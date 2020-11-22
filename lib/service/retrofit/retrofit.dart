@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
@@ -9,7 +8,7 @@ import 'package:retrofit/http.dart';
 
 part 'retrofit.g.dart';
 
-@RestApi(baseUrl: BASE_API_URL)
+@RestApi()
 abstract class RestClient {
   factory RestClient(Dio dio, {String baseUrl}) = _RestClient;
 

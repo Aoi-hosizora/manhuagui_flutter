@@ -104,5 +104,5 @@ class MangaPageGroupList {
 
   Map<String, dynamic> toJson() => _$MangaPageGroupListToJson(this);
 
-  static const fields = <String>['title', 'top_Group', 'groups', 'other_groups'];
+  static const fields = <String>['title', 'top_group', 'groups', 'other_groups'];
 }

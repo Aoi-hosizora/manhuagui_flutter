@@ -9,7 +9,6 @@ part of 'retrofit.dart';
 class _RestClient implements RestClient {
   _RestClient(this._dio, {this.baseUrl}) {
     ArgumentError.checkNotNull(_dio, '_dio');
-    baseUrl ??= 'https://192.168.43.23:10018/v1/';
   }
 
   final Dio _dio;

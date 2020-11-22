@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
+import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class HomePage extends StatefulWidget {
@@ -32,13 +35,38 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Manhuagui'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Hello world'),
-          ],
-        ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Center(
+            child: OutlineButton(
+              child: Text('getHotSerialMangas'),
+              onPressed: () {
+                var dio = DioManager.getInstance().dio;
+                var client = RestClient(dio);
+                client.getHotSerialMangas().then((r) {
+                  Fluttertoast.showToast(msg: r.data.topGroup.mangas.map((e) => '${e.title}|${e.newestChapter}').join(", "));
+                }).catchError((e) {
+                  Fluttertoast.showToast(msg: wrapError(e).text);
+                });
+              },
+            ),
+          ),
+          Center(
+            child: OutlineButton(
+              child: Text('getGenres'),
+              onPressed: () {
+                var dio = DioManager.getInstance().dio;
+                var client = RestClient(dio);
+                client.getGenres().then((r) {
+                  Fluttertoast.showToast(msg: r.data.data.map((e) => e.title).join(", "));
+                }).catchError((e) {
+                  Fluttertoast.showToast(msg: wrapError(e).text);
+                });
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
