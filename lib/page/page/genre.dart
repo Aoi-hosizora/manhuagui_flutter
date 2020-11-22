@@ -1,0 +1,20 @@
+import 'package:flutter/material.dart';
+
+/// 分类类别
+class GenreSubPage extends StatefulWidget {
+  const GenreSubPage({Key key}) : super(key: key);
+
+  @override
+  _GenreSubPageState createState() => _GenreSubPageState();
+}
+
+class _GenreSubPageState extends State<GenreSubPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text('GenreSubPage'),
+      ),
+    );
+  }
+}
