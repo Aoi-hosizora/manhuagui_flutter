@@ -10,7 +10,7 @@ class CategorySubPage extends StatefulWidget {
   _CategorySubPageState createState() => _CategorySubPageState();
 }
 
-class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin {
   TabController _controller;
   var _tabs = <String>['类别', '漫画家'];
   var _pages = <Widget>[
@@ -28,11 +28,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -44,7 +40,10 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
           labelStyle: Theme.of(context).primaryTextTheme.subtitle1,
           tabs: _tabs
               .map(
-                (t) => Padding(padding: EdgeInsets.symmetric(vertical: 6), child: Text(t)),
+                (t) => Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(t),
+                ),
               )
               .toList(),
         ),

@@ -8,9 +8,13 @@ class AuthorSubPage extends StatefulWidget {
   _AuthorSubPageState createState() => _AuthorSubPageState();
 }
 
-class _AuthorSubPageState extends State<AuthorSubPage> {
+class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: Center(
         child: Text('AuthorSubPage'),

@@ -10,7 +10,7 @@ class HomeSubPage extends StatefulWidget {
   _HomeSubPageState createState() => _HomeSubPageState();
 }
 
-class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStateMixin {
   TabController _controller;
   var _tabs = <String>['推荐', '更新'];
   var _pages = <Widget>[
@@ -28,11 +28,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -44,7 +40,10 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           labelStyle: Theme.of(context).primaryTextTheme.subtitle1,
           tabs: _tabs
               .map(
-                (t) => Padding(padding: EdgeInsets.symmetric(vertical: 6), child: Text(t)),
+                (t) => Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(t),
+                ),
               )
               .toList(),
         ),
