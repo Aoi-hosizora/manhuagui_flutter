@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// 主页
 class IndexPage extends StatefulWidget {
   const IndexPage({Key key}) : super(key: key);
 
@@ -38,6 +39,18 @@ class _IndexPageState extends State<IndexPage> {
     return true;
   }
 
+  DateTime _lastBackPressedTime;
+
+  Future<bool> _onWillPop() async {
+    DateTime now = DateTime.now();
+    if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime) > Duration(seconds: 2)) {
+      _lastBackPressedTime = now;
+      Fluttertoast.showToast(msg: '再按一次退出');
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     _checkPermission().then((ok) {
@@ -47,26 +60,29 @@ class _IndexPageState extends State<IndexPage> {
       }
     });
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        items: _items
-            .map(
-              (t) => BottomNavigationBarItem(
-                icon: Icon(t.item1),
-                label: t.item2,
-              ),
-            )
-            .toList(),
-        onTap: (index) {
-          _currentIndex = index;
-          if (mounted) setState(() {});
-        },
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _pages,
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _currentIndex,
+          items: _items
+              .map(
+                (t) => BottomNavigationBarItem(
+                  icon: Icon(t.item1),
+                  label: t.item2,
+                ),
+              )
+              .toList(),
+          onTap: (index) {
+            _currentIndex = index;
+            if (mounted) setState(() {});
+          },
+        ),
       ),
     );
   }

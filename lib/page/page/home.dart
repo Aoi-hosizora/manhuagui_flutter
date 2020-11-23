@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/page/page/overall.dart';
+import 'package:manhuagui_flutter/page/page/ranking.dart';
 import 'package:manhuagui_flutter/page/page/recent.dart';
 import 'package:manhuagui_flutter/page/page/recommend.dart';
+import 'package:manhuagui_flutter/page/search.dart';
+import 'package:manhuagui_flutter/service/natives/browser.dart';
 
 /// 首页
 class HomeSubPage extends StatefulWidget {
@@ -12,10 +17,12 @@ class HomeSubPage extends StatefulWidget {
 
 class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStateMixin {
   TabController _controller;
-  var _tabs = <String>['推荐', '更新'];
+  var _tabs = <String>['推荐', '更新', '全部', '排行'];
   var _pages = <Widget>[
     RecommendSubPage(),
     RecentSubPage(),
+    OverallSubPage(),
+    RankingSubPage(),
   ];
 
   @override
@@ -37,26 +44,34 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: Theme.of(context).primaryTextTheme.subtitle1,
+          labelStyle: Theme
+              .of(context)
+              .primaryTextTheme
+              .subtitle1,
           tabs: _tabs
               .map(
-                (t) => Padding(
+                (t) =>
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(t),
                 ),
-              )
+          )
               .toList(),
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '打开浏览器',
-            onPressed: () {},
+            onPressed: () => launchInBrowser(context: context, url: BASE_WEB_URL),
           ),
           IconButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
-            onPressed: () {},
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (c) => SearchPage(),
+              ),
+            ),
           ),
         ],
       ),

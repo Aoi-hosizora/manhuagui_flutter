@@ -58,6 +58,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     var paddingWidth = 5.0;
     var width = MediaQuery.of(context).size.width / 3 - paddingWidth * 2;
     var height = width / 3 * 4;
+    var title = group.title.isEmpty ? type : (type + "・" + group.title);
 
     var buildMangaBlock = (TinyMangaPage manga, Color color) {
       if (manga == null) {
@@ -152,10 +153,26 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6),
-            child: Text(
-              group.title.isEmpty ? type : (type + "・" + group.title),
-              style: Theme.of(context).textTheme.subtitle1,
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
+              children: [
+                Icon(
+                  type == '热门连载'
+                      ? Icons.whatshot
+                      : type == '经典完结'
+                          ? Icons.hourglass_bottom
+                          : type == '最新上架'
+                              ? Icons.fiber_new
+                              : Icons.bookmark_border,
+                  size: 20,
+                  color: Colors.orange,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.subtitle1,
+                ),
+              ],
             ),
           ),
           Row(

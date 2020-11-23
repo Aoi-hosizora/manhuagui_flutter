@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/page/author.dart';
 import 'package:manhuagui_flutter/page/page/genre.dart';
+import 'package:manhuagui_flutter/page/search.dart';
 
 /// 分类
 class CategorySubPage extends StatefulWidget {
@@ -47,6 +48,17 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
               )
               .toList(),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search),
+            tooltip: '搜索',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (c) => SearchPage(),
+              ),
+            ),
+          ),
+        ],
       ),
       body: TabBarView(
         controller: _controller,

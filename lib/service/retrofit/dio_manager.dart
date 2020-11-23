@@ -33,6 +33,7 @@ class LogInterceptor extends Interceptor {
   @override
   Future onRequest(RequestOptions options) async {
     print('┌─────────────────── Request ─────────────────────┐');
+    print('date: ${DateTime.now().toIso8601String()}');
     print('uri: ${options.uri}');
     print('method: ${options.method}');
     if (options.extra.isNotEmpty) {
@@ -46,6 +47,7 @@ class LogInterceptor extends Interceptor {
   @override
   Future onError(DioError err) async {
     print('┌─────────────────── DioError ────────────────────┐');
+    print('date: ${DateTime.now().toIso8601String()}');
     print('uri: ${err.request.uri}');
     print('method: ${err.request.method}');
     print('error: $err');
@@ -58,6 +60,7 @@ class LogInterceptor extends Interceptor {
   @override
   Future onResponse(Response response) async {
     print('┌─────────────────── Response ────────────────────┐');
+    print('date: ${DateTime.now().toIso8601String()}');
     _printResponse(response);
     print('└─────────────────── Response ────────────────────┘');
   }
@@ -84,6 +87,7 @@ class ErrorMessage {
 /// Wrap error from dio to [ErrorMessage].
 ErrorMessage wrapError(dynamic e) {
   print('┌─────────────────── WrapError ───────────────────┐');
+  print('date: ${DateTime.now().toIso8601String()}');
 
   if (e is DioError) {
     print('uri: ${e.request.uri}');

@@ -15,7 +15,7 @@
 *.iws
 .idea/
 
-# Vscode related
+# VS Code related
 .vscode/
 .history/
 .ionide/
@@ -41,11 +41,12 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android
+# Android related
 key.properties
 .project
 .classpath
 .settings/
+settings_aar.gradle
 
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
