@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/model/category.dart';
 part 'manga.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class MangaPage {
+class Manga {
   int mid;
   String title;
   String cover;
@@ -25,17 +25,17 @@ class MangaPage {
   int scoreCount;
   List<double> perScores;
 
-  MangaPage({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.alias, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction, this.introduction, this.mangaRank, this.averageScore, this.scoreCount, this.perScores});
+  Manga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.alias, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction, this.introduction, this.mangaRank, this.averageScore, this.scoreCount, this.perScores});
 
-  factory MangaPage.fromJson(Map<String, dynamic> json) => _$MangaPageFromJson(json);
+  factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
-  Map<String, dynamic> toJson() => _$MangaPageToJson(this);
+  Map<String, dynamic> toJson() => _$MangaToJson(this);
 
   static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class SmallMangaPage {
+class SmallManga {
   int mid;
   String title;
   String cover;
@@ -49,17 +49,17 @@ class SmallMangaPage {
   String newestDate;
   String briefIntroduction;
 
-  SmallMangaPage({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction});
+  SmallManga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction});
 
-  factory SmallMangaPage.fromJson(Map<String, dynamic> json) => _$SmallMangaPageFromJson(json);
+  factory SmallManga.fromJson(Map<String, dynamic> json) => _$SmallMangaFromJson(json);
 
-  Map<String, dynamic> toJson() => _$SmallMangaPageToJson(this);
+  Map<String, dynamic> toJson() => _$SmallMangaToJson(this);
 
   static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class TinyMangaPage {
+class TinyManga {
   int mid;
   String title;
   String cover;
@@ -68,41 +68,41 @@ class TinyMangaPage {
   String newestChapter;
   String newestDate;
 
-  TinyMangaPage({this.mid, this.title, this.cover, this.url, this.finished, this.newestChapter, this.newestDate});
+  TinyManga({this.mid, this.title, this.cover, this.url, this.finished, this.newestChapter, this.newestDate});
 
-  factory TinyMangaPage.fromJson(Map<String, dynamic> json) => _$TinyMangaPageFromJson(json);
+  factory TinyManga.fromJson(Map<String, dynamic> json) => _$TinyMangaFromJson(json);
 
-  Map<String, dynamic> toJson() => _$TinyMangaPageToJson(this);
+  Map<String, dynamic> toJson() => _$TinyMangaToJson(this);
 
   static const fields = <String>['mid', 'title', 'cover', 'url', 'finished', 'newest_chapter', 'newest_date'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class MangaPageGroup {
+class MangaGroup {
   String title;
-  List<TinyMangaPage> mangas;
+  List<TinyManga> mangas;
 
-  MangaPageGroup({this.title, this.mangas});
+  MangaGroup({this.title, this.mangas});
 
-  factory MangaPageGroup.fromJson(Map<String, dynamic> json) => _$MangaPageGroupFromJson(json);
+  factory MangaGroup.fromJson(Map<String, dynamic> json) => _$MangaGroupFromJson(json);
 
-  Map<String, dynamic> toJson() => _$MangaPageGroupToJson(this);
+  Map<String, dynamic> toJson() => _$MangaGroupToJson(this);
 
   static const fields = <String>['title', 'mangas'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class MangaPageGroupList {
+class MangaGroupList {
   String title;
-  MangaPageGroup topGroup;
-  List<MangaPageGroup> groups;
-  List<MangaPageGroup> otherGroups;
+  MangaGroup topGroup;
+  List<MangaGroup> groups;
+  List<MangaGroup> otherGroups;
 
-  MangaPageGroupList({this.title, this.topGroup, this.groups, this.otherGroups});
+  MangaGroupList({this.title, this.topGroup, this.groups, this.otherGroups});
 
-  factory MangaPageGroupList.fromJson(Map<String, dynamic> json) => _$MangaPageGroupListFromJson(json);
+  factory MangaGroupList.fromJson(Map<String, dynamic> json) => _$MangaGroupListFromJson(json);
 
-  Map<String, dynamic> toJson() => _$MangaPageGroupListToJson(this);
+  Map<String, dynamic> toJson() => _$MangaGroupListToJson(this);
 
   static const fields = <String>['title', 'top_group', 'groups', 'other_groups'];
 }

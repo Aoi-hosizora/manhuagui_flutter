@@ -16,7 +16,7 @@ class _RestClient implements RestClient {
   String baseUrl;
 
   @override
-  Future<Result<ResultPage<TinyMangaPage>>> getAllMangaPages(
+  Future<Result<ResultPage<TinyManga>>> getAllMangaPages(
       {page, limit}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'page': page, r'limit': limit};
@@ -30,12 +30,12 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<ResultPage<TinyMangaPage>>.fromJson(_result.data);
+    final value = Result<ResultPage<TinyManga>>.fromJson(_result.data);
     return value;
   }
 
   @override
-  Future<Result<MangaPage>> getMangaPage({mid}) async {
+  Future<Result<Manga>> getMangaPage({mid}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
@@ -48,7 +48,7 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<MangaPage>.fromJson(_result.data);
+    final value = Result<Manga>.fromJson(_result.data);
     return value;
   }
 
@@ -71,7 +71,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<MangaPageGroupList>> getHotSerialMangas() async {
+  Future<Result<MangaGroupList>> getHotSerialMangas() async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -83,12 +83,12 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<MangaPageGroupList>.fromJson(_result.data);
+    final value = Result<MangaGroupList>.fromJson(_result.data);
     return value;
   }
 
   @override
-  Future<Result<MangaPageGroupList>> getFinishedMangas() async {
+  Future<Result<MangaGroupList>> getFinishedMangas() async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -100,12 +100,12 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<MangaPageGroupList>.fromJson(_result.data);
+    final value = Result<MangaGroupList>.fromJson(_result.data);
     return value;
   }
 
   @override
-  Future<Result<MangaPageGroupList>> getLatestMangas() async {
+  Future<Result<MangaGroupList>> getLatestMangas() async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -117,12 +117,12 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<MangaPageGroupList>.fromJson(_result.data);
+    final value = Result<MangaGroupList>.fromJson(_result.data);
     return value;
   }
 
   @override
-  Future<Result<ResultPage<TinyMangaPage>>> getRecentUpdatedMangas() async {
+  Future<Result<ResultPage<TinyManga>>> getRecentUpdatedMangas() async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -134,7 +134,7 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<ResultPage<TinyMangaPage>>.fromJson(_result.data);
+    final value = Result<ResultPage<TinyManga>>.fromJson(_result.data);
     return value;
   }
 
@@ -190,7 +190,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<TinyMangaPage>>> getGenreMangas(
+  Future<Result<ResultPage<TinyManga>>> getGenreMangas(
       {genre, zone, age, status, page, order}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
@@ -211,12 +211,12 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<ResultPage<TinyMangaPage>>.fromJson(_result.data);
+    final value = Result<ResultPage<TinyManga>>.fromJson(_result.data);
     return value;
   }
 
   @override
-  Future<Result<ResultPage<SmallMangaPage>>> searchMangas(
+  Future<Result<ResultPage<SmallManga>>> searchMangas(
       {keyword, page, order}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'page': page, r'order': order};
@@ -230,7 +230,7 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<ResultPage<SmallMangaPage>>.fromJson(_result.data);
+    final value = Result<ResultPage<SmallManga>>.fromJson(_result.data);
     return value;
   }
 
@@ -278,7 +278,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<SmallMangaPage>>> getAuthorMangas(
+  Future<Result<ResultPage<SmallManga>>> getAuthorMangas(
       {aid, page, order}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'page': page, r'order': order};
@@ -293,7 +293,7 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<ResultPage<SmallMangaPage>>.fromJson(_result.data);
+    final value = Result<ResultPage<SmallManga>>.fromJson(_result.data);
     return value;
   }
 }

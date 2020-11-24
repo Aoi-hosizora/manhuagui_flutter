@@ -6,8 +6,8 @@ part of 'manga.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-MangaPage _$MangaPageFromJson(Map<String, dynamic> json) {
-  return MangaPage(
+Manga _$MangaFromJson(Map<String, dynamic> json) {
+  return Manga(
     mid: json['mid'] as int,
     title: json['title'] as String,
     cover: json['cover'] as String,
@@ -37,7 +37,7 @@ MangaPage _$MangaPageFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$MangaPageToJson(MangaPage instance) => <String, dynamic>{
+Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'mid': instance.mid,
       'title': instance.title,
       'cover': instance.cover,
@@ -58,8 +58,8 @@ Map<String, dynamic> _$MangaPageToJson(MangaPage instance) => <String, dynamic>{
       'per_scores': instance.perScores,
     };
 
-SmallMangaPage _$SmallMangaPageFromJson(Map<String, dynamic> json) {
-  return SmallMangaPage(
+SmallManga _$SmallMangaFromJson(Map<String, dynamic> json) {
+  return SmallManga(
     mid: json['mid'] as int,
     title: json['title'] as String,
     cover: json['cover'] as String,
@@ -81,7 +81,7 @@ SmallMangaPage _$SmallMangaPageFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$SmallMangaPageToJson(SmallMangaPage instance) =>
+Map<String, dynamic> _$SmallMangaToJson(SmallManga instance) =>
     <String, dynamic>{
       'mid': instance.mid,
       'title': instance.title,
@@ -97,8 +97,8 @@ Map<String, dynamic> _$SmallMangaPageToJson(SmallMangaPage instance) =>
       'brief_introduction': instance.briefIntroduction,
     };
 
-TinyMangaPage _$TinyMangaPageFromJson(Map<String, dynamic> json) {
-  return TinyMangaPage(
+TinyManga _$TinyMangaFromJson(Map<String, dynamic> json) {
+  return TinyManga(
     mid: json['mid'] as int,
     title: json['title'] as String,
     cover: json['cover'] as String,
@@ -109,7 +109,7 @@ TinyMangaPage _$TinyMangaPageFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$TinyMangaPageToJson(TinyMangaPage instance) =>
+Map<String, dynamic> _$TinyMangaToJson(TinyManga instance) =>
     <String, dynamic>{
       'mid': instance.mid,
       'title': instance.title,
@@ -120,43 +120,43 @@ Map<String, dynamic> _$TinyMangaPageToJson(TinyMangaPage instance) =>
       'newest_date': instance.newestDate,
     };
 
-MangaPageGroup _$MangaPageGroupFromJson(Map<String, dynamic> json) {
-  return MangaPageGroup(
+MangaGroup _$MangaGroupFromJson(Map<String, dynamic> json) {
+  return MangaGroup(
     title: json['title'] as String,
     mangas: (json['mangas'] as List)
         ?.map((e) => e == null
             ? null
-            : TinyMangaPage.fromJson(e as Map<String, dynamic>))
+            : TinyManga.fromJson(e as Map<String, dynamic>))
         ?.toList(),
   );
 }
 
-Map<String, dynamic> _$MangaPageGroupToJson(MangaPageGroup instance) =>
+Map<String, dynamic> _$MangaGroupToJson(MangaGroup instance) =>
     <String, dynamic>{
       'title': instance.title,
       'mangas': instance.mangas,
     };
 
-MangaPageGroupList _$MangaPageGroupListFromJson(Map<String, dynamic> json) {
-  return MangaPageGroupList(
+MangaGroupList _$MangaGroupListFromJson(Map<String, dynamic> json) {
+  return MangaGroupList(
     title: json['title'] as String,
     topGroup: json['top_group'] == null
         ? null
-        : MangaPageGroup.fromJson(json['top_group'] as Map<String, dynamic>),
+        : MangaGroup.fromJson(json['top_group'] as Map<String, dynamic>),
     groups: (json['groups'] as List)
         ?.map((e) => e == null
             ? null
-            : MangaPageGroup.fromJson(e as Map<String, dynamic>))
+            : MangaGroup.fromJson(e as Map<String, dynamic>))
         ?.toList(),
     otherGroups: (json['other_groups'] as List)
         ?.map((e) => e == null
             ? null
-            : MangaPageGroup.fromJson(e as Map<String, dynamic>))
+            : MangaGroup.fromJson(e as Map<String, dynamic>))
         ?.toList(),
   );
 }
 
-Map<String, dynamic> _$MangaPageGroupListToJson(MangaPageGroupList instance) =>
+Map<String, dynamic> _$MangaGroupListToJson(MangaGroupList instance) =>
     <String, dynamic>{
       'title': instance.title,
       'top_group': instance.topGroup,

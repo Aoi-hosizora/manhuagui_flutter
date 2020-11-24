@@ -110,17 +110,18 @@ ErrorMessage wrapError(dynamic e) {
     // DioErrorType.RESPONSE
     try {
       var r = Result.fromJson(e.response.data);
+      r.message = '${r.message[0].toUpperCase()}${r.message.substring(1)}';
       print('type: result');
       print('error: ${e.response.statusCode} ${r.code} ${r.message}');
       print('└─────────────────── WrapError ───────────────────┘');
-      var msg = r.code < 50000 ? r.message : '${r.code}: ${r.message}';
-      return ErrorMessage(text: '${msg[0].toUpperCase()}${msg.substring(1)}', e: '${r.code}: ${r.message}'); // !!!
+      var text = r.code < 50000 ? r.message : '${r.code}: ${r.message}';
+      return ErrorMessage(text: text, e: '${r.code}: ${r.message}'); // !!!
     } catch (_) {
-      var msg = '${e.response.statusCode}: ${e.response.statusMessage}';
+      var text = '${e.response.statusCode}: ${e.response.statusMessage}';
       print('type: server');
-      print('error: $msg');
+      print('error: $text');
       print('└─────────────────── WrapError ───────────────────┘');
-      return ErrorMessage(text: msg, e: e);
+      return ErrorMessage(text: text, e: e);
     }
   }
 

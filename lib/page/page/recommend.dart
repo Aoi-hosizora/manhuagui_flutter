@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/manga_group.dart';
+import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
@@ -15,16 +19,18 @@ class RecommendSubPage extends StatefulWidget {
 class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepAliveClientMixin {
   ScrollMoreController _controller;
   ScrollFabController _fabController;
+  GlobalKey<RefreshIndicatorState> _indicatorKey;
   var _loading = true;
-  var _data = <MangaPageGroupList>[];
-  String _error;
+  var _data = <MangaGroupList>[];
+  var _error = '';
 
   @override
   void initState() {
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
-    _loadData();
+    _indicatorKey = GlobalKey<RefreshIndicatorState>();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
   }
 
   @override
@@ -36,8 +42,6 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
   Future<void> _loadData() {
     _loading = true;
-    _data = null;
-    _error = "";
     if (mounted) setState(() {});
 
     var dio = DioManager.getInstance().dio;
@@ -45,8 +49,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     return client.getHotSerialMangas().then((hotSerial) async {
       var finished = await client.getFinishedMangas();
       var newest = await client.getLatestMangas();
-      _data = [hotSerial.data, finished.data, newest.data];
+
+      _error = '';
+      _data.clear();
+      if (mounted) setState(() {});
+      await Future.delayed(Duration(milliseconds: 20));
+
+      _data.addAll([hotSerial.data, finished.data, newest.data]);
     }).catchError((e) {
+      _data = [];
       _error = wrapError(e).text;
     }).whenComplete(() {
       _loading = false;
@@ -54,13 +65,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     });
   }
 
-  Widget _buildMangaColumn(MangaPageGroup group, String type, {bool first = false}) {
+  Widget _buildMangaColumn(MangaGroup group, String type, {bool first = false}) {
     var paddingWidth = 5.0;
     var width = MediaQuery.of(context).size.width / 3 - paddingWidth * 2;
     var height = width / 3 * 4;
     var title = group.title.isEmpty ? type : (type + "・" + group.title);
 
-    var buildMangaBlock = (TinyMangaPage manga, Color color) {
+    var buildMangaBlock = (TinyManga manga) {
       if (manga == null) {
         return Container(
           margin: EdgeInsets.symmetric(horizontal: paddingWidth),
@@ -72,16 +83,23 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
               end: Alignment.bottomRight,
               stops: [0, 0.5, 1],
               colors: [
-                Colors.blue[200],
+                Colors.blue[100],
                 Colors.orange[200],
-                Colors.purple[200],
+                Colors.purple[100],
               ],
             ),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {},
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (c) => MangaGroupPage(
+                    group: group,
+                    title: title,
+                  ),
+                ),
+              ),
               child: Center(
                 child: Text('查看更多...'),
               ),
@@ -98,12 +116,29 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 margin: EdgeInsets.symmetric(horizontal: paddingWidth),
                 height: height,
                 width: width,
-                color: color,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {},
-                  ),
+                child: Stack(
+                  children: [
+                    NetworkImageView(
+                      url: manga.cover,
+                      width: width,
+                      height: height,
+                    ),
+                    Positioned.fill(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (c) => MangaPage(
+                                id: manga.mid,
+                                title: manga.title,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Positioned(
@@ -179,18 +214,19 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildMangaBlock(group.mangas[0], Colors.red),
-              buildMangaBlock(group.mangas[1], Colors.orange),
-              buildMangaBlock(group.mangas[2], Colors.blue),
+              buildMangaBlock(group.mangas[0]),
+              buildMangaBlock(group.mangas[1]),
+              buildMangaBlock(group.mangas[2]),
             ],
           ),
+          SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildMangaBlock(group.mangas[3], Colors.green),
-              buildMangaBlock(group.mangas[4], Colors.purple),
-              buildMangaBlock(null, null),
+              buildMangaBlock(group.mangas[3]),
+              buildMangaBlock(group.mangas[4]),
+              buildMangaBlock(null),
             ],
           ),
         ],
@@ -207,11 +243,12 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: RefreshIndicator(
+        key: _indicatorKey,
         onRefresh: _loadData,
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
-          isEmpty: _data == null,
+          isEmpty: _data?.isNotEmpty != true,
           setting: PlaceholderSetting(
             showProgress: true,
             loadingText: '加载中',

@@ -13,25 +13,25 @@ abstract class RestClient {
   factory RestClient(Dio dio, {String baseUrl}) = _RestClient;
 
   @GET('/manga')
-  Future<Result<ResultPage<TinyMangaPage>>> getAllMangaPages({@Query('page') int page, @Query('limit') int limit});
+  Future<Result<ResultPage<TinyManga>>> getAllMangaPages({@Query('page') int page, @Query('limit') int limit});
 
   @GET('/manga/{mid}')
-  Future<Result<MangaPage>> getMangaPage({@Path() int mid});
+  Future<Result<Manga>> getMangaPage({@Path() int mid});
 
   @GET('/manga/{mid}/{cid}')
   Future<Result<MangaChapter>> getMangaChapter({@Path() int mid, @Path() int cid});
 
   @GET('/list/serial')
-  Future<Result<MangaPageGroupList>> getHotSerialMangas();
+  Future<Result<MangaGroupList>> getHotSerialMangas();
 
   @GET('/list/finish')
-  Future<Result<MangaPageGroupList>> getFinishedMangas();
+  Future<Result<MangaGroupList>> getFinishedMangas();
 
   @GET('/list/latest')
-  Future<Result<MangaPageGroupList>> getLatestMangas();
+  Future<Result<MangaGroupList>> getLatestMangas();
 
   @GET('/list/updated')
-  Future<Result<ResultPage<TinyMangaPage>>> getRecentUpdatedMangas();
+  Future<Result<ResultPage<TinyManga>>> getRecentUpdatedMangas();
 
   @GET('/category/age')
   Future<Result<ResultPage<Category>>> getAges();
@@ -43,10 +43,10 @@ abstract class RestClient {
   Future<Result<ResultPage<Category>>> getGenres();
 
   @GET('/category/genre/{genre}')
-  Future<Result<ResultPage<TinyMangaPage>>> getGenreMangas({@Path() String genre, @Query('zone') String zone, @Query('age') String age, @Query('status') String status, @Query('page') int page, @Query('order') String order});
+  Future<Result<ResultPage<TinyManga>>> getGenreMangas({@Path() String genre, @Query('zone') String zone, @Query('age') String age, @Query('status') String status, @Query('page') int page, @Query('order') String order});
 
   @GET('/search/{keyword}')
-  Future<Result<ResultPage<SmallMangaPage>>> searchMangas({@Path() String keyword, @Query('page') int page, @Query('order') String order});
+  Future<Result<ResultPage<SmallManga>>> searchMangas({@Path() String keyword, @Query('page') int page, @Query('order') String order});
 
   @GET('/author')
   Future<Result<ResultPage<SmallAuthor>>> getAllAuthors({@Query('genre') String genre, @Query('zone') String zone, @Query('age') String age, @Query('page') int page, @Query('order') String order});
@@ -55,5 +55,5 @@ abstract class RestClient {
   Future<Result<Author>> getAuthor({@Path() int aid});
 
   @GET('/author/{aid}/manga')
-  Future<Result<ResultPage<SmallMangaPage>>> getAuthorMangas({@Path() int aid, @Query('page') int page, @Query('order') String order});
+  Future<Result<ResultPage<SmallManga>>> getAuthorMangas({@Path() int aid, @Query('page') int page, @Query('order') String order});
 }
