@@ -1,173 +1,120 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/manga.dart';
-import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/page/view/tiny_manga.dart';
 
 /// 漫画分组
+/// Page for [MangaGroup].
 class MangaGroupPage extends StatefulWidget {
   const MangaGroupPage({
     Key key,
     @required this.group,
-    @required this.title,
+    @required this.type,
+    @required this.icon,
   })  : assert(group != null),
-        assert(title != null),
+        assert(type != null),
+        assert(icon != null),
         super(key: key);
 
   final MangaGroup group;
-  final String title;
+  final String type;
+  final IconData icon;
 
   @override
   _MangaGroupPageState createState() => _MangaGroupPageState();
 }
 
 class _MangaGroupPageState extends State<MangaGroupPage> {
-  double _paddingWidth;
-  double _width;
-  double _height;
+  ScrollMoreController _controller;
 
-  Widget _buildMangaBlock(TinyManga manga) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: _paddingWidth),
-              height: _height,
-              width: _width,
-              // color: color,
-              child: Stack(
-                children: [
-                  NetworkImageView(
-                    url: manga.cover,
-                    width: _width,
-                    height: _height,
-                  ),
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (c) => MangaPage(
-                              id: manga.mid,
-                              title: manga.title,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: _paddingWidth),
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                width: _width,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0, 1],
-                    colors: [
-                      Color.fromRGBO(0, 0, 0, 0),
-                      Color.fromRGBO(0, 0, 0, 1),
-                    ],
-                  ),
-                ),
-                child: Text(
-                  (manga.finished ? '共' : '更新至') + manga.newestChapter,
-                  style: TextStyle(color: Colors.white),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ],
-        ),
-        Container(
-          width: _width,
-          margin: EdgeInsets.symmetric(horizontal: _paddingWidth, vertical: 3),
-          child: Text(
-            manga.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollMoreController();
   }
 
   @override
   Widget build(BuildContext context) {
-    _paddingWidth = 5.0;
-    _width = MediaQuery.of(context).size.width / 3 - _paddingWidth * 2;
-    _height = _width / 3 * 4;
+    var paddingWidth = 5.0;
+    var width = MediaQuery.of(context).size.width / 3 - paddingWidth * 2;
+    var height = width / 3 * 4;
+    var title = widget.group.title.isEmpty ? widget.type : (widget.type + "・" + widget.group.title);
+
+    Widget buildTinyMangaView(TinyManga manga) => TinyMangaView(
+          manga: manga,
+          width: width,
+          height: height,
+          paddingWidth: paddingWidth,
+        );
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
-        title: Text(widget.title),
+        title: Text(title),
       ),
       body: Container(
         color: Colors.white,
         child: ListView(
-          padding: EdgeInsets.symmetric(vertical: 10),
+          controller: _controller,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildMangaBlock(widget.group.mangas[0]),
-                _buildMangaBlock(widget.group.mangas[1]),
-                _buildMangaBlock(widget.group.mangas[2]),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildMangaBlock(widget.group.mangas[3]),
-                _buildMangaBlock(widget.group.mangas[4]),
-                _buildMangaBlock(widget.group.mangas[5]),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildMangaBlock(widget.group.mangas[6]),
-                _buildMangaBlock(widget.group.mangas[7]),
-                _buildMangaBlock(widget.group.mangas[8]),
-              ],
-            ),
-            SizedBox(height: 10),
-            if (widget.group.mangas.length == 10)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
                 children: [
-                  _buildMangaBlock(widget.group.mangas[9]),
+                  Icon(widget.icon, size: 20, color: Colors.orange),
+                  SizedBox(width: 6),
+                  Text(title, style: Theme.of(context).textTheme.subtitle1),
                 ],
-              )
-            else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildMangaBlock(widget.group.mangas[9]),
-                  _buildMangaBlock(widget.group.mangas[10]),
-                  _buildMangaBlock(widget.group.mangas[11]),
-                ],
-              )
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildTinyMangaView(widget.group.mangas[0]),
+                buildTinyMangaView(widget.group.mangas[1]),
+                buildTinyMangaView(widget.group.mangas[2]),
+              ],
+            ),
+            SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildTinyMangaView(widget.group.mangas[3]),
+                buildTinyMangaView(widget.group.mangas[4]),
+                buildTinyMangaView(widget.group.mangas[5]),
+              ],
+            ),
+            SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildTinyMangaView(widget.group.mangas[6]),
+                buildTinyMangaView(widget.group.mangas[7]),
+                buildTinyMangaView(widget.group.mangas[8]),
+              ],
+            ),
+            SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildTinyMangaView(widget.group.mangas[9]),
+                if (widget.group.mangas.length == 12) buildTinyMangaView(widget.group.mangas[10]),
+                if (widget.group.mangas.length == 12) buildTinyMangaView(widget.group.mangas[11]),
+              ],
+            )
           ],
+        ),
+      ),
+      floatingActionButton: ScrollFloatingActionButton(
+        scrollController: _controller,
+        fab: FloatingActionButton(
+          child: Icon(Icons.vertical_align_top),
+          onPressed: () => _controller.scrollTop(),
         ),
       ),
     );

@@ -44,25 +44,24 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: Theme
-              .of(context)
-              .primaryTextTheme
-              .subtitle1,
+          labelStyle: Theme.of(context).primaryTextTheme.subtitle1,
           tabs: _tabs
               .map(
-                (t) =>
-                Padding(
+                (t) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(t),
                 ),
-          )
+              )
               .toList(),
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '打开浏览器',
-            onPressed: () => launchInBrowser(context: context, url: BASE_WEB_URL),
+            onPressed: () => launchInBrowser(
+              context: context,
+              url: BASE_WEB_URL,
+            ),
           ),
           IconButton(
             icon: Icon(Icons.search),

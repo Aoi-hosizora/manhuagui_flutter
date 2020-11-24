@@ -13,10 +13,10 @@ abstract class RestClient {
   factory RestClient(Dio dio, {String baseUrl}) = _RestClient;
 
   @GET('/manga')
-  Future<Result<ResultPage<TinyManga>>> getAllMangaPages({@Query('page') int page, @Query('limit') int limit});
+  Future<Result<ResultPage<TinyManga>>> getAllMangas({@Query('page') int page, @Query('limit') int limit});
 
   @GET('/manga/{mid}')
-  Future<Result<Manga>> getMangaPage({@Path() int mid});
+  Future<Result<Manga>> getManga({@Path() int mid});
 
   @GET('/manga/{mid}/{cid}')
   Future<Result<MangaChapter>> getMangaChapter({@Path() int mid, @Path() int cid});

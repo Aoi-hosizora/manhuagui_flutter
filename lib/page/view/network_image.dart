@@ -8,7 +8,6 @@ class NetworkImageView extends StatelessWidget {
     @required this.width,
     @required this.height,
     this.fit = BoxFit.cover,
-    this.httpHeaders,
   })  : assert(url != null && url != ''),
         super(key: key);
 
@@ -16,7 +15,6 @@ class NetworkImageView extends StatelessWidget {
   final double width;
   final double height;
   final BoxFit fit;
-  final Map<String, String> httpHeaders;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +23,6 @@ class NetworkImageView extends StatelessWidget {
       height: this.height,
       child: CachedNetworkImage(
         imageUrl: this.url,
-        httpHeaders: this.httpHeaders,
         width: this.width,
         height: this.height,
         fit: this.fit,

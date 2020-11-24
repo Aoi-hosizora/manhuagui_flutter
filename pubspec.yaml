@@ -19,6 +19,7 @@ dependencies:
   flutter_ahlib: ^1.1.2
   flutter_web_browser: ^0.13.0
   cached_network_image: ^2.3.3
+  flutter_rating_bar: ^3.2.0+1
 
 dev_dependencies:
   flutter_test:

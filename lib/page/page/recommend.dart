@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
-import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/page/view/tiny_manga.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 /// 首页推荐
+/// Page for [MangaGroupList].
 class RecommendSubPage extends StatefulWidget {
   const RecommendSubPage({Key key}) : super(key: key);
 
@@ -70,8 +70,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     var width = MediaQuery.of(context).size.width / 3 - paddingWidth * 2;
     var height = width / 3 * 4;
     var title = group.title.isEmpty ? type : (type + "・" + group.title);
+    var icon = type == '热门连载'
+        ? Icons.whatshot
+        : type == '经典完结'
+            ? Icons.hourglass_bottom
+            : type == '最新上架'
+                ? Icons.fiber_new
+                : Icons.bookmark_border;
 
-    var buildMangaBlock = (TinyManga manga) {
+    Widget buildTinyMangaView(TinyManga manga) {
       if (manga == null) {
         return Container(
           margin: EdgeInsets.symmetric(horizontal: paddingWidth),
@@ -92,94 +99,29 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           child: Material(
             color: Colors.transparent,
             child: InkWell(
+              child: Center(
+                child: Text('查看更多...'),
+              ),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (c) => MangaGroupPage(
                     group: group,
-                    title: title,
+                    type: type,
+                    icon: icon,
                   ),
                 ),
-              ),
-              child: Center(
-                child: Text('查看更多...'),
               ),
             ),
           ),
         );
       }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: paddingWidth),
-                height: height,
-                width: width,
-                child: Stack(
-                  children: [
-                    NetworkImageView(
-                      url: manga.cover,
-                      width: width,
-                      height: height,
-                    ),
-                    Positioned.fill(
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (c) => MangaPage(
-                                id: manga.mid,
-                                title: manga.title,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: paddingWidth),
-                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  width: width,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [0, 1],
-                      colors: [
-                        Color.fromRGBO(0, 0, 0, 0),
-                        Color.fromRGBO(0, 0, 0, 1),
-                      ],
-                    ),
-                  ),
-                  child: Text(
-                    (manga.finished ? '共' : '更新至') + manga.newestChapter,
-                    style: TextStyle(color: Colors.white),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Container(
-            width: width,
-            margin: EdgeInsets.symmetric(horizontal: paddingWidth, vertical: 3),
-            child: Text(
-              manga.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+      return TinyMangaView(
+        manga: manga,
+        width: width,
+        height: height,
+        paddingWidth: paddingWidth,
       );
-    };
+    }
 
     return Container(
       color: Colors.white,
@@ -192,13 +134,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             child: Row(
               children: [
                 Icon(
-                  type == '热门连载'
-                      ? Icons.whatshot
-                      : type == '经典完结'
-                          ? Icons.hourglass_bottom
-                          : type == '最新上架'
-                              ? Icons.fiber_new
-                              : Icons.bookmark_border,
+                  icon,
                   size: 20,
                   color: Colors.orange,
                 ),
@@ -214,9 +150,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildMangaBlock(group.mangas[0]),
-              buildMangaBlock(group.mangas[1]),
-              buildMangaBlock(group.mangas[2]),
+              buildTinyMangaView(group.mangas[0]),
+              buildTinyMangaView(group.mangas[1]),
+              buildTinyMangaView(group.mangas[2]),
             ],
           ),
           SizedBox(height: 6),
@@ -224,9 +160,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildMangaBlock(group.mangas[3]),
-              buildMangaBlock(group.mangas[4]),
-              buildMangaBlock(null),
+              buildTinyMangaView(group.mangas[3]),
+              buildTinyMangaView(group.mangas[4]),
+              buildTinyMangaView(null),
             ],
           ),
         ],
