@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
+import 'package:manhuagui_flutter/model/chapter.dart';
 
 part 'manga.g.dart';
 
@@ -24,14 +25,15 @@ class Manga {
   double averageScore;
   int scoreCount;
   List<double> perScores;
+  List<MangaChapterGroup> chapterGroups;
 
-  Manga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.alias, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction, this.introduction, this.mangaRank, this.averageScore, this.scoreCount, this.perScores});
+  Manga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.alias, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction, this.introduction, this.mangaRank, this.averageScore, this.scoreCount, this.perScores, this.chapterGroups});
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaToJson(this);
 
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores'];
+  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores', 'chapter_groups'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

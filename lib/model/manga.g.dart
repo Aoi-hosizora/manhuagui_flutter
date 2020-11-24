@@ -34,6 +34,11 @@ Manga _$MangaFromJson(Map<String, dynamic> json) {
     perScores: (json['per_scores'] as List)
         ?.map((e) => (e as num)?.toDouble())
         ?.toList(),
+    chapterGroups: (json['chapter_groups'] as List)
+        ?.map((e) => e == null
+            ? null
+            : MangaChapterGroup.fromJson(e as Map<String, dynamic>))
+        ?.toList(),
   );
 }
 
@@ -56,6 +61,7 @@ Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'average_score': instance.averageScore,
       'score_count': instance.scoreCount,
       'per_scores': instance.perScores,
+      'chapter_groups': instance.chapterGroups,
     };
 
 SmallManga _$SmallMangaFromJson(Map<String, dynamic> json) {
@@ -109,8 +115,7 @@ TinyManga _$TinyMangaFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$TinyMangaToJson(TinyManga instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$TinyMangaToJson(TinyManga instance) => <String, dynamic>{
       'mid': instance.mid,
       'title': instance.title,
       'cover': instance.cover,
@@ -124,9 +129,8 @@ MangaGroup _$MangaGroupFromJson(Map<String, dynamic> json) {
   return MangaGroup(
     title: json['title'] as String,
     mangas: (json['mangas'] as List)
-        ?.map((e) => e == null
-            ? null
-            : TinyManga.fromJson(e as Map<String, dynamic>))
+        ?.map((e) =>
+            e == null ? null : TinyManga.fromJson(e as Map<String, dynamic>))
         ?.toList(),
   );
 }
@@ -144,14 +148,12 @@ MangaGroupList _$MangaGroupListFromJson(Map<String, dynamic> json) {
         ? null
         : MangaGroup.fromJson(json['top_group'] as Map<String, dynamic>),
     groups: (json['groups'] as List)
-        ?.map((e) => e == null
-            ? null
-            : MangaGroup.fromJson(e as Map<String, dynamic>))
+        ?.map((e) =>
+            e == null ? null : MangaGroup.fromJson(e as Map<String, dynamic>))
         ?.toList(),
     otherGroups: (json['other_groups'] as List)
-        ?.map((e) => e == null
-            ? null
-            : MangaGroup.fromJson(e as Map<String, dynamic>))
+        ?.map((e) =>
+            e == null ? null : MangaGroup.fromJson(e as Map<String, dynamic>))
         ?.toList(),
   );
 }

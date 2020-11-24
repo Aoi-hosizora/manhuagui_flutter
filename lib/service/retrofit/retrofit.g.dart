@@ -16,8 +16,7 @@ class _RestClient implements RestClient {
   String baseUrl;
 
   @override
-  Future<Result<ResultPage<TinyManga>>> getAllMangas(
-      {page, limit}) async {
+  Future<Result<ResultPage<TinyManga>>> getAllMangas({page, limit}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'page': page, r'limit': limit};
     queryParameters.removeWhere((k, v) => v == null);

@@ -4,6 +4,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
@@ -36,6 +37,7 @@ class _MangaPageState extends State<MangaPage> {
   Manga _data;
   var _error = '';
   var _showBriefIntroduction = true;
+  var _invertedOrder = true;
 
   @override
   void initState() {
@@ -63,6 +65,100 @@ class _MangaPageState extends State<MangaPage> {
       _loading = false;
       if (mounted) setState(() {});
     });
+  }
+
+  Widget _buildChapterListView() {
+    var chaptersHPadding = 12.0;
+    var chaptersVPadding = 10.0;
+    var chapterPadding = 4.0;
+    var chapterWidth = (MediaQuery.of(context).size.width - 2 * chaptersHPadding - 6 * chapterPadding) / 4;
+
+    void gotoToc() {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (c) => MangaTocPage(
+            title: _data.title,
+            groups: _data.chapterGroups,
+          ),
+        ),
+      );
+    }
+
+    var groupViews = <Widget>[];
+    for (var idx = 0; idx < _data.chapterGroups.length; idx++) {
+      var group = _data.chapterGroups[idx];
+      var inGroupView = <Widget>[];
+      if (idx == 0) {
+        inGroupView = [
+          Row(
+            children: [
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
+            ],
+          ),
+          SizedBox(height: chapterPadding * 2),
+          Row(
+            children: [
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
+            ],
+          ),
+          SizedBox(height: chapterPadding * 2),
+          Row(
+            children: [
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('...'), onPressed: gotoToc), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
+            ],
+          ),
+        ];
+      } else {
+        inGroupView = [
+          Row(
+            children: [
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
+              Container(child: OutlineButton(child: Text('...'), onPressed: gotoToc), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
+            ],
+          ),
+        ];
+      }
+      groupViews.add(
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: chaptersVPadding / 2),
+          child: Column(
+            children: [
+              Text(
+                '・${group.title}・',
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+              SizedBox(height: chaptersVPadding),
+              // ****************************************************************
+              // 每一组章节
+              // ****************************************************************
+              ...inGroupView,
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: chaptersHPadding, vertical: chaptersVPadding / 2),
+      child: Column(
+        // ****************************************************************
+        // 所有章节
+        // ****************************************************************
+        children: groupViews,
+      ),
+    );
   }
 
   @override
@@ -100,6 +196,9 @@ class _MangaPageState extends State<MangaPage> {
           childBuilder: (c) => Scrollbar(
             child: ListView(
               children: [
+                // ****************************************************************
+                // 头部框
+                // ****************************************************************
                 Container(
                   width: MediaQuery.of(context).size.width,
                   height: 180,
@@ -118,8 +217,11 @@ class _MangaPageState extends State<MangaPage> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ****************************************************************
+                      // 封面
+                      // ****************************************************************
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         child: NetworkImageView(
                           url: _data.cover,
                           height: 160,
@@ -127,10 +229,13 @@ class _MangaPageState extends State<MangaPage> {
                           fit: BoxFit.cover,
                         ),
                       ),
+                      // ****************************************************************
+                      // 信息
+                      // ****************************************************************
                       Container(
-                        width: MediaQuery.of(context).size.width - 12 * 3 - 120,
-                        height: 180.0 - 15 * 2,
-                        margin: EdgeInsets.only(top: 15, bottom: 15, right: 12),
+                        width: MediaQuery.of(context).size.width - 14 * 3 - 120,
+                        height: 180.0 - 14 * 2,
+                        margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
                         child: Wrap(
                           direction: Axis.vertical,
                           children: [
@@ -164,27 +269,30 @@ class _MangaPageState extends State<MangaPage> {
                               text: Text('${_data.newestDate} ${_data.finished ? '已完结' : '连载中'}'),
                               space: 8,
                             ),
-                            SizedBox(height: 6),
+                            SizedBox(height: 4),
+                            // ****************************************************************
+                            // 两个按钮
+                            // ****************************************************************
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  height: 24,
+                                  height: 28,
                                   width: 75,
                                   child: OutlineButton(
                                     padding: EdgeInsets.all(2),
-                                    child: Text('订阅漫画'),
-                                    onPressed: () {},
+                                    child: Text('订阅漫画'), // 取消订阅
+                                    onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
                                   ),
                                 ),
-                                SizedBox(width: 12),
+                                SizedBox(width: 14),
                                 Container(
-                                  height: 24,
+                                  height: 28,
                                   width: 75,
                                   child: OutlineButton(
                                     padding: EdgeInsets.all(2),
-                                    child: Text('继续阅读'),
-                                    onPressed: () {},
+                                    child: Text('开始阅读'), // 继续阅读
+                                    onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
                                   ),
                                 ),
                               ],
@@ -195,8 +303,11 @@ class _MangaPageState extends State<MangaPage> {
                     ],
                   ),
                 ),
+                // ****************************************************************
+                // 介绍
+                // ****************************************************************
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   color: Colors.white,
                   child: RichText(
                     text: _showBriefIntroduction
@@ -205,7 +316,7 @@ class _MangaPageState extends State<MangaPage> {
                             style: TextStyle(color: Colors.black),
                             children: [
                               TextSpan(
-                                text: '查看更多',
+                                text: ' 展开详情',
                                 style: TextStyle(color: Theme.of(context).primaryColor),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
@@ -220,7 +331,7 @@ class _MangaPageState extends State<MangaPage> {
                             style: TextStyle(color: Colors.black),
                             children: [
                               TextSpan(
-                                text: ' 隐藏',
+                                text: ' 收起介绍',
                                 style: TextStyle(color: Theme.of(context).primaryColor),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
@@ -233,10 +344,13 @@ class _MangaPageState extends State<MangaPage> {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 12),
                   color: Colors.white,
                   child: Divider(height: 1, thickness: 1),
                 ),
+                // ****************************************************************
+                // 排名
+                // ****************************************************************
                 Container(
                   color: Colors.white,
                   child: Material(
@@ -244,7 +358,7 @@ class _MangaPageState extends State<MangaPage> {
                     child: InkWell(
                       onTap: () => Fluttertoast.showToast(msg: 'TODO'),
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         child: Column(
                           children: [
                             RatingBar.builder(
@@ -267,11 +381,96 @@ class _MangaPageState extends State<MangaPage> {
                     ),
                   ),
                 ),
-                Divider(height: 1, thickness: 1),
-                Text('章节信息......'),
-                Text('章节信息......'),
-                Text('章节信息......'),
-                Text('章节信息......'),
+                Container(height: 12),
+                // ****************************************************************
+                // 章节列表头
+                // ****************************************************************
+                Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.only(left: 12, top: 2, bottom: 2, right: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '章节列表',
+                        style: Theme.of(context).textTheme.subtitle1,
+                      ),
+                      Row(
+                        children: [
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                _invertedOrder = false;
+                                if (mounted) setState(() {});
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 6, bottom: 6, left: 5, right: 10),
+                                child: IconText(
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_up,
+                                    size: 18,
+                                    color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
+                                  ),
+                                  text: Text(
+                                    '正序',
+                                    style: TextStyle(
+                                      color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
+                                    ),
+                                  ),
+                                  space: 0,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                _invertedOrder = true;
+                                if (mounted) setState(() {});
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 6, bottom: 6, left: 5, right: 10),
+                                child: IconText(
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_down,
+                                    size: 18,
+                                    color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
+                                  ),
+                                  text: Text(
+                                    '倒序',
+                                    style: TextStyle(
+                                      color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
+                                    ),
+                                  ),
+                                  space: 0,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  color: Colors.white,
+                  child: Divider(height: 1, thickness: 1),
+                ),
+                // ****************************************************************
+                // 章节列表
+                // ****************************************************************
+                _buildChapterListView(),
+                Container(height: 12),
+                // ****************************************************************
+                // 其他
+                // ****************************************************************
+                Container(
+                  height: 200,
+                  color: Colors.white,
+                ),
               ],
             ),
           ),
