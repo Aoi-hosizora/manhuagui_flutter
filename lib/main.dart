@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
       title: 'Manhuagui',
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
+        scaffoldBackgroundColor: Colors.grey[100],
       ),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [

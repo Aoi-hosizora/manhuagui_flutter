@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 
 /// 漫画章节目录
 /// Page for [MangaChapterGroup].
@@ -28,8 +29,12 @@ class _MangaTocPageState extends State<MangaTocPage> {
         toolbarHeight: 45,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Text('MangaTocPage'),
+      body: Container(
+        color: Colors.white,
+        child: ChapterGroupView(
+          groups: widget.groups,
+          complete: true,
+        ),
       ),
     );
   }

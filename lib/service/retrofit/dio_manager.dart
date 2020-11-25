@@ -94,12 +94,15 @@ ErrorMessage wrapError(dynamic e) {
     print('method: ${e.request.method}');
 
     if (e.response == null) {
-      // DioError [DioErrorType.DEFAULT]: SocketException: OS Error
+      // DioError [DioErrorType.DEFAULT]: SocketException: Connection failed (OS Error: Network is unreachable, errno = 101)
+      // DioError [DioErrorType.DEFAULT]: SocketException: OS Error: Connection refused
       // DioError [DioErrorType.DEFAULT]: HandshakeException: Handshake error in client (OS Error)
       // DioError [DioErrorType.CONNECT_TIMEOUT]: Connecting timed out
       var text = 'Network error'; // DioErrorType.DEFAULT || DioErrorType.CANCEL
       if (e.type == DioErrorType.CONNECT_TIMEOUT || e.type == DioErrorType.SEND_TIMEOUT || e.type == DioErrorType.RECEIVE_TIMEOUT) {
         text = 'Network timeout'; // DioErrorType.XXX_TIMEOUT
+      } else if (!e.toString().contains('unreachable')) {
+        text = 'Server error';
       }
       print('type: network');
       print('error: $text ==> $e');

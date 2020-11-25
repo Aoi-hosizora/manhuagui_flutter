@@ -35,16 +35,16 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    var paddingWidth = 5.0;
-    var width = MediaQuery.of(context).size.width / 3 - paddingWidth * 2;
-    var height = width / 3 * 4;
     var title = widget.group.title.isEmpty ? widget.type : (widget.type + "・" + widget.group.title);
+    var vPadding = 5.0;
+    var width = MediaQuery.of(context).size.width / 3 - vPadding * 2;
+    var height = width / 3 * 4;
 
-    Widget buildTinyMangaView(TinyManga manga) => TinyMangaView(
+    Widget buildMangaBlock(TinyManga manga) => TinyMangaView(
           manga: manga,
           width: width,
           height: height,
-          paddingWidth: paddingWidth,
+          vPadding: vPadding,
         );
 
     return Scaffold(
@@ -72,9 +72,9 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildTinyMangaView(widget.group.mangas[0]),
-                buildTinyMangaView(widget.group.mangas[1]),
-                buildTinyMangaView(widget.group.mangas[2]),
+                buildMangaBlock(widget.group.mangas[0]),
+                buildMangaBlock(widget.group.mangas[1]),
+                buildMangaBlock(widget.group.mangas[2]),
               ],
             ),
             SizedBox(height: 6),
@@ -82,9 +82,9 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildTinyMangaView(widget.group.mangas[3]),
-                buildTinyMangaView(widget.group.mangas[4]),
-                buildTinyMangaView(widget.group.mangas[5]),
+                buildMangaBlock(widget.group.mangas[3]),
+                buildMangaBlock(widget.group.mangas[4]),
+                buildMangaBlock(widget.group.mangas[5]),
               ],
             ),
             SizedBox(height: 6),
@@ -92,9 +92,9 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildTinyMangaView(widget.group.mangas[6]),
-                buildTinyMangaView(widget.group.mangas[7]),
-                buildTinyMangaView(widget.group.mangas[8]),
+                buildMangaBlock(widget.group.mangas[6]),
+                buildMangaBlock(widget.group.mangas[7]),
+                buildMangaBlock(widget.group.mangas[8]),
               ],
             ),
             SizedBox(height: 6),
@@ -102,9 +102,11 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildTinyMangaView(widget.group.mangas[9]),
-                if (widget.group.mangas.length == 12) buildTinyMangaView(widget.group.mangas[10]),
-                if (widget.group.mangas.length == 12) buildTinyMangaView(widget.group.mangas[11]),
+                buildMangaBlock(widget.group.mangas[9]),
+                if (widget.group.mangas.length == 12) ...[
+                  buildMangaBlock(widget.group.mangas[10]),
+                  buildMangaBlock(widget.group.mangas[11]),
+                ],
               ],
             )
           ],

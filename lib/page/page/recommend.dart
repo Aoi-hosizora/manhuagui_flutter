@@ -66,9 +66,6 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   }
 
   Widget _buildMangaColumn(MangaGroup group, String type, {bool first = false}) {
-    var paddingWidth = 5.0;
-    var width = MediaQuery.of(context).size.width / 3 - paddingWidth * 2;
-    var height = width / 3 * 4;
     var title = group.title.isEmpty ? type : (type + "・" + group.title);
     var icon = type == '热门连载'
         ? Icons.whatshot
@@ -78,12 +75,16 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 ? Icons.fiber_new
                 : Icons.bookmark_border;
 
+    var vPadding = 5.0;
+    var width = MediaQuery.of(context).size.width / 3 - vPadding * 2;
+    var height = width / 3 * 4;
+
     Widget buildTinyMangaView(TinyManga manga) {
       if (manga == null) {
         return Container(
-          margin: EdgeInsets.symmetric(horizontal: paddingWidth),
-          height: height,
+          margin: EdgeInsets.symmetric(horizontal: vPadding),
           width: width,
+          height: height,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -119,7 +120,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         manga: manga,
         width: width,
         height: height,
-        paddingWidth: paddingWidth,
+        vPadding: vPadding,
       );
     }
 
@@ -177,7 +178,6 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       body: RefreshIndicator(
         key: _indicatorKey,
         onRefresh: _loadData,

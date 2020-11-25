@@ -8,17 +8,17 @@ class TinyMangaView extends StatefulWidget {
   const TinyMangaView({
     Key key,
     @required this.manga,
-    @required this.height,
     @required this.width,
-    @required this.paddingWidth,
+    @required this.height,
+    @required this.vPadding,
   })  : assert(manga != null),
-        assert(height != null && width != null && paddingWidth != null),
+        assert(height != null && width != null && vPadding != null),
         super(key: key);
 
   final TinyManga manga;
-  final double height;
   final double width;
-  final double paddingWidth;
+  final double height;
+  final double vPadding;
 
   @override
   _TinyMangaViewState createState() => _TinyMangaViewState();
@@ -33,9 +33,9 @@ class _TinyMangaViewState extends State<TinyMangaView> {
         Stack(
           children: [
             Container(
-              margin: EdgeInsets.symmetric(horizontal: widget.paddingWidth),
-              height: widget.height,
+              margin: EdgeInsets.symmetric(horizontal: widget.vPadding),
               width: widget.width,
+              height: widget.height,
               child: Stack(
                 children: [
                   NetworkImageView(
@@ -65,7 +65,7 @@ class _TinyMangaViewState extends State<TinyMangaView> {
             Positioned(
               bottom: 0,
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: widget.paddingWidth),
+                margin: EdgeInsets.symmetric(horizontal: widget.vPadding),
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 width: widget.width,
                 decoration: BoxDecoration(
@@ -91,7 +91,7 @@ class _TinyMangaViewState extends State<TinyMangaView> {
         ),
         Container(
           width: widget.width,
-          margin: EdgeInsets.symmetric(horizontal: widget.paddingWidth, vertical: 3),
+          margin: EdgeInsets.symmetric(horizontal: widget.vPadding, vertical: 3),
           child: Text(
             widget.manga.title,
             maxLines: 1,

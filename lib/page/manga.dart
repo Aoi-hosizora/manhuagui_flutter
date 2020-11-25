@@ -5,6 +5,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
+import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
@@ -67,104 +68,9 @@ class _MangaPageState extends State<MangaPage> {
     });
   }
 
-  Widget _buildChapterListView() {
-    var chaptersHPadding = 12.0;
-    var chaptersVPadding = 10.0;
-    var chapterPadding = 4.0;
-    var chapterWidth = (MediaQuery.of(context).size.width - 2 * chaptersHPadding - 6 * chapterPadding) / 4;
-
-    void gotoToc() {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (c) => MangaTocPage(
-            title: _data.title,
-            groups: _data.chapterGroups,
-          ),
-        ),
-      );
-    }
-
-    var groupViews = <Widget>[];
-    for (var idx = 0; idx < _data.chapterGroups.length; idx++) {
-      var group = _data.chapterGroups[idx];
-      var inGroupView = <Widget>[];
-      if (idx == 0) {
-        inGroupView = [
-          Row(
-            children: [
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
-            ],
-          ),
-          SizedBox(height: chapterPadding * 2),
-          Row(
-            children: [
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
-            ],
-          ),
-          SizedBox(height: chapterPadding * 2),
-          Row(
-            children: [
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('...'), onPressed: gotoToc), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
-            ],
-          ),
-        ];
-      } else {
-        inGroupView = [
-          Row(
-            children: [
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.only(right: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('X话'), onPressed: () {}), height: 36, width: chapterWidth, margin: EdgeInsets.symmetric(horizontal: chapterPadding)),
-              Container(child: OutlineButton(child: Text('...'), onPressed: gotoToc), height: 36, width: chapterWidth, margin: EdgeInsets.only(left: chapterPadding)),
-            ],
-          ),
-        ];
-      }
-      groupViews.add(
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: chaptersVPadding / 2),
-          child: Column(
-            children: [
-              Text(
-                '・${group.title}・',
-                style: Theme.of(context).textTheme.subtitle1,
-              ),
-              SizedBox(height: chaptersVPadding),
-              // ****************************************************************
-              // 每一组章节
-              // ****************************************************************
-              ...inGroupView,
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: chaptersHPadding, vertical: chaptersVPadding / 2),
-      child: Column(
-        // ****************************************************************
-        // 所有章节
-        // ****************************************************************
-        children: groupViews,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
@@ -383,86 +289,23 @@ class _MangaPageState extends State<MangaPage> {
                 ),
                 Container(height: 12),
                 // ****************************************************************
-                // 章节列表头
-                // ****************************************************************
-                Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.only(left: 12, top: 2, bottom: 2, right: 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '章节列表',
-                        style: Theme.of(context).textTheme.subtitle1,
-                      ),
-                      Row(
-                        children: [
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                _invertedOrder = false;
-                                if (mounted) setState(() {});
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 6, bottom: 6, left: 5, right: 10),
-                                child: IconText(
-                                  icon: Icon(
-                                    Icons.keyboard_arrow_up,
-                                    size: 18,
-                                    color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                                  ),
-                                  text: Text(
-                                    '正序',
-                                    style: TextStyle(
-                                      color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                                    ),
-                                  ),
-                                  space: 0,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                _invertedOrder = true;
-                                if (mounted) setState(() {});
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 6, bottom: 6, left: 5, right: 10),
-                                child: IconText(
-                                  icon: Icon(
-                                    Icons.keyboard_arrow_down,
-                                    size: 18,
-                                    color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                                  ),
-                                  text: Text(
-                                    '倒序',
-                                    style: TextStyle(
-                                      color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                                    ),
-                                  ),
-                                  space: 0,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  color: Colors.white,
-                  child: Divider(height: 1, thickness: 1),
-                ),
-                // ****************************************************************
                 // 章节列表
                 // ****************************************************************
-                _buildChapterListView(),
+                Container(
+                  color: Colors.white,
+                  child: ChapterGroupView(
+                    groups: _data.chapterGroups,
+                    complete: false,
+                    onGotoToc: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (c) => MangaTocPage(
+                          title: _data.title,
+                          groups: _data.chapterGroups,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 Container(height: 12),
                 // ****************************************************************
                 // 其他
