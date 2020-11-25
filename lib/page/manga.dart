@@ -38,7 +38,6 @@ class _MangaPageState extends State<MangaPage> {
   Manga _data;
   var _error = '';
   var _showBriefIntroduction = true;
-  var _invertedOrder = true;
 
   @override
   void initState() {
@@ -215,8 +214,8 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   color: Colors.white,
-                  child: RichText(
-                    text: _showBriefIntroduction
+                  child: SelectableText.rich(
+                    _showBriefIntroduction
                         ? TextSpan(
                             text: _data.briefIntroduction,
                             style: TextStyle(color: Colors.black),
@@ -230,6 +229,7 @@ class _MangaPageState extends State<MangaPage> {
                                     if (mounted) setState(() {});
                                   },
                               ),
+                              TextSpan(text: ' '),
                             ],
                           )
                         : TextSpan(
@@ -245,8 +245,10 @@ class _MangaPageState extends State<MangaPage> {
                                     if (mounted) setState(() {});
                                   },
                               ),
+                              TextSpan(text: ' '),
                             ],
                           ),
+                    style: Theme.of(context).textTheme.subtitle1,
                   ),
                 ),
                 Container(
@@ -295,15 +297,8 @@ class _MangaPageState extends State<MangaPage> {
                   color: Colors.white,
                   child: ChapterGroupView(
                     groups: _data.chapterGroups,
+                    mangaTitle: _data.title,
                     complete: false,
-                    onGotoToc: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (c) => MangaTocPage(
-                          title: _data.title,
-                          groups: _data.chapterGroups,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
                 Container(height: 12),

@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/page/chapter.dart';
+import 'package:manhuagui_flutter/page/manga_toc.dart';
 
 /// View for [MangaChapterGroup].
 class ChapterGroupView extends StatefulWidget {
   const ChapterGroupView({
     Key key,
     @required this.groups,
-    this.onGotoToc,
+    @required this.mangaTitle,
     @required this.complete,
   })  : assert(groups != null),
+        assert(mangaTitle != null),
         assert(complete != null),
         super(key: key);
 
   final List<MangaChapterGroup> groups;
-  final void Function() onGotoToc;
+  final String mangaTitle;
   final bool complete;
 
   @override
@@ -27,9 +29,51 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
 
   Widget _buildChapterView(TinyMangaChapter chapter, int index, {double padding, double height, double width}) {
     return Container(
-      child: OutlineButton(
-        child: Text(chapter == null ? '...' : chapter.title),
-        onPressed: chapter == null ? widget.onGotoToc : () => Fluttertoast.showToast(msg: 'TODO: ${chapter.title}'),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: OutlineButton(
+              child: Text(
+                chapter == null ? '...' : chapter.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (c) => chapter == null
+                      ? MangaTocPage(
+                          mangaTitle: widget.mangaTitle,
+                          groups: widget.groups,
+                        )
+                      : ChapterPage(
+                          chapter: chapter,
+                          mangaTitle: widget.mangaTitle,
+                        ),
+                ),
+              ),
+            ),
+          ),
+          if (chapter?.isNew == true)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(2),
+                    topRight: Radius.circular(1),
+                  ),
+                ),
+                child: Text(
+                  'NEW',
+                  style: TextStyle(fontSize: 9, color: Colors.white),
+                ),
+              ),
+            ),
+        ],
       ),
       height: height,
       width: width,
@@ -42,7 +86,7 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
   }
 
   Widget _buildSingleChapterGroupView(MangaChapterGroup group, {double hPadding, double vPadding, bool first = false}) {
-    var padding = 4.0;
+    var padding = 3.0;
     var width = (MediaQuery.of(context).size.width - 2 * hPadding - 6 * padding) / 4;
     var height = 36.0;
 
@@ -79,6 +123,11 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
           ],
         ),
       );
+      if (r != rows - 1) {
+        chaptersView.add(
+          SizedBox(height: padding * 2),
+        );
+      }
     }
 
     return Padding(

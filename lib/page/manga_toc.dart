@@ -7,13 +7,13 @@ import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
     Key key,
-    @required this.title,
+    @required this.mangaTitle,
     @required this.groups,
-  })  : assert(title != null),
+  })  : assert(mangaTitle != null),
         assert(groups != null),
         super(key: key);
 
-  final String title;
+  final String mangaTitle;
   final List<MangaChapterGroup> groups;
 
   @override
@@ -27,13 +27,20 @@ class _MangaTocPageState extends State<MangaTocPage> {
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
-        title: Text(widget.title),
+        title: Text(widget.mangaTitle),
       ),
       body: Container(
         color: Colors.white,
-        child: ChapterGroupView(
-          groups: widget.groups,
-          complete: true,
+        child: Scrollbar(
+          child: ListView(
+            children: [
+              ChapterGroupView(
+                groups: widget.groups,
+                mangaTitle: widget.mangaTitle,
+                complete: true,
+              ),
+            ],
+          ),
         ),
       ),
     );
