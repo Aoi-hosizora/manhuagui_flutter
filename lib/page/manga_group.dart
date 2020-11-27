@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/tiny_manga.dart';
+import 'package:manhuagui_flutter/page/view/tiny_manga_block.dart';
 
 /// 漫画分组
 /// Page for [MangaGroup].
@@ -40,7 +40,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
     var width = MediaQuery.of(context).size.width / 3 - vPadding * 2;
     var height = width / 3 * 4;
 
-    Widget buildMangaBlock(TinyManga manga) => TinyMangaView(
+    Widget buildMangaBlock(TinyManga manga) => TinyMangaBlockView(
           manga: manga,
           width: width,
           height: height,
@@ -116,6 +116,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         scrollController: _controller,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
+          heroTag: 'MangaGroupPage',
           onPressed: () => _controller.scrollTop(),
         ),
       ),

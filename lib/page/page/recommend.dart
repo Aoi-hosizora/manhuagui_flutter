@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
-import 'package:manhuagui_flutter/page/view/tiny_manga.dart';
+import 'package:manhuagui_flutter/page/view/tiny_manga_block.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
@@ -116,7 +116,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           ),
         );
       }
-      return TinyMangaView(
+      return TinyMangaBlockView(
         manga: manga,
         width: width,
         height: height,
@@ -212,6 +212,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         fabController: _fabController,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
+          heroTag: 'RecommendSubPage',
           onPressed: () => _controller.scrollTop(),
         ),
       ),

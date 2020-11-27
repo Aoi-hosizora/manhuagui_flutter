@@ -124,7 +124,7 @@ class _MangaPageState extends State<MangaPage> {
                       // ****************************************************************
                       // 封面
                       // ****************************************************************
-                      Padding(
+                      Container(
                         padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         child: NetworkImageView(
                           url: _data.cover,
@@ -164,13 +164,13 @@ class _MangaPageState extends State<MangaPage> {
                               space: 8,
                             ),
                             IconText(
-                              icon: Icon(Icons.library_books, size: 20, color: Colors.orange),
-                              text: Text('更新至 ${_data.newestChapter}'),
+                              icon: Icon(Icons.subject, size: 20, color: Colors.orange),
+                              text: Text((_data.finished ? '共' : '更新至') + _data.newestChapter),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                              text: Text('${_data.newestDate} ${_data.finished ? '已完结' : '连载中'}'),
+                              text: Text(_data.newestDate + (_data.finished ? '已完结' : '连载中')),
                               space: 8,
                             ),
                             SizedBox(height: 4),

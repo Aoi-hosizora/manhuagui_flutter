@@ -4,15 +4,18 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 /// View for [TinyManga].
-class TinyMangaView extends StatefulWidget {
-  const TinyMangaView({
+/// Used in [RecommendSubPage] and [MangaGroupPage].
+class TinyMangaBlockView extends StatefulWidget {
+  const TinyMangaBlockView({
     Key key,
     @required this.manga,
     @required this.width,
     @required this.height,
     @required this.vPadding,
   })  : assert(manga != null),
-        assert(height != null && width != null && vPadding != null),
+        assert(height != null),
+        assert(width != null),
+        assert(vPadding != null),
         super(key: key);
 
   final TinyManga manga;
@@ -21,10 +24,10 @@ class TinyMangaView extends StatefulWidget {
   final double vPadding;
 
   @override
-  _TinyMangaViewState createState() => _TinyMangaViewState();
+  _TinyMangaBlockViewState createState() => _TinyMangaBlockViewState();
 }
 
-class _TinyMangaViewState extends State<TinyMangaView> {
+class _TinyMangaBlockViewState extends State<TinyMangaBlockView> {
   @override
   Widget build(BuildContext context) {
     return Column(

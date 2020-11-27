@@ -34,7 +34,7 @@ class ChapterPage extends StatefulWidget {
   _ChapterPageState createState() => _ChapterPageState();
 }
 
-class _ChapterPageState extends State<ChapterPage> {
+class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClientMixin {
   PageController _controller;
   var _loading = true;
   MangaChapter _data;
@@ -45,7 +45,7 @@ class _ChapterPageState extends State<ChapterPage> {
   var _showAppBar = false;
   var _pointerDownXPosition = 0.0;
   final _kSlideWidthRatio = 0.3;
-  final _kChapterSwipeWidth = 65;
+  final _kChapterSwipeWidth = 100;
   var _swipeOffsetX = 0.0;
   var _swipeFirstOver = false;
   var _swipeLastOver = false;
@@ -241,7 +241,12 @@ class _ChapterPageState extends State<ChapterPage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     if (_loading) {
       return SafeArea(
         child: Scaffold(
@@ -344,10 +349,7 @@ class _ChapterPageState extends State<ChapterPage> {
             // ****************************************************************
             Positioned.fill(
               child: Container(
-                decoration: BoxDecoration(color: Colors.black),
-                constraints: BoxConstraints.expand(
-                  height: MediaQuery.of(context).size.height,
-                ),
+                color: Colors.black,
                 child: NotificationListener<ScrollUpdateNotification>(
                   onNotification: _onScrollNotification,
                   child: PhotoViewGallery.builder(
@@ -402,7 +404,7 @@ class _ChapterPageState extends State<ChapterPage> {
             // 上一章节
             // ****************************************************************
             AnimatedPositioned(
-              left: _swipeFirstOver ? 0 : -30,
+              left: _swipeFirstOver ? 8 : -30,
               duration: Duration(milliseconds: 300),
               child: AnimatedOpacity(
                 opacity: _swipeFirstOver ? 1.0 : 0.0,
@@ -438,7 +440,7 @@ class _ChapterPageState extends State<ChapterPage> {
             // 下一章节
             // ****************************************************************
             AnimatedPositioned(
-              right: _swipeLastOver ? 0 : -30,
+              right: _swipeLastOver ? 8 : -30,
               duration: Duration(milliseconds: 300),
               child: AnimatedOpacity(
                 opacity: _swipeLastOver ? 1.0 : 0.0,
