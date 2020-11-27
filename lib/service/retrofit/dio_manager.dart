@@ -116,6 +116,10 @@ ErrorMessage wrapError(dynamic e) {
       r.message = '${r.message[0].toUpperCase()}${r.message.substring(1)}';
       print('type: result');
       print('error: ${e.response.statusCode} ${r.code} ${r.message}');
+      var m = e.response.data as Map<String, dynamic>;
+      if (m.containsKey('error') && m['error'] is Map<String, dynamic>) {
+        print('detail: ${m['error']['detail']}');
+      }
       print('└─────────────────── WrapError ───────────────────┘');
       var text = r.code < 50000 ? r.message : '${r.code}: ${r.message}';
       return ErrorMessage(text: text, e: '${r.code}: ${r.message}'); // !!!

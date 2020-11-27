@@ -204,6 +204,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "5.2.1"
+  filesize:
+    dependency: "direct main"
+    description:
+      name: filesize
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.4"
   fixnum:
     dependency: transitive
     description:
@@ -469,6 +476,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.1"
+  photo_view:
+    dependency: "direct main"
+    description:
+      name: photo_view
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.10.3"
   platform:
     dependency: transitive
     description:

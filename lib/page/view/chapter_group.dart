@@ -47,8 +47,8 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
                           groups: widget.groups,
                         )
                       : ChapterPage(
-                          chapter: chapter,
-                          mangaTitle: widget.mangaTitle,
+                          mid: chapter.mid,
+                          cid: chapter.cid,
                         ),
                 ),
               ),
