@@ -17,14 +17,17 @@ class ChapterPage extends StatefulWidget {
     Key key,
     @required this.mid,
     @required this.cid,
+    this.initialPage = 1,
     this.showAppBar = false,
   })  : assert(mid != null),
         assert(cid != null),
+        assert(initialPage != null),
         assert(showAppBar != null),
         super(key: key);
 
   final int mid;
   final int cid;
+  final int initialPage;
   final bool showAppBar;
 
   @override
@@ -40,13 +43,21 @@ class _ChapterPageState extends State<ChapterPage> {
   var _progressValue = 1;
   var _showRegion = false;
   var _showAppBar = false;
-  double _pointerDownXPosition = 0;
-  final _kSlideWidth = 0.3;
+  var _pointerDownXPosition = 0.0;
+  final _kSlideWidthRatio = 0.3;
+  final _kChapterSwipeWidth = 65;
+  var _swipeOffsetX = 0.0;
+  var _swipeFirstOver = false;
+  var _swipeLastOver = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = PageController();
+    if (widget.initialPage > 0) {
+      _controller = PageController(initialPage: widget.initialPage - 1);
+      _currentPage = widget.initialPage;
+      _progressValue = widget.initialPage;
+    }
     _showAppBar = widget.showAppBar;
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
@@ -69,6 +80,12 @@ class _ChapterPageState extends State<ChapterPage> {
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
+      if (widget.initialPage <= 0) {
+        // <<<
+        _controller = PageController(initialPage: _data.pageCount - 1);
+        _currentPage = _data.pageCount;
+        _progressValue = _data.pageCount;
+      }
     }).catchError((e) {
       _data = null;
       _error = wrapError(e).text;
@@ -82,14 +99,14 @@ class _ChapterPageState extends State<ChapterPage> {
     _pointerDownXPosition = pos?.dx ?? 0;
   }
 
-  void _onImagePointerUp(Offset pos) {
+  void _onPointerUp(Offset pos) {
     var width = MediaQuery.of(context).size.width;
     if (pos != null) {
       var x = pos.dx;
-      // print('x: $x, y: $y, width: $width, height: $height');
-      if (x == _pointerDownXPosition && x < width * _kSlideWidth) {
+      // print('x: $x, width: $width');
+      if (x == _pointerDownXPosition && x < width * _kSlideWidthRatio) {
         _onMoveToPage(_currentPage - 1);
-      } else if (x == _pointerDownXPosition && x > width * (1 - _kSlideWidth)) {
+      } else if (x == _pointerDownXPosition && x > width * (1 - _kSlideWidthRatio)) {
         _onMoveToPage(_currentPage + 1);
       } else {
         _showAppBar = !_showAppBar;
@@ -110,14 +127,49 @@ class _ChapterPageState extends State<ChapterPage> {
   }
 
   void _onPageChanged(int page) {
+    // print('page: $page');
     _progressValue = page + 1;
     _currentPage = page + 1;
     if (mounted) setState(() {});
   }
 
+  bool _onScrollNotification(Notification n) {
+    if (n is ScrollUpdateNotification) {
+      var dx = n.dragDetails?.delta?.dx;
+      if (dx != null) {
+        _swipeOffsetX += dx;
+      } else {
+        _swipeOffsetX = 0;
+        if (_swipeFirstOver) {
+          _gotoLastChapter(gotoLastPage: true); // <<<
+        } else if (_swipeLastOver) {
+          _gotoNextChapter(); // <<<
+        }
+      }
+      if (_currentPage == 1 && _swipeOffsetX >= 0 && _swipeOffsetX < _kChapterSwipeWidth * 2) {
+        if (_swipeOffsetX > _kChapterSwipeWidth && !_swipeFirstOver) {
+          _swipeFirstOver = true;
+          if (mounted) setState(() {});
+        } else if (_swipeOffsetX <= _kChapterSwipeWidth && _swipeFirstOver) {
+          _swipeFirstOver = false;
+          if (mounted) setState(() {});
+        }
+      } else if (_currentPage == _data.pageCount && _swipeOffsetX <= 0 && _swipeOffsetX > -_kChapterSwipeWidth * 2) {
+        if (_swipeOffsetX < -_kChapterSwipeWidth && !_swipeLastOver) {
+          _swipeLastOver = true;
+          if (mounted) setState(() {});
+        } else if (_swipeOffsetX >= -_kChapterSwipeWidth && _swipeLastOver) {
+          _swipeLastOver = false;
+          if (mounted) setState(() {});
+        }
+      }
+    }
+    return true;
+  }
+
   void _onMoveToPage(int page) {
     if (page <= 0) {
-      _gotoLastChapter();
+      _gotoLastChapter(gotoLastPage: true);
     } else if (page > _data.pages.length) {
       _gotoNextChapter();
     } else {
@@ -129,7 +181,7 @@ class _ChapterPageState extends State<ChapterPage> {
     }
   }
 
-  void _gotoLastChapter() {
+  void _gotoLastChapter({bool gotoLastPage = false}) {
     if (_data.prevCid == 0) {
       showDialog(
         context: context,
@@ -153,6 +205,7 @@ class _ChapterPageState extends State<ChapterPage> {
           mid: widget.mid,
           cid: _data.prevCid,
           showAppBar: _showAppBar,
+          initialPage: gotoLastPage ? -1 : 1,
         ),
       ),
     );
@@ -249,11 +302,11 @@ class _ChapterPageState extends State<ChapterPage> {
     }
 
     var width = MediaQuery.of(context).size.width;
-    var height = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top;
+    var height = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - (_showAppBar ? 45 : 0);
     return SafeArea(
       top: !_showAppBar,
       child: Scaffold(
-        appBar: !_showAppBar && _data != null
+        appBar: !_showAppBar
             ? null
             : AppBar(
                 centerTitle: true,
@@ -271,7 +324,7 @@ class _ChapterPageState extends State<ChapterPage> {
                   ),
                   IconButton(
                     icon: Transform.rotate(
-                      angle: 180 * pi / 180,
+                      angle: pi,
                       child: Icon(Icons.arrow_right_alt),
                     ),
                     tooltip: '上一章节',
@@ -286,39 +339,137 @@ class _ChapterPageState extends State<ChapterPage> {
               ),
         body: Stack(
           children: [
+            // ****************************************************************
+            // 漫画显示
+            // ****************************************************************
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(color: Colors.black),
                 constraints: BoxConstraints.expand(
                   height: MediaQuery.of(context).size.height,
                 ),
-                child: PhotoViewGallery.builder(
-                  pageController: _controller,
-                  scrollPhysics: BouncingScrollPhysics(),
-                  backgroundDecoration: BoxDecoration(color: Colors.black),
-                  loadingBuilder: (c, ImageChunkEvent e) => ImageLoadingView(title: _currentPage.toString(), event: e),
-                  loadFailedChild: ImageLoadFailedView(title: _currentPage.toString()),
-                  onPageChanged: _onPageChanged,
-                  itemCount: _data.pages.length,
-                  builder: (c, idx) => PhotoViewGalleryPageOptions(
-                    initialScale: PhotoViewComputedScale.contained,
-                    minScale: PhotoViewComputedScale.contained / 2,
-                    maxScale: PhotoViewComputedScale.covered * 2,
-                    filterQuality: FilterQuality.high,
-                    onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
-                    onTapUp: (c, d, v) => _onImagePointerUp(d.globalPosition),
-                    imageProvider: LocalOrNetworkImageProvider(
-                      url: () async => _data.pages[idx],
-                      file: () async => null,
-                      headers: {
-                        'User-Agent': USER_AGENT,
-                        'REFERER': REFERER,
-                      },
+                child: NotificationListener<ScrollUpdateNotification>(
+                  onNotification: _onScrollNotification,
+                  child: PhotoViewGallery.builder(
+                    scrollPhysics: BouncingScrollPhysics(),
+                    backgroundDecoration: BoxDecoration(color: Colors.black),
+                    pageController: _controller,
+                    onPageChanged: _onPageChanged,
+                    itemCount: _data.pages.length,
+                    loadingBuilder: (c, ImageChunkEvent e) => Listener(
+                      onPointerUp: (e) => _onPointerUp(e.position),
+                      onPointerDown: (e) => _onPointerDown(e.position),
+                      child: ImageLoadingView(
+                        title: _currentPage.toString(),
+                        event: e,
+                        height: height,
+                        width: width,
+                      ),
+                    ),
+                    loadFailedChild: Listener(
+                      onPointerUp: (e) => _onPointerUp(e.position),
+                      onPointerDown: (e) => _onPointerDown(e.position),
+                      child: ImageLoadFailedView(
+                        title: _currentPage.toString(),
+                        height: height,
+                        width: width,
+                      ),
+                    ),
+                    // ****************************************************************
+                    // 漫画显示选项
+                    // ****************************************************************
+                    builder: (c, idx) => PhotoViewGalleryPageOptions(
+                      initialScale: PhotoViewComputedScale.contained,
+                      minScale: PhotoViewComputedScale.contained / 2,
+                      maxScale: PhotoViewComputedScale.covered * 2,
+                      filterQuality: FilterQuality.high,
+                      onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
+                      onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
+                      imageProvider: LocalOrNetworkImageProvider(
+                        url: () async => _data.pages[idx],
+                        file: () async => null,
+                        headers: {
+                          'User-Agent': USER_AGENT,
+                          'Referer': REFERER,
+                        },
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
+            // ****************************************************************
+            // 上一章节
+            // ****************************************************************
+            AnimatedPositioned(
+              left: _swipeFirstOver ? 0 : -30,
+              duration: Duration(milliseconds: 300),
+              child: AnimatedOpacity(
+                opacity: _swipeFirstOver ? 1.0 : 0.0,
+                duration: Duration(milliseconds: 500),
+                child: Container(
+                  color: Colors.black,
+                  width: 30,
+                  height: height,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Transform.rotate(
+                        angle: pi,
+                        child: Icon(
+                          Icons.arrow_right_alt,
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        '前\n往\n上\n一\n章\n节',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // ****************************************************************
+            // 下一章节
+            // ****************************************************************
+            AnimatedPositioned(
+              right: _swipeLastOver ? 0 : -30,
+              duration: Duration(milliseconds: 300),
+              child: AnimatedOpacity(
+                opacity: _swipeLastOver ? 1.0 : 0.0,
+                duration: Duration(milliseconds: 500),
+                child: Container(
+                  color: Colors.black,
+                  width: 30,
+                  height: height,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.arrow_right_alt,
+                        size: 24,
+                        color: Colors.white,
+                      ),
+                      Text(
+                        '前\n往\n下\n一\n章\n节',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // ****************************************************************
+            // 最下面的滚动条
+            // ****************************************************************
             if (_showAppBar && _data != null)
               Positioned(
                 bottom: 0,
@@ -348,6 +499,9 @@ class _ChapterPageState extends State<ChapterPage> {
                   ),
                 ),
               ),
+            // ****************************************************************
+            // 右下角的提示文字
+            // ****************************************************************
             if (!_showAppBar && _data != null)
               Positioned(
                 bottom: 0,
@@ -361,6 +515,9 @@ class _ChapterPageState extends State<ChapterPage> {
                   ),
                 ),
               ),
+            // ****************************************************************
+            // 帮助区域显示
+            // ****************************************************************
             if (_showRegion)
               Positioned.fill(
                 child: GestureDetector(
@@ -368,8 +525,8 @@ class _ChapterPageState extends State<ChapterPage> {
                     children: [
                       Container(
                         height: height,
-                        width: width * _kSlideWidth,
-                        color: Colors.amber.withAlpha(200),
+                        width: width * _kSlideWidthRatio,
+                        color: Colors.yellow[800].withAlpha(200),
                         child: Center(
                           child: Text(
                             '上\n一\n页',
@@ -382,8 +539,8 @@ class _ChapterPageState extends State<ChapterPage> {
                       ),
                       Container(
                         height: height,
-                        width: width * (1 - 2 * _kSlideWidth),
-                        color: Colors.blue.withAlpha(200),
+                        width: width * (1 - 2 * _kSlideWidthRatio),
+                        color: Colors.blue[300].withAlpha(200),
                         child: Center(
                           child: Text(
                             '菜单',
@@ -396,8 +553,8 @@ class _ChapterPageState extends State<ChapterPage> {
                       ),
                       Container(
                         height: height,
-                        width: width * _kSlideWidth,
-                        color: Colors.deepOrange.withAlpha(200),
+                        width: width * _kSlideWidthRatio,
+                        color: Colors.red[200].withAlpha(200),
                         child: Center(
                           child: Text(
                             '下\n一\n页',
@@ -416,6 +573,9 @@ class _ChapterPageState extends State<ChapterPage> {
                   },
                 ),
               ),
+            // ****************************************************************
+            // ================================================================
+            // ****************************************************************
           ],
         ),
       ),
