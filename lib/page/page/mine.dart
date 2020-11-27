@@ -8,9 +8,13 @@ class MineSubPage extends StatefulWidget {
   _MineSubPageState createState() => _MineSubPageState();
 }
 
-class _MineSubPageState extends State<MineSubPage> {
+class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: Center(
         child: Text('MineSubPage'),

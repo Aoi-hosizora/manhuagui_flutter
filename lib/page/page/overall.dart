@@ -18,6 +18,8 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   ScrollMoreController _controller;
   ScrollFabController _fabController;
   var _data = <TinyManga>[];
+  int _total;
+  var _order = MangaOrder.NEW;
 
   @override
   void initState() {
@@ -37,12 +39,14 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
     var dio = DioManager.getInstance().dio;
     var client = RestClient(dio);
     ErrorMessage err;
-    var result = await client.getAllMangas(page: page, order: MangaOrder.NEW).catchError((e) {
+    var result = await client.getAllMangas(page: page, order: _order).catchError((e) {
       err = wrapError(e);
     });
     if (err != null) {
       return Future.error(err.text);
     }
+    _total = result.data.total;
+    if (mounted) setState(() {});
     return result.data.data;
   }
 
@@ -70,6 +74,54 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         onStateChanged: (_) => _fabController.hide(),
         separator: Divider(height: 1),
         itemBuilder: (c, item) => TinyMangaLineView(manga: item),
+        topWidget: Container(
+          color: Colors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 5),
+                      child: Text('全部漫画 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                    ),
+                    Container(
+                      height: 26,
+                      width: 75,
+                      child: DropdownButton<MangaOrder>(
+                        value: _order,
+                        items: <MangaOrder>[MangaOrder.POPULAR, MangaOrder.NEW, MangaOrder.UPDATE]
+                            .map(
+                              (o) => DropdownMenuItem(
+                                value: o,
+                                child: Text(o.toTitle()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) {
+                          if (v != _order) {
+                            _order = v;
+                            if (mounted) setState(() {});
+                            _controller.refresh();
+                          }
+                        },
+                        isExpanded: true,
+                        style: Theme.of(context).textTheme.bodyText2,
+                        underline: Container(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(height: 1, thickness: 1.5),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: ScrollFloatingActionButton(
         scrollController: _controller,

@@ -15,6 +15,10 @@ class Category {
   Map<String, dynamic> toJson() => _$CategoryToJson(this);
 
   static const fields = <String>['name', 'title', 'url'];
+
+  TinyCategory toTiny() {
+    return TinyCategory(name: name, title: title);
+  }
 }
 
 /*
