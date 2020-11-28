@@ -19,7 +19,7 @@ class GenreSubPage extends StatefulWidget {
 class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClientMixin {
   ScrollMoreController _controller;
   ScrollFabController _fabController;
-  var _order = MangaOrder.NEW;
+  var _order = MangaOrder.POPULAR;
   var _genreLoading = true;
   var _genres = <Category>[];
   var _genreError = '';
@@ -100,9 +100,14 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var workingHeight = MediaQuery.of(context).size.width - MediaQuery.of(context).padding.top - 45;
-    var filterHeight = 26.0 + 5 * 2;
+    var workingHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 45 - kBottomNavigationBarHeight;
+    var workingWidth = MediaQuery.of(context).size.width;
+    var filterHeight = 26.0 + 5 * 2 - 1;
+
     return Scaffold(
+      // ****************************************************************
+      // 加载 Genre
+      // ****************************************************************
       body: PlaceholderText.from(
         isLoading: _genreLoading,
         errorText: _genreError,
@@ -115,6 +120,9 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
         onRefresh: () => _loadGenres(),
         childBuilder: (c) => Stack(
           children: [
+            // ****************************************************************
+            // 检索结果
+            // ****************************************************************
             Positioned.fill(
               child: PaginationListView<TinyManga>(
                 controller: _controller,
@@ -138,16 +146,19 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ****************************************************************
+                      // 检索条件
+                      // ****************************************************************
                       Container(
                         color: Colors.white,
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                InkWell(
                                   onTap: () {
                                     _showGenreFilter = !_showGenreFilter;
                                     _showAgeFilter = false;
@@ -155,6 +166,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                                     _showStatusFilter = false;
                                     if (mounted) setState(() {});
                                   },
+                                  // 剧情
                                   child: Container(
                                     padding: EdgeInsets.only(left: 15),
                                     height: 26,
@@ -170,10 +182,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                                     ),
                                   ),
                                 ),
-                              ),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
+                                // 受众
+                                InkWell(
                                   onTap: () {
                                     _showGenreFilter = false;
                                     _showAgeFilter = !_showAgeFilter;
@@ -196,10 +206,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                                     ),
                                   ),
                                 ),
-                              ),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
+                                // 地区
+                                InkWell(
                                   onTap: () {
                                     _showGenreFilter = false;
                                     _showAgeFilter = false;
@@ -222,10 +230,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                                     ),
                                   ),
                                 ),
-                              ),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
+                                // 进度
+                                InkWell(
                                   onTap: () {
                                     _showGenreFilter = false;
                                     _showAgeFilter = false;
@@ -248,12 +254,15 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                       Divider(height: 1, thickness: 1),
+                      // ****************************************************************
+                      // 检索排序
+                      // ****************************************************************
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         child: Row(
@@ -299,12 +308,16 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                 ),
               ),
             ),
+            // ****************************************************************
+            // 剧情分类
+            // ****************************************************************
             if (_showGenreFilter) ...[
               Positioned(
-                bottom: 0,
+                top: filterHeight,
                 child: GestureDetector(
                   child: Container(
-                    height: workingHeight - filterHeight,
+                    height: workingHeight,
+                    width: workingWidth,
                     color: Colors.black.withAlpha(100),
                   ),
                   onTap: () {
@@ -329,12 +342,16 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                 ),
               ),
             ],
+            // ****************************************************************
+            // 受众分类
+            // ****************************************************************
             if (_showAgeFilter) ...[
               Positioned(
-                bottom: 0,
+                top: filterHeight,
                 child: GestureDetector(
                   child: Container(
-                    height: workingHeight - filterHeight,
+                    height: workingHeight,
+                    width: workingWidth,
                     color: Colors.black.withAlpha(100),
                   ),
                   onTap: () {
@@ -359,12 +376,16 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                 ),
               ),
             ],
+            // ****************************************************************
+            // 地区分类
+            // ****************************************************************
             if (_showZoneFilter) ...[
               Positioned(
-                bottom: 0,
+                top: filterHeight,
                 child: GestureDetector(
                   child: Container(
-                    height: workingHeight - filterHeight,
+                    height: workingHeight,
+                    width: workingWidth,
                     color: Colors.black.withAlpha(100),
                   ),
                   onTap: () {
@@ -389,12 +410,16 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                 ),
               ),
             ],
+            // ****************************************************************
+            // 进度分类
+            // ****************************************************************
             if (_showStatusFilter) ...[
               Positioned(
-                bottom: 0,
+                top: filterHeight,
                 child: GestureDetector(
                   child: Container(
-                    height: workingHeight - filterHeight,
+                    height: workingHeight,
+                    width: workingWidth,
                     color: Colors.black.withAlpha(100),
                   ),
                   onTap: () {
@@ -419,6 +444,9 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                 ),
               ),
             ],
+            // ****************************************************************
+            // ================================================================
+            // ****************************************************************
           ],
         ),
       ),
