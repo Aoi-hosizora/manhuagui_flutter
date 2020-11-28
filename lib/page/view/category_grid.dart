@@ -5,12 +5,14 @@ class CategoryGridView extends StatefulWidget {
   const CategoryGridView({
     Key key,
     @required this.categories,
+    @required this.selectedCategory,
     @required this.onCategoryClicked,
   })  : assert(categories != null),
         assert(onCategoryClicked != null),
         super(key: key);
 
   final List<TinyCategory> categories;
+  final TinyCategory selectedCategory;
   final void Function(TinyCategory) onCategoryClicked;
 
   @override
@@ -19,6 +21,7 @@ class CategoryGridView extends StatefulWidget {
 
 class _CategoryGridViewState extends State<CategoryGridView> {
   Widget _buildCategoryGrid(TinyCategory category, int index, {double padding, double height, double width}) {
+    var selected = widget.selectedCategory != null && widget.selectedCategory.name == category.name;
     return Container(
       height: height,
       width: width,
@@ -27,14 +30,28 @@ class _CategoryGridViewState extends State<CategoryGridView> {
           : index == 3
               ? EdgeInsets.only(left: padding)
               : EdgeInsets.symmetric(horizontal: padding),
-      child: OutlineButton(
-        child: Text(
-          category.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+      child: Container(
+        decoration: BoxDecoration(
+          color: selected ? Theme.of(context).primaryColor : Colors.white,
+          border: selected ? null : Border.all(color: Colors.grey[300]),
+          borderRadius: BorderRadius.circular(4.0),
         ),
-        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        onPressed: () => widget.onCategoryClicked(category),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => widget.onCategoryClicked(category),
+            child: Center(
+              child: Text(
+                category.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -74,11 +91,21 @@ class _CategoryGridViewState extends State<CategoryGridView> {
       }
     }
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
+    return Container(
+      color: Colors.white,
+      width: MediaQuery.of(context).size.width,
       child: Column(
         children: [
-          ...categoriesView,
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ...categoriesView,
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1),
         ],
       ),
     );

@@ -56,8 +56,14 @@ var ages = <TinyCategory>[
   TinyCategory(title: '通用', name: 'tongyong'),
 ];
 
+// 按剧情
+var genres = <TinyCategory>[
+  TinyCategory(title: '全部', name: 'all'),
+  // ...
+];
+
 // 按进度
-var status = <TinyCategory>[
+var statuses = <TinyCategory>[
   TinyCategory(title: '全部', name: 'all'),
   TinyCategory(title: '连载', name: 'lianzai'),
   TinyCategory(title: '完结', name: 'wanjie'),
