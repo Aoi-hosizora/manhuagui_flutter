@@ -19,7 +19,9 @@ class GenreSubPage extends StatefulWidget {
 class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClientMixin {
   ScrollMoreController _controller;
   ScrollFabController _fabController;
-  var _order = MangaOrder.POPULAR;
+  var _data = <TinyManga>[];
+  int _total;
+  var _order = MangaOrder.byPopular;
   var _genreLoading = true;
   var _genres = <Category>[];
   var _genreError = '';
@@ -31,8 +33,6 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   var _showAgeFilter = false;
   var _showZoneFilter = false;
   var _showStatusFilter = false;
-  var _data = <TinyManga>[];
-  int _total;
 
   @override
   void initState() {
@@ -158,6 +158,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
+                                // TODO
                                 InkWell(
                                   onTap: () {
                                     _showGenreFilter = !_showGenreFilter;
@@ -276,8 +277,9 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                               height: 26,
                               width: 75,
                               child: DropdownButton<MangaOrder>(
+                                // TODO
                                 value: _order,
-                                items: <MangaOrder>[MangaOrder.POPULAR, MangaOrder.NEW, MangaOrder.UPDATE]
+                                items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate]
                                     .map(
                                       (o) => DropdownMenuItem(
                                         value: o,
@@ -293,10 +295,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                                   }
                                 },
                                 isExpanded: true,
-                                style: Theme.of(context).textTheme.bodyText2,
-                                underline: Container(
-                                  color: Colors.white,
-                                ),
+                                style: Theme.of(context).textTheme.bodyText1,
+                                underline: Container(color: Colors.white),
                               ),
                             ),
                           ],

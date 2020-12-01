@@ -17,6 +17,7 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> {
+  DateTime _lastBackPressedTime;
   var _currentIndex = 0;
   var _items = <Tuple2<IconData, String>>[
     Tuple2(Icons.home, '首页'),
@@ -39,8 +40,6 @@ class _IndexPageState extends State<IndexPage> {
     return true;
   }
 
-  DateTime _lastBackPressedTime;
-
   Future<bool> _onWillPop() async {
     DateTime now = DateTime.now();
     if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime) > Duration(seconds: 2)) {
@@ -55,7 +54,7 @@ class _IndexPageState extends State<IndexPage> {
   Widget build(BuildContext context) {
     _checkPermission().then((ok) {
       if (!ok) {
-        Fluttertoast.showToast(msg: 'Permission denied');
+        Fluttertoast.showToast(msg: '权限授予失败，退出应用');
         SystemNavigator.pop();
       }
     });

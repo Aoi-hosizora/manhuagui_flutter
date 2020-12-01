@@ -9,15 +9,15 @@ class MangaGroupPage extends StatefulWidget {
   const MangaGroupPage({
     Key key,
     @required this.group,
-    @required this.type,
+    @required this.title,
     @required this.icon,
   })  : assert(group != null),
-        assert(type != null),
+        assert(title != null),
         assert(icon != null),
         super(key: key);
 
   final MangaGroup group;
-  final String type;
+  final String title;
   final IconData icon;
 
   @override
@@ -35,23 +35,22 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    var title = widget.group.title.isEmpty ? widget.type : (widget.type + "・" + widget.group.title);
-    var vPadding = 5.0;
-    var width = MediaQuery.of(context).size.width / 3 - vPadding * 2;
+    final hSpace = 5.0;
+    var width = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
     var height = width / 3 * 4;
 
-    Widget buildMangaBlock(TinyManga manga) => TinyMangaBlockView(
+    Widget buildMangaBlock(TinyManga manga, {bool left = false}) => TinyMangaBlockView(
           manga: manga,
           width: width,
           height: height,
-          vPadding: vPadding,
+          margin: EdgeInsets.only(left: left ? hSpace : 0, right: hSpace),
         );
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
-        title: Text(title),
+        title: Text(widget.title),
       ),
       body: Container(
         color: Colors.white,
@@ -60,49 +59,43 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
           children: [
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Row(
-                children: [
-                  Icon(widget.icon, size: 20, color: Colors.orange),
-                  SizedBox(width: 6),
-                  Text(title, style: Theme.of(context).textTheme.subtitle1),
-                ],
+              child: IconText(
+                icon: Icon(widget.icon, size: 20, color: Colors.orange),
+                text: Text(widget.title, style: Theme.of(context).textTheme.subtitle1),
+                space: 6,
               ),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildMangaBlock(widget.group.mangas[0]),
+                buildMangaBlock(widget.group.mangas[0], left: true),
                 buildMangaBlock(widget.group.mangas[1]),
                 buildMangaBlock(widget.group.mangas[2]),
               ],
             ),
             SizedBox(height: 6),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildMangaBlock(widget.group.mangas[3]),
+                buildMangaBlock(widget.group.mangas[3], left: true),
                 buildMangaBlock(widget.group.mangas[4]),
                 buildMangaBlock(widget.group.mangas[5]),
               ],
             ),
             SizedBox(height: 6),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildMangaBlock(widget.group.mangas[6]),
+                buildMangaBlock(widget.group.mangas[6], left: true),
                 buildMangaBlock(widget.group.mangas[7]),
                 buildMangaBlock(widget.group.mangas[8]),
               ],
             ),
             SizedBox(height: 6),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildMangaBlock(widget.group.mangas[9]),
+                buildMangaBlock(widget.group.mangas[9], left: true),
                 if (widget.group.mangas.length == 12) ...[
                   buildMangaBlock(widget.group.mangas[10]),
                   buildMangaBlock(widget.group.mangas[11]),

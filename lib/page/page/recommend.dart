@@ -46,18 +46,18 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     var dio = DioManager.getInstance().dio;
     var client = RestClient(dio);
-    return client.getHotSerialMangas().then((hotSerial) async {
+    return Future.value(0).then((_) async {
+      var hot = await client.getHotSerialMangas();
       var finished = await client.getFinishedMangas();
-      var newest = await client.getLatestMangas();
+      var latest = await client.getLatestMangas();
 
       _error = '';
       _data.clear();
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-
-      _data.addAll([hotSerial.data, finished.data, newest.data]);
+      _data.addAll([hot.data, finished.data, latest.data]);
     }).catchError((e) {
-      _data = [];
+      _data.clear();
       _error = wrapError(e).text;
     }).whenComplete(() {
       _loading = false;
@@ -65,7 +65,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     });
   }
 
-  Widget _buildMangaColumn(MangaGroup group, String type, {bool first = false}) {
+  Widget _buildColumn(MangaGroup group, String type, {bool first = false}) {
     var title = group.title.isEmpty ? type : (type + "・" + group.title);
     var icon = type == '热门连载'
         ? Icons.whatshot
@@ -75,54 +75,25 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 ? Icons.fiber_new
                 : Icons.bookmark_border;
 
-    var vPadding = 5.0;
-    var width = MediaQuery.of(context).size.width / 3 - vPadding * 2;
+    final hSpace = 5.0;
+    var width = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
     var height = width / 3 * 4;
 
-    Widget buildTinyMangaView(TinyManga manga) {
-      if (manga == null) {
-        return Container(
-          margin: EdgeInsets.symmetric(horizontal: vPadding),
+    Widget buildBlock(TinyManga manga, {bool left = false}) => TinyMangaBlockView(
+          manga: manga,
           width: width,
           height: height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              stops: [0, 0.5, 1],
-              colors: [
-                Colors.blue[100],
-                Colors.orange[200],
-                Colors.purple[100],
-              ],
-            ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              child: Center(
-                child: Text('查看更多...'),
-              ),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (c) => MangaGroupPage(
-                    group: group,
-                    type: type,
-                    icon: icon,
-                  ),
-                ),
+          margin: EdgeInsets.only(left: left ? hSpace : 0, right: hSpace),
+          onMorePressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (c) => MangaGroupPage(
+                group: group,
+                title: title,
+                icon: icon,
               ),
             ),
           ),
         );
-      }
-      return TinyMangaBlockView(
-        manga: manga,
-        width: width,
-        height: height,
-        vPadding: vPadding,
-      );
-    }
 
     return Container(
       color: Colors.white,
@@ -132,38 +103,27 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         children: [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: Colors.orange,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.subtitle1,
-                ),
-              ],
+            child: IconText(
+              icon: Icon(icon, size: 20, color: Colors.orange),
+              text: Text(title, style: Theme.of(context).textTheme.subtitle1),
+              space: 6,
             ),
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildTinyMangaView(group.mangas[0]),
-              buildTinyMangaView(group.mangas[1]),
-              buildTinyMangaView(group.mangas[2]),
+              buildBlock(group.mangas[0], left: true),
+              buildBlock(group.mangas[1]),
+              buildBlock(group.mangas[2]),
             ],
           ),
           SizedBox(height: 6),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildTinyMangaView(group.mangas[3]),
-              buildTinyMangaView(group.mangas[4]),
-              buildTinyMangaView(null),
+              buildBlock(group.mangas[3], left: true),
+              buildBlock(group.mangas[4]),
+              buildBlock(null),
             ],
           ),
         ],
@@ -178,30 +138,30 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      body: RefreshIndicator(
-        key: _indicatorKey,
-        onRefresh: _loadData,
-        child: PlaceholderText.from(
-          isLoading: _loading,
-          errorText: _error,
-          isEmpty: _data?.isNotEmpty != true,
-          setting: PlaceholderSetting(
-            showProgress: true,
-            loadingText: '加载中',
-            retryText: '重试',
-          ),
+      body: PlaceholderText.from(
+        isLoading: _loading,
+        errorText: _error,
+        isEmpty: _data?.isNotEmpty != true,
+        setting: PlaceholderSetting(
+          showProgress: true,
+          loadingText: '加载中',
+          retryText: '重试',
+        ),
+        onRefresh: () => _loadData(),
+        onChanged: (_) => _fabController.hide(),
+        childBuilder: (c) => RefreshIndicator(
+          key: _indicatorKey,
           onRefresh: () => _loadData(),
-          onChanged: (_) => _fabController.hide(),
-          childBuilder: (c) => Scrollbar(
+          child: Scrollbar(
             child: ListView(
               controller: _controller,
               children: [
-                _buildMangaColumn(_data[0].topGroup, "热门连载", first: true),
-                _buildMangaColumn(_data[1].topGroup, "经典完结"),
-                _buildMangaColumn(_data[2].topGroup, "最新上架"),
-                for (var group in _data[0].groups) _buildMangaColumn(group, "热门连载"),
-                for (var group in _data[1].groups) _buildMangaColumn(group, "经典完结"),
-                for (var group in _data[2].groups) _buildMangaColumn(group, "最新上架"),
+                _buildColumn(_data[0].topGroup, "热门连载", first: true),
+                _buildColumn(_data[1].topGroup, "经典完结"),
+                _buildColumn(_data[2].topGroup, "最新上架"),
+                for (var group in _data[0].groups) _buildColumn(group, "热门连载"),
+                for (var group in _data[1].groups) _buildColumn(group, "经典完结"),
+                for (var group in _data[2].groups) _buildColumn(group, "最新上架"),
               ],
             ),
           ),

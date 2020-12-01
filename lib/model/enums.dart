@@ -3,39 +3,39 @@ import 'package:json_annotation/json_annotation.dart';
 enum MangaOrder {
   /// 人气最旺
   @JsonValue('popular')
-  POPULAR,
+  byPopular,
 
   /// 最新发布
   @JsonValue('new')
-  NEW,
+  byNew,
 
   /// 最新更新
   @JsonValue('update')
-  UPDATE,
+  byUpdate,
 }
 
 enum AuthorOrder {
   /// 人气最旺
   @JsonValue('popular')
-  POPULAR,
+  byPopular,
 
   /// 作品最多
   @JsonValue('comic')
-  COMIC,
+  byComic,
 
   /// 最新收录
   @JsonValue('update')
-  UPDATE
+  byUpdate
 }
 
 extension MangaOrderExtension on MangaOrder {
   String toJson() {
     switch (this) {
-      case MangaOrder.POPULAR:
+      case MangaOrder.byPopular:
         return 'popular';
-      case MangaOrder.NEW:
+      case MangaOrder.byNew:
         return 'new';
-      case MangaOrder.UPDATE:
+      case MangaOrder.byUpdate:
         return 'update';
       default:
         return '?';
@@ -44,11 +44,11 @@ extension MangaOrderExtension on MangaOrder {
 
   String toTitle() {
     switch (this) {
-      case MangaOrder.POPULAR:
+      case MangaOrder.byPopular:
         return '人气最旺';
-      case MangaOrder.NEW:
+      case MangaOrder.byNew:
         return '最新发布';
-      case MangaOrder.UPDATE:
+      case MangaOrder.byUpdate:
         return '最新更新';
       default:
         return '未知排序';
@@ -59,11 +59,11 @@ extension MangaOrderExtension on MangaOrder {
 extension AuthorOrderExtension on AuthorOrder {
   String toJson() {
     switch (this) {
-      case AuthorOrder.POPULAR:
+      case AuthorOrder.byPopular:
         return 'popular';
-      case AuthorOrder.COMIC:
+      case AuthorOrder.byComic:
         return 'comic';
-      case AuthorOrder.UPDATE:
+      case AuthorOrder.byUpdate:
         return 'update';
       default:
         return '?';
@@ -72,11 +72,11 @@ extension AuthorOrderExtension on AuthorOrder {
 
   String toTitle() {
     switch (this) {
-      case AuthorOrder.POPULAR:
+      case AuthorOrder.byPopular:
         return '人气最旺';
-      case AuthorOrder.COMIC:
+      case AuthorOrder.byComic:
         return '作品最多';
-      case AuthorOrder.UPDATE:
+      case AuthorOrder.byUpdate:
         return '最新收录';
       default:
         return '未知排序';

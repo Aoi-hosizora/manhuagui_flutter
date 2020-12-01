@@ -35,16 +35,14 @@ class NetworkImageView extends StatelessWidget {
           height: this.height,
           color: Colors.orange[50],
         ),
-        errorWidget: (context, url, error) => GestureDetector(
-          child: Container(
-            child: Icon(
-              Icons.broken_image,
-              color: Colors.grey,
-            ),
-            width: this.width,
-            height: this.height,
-            color: Colors.orange[50],
+        errorWidget: (context, url, error) => Container(
+          child: Icon(
+            Icons.broken_image,
+            color: Colors.grey,
           ),
+          width: this.width,
+          height: this.height,
+          color: Colors.orange[50],
         ),
         fadeOutDuration: Duration(milliseconds: 1000),
         fadeOutCurve: Curves.easeOut,

@@ -3,7 +3,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
-/// View for [TinyManga].
+/// View for [TinyManga] (Block style).
 /// Used in [RecommendSubPage] and [MangaGroupPage].
 class TinyMangaBlockView extends StatefulWidget {
   const TinyMangaBlockView({
@@ -11,17 +11,19 @@ class TinyMangaBlockView extends StatefulWidget {
     @required this.manga,
     @required this.width,
     @required this.height,
-    @required this.vPadding,
-  })  : assert(manga != null),
-        assert(height != null),
+    @required this.margin,
+    this.onMorePressed,
+  })  : assert(height != null),
         assert(width != null),
-        assert(vPadding != null),
+        assert(margin != null),
+        assert(manga != null || onMorePressed != null),
         super(key: key);
 
   final TinyManga manga;
   final double width;
   final double height;
-  final double vPadding;
+  final EdgeInsets margin;
+  final void Function() onMorePressed;
 
   @override
   _TinyMangaBlockViewState createState() => _TinyMangaBlockViewState();
@@ -30,13 +32,42 @@ class TinyMangaBlockView extends StatefulWidget {
 class _TinyMangaBlockViewState extends State<TinyMangaBlockView> {
   @override
   Widget build(BuildContext context) {
+    if (widget.manga == null) {
+      return Container(
+        margin: widget.margin,
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: [0, 0.5, 1],
+            colors: [
+              Colors.blue[100],
+              Colors.orange[200],
+              Colors.purple[100],
+            ],
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            child: Center(
+              child: Text('查看更多...'),
+            ),
+            onTap: widget.onMorePressed,
+          ),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Stack(
           children: [
             Container(
-              margin: EdgeInsets.symmetric(horizontal: widget.vPadding),
+              margin: widget.margin,
               width: widget.width,
               height: widget.height,
               child: Stack(
@@ -68,7 +99,7 @@ class _TinyMangaBlockViewState extends State<TinyMangaBlockView> {
             Positioned(
               bottom: 0,
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: widget.vPadding),
+                margin: widget.margin,
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 width: widget.width,
                 decoration: BoxDecoration(
@@ -94,7 +125,8 @@ class _TinyMangaBlockViewState extends State<TinyMangaBlockView> {
         ),
         Container(
           width: widget.width,
-          margin: EdgeInsets.symmetric(horizontal: widget.vPadding, vertical: 3),
+          margin: widget.margin,
+          padding: EdgeInsets.symmetric(vertical: 3),
           child: Text(
             widget.manga.title,
             maxLines: 1,

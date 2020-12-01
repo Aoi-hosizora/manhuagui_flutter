@@ -8,9 +8,13 @@ class SubscribeSubPage extends StatefulWidget {
   _SubscribeSubPageState createState() => _SubscribeSubPageState();
 }
 
-class _SubscribeSubPageState extends State<SubscribeSubPage> {
+class _SubscribeSubPageState extends State<SubscribeSubPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,

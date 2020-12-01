@@ -19,7 +19,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   ScrollFabController _fabController;
   var _data = <TinyManga>[];
   int _total;
-  var _order = MangaOrder.NEW;
+  var _order = MangaOrder.byNew;
 
   @override
   void initState() {
@@ -77,7 +77,6 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         topWidget: Container(
           color: Colors.white,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -92,8 +91,12 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                       height: 26,
                       width: 75,
                       child: DropdownButton<MangaOrder>(
+                        // TODO
+                        isExpanded: true,
+                        style: Theme.of(context).textTheme.bodyText1,
+                        underline: Container(color: Colors.white),
                         value: _order,
-                        items: <MangaOrder>[MangaOrder.POPULAR, MangaOrder.NEW, MangaOrder.UPDATE]
+                        items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate]
                             .map(
                               (o) => DropdownMenuItem(
                                 value: o,
@@ -108,11 +111,6 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                             _controller.refresh();
                           }
                         },
-                        isExpanded: true,
-                        style: Theme.of(context).textTheme.bodyText2,
-                        underline: Container(
-                          color: Colors.white,
-                        ),
                       ),
                     ),
                   ],

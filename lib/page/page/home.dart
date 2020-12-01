@@ -57,7 +57,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),
-            tooltip: '打开浏览器',
+            tooltip: '浏览器打开',
             onPressed: () => launchInBrowser(
               context: context,
               url: BASE_WEB_URL,
