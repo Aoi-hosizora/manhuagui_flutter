@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/enums.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
@@ -87,31 +88,19 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                       padding: EdgeInsets.only(left: 5),
                       child: Text('全部漫画 (共 ${_total == null ? '?' : _total.toString()} 部)'),
                     ),
-                    Container(
-                      height: 26,
-                      width: 75,
-                      child: DropdownButton<MangaOrder>(
-                        // TODO
-                        isExpanded: true,
-                        style: Theme.of(context).textTheme.bodyText1,
-                        underline: Container(color: Colors.white),
-                        value: _order,
-                        items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate]
-                            .map(
-                              (o) => DropdownMenuItem(
-                                value: o,
-                                child: Text(o.toTitle()),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != _order) {
-                            _order = v;
-                            if (mounted) setState(() {});
-                            _controller.refresh();
-                          }
-                        },
-                      ),
+                    OptionPopupView<MangaOrder>(
+                      title: _order.toTitle(),
+                      top: 4,
+                      value: _order,
+                      items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                      onSelected: (o) {
+                        if (_order != o) {
+                          _order = o;
+                          if (mounted) setState(() {});
+                          _controller.refresh();
+                        }
+                      },
+                      optionBuilder: (c, v) => v.toTitle(),
                     ),
                   ],
                 ),

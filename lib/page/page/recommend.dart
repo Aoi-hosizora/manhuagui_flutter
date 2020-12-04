@@ -46,8 +46,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     var dio = DioManager.getInstance().dio;
     var client = RestClient(dio);
-    return Future.value(0).then((_) async {
-      var hot = await client.getHotSerialMangas();
+    return client.getHotSerialMangas().then((hot) async {
       var finished = await client.getFinishedMangas();
       var latest = await client.getLatestMangas();
 
@@ -138,21 +137,21 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      body: PlaceholderText.from(
-        isLoading: _loading,
-        errorText: _error,
-        isEmpty: _data?.isNotEmpty != true,
-        setting: PlaceholderSetting(
-          showProgress: true,
-          loadingText: '加载中',
-          retryText: '重试',
-        ),
+      body: RefreshIndicator(
+        key: _indicatorKey,
         onRefresh: () => _loadData(),
-        onChanged: (_) => _fabController.hide(),
-        childBuilder: (c) => RefreshIndicator(
-          key: _indicatorKey,
+        child: PlaceholderText.from(
+          isLoading: _loading,
+          errorText: _error,
+          isEmpty: _data?.isNotEmpty != true,
+          setting: PlaceholderSetting(
+            showProgress: true,
+            loadingText: '加载中',
+            retryText: '重试',
+          ),
           onRefresh: () => _loadData(),
-          child: Scrollbar(
+          onChanged: (_) => _fabController.hide(),
+          childBuilder: (c) => Scrollbar(
             child: ListView(
               controller: _controller,
               children: [
