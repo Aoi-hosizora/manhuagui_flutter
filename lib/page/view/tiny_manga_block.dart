@@ -13,8 +13,8 @@ class TinyMangaBlockView extends StatefulWidget {
     @required this.height,
     @required this.margin,
     this.onMorePressed,
-  })  : assert(height != null),
-        assert(width != null),
+  })  : assert(width != null),
+        assert(height != null),
         assert(margin != null),
         assert(manga != null || onMorePressed != null),
         super(key: key);
@@ -34,9 +34,9 @@ class _TinyMangaBlockViewState extends State<TinyMangaBlockView> {
   Widget build(BuildContext context) {
     if (widget.manga == null) {
       return Container(
-        margin: widget.margin,
         width: widget.width,
         height: widget.height,
+        margin: widget.margin,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -67,9 +67,9 @@ class _TinyMangaBlockViewState extends State<TinyMangaBlockView> {
         Stack(
           children: [
             Container(
-              margin: widget.margin,
               width: widget.width,
               height: widget.height,
+              margin: widget.margin,
               child: Stack(
                 children: [
                   NetworkImageView(

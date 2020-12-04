@@ -28,8 +28,18 @@ class ChapterGroupView extends StatefulWidget {
 class _ChapterGroupViewState extends State<ChapterGroupView> {
   var _invertedOrder = true;
 
-  Widget _buildChapterView(TinyMangaChapter chapter, int index, {double padding, double height, double width}) {
+  Widget _buildGridItem(TinyMangaChapter chapter, int index, {double hSpace, double width, double height}) {
+    // ****************************************************************
+    // 每个章节
+    // ****************************************************************
     return Container(
+      width: width,
+      height: height,
+      margin: index == 0
+          ? EdgeInsets.only(right: hSpace)
+          : index == 3
+              ? EdgeInsets.only(left: hSpace)
+              : EdgeInsets.symmetric(horizontal: hSpace),
       child: Stack(
         children: [
           Positioned.fill(
@@ -76,21 +86,10 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
             ),
         ],
       ),
-      height: height,
-      width: width,
-      margin: index == 0
-          ? EdgeInsets.only(right: padding)
-          : index == 3
-              ? EdgeInsets.only(left: padding)
-              : EdgeInsets.symmetric(horizontal: padding),
     );
   }
 
-  Widget _buildSingleChapterGroupView(MangaChapterGroup group, {double hPadding, double vPadding, bool first = false}) {
-    var padding = 3.0;
-    var width = (MediaQuery.of(context).size.width - 2 * hPadding - 6 * padding) / 4;
-    var height = 36.0;
-
+  Widget _buildSingleGroup(MangaChapterGroup group, {double hPadding, double vPadding, bool first = false}) {
     var chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
     if (!widget.complete) {
       if (first) {
@@ -104,20 +103,28 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
       }
     }
 
-    var chaptersView = <Widget>[];
+    var hSpace = 3.0;
+    var vSpace = 2 * hSpace;
+    var width = (MediaQuery.of(context).size.width - 2 * hPadding - 6 * hSpace) / 4; // |   ▢  ▢  ▢  ▢   |
+    var height = 36.0;
+
+    var gridRows = <Widget>[];
     var rows = (chapters.length.toDouble() / 4).ceil();
     for (var r = 0; r < rows; r++) {
       var columns = <TinyMangaChapter>[
         for (var i = 4 * r; i < 4 * (r + 1) && i < chapters.length; i++) chapters[i],
       ];
-      chaptersView.add(
+      gridRows.add(
+        // ****************************************************************
+        // 分组中的每一行
+        // ****************************************************************
         Row(
           children: [
             for (var i = 0; i < columns.length; i++)
-              _buildChapterView(
+              _buildGridItem(
                 columns[i],
                 i,
-                padding: padding,
+                hSpace: hSpace,
                 width: width,
                 height: height,
               ),
@@ -125,24 +132,25 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
         ),
       );
       if (r != rows - 1) {
-        chaptersView.add(
-          SizedBox(height: padding * 2),
+        gridRows.add(
+          SizedBox(height: vSpace),
         );
       }
     }
 
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: vPadding / 2),
-      child: Column(
-        children: [
-          Text(
-            '・${group.title}・',
-            style: Theme.of(context).textTheme.subtitle1,
-          ),
-          SizedBox(height: vPadding),
-          ...chaptersView,
-        ],
-      ),
+    // ****************************************************************
+    // 单个章节分组
+    // ****************************************************************
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '・${group.title}・',
+          style: Theme.of(context).textTheme.subtitle1,
+        ),
+        SizedBox(height: vPadding),
+        ...gridRows,
+      ],
     );
   }
 
@@ -170,6 +178,9 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
                 '章节列表',
                 style: Theme.of(context).textTheme.subtitle1,
               ),
+              // ****************************************************************
+              // 两个排序按钮
+              // ****************************************************************
               Row(
                 children: [
                   Material(
@@ -235,22 +246,25 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
           child: Divider(height: 1, thickness: 1),
         ),
         // ****************************************************************
-        // 章节列表
+        // 章节分组列表
         // ****************************************************************
         Container(
           padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding / 2),
           child: Column(
             children: [
               // ****************************************************************
-              // 章节分组
+              // 单个章节分组
               // ****************************************************************
               for (var i = 0; i < widget.groups.length; i++)
-                _buildSingleChapterGroupView(
-                  widget.groups[i],
-                  first: i == 0,
-                  hPadding: hPadding,
-                  vPadding: vPadding,
-                )
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: vPadding / 2),
+                  child: _buildSingleGroup(
+                    widget.groups[i],
+                    first: i == 0,
+                    hPadding: hPadding,
+                    vPadding: vPadding,
+                  ),
+                ),
             ],
           ),
         ),

@@ -93,9 +93,10 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                       top: 4,
                       value: _order,
                       items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                      onSelected: (o) {
+                      onSelect: (o) {
                         if (_order != o) {
                           _order = o;
+                          _data.clear();
                           if (mounted) setState(() {});
                           _controller.refresh();
                         }
