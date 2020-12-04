@@ -148,7 +148,7 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
             // ****************************************************************
             // 选项界面
             // ****************************************************************
-            child: _OptionPopupRouteView(
+            child: _OptionPopupRouteView<T>(
               value: value,
               items: items,
               optionBuilder: optionBuilder,

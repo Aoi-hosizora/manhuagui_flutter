@@ -96,7 +96,6 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                       onSelect: (o) {
                         if (_order != o) {
                           _order = o;
-                          _data.clear();
                           if (mounted) setState(() {});
                           _controller.refresh();
                         }
