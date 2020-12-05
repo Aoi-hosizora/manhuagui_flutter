@@ -11,12 +11,14 @@ class OptionPopupView<T> extends StatefulWidget {
     this.doHighlight = false,
     @required this.optionBuilder,
     @required this.onSelect,
+    this.enable = true,
   })  : assert(title != null),
         assert(value != null),
         assert(doHighlight != null),
         assert(items != null),
         assert(onSelect != null),
         assert(optionBuilder != null),
+        assert(enable != null),
         super(key: key);
 
   final String title;
@@ -26,6 +28,7 @@ class OptionPopupView<T> extends StatefulWidget {
   final List<T> items;
   final String Function(BuildContext, T) optionBuilder;
   final void Function(T) onSelect;
+  final bool enable;
 
   @override
   _OptionPopupRouteViewState<T> createState() => _OptionPopupRouteViewState<T>();
@@ -67,7 +70,7 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: _onTap,
+        onTap: widget.enable ? _onTap : null,
         child: Container(
           height: 26,
           width: 88,
@@ -75,15 +78,19 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
             alignment: IconTextAlignment.r2l,
             mainAxisAlignment: MainAxisAlignment.center,
             space: 0,
-            textPadding:  EdgeInsets.only(left: 10),
+            textPadding: EdgeInsets.only(left: 10),
             icon: Icon(
               Icons.arrow_drop_down,
-              color: Colors.grey[700],
+              color: !widget.enable ? Colors.grey[300] : Colors.grey[700],
             ),
             text: Text(
               widget.title,
               style: TextStyle(
-                color: _selected && widget.doHighlight ? Colors.orange : Colors.black,
+                color: !widget.enable
+                    ? Colors.grey
+                    : _selected && widget.doHighlight
+                        ? Colors.orange
+                        : Colors.black,
               ),
             ),
           ),

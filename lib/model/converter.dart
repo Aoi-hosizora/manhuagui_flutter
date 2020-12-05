@@ -14,12 +14,12 @@ bool _matchJson(List<String> fields, Map<String, dynamic> json) {
   return true;
 }
 
-bool _matchPageJson<T>(Map<String, dynamic> json) {
+bool _matchPageJson<T, T2>(Map<String, dynamic> json) {
   if (!_matchJson(ResultPage.fields, json)) {
     return false;
   }
   if ((json['data'] as List).length == 0) {
-    return true;
+    return ResultPage<T>() is T2;
   }
   return _jsonMapType(json['data'][0]) == T;
 }
@@ -86,29 +86,29 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return MangaGroupList.fromJson(json) as T; // MangaPageGroupList
       }
       // Result<ResultPage<?>>
-      if (_matchPageJson<Manga>(json)) {
+      if (_matchPageJson<Manga, T>(json)) {
         return ResultPage.fromJson(json, Manga()) as T; // MangaPage
-      } else if (_matchPageJson<SmallManga>(json)) {
+      } else if (_matchPageJson<SmallManga, T>(json)) {
         return ResultPage.fromJson(json, SmallManga()) as T; // SmallMangaPage
-      } else if (_matchPageJson<TinyManga>(json)) {
+      } else if (_matchPageJson<TinyManga, T>(json)) {
         return ResultPage.fromJson(json, TinyManga()) as T; // TinyMangaPage
-      } else if (_matchPageJson<MangaChapter>(json)) {
+      } else if (_matchPageJson<MangaChapter, T>(json)) {
         return ResultPage.fromJson(json, MangaChapter()) as T; // MangaChapter
-      } else if (_matchPageJson<TinyMangaChapter>(json)) {
+      } else if (_matchPageJson<TinyMangaChapter, T>(json)) {
         return ResultPage.fromJson(json, TinyMangaChapter()) as T; // TinyMangaChapter
-      } else if (_matchPageJson<Category>(json)) {
+      } else if (_matchPageJson<Category, T>(json)) {
         return ResultPage.fromJson(json, Category()) as T; // Category
-      } else if (_matchPageJson<Author>(json)) {
+      } else if (_matchPageJson<Author, T>(json)) {
         return ResultPage.fromJson(json, Author()) as T; // Author
-      } else if (_matchPageJson<SmallAuthor>(json)) {
+      } else if (_matchPageJson<SmallAuthor, T>(json)) {
         return ResultPage.fromJson(json, SmallAuthor()) as T; // SmallAuthor
-      } else if (_matchPageJson<TinyAuthor>(json)) {
+      } else if (_matchPageJson<TinyAuthor, T>(json)) {
         return ResultPage.fromJson(json, TinyAuthor()) as T; // TinyAuthor
-      } else if (_matchPageJson<MangaGroup>(json)) {
+      } else if (_matchPageJson<MangaGroup, T>(json)) {
         return ResultPage.fromJson(json, MangaGroup()) as T; // MangaPageGroup
-      } else if (_matchPageJson<MangaChapterGroup>(json)) {
+      } else if (_matchPageJson<MangaChapterGroup, T>(json)) {
         return ResultPage.fromJson(json, MangaChapterGroup()) as T; // MangaChapterGroup
-      } else if (_matchPageJson<MangaGroupList>(json)) {
+      } else if (_matchPageJson<MangaGroupList, T>(json)) {
         return ResultPage.fromJson(json, MangaGroupList()) as T; // MangaPageGroupList
       }
     }

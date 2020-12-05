@@ -6,7 +6,6 @@ import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
-import 'package:manhuagui_flutter/page/view/lazy_indexed_stack.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页

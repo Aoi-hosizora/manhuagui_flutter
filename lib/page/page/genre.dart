@@ -26,10 +26,16 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   var _data = <TinyManga>[];
   int _total;
   var _order = MangaOrder.byPopular;
+  var _lastOrder = MangaOrder.byPopular;
   var _selectedGenre = allGenres[0];
   var _selectedAge = allAges[0];
   var _selectedZone = allZones[0];
   var _selectedStatus = allStatuses[0];
+  var _lastGenre = allGenres[0];
+  var _lastAge = allAges[0];
+  var _lastZone = allZones[0];
+  var _lastStatus = allStatuses[0];
+  var _disableOption = false;
 
   @override
   void initState() {
@@ -113,99 +119,128 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
           strategy: PaginationStrategy.offsetBased,
           getDataByOffset: _getData,
           initialPage: 1,
-          onAppend: (l) => Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画'),
-          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+          onStartLoading: () => mountedSetState(() => _disableOption = true),
+          onStopLoading: () => mountedSetState(() => _disableOption = false),
+          onAppend: (l) {
+            if (l.length > 0) {
+              Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
+            }
+            _lastOrder = _order;
+            _lastGenre = _selectedGenre;
+            _lastAge = _selectedAge;
+            _lastZone = _selectedZone;
+            _lastStatus = _selectedStatus;
+            if (mounted) setState(() {});
+          },
+          onError: (e) {
+            Fluttertoast.showToast(msg: e.toString());
+            _order = _lastOrder;
+            _selectedGenre = _lastGenre;
+            _selectedAge = _lastAge;
+            _selectedZone = _lastZone;
+            _selectedStatus = _lastStatus;
+            if (mounted) setState(() {});
+          },
           clearWhenRefreshing: false,
           clearWhenError: false,
-          updateOnlyIfNotEmpty: true,
+          updateOnlyIfNotEmpty: false,
           refreshFirst: true,
           placeholderSetting: PlaceholderSetting().toChinese(),
           onStateChanged: (_, __) => _fabController.hide(),
-          padding: EdgeInsets.symmetric(vertical: 3),
+          padding: EdgeInsets.zero,
           separator: Divider(height: 1),
           itemBuilder: (c, item) => TinyMangaLineView(manga: item),
+          outTopWidget: Container(
+            color: Colors.white,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // ****************************************************************
+                      // 检索条件
+                      // ****************************************************************
+                      OptionPopupView<TinyCategory>(
+                        title: _selectedGenre.name == 'all' ? '剧情' : _selectedGenre.title,
+                        top: 4,
+                        doHighlight: true,
+                        value: _selectedGenre,
+                        items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
+                        onSelect: (g) {
+                          if (_selectedGenre != g) {
+                            _lastGenre = _selectedGenre;
+                            _selectedGenre = g;
+                            if (mounted) setState(() {});
+                            _controller.refresh();
+                          }
+                        },
+                        optionBuilder: (c, v) => v.title,
+                        enable: !_disableOption,
+                      ),
+                      OptionPopupView<TinyCategory>(
+                        title: _selectedAge.name == 'all' ? '受众' : _selectedAge.title,
+                        top: 4,
+                        doHighlight: true,
+                        value: _selectedAge,
+                        items: allAges,
+                        onSelect: (a) {
+                          if (_selectedAge != a) {
+                            _lastAge = _selectedAge;
+                            _selectedAge = a;
+                            if (mounted) setState(() {});
+                            _controller.refresh();
+                          }
+                        },
+                        optionBuilder: (c, v) => v.title,
+                        enable: !_disableOption,
+                      ),
+                      OptionPopupView<TinyCategory>(
+                        title: _selectedZone.name == 'all' ? '地区' : _selectedZone.title,
+                        top: 4,
+                        doHighlight: true,
+                        value: _selectedZone,
+                        items: allZones,
+                        onSelect: (z) {
+                          if (_selectedZone != z) {
+                            _lastZone = _selectedZone;
+                            _selectedZone = z;
+                            if (mounted) setState(() {});
+                            _controller.refresh();
+                          }
+                        },
+                        optionBuilder: (c, v) => v.title,
+                        enable: !_disableOption,
+                      ),
+                      OptionPopupView<TinyCategory>(
+                        title: _selectedStatus.name == 'all' ? '进度' : _selectedStatus.title,
+                        top: 4,
+                        doHighlight: true,
+                        value: _selectedStatus,
+                        items: allStatuses,
+                        onSelect: (s) {
+                          if (_selectedStatus != s) {
+                            _lastStatus = _selectedStatus;
+                            _selectedStatus = s;
+                            if (mounted) setState(() {});
+                            _controller.refresh();
+                          }
+                        },
+                        optionBuilder: (c, v) => v.title,
+                        enable: !_disableOption,
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, thickness: 1),
+              ],
+            ),
+          ),
           topWidget: Container(
             color: Colors.white,
             child: Column(
               children: [
-                // ****************************************************************
-                // 检索条件
-                // ****************************************************************
-                Container(
-                  color: Colors.white,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 5),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          OptionPopupView<TinyCategory>(
-                            title: _selectedGenre.name == 'all' ? '剧情' : _selectedGenre.title,
-                            top: 4,
-                            doHighlight: true,
-                            value: _selectedGenre,
-                            items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
-                            onSelect: (g) {
-                              if (_selectedGenre != g) {
-                                _selectedGenre = g;
-                                if (mounted) setState(() {});
-                                _controller.refresh();
-                              }
-                            },
-                            optionBuilder: (c, v) => v.title,
-                          ),
-                          OptionPopupView<TinyCategory>(
-                            title: _selectedAge.name == 'all' ? '受众' : _selectedAge.title,
-                            top: 4,
-                            doHighlight: true,
-                            value: _selectedAge,
-                            items: allAges,
-                            onSelect: (a) {
-                              if (_selectedAge != a) {
-                                _selectedAge = a;
-                                if (mounted) setState(() {});
-                                _controller.refresh();
-                              }
-                            },
-                            optionBuilder: (c, v) => v.title,
-                          ),
-                          OptionPopupView<TinyCategory>(
-                            title: _selectedZone.name == 'all' ? '地区' : _selectedZone.title,
-                            top: 4,
-                            doHighlight: true,
-                            value: _selectedZone,
-                            items: allZones,
-                            onSelect: (z) {
-                              if (_selectedZone != z) {
-                                _selectedZone = z;
-                                if (mounted) setState(() {});
-                                _controller.refresh();
-                              }
-                            },
-                            optionBuilder: (c, v) => v.title,
-                          ),
-                          OptionPopupView<TinyCategory>(
-                            title: _selectedStatus.name == 'all' ? '进度' : _selectedStatus.title,
-                            top: 4,
-                            doHighlight: true,
-                            value: _selectedStatus,
-                            items: allStatuses,
-                            onSelect: (s) {
-                              if (_selectedStatus != s) {
-                                _selectedStatus = s;
-                                if (mounted) setState(() {});
-                                _controller.refresh();
-                              }
-                            },
-                            optionBuilder: (c, v) => v.title,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Divider(height: 1, thickness: 1),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: Row(
@@ -226,12 +261,14 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
                         onSelect: (o) {
                           if (_order != o) {
+                            _lastOrder = _order;
                             _order = o;
                             if (mounted) setState(() {});
                             _controller.refresh();
                           }
                         },
                         optionBuilder: (c, v) => v.toTitle(),
+                        enable: !_disableOption,
                       ),
                     ],
                   ),

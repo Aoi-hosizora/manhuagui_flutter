@@ -22,6 +22,8 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   var _data = <TinyManga>[];
   int _total;
   var _order = MangaOrder.byNew;
+  var _lastOrder = MangaOrder.byNew;
+  var _disableOption = false;
 
   @override
   void initState() {
@@ -65,11 +67,23 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         strategy: PaginationStrategy.offsetBased,
         getDataByOffset: _getData,
         initialPage: 1,
-        onAppend: (l) => Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画'),
-        onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+        onStartLoading: () => mountedSetState(() => _disableOption = true),
+        onStopLoading: () => mountedSetState(() => _disableOption = false),
+        onAppend: (l) {
+          if (l.length > 0) {
+            Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
+          }
+          _lastOrder = _order;
+          if (mounted) setState(() {});
+        },
+        onError: (e) {
+          Fluttertoast.showToast(msg: e.toString());
+          _order = _lastOrder;
+          if (mounted) setState(() {});
+        },
         clearWhenRefreshing: false,
         clearWhenError: false,
-        updateOnlyIfNotEmpty: true,
+        updateOnlyIfNotEmpty: false,
         refreshFirst: true,
         placeholderSetting: PlaceholderSetting().toChinese(),
         onStateChanged: (_, __) => _fabController.hide(),
@@ -96,12 +110,14 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                       items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
                       onSelect: (o) {
                         if (_order != o) {
+                          _lastOrder = _order;
                           _order = o;
                           if (mounted) setState(() {});
                           _controller.refresh();
                         }
                       },
                       optionBuilder: (c, v) => v.toTitle(),
+                      enable: !_disableOption,
                     ),
                   ],
                 ),
