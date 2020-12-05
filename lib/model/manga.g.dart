@@ -165,3 +165,59 @@ Map<String, dynamic> _$MangaGroupListToJson(MangaGroupList instance) =>
       'groups': instance.groups,
       'other_groups': instance.otherGroups,
     };
+
+MangaRank _$MangaRankFromJson(Map<String, dynamic> json) {
+  return MangaRank(
+    mid: json['mid'] as int,
+    title: json['title'] as String,
+    url: json['url'] as String,
+    finished: json['finished'] as bool,
+    authors: (json['authors'] as List)
+        ?.map((e) =>
+            e == null ? null : TinyAuthor.fromJson(e as Map<String, dynamic>))
+        ?.toList(),
+    newestChapter: json['newest_chapter'] as String,
+    newestDate: json['newest_date'] as String,
+    order: json['order'] as int,
+    score: (json['score'] as num)?.toDouble(),
+    trend: json['trend'] as int,
+  );
+}
+
+Map<String, dynamic> _$MangaRankToJson(MangaRank instance) => <String, dynamic>{
+      'mid': instance.mid,
+      'title': instance.title,
+      'url': instance.url,
+      'finished': instance.finished,
+      'authors': instance.authors,
+      'newest_chapter': instance.newestChapter,
+      'newest_date': instance.newestDate,
+      'order': instance.order,
+      'score': instance.score,
+      'trend': instance.trend,
+    };
+
+ShelfManga _$ShelfMangaFromJson(Map<String, dynamic> json) {
+  return ShelfManga(
+    mid: json['mid'] as int,
+    title: json['title'] as String,
+    cover: json['cover'] as String,
+    url: json['url'] as String,
+    newestChapter: json['newest_chapter'] as String,
+    newestDuration: json['newest_duration'] as String,
+    lastChapter: json['last_chapter'] as String,
+    lastDuration: json['last_duration'] as String,
+  );
+}
+
+Map<String, dynamic> _$ShelfMangaToJson(ShelfManga instance) =>
+    <String, dynamic>{
+      'mid': instance.mid,
+      'title': instance.title,
+      'cover': instance.cover,
+      'url': instance.url,
+      'newest_chapter': instance.newestChapter,
+      'newest_duration': instance.newestDuration,
+      'last_chapter': instance.lastChapter,
+      'last_duration': instance.lastDuration,
+    };

@@ -272,4 +272,95 @@ class _RestClient implements RestClient {
     final value = Result<ResultPage<SmallManga>>.fromJson(_result.data);
     return value;
   }
+
+  @override
+  Future<Result<ResultPage<MangaRank>>> getDayRanking({type}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'type': type};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/rank/day',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<ResultPage<MangaRank>>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<MangaRank>>> getWeekRanking({type}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'type': type};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/rank/week',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<ResultPage<MangaRank>>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<MangaRank>>> getMonthRanking({type}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'type': type};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/rank/month',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<ResultPage<MangaRank>>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<MangaRank>>> getTotalRanking({type}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'type': type};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/rank/total',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<ResultPage<MangaRank>>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<Comment>>> getMangaComments({mid, page}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'page': page};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>(
+        '/comment/manga/{uid}',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<ResultPage<Comment>>.fromJson(_result.data);
+    return value;
+  }
 }

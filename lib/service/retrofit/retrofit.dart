@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/enums.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
@@ -51,4 +52,19 @@ abstract class RestClient {
 
   @GET('/author/{aid}/manga')
   Future<Result<ResultPage<SmallManga>>> getAuthorMangas({@Path() int aid, @Query('page') int page, @Query('order') MangaOrder order});
+
+  @GET('/rank/day')
+  Future<Result<ResultPage<MangaRank>>> getDayRanking({@Query('type') String type});
+
+  @GET('/rank/week')
+  Future<Result<ResultPage<MangaRank>>> getWeekRanking({@Query('type') String type});
+
+  @GET('/rank/month')
+  Future<Result<ResultPage<MangaRank>>> getMonthRanking({@Query('type') String type});
+
+  @GET('/rank/total')
+  Future<Result<ResultPage<MangaRank>>> getTotalRanking({@Query('type') String type});
+
+  @GET('/comment/manga/{uid}')
+  Future<Result<ResultPage<Comment>>> getMangaComments({@Path() int mid, @Query('page') int page});
 }

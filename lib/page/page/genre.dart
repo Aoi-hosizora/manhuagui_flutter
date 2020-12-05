@@ -273,7 +273,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                     ],
                   ),
                 ),
-                Divider(height: 1, thickness: 1.5),
+                Divider(height: 1, thickness: 1),
               ],
             ),
           ),

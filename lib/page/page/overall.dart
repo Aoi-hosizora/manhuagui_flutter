@@ -122,7 +122,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                   ],
                 ),
               ),
-              Divider(height: 1, thickness: 1.5),
+              Divider(height: 1, thickness: 1),
             ],
           ),
         ),

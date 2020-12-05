@@ -108,3 +108,45 @@ class MangaGroupList {
 
   static const fields = <String>['title', 'top_group', 'groups', 'other_groups'];
 }
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class MangaRank {
+  int mid;
+  String title;
+  String url;
+  bool finished;
+  List<TinyAuthor> authors;
+  String newestChapter;
+  String newestDate;
+  int order;
+  double score;
+  int trend;
+
+  MangaRank({this.mid, this.title, this.url, this.finished, this.authors, this.newestChapter, this.newestDate, this.order, this.score, this.trend});
+
+  factory MangaRank.fromJson(Map<String, dynamic> json) => _$MangaRankFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MangaRankToJson(this);
+
+  static const fields = <String>['mid', 'title', 'url', 'finished', 'authors', 'newest_chapter', 'newest_date', 'order', 'score', 'trend'];
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class ShelfManga {
+  int mid;
+  String title;
+  String cover;
+  String url;
+  String newestChapter;
+  String newestDuration;
+  String lastChapter;
+  String lastDuration;
+
+  ShelfManga({this.mid, this.title, this.cover, this.url, this.newestChapter, this.newestDuration, this.lastChapter, this.lastDuration});
+
+  factory ShelfManga.fromJson(Map<String, dynamic> json) => _$ShelfMangaFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
+
+  static const fields = <String>['mid', 'title', 'cover', 'url', 'newest_chapter', 'newest_duration', 'last_chapter', 'last_duration'];
+}
