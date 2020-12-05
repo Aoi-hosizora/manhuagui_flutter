@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
@@ -58,15 +59,15 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
         strategy: PaginationStrategy.offsetBased,
         getDataByOffset: _getData,
         initialPage: 1,
-        refreshFirst: true,
+        onAppend: (l) => Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画'),
+        onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+        clearWhenRefreshing: false,
+        clearWhenError: false,
         updateOnlyIfNotEmpty: true,
+        refreshFirst: true,
+        placeholderSetting: PlaceholderSetting().toChinese(),
+        onStateChanged: (_, __) => _fabController.hide(),
         padding: EdgeInsets.symmetric(vertical: 3),
-        placeholderSetting: PlaceholderSetting(
-          showProgress: true,
-          loadingText: '加载中',
-          retryText: '重试',
-        ),
-        onStateChanged: (_) => _fabController.hide(),
         separator: Divider(height: 1),
         itemBuilder: (c, item) => TinyMangaLineView(manga: item),
       ),

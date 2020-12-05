@@ -71,10 +71,11 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
         child: Container(
           height: 26,
           width: 88,
-          padding: EdgeInsets.only(left: 10),
           child: IconText(
             alignment: IconTextAlignment.r2l,
+            mainAxisAlignment: MainAxisAlignment.center,
             space: 0,
+            textPadding:  EdgeInsets.only(left: 10),
             icon: Icon(
               Icons.arrow_drop_down,
               color: Colors.grey[700],

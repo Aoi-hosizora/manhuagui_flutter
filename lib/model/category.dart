@@ -1,3 +1,4 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'category.g.dart';
@@ -21,22 +22,36 @@ class Category {
   }
 }
 
-/*
-zone:   (all|japan|hongkong|other|europe|china|korea)
-age:    (all|shaonv|shaonian|qingnian|ertong|tongyong)
-status: (all|lianzai|wanjie)
-genre:  (all|...)
-*/
-
 class TinyCategory {
   String name;
   String title;
 
   TinyCategory({this.name, this.title});
+
+  @override
+  bool operator ==(Object other) {
+    return other is TinyCategory && other.name == this.name;
+  }
+
+  @override
+  int get hashCode => hash2(this.name, this.title);
 }
 
+/*
+genre:  (all|...)
+zone:   (all|japan|hongkong|other|europe|china|korea)
+age:    (all|shaonv|shaonian|qingnian|ertong|tongyong)
+status: (all|lianzai|wanjie)
+*/
+
+// 按剧情
+var allGenres = <TinyCategory>[
+  TinyCategory(title: '全部', name: 'all'),
+  // ...
+];
+
 // 按地区
-var zones = <TinyCategory>[
+var allZones = <TinyCategory>[
   TinyCategory(title: '全部', name: 'all'),
   TinyCategory(title: '日本', name: 'japan'),
   TinyCategory(title: '港台', name: 'hongkong'),
@@ -47,7 +62,7 @@ var zones = <TinyCategory>[
 ];
 
 // 按受众
-var ages = <TinyCategory>[
+var allAges = <TinyCategory>[
   TinyCategory(title: '全部', name: 'all'),
   TinyCategory(title: '少女', name: 'shaonv'),
   TinyCategory(title: '少年', name: 'shaonian'),
@@ -56,14 +71,8 @@ var ages = <TinyCategory>[
   TinyCategory(title: '通用', name: 'tongyong'),
 ];
 
-// 按剧情
-var genres = <TinyCategory>[
-  TinyCategory(title: '全部', name: 'all'),
-  // ...
-];
-
 // 按进度
-var statuses = <TinyCategory>[
+var allStatuses = <TinyCategory>[
   TinyCategory(title: '全部', name: 'all'),
   TinyCategory(title: '连载', name: 'lianzai'),
   TinyCategory(title: '完结', name: 'wanjie'),

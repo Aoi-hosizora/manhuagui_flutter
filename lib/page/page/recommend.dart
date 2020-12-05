@@ -144,13 +144,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           isLoading: _loading,
           errorText: _error,
           isEmpty: _data?.isNotEmpty != true,
-          setting: PlaceholderSetting(
-            showProgress: true,
-            loadingText: '加载中',
-            retryText: '重试',
-          ),
+          setting: PlaceholderSetting().toChinese(),
           onRefresh: () => _loadData(),
-          onChanged: (_) => _fabController.hide(),
+          onChanged: (_, __) => _fabController.hide(),
           childBuilder: (c) => Scrollbar(
             child: ListView(
               controller: _controller,

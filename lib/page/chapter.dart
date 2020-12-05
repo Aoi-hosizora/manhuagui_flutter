@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/page/view/image_loading.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:photo_view/photo_view.dart';

@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
+import 'package:manhuagui_flutter/page/view/lazy_indexed_stack.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -62,9 +63,10 @@ class _IndexPageState extends State<IndexPage> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        body: IndexedStack(
+        body: LazyIndexedStack(
           index: _currentIndex,
-          children: _pages,
+          itemCount: _pages.length,
+          itemBuilder: (_, i) => _pages[i],
         ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,

@@ -91,11 +91,7 @@ class _MangaPageState extends State<MangaPage> {
           isLoading: _loading,
           errorText: _error,
           isEmpty: _data == null,
-          setting: PlaceholderSetting(
-            showProgress: true,
-            loadingText: '加载中',
-            retryText: '重试',
-          ),
+          setting: PlaceholderSetting().toChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => Scrollbar(
             child: ListView(
