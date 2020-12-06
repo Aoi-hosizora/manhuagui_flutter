@@ -72,7 +72,7 @@ class _MangaPageState extends State<MangaPage> {
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
-        title: Text(widget.title),
+        title: Text(_data?.title ?? widget.title),
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),

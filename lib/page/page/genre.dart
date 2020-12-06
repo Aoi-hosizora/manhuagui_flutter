@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
-import 'package:manhuagui_flutter/model/enums.dart';
+import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
@@ -163,7 +163,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                       // 检索条件
                       // ****************************************************************
                       OptionPopupView<TinyCategory>(
-                        title: _selectedGenre.name == 'all' ? '剧情' : _selectedGenre.title,
+                        title: _selectedGenre.isAll() ? '剧情' : _selectedGenre.title,
                         top: 4,
                         doHighlight: true,
                         value: _selectedGenre,
@@ -180,7 +180,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         enable: !_disableOption,
                       ),
                       OptionPopupView<TinyCategory>(
-                        title: _selectedAge.name == 'all' ? '受众' : _selectedAge.title,
+                        title: _selectedAge.isAll() ? '受众' : _selectedAge.title,
                         top: 4,
                         doHighlight: true,
                         value: _selectedAge,
@@ -197,7 +197,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         enable: !_disableOption,
                       ),
                       OptionPopupView<TinyCategory>(
-                        title: _selectedZone.name == 'all' ? '地区' : _selectedZone.title,
+                        title: _selectedZone.isAll() ? '地区' : _selectedZone.title,
                         top: 4,
                         doHighlight: true,
                         value: _selectedZone,
@@ -214,7 +214,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         enable: !_disableOption,
                       ),
                       OptionPopupView<TinyCategory>(
-                        title: _selectedStatus.name == 'all' ? '进度' : _selectedStatus.title,
+                        title: _selectedStatus.isAll() ? '进度' : _selectedStatus.title,
                         top: 4,
                         doHighlight: true,
                         value: _selectedStatus,

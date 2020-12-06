@@ -2,6 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
 
@@ -14,14 +15,14 @@ bool _matchJson(List<String> fields, Map<String, dynamic> json) {
   return true;
 }
 
-bool _matchPageJson<T, T2>(Map<String, dynamic> json) {
+bool _matchPageJson<TItem, TPage>(Map<String, dynamic> json) {
   if (!_matchJson(ResultPage.fields, json)) {
     return false;
   }
   if ((json['data'] as List).length == 0) {
-    return ResultPage<T>() is T2;
+    return ResultPage<TItem>() is TPage;
   }
-  return _jsonMapType(json['data'][0]) == T;
+  return _jsonMapType(json['data'][0]) == TItem;
 }
 
 Type _jsonMapType(Map<String, dynamic> json) {
@@ -31,10 +32,10 @@ Type _jsonMapType(Map<String, dynamic> json) {
     return SmallManga;
   } else if (_matchJson(TinyManga.fields, json)) {
     return TinyManga;
-  } else if (_matchJson(MangaRank.fields, json)) {
-    return MangaRank;
   } else if (_matchJson(ShelfManga.fields, json)) {
     return ShelfManga;
+  } else if (_matchJson(MangaRank.fields, json)) {
+    return MangaRank;
   } else if (_matchJson(MangaChapter.fields, json)) {
     return MangaChapter;
   } else if (_matchJson(TinyMangaChapter.fields, json)) {
@@ -74,10 +75,10 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return SmallManga.fromJson(json) as T; // SmallManga
       } else if (_matchJson(TinyManga.fields, json)) {
         return TinyManga.fromJson(json) as T; // TinyManga
-      } else if (_matchJson(MangaRank.fields, json)) {
-        return MangaRank.fromJson(json) as T; // MangaRank
       } else if (_matchJson(ShelfManga.fields, json)) {
         return ShelfManga.fromJson(json) as T; // ShelfManga
+      } else if (_matchJson(MangaRank.fields, json)) {
+        return MangaRank.fromJson(json) as T; // MangaRank
       } else if (_matchJson(MangaChapter.fields, json)) {
         return MangaChapter.fromJson(json) as T; // MangaChapter
       } else if (_matchJson(TinyMangaChapter.fields, json)) {
@@ -108,10 +109,10 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return ResultPage.fromJson(json, SmallManga()) as T; // SmallManga
       } else if (_matchPageJson<TinyManga, T>(json)) {
         return ResultPage.fromJson(json, TinyManga()) as T; // TinyManga
-      } else if (_matchPageJson<MangaRank, T>(json)) {
-        return ResultPage.fromJson(json, MangaRank()) as T; // MangaRank
       } else if (_matchPageJson<ShelfManga, T>(json)) {
         return ResultPage.fromJson(json, ShelfManga()) as T; // ShelfManga
+      } else if (_matchPageJson<MangaRank, T>(json)) {
+        return ResultPage.fromJson(json, MangaRank()) as T; // MangaRank
       } else if (_matchPageJson<MangaChapter, T>(json)) {
         return ResultPage.fromJson(json, MangaChapter()) as T; // MangaChapter
       } else if (_matchPageJson<TinyMangaChapter, T>(json)) {
