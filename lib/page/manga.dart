@@ -5,6 +5,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
+import 'package:manhuagui_flutter/page/view/list_text.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
@@ -144,15 +145,19 @@ class _MangaPageState extends State<MangaPage> {
                               text: Text('${_data.publishYear} ${_data.mangaZone}'),
                               space: 8,
                             ),
-                            IconText(
-                              icon: Icon(Icons.bookmark, size: 20, color: Colors.orange),
-                              text: Text('${_data.genres.map((e) => e.title).join(' ')}'),
-                              space: 8,
+                            Row(
+                              children: [
+                                Icon(Icons.bookmark, size: 20, color: Colors.orange),
+                                SizedBox(width: 8),
+                                GenreListText(genres: _data.genres),
+                              ],
                             ),
-                            IconText(
-                              icon: Icon(Icons.person, size: 20, color: Colors.orange),
-                              text: Text('${_data.authors.map((e) => e.name).join(' ')}'),
-                              space: 8,
+                            Row(
+                              children: [
+                                Icon(Icons.person, size: 20, color: Colors.orange),
+                                SizedBox(width: 8),
+                                AuthorListText(authors: _data.authors),
+                              ],
                             ),
                             IconText(
                               icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),

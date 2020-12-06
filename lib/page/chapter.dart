@@ -246,71 +246,12 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   Widget build(BuildContext context) {
     super.build(context);
 
-    if (_loading) {
-      return SafeArea(
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(
-            child: SizedBox(
-              height: 40,
-              width: 40,
-              child: CircularProgressIndicator(),
-            ),
-          ),
-        ),
-      );
-    } else if (_data == null) {
-      return SafeArea(
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(5),
-                  child: Icon(
-                    Icons.error,
-                    size: 50,
-                    color: Colors.grey,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                  child: Text(
-                    _error?.isNotEmpty == true ? _error : '未知错误',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: Theme.of(context).textTheme.headline6.fontSize,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(5),
-                  child: OutlineButton(
-                    borderSide: BorderSide(color: Colors.grey),
-                    child: Text(
-                      '重试',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    onPressed: () => _loadData(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - (_showAppBar ? 45 : 0);
     return SafeArea(
       top: !_showAppBar,
       child: Scaffold(
-        appBar: !_showAppBar
+        appBar: _loading || _data == null || !_showAppBar
             ? null
             : AppBar(
                 centerTitle: true,
@@ -341,243 +282,262 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   ),
                 ],
               ),
-        body: Stack(
-          children: [
-            // ****************************************************************
-            // 漫画显示
-            // ****************************************************************
-            Positioned.fill(
-              child: Container(
-                color: Colors.black,
-                child: NotificationListener<ScrollUpdateNotification>(
-                  onNotification: _onScrollNotification,
-                  child: PhotoViewGallery.builder(
-                    scrollPhysics: BouncingScrollPhysics(),
-                    backgroundDecoration: BoxDecoration(color: Colors.black),
-                    pageController: _controller,
-                    onPageChanged: _onPageChanged,
-                    itemCount: _data.pages.length,
-                    loadingBuilder: (c, ImageChunkEvent e) => Listener(
-                      onPointerUp: (e) => _onPointerUp(e.position),
-                      onPointerDown: (e) => _onPointerDown(e.position),
-                      child: ImageLoadingView(
-                        title: _currentPage.toString(),
-                        event: e,
-                        height: height,
-                        width: width,
+        body: Container(
+          color: Colors.black,
+          child: PlaceholderText(
+            onRefresh: () => _loadData(),
+            state: _loading
+                ? PlaceholderState.loading
+                : _data == null
+                    ? PlaceholderState.error
+                    : PlaceholderState.normal,
+            setting: PlaceholderSetting(
+              iconColor: Colors.grey,
+              showLoadingText: false,
+              textStyle: TextStyle(
+                fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                color: Colors.grey,
+              ),
+              buttonTextStyle: TextStyle(color: Colors.grey),
+              buttonBorderSide: BorderSide(color: Colors.grey),
+            ).toChinese(),
+            errorText: _error,
+            childBuilder: (c) => Stack(
+              children: [
+                // ****************************************************************
+                // 漫画显示
+                // ****************************************************************
+                Positioned.fill(
+                  child: NotificationListener<ScrollUpdateNotification>(
+                    onNotification: _onScrollNotification,
+                    child: PhotoViewGallery.builder(
+                      scrollPhysics: BouncingScrollPhysics(),
+                      backgroundDecoration: BoxDecoration(color: Colors.black),
+                      pageController: _controller,
+                      onPageChanged: _onPageChanged,
+                      itemCount: _data.pages.length,
+                      loadingBuilder: (c, ImageChunkEvent e) => Listener(
+                        onPointerUp: (e) => _onPointerUp(e.position),
+                        onPointerDown: (e) => _onPointerDown(e.position),
+                        child: ImageLoadingView(
+                          title: _currentPage.toString(),
+                          event: e,
+                          height: height,
+                          width: width,
+                        ),
+                      ),
+                      loadFailedChild: Listener(
+                        onPointerUp: (e) => _onPointerUp(e.position),
+                        onPointerDown: (e) => _onPointerDown(e.position),
+                        child: ImageLoadFailedView(
+                          title: _currentPage.toString(),
+                          height: height,
+                          width: width,
+                        ),
+                      ),
+                      // ****************************************************************
+                      // 漫画显示选项
+                      // ****************************************************************
+                      builder: (c, idx) => PhotoViewGalleryPageOptions(
+                        initialScale: PhotoViewComputedScale.contained,
+                        minScale: PhotoViewComputedScale.contained / 2,
+                        maxScale: PhotoViewComputedScale.covered * 2,
+                        filterQuality: FilterQuality.high,
+                        onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
+                        onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
+                        imageProvider: LocalOrNetworkImageProvider(
+                          url: () async => _data.pages[idx],
+                          file: () async => null,
+                          headers: {
+                            'User-Agent': USER_AGENT,
+                            'Referer': REFERER,
+                          },
+                        ),
                       ),
                     ),
-                    loadFailedChild: Listener(
-                      onPointerUp: (e) => _onPointerUp(e.position),
-                      onPointerDown: (e) => _onPointerDown(e.position),
-                      child: ImageLoadFailedView(
-                        title: _currentPage.toString(),
-                        height: height,
-                        width: width,
-                      ),
-                    ),
-                    // ****************************************************************
-                    // 漫画显示选项
-                    // ****************************************************************
-                    builder: (c, idx) => PhotoViewGalleryPageOptions(
-                      initialScale: PhotoViewComputedScale.contained,
-                      minScale: PhotoViewComputedScale.contained / 2,
-                      maxScale: PhotoViewComputedScale.covered * 2,
-                      filterQuality: FilterQuality.high,
-                      onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
-                      onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
-                      imageProvider: LocalOrNetworkImageProvider(
-                        url: () async => _data.pages[idx],
-                        file: () async => null,
-                        headers: {
-                          'User-Agent': USER_AGENT,
-                          'Referer': REFERER,
-                        },
-                      ),
-                    ),
                   ),
                 ),
-              ),
-            ),
-            // ****************************************************************
-            // 上一章节
-            // ****************************************************************
-            AnimatedPositioned(
-              left: _swipeFirstOver ? 8 : -30,
-              duration: Duration(milliseconds: 300),
-              child: AnimatedOpacity(
-                opacity: _swipeFirstOver ? 1.0 : 0.0,
-                duration: Duration(milliseconds: 500),
-                child: Container(
-                  color: Colors.black,
-                  width: 30,
-                  height: height,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Transform.rotate(
-                        angle: pi,
-                        child: Icon(
-                          Icons.arrow_right_alt,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        '前\n往\n上\n一\n章\n节',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: Theme.of(context).textTheme.headline6.fontSize,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // ****************************************************************
-            // 下一章节
-            // ****************************************************************
-            AnimatedPositioned(
-              right: _swipeLastOver ? 8 : -30,
-              duration: Duration(milliseconds: 300),
-              child: AnimatedOpacity(
-                opacity: _swipeLastOver ? 1.0 : 0.0,
-                duration: Duration(milliseconds: 500),
-                child: Container(
-                  color: Colors.black,
-                  width: 30,
-                  height: height,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.arrow_right_alt,
-                        size: 24,
-                        color: Colors.white,
-                      ),
-                      Text(
-                        '前\n往\n下\n一\n章\n节',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: Theme.of(context).textTheme.headline6.fontSize,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // ****************************************************************
-            // 最下面的滚动条
-            // ****************************************************************
-            if (_showAppBar && _data != null)
-              Positioned(
-                bottom: 0,
-                child: Container(
-                  color: Colors.black.withOpacity(0.75),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                  width: MediaQuery.of(context).size.width,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: _progressValue.toDouble(),
-                          min: 1,
-                          max: _data.pageCount.toDouble(),
-                          onChanged: _onSliderChanged,
-                          onChangeEnd: _onSliderChangeEnd,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 4, right: 18),
-                        child: Text(
-                          '$_progressValue/${_data.pageCount}页',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            // ****************************************************************
-            // 右下角的提示文字
-            // ****************************************************************
-            if (!_showAppBar && _data != null)
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  color: Colors.black,
-                  padding: EdgeInsets.symmetric(horizontal: 6),
-                  child: Text(
-                    '${_data.title} $_currentPage/${_data.pageCount}',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-            // ****************************************************************
-            // 帮助区域显示
-            // ****************************************************************
-            if (_showRegion)
-              Positioned.fill(
-                child: GestureDetector(
-                  child: Row(
-                    children: [
-                      Container(
-                        height: height,
-                        width: width * _kSlideWidthRatio,
-                        color: Colors.yellow[800].withAlpha(200),
-                        child: Center(
-                          child: Text(
-                            '上\n一\n页',
+                // ****************************************************************
+                // 上一章节
+                // ****************************************************************
+                AnimatedPositioned(
+                  left: _swipeFirstOver ? 8 : -30,
+                  duration: Duration(milliseconds: 300),
+                  child: AnimatedOpacity(
+                    opacity: _swipeFirstOver ? 1.0 : 0.0,
+                    duration: Duration(milliseconds: 300),
+                    child: Container(
+                      color: Colors.black,
+                      width: 30,
+                      height: height,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Transform.rotate(
+                            angle: pi,
+                            child: Icon(
+                              Icons.arrow_right_alt,
+                              size: 24,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            '前\n往\n上\n一\n章\n节',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: Theme.of(context).textTheme.headline6.fontSize,
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                      Container(
-                        height: height,
-                        width: width * (1 - 2 * _kSlideWidthRatio),
-                        color: Colors.blue[300].withAlpha(200),
-                        child: Center(
-                          child: Text(
-                            '菜单',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Theme.of(context).textTheme.headline6.fontSize,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        height: height,
-                        width: width * _kSlideWidthRatio,
-                        color: Colors.red[200].withAlpha(200),
-                        child: Center(
-                          child: Text(
-                            '下\n一\n页',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Theme.of(context).textTheme.headline6.fontSize,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  onTap: () {
-                    _showRegion = false;
-                    if (mounted) setState(() {});
-                  },
                 ),
-              ),
-            // ****************************************************************
-            // ================================================================
-            // ****************************************************************
-          ],
+                // ****************************************************************
+                // 下一章节
+                // ****************************************************************
+                AnimatedPositioned(
+                  right: _swipeLastOver ? 8 : -30,
+                  duration: Duration(milliseconds: 300),
+                  child: AnimatedOpacity(
+                    opacity: _swipeLastOver ? 1.0 : 0.0,
+                    duration: Duration(milliseconds: 300),
+                    child: Container(
+                      color: Colors.black,
+                      width: 30,
+                      height: height,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_right_alt,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                          Text(
+                            '前\n往\n下\n一\n章\n节',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // ****************************************************************
+                // 右下角的提示文字
+                // ****************************************************************
+                if (!_showAppBar && _data != null)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      color: Colors.black,
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        '${_data.title} $_currentPage/${_data.pageCount}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                // ****************************************************************
+                // 最下面的滚动条
+                // ****************************************************************
+                if (_showAppBar && _data != null)
+                  Positioned(
+                    bottom: 0,
+                    child: Container(
+                      color: Colors.black.withOpacity(0.75),
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Slider(
+                              value: _progressValue.toDouble(),
+                              min: 1,
+                              max: _data.pageCount.toDouble(),
+                              onChanged: _onSliderChanged,
+                              onChangeEnd: _onSliderChangeEnd,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 4, right: 18),
+                            child: Text(
+                              '$_progressValue/${_data.pageCount}页',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // ****************************************************************
+                // 帮助区域显示
+                // ****************************************************************
+                if (_showRegion)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () {
+                        _showRegion = false;
+                        if (mounted) setState(() {});
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            height: height,
+                            width: width * _kSlideWidthRatio,
+                            color: Colors.yellow[800].withAlpha(200),
+                            child: Center(
+                              child: Text(
+                                '上\n一\n页',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            height: height,
+                            width: width * (1 - 2 * _kSlideWidthRatio),
+                            color: Colors.blue[300].withAlpha(200),
+                            child: Center(
+                              child: Text(
+                                '菜单',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            height: height,
+                            width: width * _kSlideWidthRatio,
+                            color: Colors.red[200].withAlpha(200),
+                            child: Center(
+                              child: Text(
+                                '下\n一\n页',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // ****************************************************************
+                // ================================================================
+                // ****************************************************************
+              ],
+            ),
+          ),
         ),
       ),
     );

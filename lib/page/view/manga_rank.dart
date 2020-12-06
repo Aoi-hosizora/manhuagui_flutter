@@ -31,7 +31,7 @@ class _MangaRankViewState extends State<MangaRankView> {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               child: NetworkImageView(
-                url: '$DEFAULT_COVER_URL${widget.manga.mid}.jpg',
+                url: '$DEFAULT_MANGA_COVER_URL${widget.manga.mid}.jpg',
                 height: 100,
                 width: 75,
                 fit: BoxFit.cover,

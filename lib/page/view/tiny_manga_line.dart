@@ -78,7 +78,7 @@ class _TinyMangaLineViewState extends State<TinyMangaLineView> {
                     child: IconText(
                       icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
                       text: Text(
-                        widget.manga.newestDate,
+                        '更新于 ${widget.manga.newestDate}',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       space: 8,

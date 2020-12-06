@@ -11,7 +11,12 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 /// 分类类别
 class GenreSubPage extends StatefulWidget {
-  const GenreSubPage({Key key}) : super(key: key);
+  const GenreSubPage({
+    Key key,
+    this.defaultGenre,
+  }) : super(key: key);
+
+  final TinyCategory defaultGenre;
 
   @override
   _GenreSubPageState createState() => _GenreSubPageState();
@@ -39,6 +44,10 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
 
   @override
   void initState() {
+    if (widget.defaultGenre != null) {
+      _selectedGenre = widget.defaultGenre;
+      _lastGenre = widget.defaultGenre;
+    }
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
