@@ -22,81 +22,90 @@ class SmallAuthorLineView extends StatefulWidget {
 class _SmallAuthorLineViewState extends State<SmallAuthorLineView> {
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (c) => AuthorPage(
-            id: widget.author.aid,
-            name: widget.author.name,
-            url: widget.author.url,
+    return Stack(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              child: NetworkImageView(
+                url: DEFAULT_AUTHOR_COVER_URL,
+                height: 100,
+                width: 75,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width - 14 * 3 - 75, // | ▢ ▢ |
+              margin: EdgeInsets.only(top: 5, bottom: 5, right: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      widget.author.name,
+                      style: Theme.of(context).textTheme.subtitle1,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 2),
+                    child: IconText(
+                      icon: Icon(Icons.place, size: 20, color: Colors.orange),
+                      text: Text(
+                        widget.author.zone,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      space: 8,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 2),
+                    child: IconText(
+                      icon: Icon(Icons.edit, size: 20, color: Colors.orange),
+                      text: Text(
+                        '共 ${widget.author.mangaCount} 部漫画',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      space: 8,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 2),
+                    child: IconText(
+                      icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
+                      text: Text(
+                        '更新于 ${widget.author.newestDate}',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      space: 8,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        Positioned.fill(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (c) => AuthorPage(
+                    id: widget.author.aid,
+                    name: widget.author.name,
+                    url: widget.author.url,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-            child: NetworkImageView(
-              url: DEFAULT_AUTHOR_COVER_URL,
-              height: 100,
-              width: 75,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Container(
-            width: MediaQuery.of(context).size.width - 14 * 3 - 75, // | ▢ ▢ |
-            margin: EdgeInsets.only(top: 5, bottom: 5, right: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    widget.author.name,
-                    style: Theme.of(context).textTheme.subtitle1,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(bottom: 2),
-                  child: IconText(
-                    icon: Icon(Icons.place, size: 20, color: Colors.orange),
-                    text: Text(
-                      widget.author.zone,
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    space: 8,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(bottom: 2),
-                  child: IconText(
-                    icon: Icon(Icons.edit, size: 20, color: Colors.orange),
-                    text: Text(
-                      '共 ${widget.author.mangaCount} 部漫画',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    space: 8,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(bottom: 2),
-                  child: IconText(
-                    icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                    text: Text(
-                      '更新于 ${widget.author.newestDate}',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    space: 8,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

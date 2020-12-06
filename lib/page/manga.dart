@@ -134,8 +134,7 @@ class _MangaPageState extends State<MangaPage> {
                       // 信息
                       // ****************************************************************
                       Container(
-                        width: MediaQuery.of(context).size.width - 14 * 3 - 120,
-                        height: 180.0 - 14 * 2,
+                        width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢ |
                         margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
                         child: Wrap(
                           direction: Axis.vertical,
@@ -166,7 +165,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.subject, size: 20, color: Colors.orange),
-                              text: Text((_data.finished ? '共' : '更新至') + _data.newestChapter),
+                              text: Text((_data.finished ? '共 ' : '更新至 ') + _data.newestChapter),
                               space: 8,
                             ),
                             IconText(

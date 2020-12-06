@@ -67,7 +67,7 @@ class _TinyMangaLineViewState extends State<TinyMangaLineView> {
                     child: IconText(
                       icon: Icon(Icons.subject, size: 20, color: Colors.orange),
                       text: Text(
-                        (widget.manga.finished ? '共' : '更新至') + widget.manga.newestChapter,
+                        (widget.manga.finished ? '共 ' : '更新至 ') + widget.manga.newestChapter,
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       space: 8,

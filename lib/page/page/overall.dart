@@ -87,7 +87,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         refreshFirst: true,
         placeholderSetting: PlaceholderSetting().toChinese(),
         onStateChanged: (_, __) => _fabController.hide(),
-        padding: EdgeInsets.symmetric(vertical: 3),
+        padding: EdgeInsets.zero,
         separator: Divider(height: 1),
         itemBuilder: (c, item) => TinyMangaLineView(manga: item),
         topWidget: Container(

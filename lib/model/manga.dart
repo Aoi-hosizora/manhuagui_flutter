@@ -58,6 +58,10 @@ class SmallManga {
   Map<String, dynamic> toJson() => _$SmallMangaToJson(this);
 
   static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction'];
+
+  TinyManga toTiny() {
+    return TinyManga(mid: this.mid, title: this.title, cover: this.cover, url: this.url, finished: this.finished, newestChapter: this.newestChapter, newestDate: this.newestDate);
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
