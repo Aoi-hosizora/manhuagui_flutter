@@ -121,7 +121,6 @@ class _AuthorPageState extends State<AuthorPage> {
         setting: PlaceholderSetting().toChinese(),
         onRefresh: () => _loadData(),
         childBuilder: (c) => NestedScrollView(
-          controller: _controller,
           headerSliverBuilder: (c, o) => [
             // ****************************************************************
             // 头部框
@@ -213,56 +212,61 @@ class _AuthorPageState extends State<AuthorPage> {
               ),
             ),
             SliverContainer(height: 12),
-            SliverPersistentHeader(
-              pinned: true,
-              floating: true,
-              delegate: SliverAppBarSizedDelegate(
-                minHeight: 37,
-                maxHeight: 37,
-                child: Container(
-                  color: Colors.white,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(left: 5, top: 4, bottom: 3),
-                              child: Text('全部漫画 (共 $_total 部)'),
-                            ),
-                            if (_total > 0)
-                              OptionPopupView<MangaOrder>(
-                                title: _order.toTitle(),
-                                top: 4,
-                                value: _order,
-                                items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                                onSelect: (o) {
-                                  if (_order != o) {
-                                    _lastOrder = _order;
-                                    _order = o;
-                                    if (mounted) setState(() {});
-                                    _controller.refresh();
-                                  }
-                                },
-                                optionBuilder: (c, v) => v.toTitle(),
-                                enable: !_disableOption,
+            SliverOverlapAbsorber(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(c),
+              sliver: SliverPersistentHeader(
+                pinned: true,
+                floating: true,
+                delegate: SliverAppBarSizedDelegate(
+                  minHeight: 37,
+                  maxHeight: 37,
+                  child: Container(
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(left: 5, top: 4, bottom: 3),
+                                child: Text('全部漫画 (共 $_total 部)'),
                               ),
-                          ],
+                              if (_total > 0)
+                                OptionPopupView<MangaOrder>(
+                                  title: _order.toTitle(),
+                                  top: 4,
+                                  value: _order,
+                                  items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                                  onSelect: (o) {
+                                    if (_order != o) {
+                                      _lastOrder = _order;
+                                      _order = o;
+                                      if (mounted) setState(() {});
+                                      _controller.refresh();
+                                    }
+                                  },
+                                  optionBuilder: (c, v) => v.toTitle(),
+                                  enable: !_disableOption,
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Divider(height: 1, thickness: 1),
-                    ],
+                        Divider(height: 1, thickness: 1),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ],
+          controller: _controller,
           body: Builder(
             builder: (c) => PaginationSliverListView<SmallManga>(
-              controller: _controller,
-              innerController: PrimaryScrollController.of(c),
+              outerController: _controller,
+              controller: PrimaryScrollController.of(c),
+              hasOverlapAbsorber: true,
               data: _mangas,
               strategy: PaginationStrategy.offsetBased,
               getDataByOffset: _getMangas,
