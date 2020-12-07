@@ -33,6 +33,12 @@ class ChapterPage extends StatefulWidget {
   _ChapterPageState createState() => _ChapterPageState();
 }
 
+/// 表示阅读方向
+enum _ScrollDirection {
+  l2r, // 从左往右
+  r2l, // 从右往左
+}
+
 class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClientMixin {
   PageController _controller;
   var _loading = true;
@@ -40,14 +46,24 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   var _error = '';
   var _currentPage = 1;
   var _progressValue = 1;
-  var _showRegion = false;
-  var _showAppBar = false;
-  var _pointerDownXPosition = 0.0;
-  final _kSlideWidthRatio = 0.3;
-  final _kChapterSwipeWidth = 100;
-  var _swipeOffsetX = 0.0;
-  var _swipeFirstOver = false;
-  var _swipeLastOver = false;
+
+  get _reverseScroll => _scrollDirection == _ScrollDirection.r2l; // 反转拖动
+  var _showRegion = false; // 显示区域提示
+  var _showAppBar = false; // 显示工具栏
+  var _scrollDirection = _ScrollDirection.l2r; // 拖动正方向
+  var _showPageHint = true; // 显示页码提示
+  var _useSwipeToChapter = true; // 滑动跳转至章节
+  var _useClickToChapter = true; // 点击跳转至章节
+
+  var _pointerDownXPosition = 0.0; // 按住的x坐标
+  final _kSlideWidthRatio = 0.3; // 点击跳转页面的区域比例
+  final _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
+  var _swipeOffsetX = 0.0; // 滑动的x偏移
+  var _swipeFirstOver = false; // 是否划出第一页
+  var _swipeLastOver = false; // 是否划出最后一页
+
+  final _fileProvider = () async => null;
+  var _imageProviders = <Future<String> Function()>[];
 
   @override
   void initState() {
@@ -79,9 +95,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
+
+      _imageProviders = [for (var url in _data.pages) () async => url];
       if (widget.initialPage <= 0) {
-        // <<<
-        _controller = PageController(initialPage: _data.pageCount - 1);
+        _controller = PageController(initialPage: _data.pageCount - 1); // 指定倒数一页
         _currentPage = _data.pageCount;
         _progressValue = _data.pageCount;
       }
@@ -102,11 +119,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     var width = MediaQuery.of(context).size.width;
     if (pos != null) {
       var x = pos.dx;
-      // print('x: $x, width: $width');
       if (x == _pointerDownXPosition && x < width * _kSlideWidthRatio) {
-        _onMoveToPage(_currentPage - 1);
+        _gotoPage(!_reverseScroll ? _currentPage - 1 : _currentPage + 1); // 上一页 / 下一页(反)
       } else if (x == _pointerDownXPosition && x > width * (1 - _kSlideWidthRatio)) {
-        _onMoveToPage(_currentPage + 1);
+        _gotoPage(!_reverseScroll ? _currentPage + 1 : _currentPage - 1); // 下一页 / 上一页(反)
       } else {
         _showAppBar = !_showAppBar;
         if (mounted) setState(() {});
@@ -114,25 +130,188 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     }
   }
 
+  void _onPageChanged(int page) {
+    _currentPage = page + 1;
+    _progressValue = page + 1;
+    if (mounted) setState(() {});
+  }
+
   void _onSliderChanged(double p) {
     _progressValue = p.toInt();
+    _gotoPage(_progressValue);
     if (mounted) setState(() {});
   }
 
-  void _onSliderChangeEnd(double p) {
-    _progressValue = p.toInt();
-    _onMoveToPage(_progressValue);
-    if (mounted) setState(() {});
+  void _gotoPage(int page) {
+    if (page <= 0) {
+      if (_useClickToChapter) {
+        _gotoChapter(last: true);
+      }
+    } else if (page > _data.pages.length) {
+      if (_useClickToChapter) {
+        _gotoChapter(last: false);
+      }
+    } else {
+      _controller.animateToPage(
+        page - 1,
+        duration: Duration(milliseconds: 1),
+        curve: Curves.ease,
+      );
+    }
   }
 
-  void _onPageChanged(int page) {
-    // print('page: $page');
-    _progressValue = page + 1;
-    _currentPage = page + 1;
+  void _gotoChapter({bool last, bool isAppBar = false}) {
+    if ((last && _data.prevCid == 0) || (!last && _data.nextCid == 0)) {
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text(last ? '上一章节' : '下一章节'),
+          content: Text(last ? '没有上一章节了。' : '没有下一章节了。'),
+          actions: [
+            FlatButton(
+              child: Text('确定'),
+              onPressed: () => Navigator.of(c).pop(),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    Navigator.of(context).pop();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (c) => ChapterPage(
+          mid: widget.mid,
+          showAppBar: _showAppBar,
+          cid: last ? _data.prevCid : _data.nextCid,
+          initialPage: (!last || isAppBar) ? 1 : -1, // 下一章节或者是由工具栏点击的上一章节则直接到第一页，否则跳转到最后一页
+        ),
+      ),
+    );
+  }
+
+  void _onSettingPressed() {
+    _showAppBar = false;
     if (mounted) setState(() {});
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('设置'),
+        content: StatefulBuilder(
+          builder: (_, _setState) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Text('阅读方向'),
+                  SizedBox(width: 32),
+                  Expanded(
+                    child: Container(
+                      height: 36,
+                      child: DropdownButton<_ScrollDirection>(
+                        value: _scrollDirection,
+                        items: [_ScrollDirection.l2r, _ScrollDirection.r2l]
+                            .map(
+                              (s) => DropdownMenuItem<_ScrollDirection>(
+                                child: Text(
+                                  s == _ScrollDirection.l2r ? '从左往右' : '从右往左',
+                                  style: Theme.of(context).textTheme.bodyText1,
+                                ),
+                                value: s,
+                              ),
+                            )
+                            .toList(),
+                        underline: Container(color: Colors.white),
+                        isExpanded: true,
+                        onChanged: (s) {
+                          _scrollDirection = s;
+                          _setState(() {});
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text('显示页码'),
+                  Spacer(),
+                  Container(
+                    height: 36,
+                    child: Switch(
+                      value: _showPageHint,
+                      onChanged: (b) {
+                        _showPageHint = b;
+                        _setState(() {});
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text('滑动跳转至章节'),
+                  Spacer(),
+                  Container(
+                    height: 36,
+                    child: Switch(
+                      value: _useSwipeToChapter,
+                      onChanged: (b) {
+                        _useSwipeToChapter = b;
+                        _setState(() {});
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text('点击跳转至章节'),
+                  Spacer(),
+                  Container(
+                    height: 36,
+                    child: Switch(
+                      value: _useClickToChapter,
+                      onChanged: (b) {
+                        _useClickToChapter = b;
+                        _setState(() {});
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          FlatButton(
+            child: Text('操作'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              _showRegion = true;
+              _showAppBar = false;
+              if (mounted) setState(() {});
+            },
+          ),
+          FlatButton(
+            child: Text('返回'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   bool _onScrollNotification(Notification n) {
+    if (!_useSwipeToChapter) {
+      return true; // 不开启滑动跳转章节
+    }
+
     if (n is ScrollUpdateNotification) {
       var dx = n.dragDetails?.delta?.dx;
       if (dx != null) {
@@ -140,12 +319,15 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       } else {
         _swipeOffsetX = 0;
         if (_swipeFirstOver) {
-          _gotoLastChapter(gotoLastPage: true); // <<<
+          _gotoChapter(last: !_reverseScroll); // 上一章 / 下一章(反)
         } else if (_swipeLastOver) {
-          _gotoNextChapter(); // <<<
+          _gotoChapter(last: _reverseScroll); // 下一章 / 上一章(反)
         }
       }
-      if (_currentPage == 1 && _swipeOffsetX >= 0 && _swipeOffsetX < _kChapterSwipeWidth * 2) {
+
+      var willSwipeFirst = ((!_reverseScroll && _currentPage == 1) || (_reverseScroll && _currentPage == _data.pageCount)); // 第一页 / 最后一页(反)
+      var willSwipeLast = ((!_reverseScroll && _currentPage == _data.pageCount) || (_reverseScroll && _currentPage == 1)); // 最后一页 / 第一页(反)
+      if (willSwipeFirst && _swipeOffsetX >= 0 && _swipeOffsetX < _kChapterSwipeWidth * 2) {
         if (_swipeOffsetX > _kChapterSwipeWidth && !_swipeFirstOver) {
           _swipeFirstOver = true;
           if (mounted) setState(() {});
@@ -153,7 +335,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           _swipeFirstOver = false;
           if (mounted) setState(() {});
         }
-      } else if (_currentPage == _data.pageCount && _swipeOffsetX <= 0 && _swipeOffsetX > -_kChapterSwipeWidth * 2) {
+      } else if (willSwipeLast && _swipeOffsetX <= 0 && _swipeOffsetX > -_kChapterSwipeWidth * 2) {
         if (_swipeOffsetX < -_kChapterSwipeWidth && !_swipeLastOver) {
           _swipeLastOver = true;
           if (mounted) setState(() {});
@@ -164,79 +346,6 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       }
     }
     return true;
-  }
-
-  void _onMoveToPage(int page) {
-    if (page <= 0) {
-      _gotoLastChapter(gotoLastPage: true);
-    } else if (page > _data.pages.length) {
-      _gotoNextChapter();
-    } else {
-      _controller.animateToPage(
-        page - 1,
-        duration: Duration(milliseconds: 1),
-        curve: Curves.ease,
-      );
-    }
-  }
-
-  void _gotoLastChapter({bool gotoLastPage = false}) {
-    if (_data.prevCid == 0) {
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text('上一章节'),
-          content: Text('没有上一章节了。'),
-          actions: [
-            FlatButton(
-              child: Text('确定'),
-              onPressed: () => Navigator.of(c).pop(),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-    Navigator.of(context).pop();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (c) => ChapterPage(
-          mid: widget.mid,
-          cid: _data.prevCid,
-          showAppBar: _showAppBar,
-          initialPage: gotoLastPage ? -1 : 1,
-        ),
-      ),
-    );
-  }
-
-  void _gotoNextChapter() {
-    if (_data.nextCid == 0) {
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text('下一章节'),
-          content: Text('没有下一章节了。'),
-          actions: [
-            FlatButton(
-              child: Text('确定'),
-              onPressed: () => Navigator.of(c).pop(),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-    Navigator.of(context).pop();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (c) => ChapterPage(
-          mid: widget.mid,
-          cid: _data.nextCid,
-          showAppBar: _showAppBar,
-        ),
-      ),
-    );
   }
 
   @override
@@ -259,13 +368,9 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 title: Text(_data.title),
                 actions: [
                   IconButton(
-                    icon: Icon(Icons.help),
-                    tooltip: '操作',
-                    onPressed: () {
-                      _showRegion = true;
-                      _showAppBar = false;
-                      if (mounted) setState(() {});
-                    },
+                    icon: Icon(Icons.settings),
+                    tooltip: '设置',
+                    onPressed: _onSettingPressed,
                   ),
                   IconButton(
                     icon: Transform.rotate(
@@ -273,12 +378,12 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       child: Icon(Icons.arrow_right_alt),
                     ),
                     tooltip: '上一章节',
-                    onPressed: _gotoLastChapter,
+                    onPressed: () => _gotoChapter(last: true, isAppBar: true),
                   ),
                   IconButton(
                     icon: Icon(Icons.arrow_right_alt),
                     tooltip: '下一章节',
-                    onPressed: _gotoNextChapter,
+                    onPressed: () => _gotoChapter(last: false, isAppBar: true),
                   ),
                 ],
               ),
@@ -312,6 +417,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                     onNotification: _onScrollNotification,
                     child: PhotoViewGallery.builder(
                       scrollPhysics: BouncingScrollPhysics(),
+                      reverse: _reverseScroll,
                       backgroundDecoration: BoxDecoration(color: Colors.black),
                       pageController: _controller,
                       onPageChanged: _onPageChanged,
@@ -339,6 +445,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       // 漫画显示选项
                       // ****************************************************************
                       builder: (c, idx) => PhotoViewGalleryPageOptions(
+                        controller: PhotoViewController(),
                         initialScale: PhotoViewComputedScale.contained,
                         minScale: PhotoViewComputedScale.contained / 2,
                         maxScale: PhotoViewComputedScale.covered * 2,
@@ -346,8 +453,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                         onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
                         onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
                         imageProvider: LocalOrNetworkImageProvider(
-                          url: () async => _data.pages[idx],
-                          file: () async => null,
+                          url: _imageProviders[idx],
+                          file: _fileProvider,
                           headers: {
                             'User-Agent': USER_AGENT,
                             'Referer': REFERER,
@@ -358,83 +465,87 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   ),
                 ),
                 // ****************************************************************
-                // 上一章节
+                // 左边导航: 上一章节 / 下一章节(反)
                 // ****************************************************************
-                AnimatedPositioned(
-                  left: _swipeFirstOver ? 8 : -30,
-                  duration: Duration(milliseconds: 300),
-                  child: AnimatedOpacity(
-                    opacity: _swipeFirstOver ? 1.0 : 0.0,
-                    duration: Duration(milliseconds: 300),
-                    child: Container(
-                      color: Colors.black,
-                      width: 30,
-                      height: height,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Transform.rotate(
-                            angle: pi,
-                            child: Icon(
+                if (_useSwipeToChapter)
+                  AnimatedPositioned(
+                    left: _swipeFirstOver ? 0 : -30,
+                    duration: Duration(milliseconds: 200),
+                    child: AnimatedOpacity(
+                      opacity: _swipeFirstOver ? 1.0 : 0.0,
+                      duration: Duration(milliseconds: 200),
+                      child: Container(
+                        color: Colors.black,
+                        padding: EdgeInsets.symmetric(horizontal: 2),
+                        width: 34,
+                        height: height,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Transform.rotate(
+                              angle: pi,
+                              child: Icon(
+                                Icons.arrow_right_alt,
+                                size: 24,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              !_reverseScroll ? '前\n往\n上\n一\n章\n节' : '前\n往\n下\n一\n章\n节',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                // ****************************************************************
+                // 右边导航: 下一章节 / 上一章节(反)
+                // ****************************************************************
+                if (_useSwipeToChapter)
+                  AnimatedPositioned(
+                    right: _swipeLastOver ? 0 : -30,
+                    duration: Duration(milliseconds: 200),
+                    child: AnimatedOpacity(
+                      opacity: _swipeLastOver ? 1.0 : 0.0,
+                      duration: Duration(milliseconds: 200),
+                      child: Container(
+                        color: Colors.black,
+                        padding: EdgeInsets.symmetric(horizontal: 2),
+                        width: 34,
+                        height: height,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
                               Icons.arrow_right_alt,
                               size: 24,
                               color: Colors.white,
                             ),
-                          ),
-                          Text(
-                            '前\n往\n上\n一\n章\n节',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                            Text(
+                              !_reverseScroll ? '前\n往\n下\n一\n章\n节' : '前\n往\n上\n一\n章\n节',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // ****************************************************************
-                // 下一章节
-                // ****************************************************************
-                AnimatedPositioned(
-                  right: _swipeLastOver ? 8 : -30,
-                  duration: Duration(milliseconds: 300),
-                  child: AnimatedOpacity(
-                    opacity: _swipeLastOver ? 1.0 : 0.0,
-                    duration: Duration(milliseconds: 300),
-                    child: Container(
-                      color: Colors.black,
-                      width: 30,
-                      height: height,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.arrow_right_alt,
-                            size: 24,
-                            color: Colors.white,
-                          ),
-                          Text(
-                            '前\n往\n下\n一\n章\n节',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Theme.of(context).textTheme.headline6.fontSize,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
                 // ****************************************************************
                 // 右下角的提示文字
                 // ****************************************************************
-                if (!_showAppBar && _data != null)
+                if (!_showAppBar && _data != null && _showPageHint)
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      color: Colors.black,
+                      color: Colors.black.withOpacity(0.75),
                       padding: EdgeInsets.symmetric(horizontal: 6),
                       child: Text(
                         '${_data.title} $_currentPage/${_data.pageCount}',
@@ -459,8 +570,11 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                               value: _progressValue.toDouble(),
                               min: 1,
                               max: _data.pageCount.toDouble(),
-                              onChanged: _onSliderChanged,
-                              onChangeEnd: _onSliderChangeEnd,
+                              onChanged: (p) {
+                                _progressValue = p.toInt();
+                                if (mounted) setState(() {});
+                              },
+                              onChangeEnd: _onSliderChanged,
                             ),
                           ),
                           Padding(
@@ -492,7 +606,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                             color: Colors.yellow[800].withAlpha(200),
                             child: Center(
                               child: Text(
-                                '上\n一\n页',
+                                !_reverseScroll ? '上\n一\n页' : '下\n一\n页', // 上一页 / 下一页(反)
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: Theme.of(context).textTheme.headline6.fontSize,
@@ -520,7 +634,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                             color: Colors.red[200].withAlpha(200),
                             child: Center(
                               child: Text(
-                                '下\n一\n页',
+                                !_reverseScroll ? '下\n一\n页' : '上\n一\n页', // 下一页 / 上一页(反)
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: Theme.of(context).textTheme.headline6.fontSize,
