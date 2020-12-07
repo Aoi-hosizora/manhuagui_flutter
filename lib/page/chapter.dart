@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/service/prefs/category.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:photo_view/photo_view.dart';
@@ -33,12 +34,6 @@ class ChapterPage extends StatefulWidget {
   _ChapterPageState createState() => _ChapterPageState();
 }
 
-/// 表示阅读方向
-enum _ScrollDirection {
-  l2r, // 从左往右
-  r2l, // 从右往左
-}
-
 class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClientMixin {
   PageController _controller;
   var _loading = true;
@@ -47,13 +42,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   var _currentPage = 1;
   var _progressValue = 1;
 
-  get _reverseScroll => _scrollDirection == _ScrollDirection.r2l; // 反转拖动
+  get _reverseScroll => _setting.scrollDirection == ScrollDirection.r2l; // 反转拖动
   var _showRegion = false; // 显示区域提示
   var _showAppBar = false; // 显示工具栏
-  var _scrollDirection = _ScrollDirection.l2r; // 拖动正方向
-  var _showPageHint = true; // 显示页码提示
-  var _useSwipeToChapter = true; // 滑动跳转至章节
-  var _useClickToChapter = true; // 点击跳转至章节
+  var _setting = CategoryViewSetting.defaultSetting();
 
   var _pointerDownXPosition = 0.0; // 按住的x坐标
   final _kSlideWidthRatio = 0.3; // 点击跳转页面的区域比例
@@ -67,6 +59,14 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
 
   @override
   void initState() {
+    _setting.existed().then((ok) {
+      if (!ok) {
+        _setting = CategoryViewSetting.defaultSetting();
+        _setting.save();
+      } else {
+        _setting.load();
+      }
+    });
     super.initState();
     if (widget.initialPage > 0) {
       _controller = PageController(initialPage: widget.initialPage - 1);
@@ -144,11 +144,11 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
 
   void _gotoPage(int page) {
     if (page <= 0) {
-      if (_useClickToChapter) {
+      if (_setting.useClickForChapter) {
         _gotoChapter(last: true);
       }
     } else if (page > _data.pages.length) {
-      if (_useClickToChapter) {
+      if (_setting.useClickForChapter) {
         _gotoChapter(last: false);
       }
     } else {
@@ -177,17 +177,43 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       );
       return;
     }
-    Navigator.of(context).pop();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (c) => ChapterPage(
-          mid: widget.mid,
-          showAppBar: _showAppBar,
-          cid: last ? _data.prevCid : _data.nextCid,
-          initialPage: (!last || isAppBar) ? 1 : -1, // 下一章节或者是由工具栏点击的上一章节则直接到第一页，否则跳转到最后一页
+    var _go = () {
+      Navigator.of(context).pop();
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (c) => ChapterPage(
+            mid: widget.mid,
+            showAppBar: _showAppBar,
+            cid: last ? _data.prevCid : _data.nextCid,
+            initialPage: (!last || isAppBar) ? 1 : -1, // 下一章节或者是由工具栏点击的上一章节则直接到第一页，否则跳转到最后一页
+          ),
         ),
-      ),
-    );
+      );
+    };
+    if (_setting.needCheckForChapter) {
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text(last ? '上一章节' : '下一章节'),
+          content: Text(last ? '即将跳转至上一章节？' : '即将跳转至下一章节？'),
+          actions: [
+            FlatButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).pop(),
+            ),
+            FlatButton(
+              child: Text('跳转'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                _go();
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      _go();
+    }
   }
 
   void _onSettingPressed() {
@@ -209,13 +235,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   Expanded(
                     child: Container(
                       height: 36,
-                      child: DropdownButton<_ScrollDirection>(
-                        value: _scrollDirection,
-                        items: [_ScrollDirection.l2r, _ScrollDirection.r2l]
+                      child: DropdownButton<ScrollDirection>(
+                        value: _setting.scrollDirection,
+                        items: [ScrollDirection.l2r, ScrollDirection.r2l]
                             .map(
-                              (s) => DropdownMenuItem<_ScrollDirection>(
+                              (s) => DropdownMenuItem<ScrollDirection>(
                                 child: Text(
-                                  s == _ScrollDirection.l2r ? '从左往右' : '从右往左',
+                                  s == ScrollDirection.l2r ? '从左往右' : '从右往左',
                                   style: Theme.of(context).textTheme.bodyText1,
                                 ),
                                 value: s,
@@ -224,8 +250,9 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                             .toList(),
                         underline: Container(color: Colors.white),
                         isExpanded: true,
-                        onChanged: (s) {
-                          _scrollDirection = s;
+                        onChanged: (s) async {
+                          _setting.scrollDirection = s;
+                          await _setting.save();
                           _setState(() {});
                           if (mounted) setState(() {});
                         },
@@ -241,9 +268,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   Container(
                     height: 36,
                     child: Switch(
-                      value: _showPageHint,
-                      onChanged: (b) {
-                        _showPageHint = b;
+                      value: _setting.showPageHint,
+                      onChanged: (b) async {
+                        _setting.showPageHint = b;
+                        await _setting.save();
                         _setState(() {});
                         if (mounted) setState(() {});
                       },
@@ -258,9 +286,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   Container(
                     height: 36,
                     child: Switch(
-                      value: _useSwipeToChapter,
-                      onChanged: (b) {
-                        _useSwipeToChapter = b;
+                      value: _setting.useSwipeForChapter,
+                      onChanged: (b) async {
+                        _setting.useSwipeForChapter = b;
+                        await _setting.save();
                         _setState(() {});
                         if (mounted) setState(() {});
                       },
@@ -275,9 +304,28 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   Container(
                     height: 36,
                     child: Switch(
-                      value: _useClickToChapter,
-                      onChanged: (b) {
-                        _useClickToChapter = b;
+                      value: _setting.useClickForChapter,
+                      onChanged: (b) async {
+                        _setting.useClickForChapter = b;
+                        await _setting.save();
+                        _setState(() {});
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text('提示跳转至章节'),
+                  Spacer(),
+                  Container(
+                    height: 36,
+                    child: Switch(
+                      value: _setting.needCheckForChapter,
+                      onChanged: (b) async {
+                        _setting.needCheckForChapter = b;
+                        await _setting.save();
                         _setState(() {});
                         if (mounted) setState(() {});
                       },
@@ -308,7 +356,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   }
 
   bool _onScrollNotification(Notification n) {
-    if (!_useSwipeToChapter) {
+    if (!_setting.useSwipeForChapter) {
       return true; // 不开启滑动跳转章节
     }
 
@@ -467,7 +515,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 // ****************************************************************
                 // 左边导航: 上一章节 / 下一章节(反)
                 // ****************************************************************
-                if (_useSwipeToChapter)
+                if (_setting.useSwipeForChapter)
                   AnimatedPositioned(
                     left: _swipeFirstOver ? 0 : -30,
                     duration: Duration(milliseconds: 200),
@@ -505,7 +553,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 // ****************************************************************
                 // 右边导航: 下一章节 / 上一章节(反)
                 // ****************************************************************
-                if (_useSwipeToChapter)
+                if (_setting.useSwipeForChapter)
                   AnimatedPositioned(
                     right: _swipeLastOver ? 0 : -30,
                     duration: Duration(milliseconds: 200),
@@ -540,7 +588,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 // ****************************************************************
                 // 右下角的提示文字
                 // ****************************************************************
-                if (!_showAppBar && _data != null && _showPageHint)
+                if (!_showAppBar && _data != null && _setting.showPageHint)
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -566,15 +614,18 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       child: Row(
                         children: [
                           Expanded(
-                            child: Slider(
-                              value: _progressValue.toDouble(),
-                              min: 1,
-                              max: _data.pageCount.toDouble(),
-                              onChanged: (p) {
-                                _progressValue = p.toInt();
-                                if (mounted) setState(() {});
-                              },
-                              onChangeEnd: _onSliderChanged,
+                            child: Directionality(
+                              textDirection: !_reverseScroll ? TextDirection.ltr : TextDirection.rtl,
+                              child: Slider(
+                                value: _progressValue.toDouble(),
+                                min: 1,
+                                max: _data.pageCount.toDouble(),
+                                onChanged: (p) {
+                                  _progressValue = p.toInt();
+                                  if (mounted) setState(() {});
+                                },
+                                onChangeEnd: _onSliderChanged,
+                              ),
                             ),
                           ),
                           Padding(
