@@ -47,6 +47,7 @@ key.properties
 .classpath
 .settings/
 settings_aar.gradle
+_*.png
 
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages

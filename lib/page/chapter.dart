@@ -2,13 +2,15 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/page/view/gallery_page_view.dart';
+import 'package:manhuagui_flutter/page/view/image_load_view.dart' as ilv;
 import 'package:manhuagui_flutter/service/prefs/category.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
 
 /// 章节
 /// Page for [TinyMangaChapter].
@@ -50,7 +52,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   var _pointerDownXPosition = 0.0; // 按住的x坐标
   final _kSlideWidthRatio = 0.3; // 点击跳转页面的区域比例
   final _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
-  var _swipeOffsetX = 0.0; // 滑动的x偏移
+  var _swipeOffsetX = 0.0; // 滑动的水平偏移量
   var _swipeFirstOver = false; // 是否划出第一页
   var _swipeLastOver = false; // 是否划出最后一页
 
@@ -62,14 +64,22 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _setting.existed().then((ok) {
       if (!ok) {
         _setting = CategoryViewSetting.defaultSetting();
-        _setting.save();
+        return _setting.save();
       } else {
-        _setting.load();
+        return _setting.load();
       }
+    }).then((_) {
+      _controller = PageController(
+        initialPage: _controller?.initialPage ?? widget.initialPage - 1,
+        viewportFraction: _setting?.enablePageSpace ?? true ? 1.08 : 1,
+      );
     });
     super.initState();
     if (widget.initialPage > 0) {
-      _controller = PageController(initialPage: widget.initialPage - 1);
+      _controller = PageController(
+        initialPage: widget.initialPage - 1,
+        viewportFraction: 1,
+      );
       _currentPage = widget.initialPage;
       _progressValue = widget.initialPage;
     }
@@ -98,7 +108,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
 
       _imageProviders = [for (var url in _data.pages) () async => url];
       if (widget.initialPage <= 0) {
-        _controller = PageController(initialPage: _data.pageCount - 1); // 指定倒数一页
+        _controller = PageController(
+          initialPage: _data.pageCount - 1, // 指定倒数一页
+          viewportFraction: _setting?.enablePageSpace ?? true ? 1.08 : 1,
+        );
         _currentPage = _data.pageCount;
         _progressValue = _data.pageCount;
       }
@@ -317,7 +330,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
               ),
               Row(
                 children: [
-                  Text('提示跳转至章节'),
+                  Text('跳转章节时弹出提示'),
                   Spacer(),
                   Container(
                     height: 36,
@@ -327,6 +340,25 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                         _setting.needCheckForChapter = b;
                         await _setting.save();
                         _setState(() {});
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text('显示页面间隔'),
+                  Spacer(),
+                  Container(
+                    height: 36,
+                    child: Switch(
+                      value: _setting.enablePageSpace,
+                      onChanged: (b) async {
+                        _setting.enablePageSpace = b;
+                        await _setting.save();
+                        _setState(() {});
+                        Fluttertoast.showToast(msg: '需要返回并重新进入章节才能看到效果');
                         if (mounted) setState(() {});
                       },
                     ),
@@ -463,7 +495,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 Positioned.fill(
                   child: NotificationListener<ScrollUpdateNotification>(
                     onNotification: _onScrollNotification,
-                    child: PhotoViewGallery.builder(
+                    child: GalleryPageView(
                       scrollPhysics: BouncingScrollPhysics(),
                       reverse: _reverseScroll,
                       backgroundDecoration: BoxDecoration(color: Colors.black),
@@ -473,7 +505,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       loadingBuilder: (c, ImageChunkEvent e) => Listener(
                         onPointerUp: (e) => _onPointerUp(e.position),
                         onPointerDown: (e) => _onPointerDown(e.position),
-                        child: ImageLoadingView(
+                        child: ilv.ImageLoadingView(
                           title: _currentPage.toString(),
                           event: e,
                           height: height,
@@ -483,7 +515,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       loadFailedChild: Listener(
                         onPointerUp: (e) => _onPointerUp(e.position),
                         onPointerDown: (e) => _onPointerDown(e.position),
-                        child: ImageLoadFailedView(
+                        child: ilv.ImageLoadFailedView(
                           title: _currentPage.toString(),
                           height: height,
                           width: width,
@@ -492,8 +524,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       // ****************************************************************
                       // 漫画显示选项
                       // ****************************************************************
-                      builder: (c, idx) => PhotoViewGalleryPageOptions(
-                        controller: PhotoViewController(),
+                      builder: (c, idx) => GalleryPageViewPageOptions(
                         initialScale: PhotoViewComputedScale.contained,
                         minScale: PhotoViewComputedScale.contained / 2,
                         maxScale: PhotoViewComputedScale.covered * 2,
