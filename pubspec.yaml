@@ -24,6 +24,7 @@ dependencies:
   photo_view: ^0.10.3
   filesize: ^1.0.4
   shared_preferences: ^0.5.12+4
+  material_floating_search_bar: ^0.2.4
 
 dev_dependencies:
   flutter_test:

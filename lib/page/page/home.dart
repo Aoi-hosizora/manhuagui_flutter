@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/page/page/ranking.dart';
 import 'package:manhuagui_flutter/page/page/recent.dart';
 import 'package:manhuagui_flutter/page/page/recommend.dart';
 import 'package:manhuagui_flutter/page/search.dart';
+import 'package:manhuagui_flutter/page/search_new.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
 /// 首页
@@ -68,7 +69,8 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (c) => SearchPage(),
+                // builder: (c) => SearchPage(),
+                builder: (c) => SearchNewPage(),
               ),
             ),
           ),

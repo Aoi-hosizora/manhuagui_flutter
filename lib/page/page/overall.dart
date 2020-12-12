@@ -99,9 +99,12 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Padding(
+                    Container(
+                      height: 26,
                       padding: EdgeInsets.only(left: 5),
-                      child: Text('全部漫画 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                      child: Center(
+                        child: Text('全部漫画 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                      ),
                     ),
                     OptionPopupView<MangaOrder>(
                       title: _order.toTitle(),

@@ -255,9 +255,12 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 5, top: 4, bottom: 3),
-                        child: Text('搜索结果 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                      Container(
+                        height: 26,
+                        padding: EdgeInsets.only(left: 5),
+                        child: Center(
+                          child: Text('搜索结果 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                        ),
                       ),
                       // ****************************************************************
                       // 检索排序
