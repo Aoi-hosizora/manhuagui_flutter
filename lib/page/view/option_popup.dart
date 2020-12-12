@@ -6,6 +6,8 @@ class OptionPopupView<T> extends StatefulWidget {
     Key key,
     @required this.title,
     this.top,
+    this.height = 26.0,
+    this.width = 88.0,
     @required this.value,
     @required this.items,
     this.doHighlight = false,
@@ -23,6 +25,8 @@ class OptionPopupView<T> extends StatefulWidget {
 
   final String title;
   final double top;
+  final double height;
+  final double width;
   final bool doHighlight;
   final T value;
   final List<T> items;
@@ -72,8 +76,8 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
       child: InkWell(
         onTap: widget.enable ? _onTap : null,
         child: Container(
-          height: 26,
-          width: 88,
+          height: widget.height, // 26
+          width: widget.width, // 88
           child: IconText(
             alignment: IconTextAlignment.r2l,
             mainAxisAlignment: MainAxisAlignment.center,

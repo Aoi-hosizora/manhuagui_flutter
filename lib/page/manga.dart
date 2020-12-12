@@ -1,9 +1,9 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 import 'package:manhuagui_flutter/page/view/list_text.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -170,7 +170,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                              text: Text(_data.newestDate + (_data.finished ? '已完结' : '连载中')),
+                              text: Text(_data.newestDate + (_data.finished ? ' 已完结' : ' 连载中')),
                               space: 8,
                             ),
                             SizedBox(height: 4),
@@ -211,43 +211,38 @@ class _MangaPageState extends State<MangaPage> {
                 // 介绍
                 // ****************************************************************
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   color: Colors.white,
-                  child: SelectableText.rich(
-                    _showBriefIntroduction
-                        ? TextSpan(
-                            text: _data.briefIntroduction,
-                            style: TextStyle(color: Colors.black),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => mountedSetState(() => _showBriefIntroduction = !_showBriefIntroduction),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: RichText(
+                          text: TextSpan(
+                            text: '',
+                            style: Theme.of(context).textTheme.bodyText2.copyWith(fontSize: 13),
                             children: [
-                              TextSpan(
-                                text: ' 展开详情',
-                                style: TextStyle(color: Theme.of(context).primaryColor),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    _showBriefIntroduction = false;
-                                    if (mounted) setState(() {});
-                                  },
-                              ),
-                              TextSpan(text: ' '),
-                            ],
-                          )
-                        : TextSpan(
-                            text: _data.introduction,
-                            style: TextStyle(color: Colors.black),
-                            children: [
-                              TextSpan(
-                                text: ' 收起介绍',
-                                style: TextStyle(color: Theme.of(context).primaryColor),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    _showBriefIntroduction = true;
-                                    if (mounted) setState(() {});
-                                  },
-                              ),
+                              if (_showBriefIntroduction) ...[
+                                TextSpan(text: _data.briefIntroduction),
+                                TextSpan(
+                                  text: ' 展开详情',
+                                  style: TextStyle(color: Theme.of(context).primaryColor),
+                                ),
+                              ],
+                              if (!_showBriefIntroduction) ...[
+                                TextSpan(text: _data.introduction),
+                                TextSpan(
+                                  text: ' 收起介绍',
+                                  style: TextStyle(color: Theme.of(context).primaryColor),
+                                ),
+                              ],
                               TextSpan(text: ' '),
                             ],
                           ),
-                    style: Theme.of(context).textTheme.subtitle1,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 Container(
@@ -263,25 +258,44 @@ class _MangaPageState extends State<MangaPage> {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => Fluttertoast.showToast(msg: 'TODO'),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => MangaDetailPage(data: _data),
+                        ),
+                      ),
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        child: Column(
+                        child: Stack(
                           children: [
-                            RatingBar.builder(
-                              direction: Axis.horizontal,
-                              allowHalfRating: true,
-                              itemCount: 5,
-                              itemPadding: EdgeInsets.symmetric(horizontal: 4),
-                              itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
-                              initialRating: _data.averageScore / 2.0,
-                              minRating: 0,
-                              itemSize: 32,
-                              ignoreGestures: true,
-                              onRatingUpdate: (_) {},
+                            Align(
+                              alignment: Alignment.center,
+                              child: Column(
+                                children: [
+                                  RatingBar.builder(
+                                    direction: Axis.horizontal,
+                                    allowHalfRating: true,
+                                    itemCount: 5,
+                                    itemPadding: EdgeInsets.symmetric(horizontal: 4),
+                                    itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+                                    initialRating: _data.averageScore / 2.0,
+                                    minRating: 0,
+                                    itemSize: 32,
+                                    ignoreGestures: true,
+                                    onRatingUpdate: (_) {},
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text('平均分数: ${_data.averageScore} / 10.0，共 ${_data.scoreCount} 人评价'),
+                                ],
+                              ),
                             ),
-                            SizedBox(height: 6),
-                            Text('平均分数: ${_data.averageScore} / 10.0，共 ${_data.scoreCount} 人评价'),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Text(
+                                '查看详情',
+                                style: TextStyle(color: Theme.of(context).primaryColor),
+                              ),
+                            ),
                           ],
                         ),
                       ),

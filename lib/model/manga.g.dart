@@ -34,6 +34,7 @@ Manga _$MangaFromJson(Map<String, dynamic> json) {
     perScores: (json['per_scores'] as List)
         ?.map((e) => (e as num)?.toDouble())
         ?.toList(),
+    banned: json['banned'] as bool,
     chapterGroups: (json['chapter_groups'] as List)
         ?.map((e) => e == null
             ? null
@@ -61,6 +62,7 @@ Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'average_score': instance.averageScore,
       'score_count': instance.scoreCount,
       'per_scores': instance.perScores,
+      'banned': instance.banned,
       'chapter_groups': instance.chapterGroups,
     };
 

@@ -120,7 +120,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
           onStopLoading: () => mountedSetState(() => _disableOption = false),
           onAppend: (l) {
             if (l.length > 0) {
-              Fluttertoast.showToast(msg: '新添了 ${l.length} 位作者');
+              Fluttertoast.showToast(msg: '新添了 ${l.length} 位漫画家');
             }
             _lastOrder = _order;
             _lastGenre = _selectedGenre;

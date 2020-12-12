@@ -218,8 +218,8 @@ class _AuthorPageState extends State<AuthorPage> {
                 pinned: true,
                 floating: true,
                 delegate: SliverAppBarSizedDelegate(
-                  minHeight: 37,
-                  maxHeight: 37,
+                  minHeight: 26.0 + 5 * 2 + 1,
+                  maxHeight: 26.0 + 5 * 2 + 1,
                   child: Container(
                     color: Colors.white,
                     child: Column(
@@ -229,10 +229,16 @@ class _AuthorPageState extends State<AuthorPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Padding(
-                                padding: EdgeInsets.only(left: 5, top: 4, bottom: 3),
-                                child: Text('全部漫画 (共 $_total 部)'),
+                              Container(
+                                height: 26,
+                                padding: EdgeInsets.only(left: 5),
+                                child: Center(
+                                  child: Text('全部漫画 (共 $_total 部)'),
+                                ),
                               ),
+                              // ****************************************************************
+                              // 漫画排序
+                              // ****************************************************************
                               if (_total > 0)
                                 OptionPopupView<MangaOrder>(
                                   title: _order.toTitle(),
@@ -262,6 +268,9 @@ class _AuthorPageState extends State<AuthorPage> {
             ),
           ],
           controller: _controller,
+          // ****************************************************************
+          // 漫画
+          // ****************************************************************
           body: Builder(
             builder: (c) => PaginationSliverListView<SmallManga>(
               outerController: _controller,

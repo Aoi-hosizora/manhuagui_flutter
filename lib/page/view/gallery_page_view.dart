@@ -14,7 +14,7 @@ class GalleryPageView extends StatefulWidget {
     this.backgroundDecoration,
     this.gaplessPlayback = false,
     this.reverse = false,
-    this.pageController,
+    @required this.pageController,
     this.onPageChanged,
     this.scaleStateChangedCallback,
     this.enableRotation = false,
@@ -23,6 +23,7 @@ class GalleryPageView extends StatefulWidget {
     this.customSize,
   })  : assert(itemCount != null),
         assert(builder != null),
+        assert(pageController != null),
         super(key: key);
 
   final int itemCount;
@@ -47,36 +48,17 @@ class GalleryPageView extends StatefulWidget {
 }
 
 class _GalleryPageViewState extends State<GalleryPageView> {
-  PageController _controller;
-
-  @override
-  void initState() {
-    _controller = widget.pageController ?? PageController(viewportFraction: 1);
-    super.initState();
-  }
-
-  void scaleStateChangedCallback(PhotoViewScaleState scaleState) {
-    if (widget.scaleStateChangedCallback != null) {
-      widget.scaleStateChangedCallback(scaleState);
-    }
-  }
-
-  int get actualPage {
-    return _controller.hasClients ? _controller.page.floor() : 0;
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Enable corner hit test
     return PhotoViewGestureDetectorScope(
       axis: widget.scrollDirection,
       child: PageView.builder(
         reverse: widget.reverse,
-        controller: _controller,
+        controller: widget.pageController,
         onPageChanged: widget.onPageChanged,
         itemCount: widget.itemCount,
         itemBuilder: (context, index) => FractionallySizedBox(
-          widthFactor: 1 / _controller.viewportFraction,
+          widthFactor: 1 / widget.pageController.viewportFraction, // <<<
           child: _buildItem(context, index),
         ),
         scrollDirection: widget.scrollDirection,
@@ -99,7 +81,7 @@ class _GalleryPageViewState extends State<GalleryPageView> {
         customSize: widget.customSize,
         gaplessPlayback: widget.gaplessPlayback,
         heroAttributes: pageOption.heroAttributes,
-        scaleStateChangedCallback: scaleStateChangedCallback,
+        scaleStateChangedCallback: (s) => widget.scaleStateChangedCallback?.call(s),
         enableRotation: widget.enableRotation,
         initialScale: pageOption.initialScale,
         minScale: pageOption.minScale,

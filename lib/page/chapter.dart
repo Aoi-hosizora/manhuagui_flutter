@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/gallery_page_view.dart';
@@ -36,6 +35,10 @@ class ChapterPage extends StatefulWidget {
   _ChapterPageState createState() => _ChapterPageState();
 }
 
+final _kSlideWidthRatio = 0.3; // 点击跳转页面的区域比例
+final _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
+final _kViewportFraction = 1.08; // 页面间隔
+
 class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClientMixin {
   PageController _controller;
   var _loading = true;
@@ -43,48 +46,30 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   var _error = '';
   var _currentPage = 1;
   var _progressValue = 1;
+  var _fileProvider = () async => null;
+  var _imageProviders = <Future<String> Function()>[];
 
-  get _reverseScroll => _setting.scrollDirection == ScrollDirection.r2l; // 反转拖动
   var _showRegion = false; // 显示区域提示
   var _showAppBar = false; // 显示工具栏
   var _setting = CategoryViewSetting.defaultSetting();
-
-  var _pointerDownXPosition = 0.0; // 按住的x坐标
-  final _kSlideWidthRatio = 0.3; // 点击跳转页面的区域比例
-  final _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
+  var _pointerDownXPosition = 0.0; // 按住的横坐标
   var _swipeOffsetX = 0.0; // 滑动的水平偏移量
   var _swipeFirstOver = false; // 是否划出第一页
   var _swipeLastOver = false; // 是否划出最后一页
 
-  final _fileProvider = () async => null;
-  var _imageProviders = <Future<String> Function()>[];
-
   @override
   void initState() {
-    _setting.existed().then((ok) {
+    super.initState();
+    _showAppBar = widget.showAppBar;
+    _setting.existed().then((ok) async {
       if (!ok) {
         _setting = CategoryViewSetting.defaultSetting();
-        return _setting.save();
+        await _setting.save();
       } else {
-        return _setting.load();
+        await _setting.load();
       }
-    }).then((_) {
-      _controller = PageController(
-        initialPage: _controller?.initialPage ?? widget.initialPage - 1,
-        viewportFraction: _setting?.enablePageSpace ?? true ? 1.08 : 1,
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
     });
-    super.initState();
-    if (widget.initialPage > 0) {
-      _controller = PageController(
-        initialPage: widget.initialPage - 1,
-        viewportFraction: 1,
-      );
-      _currentPage = widget.initialPage;
-      _progressValue = widget.initialPage;
-    }
-    _showAppBar = widget.showAppBar;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   @override
@@ -105,16 +90,16 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
-
       _imageProviders = [for (var url in _data.pages) () async => url];
-      if (widget.initialPage <= 0) {
-        _controller = PageController(
-          initialPage: _data.pageCount - 1, // 指定倒数一页
-          viewportFraction: _setting?.enablePageSpace ?? true ? 1.08 : 1,
-        );
-        _currentPage = _data.pageCount;
-        _progressValue = _data.pageCount;
-      }
+
+      // !!!
+      var initialPage = widget.initialPage <= 0 ? _data.pageCount : widget.initialPage; // 指定初始页
+      _controller = PageController(
+        initialPage: initialPage - 1,
+        viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
+      );
+      _currentPage = initialPage;
+      _progressValue = initialPage;
     }).catchError((e) {
       _data = null;
       _error = wrapError(e).text;
@@ -133,9 +118,9 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     if (pos != null) {
       var x = pos.dx;
       if (x == _pointerDownXPosition && x < width * _kSlideWidthRatio) {
-        _gotoPage(!_reverseScroll ? _currentPage - 1 : _currentPage + 1); // 上一页 / 下一页(反)
+        _gotoPage(!_setting.reverseScroll ? _currentPage - 1 : _currentPage + 1); // 上一页 / 下一页(反)
       } else if (x == _pointerDownXPosition && x > width * (1 - _kSlideWidthRatio)) {
-        _gotoPage(!_reverseScroll ? _currentPage + 1 : _currentPage - 1); // 下一页 / 上一页(反)
+        _gotoPage(!_setting.reverseScroll ? _currentPage + 1 : _currentPage - 1); // 下一页 / 上一页(反)
       } else {
         _showAppBar = !_showAppBar;
         if (mounted) setState(() {});
@@ -155,6 +140,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     if (mounted) setState(() {});
   }
 
+  /// goto page
   void _gotoPage(int page) {
     if (page <= 0) {
       if (_setting.useClickForChapter) {
@@ -173,6 +159,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     }
   }
 
+  /// goto chapter
   void _gotoChapter({bool last, bool isAppBar = false}) {
     if ((last && _data.prevCid == 0) || (!last && _data.nextCid == 0)) {
       showDialog(
@@ -198,12 +185,12 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
             mid: widget.mid,
             showAppBar: _showAppBar,
             cid: last ? _data.prevCid : _data.nextCid,
-            initialPage: (!last || isAppBar) ? 1 : -1, // 下一章节或者是由工具栏点击的上一章节则直接到第一页，否则跳转到最后一页
+            initialPage: (!last || isAppBar) ? 1 : -1, // 下一章节 || 工具栏点击的上一章节 => 第一页，否则 => 最后一页
           ),
         ),
       );
     };
-    if (_setting.needCheckForChapter) {
+    if (_setting.needCheckForChapter && !isAppBar) {
       showDialog(
         context: context,
         builder: (c) => AlertDialog(
@@ -232,6 +219,43 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   void _onSettingPressed() {
     _showAppBar = false;
     if (mounted) setState(() {});
+
+    Widget _buildCombo<T>({String title, T value, List<T> values, Widget Function(T) builder, void Function(T) onChanged}) {
+      return Row(
+        children: [
+          Text(title),
+          SizedBox(width: 60),
+          Container(
+            height: 36,
+            width: 120,
+            child: DropdownButton<T>(
+              value: value,
+              items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
+              underline: Container(color: Colors.white),
+              isExpanded: true,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget _buildSlider({String title, bool value, void Function(bool) onChanged}) {
+      return Row(
+        children: [
+          Text(title),
+          Spacer(),
+          Container(
+            height: 36,
+            child: Switch(
+              value: value,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      );
+    }
+
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
@@ -241,129 +265,74 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Text('阅读方向'),
-                  SizedBox(width: 32),
-                  Expanded(
-                    child: Container(
-                      height: 36,
-                      child: DropdownButton<ScrollDirection>(
-                        value: _setting.scrollDirection,
-                        items: [ScrollDirection.l2r, ScrollDirection.r2l]
-                            .map(
-                              (s) => DropdownMenuItem<ScrollDirection>(
-                                child: Text(
-                                  s == ScrollDirection.l2r ? '从左往右' : '从右往左',
-                                  style: Theme.of(context).textTheme.bodyText1,
-                                ),
-                                value: s,
-                              ),
-                            )
-                            .toList(),
-                        underline: Container(color: Colors.white),
-                        isExpanded: true,
-                        onChanged: (s) async {
-                          _setting.scrollDirection = s;
-                          await _setting.save();
-                          _setState(() {});
-                          if (mounted) setState(() {});
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+              _buildCombo<bool>(
+                title: '阅读方向',
+                value: _setting.reverseScroll,
+                values: [false, true],
+                builder: (s) => Text(
+                  s == false ? '从左往右' : '从右往左',
+                  style: Theme.of(context).textTheme.bodyText1,
+                ),
+                onChanged: (s) async {
+                  _setting.reverseScroll = s;
+                  await _setting.save();
+                  _setState(() {});
+                  if (mounted) setState(() {});
+                },
               ),
-              Row(
-                children: [
-                  Text('显示页码'),
-                  Spacer(),
-                  Container(
-                    height: 36,
-                    child: Switch(
-                      value: _setting.showPageHint,
-                      onChanged: (b) async {
-                        _setting.showPageHint = b;
-                        await _setting.save();
-                        _setState(() {});
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                  ),
-                ],
+              _buildSlider(
+                title: '显示页码',
+                value: _setting.showPageHint,
+                onChanged: (b) async {
+                  _setting.showPageHint = b;
+                  await _setting.save();
+                  _setState(() {});
+                  if (mounted) setState(() {});
+                },
               ),
-              Row(
-                children: [
-                  Text('滑动跳转至章节'),
-                  Spacer(),
-                  Container(
-                    height: 36,
-                    child: Switch(
-                      value: _setting.useSwipeForChapter,
-                      onChanged: (b) async {
-                        _setting.useSwipeForChapter = b;
-                        await _setting.save();
-                        _setState(() {});
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                  ),
-                ],
+              _buildSlider(
+                title: '滑动跳转至章节',
+                value: _setting.useSwipeForChapter,
+                onChanged: (b) async {
+                  _setting.useSwipeForChapter = b;
+                  await _setting.save();
+                  _setState(() {});
+                  if (mounted) setState(() {});
+                },
               ),
-              Row(
-                children: [
-                  Text('点击跳转至章节'),
-                  Spacer(),
-                  Container(
-                    height: 36,
-                    child: Switch(
-                      value: _setting.useClickForChapter,
-                      onChanged: (b) async {
-                        _setting.useClickForChapter = b;
-                        await _setting.save();
-                        _setState(() {});
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                  ),
-                ],
+              _buildSlider(
+                title: '点击跳转至章节',
+                value: _setting.useClickForChapter,
+                onChanged: (b) async {
+                  _setting.useClickForChapter = b;
+                  await _setting.save();
+                  _setState(() {});
+                  if (mounted) setState(() {});
+                },
               ),
-              Row(
-                children: [
-                  Text('跳转章节时弹出提示'),
-                  Spacer(),
-                  Container(
-                    height: 36,
-                    child: Switch(
-                      value: _setting.needCheckForChapter,
-                      onChanged: (b) async {
-                        _setting.needCheckForChapter = b;
-                        await _setting.save();
-                        _setState(() {});
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                  ),
-                ],
+              _buildSlider(
+                title: '跳转章节时弹出提示',
+                value: _setting.needCheckForChapter,
+                onChanged: (b) async {
+                  _setting.needCheckForChapter = b;
+                  await _setting.save();
+                  _setState(() {});
+                  if (mounted) setState(() {});
+                },
               ),
-              Row(
-                children: [
-                  Text('显示页面间隔'),
-                  Spacer(),
-                  Container(
-                    height: 36,
-                    child: Switch(
-                      value: _setting.enablePageSpace,
-                      onChanged: (b) async {
-                        _setting.enablePageSpace = b;
-                        await _setting.save();
-                        _setState(() {});
-                        Fluttertoast.showToast(msg: '需要返回并重新进入章节才能看到效果');
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                  ),
-                ],
+              _buildSlider(
+                title: '显示页面间隔',
+                value: _setting.enablePageSpace,
+                onChanged: (b) async {
+                  _setting.enablePageSpace = b;
+                  await _setting.save();
+                  _setState(() {});
+                  _controller = PageController(
+                    initialPage: _controller.initialPage,
+                    viewportFraction: b ? _kViewportFraction : 1,
+                  );
+                  if (mounted) setState(() {});
+                },
               ),
             ],
           ),
@@ -394,37 +363,40 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
 
     if (n is ScrollUpdateNotification) {
       var dx = n.dragDetails?.delta?.dx;
-      if (dx != null) {
-        _swipeOffsetX += dx;
-      } else {
+      if (dx == null) {
         _swipeOffsetX = 0;
         if (_swipeFirstOver) {
-          _gotoChapter(last: !_reverseScroll); // 上一章 / 下一章(反)
+          _gotoChapter(last: !_setting.reverseScroll); // 上一章 / 下一章(反)
         } else if (_swipeLastOver) {
-          _gotoChapter(last: _reverseScroll); // 下一章 / 上一章(反)
+          _gotoChapter(last: _setting.reverseScroll); // 下一章 / 上一章(反)
         }
+      } else {
+        _swipeOffsetX += dx;
       }
 
-      var willSwipeFirst = ((!_reverseScroll && _currentPage == 1) || (_reverseScroll && _currentPage == _data.pageCount)); // 第一页 / 最后一页(反)
-      var willSwipeLast = ((!_reverseScroll && _currentPage == _data.pageCount) || (_reverseScroll && _currentPage == 1)); // 最后一页 / 第一页(反)
+      var willSwipeFirst = ((!_setting.reverseScroll && _currentPage == 1) || (_setting.reverseScroll && _currentPage == _data.pageCount)); // 第一页 / 最后一页(反)
+      var willSwipeLast = ((!_setting.reverseScroll && _currentPage == _data.pageCount) || (_setting.reverseScroll && _currentPage == 1)); // 最后一页 / 第一页(反)
+      var nowSwipeFirstOver = _swipeOffsetX >= _kChapterSwipeWidth; // 当前划出第一页
+      var nowSwipeLastOver = _swipeOffsetX <= -_kChapterSwipeWidth; // 当前划出最后一页
       if (willSwipeFirst && _swipeOffsetX >= 0 && _swipeOffsetX < _kChapterSwipeWidth * 2) {
-        if (_swipeOffsetX > _kChapterSwipeWidth && !_swipeFirstOver) {
+        if (!_swipeFirstOver && nowSwipeFirstOver) {
           _swipeFirstOver = true;
           if (mounted) setState(() {});
-        } else if (_swipeOffsetX <= _kChapterSwipeWidth && _swipeFirstOver) {
+        } else if (_swipeFirstOver && !nowSwipeFirstOver) {
           _swipeFirstOver = false;
           if (mounted) setState(() {});
         }
       } else if (willSwipeLast && _swipeOffsetX <= 0 && _swipeOffsetX > -_kChapterSwipeWidth * 2) {
-        if (_swipeOffsetX < -_kChapterSwipeWidth && !_swipeLastOver) {
+        if (!_swipeLastOver && nowSwipeLastOver) {
           _swipeLastOver = true;
           if (mounted) setState(() {});
-        } else if (_swipeOffsetX >= -_kChapterSwipeWidth && _swipeLastOver) {
+        } else if (_swipeLastOver && !nowSwipeLastOver) {
           _swipeLastOver = false;
           if (mounted) setState(() {});
         }
       }
     }
+
     return true;
   }
 
@@ -457,13 +429,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       angle: pi,
                       child: Icon(Icons.arrow_right_alt),
                     ),
-                    tooltip: '上一章节',
-                    onPressed: () => _gotoChapter(last: true, isAppBar: true),
+                    tooltip: !_setting.reverseScroll ? '上一章节' : '下一章节', // 上一章节 / 下一章节(反)
+                    onPressed: () => _gotoChapter(last: !_setting.reverseScroll, isAppBar: true),
                   ),
                   IconButton(
                     icon: Icon(Icons.arrow_right_alt),
-                    tooltip: '下一章节',
-                    onPressed: () => _gotoChapter(last: false, isAppBar: true),
+                    tooltip: !_setting.reverseScroll ? '下一章节' : '上一章节', // 下一章节 / 上一章节(反)
+                    onPressed: () => _gotoChapter(last: _setting.reverseScroll, isAppBar: true),
                   ),
                 ],
               ),
@@ -497,7 +469,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                     onNotification: _onScrollNotification,
                     child: GalleryPageView(
                       scrollPhysics: BouncingScrollPhysics(),
-                      reverse: _reverseScroll,
+                      reverse: _setting.reverseScroll,
                       backgroundDecoration: BoxDecoration(color: Colors.black),
                       pageController: _controller,
                       onPageChanged: _onPageChanged,
@@ -554,7 +526,6 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       opacity: _swipeFirstOver ? 1.0 : 0.0,
                       duration: Duration(milliseconds: 200),
                       child: Container(
-                        color: Colors.black,
                         padding: EdgeInsets.symmetric(horizontal: 2),
                         width: 34,
                         height: height,
@@ -563,14 +534,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                           children: [
                             Transform.rotate(
                               angle: pi,
-                              child: Icon(
-                                Icons.arrow_right_alt,
-                                size: 24,
-                                color: Colors.white,
-                              ),
+                              child: Icon(Icons.arrow_right_alt, size: 24, color: Colors.white),
                             ),
                             Text(
-                              !_reverseScroll ? '前\n往\n上\n一\n章\n节' : '前\n往\n下\n一\n章\n节',
+                              !_setting.reverseScroll ? '前\n往\n上\n一\n章\n节' : '前\n往\n下\n一\n章\n节',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: Theme.of(context).textTheme.headline6.fontSize,
@@ -592,20 +559,15 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       opacity: _swipeLastOver ? 1.0 : 0.0,
                       duration: Duration(milliseconds: 200),
                       child: Container(
-                        color: Colors.black,
                         padding: EdgeInsets.symmetric(horizontal: 2),
                         width: 34,
                         height: height,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.arrow_right_alt,
-                              size: 24,
-                              color: Colors.white,
-                            ),
+                            Icon(Icons.arrow_right_alt, size: 24, color: Colors.white),
                             Text(
-                              !_reverseScroll ? '前\n往\n下\n一\n章\n节' : '前\n往\n上\n一\n章\n节',
+                              !_setting.reverseScroll ? '前\n往\n下\n一\n章\n节' : '前\n往\n上\n一\n章\n节',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: Theme.of(context).textTheme.headline6.fontSize,
@@ -619,15 +581,15 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 // ****************************************************************
                 // 右下角的提示文字
                 // ****************************************************************
-                if (!_showAppBar && _data != null && _setting.showPageHint)
+                if (_setting.showPageHint && !_showAppBar && _data != null)
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: Container(
                       color: Colors.black.withOpacity(0.75),
-                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                       child: Text(
-                        '${_data.title} $_currentPage/${_data.pageCount}',
+                        '${_data.title}  $_currentPage/${_data.pageCount}',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -646,15 +608,12 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                         children: [
                           Expanded(
                             child: Directionality(
-                              textDirection: !_reverseScroll ? TextDirection.ltr : TextDirection.rtl,
+                              textDirection: !_setting.reverseScroll ? TextDirection.ltr : TextDirection.rtl,
                               child: Slider(
                                 value: _progressValue.toDouble(),
                                 min: 1,
                                 max: _data.pageCount.toDouble(),
-                                onChanged: (p) {
-                                  _progressValue = p.toInt();
-                                  if (mounted) setState(() {});
-                                },
+                                onChanged: (p) => mountedSetState(() => _progressValue = p.toInt()),
                                 onChangeEnd: _onSliderChanged,
                               ),
                             ),
@@ -688,7 +647,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                             color: Colors.yellow[800].withAlpha(200),
                             child: Center(
                               child: Text(
-                                !_reverseScroll ? '上\n一\n页' : '下\n一\n页', // 上一页 / 下一页(反)
+                                !_setting.reverseScroll ? '上\n一\n页' : '下\n一\n页', // 上一页 / 下一页(反)
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: Theme.of(context).textTheme.headline6.fontSize,
@@ -716,7 +675,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                             color: Colors.red[200].withAlpha(200),
                             child: Center(
                               child: Text(
-                                !_reverseScroll ? '下\n一\n页' : '上\n一\n页', // 下一页 / 上一页(反)
+                                !_setting.reverseScroll ? '下\n一\n页' : '上\n一\n页', // 下一页 / 上一页(反)
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: Theme.of(context).textTheme.headline6.fontSize,
