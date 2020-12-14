@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/view/option_popup.dart';
+import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
+import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
+import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
 /// 搜索
@@ -13,53 +18,112 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  FloatingSearchBarController _controller;
-  String _q;
+  FloatingSearchBarController _searchController;
+  ScrollMoreController _scrollController;
+  ScrollFabController _fabController;
+  String __q;
   var _data = <SmallManga>[];
   int _total;
+  var _order = MangaOrder.byPopular;
+  var _lastOrder = MangaOrder.byPopular;
+  var _disableOption = false;
 
-  List<String> _getHistories({String keyword}) {
-    if (keyword?.isNotEmpty != true) {
-      return List.generate(20, (num) => 'Item ${num + 1}');
-    }
-    return List.generate(5, (num) => '$keyword ${num + 1}');
-  }
+  String get _q => __q?.trim()?.isNotEmpty == true ? __q.trim() : null;
 
-  void _search() {
-    var text = _controller?.query?.trim();
-    if (text == null || text == '') {
-      Fluttertoast.showToast(msg: '请输入搜索内容');
-      return;
-    }
+  set _q(String s) => __q = s?.trim();
 
-    _controller.close();
-    if (_q != text) {
-      _q = text;
-      if (mounted) setState(() {});
-      print('search $_q when ${DateTime.now()}');
-    }
-  }
+  String get _text => _searchController?.query?.trim()?.isNotEmpty == true ? _searchController.query.trim() : null;
+
+  set _text(String s) => _searchController?.query = s?.trim() ?? '';
 
   @override
   void initState() {
     super.initState();
-    _controller = FloatingSearchBarController();
-    WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(Duration(milliseconds: 200), () => _controller.open()));
+    _searchController = FloatingSearchBarController();
+    _scrollController = ScrollMoreController();
+    _fabController = ScrollFabController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(Duration(milliseconds: 200), () => _searchController.open()));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    _fabController.dispose();
+    super.dispose();
+  }
+
+  List<String> _getHistories({String keyword}) {
+    return ['lian', 'lianai', 'aiqing', 'ai'];
+    // keyword = keyword?.trim();
+    // if (keyword?.isNotEmpty != true) {
+    //   return List.generate(20, (num) => 'Item ${num + 1}');
+    // }
+    // return List.generate(5, (num) => '$keyword ${num + 1}');
+  }
+
+  Future<List<SmallManga>> _getData({int page}) async {
+    var dio = DioManager.getInstance().dio;
+    var client = RestClient(dio);
+    ErrorMessage err;
+    var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).catchError((e) {
+      err = wrapError(e);
+    });
+    if (err != null) {
+      return Future.error(err.text);
+    }
+    _total = result.data.total;
+    if (mounted) setState(() {});
+    return result.data.data;
+  }
+
+  void _search() {
+    if (_text == null) {
+      Fluttertoast.showToast(msg: '请输入搜索内容');
+      return;
+    }
+
+    if (_q != _text) {
+      _q = _text;
+      _searchController.close();
+      _scrollController.refresh();
+    } else {
+      _searchController.close();
+    }
+  }
+
+  Future<bool> _pop() async {
+    if (_q == null) {
+      return true; // 没搜索 => 退出
+    }
+    if (_searchController.isOpen) {
+      _searchController.close(); // 有搜索 => 关闭、恢复搜索框
+      _text = _q;
+    } else {
+      _q = null; // 有搜索 => 取消搜索，打开、清空搜索框
+      _data.clear();
+      _searchController.open();
+      _text = null;
+      if (mounted) setState(() {});
+    }
+    return false;
+  }
+
+  void _changeFocus(bool focus) {
+    if (focus == false) {
+      if (_q != null) {
+        _text = _q; // 有搜索 => 恢复搜索框
+      } else {
+        Navigator.of(context).maybePop(); // 没搜索 => 退出
+      }
+    }
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        if (_q?.isNotEmpty == true) {
-          _controller.clear(); // 清空搜索以及搜索框
-          _q = null;
-          if (mounted) setState(() {});
-          _controller.open(); // 重新打开搜索框
-          return false;
-        }
-        return true;
-      },
+      onWillPop: _pop,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         body: Stack(
@@ -75,23 +139,86 @@ class _SearchPageState extends State<SearchPage> {
             ),
             Positioned.fill(
               top: MediaQuery.of(context).padding.top + 45,
-              child: PlaceholderText(
-                state: _q?.isNotEmpty == true ? PlaceholderState.normal : PlaceholderState.nothing,
-                setting: PlaceholderSetting().toChinese(),
-                childBuilder: (_) => Center(
-                  child: Text('search result about "$_q"'),
+              child: PaginationListView<SmallManga>(
+                controller: _scrollController,
+                data: _data,
+                strategy: PaginationStrategy.offsetBased,
+                getDataByOffset: _getData,
+                initialPage: 1,
+                onAppend: (l) {
+                  if (l.length > 0) {
+                    Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
+                  }
+                  _lastOrder = _order;
+                  if (mounted) setState(() {});
+                },
+                onError: (e) {
+                  Fluttertoast.showToast(msg: e.toString());
+                  _order = _lastOrder;
+                  if (mounted) setState(() {});
+                },
+                clearWhenRefreshing: true,
+                clearWhenError: false,
+                updateOnlyIfNotEmpty: false,
+                refreshFirst: false,
+                placeholderSetting: PlaceholderSetting(
+                  showNothingIcon: _q != null,
+                  showNothingRetry: _q != null,
+                ).toChinese(
+                  nothingText: _q == null ? '请在搜索框中输入关键字...' : '无内容',
+                ),
+                onStateChanged: (_, __) => _fabController.hide(),
+                padding: EdgeInsets.zero,
+                separator: Divider(height: 1),
+                itemBuilder: (c, item) => TinyMangaLineView(manga: item.toTiny()),
+                topWidget: Container(
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              height: 26,
+                              padding: EdgeInsets.only(left: 5),
+                              child: Center(
+                                child: Text('"$_q" 的搜索结果 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                              ),
+                            ),
+                            OptionPopupView<MangaOrder>(
+                              title: _order.toTitle(),
+                              top: 4,
+                              value: _order,
+                              items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                              onSelect: (o) {
+                                if (_order != o) {
+                                  _lastOrder = _order;
+                                  _order = o;
+                                  if (mounted) setState(() {});
+                                  _scrollController.refresh();
+                                }
+                              },
+                              optionBuilder: (c, v) => v.toTitle(),
+                              enable: !_disableOption,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(height: 1, thickness: 1),
+                    ],
+                  ),
                 ),
               ),
             ),
             Scrollbar(
               child: FloatingSearchBar(
-                controller: _controller,
+                controller: _searchController,
                 height: 36,
-                hint: 'Search',
+                hint: '搜索',
                 textInputType: TextInputType.text,
                 textInputAction: TextInputAction.search,
-                hintStyle: Theme.of(context).textTheme.bodyText2.copyWith(color: Theme.of(context).hintColor),
-                queryStyle: Theme.of(context).textTheme.bodyText2,
                 elevation: 3.0,
                 iconColor: Colors.black54,
                 margins: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 4),
@@ -99,12 +226,14 @@ class _SearchPageState extends State<SearchPage> {
                 padding: EdgeInsets.symmetric(horizontal: 3),
                 scrollPadding: EdgeInsets.only(top: 0, bottom: 32),
                 maxWidth: MediaQuery.of(context).size.width - 8 * 2,
-                openMaxWidth: MediaQuery.of(context).size.width - 8 * 2,
-                borderRadius: _controller.isClosed ? BorderRadius.circular(3) : BorderRadius.only(topLeft: Radius.circular(3), topRight: Radius.circular(3)),
+                openMaxWidth: MediaQuery.of(context).size.width - 10 * 2,
+                borderRadius: _searchController.isClosed ? BorderRadius.circular(3) : BorderRadius.only(topLeft: Radius.circular(3), topRight: Radius.circular(3)),
+                hintStyle: Theme.of(context).textTheme.bodyText2.copyWith(color: Theme.of(context).hintColor),
+                queryStyle: Theme.of(context).textTheme.bodyText2,
                 clearQueryOnClose: false,
                 closeOnBackdropTap: false,
-                automaticallyImplyDrawerHamburger: false,
                 automaticallyImplyBackButton: false,
+                automaticallyImplyDrawerHamburger: false,
                 transitionDuration: Duration(milliseconds: 500),
                 transitionCurve: Curves.easeInOut,
                 transition: CircularFloatingSearchBarTransition(),
@@ -114,16 +243,7 @@ class _SearchPageState extends State<SearchPage> {
                     size: 18,
                     showIfOpened: true,
                     showIfClosed: true,
-                    onTap: () {
-                      if (_controller.isOpen) {
-                        // 返回搜索列表
-                        _controller.query = _q;
-                        _controller.close();
-                        if (mounted) setState(() {});
-                      } else {
-                        Navigator.of(context).maybePop();
-                      }
-                    },
+                    onTap: () => Navigator.of(context).maybePop(), // 返回
                   ),
                 ],
                 actions: [
@@ -132,11 +252,7 @@ class _SearchPageState extends State<SearchPage> {
                     size: 18,
                     showIfOpened: true,
                     showIfClosed: false,
-                    onTap: () {
-                      // 清空
-                      _controller.clear();
-                      if (mounted) setState(() {});
-                    },
+                    onTap: () => mountedSetState(() => _searchController.clear()), // 清空
                   ),
                   FloatingSearchBarAction.icon(
                     icon: Icon(Icons.search, size: 18),
@@ -146,20 +262,15 @@ class _SearchPageState extends State<SearchPage> {
                     onTap: () => _search(), // 搜索
                   ),
                 ],
-                debounceDelay: Duration.zero,
-                onQueryChanged: (q) {
-                  if (mounted) setState(() {});
-                  print('onQueryChanged: $q');
-                },
-                onFocusChanged: (q) {
-                  if (q) {
-                    if (mounted) setState(() {});
-                  }
-                  print('onFocusChanged: $q');
-                },
+                debounceDelay: Duration(milliseconds: 100),
+                onQueryChanged: (_) => mountedSetState(() {}),
+                onFocusChanged: _changeFocus,
                 onSubmitted: (_) => _search(),
                 builder: (_, __) => ClipRRect(
-                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(3), bottomRight: Radius.circular(3)),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(3),
+                    bottomRight: Radius.circular(3),
+                  ),
                   child: Container(
                     color: Colors.white,
                     child: Material(
@@ -167,25 +278,19 @@ class _SearchPageState extends State<SearchPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (_controller.query?.isNotEmpty == true && _controller.query != _q)
+                          if (_text != null && _text != _q)
                             ListTile(
-                              // 搜索
-                              title: Text('搜索 "${_controller.query}"'),
+                              title: Text('搜索 "$_text"'),
                               leading: Icon(Icons.search),
-                              onTap: () => _search(),
+                              onTap: () => _search(), // 搜索
                             ),
-                          if (_q?.isNotEmpty == true)
+                          if (_q != null)
                             ListTile(
                               title: Text('返回 "$_q" 的搜索结果'),
                               leading: Icon(Icons.search),
-                              onTap: () {
-                                // 返回搜索列表
-                                _controller.query = _q;
-                                _controller.close();
-                                if (mounted) setState(() {});
-                              },
+                              onTap: () => Navigator.of(context).maybePop(), // 返回
                             ),
-                          ..._getHistories(keyword: _controller.query).map(
+                          ..._getHistories(keyword: _text).map(
                             (h) => ListTile(
                               title: Text(h),
                               leading: Icon(Icons.history),
@@ -193,10 +298,10 @@ class _SearchPageState extends State<SearchPage> {
                                 icon: Icon(Icons.close),
                                 onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
                               ),
-                              onTap: () => _controller.query = h, // 候选关键字
+                              onTap: () => _searchController.query = h,
                             ),
                           ),
-                          if (_controller.query?.isNotEmpty != true)
+                          if (_text != null)
                             ListTile(
                               title: Center(
                                 child: Text('清空历史记录'),
@@ -211,6 +316,15 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
           ],
+        ),
+        floatingActionButton: ScrollFloatingActionButton(
+          scrollController: _scrollController,
+          fabController: _fabController,
+          fab: FloatingActionButton(
+            child: Icon(Icons.vertical_align_top),
+            heroTag: 'SearchPage',
+            onPressed: () => _scrollController.scrollTop(),
+          ),
         ),
       ),
     );
