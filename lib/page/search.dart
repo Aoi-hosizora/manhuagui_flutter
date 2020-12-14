@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
+import 'package:manhuagui_flutter/service/prefs/search.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
@@ -22,6 +23,7 @@ class _SearchPageState extends State<SearchPage> {
   ScrollMoreController _scrollController;
   ScrollFabController _fabController;
   String __q;
+  var _histories = <String>[];
   var _data = <SmallManga>[];
   int _total;
   var _order = MangaOrder.byPopular;
@@ -53,15 +55,6 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
-  List<String> _getHistories({String keyword}) {
-    return ['lian', 'lianai', 'aiqing', 'ai'];
-    // keyword = keyword?.trim();
-    // if (keyword?.isNotEmpty != true) {
-    //   return List.generate(20, (num) => 'Item ${num + 1}');
-    // }
-    // return List.generate(5, (num) => '$keyword ${num + 1}');
-  }
-
   Future<List<SmallManga>> _getData({int page}) async {
     var dio = DioManager.getInstance().dio;
     var client = RestClient(dio);
@@ -77,6 +70,22 @@ class _SearchPageState extends State<SearchPage> {
     return result.data.data;
   }
 
+  Future<List<String>> _getHistories({String keyword}) async {
+    var histories = await getSearchHistories();
+    if (keyword == null) {
+      return histories;
+    }
+    var keywords = keyword.split(' ');
+    return histories.where((s) {
+      for (var w in keywords) {
+        if (s.contains(w)) {
+          return true;
+        }
+      }
+      return false;
+    }).toList();
+  }
+
   void _search() {
     if (_text == null) {
       Fluttertoast.showToast(msg: '请输入搜索内容');
@@ -87,6 +96,7 @@ class _SearchPageState extends State<SearchPage> {
       _q = _text;
       _searchController.close();
       _scrollController.refresh();
+      addSearchHistory(_q);
     } else {
       _searchController.close();
     }
@@ -116,7 +126,20 @@ class _SearchPageState extends State<SearchPage> {
       } else {
         Navigator.of(context).maybePop(); // 没搜索 => 退出
       }
+    } else {
+      _getHistories(keyword: _text).then((l) {
+        _histories = l;
+        if (mounted) setState(() {});
+      });
     }
+    if (mounted) setState(() {});
+  }
+
+  void _changeQuery(String s) {
+    _getHistories(keyword: _text).then((l) {
+      _histories = l;
+      if (mounted) setState(() {});
+    });
     if (mounted) setState(() {});
   }
 
@@ -133,8 +156,8 @@ class _SearchPageState extends State<SearchPage> {
               top: 0,
               child: Container(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).padding.top + 36 + 4 * 2 + 1, // 45
-                child: AppBar(),
+                height: MediaQuery.of(context).padding.top,
+                child: Container(color: Theme.of(context).primaryColor),
               ),
             ),
             Positioned.fill(
@@ -212,22 +235,35 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
             ),
+            Positioned(
+              top: MediaQuery.of(context).padding.top,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: 35.0 + 5 * 2, // 45
+                child: AppBar(automaticallyImplyLeading: false),
+              ),
+            ),
             Scrollbar(
               child: FloatingSearchBar(
                 controller: _searchController,
-                height: 36,
+                height: 35,
                 hint: '搜索',
                 textInputType: TextInputType.text,
                 textInputAction: TextInputAction.search,
-                elevation: 3.0,
                 iconColor: Colors.black54,
-                margins: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 4),
+                margins: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 5),
                 insets: EdgeInsets.symmetric(horizontal: 4),
                 padding: EdgeInsets.symmetric(horizontal: 3),
                 scrollPadding: EdgeInsets.only(top: 0, bottom: 32),
                 maxWidth: MediaQuery.of(context).size.width - 8 * 2,
-                openMaxWidth: MediaQuery.of(context).size.width - 10 * 2,
-                borderRadius: _searchController.isClosed ? BorderRadius.circular(3) : BorderRadius.only(topLeft: Radius.circular(3), topRight: Radius.circular(3)),
+                openMaxWidth: MediaQuery.of(context).size.width - 8 * 2,
+                elevation: 3.0,
+                borderRadius: _searchController.isClosed
+                    ? BorderRadius.circular(3)
+                    : BorderRadius.only(
+                        topLeft: Radius.circular(3),
+                        topRight: Radius.circular(3),
+                      ),
                 hintStyle: Theme.of(context).textTheme.bodyText2.copyWith(color: Theme.of(context).hintColor),
                 queryStyle: Theme.of(context).textTheme.bodyText2,
                 clearQueryOnClose: false,
@@ -263,7 +299,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ],
                 debounceDelay: Duration(milliseconds: 100),
-                onQueryChanged: (_) => mountedSetState(() {}),
+                onQueryChanged: _changeQuery,
                 onFocusChanged: _changeFocus,
                 onSubmitted: (_) => _search(),
                 builder: (_, __) => ClipRRect(
@@ -276,7 +312,6 @@ class _SearchPageState extends State<SearchPage> {
                     child: Material(
                       color: Colors.transparent,
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           if (_text != null && _text != _q)
                             ListTile(
@@ -290,23 +325,48 @@ class _SearchPageState extends State<SearchPage> {
                               leading: Icon(Icons.search),
                               onTap: () => Navigator.of(context).maybePop(), // 返回
                             ),
-                          ..._getHistories(keyword: _text).map(
+                          ..._histories.map(
                             (h) => ListTile(
                               title: Text(h),
                               leading: Icon(Icons.history),
                               trailing: IconButton(
                                 icon: Icon(Icons.close),
-                                onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
+                                onPressed: () {
+                                  _histories.remove(h);
+                                  removeSearchHistory(h);
+                                  if (mounted) setState(() {});
+                                },
                               ),
                               onTap: () => _searchController.query = h,
                             ),
                           ),
-                          if (_text != null)
+                          if (_histories.isNotEmpty && _text == null)
                             ListTile(
                               title: Center(
                                 child: Text('清空历史记录'),
                               ),
-                              onTap: () => Fluttertoast.showToast(msg: 'TODO'),
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                  title: Text('清空历史记录'),
+                                  content: Text('确定要清空搜索的历史记录吗？该操作无法撤销。'),
+                                  actions: [
+                                    FlatButton(
+                                      child: Text('清空'),
+                                      onPressed: () {
+                                        _histories.clear();
+                                        clearSearchHistories();
+                                        if (mounted) setState(() {});
+                                        Navigator.of(c).pop();
+                                      },
+                                    ),
+                                    FlatButton(
+                                      child: Text('取消'),
+                                      onPressed: () => Navigator.of(c).pop(),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                         ],
                       ),

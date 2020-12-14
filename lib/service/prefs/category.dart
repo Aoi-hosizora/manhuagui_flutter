@@ -44,11 +44,11 @@ class CategoryViewSetting {
 
   Future<void> save() async {
     var prefs = await getPrefs();
-    prefs.setBool(_SCROLL_DIRECTION, reverseScroll);
-    prefs.setBool(_SHOW_PAGE_HINT, showPageHint);
-    prefs.setBool(_USE_SWIPE_FOR_CHAPTER, useSwipeForChapter);
-    prefs.setBool(_USE_CLICK_FOR_CHAPTER, useClickForChapter);
-    prefs.setBool(_NEED_CHECK_FOR_CHAPTER, needCheckForChapter);
-    prefs.setBool(_ENABLE_PAGE_SPACE, enablePageSpace);
+    await prefs.setBool(_SCROLL_DIRECTION, reverseScroll);
+    await prefs.setBool(_SHOW_PAGE_HINT, showPageHint);
+    await prefs.setBool(_USE_SWIPE_FOR_CHAPTER, useSwipeForChapter);
+    await prefs.setBool(_USE_CLICK_FOR_CHAPTER, useClickForChapter);
+    await prefs.setBool(_NEED_CHECK_FOR_CHAPTER, needCheckForChapter);
+    await prefs.setBool(_ENABLE_PAGE_SPACE, enablePageSpace);
   }
 }
