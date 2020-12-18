@@ -16,21 +16,53 @@ class IndexPage extends StatefulWidget {
   _IndexPageState createState() => _IndexPageState();
 }
 
+class _PageItem {
+  const _PageItem({
+    @required this.title,
+    @required this.icon,
+    @required this.page,
+    @required this.action,
+  })  : assert(title != null),
+        assert(icon != null),
+        assert(page != null),
+        assert(action != null);
+
+  final String title;
+  final IconData icon;
+  final Widget page;
+  final ActionController action;
+}
+
 class _IndexPageState extends State<IndexPage> {
-  DateTime _lastBackPressedTime;
   var _currentIndex = 0;
-  var _items = <Tuple2<IconData, String>>[
-    Tuple2(Icons.home, '首页'),
-    Tuple2(Icons.category, '分类'),
-    Tuple2(Icons.notifications, '订阅'),
-    Tuple2(Icons.person, '我的'),
-  ];
-  var _pages = <Widget>[
-    HomeSubPage(),
-    CategorySubPage(),
-    SubscribeSubPage(),
-    MineSubPage(),
-  ];
+  var _items = <_PageItem>[];
+  var _pages = <Widget>[];
+  PageController _controller;
+  DateTime _lastBackPressedTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+
+    var homeAction = ActionController();
+    var categoryAction = ActionController();
+    var subscribeAction = ActionController();
+    var mineAction = ActionController();
+    _items = [
+      _PageItem(title: '首页', icon: Icons.home, page: HomeSubPage(actionController: homeAction), action: homeAction),
+      _PageItem(title: '分类', icon: Icons.category, page: CategorySubPage(actionController: categoryAction), action: categoryAction),
+      _PageItem(title: '订阅', icon: Icons.notifications, page: SubscribeSubPage(actionController: subscribeAction), action: subscribeAction),
+      _PageItem(title: '我的', icon: Icons.person, page: MineSubPage(actionController: mineAction), action: mineAction),
+    ];
+    _pages = _items.map((item) => item.page).toList();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<bool> _checkPermission() async {
     if (!(await Permission.storage.status).isGranted) {
@@ -62,10 +94,11 @@ class _IndexPageState extends State<IndexPage> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        body: LazyIndexedStack(
-          index: _currentIndex,
-          itemCount: _pages.length,
-          itemBuilder: (_, i) => _pages[i],
+        body: PageView.builder(
+          physics: NeverScrollableScrollPhysics(),
+          controller: _controller,
+          itemCount: _items.length,
+          itemBuilder: (_, idx) => _pages[idx],
         ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -73,12 +106,31 @@ class _IndexPageState extends State<IndexPage> {
           items: _items
               .map(
                 (t) => BottomNavigationBarItem(
-                  icon: Icon(t.item1),
-                  label: t.item2,
+                  icon: Icon(t.icon),
+                  label: t.title,
                 ),
               )
               .toList(),
-          onTap: (index) {
+          onTap: (index) async {
+            if (_currentIndex == index) {
+              _items[index].action.invoke('');
+              return;
+            }
+            _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.ease);
+
+            // var target = index > _currentIndex ? _currentIndex + 1 : _currentIndex - 1;
+            // var newPages = <Widget>[]..addAll(_pages);
+            // newPages[target] = _pages[index];
+            // newPages[index] = _pages[target];
+            // _pages = newPages;
+            // if (mounted) setState(() {});
+            //
+            // var result = _controller.animateToPage(target, duration: kTabScrollDuration, curve: Curves.ease);
+            // result.then((_) async {
+            //   _pages = _items.map((item) => item.page).toList();
+            //   if (mounted) setState(() {});
+            // });
+
             _currentIndex = index;
             if (mounted) setState(() {});
           },

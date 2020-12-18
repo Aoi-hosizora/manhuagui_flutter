@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/author.dart';
 import 'package:manhuagui_flutter/page/page/genre.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 
 /// 分类
 class CategorySubPage extends StatefulWidget {
-  const CategorySubPage({Key key}) : super(key: key);
+  const CategorySubPage({Key key,
+    this.actionController,
+  }) : super(key: key);
+
+  final ActionController actionController;
 
   @override
   _CategorySubPageState createState() => _CategorySubPageState();

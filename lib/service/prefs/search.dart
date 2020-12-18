@@ -13,9 +13,7 @@ Future<List<String>> getSearchHistories() async {
 Future<void> addSearchHistory(String s) async {
   var prefs = await getPrefs();
   var l = prefs.getStringList(_SEARCH_HISTORY) ?? [];
-  if (l.contains(s)) {
-    l.remove(s);
-  }
+  l.remove(s);
   l.insert(0, s);
   await prefs.setStringList(_SEARCH_HISTORY, l);
 }

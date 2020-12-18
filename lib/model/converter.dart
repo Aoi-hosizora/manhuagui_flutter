@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
+import 'package:manhuagui_flutter/model/user.dart';
 
 bool _matchJson(List<String> fields, Map<String, dynamic> json) {
   for (var f in fields) {
@@ -58,6 +59,10 @@ Type _jsonMapType(Map<String, dynamic> json) {
     return MangaChapterGroup;
   } else if (_matchJson(MangaGroupList.fields, json)) {
     return MangaGroupList;
+  } else if (_matchJson(Token.fields, json)) {
+    return Token;
+  } else if (_matchJson(User.fields, json)) {
+    return User;
   }
   return null;
 }
@@ -101,6 +106,10 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return MangaChapterGroup.fromJson(json) as T; // MangaChapterGroup
       } else if (_matchJson(MangaGroupList.fields, json)) {
         return MangaGroupList.fromJson(json) as T; // MangaGroupList
+      } else if (_matchJson(Token.fields, json)) {
+        return Token.fromJson(json) as T; // Token
+      } else if (_matchJson(User.fields, json)) {
+        return User.fromJson(json) as T; // User
       }
       // Result<ResultPage<?>>
       if (_matchPageJson<Manga, T>(json)) {
@@ -135,6 +144,10 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return ResultPage.fromJson(json, MangaChapterGroup()) as T; // MangaChapterGroup
       } else if (_matchPageJson<MangaGroupList, T>(json)) {
         return ResultPage.fromJson(json, MangaGroupList()) as T; // MangaGroupList
+      } else if (_matchPageJson<Token, T>(json)) {
+        return ResultPage.fromJson(json, Token()) as T; // Token
+      } else if (_matchPageJson<User, T>(json)) {
+        return ResultPage.fromJson(json, User()) as T; // User
       }
     }
     return json as T;

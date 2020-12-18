@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
+import 'package:manhuagui_flutter/model/user.dart';
 import 'package:retrofit/http.dart';
 
 part 'retrofit.g.dart';
@@ -67,4 +68,16 @@ abstract class RestClient {
 
   @GET('/comment/manga/{uid}')
   Future<Result<ResultPage<Comment>>> getMangaComments({@Path() int mid, @Query('page') int page});
+
+  @POST('/user/check_login')
+  Future<Result<dynamic>> checkUserLogin({@Header('Authorization') String token});
+
+  @GET('/user/info')
+  Future<Result<User>> getUserInfo({@Header('Authorization') String token});
+
+  @POST('/user/login')
+  Future<Result<Token>> login({@Query('username') String username, @Query('password') String password});
+
+  @GET('/user/shelf')
+  Future<Result<ResultPage<ShelfManga>>> getUserShelfMangas({@Header('Authorization') String token, @Query('page') int page});
 }
