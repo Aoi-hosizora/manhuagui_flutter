@@ -10,7 +10,12 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 /// 首页推荐
 /// Page for [MangaGroupList].
 class RecommendSubPage extends StatefulWidget {
-  const RecommendSubPage({Key key}) : super(key: key);
+  const RecommendSubPage({
+    Key key,
+    this.action,
+  }) : super(key: key);
+
+  final ActionController action;
 
   @override
   _RecommendSubPageState createState() => _RecommendSubPageState();
@@ -30,6 +35,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
     _indicatorKey = GlobalKey<RefreshIndicatorState>();
+    widget.action?.addAction('', () => print('RecommendSubPage'));
     WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
   }
 
@@ -44,7 +50,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     return client.getHotSerialMangas().then((hot) async {
       var finished = await client.getFinishedMangas();

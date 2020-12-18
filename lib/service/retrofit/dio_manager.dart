@@ -7,7 +7,7 @@ class DioManager {
 
   static DioManager _instance;
 
-  static DioManager getInstance() {
+  static DioManager get instance {
     if (_instance == null) {
       _instance = DioManager._();
       _instance._initDio();

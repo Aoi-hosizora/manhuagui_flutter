@@ -10,7 +10,12 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 /// 首页排行
 class RankingSubPage extends StatefulWidget {
-  const RankingSubPage({Key key}) : super(key: key);
+  const RankingSubPage({
+    Key key,
+    this.action,
+  }) : super(key: key);
+
+  final ActionController action;
 
   @override
   _RankingSubPageState createState() => _RankingSubPageState();
@@ -34,6 +39,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
+    widget.action?.addAction('', () => print('RankingSubPage'));
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
   }
 
@@ -48,7 +54,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     _genreLoading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     return client.getGenres().then((r) async {
       _genreError = '';
@@ -66,7 +72,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   }
 
   Future<List<MangaRank>> _getData() async {
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
     var f = _duration.name == 'day'

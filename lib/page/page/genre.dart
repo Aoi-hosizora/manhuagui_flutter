@@ -14,9 +14,11 @@ class GenreSubPage extends StatefulWidget {
   const GenreSubPage({
     Key key,
     this.defaultGenre,
+    this.action,
   }) : super(key: key);
 
   final TinyCategory defaultGenre;
+  final ActionController action;
 
   @override
   _GenreSubPageState createState() => _GenreSubPageState();
@@ -51,6 +53,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
+    widget.action?.addAction('', () => print('GenreSubPage'));
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
   }
 
@@ -65,7 +68,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     _genreLoading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     return client.getGenres().then((r) async {
       _genreError = '';
@@ -83,7 +86,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   }
 
   Future<List<TinyManga>> _getData({int page}) async {
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
     var f = client.getGenreMangas(

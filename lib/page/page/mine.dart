@@ -8,10 +8,10 @@ import 'package:manhuagui_flutter/service/state/notifiable.dart';
 class MineSubPage extends StatefulWidget {
   const MineSubPage({
     Key key,
-    this.actionController,
+    this.action,
   }) : super(key: key);
 
-  final ActionController actionController;
+  final ActionController action;
 
   @override
   _MineSubPageState createState() => _MineSubPageState();
@@ -22,6 +22,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   void initState() {
     super.initState();
     AuthState.instance.registerListener(this, () => mountedSetState(() {}));
+    widget.action?.addAction('', () => print('MineSubPage'));
   }
 
   @override

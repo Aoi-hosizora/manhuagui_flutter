@@ -8,10 +8,10 @@ import 'package:manhuagui_flutter/service/state/notifiable.dart';
 class SubscribeSubPage extends StatefulWidget {
   const SubscribeSubPage({
     Key key,
-    this.actionController,
+    this.action,
   }) : super(key: key);
 
-  final ActionController actionController;
+  final ActionController action;
 
   @override
   _SubscribeSubPageState createState() => _SubscribeSubPageState();
@@ -21,6 +21,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
+    widget.action?.addAction('', () => print('SubscribeSubPage'));
     AuthState.instance.registerListener(this, () => mountedSetState(() {}));
   }
 

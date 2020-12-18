@@ -50,7 +50,7 @@ class _MangaPageState extends State<MangaPage> {
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     return client.getManga(mid: widget.id).then((r) async {
       _error = '';

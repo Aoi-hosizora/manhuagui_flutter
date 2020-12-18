@@ -56,7 +56,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<List<SmallManga>> _getData({int page}) async {
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
     var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).catchError((e) {

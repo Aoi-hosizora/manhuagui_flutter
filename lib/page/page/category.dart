@@ -6,11 +6,12 @@ import 'package:manhuagui_flutter/page/search.dart';
 
 /// 分类
 class CategorySubPage extends StatefulWidget {
-  const CategorySubPage({Key key,
-    this.actionController,
+  const CategorySubPage({
+    Key key,
+    this.action,
   }) : super(key: key);
 
-  final ActionController actionController;
+  final ActionController action;
 
   @override
   _CategorySubPageState createState() => _CategorySubPageState();
@@ -18,11 +19,10 @@ class CategorySubPage extends StatefulWidget {
 
 class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin {
   TabController _controller;
+  var _selectedIndex = 0;
   var _tabs = <String>['类别', '漫画家'];
-  var _pages = <Widget>[
-    GenreSubPage(),
-    AuthorSubPage(),
-  ];
+  var _actions = <ActionController>[];
+  var _pages = <Widget>[];
 
   @override
   void initState() {
@@ -31,6 +31,19 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
       length: _tabs.length,
       vsync: this,
     );
+    _actions = List.generate(_tabs.length, (_) => ActionController());
+    _pages = [
+      GenreSubPage(action: _actions[0]),
+      AuthorSubPage(action: _actions[1]),
+    ];
+    widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _actions.forEach((a) => a.dispose());
+    super.dispose();
   }
 
   @override
@@ -52,6 +65,13 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
                 ),
               )
               .toList(),
+          onTap: (idx) {
+            if (idx == _selectedIndex) {
+              _actions[idx].invoke('');
+            } else {
+              _selectedIndex = idx;
+            }
+          },
         ),
         actions: [
           IconButton(

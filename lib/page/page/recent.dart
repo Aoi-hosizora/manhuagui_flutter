@@ -8,7 +8,12 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 /// 首页更新
 class RecentSubPage extends StatefulWidget {
-  const RecentSubPage({Key key}) : super(key: key);
+  const RecentSubPage({
+    Key key,
+    this.action,
+  }) : super(key: key);
+
+  final ActionController action;
 
   @override
   _RecentSubPageState createState() => _RecentSubPageState();
@@ -24,6 +29,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
+    widget.action?.addAction('', () => print('RecentSubPage'));
   }
 
   @override
@@ -34,7 +40,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   }
 
   Future<List<TinyManga>> _getData({int page}) async {
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
     var result = await client.getRecentUpdatedMangas(page: page).catchError((e) {

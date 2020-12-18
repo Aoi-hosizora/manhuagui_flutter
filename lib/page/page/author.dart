@@ -11,7 +11,12 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 /// 分类漫画家
 class AuthorSubPage extends StatefulWidget {
-  const AuthorSubPage({Key key}) : super(key: key);
+  const AuthorSubPage({
+    Key key,
+    this.action,
+  }) : super(key: key);
+
+  final ActionController action;
 
   @override
   _AuthorSubPageState createState() => _AuthorSubPageState();
@@ -40,6 +45,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
+    widget.action?.addAction('', () => print('AuthorSubPage'));
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
   }
 
@@ -54,7 +60,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     _genreLoading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     return client.getGenres().then((r) async {
       _genreError = '';
@@ -72,7 +78,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   }
 
   Future<List<SmallAuthor>> _getData({int page}) async {
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
     var f = client.getAllAuthors(

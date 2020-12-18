@@ -10,7 +10,12 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 /// 首页全部
 class OverallSubPage extends StatefulWidget {
-  const OverallSubPage({Key key}) : super(key: key);
+  const OverallSubPage({
+    Key key,
+    this.action,
+  }) : super(key: key);
+
+  final ActionController action;
 
   @override
   _OverallSubPageState createState() => _OverallSubPageState();
@@ -30,6 +35,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
+    widget.action?.addAction('', () => print('OverallSubPage'));
   }
 
   @override
@@ -40,7 +46,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   }
 
   Future<List<TinyManga>> _getData({int page}) async {
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
     var result = await client.getAllMangas(page: page, order: _order).catchError((e) {

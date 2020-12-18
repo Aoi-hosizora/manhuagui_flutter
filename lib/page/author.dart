@@ -64,7 +64,7 @@ class _AuthorPageState extends State<AuthorPage> {
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     return client.getAuthor(aid: widget.id).then((r) async {
       _error = '';
@@ -82,7 +82,7 @@ class _AuthorPageState extends State<AuthorPage> {
   }
 
   Future<List<SmallManga>> _getMangas({int page}) async {
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
     var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _order).catchError((e) {

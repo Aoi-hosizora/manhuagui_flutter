@@ -82,7 +82,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.getInstance().dio;
+    var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     return client.getMangaChapter(mid: widget.mid, cid: widget.cid).then((r) async {
       _error = '';

@@ -12,10 +12,10 @@ import 'package:manhuagui_flutter/service/natives/browser.dart';
 class HomeSubPage extends StatefulWidget {
   const HomeSubPage({
     Key key,
-    this.actionController,
+    this.action,
   }) : super(key: key);
 
-  final ActionController actionController;
+  final ActionController action;
 
   @override
   _HomeSubPageState createState() => _HomeSubPageState();
@@ -23,13 +23,10 @@ class HomeSubPage extends StatefulWidget {
 
 class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStateMixin {
   TabController _controller;
+  var _selectedIndex = 0;
   var _tabs = <String>['推荐', '更新', '全部', '排行'];
-  var _pages = <Widget>[
-    RecommendSubPage(),
-    RecentSubPage(),
-    OverallSubPage(),
-    RankingSubPage(),
-  ];
+  var _actions = <ActionController>[];
+  var _pages = <Widget>[];
 
   @override
   void initState() {
@@ -38,6 +35,21 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       length: _tabs.length,
       vsync: this,
     );
+    _actions = List.generate(_tabs.length, (_) => ActionController());
+    _pages = [
+      RecommendSubPage(action: _actions[0]),
+      RecentSubPage(action: _actions[1]),
+      OverallSubPage(action: _actions[2]),
+      RankingSubPage(action: _actions[3]),
+    ];
+    widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _actions.forEach((a) => a.dispose());
+    super.dispose();
   }
 
   @override
@@ -59,6 +71,13 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
                 ),
               )
               .toList(),
+          onTap: (idx) {
+            if (idx == _selectedIndex) {
+              _actions[idx].invoke('');
+            } else {
+              _selectedIndex = idx;
+            }
+          },
         ),
         actions: [
           IconButton(

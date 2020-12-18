@@ -16,51 +16,36 @@ class IndexPage extends StatefulWidget {
   _IndexPageState createState() => _IndexPageState();
 }
 
-class _PageItem {
-  const _PageItem({
-    @required this.title,
-    @required this.icon,
-    @required this.page,
-    @required this.action,
-  })  : assert(title != null),
-        assert(icon != null),
-        assert(page != null),
-        assert(action != null);
-
-  final String title;
-  final IconData icon;
-  final Widget page;
-  final ActionController action;
-}
-
 class _IndexPageState extends State<IndexPage> {
-  var _currentIndex = 0;
-  var _items = <_PageItem>[];
-  var _pages = <Widget>[];
   PageController _controller;
+  var _selectedIndex = 0;
   DateTime _lastBackPressedTime;
+  var _tabs = <Tuple2<String, IconData>>[
+    Tuple2('首页', Icons.home),
+    Tuple2('分类', Icons.category),
+    Tuple2('订阅', Icons.notifications),
+    Tuple2('我的', Icons.person),
+  ];
+  var _actions = <ActionController>[];
+  var _pages = <Widget>[];
 
   @override
   void initState() {
     super.initState();
     _controller = PageController();
-
-    var homeAction = ActionController();
-    var categoryAction = ActionController();
-    var subscribeAction = ActionController();
-    var mineAction = ActionController();
-    _items = [
-      _PageItem(title: '首页', icon: Icons.home, page: HomeSubPage(actionController: homeAction), action: homeAction),
-      _PageItem(title: '分类', icon: Icons.category, page: CategorySubPage(actionController: categoryAction), action: categoryAction),
-      _PageItem(title: '订阅', icon: Icons.notifications, page: SubscribeSubPage(actionController: subscribeAction), action: subscribeAction),
-      _PageItem(title: '我的', icon: Icons.person, page: MineSubPage(actionController: mineAction), action: mineAction),
+    _actions = List.generate(_tabs.length, (_) => ActionController());
+    _pages = [
+      HomeSubPage(action: _actions[0]),
+      CategorySubPage(action: _actions[1]),
+      SubscribeSubPage(action: _actions[2]),
+      MineSubPage(action: _actions[3]),
     ];
-    _pages = _items.map((item) => item.page).toList();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _actions.forEach((a) => a.dispose());
     super.dispose();
   }
 
@@ -97,42 +82,31 @@ class _IndexPageState extends State<IndexPage> {
         body: PageView.builder(
           physics: NeverScrollableScrollPhysics(),
           controller: _controller,
-          itemCount: _items.length,
+          onPageChanged: (index) {
+            _selectedIndex = index;
+            if (mounted) setState(() {});
+          },
+          itemCount: _tabs.length,
           itemBuilder: (_, idx) => _pages[idx],
         ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: _currentIndex,
-          items: _items
+          currentIndex: _selectedIndex,
+          items: _tabs
               .map(
                 (t) => BottomNavigationBarItem(
-                  icon: Icon(t.icon),
-                  label: t.title,
+                  label: t.item1,
+                  icon: Icon(t.item2),
                 ),
               )
               .toList(),
           onTap: (index) async {
-            if (_currentIndex == index) {
-              _items[index].action.invoke('');
-              return;
+            if (_selectedIndex == index) {
+              _actions[_selectedIndex].invoke('');
+            } else {
+              _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.ease);
+              if (mounted) setState(() {});
             }
-            _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.ease);
-
-            // var target = index > _currentIndex ? _currentIndex + 1 : _currentIndex - 1;
-            // var newPages = <Widget>[]..addAll(_pages);
-            // newPages[target] = _pages[index];
-            // newPages[index] = _pages[target];
-            // _pages = newPages;
-            // if (mounted) setState(() {});
-            //
-            // var result = _controller.animateToPage(target, duration: kTabScrollDuration, curve: Curves.ease);
-            // result.then((_) async {
-            //   _pages = _items.map((item) => item.page).toList();
-            //   if (mounted) setState(() {});
-            // });
-
-            _currentIndex = index;
-            if (mounted) setState(() {});
           },
         ),
       ),
