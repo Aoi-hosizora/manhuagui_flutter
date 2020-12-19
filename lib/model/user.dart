@@ -22,12 +22,12 @@ class User {
   @JsonKey(name: 'class')
   String className;
   int score;
-  String loginIP;
-  String lastLoginIP;
+  String loginIp;
+  String lastLoginIp;
   String registerTime;
   String lastLoginTime;
 
-  User({this.username, this.avatar, this.className, this.score, this.loginIP, this.lastLoginIP, this.registerTime, this.lastLoginTime});
+  User({this.username, this.avatar, this.className, this.score, this.loginIp, this.lastLoginIp, this.registerTime, this.lastLoginTime});
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 

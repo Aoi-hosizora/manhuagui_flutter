@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/state/auth.dart';
+import 'package:synchronized/synchronized.dart';
+
+var _lock = Lock();
 
 class LoginFirstView extends StatefulWidget {
   const LoginFirstView({Key key}) : super(key: key);
@@ -15,10 +18,14 @@ class _LoginFirstViewState extends State<LoginFirstView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      getToken().then((token) {
-        if (token.isNotEmpty) {
-          AuthState.instance.token = token;
-          AuthState.instance.notifyAll();
+      _lock.synchronized(() async {
+        var token = await getToken();
+        if (token?.isNotEmpty == true) {
+          if (AuthState.instance.token != token) {
+            print('${DateTime.now()}');
+            AuthState.instance.token = token;
+            AuthState.instance.notifyAll();
+          }
         }
       });
     });

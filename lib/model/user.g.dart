@@ -22,8 +22,8 @@ User _$UserFromJson(Map<String, dynamic> json) {
     avatar: json['avatar'] as String,
     className: json['class'] as String,
     score: json['score'] as int,
-    loginIP: json['login_i_p'] as String,
-    lastLoginIP: json['last_login_i_p'] as String,
+    loginIp: json['login_ip'] as String,
+    lastLoginIp: json['last_login_ip'] as String,
     registerTime: json['register_time'] as String,
     lastLoginTime: json['last_login_time'] as String,
   );
@@ -34,8 +34,8 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'avatar': instance.avatar,
       'class': instance.className,
       'score': instance.score,
-      'login_i_p': instance.loginIP,
-      'last_login_i_p': instance.lastLoginIP,
+      'login_ip': instance.loginIp,
+      'last_login_ip': instance.lastLoginIp,
       'register_time': instance.registerTime,
       'last_login_time': instance.lastLoginTime,
     };

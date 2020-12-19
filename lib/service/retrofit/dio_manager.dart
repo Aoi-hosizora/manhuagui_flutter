@@ -80,8 +80,10 @@ class LogInterceptor extends Interceptor {
 class ErrorMessage {
   String text;
   dynamic e;
+  int httpCode;
+  int serviceCode;
 
-  ErrorMessage({this.text, this.e});
+  ErrorMessage({this.text, this.e, this.httpCode, this.serviceCode});
 }
 
 /// Wrap error from dio to [ErrorMessage].
@@ -122,13 +124,13 @@ ErrorMessage wrapError(dynamic e) {
       }
       print('└─────────────────── WrapError ───────────────────┘');
       var text = r.code < 50000 ? r.message : '${r.code}: ${r.message}';
-      return ErrorMessage(text: text, e: '${r.code}: ${r.message}'); // !!!
+      return ErrorMessage(text: text, e: '${r.code}: ${r.message}', httpCode: e.response.statusCode, serviceCode: r.code); // !!!
     } catch (_) {
       var text = '${e.response.statusCode}: ${e.response.statusMessage}';
       print('type: server');
       print('error: $text');
       print('└─────────────────── WrapError ───────────────────┘');
-      return ErrorMessage(text: text, e: e);
+      return ErrorMessage(text: text, e: e, httpCode: e.response.statusCode);
     }
   }
 
@@ -137,5 +139,5 @@ ErrorMessage wrapError(dynamic e) {
   print('error: $e');
   print('└─────────────────── WrapError ───────────────────┘');
   var msg = '${e.runtimeType}: ${e.toString()}';
-  return ErrorMessage(text: msg, e: e);
+  return ErrorMessage(httpCode: 0, text: msg, e: e);
 }

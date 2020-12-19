@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
+import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
@@ -29,9 +30,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    AuthState.instance.registerListener(this, () => mountedSetState(() {}));
+    AuthState.instance.registerListener(this, () {
+      if (mounted) setState(() {});
+      if (AuthState.instance.logined) {
+        _loadUser();
+      }
+    });
     widget.action?.addAction('', () => print('MineSubPage'));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadUser());
   }
 
   @override
@@ -54,11 +59,40 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       _data = r.data;
     }).catchError((e) {
       _data = null;
-      _error = wrapError(e).text;
+      var we = wrapError(e);
+      _error = we.text;
+      if (we.httpCode == 401) {
+        _logout();
+      }
     }).whenComplete(() {
       _loading = false;
       if (mounted) setState(() {});
     });
+  }
+
+  void _logout() {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('退出登录'),
+        content: Text('确定要退出登录吗？'),
+        actions: [
+          FlatButton(
+            child: Text('确定'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              await removeToken();
+              AuthState.instance.token = null;
+              AuthState.instance.notifyAll();
+            },
+          ),
+          FlatButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -71,45 +105,147 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   Widget build(BuildContext context) {
     super.build(context);
     if (!AuthState.instance.logined) {
-      return Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          toolbarHeight: 45,
-          title: Text('我的'),
-        ),
-        body: LoginFirstView(),
-      );
+      _data = null;
+      return LoginFirstView();
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
-        title: Text('我的'),
-      ),
-      body: PlaceholderText.from(
-        isLoading: _loading,
-        errorText: _error,
-        isEmpty: _data == null,
-        setting: PlaceholderSetting().toChinese(),
-        onRefresh: () => _loadUser(),
-        childBuilder: (c) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('token: ${AuthState.instance.token}'),
-              Text('username: ${_data.username}'),
-              OutlineButton(
-                child: Text('退出登录'),
-                onPressed: () async {
-                  await removeToken();
-                  AuthState.instance.token = null;
-                  AuthState.instance.notifyAll();
-                },
+    return PlaceholderText.from(
+      isLoading: _loading,
+      errorText: _error,
+      isEmpty: _data == null,
+      setting: PlaceholderSetting().toChinese(),
+      onRefresh: () => _loadUser(),
+      childBuilder: (c) => Column(
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: 180,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                stops: [0, 0.5, 1],
+                colors: [
+                  Colors.blue[100],
+                  Colors.orange[100],
+                  Colors.purple[100],
+                ],
               ),
-            ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    NetworkImageView(
+                      url: _data.avatar,
+                      height: 75,
+                      width: 75,
+                      fit: BoxFit.cover,
+                    ),
+                    SizedBox(height: 15),
+                    Text(
+                      _data.username,
+                      style: Theme.of(context).textTheme.subtitle1,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+          SizedBox(height: 12),
+          Container(
+            color: Colors.white,
+            width: MediaQuery.of(context).size.width,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+                  child: Text(
+                    '个人信息',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 10, right: 10, bottom: 4),
+                  child: Divider(height: 1, thickness: 1),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
+                  child: Text(
+                    '您的会员等级：${_data.className}',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
+                  child: Text(
+                    '个人成长值：${_data.score} 点',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                SizedBox(height: 6),
+              ],
+            ),
+          ),
+          SizedBox(height: 12),
+          Container(
+            color: Colors.white,
+            width: MediaQuery.of(context).size.width,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+                  child: Text(
+                    '登录统计',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 10, right: 10, bottom: 4),
+                  child: Divider(height: 1, thickness: 1),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
+                  child: Text(
+                    '本次登录IP：${_data.loginIp}',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
+                  child: Text(
+                    '上次登录IP：${_data.lastLoginIp}',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
+                  child: Text(
+                    '注册时间：${_data.registerTime}',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
+                  child: Text(
+                    '上次登录时间：${_data.lastLoginTime}',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                SizedBox(height: 6),
+              ],
+            ),
+          ),
+          SizedBox(height: 10),
+          OutlineButton(
+            child: Text('退出登录'),
+            onPressed: _logout,
+          ),
+        ],
       ),
     );
   }
