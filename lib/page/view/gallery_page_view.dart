@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:manhuagui_flutter/page/view/preload_page_view.dart';
 import 'package:photo_view/photo_view.dart';
 
 typedef GalleryPageViewPageChangedCallback = void Function(int index);
 typedef GalleryPageViewBuilder = GalleryPageViewPageOptions Function(BuildContext context, int index);
 
+/// A [PhotoViewGallery] with [FractionallySizedBox] for [itemBuilder].
 class GalleryPageView extends StatefulWidget {
   const GalleryPageView({
     Key key,
@@ -21,6 +23,7 @@ class GalleryPageView extends StatefulWidget {
     this.scrollPhysics,
     this.scrollDirection = Axis.horizontal,
     this.customSize,
+    this.preloadPagesCount = 1,
   })  : assert(itemCount != null),
         assert(builder != null),
         assert(pageController != null),
@@ -40,6 +43,7 @@ class GalleryPageView extends StatefulWidget {
   final bool enableRotation;
   final Size customSize;
   final Axis scrollDirection;
+  final int preloadPagesCount;
 
   @override
   State<StatefulWidget> createState() {
@@ -52,7 +56,7 @@ class _GalleryPageViewState extends State<GalleryPageView> {
   Widget build(BuildContext context) {
     return PhotoViewGestureDetectorScope(
       axis: widget.scrollDirection,
-      child: PageView.builder(
+      child: PreLoadPageView.builder(
         reverse: widget.reverse,
         controller: widget.pageController,
         onPageChanged: widget.onPageChanged,
@@ -61,6 +65,7 @@ class _GalleryPageViewState extends State<GalleryPageView> {
           widthFactor: 1 / widget.pageController.viewportFraction, // <<<
           child: _buildItem(context, index),
         ),
+        preloadPagesCount: widget.preloadPagesCount ?? 1, // <<<
         scrollDirection: widget.scrollDirection,
         physics: widget.scrollPhysics,
       ),

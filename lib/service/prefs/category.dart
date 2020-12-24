@@ -6,6 +6,7 @@ const _USE_SWIPE_FOR_CHAPTER = 'USE_SWIPE_FOR_CHAPTER';
 const _USE_CLICK_FOR_CHAPTER = 'USE_CLICK_FOR_CHAPTER';
 const _NEED_CHECK_FOR_CHAPTER = 'NEED_CHECK_FOR_CHAPTER';
 const _ENABLE_PAGE_SPACE = 'ENABLE_PAGE_SPACE';
+const _PRELOAD_COUNT = 'PRELOAD_COUNT';
 
 class CategoryViewSetting {
   CategoryViewSetting();
@@ -16,6 +17,7 @@ class CategoryViewSetting {
   bool useClickForChapter; // 点击跳转至章节
   bool needCheckForChapter; // 跳转章节时弹出提示
   bool enablePageSpace; // 显示页面间隔
+  int preloadCount; // 预加载页数
 
   Future<bool> existed() async {
     var prefs = await getPrefs();
@@ -29,6 +31,7 @@ class CategoryViewSetting {
     useClickForChapter = true;
     needCheckForChapter = true;
     enablePageSpace = true;
+    preloadCount = 2;
   }
 
   Future<void> load() async {
@@ -40,6 +43,7 @@ class CategoryViewSetting {
     useClickForChapter = prefs.getBool(_USE_CLICK_FOR_CHAPTER) ?? def.useClickForChapter;
     needCheckForChapter = prefs.getBool(_NEED_CHECK_FOR_CHAPTER) ?? def.needCheckForChapter;
     enablePageSpace = prefs.getBool(_ENABLE_PAGE_SPACE) ?? def.enablePageSpace;
+    preloadCount = prefs.getInt(_PRELOAD_COUNT) ?? def.preloadCount;
   }
 
   Future<void> save() async {
@@ -50,5 +54,6 @@ class CategoryViewSetting {
     await prefs.setBool(_USE_CLICK_FOR_CHAPTER, useClickForChapter);
     await prefs.setBool(_NEED_CHECK_FOR_CHAPTER, needCheckForChapter);
     await prefs.setBool(_ENABLE_PAGE_SPACE, enablePageSpace);
+    await prefs.setInt(_PRELOAD_COUNT, preloadCount);
   }
 }

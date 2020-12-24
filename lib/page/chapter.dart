@@ -35,7 +35,7 @@ class ChapterPage extends StatefulWidget {
   _ChapterPageState createState() => _ChapterPageState();
 }
 
-final _kSlideWidthRatio = 0.3; // 点击跳转页面的区域比例
+final _kSlideWidthRatio = 0.25; // 点击跳转页面的区域比例
 final _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
 final _kViewportFraction = 1.08; // 页面间隔
 
@@ -190,7 +190,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         ),
       );
     };
-    if (_setting.needCheckForChapter && !isAppBar) {
+    if (_setting.needCheckForChapter) {
       showDialog(
         context: context,
         builder: (c) => AlertDialog(
@@ -220,14 +220,14 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _showAppBar = false;
     if (mounted) setState(() {});
 
-    Widget _buildCombo<T>({String title, T value, List<T> values, Widget Function(T) builder, void Function(T) onChanged}) {
+    Widget _buildCombo<T>({String title, double width = 120, T value, List<T> values, Widget Function(T) builder, void Function(T) onChanged}) {
       return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title),
-          SizedBox(width: 60),
           Container(
-            height: 36,
-            width: 120,
+            height: 38,
+            width: width,
             child: DropdownButton<T>(
               value: value,
               items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
@@ -242,11 +242,11 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
 
     Widget _buildSlider({String title, bool value, void Function(bool) onChanged}) {
       return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title),
-          Spacer(),
           Container(
-            height: 36,
+            height: 38,
             child: Switch(
               value: value,
               onChanged: onChanged,
@@ -331,6 +331,22 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                     initialPage: _controller.initialPage,
                     viewportFraction: b ? _kViewportFraction : 1,
                   );
+                  if (mounted) setState(() {});
+                },
+              ),
+              _buildCombo<int>(
+                title: '预加载页数',
+                width: 80,
+                value: _setting.preloadCount.clamp(0, 5),
+                values: [0, 1, 2, 3, 4, 5],
+                builder: (s) => Text(
+                  '$s页',
+                  style: Theme.of(context).textTheme.bodyText1,
+                ),
+                onChanged: (c) async {
+                  _setting.preloadCount = c.clamp(0, 5);
+                  await _setting.save();
+                  _setState(() {});
                   if (mounted) setState(() {});
                 },
               ),
@@ -474,6 +490,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       pageController: _controller,
                       onPageChanged: _onPageChanged,
                       itemCount: _data.pages.length,
+                      preloadPagesCount: _setting.preloadCount,
+                      // 2
                       loadingBuilder: (c, ImageChunkEvent e) => Listener(
                         onPointerUp: (e) => _onPointerUp(e.position),
                         onPointerDown: (e) => _onPointerDown(e.position),
