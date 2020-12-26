@@ -127,12 +127,34 @@ Map<String, dynamic> _$TinyMangaToJson(TinyManga instance) => <String, dynamic>{
       'newest_date': instance.newestDate,
     };
 
+TinyBlockManga _$TinyBlockMangaFromJson(Map<String, dynamic> json) {
+  return TinyBlockManga(
+    mid: json['mid'] as int,
+    title: json['title'] as String,
+    cover: json['cover'] as String,
+    url: json['url'] as String,
+    finished: json['finished'] as bool,
+    newestChapter: json['newest_chapter'] as String,
+  );
+}
+
+Map<String, dynamic> _$TinyBlockMangaToJson(TinyBlockManga instance) =>
+    <String, dynamic>{
+      'mid': instance.mid,
+      'title': instance.title,
+      'cover': instance.cover,
+      'url': instance.url,
+      'finished': instance.finished,
+      'newest_chapter': instance.newestChapter,
+    };
+
 MangaGroup _$MangaGroupFromJson(Map<String, dynamic> json) {
   return MangaGroup(
     title: json['title'] as String,
     mangas: (json['mangas'] as List)
-        ?.map((e) =>
-            e == null ? null : TinyManga.fromJson(e as Map<String, dynamic>))
+        ?.map((e) => e == null
+            ? null
+            : TinyBlockManga.fromJson(e as Map<String, dynamic>))
         ?.toList(),
   );
 }
@@ -168,10 +190,34 @@ Map<String, dynamic> _$MangaGroupListToJson(MangaGroupList instance) =>
       'other_groups': instance.otherGroups,
     };
 
+HomepageMangaGroupList _$HomepageMangaGroupListFromJson(
+    Map<String, dynamic> json) {
+  return HomepageMangaGroupList(
+    serial: json['serial'] == null
+        ? null
+        : MangaGroupList.fromJson(json['serial'] as Map<String, dynamic>),
+    finish: json['finish'] == null
+        ? null
+        : MangaGroupList.fromJson(json['finish'] as Map<String, dynamic>),
+    latest: json['latest'] == null
+        ? null
+        : MangaGroupList.fromJson(json['latest'] as Map<String, dynamic>),
+  );
+}
+
+Map<String, dynamic> _$HomepageMangaGroupListToJson(
+        HomepageMangaGroupList instance) =>
+    <String, dynamic>{
+      'serial': instance.serial,
+      'finish': instance.finish,
+      'latest': instance.latest,
+    };
+
 MangaRank _$MangaRankFromJson(Map<String, dynamic> json) {
   return MangaRank(
     mid: json['mid'] as int,
     title: json['title'] as String,
+    cover: json['cover'] as String,
     url: json['url'] as String,
     finished: json['finished'] as bool,
     authors: (json['authors'] as List)
@@ -189,6 +235,7 @@ MangaRank _$MangaRankFromJson(Map<String, dynamic> json) {
 Map<String, dynamic> _$MangaRankToJson(MangaRank instance) => <String, dynamic>{
       'mid': instance.mid,
       'title': instance.title,
+      'cover': instance.cover,
       'url': instance.url,
       'finished': instance.finished,
       'authors': instance.authors,

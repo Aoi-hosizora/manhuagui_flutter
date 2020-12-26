@@ -3,10 +3,10 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
-/// View for [TinyManga] (Block style).
-/// Used in [RecommendSubPage] and [MangaGroupPage].
-class TinyMangaBlockView extends StatefulWidget {
-  const TinyMangaBlockView({
+/// View for [TinyBlockManga] (Block style).
+/// Used in [MangaColumnView].
+class TinyBlockMangaView extends StatefulWidget {
+  const TinyBlockMangaView({
     Key key,
     @required this.manga,
     @required this.width,
@@ -19,17 +19,17 @@ class TinyMangaBlockView extends StatefulWidget {
         assert(manga != null || onMorePressed != null),
         super(key: key);
 
-  final TinyManga manga;
+  final TinyBlockManga manga;
   final double width;
   final double height;
   final EdgeInsets margin;
   final void Function() onMorePressed;
 
   @override
-  _TinyMangaBlockViewState createState() => _TinyMangaBlockViewState();
+  _TinyBlockMangaViewState createState() => _TinyBlockMangaViewState();
 }
 
-class _TinyMangaBlockViewState extends State<TinyMangaBlockView> {
+class _TinyBlockMangaViewState extends State<TinyBlockMangaView> {
   @override
   Widget build(BuildContext context) {
     if (widget.manga == null) {

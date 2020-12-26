@@ -610,7 +610,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                     right: 0,
                     child: Container(
                       color: Colors.black.withOpacity(0.75),
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      padding: EdgeInsets.only(left: 6, right: 9, top: 1, bottom: 1),
                       child: Text(
                         '${_data.title}  $_currentPage/${_data.pageCount}',
                         style: TextStyle(color: Colors.white),

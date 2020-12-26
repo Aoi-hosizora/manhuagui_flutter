@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -149,7 +148,7 @@ class _AuthorPageState extends State<AuthorPage> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     child: NetworkImageView(
-                      url: DEFAULT_AUTHOR_COVER_URL,
+                      url: _data.cover,
                       height: 130,
                       width: 100,
                       fit: BoxFit.cover,

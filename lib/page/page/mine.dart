@@ -167,14 +167,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   ),
                 ),
                 Positioned(
-                  right: 0,
-                  top: MediaQuery.of(context).padding.top,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: IconButton(
-                      icon: Icon(Icons.settings, color: Colors.black54),
-                      onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
-                    ),
+                  right: -20,
+                  top: MediaQuery.of(context).padding.top - 4,
+                  child: RawMaterialButton(
+                    child: Icon(Icons.settings, color: Colors.black54),
+                    padding: EdgeInsets.all(15.0),
+                    shape: CircleBorder(),
+                    onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
                   ),
                 ),
               ],

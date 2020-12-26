@@ -124,6 +124,23 @@ class _RestClient implements RestClient {
   }
 
   @override
+  Future<Result<HomepageMangaGroupList>> getHomepageMangas() async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/list/homepage',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<HomepageMangaGroupList>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
   Future<Result<ResultPage<TinyManga>>> getRecentUpdatedMangas(
       {page, limit = 42}) async {
     const _extra = <String, dynamic>{};

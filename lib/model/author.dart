@@ -8,6 +8,7 @@ class Author {
   String name;
   String alias;
   String zone;
+  String cover;
   String url;
   int mangaCount;
   int newestMangaId;
@@ -16,13 +17,13 @@ class Author {
   double averageScore;
   String introduction;
 
-  Author({this.aid, this.name, this.alias, this.zone, this.url, this.mangaCount, this.newestMangaId, this.newestMangaTitle, this.newestDate, this.averageScore, this.introduction});
+  Author({this.aid, this.name, this.alias, this.zone, this.cover, this.url, this.mangaCount, this.newestMangaId, this.newestMangaTitle, this.newestDate, this.averageScore, this.introduction});
 
   factory Author.fromJson(Map<String, dynamic> json) => _$AuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuthorToJson(this);
 
-  static const fields = <String>['aid', 'name', 'alias', 'zone', 'url', 'manga_count', 'newest_manga_id', 'newest_manga_title', 'newest_date', 'average_score', 'introduction'];
+  static const fields = <String>['aid', 'name', 'alias', 'zone', 'cover', 'url', 'manga_count', 'newest_manga_id', 'newest_manga_title', 'newest_date', 'average_score', 'introduction'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -30,17 +31,18 @@ class SmallAuthor {
   int aid;
   String name;
   String zone;
+  String cover;
   String url;
   int mangaCount;
   String newestDate;
 
-  SmallAuthor({this.aid, this.name, this.zone, this.url, this.mangaCount, this.newestDate});
+  SmallAuthor({this.aid, this.name, this.zone, this.cover, this.url, this.mangaCount, this.newestDate});
 
   factory SmallAuthor.fromJson(Map<String, dynamic> json) => _$SmallAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$SmallAuthorToJson(this);
 
-  static const fields = <String>['aid', 'name', 'zone', 'url', 'manga_count', 'newest_date'];
+  static const fields = <String>['aid', 'name', 'zone', 'cover', 'url', 'manga_count', 'newest_date'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/tiny_manga_block.dart';
+import 'package:manhuagui_flutter/page/view/manga_column.dart';
 
 /// 漫画分组
 /// Page for [MangaGroup].
@@ -9,16 +9,13 @@ class MangaGroupPage extends StatefulWidget {
   const MangaGroupPage({
     Key key,
     @required this.group,
-    @required this.title,
-    @required this.icon,
+    @required this.type,
   })  : assert(group != null),
-        assert(title != null),
-        assert(icon != null),
+        assert(type != null),
         super(key: key);
 
   final MangaGroup group;
-  final String title;
-  final IconData icon;
+  final MangaGroupType type;
 
   @override
   _MangaGroupPageState createState() => _MangaGroupPageState();
@@ -34,75 +31,27 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final hSpace = 5.0;
-    var width = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
-    var height = width / 3 * 4;
-
-    Widget buildMangaBlock(TinyManga manga, {bool left = false}) => TinyMangaBlockView(
-          manga: manga,
-          width: width,
-          height: height,
-          margin: EdgeInsets.only(left: left ? hSpace : 0, right: hSpace),
-        );
-
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
-        title: Text(widget.title),
+        title: Text('漫画分组详细'),
       ),
-      body: Container(
-        color: Colors.white,
-        child: ListView(
+      body: Padding(
+        padding: EdgeInsets.only(bottom: 4, top: 2),
+        child: MangaColumnView(
+          group: widget.group,
+          type: widget.type,
           controller: _controller,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: IconText(
-                icon: Icon(widget.icon, size: 20, color: Colors.orange),
-                text: Text(widget.title, style: Theme.of(context).textTheme.subtitle1),
-                space: 6,
-              ),
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildMangaBlock(widget.group.mangas[0], left: true),
-                buildMangaBlock(widget.group.mangas[1]),
-                buildMangaBlock(widget.group.mangas[2]),
-              ],
-            ),
-            SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildMangaBlock(widget.group.mangas[3], left: true),
-                buildMangaBlock(widget.group.mangas[4]),
-                buildMangaBlock(widget.group.mangas[5]),
-              ],
-            ),
-            SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildMangaBlock(widget.group.mangas[6], left: true),
-                buildMangaBlock(widget.group.mangas[7]),
-                buildMangaBlock(widget.group.mangas[8]),
-              ],
-            ),
-            SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildMangaBlock(widget.group.mangas[9], left: true),
-                if (widget.group.mangas.length == 12) ...[
-                  buildMangaBlock(widget.group.mangas[10]),
-                  buildMangaBlock(widget.group.mangas[11]),
-                ],
-              ],
-            )
-          ],
+          complete: true,
+          showTopMargin: false,
         ),
       ),
       floatingActionButton: ScrollFloatingActionButton(

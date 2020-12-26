@@ -107,9 +107,30 @@ class TinyManga {
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class MangaGroup {
+class TinyBlockManga {
+  int mid;
   String title;
-  List<TinyManga> mangas;
+  String cover;
+  String url;
+  bool finished;
+  String newestChapter;
+
+  TinyBlockManga({this.mid, this.title, this.cover, this.url, this.finished, this.newestChapter});
+
+  factory TinyBlockManga.fromJson(Map<String, dynamic> json) => _$TinyBlockMangaFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TinyBlockMangaToJson(this);
+
+  static const fields = <String>['mid', 'title', 'cover', 'url', 'finished', 'newest_chapter'];
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class MangaGroup {
+  // 1. X (#12)
+  // 2. 少女/爱情; 少年/热血; 竞技/体育; 武侠/格斗 (#10)
+  // 3. 推理/恐怖/悬疑; 百合/后宫/治愈; 社会/历史/战争; 校园/励志/冒险 (#15)
+  String title;
+  List<TinyBlockManga> mangas;
 
   MangaGroup({this.title, this.mangas});
 
@@ -120,8 +141,32 @@ class MangaGroup {
   static const fields = <String>['title', 'mangas'];
 }
 
+/// [MangaGroupList.title]
+enum MangaGroupType {
+  serial,
+  finish,
+  latest,
+}
+
+extension MangaGroupTitleExtension on MangaGroupType {
+  String toTitle() {
+    switch (this) {
+      case MangaGroupType.serial:
+        return '热门连载';
+      case MangaGroupType.finish:
+        return '经典完结';
+      case MangaGroupType.latest:
+        return '最新上架';
+    }
+    return '?';
+  }
+}
+
 @JsonSerializable(fieldRename: FieldRename.snake)
 class MangaGroupList {
+  // 1. 热门连载: top_group, groups (#4), other_groups (#4)
+  // 2. 经典完结: top_group, groups (#4), other_groups (#4)
+  // 3. 最新上架: top_group, groups (#4)
   String title;
   MangaGroup topGroup;
   List<MangaGroup> groups;
@@ -137,9 +182,25 @@ class MangaGroupList {
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
+class HomepageMangaGroupList {
+  MangaGroupList serial; // 热门连载
+  MangaGroupList finish; // 经典完结
+  MangaGroupList latest; // 最新上架
+
+  HomepageMangaGroupList({this.serial, this.finish, this.latest});
+
+  factory HomepageMangaGroupList.fromJson(Map<String, dynamic> json) => _$HomepageMangaGroupListFromJson(json);
+
+  Map<String, dynamic> toJson() => _$HomepageMangaGroupListToJson(this);
+
+  static const fields = <String>['serial', 'finish', 'latest'];
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class MangaRank {
   int mid;
   String title;
+  String cover;
   String url;
   bool finished;
   List<TinyAuthor> authors;
@@ -149,13 +210,13 @@ class MangaRank {
   double score;
   int trend;
 
-  MangaRank({this.mid, this.title, this.url, this.finished, this.authors, this.newestChapter, this.newestDate, this.order, this.score, this.trend});
+  MangaRank({this.mid, this.title, this.cover, this.url, this.finished, this.authors, this.newestChapter, this.newestDate, this.order, this.score, this.trend});
 
   factory MangaRank.fromJson(Map<String, dynamic> json) => _$MangaRankFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaRankToJson(this);
 
-  static const fields = <String>['mid', 'title', 'url', 'finished', 'authors', 'newest_chapter', 'newest_date', 'order', 'score', 'trend'];
+  static const fields = <String>['mid', 'title', 'cover', 'url', 'finished', 'authors', 'newest_chapter', 'newest_date', 'order', 'score', 'trend'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

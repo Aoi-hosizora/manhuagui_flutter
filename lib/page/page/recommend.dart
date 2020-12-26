@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/manga_group.dart';
-import 'package:manhuagui_flutter/page/view/tiny_manga_block.dart';
+import 'package:manhuagui_flutter/page/view/manga_column.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 /// 首页推荐
-/// Page for [MangaGroupList].
+/// Page for [HomepageMangaGroupList] / [MangaGroupList].
 class RecommendSubPage extends StatefulWidget {
   const RecommendSubPage({
     Key key,
@@ -26,7 +25,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   ScrollFabController _fabController;
   GlobalKey<RefreshIndicatorState> _indicatorKey;
   var _loading = true;
-  var _data = <MangaGroupList>[];
+  HomepageMangaGroupList _data;
   var _error = '';
 
   @override
@@ -52,88 +51,19 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
-    return client.getHotSerialMangas().then((hot) async {
-      var finished = await client.getFinishedMangas();
-      var latest = await client.getLatestMangas();
-
+    return client.getHomepageMangas().then((r) async {
       _error = '';
-      _data.clear();
+      _data = null;
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _data.addAll([hot.data, finished.data, latest.data]);
+      _data = r.data;
     }).catchError((e) {
-      _data.clear();
+      _data = null;
       _error = wrapError(e).text;
     }).whenComplete(() {
       _loading = false;
       if (mounted) setState(() {});
     });
-  }
-
-  Widget _buildColumn(MangaGroup group, String type, {bool first = false}) {
-    var title = group.title.isEmpty ? type : (type + "・" + group.title);
-    var icon = type == '热门连载'
-        ? Icons.whatshot
-        : type == '经典完结'
-            ? Icons.hourglass_bottom
-            : type == '最新上架'
-                ? Icons.fiber_new
-                : Icons.bookmark_border;
-
-    final hSpace = 5.0;
-    var width = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
-    var height = width / 3 * 4;
-
-    Widget buildBlock(TinyManga manga, {bool left = false}) => TinyMangaBlockView(
-          manga: manga,
-          width: width,
-          height: height,
-          margin: EdgeInsets.only(left: left ? hSpace : 0, right: hSpace),
-          onMorePressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (c) => MangaGroupPage(
-                group: group,
-                title: title,
-                icon: icon,
-              ),
-            ),
-          ),
-        );
-
-    return Container(
-      color: Colors.white,
-      margin: EdgeInsets.only(top: first ? 0 : 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: IconText(
-              icon: Icon(icon, size: 20, color: Colors.orange),
-              text: Text(title, style: Theme.of(context).textTheme.subtitle1),
-              space: 6,
-            ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildBlock(group.mangas[0], left: true),
-              buildBlock(group.mangas[1]),
-              buildBlock(group.mangas[2]),
-            ],
-          ),
-          SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildBlock(group.mangas[3], left: true),
-              buildBlock(group.mangas[4]),
-              buildBlock(null),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -149,7 +79,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
-          isEmpty: _data?.isNotEmpty != true,
+          isEmpty: _data == null,
           setting: PlaceholderSetting().toChinese(),
           onRefresh: () => _loadData(),
           onChanged: (_, __) => _fabController.hide(),
@@ -157,12 +87,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             child: ListView(
               controller: _controller,
               children: [
-                _buildColumn(_data[0].topGroup, "热门连载", first: true),
-                _buildColumn(_data[1].topGroup, "经典完结"),
-                _buildColumn(_data[2].topGroup, "最新上架"),
-                for (var group in _data[0].groups) _buildColumn(group, "热门连载"),
-                for (var group in _data[1].groups) _buildColumn(group, "经典完结"),
-                for (var group in _data[2].groups) _buildColumn(group, "最新上架"),
+                MangaColumnView(group: _data.serial.topGroup, type: MangaGroupType.serial, showTopMargin: false), // 热门连载
+                MangaColumnView(group: _data.finish.topGroup, type: MangaGroupType.finish), // 经典完结
+                MangaColumnView(group: _data.latest.topGroup, type: MangaGroupType.latest), // 最新上架
+                for (var group in _data.serial.groups) MangaColumnView(group: group, type: MangaGroupType.serial, small: true),
+                for (var group in _data.finish.groups) MangaColumnView(group: group, type: MangaGroupType.finish, small: true),
+                for (var group in _data.latest.groups) MangaColumnView(group: group, type: MangaGroupType.latest, small: true),
+                for (var group in _data.serial.otherGroups) MangaColumnView(group: group, type: MangaGroupType.serial, small: true, singleLine: true),
+                for (var group in _data.finish.otherGroups) MangaColumnView(group: group, type: MangaGroupType.finish, small: true, singleLine: true),
+                for (var group in _data.latest.otherGroups) MangaColumnView(group: group, type: MangaGroupType.latest, small: true, singleLine: true),
               ],
             ),
           ),

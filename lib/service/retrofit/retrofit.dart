@@ -33,6 +33,9 @@ abstract class RestClient {
   @GET('/list/latest')
   Future<Result<MangaGroupList>> getLatestMangas();
 
+  @GET('/list/homepage')
+  Future<Result<HomepageMangaGroupList>> getHomepageMangas();
+
   @GET('/list/updated')
   Future<Result<ResultPage<TinyManga>>> getRecentUpdatedMangas({@Query('page') int page, @Query('limit') int limit = 42});
 

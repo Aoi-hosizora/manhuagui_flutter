@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -31,7 +30,7 @@ class _MangaRankViewState extends State<MangaRankView> {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               child: NetworkImageView(
-                url: '$DEFAULT_MANGA_COVER_URL${widget.manga.mid}.jpg',
+                url: widget.manga.cover,
                 height: 100,
                 width: 75,
                 fit: BoxFit.cover,

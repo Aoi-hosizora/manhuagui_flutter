@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -30,7 +29,7 @@ class _SmallAuthorLineViewState extends State<SmallAuthorLineView> {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               child: NetworkImageView(
-                url: DEFAULT_AUTHOR_COVER_URL,
+                url: widget.author.cover,
                 height: 100,
                 width: 75,
                 fit: BoxFit.cover,
