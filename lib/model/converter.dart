@@ -20,7 +20,7 @@ bool _matchPageJson<TItem, TPage>(Map<String, dynamic> json) {
   if (!_matchJson(ResultPage.fields, json)) {
     return false;
   }
-  if ((json['data'] as List).length == 0) {
+  if (((json['data'] as List)?.length ?? 0) == 0) {
     return ResultPage<TItem>() is TPage;
   }
   return _jsonMapType(json['data'][0]) == TItem;
@@ -63,6 +63,8 @@ Type _jsonMapType(Map<String, dynamic> json) {
     return Token;
   } else if (_matchJson(User.fields, json)) {
     return User;
+  } else if (_matchJson(ShelfStatus.fields, json)) {
+    return ShelfStatus;
   }
   return null;
 }
@@ -110,6 +112,8 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return Token.fromJson(json) as T; // Token
       } else if (_matchJson(User.fields, json)) {
         return User.fromJson(json) as T; // User
+      } else if (_matchJson(ShelfStatus.fields, json)) {
+        return ShelfStatus.fromJson(json) as T; // ShelfStatus
       }
       // Result<ResultPage<?>>
       if (_matchPageJson<Manga, T>(json)) {
@@ -148,6 +152,8 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return ResultPage.fromJson(json, Token()) as T; // Token
       } else if (_matchPageJson<User, T>(json)) {
         return ResultPage.fromJson(json, User()) as T; // User
+      } else if (_matchPageJson<ShelfStatus, T>(json)) {
+        return ResultPage.fromJson(json, ShelfStatus()) as T; // ShelfStatus
       }
     }
     return json as T;

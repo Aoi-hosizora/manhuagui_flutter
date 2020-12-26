@@ -36,24 +36,18 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
       Tuple2('漫画作者', widget.data.authors.map((a) => a.name).join(', ')),
       Tuple2('最新章节', widget.data.newestChapter),
       Tuple2('更新时间', widget.data.newestDate),
-      Tuple2('章节分组数', widget.data.chapterGroups.length.toString()),
       Tuple2('总章节数', widget.data.chapterGroups.expand((g) => g.chapters).length.toString()),
+      Tuple2('章节分组数', widget.data.chapterGroups.length.toString()),
       for (var group in widget.data.chapterGroups) Tuple2('《${group.title}》章节数', group.chapters.length.toString()),
       Tuple2('包含色情暴力', widget.data.banned ? '是' : '否'),
+      Tuple2('拥有版权', widget.data.copyright ? '是' : '否'),
       Tuple2('漫画排名', widget.data.mangaRank),
-      Tuple2('平均得分', widget.data.averageScore.toString()),
+      Tuple2('平均得分', widget.data.averageScore.toStringAsFixed(1)),
       Tuple2('评分人数', widget.data.scoreCount.toString()),
-      for (var num in [1, 2, 3, 4, 5]) Tuple2('评 $num 星比例', '${widget.data.perScores[num] * 100}%'),
+      for (var num in [1, 2, 3, 4, 5]) Tuple2('评 $num 星比例', widget.data.perScores[num]),
       Tuple2('简要介绍', widget.data.briefIntroduction),
       Tuple2('详细介绍', widget.data.introduction),
     ];
-  }
-
-  void _copy(String text) {
-    copyText(
-      text: text,
-      onSuccess: () => Fluttertoast.showToast(msg: '$text 已经复制到剪贴板'),
-    );
   }
 
   @override
@@ -98,16 +92,16 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                       TableRowInkWell(
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                          child: Text(data.item1),
+                          child: Text('${data.item1}　'),
                         ),
-                        onTap: () => _copy(data.item2),
+                        onTap: () => copyText(data.item2),
                       ),
                       TableRowInkWell(
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           child: Text('${data.item2}　'),
                         ),
-                        onTap: () => _copy(data.item2),
+                        onTap: () => copyText(data.item2),
                       ),
                     ],
                   ),

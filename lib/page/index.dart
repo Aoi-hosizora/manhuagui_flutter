@@ -104,7 +104,7 @@ class _IndexPageState extends State<IndexPage> {
             if (_selectedIndex == index) {
               _actions[_selectedIndex].invoke('');
             } else {
-              _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.easeInOutCubic);
+              _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
               if (mounted) setState(() {});
             }
           },

@@ -41,8 +41,8 @@ class _AuthorPageState extends State<AuthorPage> {
   var _error = '';
   var _mangas = <SmallManga>[];
   var _total = 0;
-  var _order = MangaOrder.byNew;
-  var _lastOrder = MangaOrder.byNew;
+  var _order = MangaOrder.byPopular;
+  var _lastOrder = MangaOrder.byPopular;
   var _disableOption = false;
 
   @override

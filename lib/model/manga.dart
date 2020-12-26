@@ -24,17 +24,39 @@ class Manga {
   String mangaRank;
   double averageScore;
   int scoreCount;
-  List<double> perScores;
+  List<String> perScores;
   bool banned;
+  bool copyright;
   List<MangaChapterGroup> chapterGroups;
 
-  Manga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.alias, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction, this.introduction, this.mangaRank, this.averageScore, this.scoreCount, this.perScores, this.banned, this.chapterGroups});
+  Manga(
+      {this.mid,
+      this.title,
+      this.cover,
+      this.url,
+      this.publishYear,
+      this.mangaZone,
+      this.genres,
+      this.authors,
+      this.alias,
+      this.finished,
+      this.newestChapter,
+      this.newestDate,
+      this.briefIntroduction,
+      this.introduction,
+      this.mangaRank,
+      this.averageScore,
+      this.scoreCount,
+      this.perScores,
+      this.banned,
+      this.copyright,
+      this.chapterGroups});
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaToJson(this);
 
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores', 'banned', 'chapter_groups'];
+  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores', 'banned', 'copyright', 'chapter_groups'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -154,4 +176,19 @@ class ShelfManga {
   Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
 
   static const fields = <String>['mid', 'title', 'cover', 'url', 'newest_chapter', 'newest_duration', 'last_chapter', 'last_duration'];
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class ShelfStatus {
+  @JsonKey(name: 'in')
+  bool isIn;
+  int count;
+
+  ShelfStatus({this.isIn, this.count});
+
+  factory ShelfStatus.fromJson(Map<String, dynamic> json) => _$ShelfStatusFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ShelfStatusToJson(this);
+
+  static const fields = <String>['in', 'count'];
 }

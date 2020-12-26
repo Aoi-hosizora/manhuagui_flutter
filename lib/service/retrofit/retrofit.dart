@@ -78,6 +78,18 @@ abstract class RestClient {
   @POST('/user/login')
   Future<Result<Token>> login({@Query('username') String username, @Query('password') String password});
 
-  @GET('/user/shelf')
-  Future<Result<ResultPage<ShelfManga>>> getUserShelfMangas({@Header('Authorization') String token, @Query('page') int page});
+  @GET('/user/manga/{mid}/{cid}')
+  Future<Result> recordManga({@Header('Authorization') String token, @Path() int mid, @Path() int cid});
+
+  @GET('/shelf')
+  Future<Result<ResultPage<ShelfManga>>> getShelfMangas({@Header('Authorization') String token, @Query('page') int page});
+
+  @GET('/shelf/{mid}')
+  Future<Result<ShelfStatus>> checkShelfMangas({@Header('Authorization') String token, @Path() int mid});
+
+  @POST('/shelf/{mid}')
+  Future<Result> addToShelf({@Header('Authorization') String token, @Path() int mid});
+
+  @DELETE('/shelf/{mid}')
+  Future<Result> removeFromShelf({@Header('Authorization') String token, @Path() int mid});
 }

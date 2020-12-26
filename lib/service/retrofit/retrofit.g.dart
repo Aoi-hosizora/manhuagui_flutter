@@ -423,13 +423,31 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<ShelfManga>>> getUserShelfMangas(
-      {token, page}) async {
+  Future<Result<dynamic>> recordManga({token, mid, cid}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>(
+        '/user/manga/$mid/$cid',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{r'Authorization': token},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<dynamic>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<ShelfManga>>> getShelfMangas({token, page}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'page': page};
     queryParameters.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
-    final _result = await _dio.request<Map<String, dynamic>>('/user/shelf',
+    final _result = await _dio.request<Map<String, dynamic>>('/shelf',
         queryParameters: queryParameters,
         options: RequestOptions(
             method: 'GET',
@@ -438,6 +456,60 @@ class _RestClient implements RestClient {
             baseUrl: baseUrl),
         data: _data);
     final value = Result<ResultPage<ShelfManga>>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<ShelfStatus>> checkShelfMangas({token, mid}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/shelf/$mid',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{r'Authorization': token},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<ShelfStatus>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<dynamic>> addToShelf({token, mid}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/shelf/$mid',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'POST',
+            headers: <String, dynamic>{r'Authorization': token},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<dynamic>.fromJson(_result.data);
+    return value;
+  }
+
+  @override
+  Future<Result<dynamic>> removeFromShelf({token, mid}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.request<Map<String, dynamic>>('/shelf/$mid',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'DELETE',
+            headers: <String, dynamic>{r'Authorization': token},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Result<dynamic>.fromJson(_result.data);
     return value;
   }
 }

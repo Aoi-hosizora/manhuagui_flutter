@@ -5,10 +5,11 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/gallery_page_view.dart';
-import 'package:manhuagui_flutter/page/view/image_load_view.dart' as ilv;
+import 'package:manhuagui_flutter/page/view/image_load_view.dart';
 import 'package:manhuagui_flutter/service/prefs/category.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
+import 'package:manhuagui_flutter/service/state/auth.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 章节
@@ -84,6 +85,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
 
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
+    if (AuthState.instance.logined) {
+      client.recordManga(token: AuthState.instance.token, mid: widget.mid, cid: widget.cid).catchError((_) {});
+    }
+
     return client.getMangaChapter(mid: widget.mid, cid: widget.cid).then((r) async {
       _error = '';
       _data = null;
@@ -495,7 +500,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       loadingBuilder: (c, ImageChunkEvent e) => Listener(
                         onPointerUp: (e) => _onPointerUp(e.position),
                         onPointerDown: (e) => _onPointerDown(e.position),
-                        child: ilv.ImageLoadingView(
+                        child: ImageLoadingView(
                           title: _currentPage.toString(),
                           event: e,
                           height: height,
@@ -505,7 +510,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       loadFailedChild: Listener(
                         onPointerUp: (e) => _onPointerUp(e.position),
                         onPointerDown: (e) => _onPointerDown(e.position),
-                        child: ilv.ImageLoadFailedView(
+                        child: ImageLoadFailedView(
                           title: _currentPage.toString(),
                           height: height,
                           width: width,

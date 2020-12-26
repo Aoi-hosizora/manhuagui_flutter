@@ -5,6 +5,12 @@ Future<void> launchInBrowser({
   @required BuildContext context,
   @required String url,
 }) async {
+  assert(context != null);
+  assert(url != null);
+  if (url.isEmpty) {
+    return;
+  }
+
   try {
     return await FlutterWebBrowser.openWebPage(
       url: url,

@@ -31,10 +31,9 @@ Manga _$MangaFromJson(Map<String, dynamic> json) {
     mangaRank: json['manga_rank'] as String,
     averageScore: (json['average_score'] as num)?.toDouble(),
     scoreCount: json['score_count'] as int,
-    perScores: (json['per_scores'] as List)
-        ?.map((e) => (e as num)?.toDouble())
-        ?.toList(),
+    perScores: (json['per_scores'] as List)?.map((e) => e as String)?.toList(),
     banned: json['banned'] as bool,
+    copyright: json['copyright'] as bool,
     chapterGroups: (json['chapter_groups'] as List)
         ?.map((e) => e == null
             ? null
@@ -63,6 +62,7 @@ Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'score_count': instance.scoreCount,
       'per_scores': instance.perScores,
       'banned': instance.banned,
+      'copyright': instance.copyright,
       'chapter_groups': instance.chapterGroups,
     };
 
@@ -222,4 +222,17 @@ Map<String, dynamic> _$ShelfMangaToJson(ShelfManga instance) =>
       'newest_duration': instance.newestDuration,
       'last_chapter': instance.lastChapter,
       'last_duration': instance.lastDuration,
+    };
+
+ShelfStatus _$ShelfStatusFromJson(Map<String, dynamic> json) {
+  return ShelfStatus(
+    isIn: json['in'] as bool,
+    count: json['count'] as int,
+  );
+}
+
+Map<String, dynamic> _$ShelfStatusToJson(ShelfStatus instance) =>
+    <String, dynamic>{
+      'in': instance.isIn,
+      'count': instance.count,
     };

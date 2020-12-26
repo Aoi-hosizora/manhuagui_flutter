@@ -153,31 +153,9 @@ class _LoginPageState extends State<LoginPage> {
                         hintText: '请输入密码',
                         icon: Icon(Icons.lock),
                         suffixIcon: IconButton(
-                          icon: CustomPaint(
-                            foregroundPainter: _passwordVisible
-                                ? null
-                                : FunctionPainter(
-                                    onPaint: (canvas, size) {
-                                      canvas.drawLine(
-                                        Offset(3, 3),
-                                        Offset(size.width - 3, size.height - 3),
-                                        Paint()
-                                          ..color = Color(0xFF626262)
-                                          ..strokeWidth = 3,
-                                      );
-                                      canvas.drawLine(
-                                        Offset(3, 1),
-                                        Offset(size.width - 1, size.height - 3),
-                                        Paint()
-                                          ..color = Theme.of(context).scaffoldBackgroundColor
-                                          ..strokeWidth = 2,
-                                      );
-                                    },
-                                  ),
-                            child: Icon(
-                              Icons.remove_red_eye,
-                              color: Theme.of(context).hintColor,
-                            ),
+                          icon: Icon(
+                            _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                            color: Theme.of(context).hintColor,
                           ),
                           onPressed: () {
                             _passwordVisible = !_passwordVisible;
@@ -250,23 +228,5 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
     );
-  }
-}
-
-class FunctionPainter extends CustomPainter {
-  const FunctionPainter({
-    @required this.onPaint,
-  }) : assert(onPaint != null);
-
-  final void Function(Canvas canvas, Size size) onPaint;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    onPaint?.call(canvas, size);
-  }
-
-  @override
-  bool shouldRepaint(FunctionPainter oldDelegate) {
-    return false;
   }
 }

@@ -17,14 +17,15 @@ class DioManager {
 
   Dio _dio;
 
-  /// Global dio from [DioManager].
+  /// A global dio instance.
   Dio get dio => _dio;
 
   void _initDio() {
     _dio = Dio();
     _dio.options.baseUrl = BASE_API_URL;
-    _dio.options.connectTimeout = 10000; // 10s
-    _dio.options.receiveTimeout = 6000; // 6s
+    _dio.options.connectTimeout = CONNECT_TIMEOUT;
+    _dio.options.sendTimeout = SEND_TIMEOUT;
+    _dio.options.receiveTimeout = RECEIVE_TIMEOUT;
     _dio.interceptors.add(LogInterceptor());
   }
 }
@@ -76,68 +77,109 @@ class LogInterceptor extends Interceptor {
   }
 }
 
-/// Return type of [wrapError].
+enum ErrorType {
+  NETWORK_ERROR,
+  RESULT_ERROR,
+  STATUS_ERROR,
+  OTHER_ERROR,
+}
+
 class ErrorMessage {
+  ErrorType type;
+  dynamic error;
   String text;
-  dynamic e;
   int httpCode;
   int serviceCode;
 
-  ErrorMessage({this.text, this.e, this.httpCode, this.serviceCode});
+  ErrorMessage({this.type, this.error, this.text, this.httpCode, this.serviceCode});
 }
 
-/// Wrap error from dio to [ErrorMessage].
-ErrorMessage wrapError(dynamic e) {
+/// Wrap error to [ErrorMessage].
+ErrorMessage wrapError(dynamic e, {bool isResult = true}) {
   print('┌─────────────────── WrapError ───────────────────┐');
   print('date: ${DateTime.now().toIso8601String()}');
 
   if (e is DioError) {
+    assert(isResult != null);
+
     print('uri: ${e.request.uri}');
     print('method: ${e.request.method}');
 
+    // ======================================================================================================================
+    // NETWORK_ERROR
     if (e.response == null) {
       // DioError [DioErrorType.DEFAULT]: SocketException: Connection failed (OS Error: Network is unreachable, errno = 101)
       // DioError [DioErrorType.DEFAULT]: SocketException: OS Error: Connection refused
       // DioError [DioErrorType.DEFAULT]: HandshakeException: Handshake error in client (OS Error)
       // DioError [DioErrorType.CONNECT_TIMEOUT]: Connecting timed out
-      var text = 'Network error'; // DioErrorType.DEFAULT || DioErrorType.CANCEL
-      if (e.type == DioErrorType.CONNECT_TIMEOUT || e.type == DioErrorType.SEND_TIMEOUT || e.type == DioErrorType.RECEIVE_TIMEOUT) {
-        text = 'Network timeout'; // DioErrorType.XXX_TIMEOUT
-      } else if (!e.toString().contains('unreachable')) {
-        text = 'Server error';
+      var text = 'Unknown error';
+      switch (e.type) {
+        case DioErrorType.DEFAULT:
+        case DioErrorType.CANCEL:
+          text = 'Network error';
+          if (!e.toString().contains('unreachable')) {
+            text = 'Server error';
+          }
+          break;
+        case DioErrorType.CONNECT_TIMEOUT:
+        case DioErrorType.SEND_TIMEOUT:
+        case DioErrorType.RECEIVE_TIMEOUT:
+          text = 'Timeout error';
+          break;
+        case DioErrorType.RESPONSE: // x
+          text = 'Response error';
+          break;
       }
-      print('type: network');
-      print('error: $text ==> $e');
+      print('type: ${ErrorType.NETWORK_ERROR}');
+      print('error: $e');
+      print('text: $text');
       print('└─────────────────── WrapError ───────────────────┘');
-      return ErrorMessage(text: text, e: e);
+      return ErrorMessage(type: ErrorType.NETWORK_ERROR, error: e, text: text);
     }
 
-    // DioErrorType.RESPONSE
+    // ======================================================================================================================
+    // STATUS_ERROR
+    if (!isResult) {
+      var err = '${e.response.statusCode}: ${e.response.statusMessage}';
+      var text = 'Respond $err';
+      print('type: ${ErrorType.STATUS_ERROR}');
+      print('error: $err');
+      print('text: $text');
+      print('└─────────────────── WrapError ───────────────────┘');
+      return ErrorMessage(type: ErrorType.STATUS_ERROR, error: err, text: text, httpCode: e.response.statusCode);
+    }
+
+    // ======================================================================================================================
+    // RESULT_ERROR
     try {
       var r = Result.fromJson(e.response.data);
       r.message = '${r.message[0].toUpperCase()}${r.message.substring(1)}';
-      print('type: result');
-      print('error: ${e.response.statusCode} ${r.code} ${r.message}');
-      var m = e.response.data as Map<String, dynamic>;
-      if (m.containsKey('error') && m['error'] is Map<String, dynamic>) {
-        print('detail: ${m['error']['detail']}');
-      }
+      var err = '${e.response.statusCode}: ${r.code} ${r.message}';
+      var text = r.message;
+      var data = e.response.data as Map<String, dynamic>;
+      var detail = data != null && data['error'] is Map<String, dynamic> ? data['error']['detail'] : null;
+      print('type: ${ErrorType.RESULT_ERROR}');
+      print('error: $err');
+      print('text: $text');
+      print('detail: $detail');
       print('└─────────────────── WrapError ───────────────────┘');
-      var text = r.code < 50000 ? r.message : '${r.code}: ${r.message}';
-      return ErrorMessage(text: text, e: '${r.code}: ${r.message}', httpCode: e.response.statusCode, serviceCode: r.code); // !!!
-    } catch (_) {
-      var text = '${e.response.statusCode}: ${e.response.statusMessage}';
-      print('type: server');
-      print('error: $text');
-      print('└─────────────────── WrapError ───────────────────┘');
-      return ErrorMessage(text: text, e: e, httpCode: e.response.statusCode);
+      return ErrorMessage(type: ErrorType.RESULT_ERROR, error: err, text: text, httpCode: e.response.statusCode, serviceCode: r.code);
+    } catch (e) {
+      // non DioError
+      return wrapError(e, isResult: isResult);
     }
   }
 
-  //  _CastError: type 'xxx' is not a subtype of type 'yyy' in type cast
-  print('type: other');
+  // ======================================================================================================================
+  // OTHER_ERROR
+  var text = 'Some strange error.';
+  if (DEBUG) {
+    // _CastError: type 'xxx' is not a subtype of type 'yyy' in type cast
+    text = '${e.runtimeType}: ${e.toString()}';
+  }
+  print('type: ${ErrorType.OTHER_ERROR}');
   print('error: $e');
+  print('text: $text');
   print('└─────────────────── WrapError ───────────────────┘');
-  var msg = '${e.runtimeType}: ${e.toString()}';
-  return ErrorMessage(httpCode: 0, text: msg, e: e);
+  return ErrorMessage(type: ErrorType.OTHER_ERROR, error: e, text: text);
 }

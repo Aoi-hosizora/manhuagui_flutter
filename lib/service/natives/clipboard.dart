@@ -1,15 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
-void copyText({
-  @required String text,
-  void Function() onSuccess,
-  void Function(dynamic) onError,
-}) async {
+Future<void> copyText(
+  String text, {
+  bool showToast = true,
+  Function() callback,
+}) {
+  assert(showToast != null);
+
   var data = ClipboardData(text: text);
-  await Clipboard.setData(data).then((_) {
-    onSuccess?.call();
-  }).catchError((err) {
-    onError?.call(err);
-  });
+  return Clipboard.setData(data).then((_) {
+    if (showToast) {
+      Fluttertoast.showToast(msg: '$text 已经复制到剪贴板');
+    }
+    callback?.call();
+  }).catchError((_) {});
 }

@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/prefs/search.dart';
@@ -247,7 +248,7 @@ class _SearchPageState extends State<SearchPage> {
               child: FloatingSearchBar(
                 controller: _searchController,
                 height: 35,
-                hint: '搜索',
+                hint: '输入标题名称、拼音或者 mid 搜索漫画',
                 textInputType: TextInputType.text,
                 textInputAction: TextInputAction.search,
                 iconColor: Colors.black54,
@@ -304,72 +305,123 @@ class _SearchPageState extends State<SearchPage> {
                 onSubmitted: (_) => _search(),
                 builder: (_, __) => ClipRRect(
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(3),
-                    bottomRight: Radius.circular(3),
+                    bottomLeft: Radius.circular(4),
+                    bottomRight: Radius.circular(4),
                   ),
-                  child: Container(
+                  child: Material(
                     color: Colors.white,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Column(
-                        children: [
-                          if (_text != null && _text != _q)
-                            ListTile(
-                              title: Text('搜索 "$_text"'),
-                              leading: Icon(Icons.search),
-                              onTap: () => _search(), // 搜索
-                            ),
-                          if (_q != null)
-                            ListTile(
-                              title: Text('返回 "$_q" 的搜索结果'),
-                              leading: Icon(Icons.search),
-                              onTap: () => Navigator.of(context).maybePop(), // 返回
-                            ),
-                          ..._histories.map(
-                            (h) => ListTile(
-                              title: Text(h),
-                              leading: Icon(Icons.history),
-                              trailing: IconButton(
-                                icon: Icon(Icons.close),
-                                onPressed: () {
-                                  _histories.remove(h);
-                                  removeSearchHistory(h);
-                                  if (mounted) setState(() {});
-                                },
+                    child: Column(
+                      children: [
+                        // ===================================================================
+                        if (_text != null && _text != _q)
+                          InkWell(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              child: IconText(
+                                icon: Icon(Icons.search, color: Colors.black45),
+                                text: Text('搜索 "$_text"'),
                               ),
-                              onTap: () => _searchController.query = h,
                             ),
+                            onTap: () => _search(), // 搜索
                           ),
-                          if (_histories.isNotEmpty && _text == null)
-                            ListTile(
-                              title: Center(
-                                child: Text('清空历史记录'),
+                        if (_text != null && (int.tryParse(_text) ?? 0) > 0)
+                          InkWell(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              child: IconText(
+                                icon: Icon(Icons.arrow_forward, color: Colors.black45),
+                                text: Text('访问漫画 mid$_text'),
                               ),
-                              onTap: () => showDialog(
-                                context: context,
-                                builder: (c) => AlertDialog(
-                                  title: Text('清空历史记录'),
-                                  content: Text('确定要清空搜索的历史记录吗？该操作无法撤销。'),
-                                  actions: [
-                                    FlatButton(
-                                      child: Text('清空'),
-                                      onPressed: () {
-                                        _histories.clear();
-                                        clearSearchHistories();
-                                        if (mounted) setState(() {});
-                                        Navigator.of(c).pop();
-                                      },
-                                    ),
-                                    FlatButton(
-                                      child: Text('取消'),
-                                      onPressed: () => Navigator.of(c).pop(),
-                                    ),
-                                  ],
+                            ),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (c) => MangaPage(
+                                  id: int.tryParse(_text),
+                                  title: '漫画 mid$_text',
+                                  url: '',
                                 ),
                               ),
+                            ), // 访问
+                          ),
+                        if (_q != null)
+                          InkWell(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              child: IconText(
+                                icon: Icon(Icons.arrow_back, color: Colors.black45),
+                                text: Text('返回 "$_q" 的搜索结果'),
+                              ),
                             ),
-                        ],
-                      ),
+                            onTap: () => Navigator.of(context).maybePop(), // 返回
+                          ),
+                        // ===================================================================
+                        ..._histories.map(
+                          (h) => InkWell(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              child: IconText(
+                                icon: Icon(Icons.history, color: Colors.black45),
+                                text: Text(h),
+                              ),
+                            ),
+                            onTap: () => _searchController.query = h, // 候选
+                            onLongPress: () => showDialog(
+                              context: context,
+                              builder: (c) => AlertDialog(
+                                title: Text('删除搜索记录'),
+                                content: Text('确定要删除 $h 吗？该操作无法撤销。'),
+                                actions: [
+                                  FlatButton(
+                                    child: Text('清空'),
+                                    onPressed: () {
+                                      _histories.remove(h);
+                                      removeSearchHistory(h);
+                                      if (mounted) setState(() {});
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: Text('取消'),
+                                    onPressed: () => Navigator.of(c).pop(),
+                                  ),
+                                ],
+                              ),
+                            ), // 删除
+                          ),
+                        ),
+                        // ===================================================================
+                        if (_histories.isNotEmpty && _text == null)
+                          InkWell(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Center(
+                                child: Text('清空历史记录'),
+                              ),
+                            ),
+                            onTap: () => showDialog(
+                              context: context,
+                              builder: (c) => AlertDialog(
+                                title: Text('清空历史记录'),
+                                content: Text('确定要清空所有历史记录吗？该操作无法撤销。'),
+                                actions: [
+                                  FlatButton(
+                                    child: Text('清空'),
+                                    onPressed: () {
+                                      _histories.clear();
+                                      clearSearchHistories();
+                                      if (mounted) setState(() {});
+                                      Navigator.of(c).pop();
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: Text('取消'),
+                                    onPressed: () => Navigator.of(c).pop(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        // ===================================================================
+                      ],
                     ),
                   ),
                 ),

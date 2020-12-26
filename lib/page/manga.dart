@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/result.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 import 'package:manhuagui_flutter/page/view/multilink_text.dart';
@@ -10,6 +11,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
+import 'package:manhuagui_flutter/service/state/auth.dart';
 
 /// 漫画页
 /// Page for [Manga].
@@ -37,6 +39,7 @@ class _MangaPageState extends State<MangaPage> {
   var _loading = true;
   Manga _data;
   var _error = '';
+  bool _subscribed;
   var _showBriefIntroduction = true;
 
   @override
@@ -52,6 +55,12 @@ class _MangaPageState extends State<MangaPage> {
 
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
+    if (AuthState.instance.logined) {
+      client.checkShelfMangas(token: AuthState.instance.token, mid: widget.id).then((r) {
+        _subscribed = r.data.isIn;
+        if (mounted) setState(() {});
+      }).catchError((_) {});
+    }
     return client.getManga(mid: widget.id).then((r) async {
       _error = '';
       _data = null;
@@ -64,6 +73,32 @@ class _MangaPageState extends State<MangaPage> {
     }).whenComplete(() {
       _loading = false;
       if (mounted) setState(() {});
+    });
+  }
+
+  void _subscribe() {
+    if (!AuthState.instance.logined) {
+      Fluttertoast.showToast(msg: '用户未登录');
+      return;
+    }
+
+    var dio = DioManager.instance.dio;
+    var client = RestClient(dio);
+    var toSubscribe = _subscribed != true; // 去订阅
+
+    Future<Result> result;
+    if (toSubscribe) {
+      result = client.addToShelf(token: AuthState.instance.token, mid: widget.id);
+    } else {
+      result = client.removeFromShelf(token: AuthState.instance.token, mid: widget.id);
+    }
+    result.then((r) {
+      _subscribed = toSubscribe;
+      Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
+      if (mounted) setState(() {});
+    }).catchError((e) {
+      var err = wrapError(e).text;
+      Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
     });
   }
 
@@ -80,7 +115,7 @@ class _MangaPageState extends State<MangaPage> {
             tooltip: '打开浏览器',
             onPressed: () => launchInBrowser(
               context: context,
-              url: widget.url,
+              url: _data?.url ?? widget.url,
             ),
           ),
         ],
@@ -185,8 +220,8 @@ class _MangaPageState extends State<MangaPage> {
                                   width: 75,
                                   child: OutlineButton(
                                     padding: EdgeInsets.all(2),
-                                    child: Text('订阅漫画'), // 取消订阅
-                                    onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
+                                    child: Text(_subscribed == true ? '取消订阅' : '订阅漫画'),
+                                    onPressed: () => _subscribe(),
                                   ),
                                 ),
                                 SizedBox(width: 14),

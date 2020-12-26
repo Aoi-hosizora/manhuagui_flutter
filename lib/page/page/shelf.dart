@@ -35,6 +35,11 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     _fabController = ScrollFabController();
     widget.action?.addAction('', () => print('ShelfSubPage'));
     AuthState.instance.registerListener(this, () => mountedSetState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (AuthState.instance.logined) {
+        if (mounted) setState(() {});
+      }
+    });
   }
 
   @override
@@ -49,7 +54,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
-    var result = await client.getUserShelfMangas(token: AuthState.instance.token, page: page).catchError((e) {
+    var result = await client.getShelfMangas(token: AuthState.instance.token, page: page).catchError((e) {
       err = wrapError(e);
     });
     if (err != null) {
@@ -123,7 +128,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         fabController: _fabController,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'RecentSubPage',
+          heroTag: 'ShelfSubPage',
           onPressed: () => _controller.scrollTop(),
         ),
       ),

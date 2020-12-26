@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -30,13 +31,19 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
+    widget.action?.addAction('', () => print('MineSubPage'));
     AuthState.instance.registerListener(this, () {
       if (mounted) setState(() {});
       if (AuthState.instance.logined) {
         _loadUser();
       }
     });
-    widget.action?.addAction('', () => print('MineSubPage'));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+      if (AuthState.instance.logined) {
+        _loadUser();
+      }
+    });
   }
 
   @override
@@ -119,7 +126,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         children: [
           Container(
             width: MediaQuery.of(context).size.width,
-            height: 180,
+            height: 200,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -132,29 +139,47 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 ],
               ),
             ),
-            child: Padding(
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    NetworkImageView(
-                      url: _data.avatar,
-                      height: 75,
-                      width: 75,
-                      fit: BoxFit.cover,
+            child: Stack(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        NetworkImageView(
+                          url: _data.avatar,
+                          height: 75,
+                          width: 75,
+                          fit: BoxFit.cover,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 8, left: 15, right: 15),
+                          child: Text(
+                            _data.username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.subtitle1,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 15),
-                    Text(
-                      _data.username,
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                Positioned(
+                  right: 0,
+                  top: MediaQuery.of(context).padding.top,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: IconButton(
+                      icon: Icon(Icons.settings, color: Colors.black54),
+                      onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 12),
           Container(
             color: Colors.white,
             width: MediaQuery.of(context).size.width,
