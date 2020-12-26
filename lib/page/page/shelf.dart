@@ -33,8 +33,10 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
-    widget.action?.addAction('', () => print('ShelfSubPage'));
-    AuthState.instance.registerListener(this, () => mountedSetState(() {}));
+    AuthState.instance.registerListener(this, () {
+      if (mounted) setState(() {});
+    });
+    widget.action?.addAction('', () => _controller.scrollTop());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (AuthState.instance.logined) {
         if (mounted) setState(() {});
@@ -98,6 +100,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         onStateChanged: (_, __) => _fabController.hide(),
         padding: EdgeInsets.zero,
         separator: Divider(height: 1),
+        physics: AlwaysScrollableScrollPhysics(),
         itemBuilder: (c, item) => ShelfMangaLineView(manga: item),
         topWidget: Container(
           color: Colors.white,

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
@@ -122,6 +123,16 @@ class TinyBlockManga {
   Map<String, dynamic> toJson() => _$TinyBlockMangaToJson(this);
 
   static const fields = <String>['mid', 'title', 'cover', 'url', 'finished', 'newest_chapter'];
+
+  @override
+  bool operator ==(Object other) {
+    return other is TinyBlockManga && other.mid == this.mid;
+  }
+
+  @override
+  int get hashCode {
+    return hash2(mid, title);
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

@@ -18,7 +18,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    widget.action.addAction('', () => print('HistorySubPage'));
+    widget.action.addAction('', () {});
   }
 
   @override

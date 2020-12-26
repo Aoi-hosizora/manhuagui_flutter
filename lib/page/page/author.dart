@@ -45,7 +45,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
-    widget.action?.addAction('', () => print('AuthorSubPage'));
+    widget.action?.addAction('', () => _controller.scrollTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
   }
 
@@ -149,6 +149,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
           placeholderSetting: PlaceholderSetting().toChinese(),
           onStateChanged: (_, __) => _fabController.hide(),
           padding: EdgeInsets.zero,
+          physics: AlwaysScrollableScrollPhysics(),
           separator: Divider(height: 1),
           itemBuilder: (c, item) => SmallAuthorLineView(author: item),
           outTopWidget: Container(

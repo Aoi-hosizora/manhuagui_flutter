@@ -39,7 +39,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
-    widget.action?.addAction('', () => print('RankingSubPage'));
+    widget.action?.addAction('', () => _controller.scrollTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
   }
 
@@ -133,6 +133,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
           placeholderSetting: PlaceholderSetting().toChinese(),
           onStateChanged: (_, __) => _fabController.hide(),
           separator: Divider(height: 1),
+          physics: AlwaysScrollableScrollPhysics(),
           itemBuilder: (c, item) => MangaRankView(manga: item),
           outTopWidget: Container(
             color: Colors.white,

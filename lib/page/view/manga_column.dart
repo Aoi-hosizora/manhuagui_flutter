@@ -12,12 +12,14 @@ class MangaColumnView extends StatefulWidget {
     @required this.group,
     @required this.type,
     this.controller,
+    this.marginV = 12,
     this.showTopMargin = true,
     this.complete = false,
     this.small = false,
     this.singleLine = false,
   })  : assert(group != null),
         assert(type != null),
+        assert(showTopMargin != null),
         assert(showTopMargin != null),
         assert(complete != null),
         assert(small != null),
@@ -28,6 +30,7 @@ class MangaColumnView extends StatefulWidget {
   final MangaGroup group;
   final MangaGroupType type;
   final ScrollController controller;
+  final double marginV;
   final bool showTopMargin;
   final bool complete;
   final bool small;
@@ -130,7 +133,7 @@ class _MangaColumnViewState extends State<MangaColumnView> {
 
     return Container(
       color: Colors.white,
-      margin: EdgeInsets.only(top: widget.showTopMargin ? 12 : 0),
+      margin: EdgeInsets.only(top: widget.showTopMargin ? widget.marginV : 0),
       child: !widget.complete
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -43,6 +43,10 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       RankingSubPage(action: _actions[3]),
     ];
     widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
+    _actions[0].addAction('to_shelf', () => widget.action.invoke('to_shelf'));
+    _actions[0].addAction('to_update', () => _controller.animateTo(1));
+    _actions[0].addAction('to_ranking', () => _controller.animateTo(3));
+    _actions[0].addAction('to_genre', () => widget.action.invoke('to_genre'));
   }
 
   @override

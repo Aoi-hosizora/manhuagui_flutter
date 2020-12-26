@@ -53,7 +53,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
-    widget.action?.addAction('', () => print('GenreSubPage'));
+    widget.action?.addAction('', () => _controller.scrollTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
   }
 
@@ -160,6 +160,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
           placeholderSetting: PlaceholderSetting().toChinese(),
           onStateChanged: (_, __) => _fabController.hide(),
           padding: EdgeInsets.zero,
+          physics: AlwaysScrollableScrollPhysics(),
           separator: Divider(height: 1),
           itemBuilder: (c, item) => TinyMangaLineView(manga: item),
           outTopWidget: Container(

@@ -40,6 +40,14 @@ class _IndexPageState extends State<IndexPage> {
       SubscribeSubPage(action: _actions[2]),
       MineSubPage(action: _actions[3]),
     ];
+    _actions[0].addAction('to_shelf', () {
+      _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+      _actions[2].invoke('to_shelf');
+    });
+    _actions[0].addAction('to_genre', () {
+      _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+      _actions[1].invoke('to_genre');
+    });
   }
 
   @override

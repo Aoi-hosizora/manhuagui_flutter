@@ -31,13 +31,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction('', () => print('MineSubPage'));
     AuthState.instance.registerListener(this, () {
       if (mounted) setState(() {});
       if (AuthState.instance.logined) {
         _loadUser();
       }
     });
+    widget.action?.addAction('', () {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) setState(() {});
       if (AuthState.instance.logined) {

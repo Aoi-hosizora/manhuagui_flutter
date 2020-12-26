@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
 import 'package:manhuagui_flutter/page/view/manga_column.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
@@ -24,6 +25,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   ScrollMoreController _controller;
   ScrollFabController _fabController;
   GlobalKey<RefreshIndicatorState> _indicatorKey;
+  var _carouselPages = <TinyBlockManga>[];
   var _loading = true;
   HomepageMangaGroupList _data;
   var _error = '';
@@ -34,7 +36,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
     _indicatorKey = GlobalKey<RefreshIndicatorState>();
-    widget.action?.addAction('', () => print('RecommendSubPage'));
+    widget.action?.addAction('', () => _controller.scrollTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
   }
 
@@ -57,6 +59,12 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
+      var p1 = _data.serial.topGroup.mangas.sublist(0, 4);
+      var p2 = _data.serial.groups.map((e) => e.mangas.first);
+      var p3 = _data.serial.otherGroups.map((e) => e.mangas.first);
+      _carouselPages = [
+        ...{...p1, ...p2, ...p3}
+      ];
     }).catchError((e) {
       _data = null;
       _error = wrapError(e).text;
@@ -64,6 +72,21 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       _loading = false;
       if (mounted) setState(() {});
     });
+  }
+
+  Widget _buildAction(String text, IconData icon, void Function() action) {
+    return InkWell(
+      onTap: () => action(),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: IconText(
+          alignment: IconTextAlignment.t2b,
+          space: 8,
+          icon: Icon(icon, color: Colors.black54),
+          text: Text(text),
+        ),
+      ),
+    );
   }
 
   @override
@@ -87,6 +110,27 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             child: ListView(
               controller: _controller,
               children: [
+                if (_carouselPages.length != 0) MangaCarouselView(mangas: _carouselPages),
+                SizedBox(height: 12),
+                Container(
+                  color: Colors.white,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildAction('我的书柜', Icons.favorite, () => widget.action.invoke('to_shelf')),
+                          _buildAction('最近更新', Icons.refresh, () => widget.action.invoke('to_update')),
+                          _buildAction('漫画排行', Icons.trending_up, () => widget.action.invoke('to_ranking')),
+                          _buildAction('漫画分类', Icons.category, () => widget.action.invoke('to_genre')),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
                 MangaColumnView(group: _data.serial.topGroup, type: MangaGroupType.serial, showTopMargin: false), // 热门连载
                 MangaColumnView(group: _data.finish.topGroup, type: MangaGroupType.finish), // 经典完结
                 MangaColumnView(group: _data.latest.topGroup, type: MangaGroupType.latest), // 最新上架

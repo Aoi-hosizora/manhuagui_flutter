@@ -35,7 +35,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
-    widget.action?.addAction('', () => print('OverallSubPage'));
+    widget.action?.addAction('', () => _controller.scrollTop());
   }
 
   @override
@@ -94,6 +94,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         placeholderSetting: PlaceholderSetting().toChinese(),
         onStateChanged: (_, __) => _fabController.hide(),
         padding: EdgeInsets.zero,
+        physics: AlwaysScrollableScrollPhysics(),
         separator: Divider(height: 1),
         itemBuilder: (c, item) => TinyMangaLineView(manga: item),
         topWidget: Container(

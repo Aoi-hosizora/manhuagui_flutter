@@ -29,7 +29,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     super.initState();
     _controller = ScrollMoreController();
     _fabController = ScrollFabController();
-    widget.action?.addAction('', () => print('RecentSubPage'));
+    widget.action?.addAction('', () => _controller.scrollTop());
   }
 
   @override
@@ -74,6 +74,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
         placeholderSetting: PlaceholderSetting().toChinese(),
         onStateChanged: (_, __) => _fabController.hide(),
         padding: EdgeInsets.zero,
+        physics: AlwaysScrollableScrollPhysics(),
         separator: Divider(height: 1),
         itemBuilder: (c, item) => TinyMangaLineView(manga: item),
       ),

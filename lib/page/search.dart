@@ -193,6 +193,7 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 onStateChanged: (_, __) => _fabController.hide(),
                 padding: EdgeInsets.zero,
+                physics: AlwaysScrollableScrollPhysics(),
                 separator: Divider(height: 1),
                 itemBuilder: (c, item) => TinyMangaLineView(manga: item.toTiny()),
                 topWidget: Container(
