@@ -264,3 +264,18 @@ class ShelfStatus {
 
   static const fields = <String>['in', 'count'];
 }
+
+class MangaHistory {
+  int mangaId;
+  String mangaTitle;
+  String mangaCover;
+  String mangaUrl;
+
+  int chapterId;
+  String chapterTitle;
+  int chapterPage;
+
+  DateTime lastTime;
+
+  MangaHistory({this.mangaId, this.mangaTitle, this.mangaCover, this.mangaUrl, this.chapterId, this.chapterTitle, this.chapterPage, this.lastTime});
+}

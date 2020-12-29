@@ -122,7 +122,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildAction('我的书柜', Icons.favorite, () => widget.action.invoke('to_shelf')),
-                          _buildAction('最近更新', Icons.refresh, () => widget.action.invoke('to_update')),
+                          _buildAction('最近更新', Icons.cached, () => widget.action.invoke('to_update')),
                           _buildAction('漫画排行', Icons.trending_up, () => widget.action.invoke('to_ranking')),
                           _buildAction('漫画分类', Icons.category, () => widget.action.invoke('to_genre')),
                         ],

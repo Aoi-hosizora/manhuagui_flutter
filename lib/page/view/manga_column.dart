@@ -65,14 +65,19 @@ class _MangaColumnViewState extends State<MangaColumnView> {
     );
   }
 
-  List<Widget> _buildRows() {
-    var vSpace = 6.0;
+  List<Widget> _buildRows(double vSpace) {
     var mangas = widget.group.mangas;
     var cs = 3;
     if (!widget.complete) {
       if (!widget.small) {
-        if (mangas.length > 6) {
-          mangas = [...mangas.sublist(0, 5), null]; // X X X | X X O
+        if (!widget.singleLine) {
+          if (mangas.length > 6) {
+            mangas = [...mangas.sublist(0, 5), null]; // X X X | X X O
+          }
+        } else {
+          if (mangas.length > 3) {
+            mangas = [...mangas.sublist(0, 2), null]; // X X O
+          }
         }
       } else {
         cs = 4;
@@ -114,13 +119,14 @@ class _MangaColumnViewState extends State<MangaColumnView> {
 
   @override
   Widget build(BuildContext context) {
-    var title = widget.group.title.isEmpty ? widget.type.toTitle() : (widget.type.toTitle() + "・" + widget.group.title);
+    var title = widget.group.title.isEmpty ? widget.type.toTitle() : (widget.type.toTitle() + '・' + widget.group.title);
     var icon = widget.type == MangaGroupType.serial
         ? Icons.whatshot
         : widget.type == MangaGroupType.finish
-            ? Icons.hourglass_bottom
+            ? Icons.check_circle_outline
             : Icons.fiber_new;
 
+    var vSpace = 6.0;
     var titleLine = Padding(
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: IconText(
@@ -129,25 +135,20 @@ class _MangaColumnViewState extends State<MangaColumnView> {
         space: 6,
       ),
     );
-    var rows = _buildRows();
+    var rows = _buildRows(vSpace);
 
     return Container(
       color: Colors.white,
       margin: EdgeInsets.only(top: widget.showTopMargin ? widget.marginV : 0),
+      padding: EdgeInsets.only(bottom: vSpace),
       child: !widget.complete
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                titleLine,
-                ...rows,
-              ],
+              children: [titleLine, ...rows],
             )
           : ListView(
               controller: widget.controller,
-              children: [
-                titleLine,
-                ...rows,
-              ],
+              children: [titleLine, ...rows],
             ),
     );
   }

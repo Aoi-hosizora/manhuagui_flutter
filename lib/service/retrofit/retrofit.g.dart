@@ -382,7 +382,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<dynamic>> checkUserLogin({token}) async {
+  Future<Result<LoginCheckResult>> checkUserLogin({token}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
@@ -396,7 +396,7 @@ class _RestClient implements RestClient {
             extra: _extra,
             baseUrl: baseUrl),
         data: _data);
-    final value = Result<dynamic>.fromJson(_result.data);
+    final value = Result<LoginCheckResult>.fromJson(_result.data);
     return value;
   }
 

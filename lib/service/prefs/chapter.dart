@@ -1,15 +1,15 @@
 import 'package:manhuagui_flutter/service/natives/prefs.dart';
 
-const _SCROLL_DIRECTION = 'SCROLL_DIRECTION';
-const _SHOW_PAGE_HINT = 'SHOW_PAGE_HINT';
-const _USE_SWIPE_FOR_CHAPTER = 'USE_SWIPE_FOR_CHAPTER';
-const _USE_CLICK_FOR_CHAPTER = 'USE_CLICK_FOR_CHAPTER';
-const _NEED_CHECK_FOR_CHAPTER = 'NEED_CHECK_FOR_CHAPTER';
-const _ENABLE_PAGE_SPACE = 'ENABLE_PAGE_SPACE';
-const _PRELOAD_COUNT = 'PRELOAD_COUNT';
+const _SCROLL_DIRECTION = 'SCROLL_DIRECTION'; // bool
+const _SHOW_PAGE_HINT = 'SHOW_PAGE_HINT'; // bool
+const _USE_SWIPE_FOR_CHAPTER = 'USE_SWIPE_FOR_CHAPTER'; // bool
+const _USE_CLICK_FOR_CHAPTER = 'USE_CLICK_FOR_CHAPTER'; // bool
+const _NEED_CHECK_FOR_CHAPTER = 'NEED_CHECK_FOR_CHAPTER'; // bool
+const _ENABLE_PAGE_SPACE = 'ENABLE_PAGE_SPACE'; // bool
+const _PRELOAD_COUNT = 'PRELOAD_COUNT'; // int
 
-class CategoryViewSetting {
-  CategoryViewSetting();
+class ChapterPageSetting {
+  ChapterPageSetting();
 
   bool reverseScroll; // 反转拖动
   bool showPageHint; // 显示页码提示
@@ -19,12 +19,7 @@ class CategoryViewSetting {
   bool enablePageSpace; // 显示页面间隔
   int preloadCount; // 预加载页数
 
-  Future<bool> existed() async {
-    var prefs = await getPrefs();
-    return prefs.containsKey(_SCROLL_DIRECTION);
-  }
-
-  CategoryViewSetting.defaultSetting() {
+  ChapterPageSetting.defaultSetting() {
     reverseScroll = false;
     showPageHint = true;
     useSwipeForChapter = true;
@@ -34,8 +29,13 @@ class CategoryViewSetting {
     preloadCount = 2;
   }
 
+  Future<bool> existed() async {
+    var prefs = await getPrefs();
+    return prefs.containsKey(_SCROLL_DIRECTION);
+  }
+
   Future<void> load() async {
-    var def = CategoryViewSetting.defaultSetting();
+    var def = ChapterPageSetting.defaultSetting();
     var prefs = await getPrefs();
     reverseScroll = prefs.getBool(_SCROLL_DIRECTION) ?? def.reverseScroll;
     showPageHint = prefs.getBool(_SHOW_PAGE_HINT) ?? def.showPageHint;

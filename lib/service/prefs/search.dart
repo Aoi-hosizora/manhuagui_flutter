@@ -1,6 +1,6 @@
 import 'package:manhuagui_flutter/service/natives/prefs.dart';
 
-const _SEARCH_HISTORY = 'SEARCH_HISTORY';
+const _SEARCH_HISTORY = 'SEARCH_HISTORY'; // string[]
 
 /// 拿到搜索历史，按照时间新到旧排序
 Future<List<String>> getSearchHistories() async {

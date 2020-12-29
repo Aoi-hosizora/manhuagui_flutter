@@ -1,11 +1,11 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/natives/prefs.dart';
 
-const _TOKEN = "TOKEN";
-const _REMEMBER_USERNAME = "REMEMBER_USERNAME";
-const _REMEMBER_PASSWORD = "REMEMBER_PASSWORD";
-const _USERNAME = "USERNAME";
-const _PASSWORD = "PASSWORD";
+const _TOKEN = 'TOKEN'; // string
+const _REMEMBER_USERNAME = 'REMEMBER_USERNAME'; // bool
+const _REMEMBER_PASSWORD = 'REMEMBER_PASSWORD'; // bool
+const _USERNAME = 'USERNAME'; // string
+const _PASSWORD = 'PASSWORD'; // string
 
 Future<String> getToken() async {
   var prefs = await getPrefs();

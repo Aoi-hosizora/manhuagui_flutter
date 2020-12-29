@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/gallery_page_view.dart';
 import 'package:manhuagui_flutter/page/view/image_load_view.dart';
-import 'package:manhuagui_flutter/service/prefs/category.dart';
+import 'package:manhuagui_flutter/service/database/history.dart';
+import 'package:manhuagui_flutter/service/prefs/chapter.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:manhuagui_flutter/service/state/auth.dart';
@@ -47,12 +50,14 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   var _error = '';
   var _currentPage = 1;
   var _progressValue = 1;
+  Timer _timer;
+  var _currentTime = '';
   var _fileProvider = () async => null;
   var _imageProviders = <Future<String> Function()>[];
 
   var _showRegion = false; // 显示区域提示
   var _showAppBar = false; // 显示工具栏
-  var _setting = CategoryViewSetting.defaultSetting();
+  var _setting = ChapterPageSetting.defaultSetting();
   var _pointerDownXPosition = 0.0; // 按住的横坐标
   var _swipeOffsetX = 0.0; // 滑动的水平偏移量
   var _swipeFirstOver = false; // 是否划出第一页
@@ -64,18 +69,36 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _showAppBar = widget.showAppBar;
     _setting.existed().then((ok) async {
       if (!ok) {
-        _setting = CategoryViewSetting.defaultSetting();
+        _setting = ChapterPageSetting.defaultSetting();
         await _setting.save();
       } else {
         await _setting.load();
       }
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
     });
+    _timer = Timer.periodic(Duration(seconds: 1), (_) {
+      var now = DateTime.now();
+      _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _timer.cancel();
+    addHistory(
+      username: AuthState.instance.username,
+      history: MangaHistory(
+        mangaId: widget.mid,
+        mangaTitle: '===',
+        mangaCover: 'https://www.google.co.jp',
+        mangaUrl: null,
+        chapterId: widget.cid,
+        chapterTitle: _data.title,
+        chapterPage: _currentPage,
+      ),
+    );
     super.dispose();
   }
 
@@ -105,6 +128,19 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       );
       _currentPage = initialPage;
       _progressValue = initialPage;
+
+      addHistory(
+        username: AuthState.instance.username,
+        history: MangaHistory(
+          mangaId: widget.mid,
+          mangaTitle: '===',
+          mangaCover: 'https://www.google.co.jp',
+          mangaUrl: null,
+          chapterId: widget.cid,
+          chapterTitle: _data.title,
+          chapterPage: _currentPage,
+        ),
+      );
     }).catchError((e) {
       _data = null;
       _error = wrapError(e).text;
@@ -609,10 +645,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      color: Colors.black.withOpacity(0.75),
-                      padding: EdgeInsets.only(left: 6, right: 9, top: 1, bottom: 1),
+                      color: Colors.black.withOpacity(0.7),
+                      padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
                       child: Text(
-                        '${_data.title}  $_currentPage/${_data.pageCount}',
+                        '${_data.title} $_currentPage/${_data.pageCount}页 $_currentTime',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),

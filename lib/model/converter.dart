@@ -69,6 +69,8 @@ Type _jsonMapType(Map<String, dynamic> json) {
     return User;
   } else if (_matchJson(ShelfStatus.fields, json)) {
     return ShelfStatus;
+  } else if (_matchJson(LoginCheckResult.fields, json)) {
+    return LoginCheckResult;
   }
   return null;
 }
@@ -122,6 +124,8 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return User.fromJson(json) as T; // User
       } else if (_matchJson(ShelfStatus.fields, json)) {
         return ShelfStatus.fromJson(json) as T; // ShelfStatus
+      } else if (_matchJson(LoginCheckResult.fields, json)) {
+        return LoginCheckResult.fromJson(json) as T; // LoginCheckResult
       }
       // Result<ResultPage<?>>
       if (_matchPageJson<Manga, T>(json)) {
@@ -166,6 +170,8 @@ class GenericConverter<T> implements JsonConverter<T, Object> {
         return ResultPage.fromJson(json, User()) as T; // User
       } else if (_matchPageJson<ShelfStatus, T>(json)) {
         return ResultPage.fromJson(json, ShelfStatus()) as T; // ShelfStatus
+      } else if (_matchPageJson<LoginCheckResult, T>(json)) {
+        return ResultPage.fromJson(json, LoginCheckResult()) as T; // LoginCheckResult
       }
     }
     return json as T;

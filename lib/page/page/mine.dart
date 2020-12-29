@@ -39,8 +39,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     });
     widget.action?.addAction('', () {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
       if (AuthState.instance.logined) {
+        if (mounted) setState(() {});
         _loadUser();
       }
     });
@@ -90,6 +90,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               Navigator.of(c).pop();
               await removeToken();
               AuthState.instance.token = null;
+              AuthState.instance.username = null;
               AuthState.instance.notifyAll();
             },
           ),

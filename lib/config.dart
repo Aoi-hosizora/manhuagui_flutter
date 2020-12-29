@@ -1,5 +1,6 @@
 const DEBUG = true;
 const APP_NAME = 'manhuagui';
+const DB_NAME = 'db_manhuagui';
 const FEEDBACK_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/issues/new';
 
 const CONNECT_TIMEOUT = 10000; // 10s

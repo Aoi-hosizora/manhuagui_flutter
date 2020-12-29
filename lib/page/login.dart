@@ -85,6 +85,7 @@ class _LoginPageState extends State<LoginPage> {
     var token = result.data.token;
     Fluttertoast.showToast(msg: '$username 登录成功');
     AuthState.instance.token = token;
+    AuthState.instance.username = username;
     AuthState.instance.notifyAll();
 
     // prefs

@@ -73,7 +73,7 @@ abstract class RestClient {
   Future<Result<ResultPage<Comment>>> getMangaComments({@Path() int mid, @Query('page') int page});
 
   @POST('/user/check_login')
-  Future<Result<dynamic>> checkUserLogin({@Header('Authorization') String token});
+  Future<Result<LoginCheckResult>> checkUserLogin({@Header('Authorization') String token});
 
   @GET('/user/info')
   Future<Result<User>> getUserInfo({@Header('Authorization') String token});

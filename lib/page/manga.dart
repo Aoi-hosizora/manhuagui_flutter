@@ -131,6 +131,7 @@ class _MangaPageState extends State<MangaPage> {
           onRefresh: () => _loadData(),
           childBuilder: (c) => Scrollbar(
             child: ListView(
+              physics: AlwaysScrollableScrollPhysics(),
               children: [
                 // ****************************************************************
                 // 头部框

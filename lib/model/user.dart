@@ -35,3 +35,16 @@ class User {
 
   static const fields = <String>['username', 'avatar', 'class', 'score', 'login_ip', 'last_login_ip', 'register_time', 'last_login_time'];
 }
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class LoginCheckResult {
+  String username;
+
+  LoginCheckResult({this.username});
+
+  factory LoginCheckResult.fromJson(Map<String, dynamic> json) => _$LoginCheckResultFromJson(json);
+
+  Map<String, dynamic> toJson() => _$LoginCheckResultToJson(this);
+
+  static const fields = <String>['username'];
+}

@@ -13,6 +13,9 @@ class AuthState extends NotifiableData {
   /// 全局 token
   String token;
 
+  /// 全局用户名
+  String username;
+
   /// 是否登录
   bool get logined => token?.isNotEmpty == true;
 }
