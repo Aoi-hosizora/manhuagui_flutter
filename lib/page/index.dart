@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
+import 'package:manhuagui_flutter/service/auth/auth.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -48,6 +49,7 @@ class _IndexPageState extends State<IndexPage> {
       _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
       _actions[1].invoke('to_genre');
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
   }
 
   @override

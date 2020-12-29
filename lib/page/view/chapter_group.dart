@@ -11,15 +11,26 @@ class ChapterGroupView extends StatefulWidget {
     Key key,
     @required this.groups,
     @required this.mangaTitle,
+    @required this.mangaCover,
+    @required this.mangaUrl,
     @required this.complete,
+    this.parentAction,
+    this.highlightChapter = 0,
   })  : assert(groups != null),
         assert(mangaTitle != null),
+        assert(mangaCover != null),
+        assert(mangaUrl != null),
         assert(complete != null),
+        assert(highlightChapter != null),
         super(key: key);
 
   final List<MangaChapterGroup> groups;
   final String mangaTitle;
+  final String mangaCover;
+  final String mangaUrl;
   final bool complete;
+  final ActionController parentAction;
+  final int highlightChapter;
 
   @override
   _ChapterGroupViewState createState() => _ChapterGroupViewState();
@@ -43,24 +54,45 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: OutlineButton(
-              child: Text(
-                chapter == null ? '...' : chapter.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(3),
+                color: chapter != null && widget.highlightChapter == chapter.cid ? Theme.of(context).primaryColor.withOpacity(0.5) : Colors.white,
               ),
-              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (c) => chapter == null
-                      ? MangaTocPage(
-                          mangaTitle: widget.mangaTitle,
-                          groups: widget.groups,
-                        )
-                      : ChapterPage(
-                          mid: chapter.mid,
-                          cid: chapter.cid,
-                        ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  buttonTheme: ButtonTheme.of(context).copyWith(
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                child: OutlineButton(
+                  child: Text(
+                    chapter == null ? '...' : chapter.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (c) => chapter == null
+                          ? MangaTocPage(
+                              mangaTitle: widget.mangaTitle,
+                              mangaCover: widget.mangaCover,
+                              mangaUrl: widget.mangaUrl,
+                              groups: widget.groups,
+                              parentAction: widget.parentAction,
+                              highlightChapter: widget.highlightChapter,
+                            )
+                          : ChapterPage(
+                              mid: chapter.mid,
+                              cid: chapter.cid,
+                              mangaTitle: widget.mangaTitle,
+                              mangaCover: widget.mangaCover,
+                              mangaUrl: widget.mangaUrl,
+                              parentAction: widget.parentAction,
+                            ),
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -77,7 +77,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         padding: EdgeInsets.zero,
         separator: Divider(height: 1),
         physics: AlwaysScrollableScrollPhysics(),
-        itemBuilder: (c, item) => MangaHistoryLineView(manga: item),
+        itemBuilder: (c, item) => MangaHistoryLineView(history: item),
         topWidget: Container(
           color: Colors.white,
           child: Column(
@@ -91,7 +91,14 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                       height: 26,
                       padding: EdgeInsets.only(left: 5),
                       child: Center(
-                        child: Text('${AuthState.instance.logined ? '用户历史' : '本地用户历史'} (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                        child: Text(AuthState.instance.logined ? '${AuthState.instance.username} 的浏览历史' : '本地的浏览历史'),
+                      ),
+                    ),
+                    Container(
+                      height: 26,
+                      padding: EdgeInsets.only(right: 5),
+                      child: Center(
+                        child: Text('共 ${_total == null ? '?' : _total.toString()} 部'),
                       ),
                     ),
                   ],

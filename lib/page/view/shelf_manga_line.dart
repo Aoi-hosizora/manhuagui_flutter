@@ -69,6 +69,8 @@ class _ShelfMangaLineViewState extends State<ShelfMangaLineView> {
                       text: Text(
                         '更新于 ${widget.manga.newestDuration}',
                         style: TextStyle(color: Colors.grey[600]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       space: 8,
                     ),

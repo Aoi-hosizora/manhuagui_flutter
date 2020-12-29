@@ -271,11 +271,13 @@ class MangaHistory {
   String mangaCover;
   String mangaUrl;
 
-  int chapterId;
+  int chapterId; // 0 表示还没开始阅读（点进漫画页），非0 表示开始阅读（点进章节页）
   String chapterTitle;
   int chapterPage;
 
   DateTime lastTime;
+
+  bool get read => chapterId != 0;
 
   MangaHistory({this.mangaId, this.mangaTitle, this.mangaCover, this.mangaUrl, this.chapterId, this.chapterTitle, this.chapterPage, this.lastTime});
 }

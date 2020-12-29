@@ -10,11 +10,11 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 class MangaHistoryLineView extends StatefulWidget {
   const MangaHistoryLineView({
     Key key,
-    @required this.manga,
-  })  : assert(manga != null),
+    @required this.history,
+  })  : assert(history != null),
         super(key: key);
 
-  final MangaHistory manga;
+  final MangaHistory history;
 
   @override
   _MangaHistoryLineViewState createState() => _MangaHistoryLineViewState();
@@ -31,7 +31,7 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               child: NetworkImageView(
-                url: widget.manga.mangaCover,
+                url: widget.history.mangaCover,
                 height: 100,
                 width: 75,
                 fit: BoxFit.cover,
@@ -46,29 +46,57 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
                   Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Text(
-                      widget.manga.mangaTitle,
+                      widget.history.mangaTitle,
                       style: Theme.of(context).textTheme.subtitle1,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 2),
-                    child: IconText(
-                      icon: Icon(Icons.import_contacts, size: 20, color: Colors.orange),
-                      text: Text(
-                        '最近阅读至 ${widget.manga.chapterTitle} (第${widget.manga.chapterPage}页)',
-                        style: TextStyle(color: Colors.grey[600]),
+                  if (widget.history.read)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 2),
+                      child: IconText(
+                        icon: Icon(Icons.subject, size: 20, color: Colors.orange),
+                        text: Text(
+                          '阅读至 ${widget.history.chapterTitle}',
+                          style: TextStyle(color: Colors.grey[600]),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        space: 8,
                       ),
-                      space: 8,
                     ),
-                  ),
+                  if (widget.history.read)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 2),
+                      child: IconText(
+                        icon: Icon(Icons.import_contacts, size: 20, color: Colors.orange),
+                        text: Text(
+                          '第${widget.history.chapterPage}页',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        space: 8,
+                      ),
+                    ),
+                  if (!widget.history.read) SizedBox(height: 22),
+                  if (!widget.history.read)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 2),
+                      child: IconText(
+                        icon: Icon(Icons.subject, size: 20, color: Colors.orange),
+                        text: Text(
+                          '还没开始阅读...',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        space: 8,
+                      ),
+                    ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 2),
                     child: IconText(
                       icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
                       text: Text(
-                        '时间：${DateFormat('yyyy-MM-dd HH:mm:ss').format(widget.manga.lastTime)}',
+                        DateFormat('yyyy-MM-dd HH:mm:ss').format(widget.history.lastTime),
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       space: 8,
@@ -86,9 +114,9 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (c) => MangaPage(
-                    id: widget.manga.mangaId,
-                    title: widget.manga.mangaTitle,
-                    url: widget.manga.mangaUrl,
+                    id: widget.history.mangaId,
+                    title: widget.history.mangaTitle ?? '？',
+                    url: widget.history.mangaUrl ?? '',
                   ),
                 ),
               ),

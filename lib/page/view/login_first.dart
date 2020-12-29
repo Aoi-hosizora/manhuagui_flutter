@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/login.dart';
-import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
-import 'package:synchronized/synchronized.dart';
-
-var _lock = Lock();
+import 'package:manhuagui_flutter/service/auth/auth.dart';
 
 class LoginFirstView extends StatefulWidget {
   const LoginFirstView({Key key}) : super(key: key);
@@ -19,32 +13,7 @@ class _LoginFirstViewState extends State<LoginFirstView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _lock.synchronized(() async {
-        if (AuthState.instance.logined) {
-          return;
-        }
-        var token = await getToken();
-        if (token?.isNotEmpty != true || AuthState.instance.token == token) {
-          return;
-        }
-
-        // check token
-        var dio = DioManager.instance.dio;
-        var client = RestClient(dio);
-        dynamic err;
-        var r = await client.checkUserLogin(token: token).catchError((e) => err = e);
-        if (err != null) {
-          await removeToken();
-          return;
-        }
-
-        // notify
-        AuthState.instance.token = token;
-        AuthState.instance.username = r.data.username;
-        AuthState.instance.notifyAll();
-      });
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
   }
 
   @override

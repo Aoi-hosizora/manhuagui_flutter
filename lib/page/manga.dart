@@ -4,10 +4,12 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
+import 'package:manhuagui_flutter/page/chapter.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 import 'package:manhuagui_flutter/page/view/multilink_text.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/service/database/history.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
@@ -35,21 +37,34 @@ class MangaPage extends StatefulWidget {
 }
 
 class _MangaPageState extends State<MangaPage> {
+  ActionController _action;
   GlobalKey<RefreshIndicatorState> _indicatorKey;
   var _loading = true;
   Manga _data;
   var _error = '';
   bool _subscribed;
+  MangaHistory _history;
   var _showBriefIntroduction = true;
 
   @override
   void initState() {
     super.initState();
+    _action = ActionController();
     _indicatorKey = GlobalKey<RefreshIndicatorState>();
+    _action.addAction('history', () async {
+      _history = await _loadHistory();
+      if (mounted) setState(() {});
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
   }
 
-  Future<void> _loadData() {
+  @override
+  void dispose() {
+    _action.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
     _loading = true;
     if (mounted) setState(() {});
 
@@ -67,6 +82,24 @@ class _MangaPageState extends State<MangaPage> {
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
+
+      _history = await _loadHistory();
+      if (mounted) setState(() {});
+      if (_history?.read != true) {
+        addHistory(
+          username: AuthState.instance.username,
+          history: MangaHistory(
+            mangaId: _data.mid,
+            mangaTitle: _data.title ?? '?',
+            mangaCover: _data.cover ?? '?',
+            mangaUrl: _data.url ?? '',
+            chapterId: 0,
+            // 还没开始阅读
+            chapterTitle: '',
+            chapterPage: 0,
+          ),
+        );
+      }
     }).catchError((e) {
       _data = null;
       _error = wrapError(e).text;
@@ -74,6 +107,10 @@ class _MangaPageState extends State<MangaPage> {
       _loading = false;
       if (mounted) setState(() {});
     });
+  }
+
+  Future<MangaHistory> _loadHistory() {
+    return getHistory(username: AuthState.instance.username, mid: widget.id); // 可能已经开始阅读，也可能还没访问
   }
 
   void _subscribe() {
@@ -100,6 +137,45 @@ class _MangaPageState extends State<MangaPage> {
       var err = wrapError(e).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
     });
+  }
+
+  void _read() async {
+    if (_history?.read != true) {
+      // 开始阅读
+      if (_data.chapterGroups.length == 0) {
+        return;
+      }
+      var cid = _data.chapterGroups.first.chapters.last.cid;
+      var targetGroups = _data.chapterGroups.where((g) => g.title == '单话');
+      if (targetGroups.length != 0) {
+        cid = targetGroups.first.chapters.last.cid;
+      }
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (c) => ChapterPage(
+            mid: _data.mid,
+            mangaTitle: _data.title,
+            mangaCover: _data.cover,
+            mangaUrl: _data.url,
+            cid: cid,
+          ),
+        ),
+      );
+    } else {
+      // 继续阅读
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (c) => ChapterPage(
+            mid: _data.mid,
+            mangaTitle: _data.title,
+            mangaCover: _data.cover,
+            mangaUrl: _data.url,
+            cid: _history.chapterId,
+            initialPage: _history.chapterPage,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -231,8 +307,8 @@ class _MangaPageState extends State<MangaPage> {
                                   width: 75,
                                   child: OutlineButton(
                                     padding: EdgeInsets.all(2),
-                                    child: Text('开始阅读'), // 继续阅读
-                                    onPressed: () => Fluttertoast.showToast(msg: 'TODO'),
+                                    child: Text(_history?.read == true ? '继续阅读' : '开始阅读'),
+                                    onPressed: () => _read(),
                                   ),
                                 ),
                               ],
@@ -345,9 +421,13 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   color: Colors.white,
                   child: ChapterGroupView(
+                    parentAction: _action,
                     groups: _data.chapterGroups,
                     mangaTitle: _data.title,
+                    mangaCover: _data.cover,
+                    mangaUrl: _data.url,
                     complete: false,
+                    highlightChapter: _history?.chapterId ?? 0,
                   ),
                 ),
                 Container(height: 12),

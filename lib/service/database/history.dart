@@ -66,7 +66,7 @@ Future<MangaHistory> getHistory({@required String username, @required int mid}) 
     chapterId: m[_colChapterId],
     chapterTitle: m[_colChapterTitle],
     chapterPage: m[_colChapterPage],
-    lastTime: m[_colLastTime],
+    lastTime: DateTime.parse(m[_colLastTime]),
   );
 }
 
@@ -120,15 +120,15 @@ Future<bool> addHistory({@required String username, @required MangaHistory histo
       '''INSERT INTO $_tblHistory ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
       [username, history.mangaId, history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String()],
-    );
+    ).catchError((_) {});
   } else {
     // UPDATE
     rows = await db.rawUpdate(
       '''UPDATE $_tblHistory
          SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colChapterId = ?, $_colChapterTitle = ?, $_colChapterPage = ?, $_colLastTime = ?
          WHERE $_colUsername = ? AND $_colMangaId = ?''',
-      [history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String()],
-    );
+      [history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String(), username, history.mangaId],
+    ).catchError((_) {});
   }
   return rows >= 1;
 }
@@ -142,6 +142,6 @@ Future<bool> deleteHistory({@required String username, @required int mid}) async
     '''DELETE FROM $_tblHistory
        WHERE $_colUsername = ? AND $_colMangaId = ?''',
     [username, mid],
-  );
+  ).catchError((_) {});
   return rows >= 1;
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 
@@ -8,13 +9,23 @@ class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
     Key key,
     @required this.mangaTitle,
+    @required this.mangaCover,
+    @required this.mangaUrl,
     @required this.groups,
+    this.parentAction,
+    this.highlightChapter,
   })  : assert(mangaTitle != null),
+        assert(mangaCover != null),
+        assert(mangaUrl != null),
         assert(groups != null),
         super(key: key);
 
   final String mangaTitle;
+  final String mangaCover;
+  final String mangaUrl;
   final List<MangaChapterGroup> groups;
+  final ActionController parentAction;
+  final int highlightChapter;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
@@ -37,7 +48,11 @@ class _MangaTocPageState extends State<MangaTocPage> {
               ChapterGroupView(
                 groups: widget.groups,
                 mangaTitle: widget.mangaTitle,
+                mangaCover: widget.mangaCover,
+                mangaUrl: widget.mangaUrl,
                 complete: true,
+                parentAction: widget.parentAction,
+                highlightChapter: widget.highlightChapter,
               ),
             ],
           ),
