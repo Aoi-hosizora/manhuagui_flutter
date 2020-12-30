@@ -370,14 +370,15 @@ class _SearchPageState extends State<SearchPage> {
                               context: context,
                               builder: (c) => AlertDialog(
                                 title: Text('删除搜索记录'),
-                                content: Text('确定要删除 $h 吗？该操作无法撤销。'),
+                                content: Text('确定要删除 $h 吗？'),
                                 actions: [
                                   FlatButton(
-                                    child: Text('清空'),
-                                    onPressed: () {
+                                    child: Text('删除'),
+                                    onPressed: () async {
                                       _histories.remove(h);
-                                      removeSearchHistory(h);
+                                      await removeSearchHistory(h);
                                       if (mounted) setState(() {});
+                                      Navigator.of(c).pop();
                                     },
                                   ),
                                   FlatButton(
@@ -402,7 +403,7 @@ class _SearchPageState extends State<SearchPage> {
                               context: context,
                               builder: (c) => AlertDialog(
                                 title: Text('清空历史记录'),
-                                content: Text('确定要清空所有历史记录吗？该操作无法撤销。'),
+                                content: Text('确定要清空所有历史记录吗？'),
                                 actions: [
                                   FlatButton(
                                     child: Text('清空'),

@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/gallery_page_view.dart';
 import 'package:manhuagui_flutter/page/view/image_load_view.dart';
 import 'package:manhuagui_flutter/service/database/history.dart';
+import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/chapter.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
@@ -20,6 +21,7 @@ import 'package:photo_view/photo_view.dart';
 class ChapterPage extends StatefulWidget {
   const ChapterPage({
     Key key,
+    this.action,
     @required this.mid,
     @required this.cid,
     @required this.mangaTitle,
@@ -27,7 +29,6 @@ class ChapterPage extends StatefulWidget {
     @required this.mangaUrl,
     this.initialPage = 1,
     this.showAppBar = false,
-    this.parentAction,
   })  : assert(mid != null),
         assert(cid != null),
         assert(mangaTitle != null),
@@ -37,6 +38,7 @@ class ChapterPage extends StatefulWidget {
         assert(showAppBar != null),
         super(key: key);
 
+  final ActionController action;
   final int mid;
   final int cid;
   final String mangaTitle;
@@ -44,7 +46,6 @@ class ChapterPage extends StatefulWidget {
   final String mangaUrl;
   final int initialPage;
   final bool showAppBar;
-  final ActionController parentAction;
 
   @override
   _ChapterPageState createState() => _ChapterPageState();
@@ -88,6 +89,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       }
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
     });
+    var now = DateTime.now();
+    _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -106,7 +109,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           chapterTitle: _data.title,
           chapterPage: _currentPage,
         ),
-      ).then((_) => widget.parentAction?.invoke('history'));
+      ).then((_) {
+        widget.action?.invoke('history');
+        widget.action?.invoke('history_toc');
+      }).catchError((_) {});
     }
     super.dispose();
   }
@@ -137,28 +143,32 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       );
       _currentPage = initialPage;
       _progressValue = initialPage;
+      if (!mounted) return;
 
-      if (mounted)
-      _timer = Timer.periodic(Duration(seconds: 1), (t) {
-        if (t.isActive) {
-          var now = DateTime.now();
-          _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-          if (mounted) setState(() {});
-        }
-      });
-      if (mounted)
-        addHistory(
-          username: AuthState.instance.username,
-          history: MangaHistory(
-            mangaId: widget.mid,
-            mangaTitle: widget.mangaTitle ?? '?',
-            mangaCover: widget.mangaCover ?? '?',
-            mangaUrl: widget.mangaUrl ?? '',
-            chapterId: _data.cid,
-            chapterTitle: _data.title,
-            chapterPage: _currentPage,
-          ),
-        ).then((_) => widget.parentAction?.invoke('history'));
+      if (_timer == null || !_timer.isActive) {
+        _timer = Timer.periodic(Duration(seconds: 1), (t) {
+          if (t.isActive) {
+            var now = DateTime.now();
+            _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+            if (mounted) setState(() {});
+          }
+        });
+      }
+      addHistory(
+        username: AuthState.instance.username,
+        history: MangaHistory(
+          mangaId: widget.mid,
+          mangaTitle: widget.mangaTitle ?? '?',
+          mangaCover: widget.mangaCover ?? '?',
+          mangaUrl: widget.mangaUrl ?? '',
+          chapterId: _data.cid,
+          chapterTitle: _data.title,
+          chapterPage: _currentPage,
+        ),
+      ).then((_) {
+        widget.action?.invoke('history');
+        widget.action?.invoke('history_toc');
+      }).catchError((_) {});
     }).catchError((e) {
       _data = null;
       _error = wrapError(e).text;
@@ -241,13 +251,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (c) => ChapterPage(
+            action: widget.action,
             mid: widget.mid,
             cid: last ? _data.prevCid : _data.nextCid,
             mangaTitle: widget.mangaTitle,
             mangaCover: widget.mangaCover,
             mangaUrl: widget.mangaUrl,
             showAppBar: _showAppBar,
-            parentAction: widget.parentAction,
             initialPage: (!last || isAppBar) ? 1 : -1, // 下一章节 || 工具栏点击的上一章节 => 第一页，否则 => 最后一页
           ),
         ),
@@ -494,7 +504,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         appBar: _loading || _data == null || !_showAppBar
             ? null
             : AppBar(
-                centerTitle: true,
+                centerTitle: false,
                 toolbarHeight: 45,
                 title: Text(_data.title),
                 actions: [
@@ -515,6 +525,11 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                     icon: Icon(Icons.arrow_right_alt),
                     tooltip: !_setting.reverseScroll ? '下一章节' : '上一章节', // 下一章节 / 上一章节(反)
                     onPressed: () => _gotoChapter(last: _setting.reverseScroll, isAppBar: true),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.open_in_browser),
+                    tooltip: '用浏览器打开',
+                    onPressed: () => launchInBrowser(context: context, url: _data.url),
                   ),
                 ],
               ),

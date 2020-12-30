@@ -7,8 +7,8 @@ const CONNECT_TIMEOUT = 10000; // 10s
 const SEND_TIMEOUT = 5000; // 5s
 const RECEIVE_TIMEOUT = 5000; // 5s
 
-const BASE_API_URL = 'http://10.0.3.2:10018/v1/';
-// const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/';
+// const BASE_API_URL = 'http://10.0.3.2:10018/v1/';
+const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/';
 const BASE_WEB_URL  = 'https://www.manhuagui.com/';
 const REGISTER_URL = 'https://www.manhuagui.com/user/register';
 

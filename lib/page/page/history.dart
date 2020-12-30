@@ -25,6 +25,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   ScrollFabController _fabController;
   var _data = <MangaHistory>[];
   int _total;
+  var _removed = 0;
 
   @override
   void initState() {
@@ -44,10 +45,41 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   }
 
   Future<List<MangaHistory>> _getData({int page}) async {
-    var data = await getHistories(username: AuthState.instance.username, page: page);
+    if (page == 1) {
+      _removed = 0; // refresh
+    }
+    var data = await getHistories(username: AuthState.instance.username, page: page, offset: _removed);
     _total = await getHistoryCount(username: AuthState.instance.username);
     if (mounted) setState(() {});
     return data;
+  }
+
+  void _delete({@required MangaHistory history}) {
+    assert(history != null);
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('删除历史记录'),
+        content: Text('是否删除 ${history.mangaTitle}？'),
+        actions: [
+          FlatButton(
+            child: Text('删除'),
+            onPressed: () async {
+              _data.remove(history);
+              _removed++;
+              _total--;
+              await deleteHistory(username: AuthState.instance.username, mid: history.mangaId);
+              if (mounted) setState(() {});
+              Navigator.of(c).pop();
+            },
+          ),
+          FlatButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -77,7 +109,10 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         padding: EdgeInsets.zero,
         separator: Divider(height: 1),
         physics: AlwaysScrollableScrollPhysics(),
-        itemBuilder: (c, item) => MangaHistoryLineView(history: item),
+        itemBuilder: (c, item) => MangaHistoryLineView(
+          history: item,
+          onLongPressed: () => _delete(history: item),
+        ),
         topWidget: Container(
           color: Colors.white,
           child: Column(

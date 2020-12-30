@@ -77,7 +77,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                 Positioned.fill(
                   child: Center(
                     child: NetworkImageView(
-                      url: widget.mangas[i].cover,
+                      url: widget.mangas[i].cover, // 3x4
                       height: 200,
                       width: 150,
                       fit: BoxFit.cover,
@@ -124,7 +124,6 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                     child: Text(
                       '${widget.mangas[_currentIndex].title} - ${widget.mangas[_currentIndex].newestChapter}',
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.subtitle1,
                     ),
                   ),
                   SizedBox(width: 12),

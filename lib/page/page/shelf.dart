@@ -115,7 +115,14 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
                       height: 26,
                       padding: EdgeInsets.only(left: 5),
                       child: Center(
-                        child: Text('全部漫画 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                        child: Text('${AuthState.instance.username} 订阅的漫画'),
+                      ),
+                    ),
+                    Container(
+                      height: 26,
+                      padding: EdgeInsets.only(right: 5),
+                      child: Center(
+                        child: Text('共 ${_total == null ? '?' : _total.toString()} 部'),
                       ),
                     ),
                   ],

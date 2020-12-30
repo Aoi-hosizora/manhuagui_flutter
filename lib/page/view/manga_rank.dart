@@ -94,9 +94,9 @@ class _MangaRankViewState extends State<MangaRankView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   widget.manga.trend == 1
-                      ? Icon(Icons.arrow_drop_up, color: Colors.blue[400])
+                      ? Icon(Icons.arrow_drop_up, color: Colors.red) // up
                       : widget.manga.trend == 2
-                          ? Icon(Icons.arrow_drop_down, color: Colors.red)
+                          ? Icon(Icons.arrow_drop_down, color: Colors.blue[400]) // down
                           : Icon(Icons.remove, color: Colors.grey),
                   Text(
                     widget.manga.score.toString(),

@@ -1,30 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
+import 'package:manhuagui_flutter/service/database/history.dart';
+import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/state/auth.dart';
 
 /// 漫画章节目录
 /// Page for [MangaChapterGroup].
 class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
     Key key,
-    @required this.mangaTitle,
-    @required this.mangaCover,
-    @required this.mangaUrl,
+    this.action,
+    @required this.mid,
+    @required this.title,
+    @required this.cover,
+    @required this.url,
     @required this.groups,
-    this.parentAction,
     this.highlightChapter,
-  })  : assert(mangaTitle != null),
-        assert(mangaCover != null),
-        assert(mangaUrl != null),
+  })  : assert(mid != null),
+        assert(title != null),
+        assert(cover != null),
+        assert(url != null),
         assert(groups != null),
         super(key: key);
 
-  final String mangaTitle;
-  final String mangaCover;
-  final String mangaUrl;
+  final ActionController action;
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
   final List<MangaChapterGroup> groups;
-  final ActionController parentAction;
   final int highlightChapter;
 
   @override
@@ -32,13 +39,41 @@ class MangaTocPage extends StatefulWidget {
 }
 
 class _MangaTocPageState extends State<MangaTocPage> {
+  MangaHistory _history;
+
+  @override
+  void initState() {
+    super.initState();
+    getHistory(username: AuthState.instance.username, mid: widget.mid).then((r) => _history = r).catchError((_) {});
+    widget?.action?.addAction('history_toc', () async {
+      _history = await getHistory(username: AuthState.instance.username, mid: widget.mid).catchError((_) {});
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    widget?.action?.removeAction('history_toc');
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
-        title: Text(widget.mangaTitle),
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.open_in_browser),
+            tooltip: '打开浏览器',
+            onPressed: () => launchInBrowser(
+              context: context,
+              url: widget.url,
+            ),
+          ),
+        ],
       ),
       body: Container(
         color: Colors.white,
@@ -46,13 +81,14 @@ class _MangaTocPageState extends State<MangaTocPage> {
           child: ListView(
             children: [
               ChapterGroupView(
+                action: widget.action,
                 groups: widget.groups,
-                mangaTitle: widget.mangaTitle,
-                mangaCover: widget.mangaCover,
-                mangaUrl: widget.mangaUrl,
                 complete: true,
-                parentAction: widget.parentAction,
-                highlightChapter: widget.highlightChapter,
+                highlightChapter: _history?.chapterId ?? widget.highlightChapter,
+                mangaId: widget.mid,
+                mangaTitle: widget.title,
+                mangaCover: widget.cover,
+                mangaUrl: widget.url,
               ),
             ],
           ),

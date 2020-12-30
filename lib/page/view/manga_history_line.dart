@@ -11,10 +11,13 @@ class MangaHistoryLineView extends StatefulWidget {
   const MangaHistoryLineView({
     Key key,
     @required this.history,
+    @required this.onLongPressed,
   })  : assert(history != null),
+        assert(onLongPressed != null),
         super(key: key);
 
   final MangaHistory history;
+  final Function() onLongPressed;
 
   @override
   _MangaHistoryLineViewState createState() => _MangaHistoryLineViewState();
@@ -120,6 +123,7 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
                   ),
                 ),
               ),
+              onLongPress: () => widget.onLongPressed(),
             ),
           ),
         ),

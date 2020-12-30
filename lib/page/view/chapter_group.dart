@@ -9,28 +9,31 @@ import 'package:manhuagui_flutter/page/manga_toc.dart';
 class ChapterGroupView extends StatefulWidget {
   const ChapterGroupView({
     Key key,
+    this.action,
     @required this.groups,
+    @required this.complete,
+    this.highlightChapter = 0,
+    @required this.mangaId,
     @required this.mangaTitle,
     @required this.mangaCover,
     @required this.mangaUrl,
-    @required this.complete,
-    this.parentAction,
-    this.highlightChapter = 0,
   })  : assert(groups != null),
+        assert(complete != null),
+        assert(highlightChapter != null),
+        assert(mangaId != null),
         assert(mangaTitle != null),
         assert(mangaCover != null),
         assert(mangaUrl != null),
-        assert(complete != null),
-        assert(highlightChapter != null),
         super(key: key);
 
+  final ActionController action;
   final List<MangaChapterGroup> groups;
+  final bool complete;
+  final int highlightChapter;
+  final int mangaId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final bool complete;
-  final ActionController parentAction;
-  final int highlightChapter;
 
   @override
   _ChapterGroupViewState createState() => _ChapterGroupViewState();
@@ -76,20 +79,21 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
                     MaterialPageRoute(
                       builder: (c) => chapter == null
                           ? MangaTocPage(
-                              mangaTitle: widget.mangaTitle,
-                              mangaCover: widget.mangaCover,
-                              mangaUrl: widget.mangaUrl,
+                              action: widget.action,
+                              mid: widget.mangaId,
+                              title: widget.mangaTitle,
+                              cover: widget.mangaCover,
+                              url: widget.mangaUrl,
                               groups: widget.groups,
-                              parentAction: widget.parentAction,
                               highlightChapter: widget.highlightChapter,
                             )
                           : ChapterPage(
+                              action: widget.action,
                               mid: chapter.mid,
                               cid: chapter.cid,
                               mangaTitle: widget.mangaTitle,
                               mangaCover: widget.mangaCover,
                               mangaUrl: widget.mangaUrl,
-                              parentAction: widget.parentAction,
                             ),
                     ),
                   ),
@@ -194,6 +198,17 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
 
     var hPadding = 12.0;
     var vPadding = 10.0;
+    var groups = widget.groups;
+    var specificGroups = widget.groups.where((g) => g.title == '单话');
+    if (specificGroups.length != 0) {
+      var sGroup = specificGroups.first;
+      groups = [sGroup];
+      for (var group in widget.groups) {
+        if (group.title != sGroup.title && group.chapters.length != sGroup.chapters.length) {
+          groups.add(group);
+        }
+      }
+    }
 
     return Column(
       children: [
@@ -287,11 +302,11 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
               // ****************************************************************
               // 单个章节分组
               // ****************************************************************
-              for (var i = 0; i < widget.groups.length; i++)
+              for (var i = 0; i < groups.length; i++)
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: vPadding / 2),
                   child: _buildSingleGroup(
-                    widget.groups[i],
+                    groups[i],
                     first: i == 0,
                     hPadding: hPadding,
                     vPadding: vPadding,

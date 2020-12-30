@@ -70,18 +70,22 @@ Future<MangaHistory> getHistory({@required String username, @required int mid}) 
   );
 }
 
-Future<List<MangaHistory>> getHistories({@required String username, @required int page, int limit = 20}) async {
+Future<List<MangaHistory>> getHistories({@required String username, @required int page, int limit = 20, int offset = 0}) async {
   username ??= '';
   assert(page == null || page >= 0);
   page ??= 1;
 
+  offset = limit * (page - 1) - offset;
+  if (offset < 0) {
+    offset = 0;
+  }
   var db = await DBProvider.instance.getDB();
   var maps = await db.rawQuery(
     '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime 
        FROM $_tblHistory
        WHERE $_colUsername = ?
        ORDER BY $_colLastTime DESC
-       LIMIT $limit OFFSET ${limit * (page - 1)}''',
+       LIMIT $limit OFFSET $offset''',
     [username],
   );
   var out = <MangaHistory>[];

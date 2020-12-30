@@ -37,8 +37,8 @@ class MangaPage extends StatefulWidget {
 }
 
 class _MangaPageState extends State<MangaPage> {
-  ActionController _action;
   GlobalKey<RefreshIndicatorState> _indicatorKey;
+  ActionController _action;
   var _loading = true;
   Manga _data;
   var _error = '';
@@ -49,10 +49,10 @@ class _MangaPageState extends State<MangaPage> {
   @override
   void initState() {
     super.initState();
-    _action = ActionController();
     _indicatorKey = GlobalKey<RefreshIndicatorState>();
+    _action = ActionController();
     _action.addAction('history', () async {
-      _history = await _loadHistory();
+      _history = await getHistory(username: AuthState.instance.username, mid: widget.id).catchError((_) {});
       if (mounted) setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
@@ -76,6 +76,7 @@ class _MangaPageState extends State<MangaPage> {
         if (mounted) setState(() {});
       }).catchError((_) {});
     }
+
     return client.getManga(mid: widget.id).then((r) async {
       _error = '';
       _data = null;
@@ -83,7 +84,8 @@ class _MangaPageState extends State<MangaPage> {
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
 
-      _history = await _loadHistory();
+      // <<<
+      _history = await getHistory(username: AuthState.instance.username, mid: widget.id).catchError((_) {}); // 可能已经开始阅读，也可能还没访问
       if (mounted) setState(() {});
       if (_history?.read != true) {
         addHistory(
@@ -98,7 +100,7 @@ class _MangaPageState extends State<MangaPage> {
             chapterTitle: '',
             chapterPage: 0,
           ),
-        );
+        ).catchError((_) {});
       }
     }).catchError((e) {
       _data = null;
@@ -107,10 +109,6 @@ class _MangaPageState extends State<MangaPage> {
       _loading = false;
       if (mounted) setState(() {});
     });
-  }
-
-  Future<MangaHistory> _loadHistory() {
-    return getHistory(username: AuthState.instance.username, mid: widget.id); // 可能已经开始阅读，也可能还没访问
   }
 
   void _subscribe() {
@@ -140,42 +138,44 @@ class _MangaPageState extends State<MangaPage> {
   }
 
   void _read() async {
+    int cid;
     if (_history?.read != true) {
       // 开始阅读
       if (_data.chapterGroups.length == 0) {
+        Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
         return;
       }
-      var cid = _data.chapterGroups.first.chapters.last.cid;
-      var targetGroups = _data.chapterGroups.where((g) => g.title == '单话');
-      if (targetGroups.length != 0) {
-        cid = targetGroups.first.chapters.last.cid;
+      var sGroup = _data.chapterGroups.first;
+      var specificGroups = _data.chapterGroups.where((g) => g.title == '单话');
+      if (specificGroups.length != 0) {
+        sGroup = specificGroups.first;
       }
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (c) => ChapterPage(
-            mid: _data.mid,
-            mangaTitle: _data.title,
-            mangaCover: _data.cover,
-            mangaUrl: _data.url,
-            cid: cid,
-          ),
-        ),
-      );
+      if (sGroup.chapters.length == 0) {
+        var specificGroups = _data.chapterGroups.where((g) => g.chapters.length != 0);
+        if (specificGroups.length == 0) {
+          Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
+          return;
+        }
+        sGroup = specificGroups.first;
+      }
+      cid = sGroup.chapters.first.cid;
     } else {
       // 继续阅读
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (c) => ChapterPage(
-            mid: _data.mid,
-            mangaTitle: _data.title,
-            mangaCover: _data.cover,
-            mangaUrl: _data.url,
-            cid: _history.chapterId,
-            initialPage: _history.chapterPage,
-          ),
-        ),
-      );
+      cid = _history.chapterId;
     }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (c) => ChapterPage(
+          mid: _data.mid,
+          mangaTitle: _data.title,
+          mangaCover: _data.cover,
+          mangaUrl: _data.url,
+          cid: cid,
+          initialPage: cid == null ? 0 : _history.chapterPage,
+        ),
+      ),
+    );
   }
 
   @override
@@ -421,22 +421,28 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   color: Colors.white,
                   child: ChapterGroupView(
-                    parentAction: _action,
+                    action: _action,
                     groups: _data.chapterGroups,
+                    complete: false,
+                    highlightChapter: _history?.chapterId ?? 0,
+                    mangaId: _data.mid,
                     mangaTitle: _data.title,
                     mangaCover: _data.cover,
                     mangaUrl: _data.url,
-                    complete: false,
-                    highlightChapter: _history?.chapterId ?? 0,
                   ),
                 ),
                 Container(height: 12),
                 // ****************************************************************
-                // 其他
+                // 评论
                 // ****************************************************************
                 Container(
-                  height: 200,
                   color: Colors.white,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Center(
+                      child: Text('评论区未上架'),
+                    ),
+                  ),
                 ),
               ],
             ),
