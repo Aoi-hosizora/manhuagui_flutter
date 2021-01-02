@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
 import 'package:manhuagui_flutter/page/chapter.dart';
+import 'package:manhuagui_flutter/page/manga_comment.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
+import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/multilink_text.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/database/history.dart';
@@ -38,6 +41,8 @@ class MangaPage extends StatefulWidget {
 
 class _MangaPageState extends State<MangaPage> {
   GlobalKey<RefreshIndicatorState> _indicatorKey;
+  ScrollMoreController _controller;
+  ScrollFabController _fabController;
   ActionController _action;
   var _loading = true;
   Manga _data;
@@ -45,11 +50,17 @@ class _MangaPageState extends State<MangaPage> {
   bool _subscribed;
   MangaHistory _history;
   var _showBriefIntroduction = true;
+  var _commentLoading = true;
+  var _commentError = '';
+  var _comments = <Comment>[];
+  int _commentTotal;
 
   @override
   void initState() {
     super.initState();
     _indicatorKey = GlobalKey<RefreshIndicatorState>();
+    _controller = ScrollMoreController();
+    _fabController = ScrollFabController();
     _action = ActionController();
     _action.addAction('history', () async {
       _history = await getHistory(username: AuthState.instance.username, mid: widget.id).catchError((_) {});
@@ -66,6 +77,9 @@ class _MangaPageState extends State<MangaPage> {
 
   Future<void> _loadData() async {
     _loading = true;
+    _commentLoading = true;
+    _data = null;
+    _comments = [];
     if (mounted) setState(() {});
 
     var dio = DioManager.instance.dio;
@@ -76,6 +90,17 @@ class _MangaPageState extends State<MangaPage> {
         if (mounted) setState(() {});
       }).catchError((_) {});
     }
+
+    client.getMangaComments(mid: widget.id, page: 1).then((r) async {
+      _comments = r.data.data;
+      _commentTotal = r.data.total;
+    }).catchError((e) {
+      _comments.clear();
+      _commentError = wrapError(e).text;
+    }).whenComplete(() {
+      _commentLoading = false;
+      if (mounted) setState(() {});
+    });
 
     return client.getManga(mid: widget.id).then((r) async {
       _error = '';
@@ -211,6 +236,7 @@ class _MangaPageState extends State<MangaPage> {
           onRefresh: () => _loadData(),
           childBuilder: (c) => Scrollbar(
             child: ListView(
+              controller: _controller,
               physics: AlwaysScrollableScrollPhysics(),
               children: [
                 // ****************************************************************
@@ -441,19 +467,100 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 15),
-                    child: Center(
-                      child: Text(
-                        '评论区尚未上架',
-                        style: Theme.of(context).textTheme.subtitle1,
-                      ),
+                  child: PlaceholderText(
+                    state: _commentLoading
+                        ? PlaceholderState.loading
+                        : _commentError?.isNotEmpty == true
+                            ? PlaceholderState.error
+                            : _comments.isEmpty
+                                ? PlaceholderState.nothing
+                                : PlaceholderState.normal,
+                    errorText: _commentError,
+                    setting: PlaceholderSetting(
+                      loadingText: '评论加载中...',
+                      nothingText: '暂无评论',
+                      showErrorRetry: false,
+                      showNothingRetry: false,
+                      iconSize: 45,
+                      progressSize: 32,
+                      iconPadding: EdgeInsets.all(8),
+                      progressPadding: EdgeInsets.all(12),
+                    ),
+                    childBuilder: (_) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          color: Colors.white,
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '评论区',
+                                style: Theme.of(context).textTheme.subtitle1,
+                              ),
+                              Text(
+                                '共 ${_commentTotal == null ? '?' : _commentTotal} 条',
+                                style: Theme.of(context).textTheme.subtitle1,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          color: Colors.white,
+                          child: Divider(height: 1, thickness: 1),
+                        ),
+                        for (var comment in _comments.sublist(0, _comments.length - 1)) ...[
+                          CommentLineView(comment: comment),
+                          Container(
+                            margin: EdgeInsets.only(left: 2.0 * 12 + 32),
+                            width: MediaQuery.of(context).size.width - 3 * 12 - 32,
+                            child: Divider(height: 1, thickness: 1),
+                          ),
+                        ],
+                        CommentLineView(comment: _comments.last),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          color: Colors.white,
+                          child: Divider(height: 1, thickness: 1),
+                        ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (c) => MangaCommentPage(mid: widget.id),
+                              ),
+                            ),
+                            child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              height: 42,
+                              child: Center(
+                                child: Text(
+                                  '查看更多评论...',
+                                  style: Theme.of(context).textTheme.subtitle1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+      floatingActionButton: ScrollFloatingActionButton(
+        scrollController: _controller,
+        fabController: _fabController,
+        fab: FloatingActionButton(
+          child: Icon(Icons.vertical_align_top),
+          heroTag: 'MangaPage',
+          onPressed: () => _controller.scrollTop(),
         ),
       ),
     );

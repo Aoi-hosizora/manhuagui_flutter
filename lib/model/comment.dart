@@ -12,16 +12,16 @@ class Comment {
   String content;
   int likeCount;
   int replyCount;
-  List<RepliedComment> replyTimeline;
   String commentTime;
+  List<RepliedComment> replyTimeline;
 
-  Comment({this.cid, this.uid, this.username, this.avatar, this.gender, this.content, this.likeCount, this.replyCount, this.replyTimeline, this.commentTime});
+  Comment({this.cid, this.uid, this.username, this.avatar, this.gender, this.content, this.likeCount, this.replyCount, this.commentTime, this.replyTimeline});
 
   factory Comment.fromJson(Map<String, dynamic> json) => _$CommentFromJson(json);
 
   Map<String, dynamic> toJson() => _$CommentToJson(this);
 
-  static const fields = <String>['cid', 'uid', 'username', 'avatar', 'gender', 'content', 'like_count', 'reply_count', 'reply_timeline', 'comment_time'];
+  static const fields = <String>['cid', 'uid', 'username', 'avatar', 'gender', 'content', 'like_count', 'reply_count', 'comment_time', 'reply_timeline'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

@@ -69,7 +69,7 @@ abstract class RestClient {
   @GET('/rank/total')
   Future<Result<ResultPage<MangaRank>>> getTotalRanking({@Query('type') String type});
 
-  @GET('/comment/manga/{uid}')
+  @GET('/comment/manga/{mid}')
   Future<Result<ResultPage<Comment>>> getMangaComments({@Path() int mid, @Query('page') int page});
 
   @POST('/user/check_login')

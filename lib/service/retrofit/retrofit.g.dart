@@ -369,7 +369,7 @@ class _RestClient implements RestClient {
     queryParameters.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     final _result = await _dio.request<Map<String, dynamic>>(
-        '/comment/manga/{uid}',
+        '/comment/manga/$mid',
         queryParameters: queryParameters,
         options: RequestOptions(
             method: 'GET',
