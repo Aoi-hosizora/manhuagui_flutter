@@ -35,7 +35,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
         CarouselSlider.builder(
           carouselController: _carouselController,
           options: CarouselOptions(
-            height: 200,
+            height: 220,
             autoPlay: true,
             autoPlayInterval: Duration(seconds: 4),
             autoPlayCurve: Curves.fastOutSlowIn,
@@ -54,7 +54,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                 ClipRect(
                   child: Container(
                     width: MediaQuery.of(context).size.width, // * 0.8,
-                    height: 200,
+                    height: 220,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: CachedNetworkImageProvider(
@@ -78,8 +78,8 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                   child: Center(
                     child: NetworkImageView(
                       url: widget.mangas[i].cover, // 3x4
-                      height: 200,
-                      width: 150,
+                      height: 220,
+                      width: 165,
                       fit: BoxFit.cover,
                     ),
                   ),

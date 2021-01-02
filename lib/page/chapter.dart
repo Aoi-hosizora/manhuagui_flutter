@@ -143,17 +143,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       );
       _currentPage = initialPage;
       _progressValue = initialPage;
-      if (!mounted) return;
 
-      if (_timer == null || !_timer.isActive) {
-        _timer = Timer.periodic(Duration(seconds: 1), (t) {
-          if (t.isActive) {
-            var now = DateTime.now();
-            _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-            if (mounted) setState(() {});
-          }
-        });
-      }
       addHistory(
         username: AuthState.instance.username,
         history: MangaHistory(
@@ -169,6 +159,16 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         widget.action?.invoke('history');
         widget.action?.invoke('history_toc');
       }).catchError((_) {});
+
+      if (mounted && (_timer == null || !_timer.isActive)) {
+        _timer = Timer.periodic(Duration(seconds: 1), (t) {
+          if (t.isActive) {
+            var now = DateTime.now();
+            _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+            if (mounted) setState(() {});
+          }
+        });
+      }
     }).catchError((e) {
       _data = null;
       _error = wrapError(e).text;

@@ -139,6 +139,7 @@ class _MangaPageState extends State<MangaPage> {
 
   void _read() async {
     int cid;
+    int page;
     if (_history?.read != true) {
       // 开始阅读
       if (_data.chapterGroups.length == 0) {
@@ -158,21 +159,24 @@ class _MangaPageState extends State<MangaPage> {
         }
         sGroup = specificGroups.first;
       }
-      cid = sGroup.chapters.first.cid;
+      cid = sGroup.chapters.last.cid;
+      page = 1;
     } else {
       // 继续阅读
       cid = _history.chapterId;
+      page = _history.chapterPage;
     }
 
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (c) => ChapterPage(
+          action: _action,
           mid: _data.mid,
           mangaTitle: _data.title,
           mangaCover: _data.cover,
           mangaUrl: _data.url,
           cid: cid,
-          initialPage: cid == null ? 0 : _history.chapterPage,
+          initialPage: page,
         ),
       ),
     );
@@ -438,9 +442,12 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   color: Colors.white,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
+                    padding: EdgeInsets.symmetric(vertical: 15),
                     child: Center(
-                      child: Text('评论区未上架'),
+                      child: Text(
+                        '评论区尚未上架',
+                        style: Theme.of(context).textTheme.subtitle1,
+                      ),
                     ),
                   ),
                 ),

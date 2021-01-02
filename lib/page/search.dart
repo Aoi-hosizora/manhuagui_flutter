@@ -375,10 +375,10 @@ class _SearchPageState extends State<SearchPage> {
                                   FlatButton(
                                     child: Text('删除'),
                                     onPressed: () async {
+                                      Navigator.of(c).pop();
                                       _histories.remove(h);
                                       await removeSearchHistory(h);
                                       if (mounted) setState(() {});
-                                      Navigator.of(c).pop();
                                     },
                                   ),
                                   FlatButton(
