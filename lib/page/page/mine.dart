@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/user.dart';
+import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
@@ -179,10 +178,14 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                     child: Material(
                       color: Colors.transparent,
                       child: IconButton(
-                        icon: Icon(Icons.feedback, color: Colors.black54),
-                        tooltip: '反馈',
+                        icon: Icon(Icons.settings, color: Colors.black54),
+                        tooltip: '设置',
                         padding: EdgeInsets.all(25),
-                        onPressed: () => launchInBrowser(context: context, url: FEEDBACK_URL),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (c) => SettingPage(),
+                          ),
+                        ),
                       ),
                     ),
                   ),

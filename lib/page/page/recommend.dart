@@ -78,7 +78,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     return InkWell(
       onTap: () => action(),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         child: IconText(
           alignment: IconTextAlignment.t2b,
           space: 8,
@@ -117,7 +117,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   child: Material(
                     color: Colors.transparent,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 35, vertical: 4),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

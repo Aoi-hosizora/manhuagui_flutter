@@ -89,7 +89,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
             tooltip: '浏览器打开',
             onPressed: () => launchInBrowser(
               context: context,
-              url: BASE_WEB_URL,
+              url: WEB_HOMEPAGE_URL,
             ),
           ),
           IconButton(

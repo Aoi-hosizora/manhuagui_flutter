@@ -145,14 +145,17 @@ class _CommentLineViewState extends State<CommentLineView> {
                                 children: [
                                   Text(
                                     "${line.username == '-' ? '匿名用户' : line.username}: ",
-                                    style: Theme.of(context).textTheme.bodyText1.copyWith(color: Theme.of(context).primaryColor),
+                                    style: TextStyle(
+                                      fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Expanded(
                                     child: Text(
                                       line.content,
-                                      style: Theme.of(context).textTheme.bodyText1,
+                                      style: TextStyle(fontSize: Theme.of(context).textTheme.bodyText1.fontSize),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),

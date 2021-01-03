@@ -25,6 +25,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     _details = [
       Tuple2('mid', widget.data.mid.toString()),
       Tuple2('标题', widget.data.title),
+      Tuple2('标题别名', widget.data.aliasTitle ?? '暂无'),
       Tuple2('别名', widget.data.alias),
       Tuple2('封面链接', widget.data.cover),
       Tuple2('网页链接', widget.data.url),
