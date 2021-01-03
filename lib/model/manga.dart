@@ -17,6 +17,7 @@ class Manga {
   List<Category> genres;
   List<TinyAuthor> authors;
   String alias;
+  String aliasTitle;
   bool finished;
   String newestChapter;
   String newestDate;
@@ -30,34 +31,13 @@ class Manga {
   bool copyright;
   List<MangaChapterGroup> chapterGroups;
 
-  Manga(
-      {this.mid,
-      this.title,
-      this.cover,
-      this.url,
-      this.publishYear,
-      this.mangaZone,
-      this.genres,
-      this.authors,
-      this.alias,
-      this.finished,
-      this.newestChapter,
-      this.newestDate,
-      this.briefIntroduction,
-      this.introduction,
-      this.mangaRank,
-      this.averageScore,
-      this.scoreCount,
-      this.perScores,
-      this.banned,
-      this.copyright,
-      this.chapterGroups});
+  Manga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.alias, this.aliasTitle, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction, this.introduction, this.mangaRank, this.averageScore, this.scoreCount, this.perScores, this.banned, this.copyright, this.chapterGroups});
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaToJson(this);
 
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores', 'banned', 'copyright', 'chapter_groups'];
+  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'alias_title', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores', 'banned', 'copyright', 'chapter_groups'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

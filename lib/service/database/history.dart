@@ -137,6 +137,20 @@ Future<bool> addHistory({@required String username, @required MangaHistory histo
   return rows >= 1;
 }
 
+Future<bool> updateHistory({@required String username, @required MangaHistory history}) async {
+  username ??= '';
+  assert(history != null && history.mangaId != null);
+
+  var db = await DBProvider.instance.getDB();
+  var rows = await db.rawUpdate(
+    '''UPDATE $_tblHistory
+         SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?
+         WHERE $_colUsername = ? AND $_colMangaId = ?''',
+    [history.mangaTitle, history.mangaCover, history.mangaUrl, username, history.mangaId],
+  ).catchError((_) {});
+  return rows >= 1;
+}
+
 Future<bool> deleteHistory({@required String username, @required int mid}) async {
   username ??= '';
   assert(mid != null);

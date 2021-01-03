@@ -126,6 +126,16 @@ class _MangaPageState extends State<MangaPage> {
             chapterPage: 0,
           ),
         ).catchError((_) {});
+      } else {
+        updateHistory(
+          username: AuthState.instance.username,
+          history: MangaHistory(
+            mangaId: _data.mid,
+            mangaTitle: _data.title ?? '?',
+            mangaCover: _data.cover ?? '?',
+            mangaUrl: _data.url ?? '',
+          ),
+        );
       }
     }).catchError((e) {
       _data = null;

@@ -22,6 +22,10 @@ class Comment {
   Map<String, dynamic> toJson() => _$CommentToJson(this);
 
   static const fields = <String>['cid', 'uid', 'username', 'avatar', 'gender', 'content', 'like_count', 'reply_count', 'comment_time', 'reply_timeline'];
+
+  RepliedComment toRepliedComment() {
+    return RepliedComment(cid: cid, uid: uid, username: username, avatar: avatar, gender: gender, content: content, likeCount: likeCount, replyCount: replyCount, commentTime: commentTime);
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

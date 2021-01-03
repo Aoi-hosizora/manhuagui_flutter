@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
+import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 /// View for [Comment].
@@ -29,6 +29,9 @@ class _CommentLineViewState extends State<CommentLineView> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ****************************************************************
+              // 头像
+              // ****************************************************************
               ClipOval(
                 child: NetworkImageView(
                   url: widget.comment.avatar,
@@ -41,11 +44,17 @@ class _CommentLineViewState extends State<CommentLineView> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ****************************************************************
+                  // 第一行
+                  // ****************************************************************
                   Container(
                     width: MediaQuery.of(context).size.width - 3 * 12 - 32, // | ▢▢ ▢▢▢▢▢ |
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        // ****************************************************************
+                        // 用户名 性别
+                        // ****************************************************************
                         Expanded(
                           child: Row(
                             children: [
@@ -75,6 +84,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                             ],
                           ),
                         ),
+                        // ****************************************************************
+                        // 楼层
+                        // ****************************************************************
                         if (widget.comment.replyTimeline.length > 0)
                           Container(
                             margin: EdgeInsets.only(right: 8),
@@ -98,6 +110,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                     ),
                   ),
                   SizedBox(height: 8),
+                  // ****************************************************************
+                  // 评论内容
+                  // ****************************************************************
                   Container(
                     width: MediaQuery.of(context).size.width - 3 * 12 - 32,
                     child: Text(
@@ -106,6 +121,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                     ),
                   ),
                   if (widget.comment.replyTimeline.length > 0) SizedBox(height: 10),
+                  // ****************************************************************
+                  // 楼层
+                  // ****************************************************************
                   if (widget.comment.replyTimeline.length > 0)
                     Container(
                       width: MediaQuery.of(context).size.width - 3 * 12 - 32,
@@ -117,6 +135,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // ****************************************************************
+                          // 每一楼
+                          // ****************************************************************
                           for (var line in widget.comment.replyTimeline.sublist(0, widget.comment.replyTimeline.length <= 3 ? widget.comment.replyTimeline.length : 3))
                             Padding(
                               padding: EdgeInsets.only(bottom: 4),
@@ -169,6 +190,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                       ),
                     ),
                   SizedBox(height: 10),
+                  // ****************************************************************
+                  // 评论信息
+                  // ****************************************************************
                   Container(
                     width: MediaQuery.of(context).size.width - 3 * 12 - 32,
                     child: Row(
@@ -205,11 +229,20 @@ class _CommentLineViewState extends State<CommentLineView> {
             ],
           ),
         ),
+        // ****************************************************************
+        // 点击效果
+        // ****************************************************************
         Positioned.fill(
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => Fluttertoast.showToast(msg: 'TODO'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (c) => CommentPage(
+                    comment: widget.comment,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

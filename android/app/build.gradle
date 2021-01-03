@@ -44,8 +44,11 @@ android {
         applicationId "com.aoihosizora.manhuagui"
         minSdkVersion 16
         targetSdkVersion 29
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        // versionCode flutterVersionCode.toInteger()
+        // versionName flutterVersionName
+
+        versionCode 3
+        versionName "1.0.2"
     }
 
     signingConfigs {
