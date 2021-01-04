@@ -33,9 +33,10 @@ class _GenreListTextState extends State<GenreListText> {
   @override
   Widget build(BuildContext context) {
     return RichText(
+      textScaleFactor: MediaQuery.of(context).textScaleFactor,
       text: TextSpan(
         text: '',
-        style: Theme.of(context).textTheme.bodyText2.copyWith(fontSize: 13),
+        style: TextStyle(color: Colors.black),
         children: [
           for (var i = 0; i < widget.genres.length; i++) ...[
             TextSpan(
@@ -99,9 +100,10 @@ class _AuthorListTextState extends State<AuthorListText> {
   @override
   Widget build(BuildContext context) {
     return RichText(
+      textScaleFactor: MediaQuery.of(context).textScaleFactor,
       text: TextSpan(
         text: '',
-        style: Theme.of(context).textTheme.bodyText2.copyWith(fontSize: 13),
+        style: TextStyle(color: Colors.black),
         children: [
           for (var i = 0; i < widget.authors.length; i++) ...[
             TextSpan(

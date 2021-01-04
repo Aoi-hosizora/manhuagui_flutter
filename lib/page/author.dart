@@ -159,41 +159,48 @@ class _AuthorPageState extends State<AuthorPage> {
                   // ****************************************************************
                   Container(
                     width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢ |
+                    height: 150,
                     margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
-                    child: Wrap(
-                      direction: Axis.vertical,
-                      children: [
-                        IconText(
-                          icon: Icon(Icons.person, size: 20, color: Colors.orange),
-                          text: Text('别名 ${_data.alias}'),
-                          space: 8,
-                        ),
-                        IconText(
-                          icon: Icon(Icons.place, size: 20, color: Colors.orange),
-                          text: Text(_data.zone),
-                          space: 8,
-                        ),
-                        IconText(
-                          icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                          text: Text('平均评分 ${_data.averageScore}'),
-                          space: 8,
-                        ),
-                        IconText(
-                          icon: Icon(Icons.edit, size: 20, color: Colors.orange),
-                          text: Text('共收录 ${_data.mangaCount} 部漫画'),
-                          space: 8,
-                        ),
-                        IconText(
-                          icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
-                          text: Text('最新收录 ${_data.newestMangaTitle}'),
-                          space: 8,
-                        ),
-                        IconText(
-                          icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                          text: Text('更新于 ${_data.newestDate}'),
-                          space: 8,
-                        ),
-                      ],
+                    child: Center(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          IconText(
+                            icon: Icon(Icons.person, size: 20, color: Colors.orange),
+                            text: Text('别名 ${_data.alias}'),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.place, size: 20, color: Colors.orange),
+                            text: Text(_data.zone),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
+                            text: Text('平均评分 ${_data.averageScore}'),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.edit, size: 20, color: Colors.orange),
+                            text: Text('共收录 ${_data.mangaCount} 部漫画'),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
+                            text: Text(
+                              '最新收录 ${_data.newestMangaTitle}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
+                            text: Text('更新于 ${_data.newestDate}'),
+                            space: 8,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

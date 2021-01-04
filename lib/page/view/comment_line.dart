@@ -101,7 +101,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                                 (widget.comment.replyTimeline.length + 1).toString(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
                             ),
@@ -117,7 +117,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                     width: MediaQuery.of(context).size.width - 3 * 12 - 32,
                     child: Text(
                       widget.comment.content,
-                      style: Theme.of(context).textTheme.bodyText1,
+                      style: TextStyle(
+                        fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
+                      ),
                     ),
                   ),
                   if (widget.comment.replyTimeline.length > 0) SizedBox(height: 10),
@@ -155,7 +157,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                                   Expanded(
                                     child: Text(
                                       line.content,
-                                      style: TextStyle(fontSize: Theme.of(context).textTheme.bodyText1.fontSize),
+                                      style: TextStyle(
+                                        fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -173,7 +177,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                                         (widget.comment.replyTimeline.indexOf(line) + 1).toString(),
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 12,
+                                          fontSize: 11,
                                         ),
                                       ),
                                     ),
@@ -186,7 +190,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                               padding: EdgeInsets.only(bottom: 4),
                               child: Text(
                                 '点击查看该楼层... (共 ${widget.comment.replyTimeline.length} 条评论)',
-                                style: Theme.of(context).textTheme.bodyText1.copyWith(color: Theme.of(context).primaryColor),
+                                style: TextStyle(fontSize: Theme.of(context).textTheme.bodyText1.fontSize, color: Theme.of(context).primaryColor),
                               ),
                             ),
                         ],

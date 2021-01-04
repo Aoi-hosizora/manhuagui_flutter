@@ -88,7 +88,7 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
                       child: IconText(
                         icon: Icon(Icons.subject, size: 20, color: Colors.orange),
                         text: Text(
-                          '还没开始阅读...',
+                          '还没开始阅读',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         space: 8,

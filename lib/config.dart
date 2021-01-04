@@ -2,7 +2,7 @@ const DEBUG = true;
 const APP_NAME = 'Manhuagui';
 const APP_VERSION = '1.0.2';
 const APP_DESCRIPTIONS = [
-  '非官方的漫画柜 (manhuagui) 安卓客户端，Flutter 开发',
+  '非官方的漫画柜 (manhuagui) 安卓客户端，使用 Flutter 开发。',
   '作者: Github Aoi-hosizora <aoihosizora@hotmail.com>',
   '',
   '该客户端仅供学习研究使用，请勿用于商业用途。',

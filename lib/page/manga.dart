@@ -47,6 +47,7 @@ class _MangaPageState extends State<MangaPage> {
   var _loading = true;
   Manga _data;
   var _error = '';
+  var _subscribing = false;
   bool _subscribed;
   MangaHistory _history;
   var _showBriefIntroduction = true;
@@ -92,9 +93,11 @@ class _MangaPageState extends State<MangaPage> {
     }
 
     client.getMangaComments(mid: widget.id, page: 1).then((r) async {
+      _commentError = '';
       _comments = r.data.data;
       _commentTotal = r.data.total;
     }).catchError((e) {
+      _commentTotal = 0;
       _comments.clear();
       _commentError = wrapError(e).text;
     }).whenComplete(() {
@@ -162,6 +165,9 @@ class _MangaPageState extends State<MangaPage> {
     } else {
       result = client.removeFromShelf(token: AuthState.instance.token, mid: widget.id);
     }
+
+    _subscribing = true;
+    if (mounted) setState(() {});
     result.then((r) {
       _subscribed = toSubscribe;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
@@ -169,6 +175,9 @@ class _MangaPageState extends State<MangaPage> {
     }).catchError((e) {
       var err = wrapError(e).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
+    }).whenComplete(() {
+      _subscribing = false;
+      if (mounted) setState(() {});
     });
   }
 
@@ -287,9 +296,10 @@ class _MangaPageState extends State<MangaPage> {
                       // ****************************************************************
                       Container(
                         width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢ |
-                        margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
-                        child: Wrap(
-                          direction: Axis.vertical,
+                        height: 180,
+                        padding: EdgeInsets.only(top: 14, bottom: 14, right: 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             IconText(
                               icon: Icon(Icons.date_range, size: 20, color: Colors.orange),
@@ -325,7 +335,8 @@ class _MangaPageState extends State<MangaPage> {
                               text: Text(_data.newestDate + (_data.finished ? ' 已完结' : ' 连载中')),
                               space: 8,
                             ),
-                            SizedBox(height: 4),
+                            // SizedBox(height: 4),
+                            Spacer(),
                             // ****************************************************************
                             // 两个按钮
                             // ****************************************************************
@@ -337,8 +348,11 @@ class _MangaPageState extends State<MangaPage> {
                                   width: 75,
                                   child: OutlineButton(
                                     padding: EdgeInsets.all(2),
-                                    child: Text(_subscribed == true ? '取消订阅' : '订阅漫画'),
-                                    onPressed: () => _subscribe(),
+                                    child: Text(
+                                      _subscribed == true ? '取消订阅' : '订阅漫画',
+                                      style: TextStyle(color: _subscribing ? Colors.grey : Theme.of(context).textTheme.button.color),
+                                    ),
+                                    onPressed: _subscribing == true ? null : () => _subscribe(),
                                   ),
                                 ),
                                 SizedBox(width: 14),
@@ -371,9 +385,10 @@ class _MangaPageState extends State<MangaPage> {
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         child: RichText(
+                          textScaleFactor: MediaQuery.of(context).textScaleFactor,
                           text: TextSpan(
                             text: '',
-                            style: Theme.of(context).textTheme.bodyText2.copyWith(fontSize: 13),
+                            style: TextStyle(color: Colors.black),
                             children: [
                               if (_showBriefIntroduction) ...[
                                 TextSpan(text: _data.briefIntroduction),

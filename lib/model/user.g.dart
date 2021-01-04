@@ -40,13 +40,13 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'last_login_time': instance.lastLoginTime,
     };
 
-
 LoginCheckResult _$LoginCheckResultFromJson(Map<String, dynamic> json) {
   return LoginCheckResult(
     username: json['username'] as String,
   );
 }
 
-Map<String, dynamic> _$LoginCheckResultToJson(LoginCheckResult instance) => <String, dynamic>{
-  'username': instance.username,
-};
+Map<String, dynamic> _$LoginCheckResultToJson(LoginCheckResult instance) =>
+    <String, dynamic>{
+      'username': instance.username,
+    };

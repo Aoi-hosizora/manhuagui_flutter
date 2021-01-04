@@ -118,7 +118,7 @@ ErrorMessage wrapError(dynamic e, {bool isResult = true}) {
         case DioErrorType.CANCEL:
           text = 'Network error';
           if (!e.toString().contains('unreachable')) {
-            text = 'Server error';
+            text = 'Server unreachable';
           }
           break;
         case DioErrorType.CONNECT_TIMEOUT:
@@ -127,7 +127,7 @@ ErrorMessage wrapError(dynamic e, {bool isResult = true}) {
           text = 'Timeout error';
           break;
         case DioErrorType.RESPONSE: // x
-          text = 'Response error';
+          text = 'Response unknown error';
           break;
       }
       print('type: ${ErrorType.NETWORK_ERROR}');
