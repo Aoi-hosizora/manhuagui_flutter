@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/list.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -22,8 +24,9 @@ class RankingSubPage extends StatefulWidget {
 }
 
 class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin {
-  ScrollMoreController _controller;
-  ScrollFabController _fabController;
+  ScrollController _controller;
+  UpdatableDataViewController _udvController;
+  AnimatedFabController _fabController;
   var _genreLoading = true;
   var _genres = <Category>[];
   var _genreError = '';
@@ -37,9 +40,10 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _controller = ScrollMoreController();
-    _fabController = ScrollFabController();
-    widget.action?.addAction('', () => _controller.scrollTop());
+    _controller = ScrollController();
+    _udvController = UpdatableDataViewController();
+    _fabController = AnimatedFabController();
+    widget.action?.addAction('', () => _controller.scrollToTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
   }
 
@@ -108,92 +112,92 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         setting: PlaceholderSetting().toChinese(),
         onRefresh: () => _loadGenres(),
         childBuilder: (c) => RefreshableListView<MangaRank>(
-          controller: _controller,
           data: _data,
           getData: () => _getData(),
-          onStartLoading: () => mountedSetState(() => _disableOption = true),
-          onStopLoading: () => mountedSetState(() => _disableOption = false),
-          onAppend: (l) {
-            if (l.length > 0) {
-              Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-            }
-            _lastDuration = _duration;
-            _lastType = _selectedType;
-            if (mounted) setState(() {});
-          },
-          onError: (e) {
-            Fluttertoast.showToast(msg: e.toString());
-            _duration = _lastDuration;
-            _selectedType = _lastType;
-            if (mounted) setState(() {});
-          },
-          clearWhenRefreshing: false,
-          clearWhenError: false,
-          refreshFirst: true,
-          placeholderSetting: PlaceholderSetting().toChinese(),
-          onStateChanged: (_, __) => _fabController.hide(),
+          controller: _udvController,
+          scrollController: _controller,
+          setting: UpdatableDataViewSetting(
+            padding: EdgeInsets.zero,
+            placeholderSetting: PlaceholderSetting().toChinese(),
+            refreshFirst: true,
+            clearWhenError: false,
+            clearWhenRefresh: false,
+            onStateChanged: (_, __) => _fabController.hide(),
+            onStartLoading: () => mountedSetState(() => _disableOption = true),
+            onStopLoading: () => mountedSetState(() => _disableOption = false),
+            onAppend: (l) {
+              if (l.length > 0) {
+                Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
+              }
+              _lastDuration = _duration;
+              _lastType = _selectedType;
+              if (mounted) setState(() {});
+            },
+            onError: (e) {
+              Fluttertoast.showToast(msg: e.toString());
+              _duration = _lastDuration;
+              _selectedType = _lastType;
+              if (mounted) setState(() {});
+            },
+          ),
           separator: Divider(height: 1),
-          physics: AlwaysScrollableScrollPhysics(),
           itemBuilder: (c, item) => MangaRankView(manga: item),
-          outTopWidget: Container(
-            color: Colors.white,
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      OptionPopupView<TinyCategory>(
-                        title: _selectedType.isAll() ? '分类' : _selectedType.title,
-                        top: 4,
-                        doHighlight: true,
-                        value: _selectedType,
-                        items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
-                        onSelect: (t) {
-                          if (_selectedType != t) {
-                            _lastType = _selectedType;
-                            _selectedType = t;
-                            if (mounted) setState(() {});
-                            _controller.refresh();
-                          }
-                        },
-                        optionBuilder: (c, v) => v.title,
-                        enable: !_disableOption,
-                      ),
-                      OptionPopupView<TinyCategory>(
-                        title: _duration.title,
-                        top: 4,
-                        doHighlight: true,
-                        value: _duration,
-                        items: allRankDurations,
-                        onSelect: (d) {
-                          if (_duration != d) {
-                            _lastDuration = _duration;
-                            _duration = d;
-                            if (mounted) setState(() {});
-                            _controller.refresh();
-                          }
-                        },
-                        optionBuilder: (c, v) => v.title,
-                        enable: !_disableOption,
-                      ),
-                    ],
+          extra: UpdatableDataViewExtraWidgets(
+            outerTopWidget: Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  OptionPopupView<TinyCategory>(
+                    title: _selectedType.isAll() ? '分类' : _selectedType.title,
+                    top: 4,
+                    doHighlight: true,
+                    value: _selectedType,
+                    items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
+                    onSelect: (t) {
+                      if (_selectedType != t) {
+                        _lastType = _selectedType;
+                        _selectedType = t;
+                        if (mounted) setState(() {});
+                        _udvController.refresh();
+                      }
+                    },
+                    optionBuilder: (c, v) => v.title,
+                    enable: !_disableOption,
                   ),
-                ),
-                Divider(height: 1, thickness: 1),
-              ],
+                  OptionPopupView<TinyCategory>(
+                    title: _duration.title,
+                    top: 4,
+                    doHighlight: true,
+                    value: _duration,
+                    items: allRankDurations,
+                    onSelect: (d) {
+                      if (_duration != d) {
+                        _lastDuration = _duration;
+                        _duration = d;
+                        if (mounted) setState(() {});
+                        _udvController.refresh();
+                      }
+                    },
+                    optionBuilder: (c, v) => v.title,
+                    enable: !_disableOption,
+                  ),
+                ],
+              ),
             ),
+            outerTopDivider: Divider(height: 1, thickness: 1),
           ),
         ),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
-        fabController: _fabController,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'RankingSubPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

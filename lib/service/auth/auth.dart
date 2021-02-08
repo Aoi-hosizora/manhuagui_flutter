@@ -4,6 +4,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:manhuagui_flutter/service/state/auth.dart';
 import 'package:synchronized/synchronized.dart';
 
+// mutex lock for checkAuth
 var _lock = Lock();
 
 Future<void> checkAuth() async {

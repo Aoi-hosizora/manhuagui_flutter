@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/image.dart';
+import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/widget.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -599,7 +601,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                         filterQuality: FilterQuality.high,
                         onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
                         onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
-                        imageProvider: LocalOrNetworkImageProvider(
+                        imageProvider: FileOrNetworkImageProvider(
                           url: _imageProviders[idx],
                           file: _fileProvider,
                           headers: {
@@ -709,7 +711,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                                 value: _progressValue.toDouble(),
                                 min: 1,
                                 max: _data.pageCount.toDouble(),
-                                onChanged: (p) => mountedSetState(() => _progressValue = p.toInt()),
+                                onChanged: (p) {
+                                  _progressValue = p.toInt();
+                                  if (mounted) setState(() {});
+                                },
                                 onChangeEnd: _onSliderChanged,
                               ),
                             ),

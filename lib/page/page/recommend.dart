@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/list.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
 import 'package:manhuagui_flutter/page/view/manga_column.dart';
@@ -22,8 +24,8 @@ class RecommendSubPage extends StatefulWidget {
 }
 
 class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepAliveClientMixin {
-  ScrollMoreController _controller;
-  ScrollFabController _fabController;
+  ScrollController _controller;
+  AnimatedFabController _fabController;
   GlobalKey<RefreshIndicatorState> _indicatorKey;
   var _carouselPages = <TinyBlockManga>[];
   var _loading = true;
@@ -33,10 +35,10 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
-    _controller = ScrollMoreController();
-    _fabController = ScrollFabController();
+    _controller = ScrollController();
+    _fabController = AnimatedFabController();
     _indicatorKey = GlobalKey<RefreshIndicatorState>();
-    widget.action?.addAction('', () => _controller.scrollTop());
+    widget.action?.addAction('', () => _controller.scrollToTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
   }
 
@@ -145,13 +147,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           ),
         ),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
-        fabController: _fabController,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'RecommendSubPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

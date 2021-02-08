@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/widget.dart';
 import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
@@ -8,7 +9,6 @@ import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
 import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 import 'package:manhuagui_flutter/service/state/auth.dart';
-import 'package:manhuagui_flutter/service/state/notifiable.dart';
 
 /// 我的
 class MineSubPage extends StatefulWidget {
@@ -23,15 +23,18 @@ class MineSubPage extends StatefulWidget {
   _MineSubPageState createState() => _MineSubPageState();
 }
 
-class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin, NotifiableMixin {
+class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin, NotifyReceiverMixin {
   bool _loading = false;
   User _data;
   String _error;
 
   @override
+  String get receiverKey => 'MineSubPage';
+
+  @override
   void initState() {
     super.initState();
-    AuthState.instance.registerListener(this, () {
+    AuthState.instance.registerDefault(this, () {
       if (mounted) setState(() {});
       if (AuthState.instance.logined) {
         _loadUser();
@@ -48,7 +51,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
 
   @override
   void dispose() {
-    AuthState.instance.unregisterListener(this);
+    AuthState.instance.unregisterDefault(this);
     super.dispose();
   }
 
@@ -102,9 +105,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       ),
     );
   }
-
-  @override
-  String get key => 'MineSubPage';
 
   @override
   bool get wantKeepAlive => true;

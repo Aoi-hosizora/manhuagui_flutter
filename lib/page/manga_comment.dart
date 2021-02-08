@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/list.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
@@ -20,16 +22,18 @@ class MangaCommentPage extends StatefulWidget {
 }
 
 class _MangaCommentPageState extends State<MangaCommentPage> {
-  ScrollMoreController _controller;
-  ScrollFabController _fabController;
+  ScrollController _controller;
+  UpdatableDataViewController _udvController;
+  AnimatedFabController _fabController;
   var _data = <Comment>[];
   int _total;
 
   @override
   void initState() {
     super.initState();
-    _controller = ScrollMoreController();
-    _fabController = ScrollFabController();
+    _controller = ScrollController();
+    _udvController = UpdatableDataViewController();
+    _fabController = AnimatedFabController();
   }
 
   @override
@@ -39,7 +43,7 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
     super.dispose();
   }
 
-  Future<List<Comment>> _getData({int page}) async {
+  Future<PagedList<Comment>> _getData({int page}) async {
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
@@ -51,7 +55,7 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
     }
     _total = result.data.total;
     if (mounted) setState(() {});
-    return result.data.data;
+    return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
   @override
@@ -63,21 +67,29 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
         title: Text('漫画评论${_total == null ? '' : ' (共 $_total 条)'}'),
       ),
       body: PaginationListView<Comment>(
-        controller: _controller,
         data: _data,
-        strategy: PaginationStrategy.offsetBased,
-        getDataByOffset: _getData,
-        initialPage: 1,
-        onAppend: (l) => doIf(l.length > 0, () => Fluttertoast.showToast(msg: '新添了 ${l.length} 条评论')),
-        onError: (e) => Fluttertoast.showToast(msg: e.toString()),
-        clearWhenRefreshing: false,
-        clearWhenError: false,
-        updateOnlyIfNotEmpty: false,
-        refreshFirst: true,
-        placeholderSetting: PlaceholderSetting().toChinese(),
-        onStateChanged: (_, __) => _fabController.hide(),
-        padding: EdgeInsets.zero,
-        physics: AlwaysScrollableScrollPhysics(),
+        getData: ({indicator}) => _getData(page: indicator),
+        scrollController: _controller,
+        controller: _udvController,
+        paginationSetting: PaginationSetting(
+          initialIndicator: 1,
+          nothingIndicator: 0,
+        ),
+        setting: UpdatableDataViewSetting(
+          padding: EdgeInsets.zero,
+          placeholderSetting: PlaceholderSetting().toChinese(),
+          refreshFirst: true,
+          clearWhenError: false,
+          clearWhenRefresh: false,
+          updateOnlyIfNotEmpty: false,
+          onStateChanged: (_, __) => _fabController.hide(),
+          onAppend: (l) {
+            if (l.length > 0) {
+              Fluttertoast.showToast(msg: '新添了 ${l.length} 条评论');
+            }
+          },
+          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+        ),
         separator: Container(
           margin: EdgeInsets.only(left: 2.0 * 12 + 32),
           width: MediaQuery.of(context).size.width - 3 * 12 - 32,
@@ -85,13 +97,14 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
         ),
         itemBuilder: (c, item) => CommentLineView(comment: item),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
-        fabController: _fabController,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'MangaCommentPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

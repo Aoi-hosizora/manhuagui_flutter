@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/list.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
@@ -21,8 +23,9 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   FloatingSearchBarController _searchController;
-  ScrollMoreController _scrollController;
-  ScrollFabController _fabController;
+  ScrollController _scrollController;
+  UpdatableDataViewController _udvController;
+  AnimatedFabController _fabController;
   String __q;
   var _histories = <String>[];
   var _data = <SmallManga>[];
@@ -43,8 +46,9 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     _searchController = FloatingSearchBarController();
-    _scrollController = ScrollMoreController();
-    _fabController = ScrollFabController();
+    _scrollController = ScrollController();
+    _udvController = UpdatableDataViewController();
+    _fabController = AnimatedFabController();
     WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(Duration(milliseconds: 200), () => _searchController.open()));
   }
 
@@ -56,7 +60,7 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
-  Future<List<SmallManga>> _getData({int page}) async {
+  Future<PagedList<SmallManga>> _getData({int page}) async {
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
@@ -68,7 +72,7 @@ class _SearchPageState extends State<SearchPage> {
     }
     _total = result.data.total;
     if (mounted) setState(() {});
-    return result.data.data;
+    return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
   Future<List<String>> _getHistories({String keyword}) async {
@@ -96,7 +100,7 @@ class _SearchPageState extends State<SearchPage> {
     if (_q != _text) {
       _q = _text;
       _searchController.close();
-      _scrollController.refresh();
+      _udvController.refresh();
       addSearchHistory(_q);
     } else {
       _searchController.close();
@@ -164,76 +168,76 @@ class _SearchPageState extends State<SearchPage> {
             Positioned.fill(
               top: MediaQuery.of(context).padding.top + 45,
               child: PaginationListView<SmallManga>(
-                controller: _scrollController,
                 data: _data,
-                strategy: PaginationStrategy.offsetBased,
-                getDataByOffset: _getData,
-                initialPage: 1,
-                onAppend: (l) {
-                  if (l.length > 0) {
-                    Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-                  }
-                  _lastOrder = _order;
-                  if (mounted) setState(() {});
-                },
-                onError: (e) {
-                  Fluttertoast.showToast(msg: e.toString());
-                  _order = _lastOrder;
-                  if (mounted) setState(() {});
-                },
-                clearWhenRefreshing: true,
-                clearWhenError: false,
-                updateOnlyIfNotEmpty: false,
-                refreshFirst: false,
-                placeholderSetting: PlaceholderSetting(
-                  showNothingIcon: _q != null,
-                  showNothingRetry: _q != null,
-                ).toChinese(
-                  nothingText: _q == null ? '请在搜索框中输入关键字...' : '无内容',
+                getData: ({indicator}) => _getData(page: indicator),
+                controller: _udvController,
+                scrollController: _scrollController,
+                paginationSetting: PaginationSetting(
+                  initialIndicator: 1,
+                  nothingIndicator: 0,
                 ),
-                onStateChanged: (_, __) => _fabController.hide(),
-                padding: EdgeInsets.zero,
-                physics: AlwaysScrollableScrollPhysics(),
+                setting: UpdatableDataViewSetting(
+                  padding: EdgeInsets.zero,
+                  placeholderSetting: PlaceholderSetting(
+                    showNothingIcon: _q != null,
+                    showNothingRetry: _q != null,
+                  ).toChinese(
+                    nothingText: _q == null ? '请在搜索框中输入关键字...' : '无内容',
+                  ),
+                  refreshFirst: false,
+                  clearWhenError: false,
+                  clearWhenRefresh: true,
+                  updateOnlyIfNotEmpty: false,
+                  onStateChanged: (_, __) => _fabController.hide(),
+                  onAppend: (l) {
+                    if (l.length > 0) {
+                      Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
+                    }
+                    _lastOrder = _order;
+                    if (mounted) setState(() {});
+                  },
+                  onError: (e) {
+                    Fluttertoast.showToast(msg: e.toString());
+                    _order = _lastOrder;
+                    if (mounted) setState(() {});
+                  },
+                ),
                 separator: Divider(height: 1),
                 itemBuilder: (c, item) => TinyMangaLineView(manga: item.toTiny()),
-                topWidget: Container(
-                  color: Colors.white,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              height: 26,
-                              padding: EdgeInsets.only(left: 5),
-                              child: Center(
-                                child: Text('"$_q" 的搜索结果 (共 ${_total == null ? '?' : _total.toString()} 部)'),
-                              ),
-                            ),
-                            OptionPopupView<MangaOrder>(
-                              title: _order.toTitle(),
-                              top: 4,
-                              value: _order,
-                              items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                              onSelect: (o) {
-                                if (_order != o) {
-                                  _lastOrder = _order;
-                                  _order = o;
-                                  if (mounted) setState(() {});
-                                  _scrollController.refresh();
-                                }
-                              },
-                              optionBuilder: (c, v) => v.toTitle(),
-                              enable: !_disableOption,
-                            ),
-                          ],
+                extra: UpdatableDataViewExtraWidgets(
+                  innerTopWidget: Container(
+                    color: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          height: 26,
+                          padding: EdgeInsets.only(left: 5),
+                          child: Center(
+                            child: Text('"$_q" 的搜索结果 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                          ),
                         ),
-                      ),
-                      Divider(height: 1, thickness: 1),
-                    ],
+                        OptionPopupView<MangaOrder>(
+                          title: _order.toTitle(),
+                          top: 4,
+                          value: _order,
+                          items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                          onSelect: (o) {
+                            if (_order != o) {
+                              _lastOrder = _order;
+                              _order = o;
+                              if (mounted) setState(() {});
+                              _udvController.refresh();
+                            }
+                          },
+                          optionBuilder: (c, v) => v.toTitle(),
+                          enable: !_disableOption,
+                        ),
+                      ],
+                    ),
                   ),
+                  innerTopDivider: Divider(height: 1, thickness: 1),
                 ),
               ),
             ),
@@ -431,13 +435,14 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ],
         ),
-        floatingActionButton: ScrollFloatingActionButton(
+        floatingActionButton: ScrollAnimatedFab(
+          controller: _fabController,
           scrollController: _scrollController,
-          fabController: _fabController,
+          condition: ScrollAnimatedCondition.direction,
           fab: FloatingActionButton(
             child: Icon(Icons.vertical_align_top),
             heroTag: 'SearchPage',
-            onPressed: () => _scrollController.scrollTop(),
+            onPressed: () => _scrollController.scrollToTop(),
           ),
         ),
       ),

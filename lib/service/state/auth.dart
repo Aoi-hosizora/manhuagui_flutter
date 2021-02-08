@@ -1,4 +1,4 @@
-import 'package:manhuagui_flutter/service/state/notifiable.dart';
+import 'package:flutter_ahlib/util.dart';
 
 class AuthState extends NotifiableData {
   AuthState._();
@@ -6,9 +6,6 @@ class AuthState extends NotifiableData {
   static AuthState _instance;
 
   static AuthState get instance => _instance ??= AuthState._();
-
-  @override
-  String get dataKey => 'AuthState';
 
   /// 全局 token
   String token;

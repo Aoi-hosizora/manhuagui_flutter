@@ -1,5 +1,5 @@
+import 'package:flutter_ahlib/util.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';

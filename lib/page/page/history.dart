@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/list.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/service/database/history.dart';
 import 'package:manhuagui_flutter/service/state/auth.dart';
-import 'package:manhuagui_flutter/service/state/notifiable.dart';
 
 /// 订阅浏览历史
 class HistorySubPage extends StatefulWidget {
@@ -20,38 +21,33 @@ class HistorySubPage extends StatefulWidget {
   _HistorySubPageState createState() => _HistorySubPageState();
 }
 
-class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAliveClientMixin, NotifiableMixin {
-  ScrollMoreController _controller;
-  ScrollFabController _fabController;
+class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAliveClientMixin, NotifyReceiverMixin {
+  ScrollController _controller;
+  UpdatableDataViewController _udvController;
+  AnimatedFabController _fabController;
   var _data = <MangaHistory>[];
   int _total;
   var _removed = 0;
 
   @override
+  String get receiverKey => "HistorySubPage";
+
+  @override
   void initState() {
     super.initState();
-    _controller = ScrollMoreController();
-    _fabController = ScrollFabController();
-    AuthState.instance.registerListener(this, () => _controller.refresh());
-    widget.action?.addAction('', () => _controller.scrollTop());
+    _controller = ScrollController();
+    _udvController = UpdatableDataViewController();
+    _fabController = AnimatedFabController();
+    AuthState.instance.registerDefault(this, () => _udvController.refresh());
+    widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
     _controller.dispose();
     _fabController.dispose();
-    AuthState.instance.unregisterListener(this);
+    AuthState.instance.unregisterDefault(this);
     super.dispose();
-  }
-
-  Future<List<MangaHistory>> _getData({int page}) async {
-    if (page == 1) {
-      _removed = 0; // refresh
-    }
-    var data = await getHistories(username: AuthState.instance.username, page: page, offset: _removed);
-    _total = await getHistoryCount(username: AuthState.instance.username);
-    if (mounted) setState(() {});
-    return data;
   }
 
   void _delete({@required MangaHistory history}) {
@@ -82,8 +78,15 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     );
   }
 
-  @override
-  String get key => 'HistorySubPage';
+  Future<PagedList<MangaHistory>> _getData({int page}) async {
+    if (page == 1) {
+      _removed = 0; // refresh
+    }
+    var data = await getHistories(username: AuthState.instance.username, page: page, offset: _removed);
+    _total = await getHistoryCount(username: AuthState.instance.username);
+    if (mounted) setState(() {});
+    return PagedList(list: data, next: page + 1);
+  }
 
   @override
   bool get wantKeepAlive => true;
@@ -93,64 +96,65 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     super.build(context);
     return Scaffold(
       body: PaginationListView<MangaHistory>(
-        controller: _controller,
         data: _data,
-        strategy: PaginationStrategy.offsetBased,
-        getDataByOffset: _getData,
-        initialPage: 1,
-        onAppend: (l) {},
-        onError: (e) => Fluttertoast.showToast(msg: e.toString()),
-        clearWhenRefreshing: false,
-        clearWhenError: false,
-        updateOnlyIfNotEmpty: false,
-        refreshFirst: true,
-        placeholderSetting: PlaceholderSetting().toChinese(),
-        onStateChanged: (_, __) => _fabController.hide(),
-        padding: EdgeInsets.zero,
+        getData: ({indicator}) => _getData(page: indicator),
+        controller: _udvController,
+        scrollController: _controller,
+        paginationSetting: PaginationSetting(
+          initialIndicator: 1,
+          nothingIndicator: 0,
+        ),
+        setting: UpdatableDataViewSetting(
+          padding: EdgeInsets.zero,
+          placeholderSetting: PlaceholderSetting().toChinese(),
+          refreshFirst: true,
+          clearWhenError: false,
+          clearWhenRefresh: false,
+          updateOnlyIfNotEmpty: false,
+          onStateChanged: (_, __) => _fabController.hide(),
+          onAppend: (l) {},
+          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+        ),
         separator: Divider(height: 1),
-        physics: AlwaysScrollableScrollPhysics(),
         itemBuilder: (c, item) => MangaHistoryLineView(
           history: item,
           onLongPressed: () => _delete(history: item),
         ),
-        topWidget: Container(
-          color: Colors.white,
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 26,
-                      padding: EdgeInsets.only(left: 5),
-                      child: Center(
-                        child: Text(AuthState.instance.logined ? '${AuthState.instance.username} 的浏览历史' : '本地的浏览历史'),
-                      ),
-                    ),
-                    Container(
-                      height: 26,
-                      padding: EdgeInsets.only(right: 5),
-                      child: Center(
-                        child: Text('共 ${_total == null ? '?' : _total.toString()} 部'),
-                      ),
-                    ),
-                  ],
+        extra: UpdatableDataViewExtraWidgets(
+          innerTopWidget: Container(
+            color: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  height: 26,
+                  padding: EdgeInsets.only(left: 5),
+                  child: Center(
+                    child: Text(AuthState.instance.logined ? '${AuthState.instance.username} 的浏览历史' : '本地的浏览历史'),
+                  ),
                 ),
-              ),
-              Divider(height: 1, thickness: 1),
-            ],
+                Container(
+                  height: 26,
+                  padding: EdgeInsets.only(right: 5),
+                  child: Center(
+                    child: Text('共 ${_total == null ? '?' : _total.toString()} 部'),
+                  ),
+                ),
+              ],
+            ),
           ),
+          innerTopDivider: Divider(height: 1, thickness: 1),
         ),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
-        fabController: _fabController,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'HistorySubPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

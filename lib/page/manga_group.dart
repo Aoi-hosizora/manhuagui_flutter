@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_column.dart';
 
@@ -22,12 +23,12 @@ class MangaGroupPage extends StatefulWidget {
 }
 
 class _MangaGroupPageState extends State<MangaGroupPage> {
-  ScrollMoreController _controller;
+  ScrollController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = ScrollMoreController();
+    _controller = ScrollController();
   }
 
   @override
@@ -54,12 +55,13 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
           showTopMargin: false,
         ),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
         scrollController: _controller,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'MangaGroupPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

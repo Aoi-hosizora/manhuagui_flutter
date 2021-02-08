@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
+import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/chapter.dart';
+import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/manga_comment.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
-import 'package:manhuagui_flutter/page/view/multilink_text.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/database/history.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
@@ -41,8 +43,8 @@ class MangaPage extends StatefulWidget {
 
 class _MangaPageState extends State<MangaPage> {
   GlobalKey<RefreshIndicatorState> _indicatorKey;
-  ScrollMoreController _controller;
-  ScrollFabController _fabController;
+  ScrollController _controller;
+  AnimatedFabController _fabController;
   ActionController _action;
   var _loading = true;
   Manga _data;
@@ -60,8 +62,8 @@ class _MangaPageState extends State<MangaPage> {
   void initState() {
     super.initState();
     _indicatorKey = GlobalKey<RefreshIndicatorState>();
-    _controller = ScrollMoreController();
-    _fabController = ScrollFabController();
+    _controller = ScrollController();
+    _fabController = AnimatedFabController();
     _action = ActionController();
     _action.addAction('history', () async {
       _history = await getHistory(username: AuthState.instance.username, mid: widget.id).catchError((_) {});
@@ -306,19 +308,55 @@ class _MangaPageState extends State<MangaPage> {
                               text: Text('${_data.publishYear} ${_data.mangaZone}'),
                               space: 8,
                             ),
-                            Row(
-                              children: [
-                                Icon(Icons.bookmark, size: 20, color: Colors.orange),
-                                SizedBox(width: 8),
-                                GenreListText(genres: _data.genres),
-                              ],
+                            IconText(
+                              icon: Icon(Icons.bookmark, size: 20, color: Colors.orange),
+                              text: TextGroup(
+                                textScaleFactor: MediaQuery.of(context).textScaleFactor,
+                                texts: [
+                                  for (var i = 0; i < _data.genres.length; i++) ...[
+                                    LinkGroupText(
+                                      text: _data.genres[i].title,
+                                      pressedColor: Theme.of(context).primaryColor,
+                                      showUnderline: true,
+                                      onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (c) => GenrePage(
+                                            genre: _data.genres[i].toTiny(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (i != _data.genres.length - 1) NormalGroupText(text: ' / '),
+                                  ],
+                                ],
+                              ),
+                              space: 8,
                             ),
-                            Row(
-                              children: [
-                                Icon(Icons.person, size: 20, color: Colors.orange),
-                                SizedBox(width: 8),
-                                AuthorListText(authors: _data.authors),
-                              ],
+                            IconText(
+                              icon: Icon(Icons.person, size: 20, color: Colors.orange),
+                              text: TextGroup(
+                                textScaleFactor: MediaQuery.of(context).textScaleFactor,
+                                texts: [
+                                  for (var i = 0; i < _data.authors.length; i++) ...[
+                                    LinkGroupText(
+                                      text: _data.authors[i].name,
+                                      pressedColor: Theme.of(context).primaryColor,
+                                      showUnderline: true,
+                                      onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (c) => AuthorPage(
+                                            id: _data.authors[i].aid,
+                                            name: _data.authors[i].name,
+                                            url: _data.authors[i].url,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (i != _data.authors.length - 1) NormalGroupText(text: ' / '),
+                                  ],
+                                ],
+                              ),
+                              space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
@@ -579,13 +617,14 @@ class _MangaPageState extends State<MangaPage> {
           ),
         ),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
-        fabController: _fabController,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'MangaPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

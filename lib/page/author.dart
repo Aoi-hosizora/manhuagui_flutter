@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/list.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
@@ -33,8 +35,9 @@ class AuthorPage extends StatefulWidget {
 }
 
 class _AuthorPageState extends State<AuthorPage> {
-  ScrollMoreController _controller;
-  ScrollFabController _fabController;
+  ScrollController _controller;
+  UpdatableDataViewController _udvController;
+  AnimatedFabController _fabController;
   var _loading = true;
   Author _data;
   var _error = '';
@@ -47,8 +50,9 @@ class _AuthorPageState extends State<AuthorPage> {
   @override
   void initState() {
     super.initState();
-    _controller = ScrollMoreController();
-    _fabController = ScrollFabController();
+    _controller = ScrollController();
+    _udvController = UpdatableDataViewController();
+    _fabController = AnimatedFabController();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
@@ -80,7 +84,7 @@ class _AuthorPageState extends State<AuthorPage> {
     });
   }
 
-  Future<List<SmallManga>> _getMangas({int page}) async {
+  Future<PagedList<SmallManga>> _getMangas({int page}) async {
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
@@ -92,7 +96,7 @@ class _AuthorPageState extends State<AuthorPage> {
     }
     _total = result.data.total;
     if (mounted) setState(() {});
-    return result.data.data;
+    return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
   @override
@@ -124,100 +128,106 @@ class _AuthorPageState extends State<AuthorPage> {
             // ****************************************************************
             // 头部框
             // ****************************************************************
-            SliverContainer(
-              width: MediaQuery.of(context).size.width,
-              height: 150,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  stops: [0, 0.5, 1],
-                  colors: [
-                    Colors.blue[100],
-                    Colors.orange[100],
-                    Colors.purple[100],
-                  ],
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ****************************************************************
-                  // 封面
-                  // ****************************************************************
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    child: NetworkImageView(
-                      url: _data.cover,
-                      height: 130,
-                      width: 100,
-                      fit: BoxFit.cover,
-                    ),
+            SliverToBoxAdapter(
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: 150,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    stops: [0, 0.5, 1],
+                    colors: [
+                      Colors.blue[100],
+                      Colors.orange[100],
+                      Colors.purple[100],
+                    ],
                   ),
-                  // ****************************************************************
-                  // 信息
-                  // ****************************************************************
-                  Container(
-                    width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢ |
-                    height: 150,
-                    margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
-                    child: Center(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          IconText(
-                            icon: Icon(Icons.person, size: 20, color: Colors.orange),
-                            text: Text('别名 ${_data.alias}'),
-                            space: 8,
-                          ),
-                          IconText(
-                            icon: Icon(Icons.place, size: 20, color: Colors.orange),
-                            text: Text(_data.zone),
-                            space: 8,
-                          ),
-                          IconText(
-                            icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                            text: Text('平均评分 ${_data.averageScore}'),
-                            space: 8,
-                          ),
-                          IconText(
-                            icon: Icon(Icons.edit, size: 20, color: Colors.orange),
-                            text: Text('共收录 ${_data.mangaCount} 部漫画'),
-                            space: 8,
-                          ),
-                          IconText(
-                            icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
-                            text: Text(
-                              '最新收录 ${_data.newestMangaTitle}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            space: 8,
-                          ),
-                          IconText(
-                            icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                            text: Text('更新于 ${_data.newestDate}'),
-                            space: 8,
-                          ),
-                        ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ****************************************************************
+                    // 封面
+                    // ****************************************************************
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      child: NetworkImageView(
+                        url: _data.cover,
+                        height: 130,
+                        width: 100,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                ],
+                    // ****************************************************************
+                    // 信息
+                    // ****************************************************************
+                    Container(
+                      width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢ |
+                      height: 150,
+                      margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
+                      child: Center(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            IconText(
+                              icon: Icon(Icons.person, size: 20, color: Colors.orange),
+                              text: Text('别名 ${_data.alias}'),
+                              space: 8,
+                            ),
+                            IconText(
+                              icon: Icon(Icons.place, size: 20, color: Colors.orange),
+                              text: Text(_data.zone),
+                              space: 8,
+                            ),
+                            IconText(
+                              icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
+                              text: Text('平均评分 ${_data.averageScore}'),
+                              space: 8,
+                            ),
+                            IconText(
+                              icon: Icon(Icons.edit, size: 20, color: Colors.orange),
+                              text: Text('共收录 ${_data.mangaCount} 部漫画'),
+                              space: 8,
+                            ),
+                            IconText(
+                              icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
+                              text: Text(
+                                '最新收录 ${_data.newestMangaTitle}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              space: 8,
+                            ),
+                            IconText(
+                              icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
+                              text: Text('更新于 ${_data.newestDate}'),
+                              space: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             // ****************************************************************
             // 介绍
             // ****************************************************************
-            SliverContainer(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              color: Colors.white,
-              child: Text(
-                _data.introduction.trim().isEmpty ? '暂无介绍' : _data.introduction.trim(),
-                style: Theme.of(context).textTheme.subtitle1,
+            SliverToBoxAdapter(
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                color: Colors.white,
+                child: Text(
+                  _data.introduction.trim().isEmpty ? '暂无介绍' : _data.introduction.trim(),
+                  style: Theme.of(context).textTheme.subtitle1,
+                ),
               ),
             ),
-            SliverContainer(height: 12),
+            SliverToBoxAdapter(
+              child: Container(height: 12),
+            ),
             SliverOverlapAbsorber(
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(c),
               sliver: SliverPersistentHeader(
@@ -256,7 +266,7 @@ class _AuthorPageState extends State<AuthorPage> {
                                       _lastOrder = _order;
                                       _order = o;
                                       if (mounted) setState(() {});
-                                      _controller.refresh();
+                                      _udvController.refresh();
                                     }
                                   },
                                   optionBuilder: (c, v) => v.toTitle(),
@@ -279,47 +289,52 @@ class _AuthorPageState extends State<AuthorPage> {
           // ****************************************************************
           body: Builder(
             builder: (c) => PaginationSliverListView<SmallManga>(
-              outerController: _controller,
-              controller: PrimaryScrollController.of(c),
-              hasOverlapAbsorber: true,
               data: _mangas,
-              strategy: PaginationStrategy.offsetBased,
-              getDataByOffset: _getMangas,
-              initialPage: 1,
-              onStartLoading: () => mountedSetState(() => _disableOption = true),
-              onStopLoading: () => mountedSetState(() => _disableOption = false),
-              onAppend: (l) {
-                if (l.length > 0) {
-                  Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-                }
-                _lastOrder = _order;
-                if (mounted) setState(() {});
-              },
-              onError: (e) {
-                Fluttertoast.showToast(msg: e.toString());
-                _order = _lastOrder;
-                if (mounted) setState(() {});
-              },
-              clearWhenRefreshing: false,
-              clearWhenError: false,
-              updateOnlyIfNotEmpty: false,
-              refreshFirst: true,
-              placeholderSetting: PlaceholderSetting().toChinese(),
-              onStateChanged: (_, __) => _fabController.hide(),
-              padding: EdgeInsets.zero,
+              getData: ({indicator}) => _getMangas(page: indicator),
+              controller: _udvController,
+              scrollController: PrimaryScrollController.of(c),
+              paginationSetting: PaginationSetting(
+                initialIndicator: 1,
+                nothingIndicator: 0,
+              ),
+              setting: UpdatableDataViewSetting(
+                padding: EdgeInsets.zero,
+                placeholderSetting: PlaceholderSetting().toChinese(),
+                refreshFirst: true,
+                clearWhenError: false,
+                clearWhenRefresh: false,
+                updateOnlyIfNotEmpty: false,
+                onStateChanged: (_, __) => _fabController.hide(),
+                onStartLoading: () => mountedSetState(() => _disableOption = true),
+                onStopLoading: () => mountedSetState(() => _disableOption = false),
+                onAppend: (l) {
+                  if (l.length > 0) {
+                    Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
+                  }
+                  _lastOrder = _order;
+                  if (mounted) setState(() {});
+                },
+                onError: (e) {
+                  Fluttertoast.showToast(msg: e.toString());
+                  _order = _lastOrder;
+                  if (mounted) setState(() {});
+                },
+              ),
+              useOverlapInjector: true,
               separator: Divider(height: 1),
               itemBuilder: (c, item) => TinyMangaLineView(manga: item.toTiny()),
             ),
           ),
         ),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
-        fabController: _fabController,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'AuthorPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

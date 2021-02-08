@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/list.dart';
+import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
@@ -20,16 +22,16 @@ class RecentSubPage extends StatefulWidget {
 }
 
 class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveClientMixin {
-  ScrollMoreController _controller;
-  ScrollFabController _fabController;
+  ScrollController _controller;
+  AnimatedFabController _fabController;
   var _data = <TinyManga>[];
 
   @override
   void initState() {
     super.initState();
-    _controller = ScrollMoreController();
-    _fabController = ScrollFabController();
-    widget.action?.addAction('', () => _controller.scrollTop());
+    _controller = ScrollController();
+    _fabController = AnimatedFabController();
+    widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
@@ -39,7 +41,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     super.dispose();
   }
 
-  Future<List<TinyManga>> _getData({int page}) async {
+  Future<PagedList<TinyManga>> _getData({int page}) async {
     var dio = DioManager.instance.dio;
     var client = RestClient(dio);
     ErrorMessage err;
@@ -49,7 +51,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     if (err != null) {
       return Future.error(err.text);
     }
-    return result.data.data;
+    return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
   @override
@@ -60,31 +62,39 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     super.build(context);
     return Scaffold(
       body: PaginationListView<TinyManga>(
-        controller: _controller,
         data: _data,
-        strategy: PaginationStrategy.offsetBased,
-        getDataByOffset: _getData,
-        initialPage: 1,
-        onAppend: (l) => doIf(l.length > 0, () => Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画')),
-        onError: (e) => Fluttertoast.showToast(msg: e.toString()),
-        clearWhenRefreshing: false,
-        clearWhenError: false,
-        updateOnlyIfNotEmpty: false,
-        refreshFirst: true,
-        placeholderSetting: PlaceholderSetting().toChinese(),
-        onStateChanged: (_, __) => _fabController.hide(),
-        padding: EdgeInsets.zero,
-        physics: AlwaysScrollableScrollPhysics(),
+        getData: ({indicator}) => _getData(page: indicator),
+        scrollController: _controller,
+        paginationSetting: PaginationSetting(
+          initialIndicator: 1,
+          nothingIndicator: 0,
+        ),
+        setting: UpdatableDataViewSetting(
+          padding: EdgeInsets.zero,
+          placeholderSetting: PlaceholderSetting().toChinese(),
+          refreshFirst: true,
+          clearWhenRefresh: false,
+          clearWhenError: false,
+          updateOnlyIfNotEmpty: false,
+          onStateChanged: (_, __) => _fabController.hide(),
+          onAppend: (l) {
+            if (l.length > 0) {
+              Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
+            }
+          },
+          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+        ),
         separator: Divider(height: 1),
         itemBuilder: (c, item) => TinyMangaLineView(manga: item),
       ),
-      floatingActionButton: ScrollFloatingActionButton(
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
-        fabController: _fabController,
+        condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
           heroTag: 'RecentSubPage',
-          onPressed: () => _controller.scrollTop(),
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

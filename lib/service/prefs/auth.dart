@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/service/natives/prefs.dart';
 
 const _TOKEN = 'TOKEN'; // string

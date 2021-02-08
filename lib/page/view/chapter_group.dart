@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/widget.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/chapter.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';

@@ -42,11 +42,11 @@ class TinyCategory {
 }
 
 /*
-genre:  (all|...)
-age:    (all|shaonv|shaonian|qingnian|ertong|tongyong)
-zone:   (all|japan|hongkong|other|europe|china|korea)
-status: (all|lianzai|wanjie)
-rank:   (all|zone|age|genre)
+  genre:  (all|...)
+  age:    (all|shaonv|shaonian|qingnian|ertong|tongyong)
+  zone:   (all|japan|hongkong|other|europe|china|korea)
+  status: (all|lianzai|wanjie)
+  rank:   (all|zone|age|genre)
 */
 
 // 按剧情
