@@ -22,20 +22,19 @@ class RecentSubPage extends StatefulWidget {
 }
 
 class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveClientMixin {
-  ScrollController _controller;
-  AnimatedFabController _fabController;
+  final _controller = ScrollController();
+  final _fabController = AnimatedFabController();
   var _data = <TinyManga>[];
 
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
-    _fabController = AnimatedFabController();
     widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction('');
     _controller.dispose();
     _fabController.dispose();
     super.dispose();

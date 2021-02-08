@@ -25,9 +25,9 @@ class AuthorSubPage extends StatefulWidget {
 }
 
 class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveClientMixin {
-  ScrollController _controller;
-  UpdatableDataViewController _udvController;
-  AnimatedFabController _fabController;
+  final _controller = ScrollController();
+  final _udvController = UpdatableDataViewController();
+  final _fabController = AnimatedFabController();
   var _genreLoading = true;
   var _genres = <Category>[];
   var _genreError = '';
@@ -46,16 +46,15 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
-    _udvController = UpdatableDataViewController();
-    _fabController = AnimatedFabController();
-    widget.action?.addAction('', () => _controller.scrollToTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
+    widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction('');
     _controller.dispose();
+    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }

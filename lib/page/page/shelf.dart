@@ -24,9 +24,9 @@ class ShelfSubPage extends StatefulWidget {
 }
 
 class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin, NotifyReceiverMixin {
-  ScrollController _controller;
-  UpdatableDataViewController _udvController;
-  AnimatedFabController _fabController;
+  final _controller = ScrollController();
+  final _udvController = UpdatableDataViewController();
+  final _fabController = AnimatedFabController();
   var _data = <ShelfManga>[];
   int _total;
 
@@ -36,25 +36,24 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
-    _udvController = UpdatableDataViewController();
-    _fabController = AnimatedFabController();
-    AuthState.instance.registerDefault(this, () {
-      if (mounted) setState(() {});
-    });
-    widget.action?.addAction('', () => _controller.scrollToTop());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (AuthState.instance.logined) {
         if (mounted) setState(() {});
       }
     });
+    AuthState.instance.registerDefault(this, () {
+      if (mounted) setState(() {});
+    });
+    widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    _fabController.dispose();
     AuthState.instance.unregisterDefault(this);
+    widget.action?.removeAction('');
+    _controller.dispose();
+    _udvController.dispose();
+    _fabController.dispose();
     super.dispose();
   }
 

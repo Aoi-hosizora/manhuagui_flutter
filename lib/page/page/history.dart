@@ -22,9 +22,9 @@ class HistorySubPage extends StatefulWidget {
 }
 
 class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAliveClientMixin, NotifyReceiverMixin {
-  ScrollController _controller;
-  UpdatableDataViewController _udvController;
-  AnimatedFabController _fabController;
+  final _controller = ScrollController();
+  final _udvController = UpdatableDataViewController();
+  final _fabController = AnimatedFabController();
   var _data = <MangaHistory>[];
   int _total;
   var _removed = 0;
@@ -35,18 +35,17 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
-    _udvController = UpdatableDataViewController();
-    _fabController = AnimatedFabController();
     AuthState.instance.registerDefault(this, () => _udvController.refresh());
     widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    _fabController.dispose();
     AuthState.instance.unregisterDefault(this);
+    widget.action?.removeAction('');
+    _controller.dispose();
+    _udvController.dispose();
+    _fabController.dispose();
     super.dispose();
   }
 

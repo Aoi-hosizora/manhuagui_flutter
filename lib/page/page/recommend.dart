@@ -24,9 +24,9 @@ class RecommendSubPage extends StatefulWidget {
 }
 
 class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepAliveClientMixin {
-  ScrollController _controller;
-  AnimatedFabController _fabController;
-  GlobalKey<RefreshIndicatorState> _indicatorKey;
+  final _controller = ScrollController();
+  final _fabController = AnimatedFabController();
+  final _indicatorKey = GlobalKey<RefreshIndicatorState>();
   var _carouselPages = <TinyBlockManga>[];
   var _loading = true;
   HomepageMangaGroupList _data;
@@ -35,15 +35,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
-    _fabController = AnimatedFabController();
-    _indicatorKey = GlobalKey<RefreshIndicatorState>();
-    widget.action?.addAction('', () => _controller.scrollToTop());
     WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
+    widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction('');
     _controller.dispose();
     _fabController.dispose();
     super.dispose();

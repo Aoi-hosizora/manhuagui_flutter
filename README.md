@@ -6,8 +6,6 @@
 ### Dependencies
 
 + See [pubspec.yaml](./pubspec.yaml).
-+ You may be unable to build the project successfully, because [flutter_ahlib](https://github.com/Aoi-hosizora/flutter_ahlib) is a local library yet. 
-  Please wait for the release of `flutter_ahlib v1.2` and refactoring.
 
 ### Install
 
@@ -18,3 +16,5 @@
 |![screenshot1](./assets/screenshot1.png)|![screenshot2](./assets/screenshot2.png)|![screenshot3](./assets/screenshot3.png)|
 |---|---|---|
 |![screenshot4](./assets/screenshot4.png)|![screenshot5](./assets/screenshot5.png)|![screenshot6](./assets/screenshot6.png)|
+|---|---|---|
+|![screenshot7](./assets/screenshot7.png)|![screenshot8](./assets/screenshot8.png)|![screenshot9](./assets/screenshot9.png)|

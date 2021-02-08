@@ -24,9 +24,9 @@ class OverallSubPage extends StatefulWidget {
 }
 
 class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAliveClientMixin {
-  ScrollController _controller;
-  UpdatableDataViewController _udvController;
-  AnimatedFabController _fabController;
+  final _controller = ScrollController();
+  final _udvController = UpdatableDataViewController();
+  final _fabController = AnimatedFabController();
   var _data = <TinyManga>[];
   int _total;
   var _order = MangaOrder.byNew;
@@ -36,15 +36,14 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
-    _udvController = UpdatableDataViewController();
-    _fabController = AnimatedFabController();
     widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction('');
     _controller.dispose();
+    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }

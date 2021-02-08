@@ -18,10 +18,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  var _formKey = GlobalKey<FormState>();
-  TextEditingController _usernameController;
-  TextEditingController _passwordController;
-  SuggestionsBoxController _suggestionController;
+  final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _suggestionController = SuggestionsBoxController();
   var _passwordVisible = false;
   var _logining = false;
   var _rememberUsername = true;
@@ -31,10 +31,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _usernameController = TextEditingController();
-    _passwordController = TextEditingController();
-    _suggestionController = SuggestionsBoxController();
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var remTuple = await getRememberOptions();
       _rememberUsername = remTuple.item1;

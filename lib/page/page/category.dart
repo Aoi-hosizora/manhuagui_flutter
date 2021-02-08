@@ -36,12 +36,15 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
       GenreSubPage(action: _actions[0]),
       AuthorSubPage(action: _actions[1]),
     ];
+
     widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
     widget.action?.addAction('to_genre', () => _controller.animateTo(0));
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction('');
+    widget.action?.removeAction('to_genre');
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

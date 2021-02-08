@@ -22,10 +22,10 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  FloatingSearchBarController _searchController;
-  ScrollController _scrollController;
-  UpdatableDataViewController _udvController;
-  AnimatedFabController _fabController;
+  final _searchController = FloatingSearchBarController();
+  final _scrollController = ScrollController();
+  final _udvController = UpdatableDataViewController();
+  final _fabController = AnimatedFabController();
   String __q;
   var _histories = <String>[];
   var _data = <SmallManga>[];
@@ -45,10 +45,6 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    _searchController = FloatingSearchBarController();
-    _scrollController = ScrollController();
-    _udvController = UpdatableDataViewController();
-    _fabController = AnimatedFabController();
     WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(Duration(milliseconds: 200), () => _searchController.open()));
   }
 
@@ -56,6 +52,7 @@ class _SearchPageState extends State<SearchPage> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }

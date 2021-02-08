@@ -42,6 +42,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       OverallSubPage(action: _actions[2]),
       RankingSubPage(action: _actions[3]),
     ];
+
     widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
     _actions[0].addAction('to_shelf', () => widget.action.invoke('to_shelf'));
     _actions[0].addAction('to_update', () => _controller.animateTo(1));
@@ -51,6 +52,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
 
   @override
   void dispose() {
+    widget.action?.removeAction('');
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

@@ -35,9 +35,9 @@ class AuthorPage extends StatefulWidget {
 }
 
 class _AuthorPageState extends State<AuthorPage> {
-  ScrollController _controller;
-  UpdatableDataViewController _udvController;
-  AnimatedFabController _fabController;
+  final _controller = ScrollController();
+  final _udvController = UpdatableDataViewController();
+  final _fabController = AnimatedFabController();
   var _loading = true;
   Author _data;
   var _error = '';
@@ -50,15 +50,13 @@ class _AuthorPageState extends State<AuthorPage> {
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
-    _udvController = UpdatableDataViewController();
-    _fabController = AnimatedFabController();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }

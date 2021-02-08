@@ -22,23 +22,16 @@ class MangaCommentPage extends StatefulWidget {
 }
 
 class _MangaCommentPageState extends State<MangaCommentPage> {
-  ScrollController _controller;
-  UpdatableDataViewController _udvController;
-  AnimatedFabController _fabController;
+  final _controller = ScrollController();
+  final _udvController = UpdatableDataViewController();
+  final _fabController = AnimatedFabController();
   var _data = <Comment>[];
   int _total;
 
   @override
-  void initState() {
-    super.initState();
-    _controller = ScrollController();
-    _udvController = UpdatableDataViewController();
-    _fabController = AnimatedFabController();
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
+    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }

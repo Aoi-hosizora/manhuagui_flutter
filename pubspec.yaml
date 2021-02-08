@@ -16,8 +16,7 @@ dependencies:
   json_annotation: ^3.1.0
   retrofit: ^1.3.4+1
   dio: ^3.0.10
-  flutter_ahlib:
-    path: 'F:/Projects/flutter_ahlib'
+  flutter_ahlib: ^1.2.0
   flutter_web_browser: ^0.13.0
   cached_network_image: ^2.3.3
   flutter_rating_bar: ^3.2.0+1

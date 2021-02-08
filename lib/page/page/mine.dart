@@ -34,6 +34,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (AuthState.instance.logined) {
+        if (mounted) setState(() {});
+        _loadUser();
+      }
+    });
     AuthState.instance.registerDefault(this, () {
       if (mounted) setState(() {});
       if (AuthState.instance.logined) {
@@ -41,17 +47,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       }
     });
     widget.action?.addAction('', () {});
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (AuthState.instance.logined) {
-        if (mounted) setState(() {});
-        _loadUser();
-      }
-    });
   }
 
   @override
   void dispose() {
     AuthState.instance.unregisterDefault(this);
+    widget.action?.removeAction('');
     super.dispose();
   }
 

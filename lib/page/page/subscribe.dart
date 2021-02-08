@@ -36,6 +36,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
       ShelfSubPage(action: _actions[0]),
       HistorySubPage(action: _actions[1]),
     ];
+
     widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
     widget.action?.addAction('to_shelf', () => _controller.animateTo(0));
   }

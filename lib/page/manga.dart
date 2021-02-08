@@ -42,10 +42,10 @@ class MangaPage extends StatefulWidget {
 }
 
 class _MangaPageState extends State<MangaPage> {
-  GlobalKey<RefreshIndicatorState> _indicatorKey;
-  ScrollController _controller;
-  AnimatedFabController _fabController;
-  ActionController _action;
+  final _indicatorKey = GlobalKey<RefreshIndicatorState>();
+  final _controller = ScrollController();
+  final _fabController = AnimatedFabController();
+  final _action = ActionController();
   var _loading = true;
   Manga _data;
   var _error = '';
@@ -61,19 +61,17 @@ class _MangaPageState extends State<MangaPage> {
   @override
   void initState() {
     super.initState();
-    _indicatorKey = GlobalKey<RefreshIndicatorState>();
-    _controller = ScrollController();
-    _fabController = AnimatedFabController();
-    _action = ActionController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
     _action.addAction('history', () async {
       _history = await getHistory(username: AuthState.instance.username, mid: widget.id).catchError((_) {});
       if (mounted) setState(() {});
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
   }
 
   @override
   void dispose() {
+    _controller.dispose();
+    _fabController.dispose();
     _action.dispose();
     super.dispose();
   }
@@ -530,6 +528,7 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 Container(
                   color: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 10),
                   child: PlaceholderText(
                     state: _commentLoading
                         ? PlaceholderState.loading
@@ -542,12 +541,6 @@ class _MangaPageState extends State<MangaPage> {
                     setting: PlaceholderSetting(
                       loadingText: '评论加载中...',
                       nothingText: '暂无评论',
-                      showErrorRetry: false,
-                      showNothingRetry: false,
-                      iconSize: 45,
-                      progressSize: 32,
-                      iconPadding: EdgeInsets.all(8),
-                      progressPadding: EdgeInsets.all(12),
                     ),
                     childBuilder: (_) => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

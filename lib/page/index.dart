@@ -41,6 +41,8 @@ class _IndexPageState extends State<IndexPage> {
       SubscribeSubPage(action: _actions[2]),
       MineSubPage(action: _actions[3]),
     ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
     _actions[0].addAction('to_shelf', () {
       _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
       _actions[2].invoke('to_shelf');
@@ -49,7 +51,6 @@ class _IndexPageState extends State<IndexPage> {
       _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
       _actions[1].invoke('to_genre');
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
   }
 
   @override
