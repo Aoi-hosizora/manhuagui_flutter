@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/service/natives/clipboard.dart';
 class CommentPage extends StatefulWidget {
   const CommentPage({
     Key key,
-    @required this.comment,
+    required this.comment,
   })  : assert(comment != null),
         super(key: key);
 
@@ -18,7 +18,7 @@ class CommentPage extends StatefulWidget {
 }
 
 class _CommentPageState extends State<CommentPage> {
-  Widget _buildLine({@required RepliedComment comment, @required int idx}) {
+  Widget _buildLine({required RepliedComment comment, required int idx}) {
     assert(comment != null);
     assert(idx != null);
     return Stack(

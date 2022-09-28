@@ -9,8 +9,8 @@ import 'package:manhuagui_flutter/page/view/tiny_block_manga.dart';
 class MangaColumnView extends StatefulWidget {
   const MangaColumnView({
     Key key,
-    @required this.group,
-    @required this.type,
+    required this.group,
+    required this.type,
     this.controller,
     this.marginV = 12,
     this.showTopMargin = true,

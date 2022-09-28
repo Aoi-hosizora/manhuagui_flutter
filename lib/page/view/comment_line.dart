@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 class CommentLineView extends StatefulWidget {
   const CommentLineView({
     Key key,
-    @required this.comment,
+    required this.comment,
   })  : assert(comment != null),
         super(key: key);
 

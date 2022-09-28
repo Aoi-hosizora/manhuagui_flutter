@@ -6,22 +6,20 @@ part of 'author.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Author _$AuthorFromJson(Map<String, dynamic> json) {
-  return Author(
-    aid: json['aid'] as int,
-    name: json['name'] as String,
-    alias: json['alias'] as String,
-    zone: json['zone'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    mangaCount: json['manga_count'] as int,
-    newestMangaId: json['newest_manga_id'] as int,
-    newestMangaTitle: json['newest_manga_title'] as String,
-    newestDate: json['newest_date'] as String,
-    averageScore: (json['average_score'] as num)?.toDouble(),
-    introduction: json['introduction'] as String,
-  );
-}
+Author _$AuthorFromJson(Map<String, dynamic> json) => Author(
+      aid: json['aid'] as int,
+      name: json['name'] as String,
+      alias: json['alias'] as String,
+      zone: json['zone'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      mangaCount: json['manga_count'] as int,
+      newestMangaId: json['newest_manga_id'] as int,
+      newestMangaTitle: json['newest_manga_title'] as String,
+      newestDate: json['newest_date'] as String,
+      averageScore: (json['average_score'] as num).toDouble(),
+      introduction: json['introduction'] as String,
+    );
 
 Map<String, dynamic> _$AuthorToJson(Author instance) => <String, dynamic>{
       'aid': instance.aid,
@@ -38,17 +36,15 @@ Map<String, dynamic> _$AuthorToJson(Author instance) => <String, dynamic>{
       'introduction': instance.introduction,
     };
 
-SmallAuthor _$SmallAuthorFromJson(Map<String, dynamic> json) {
-  return SmallAuthor(
-    aid: json['aid'] as int,
-    name: json['name'] as String,
-    zone: json['zone'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    mangaCount: json['manga_count'] as int,
-    newestDate: json['newest_date'] as String,
-  );
-}
+SmallAuthor _$SmallAuthorFromJson(Map<String, dynamic> json) => SmallAuthor(
+      aid: json['aid'] as int,
+      name: json['name'] as String,
+      zone: json['zone'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      mangaCount: json['manga_count'] as int,
+      newestDate: json['newest_date'] as String,
+    );
 
 Map<String, dynamic> _$SmallAuthorToJson(SmallAuthor instance) =>
     <String, dynamic>{
@@ -61,13 +57,11 @@ Map<String, dynamic> _$SmallAuthorToJson(SmallAuthor instance) =>
       'newest_date': instance.newestDate,
     };
 
-TinyAuthor _$TinyAuthorFromJson(Map<String, dynamic> json) {
-  return TinyAuthor(
-    aid: json['aid'] as int,
-    name: json['name'] as String,
-    url: json['url'] as String,
-  );
-}
+TinyAuthor _$TinyAuthorFromJson(Map<String, dynamic> json) => TinyAuthor(
+      aid: json['aid'] as int,
+      name: json['name'] as String,
+      url: json['url'] as String,
+    );
 
 Map<String, dynamic> _$TinyAuthorToJson(TinyAuthor instance) =>
     <String, dynamic>{

@@ -9,7 +9,7 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  Widget _item({@required String title, Function action}) {
+  Widget _item({required String title, Function action}) {
     return Container(
       color: Colors.white,
       child: Material(
@@ -95,7 +95,7 @@ class _SettingPageState extends State<SettingPage> {
               applicationIcon: SizedBox(
                 height: 50,
                 width: 50,
-                child: Image.asset('lib/assets/ic_launcher_h.png'),
+                child: Image.asset('lib/assets/ic_launcher_xxhdpi.png'),
               ),
               applicationLegalese: '© 2020-2021 Aoi-hosizora',
               children: [

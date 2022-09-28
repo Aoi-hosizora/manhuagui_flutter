@@ -6,24 +6,20 @@ part of 'comment.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Comment _$CommentFromJson(Map<String, dynamic> json) {
-  return Comment(
-    cid: json['cid'] as int,
-    uid: json['uid'] as int,
-    username: json['username'] as String,
-    avatar: json['avatar'] as String,
-    gender: json['gender'] as int,
-    content: json['content'] as String,
-    likeCount: json['like_count'] as int,
-    replyCount: json['reply_count'] as int,
-    commentTime: json['comment_time'] as String,
-    replyTimeline: (json['reply_timeline'] as List)
-        ?.map((e) => e == null
-            ? null
-            : RepliedComment.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-  );
-}
+Comment _$CommentFromJson(Map<String, dynamic> json) => Comment(
+      cid: json['cid'] as int,
+      uid: json['uid'] as int,
+      username: json['username'] as String,
+      avatar: json['avatar'] as String,
+      gender: json['gender'] as int,
+      content: json['content'] as String,
+      likeCount: json['like_count'] as int,
+      replyCount: json['reply_count'] as int,
+      commentTime: json['comment_time'] as String,
+      replyTimeline: (json['reply_timeline'] as List<dynamic>)
+          .map((e) => RepliedComment.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
 
 Map<String, dynamic> _$CommentToJson(Comment instance) => <String, dynamic>{
       'cid': instance.cid,
@@ -38,19 +34,18 @@ Map<String, dynamic> _$CommentToJson(Comment instance) => <String, dynamic>{
       'reply_timeline': instance.replyTimeline,
     };
 
-RepliedComment _$RepliedCommentFromJson(Map<String, dynamic> json) {
-  return RepliedComment(
-    cid: json['cid'] as int,
-    uid: json['uid'] as int,
-    username: json['username'] as String,
-    avatar: json['avatar'] as String,
-    gender: json['gender'] as int,
-    content: json['content'] as String,
-    likeCount: json['like_count'] as int,
-    replyCount: json['reply_count'] as int,
-    commentTime: json['comment_time'] as String,
-  );
-}
+RepliedComment _$RepliedCommentFromJson(Map<String, dynamic> json) =>
+    RepliedComment(
+      cid: json['cid'] as int,
+      uid: json['uid'] as int,
+      username: json['username'] as String,
+      avatar: json['avatar'] as String,
+      gender: json['gender'] as int,
+      content: json['content'] as String,
+      likeCount: json['like_count'] as int,
+      replyCount: json['reply_count'] as int,
+      commentTime: json['comment_time'] as String,
+    );
 
 Map<String, dynamic> _$RepliedCommentToJson(RepliedComment instance) =>
     <String, dynamic>{

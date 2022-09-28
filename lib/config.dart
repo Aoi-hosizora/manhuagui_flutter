@@ -1,6 +1,8 @@
+// ignore_for_file: constant_identifier_names
+
 const DEBUG = true;
 const APP_NAME = 'Manhuagui';
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.1.0';
 const APP_DESCRIPTIONS = [
   '非官方的漫画柜 (manhuagui) 安卓客户端，使用 Flutter 开发。',
   '作者: Github Aoi-hosizora <aoihosizora@hotmail.com>',
@@ -8,17 +10,18 @@ const APP_DESCRIPTIONS = [
   '该客户端仅供学习研究使用，请勿用于商业用途。',
   '本应用与内容提供方无任何联系，若有任何问题，请发邮件或 Issue 联系。',
 ];
+const LEGALESE = '© 2022 青いほしぞら';
 const DB_NAME = 'db_manhuagui';
 
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';
 const APP_HOMEPAGE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter';
-const CONTACT = '';
 const FEEDBACK_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/issues/new';
 const RELEASE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/releases';
 
 const CONNECT_TIMEOUT = 10000; // 10s
 const SEND_TIMEOUT = 5000; // 5s
 const RECEIVE_TIMEOUT = 5000; // 5s
+const HEAD_TIMEOUT = 2500; // 2.5s
 
 // const BASE_API_URL = 'http://10.0.3.2:10018/v1/';
 const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/';

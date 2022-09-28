@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/page/genre.dart';
 class GenrePage extends StatefulWidget {
   const GenrePage({
     Key key,
-    @required this.genre,
+    required this.genre,
   })  : assert(genre != null),
         super(key: key);
 

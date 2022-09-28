@@ -18,9 +18,9 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 class AuthorPage extends StatefulWidget {
   const AuthorPage({
     Key key,
-    @required this.id,
-    @required this.name,
-    @required this.url,
+    required this.id,
+    required this.name,
+    required this.url,
   })  : assert(id != null),
         assert(name != null),
         assert(url != null),

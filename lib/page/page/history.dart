@@ -49,7 +49,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     super.dispose();
   }
 
-  void _delete({@required MangaHistory history}) {
+  void _delete({required MangaHistory history}) {
     assert(history != null);
     showDialog(
       context: context,

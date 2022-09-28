@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/index.dart';
 
 void main() {
@@ -15,15 +16,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Manhuagui',
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-        scaffoldBackgroundColor: Colors.grey[100],
+        primarySwatch: Colors.purple,
         appBarTheme: AppBarTheme(
           systemOverlayStyle: SystemUiOverlayStyle(
             systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
             systemNavigationBarIconBrightness: Brightness.dark,
           ),
         ),
-      ),
+        splashFactory: CustomInkRipple.preferredSplashFactory,
+      ).withPreferredButtonStyles(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

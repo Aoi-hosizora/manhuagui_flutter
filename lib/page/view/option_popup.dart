@@ -4,15 +4,15 @@ import 'package:flutter_ahlib/widget.dart';
 class OptionPopupView<T> extends StatefulWidget {
   const OptionPopupView({
     Key key,
-    @required this.title,
+    required this.title,
     this.top,
     this.height = 26.0,
     this.width = 88.0,
-    @required this.value,
-    @required this.items,
+    required this.value,
+    required this.items,
     this.doHighlight = false,
-    @required this.optionBuilder,
-    @required this.onSelect,
+    required this.optionBuilder,
+    required this.onSelect,
     this.enable = true,
   })  : assert(title != null),
         assert(value != null),
@@ -106,13 +106,13 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
 
 class _OptionPopupRoute<T> extends PopupRoute<T> {
   _OptionPopupRoute({
-    @required this.buttonRect,
-    @required this.transitionDuration,
+    required this.buttonRect,
+    required this.transitionDuration,
     this.barrierLabel,
     this.top,
-    @required this.value,
-    @required this.items,
-    @required this.optionBuilder,
+    required this.value,
+    required this.items,
+    required this.optionBuilder,
   })  : assert(buttonRect != null),
         assert(transitionDuration != null),
         assert(value != null),
@@ -175,7 +175,7 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
 
 class _OptionPopupRouteLayout<T> extends SingleChildLayoutDelegate {
   _OptionPopupRouteLayout({
-    @required this.buttonRect,
+    required this.buttonRect,
     this.top,
   }) : assert(buttonRect != null);
 
@@ -208,10 +208,10 @@ class _OptionPopupRouteLayout<T> extends SingleChildLayoutDelegate {
 class _OptionPopupRouteView<T> extends StatefulWidget {
   const _OptionPopupRouteView({
     Key key,
-    @required this.value,
-    @required this.items,
-    @required this.optionBuilder,
-    @required this.transitionDuration,
+    required this.value,
+    required this.items,
+    required this.optionBuilder,
+    required this.transitionDuration,
   })  : assert(value != null),
         assert(items != null),
         assert(optionBuilder != null),

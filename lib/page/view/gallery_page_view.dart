@@ -9,14 +9,14 @@ typedef GalleryPageViewBuilder = GalleryPageViewPageOptions Function(BuildContex
 class GalleryPageView extends StatefulWidget {
   const GalleryPageView({
     Key key,
-    @required this.itemCount,
-    @required this.builder,
+    required this.itemCount,
+    required this.builder,
     this.loadingBuilder,
     this.loadFailedChild,
     this.backgroundDecoration,
     this.gaplessPlayback = false,
     this.reverse = false,
-    @required this.pageController,
+    required this.pageController,
     this.onPageChanged,
     this.scaleStateChangedCallback,
     this.enableRotation = false,
@@ -107,7 +107,7 @@ class _GalleryPageViewState extends State<GalleryPageView> {
 class GalleryPageViewPageOptions {
   const GalleryPageViewPageOptions({
     Key key,
-    @required this.imageProvider,
+    required this.imageProvider,
     this.heroAttributes,
     this.minScale,
     this.maxScale,

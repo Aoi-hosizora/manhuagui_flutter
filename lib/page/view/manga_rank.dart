@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 class MangaRankView extends StatefulWidget {
   const MangaRankView({
     Key key,
-    @required this.manga,
+    required this.manga,
   })  : assert(manga != null),
         super(key: key);
 

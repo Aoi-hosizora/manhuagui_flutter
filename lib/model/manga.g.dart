@@ -6,42 +6,38 @@ part of 'manga.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Manga _$MangaFromJson(Map<String, dynamic> json) {
-  return Manga(
-    mid: json['mid'] as int,
-    title: json['title'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    publishYear: json['publish_year'] as String,
-    mangaZone: json['manga_zone'] as String,
-    genres: (json['genres'] as List)
-        ?.map((e) =>
-            e == null ? null : Category.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-    authors: (json['authors'] as List)
-        ?.map((e) =>
-            e == null ? null : TinyAuthor.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-    alias: json['alias'] as String,
-    aliasTitle: json['alias_title'] as String,
-    finished: json['finished'] as bool,
-    newestChapter: json['newest_chapter'] as String,
-    newestDate: json['newest_date'] as String,
-    briefIntroduction: json['brief_introduction'] as String,
-    introduction: json['introduction'] as String,
-    mangaRank: json['manga_rank'] as String,
-    averageScore: (json['average_score'] as num)?.toDouble(),
-    scoreCount: json['score_count'] as int,
-    perScores: (json['per_scores'] as List)?.map((e) => e as String)?.toList(),
-    banned: json['banned'] as bool,
-    copyright: json['copyright'] as bool,
-    chapterGroups: (json['chapter_groups'] as List)
-        ?.map((e) => e == null
-            ? null
-            : MangaChapterGroup.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-  );
-}
+Manga _$MangaFromJson(Map<String, dynamic> json) => Manga(
+      mid: json['mid'] as int,
+      title: json['title'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      publishYear: json['publish_year'] as String,
+      mangaZone: json['manga_zone'] as String,
+      genres: (json['genres'] as List<dynamic>)
+          .map((e) => Category.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      authors: (json['authors'] as List<dynamic>)
+          .map((e) => TinyAuthor.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      alias: json['alias'] as String,
+      aliasTitle: json['alias_title'] as String,
+      finished: json['finished'] as bool,
+      newestChapter: json['newest_chapter'] as String,
+      newestDate: json['newest_date'] as String,
+      briefIntroduction: json['brief_introduction'] as String,
+      introduction: json['introduction'] as String,
+      mangaRank: json['manga_rank'] as String,
+      averageScore: (json['average_score'] as num).toDouble(),
+      scoreCount: json['score_count'] as int,
+      perScores: (json['per_scores'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      banned: json['banned'] as bool,
+      copyright: json['copyright'] as bool,
+      chapterGroups: (json['chapter_groups'] as List<dynamic>)
+          .map((e) => MangaChapterGroup.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
 
 Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'mid': instance.mid,
@@ -68,28 +64,24 @@ Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'chapter_groups': instance.chapterGroups,
     };
 
-SmallManga _$SmallMangaFromJson(Map<String, dynamic> json) {
-  return SmallManga(
-    mid: json['mid'] as int,
-    title: json['title'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    publishYear: json['publish_year'] as String,
-    mangaZone: json['manga_zone'] as String,
-    genres: (json['genres'] as List)
-        ?.map((e) =>
-            e == null ? null : Category.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-    authors: (json['authors'] as List)
-        ?.map((e) =>
-            e == null ? null : TinyAuthor.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-    finished: json['finished'] as bool,
-    newestChapter: json['newest_chapter'] as String,
-    newestDate: json['newest_date'] as String,
-    briefIntroduction: json['brief_introduction'] as String,
-  );
-}
+SmallManga _$SmallMangaFromJson(Map<String, dynamic> json) => SmallManga(
+      mid: json['mid'] as int,
+      title: json['title'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      publishYear: json['publish_year'] as String,
+      mangaZone: json['manga_zone'] as String,
+      genres: (json['genres'] as List<dynamic>)
+          .map((e) => Category.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      authors: (json['authors'] as List<dynamic>)
+          .map((e) => TinyAuthor.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      finished: json['finished'] as bool,
+      newestChapter: json['newest_chapter'] as String,
+      newestDate: json['newest_date'] as String,
+      briefIntroduction: json['brief_introduction'] as String,
+    );
 
 Map<String, dynamic> _$SmallMangaToJson(SmallManga instance) =>
     <String, dynamic>{
@@ -107,17 +99,15 @@ Map<String, dynamic> _$SmallMangaToJson(SmallManga instance) =>
       'brief_introduction': instance.briefIntroduction,
     };
 
-TinyManga _$TinyMangaFromJson(Map<String, dynamic> json) {
-  return TinyManga(
-    mid: json['mid'] as int,
-    title: json['title'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    finished: json['finished'] as bool,
-    newestChapter: json['newest_chapter'] as String,
-    newestDate: json['newest_date'] as String,
-  );
-}
+TinyManga _$TinyMangaFromJson(Map<String, dynamic> json) => TinyManga(
+      mid: json['mid'] as int,
+      title: json['title'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      finished: json['finished'] as bool,
+      newestChapter: json['newest_chapter'] as String,
+      newestDate: json['newest_date'] as String,
+    );
 
 Map<String, dynamic> _$TinyMangaToJson(TinyManga instance) => <String, dynamic>{
       'mid': instance.mid,
@@ -129,16 +119,15 @@ Map<String, dynamic> _$TinyMangaToJson(TinyManga instance) => <String, dynamic>{
       'newest_date': instance.newestDate,
     };
 
-TinyBlockManga _$TinyBlockMangaFromJson(Map<String, dynamic> json) {
-  return TinyBlockManga(
-    mid: json['mid'] as int,
-    title: json['title'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    finished: json['finished'] as bool,
-    newestChapter: json['newest_chapter'] as String,
-  );
-}
+TinyBlockManga _$TinyBlockMangaFromJson(Map<String, dynamic> json) =>
+    TinyBlockManga(
+      mid: json['mid'] as int,
+      title: json['title'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      finished: json['finished'] as bool,
+      newestChapter: json['newest_chapter'] as String,
+    );
 
 Map<String, dynamic> _$TinyBlockMangaToJson(TinyBlockManga instance) =>
     <String, dynamic>{
@@ -150,16 +139,12 @@ Map<String, dynamic> _$TinyBlockMangaToJson(TinyBlockManga instance) =>
       'newest_chapter': instance.newestChapter,
     };
 
-MangaGroup _$MangaGroupFromJson(Map<String, dynamic> json) {
-  return MangaGroup(
-    title: json['title'] as String,
-    mangas: (json['mangas'] as List)
-        ?.map((e) => e == null
-            ? null
-            : TinyBlockManga.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-  );
-}
+MangaGroup _$MangaGroupFromJson(Map<String, dynamic> json) => MangaGroup(
+      title: json['title'] as String,
+      mangas: (json['mangas'] as List<dynamic>)
+          .map((e) => TinyBlockManga.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
 
 Map<String, dynamic> _$MangaGroupToJson(MangaGroup instance) =>
     <String, dynamic>{
@@ -167,22 +152,17 @@ Map<String, dynamic> _$MangaGroupToJson(MangaGroup instance) =>
       'mangas': instance.mangas,
     };
 
-MangaGroupList _$MangaGroupListFromJson(Map<String, dynamic> json) {
-  return MangaGroupList(
-    title: json['title'] as String,
-    topGroup: json['top_group'] == null
-        ? null
-        : MangaGroup.fromJson(json['top_group'] as Map<String, dynamic>),
-    groups: (json['groups'] as List)
-        ?.map((e) =>
-            e == null ? null : MangaGroup.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-    otherGroups: (json['other_groups'] as List)
-        ?.map((e) =>
-            e == null ? null : MangaGroup.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-  );
-}
+MangaGroupList _$MangaGroupListFromJson(Map<String, dynamic> json) =>
+    MangaGroupList(
+      title: json['title'] as String,
+      topGroup: MangaGroup.fromJson(json['top_group'] as Map<String, dynamic>),
+      groups: (json['groups'] as List<dynamic>)
+          .map((e) => MangaGroup.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      otherGroups: (json['other_groups'] as List<dynamic>)
+          .map((e) => MangaGroup.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
 
 Map<String, dynamic> _$MangaGroupListToJson(MangaGroupList instance) =>
     <String, dynamic>{
@@ -193,19 +173,12 @@ Map<String, dynamic> _$MangaGroupListToJson(MangaGroupList instance) =>
     };
 
 HomepageMangaGroupList _$HomepageMangaGroupListFromJson(
-    Map<String, dynamic> json) {
-  return HomepageMangaGroupList(
-    serial: json['serial'] == null
-        ? null
-        : MangaGroupList.fromJson(json['serial'] as Map<String, dynamic>),
-    finish: json['finish'] == null
-        ? null
-        : MangaGroupList.fromJson(json['finish'] as Map<String, dynamic>),
-    latest: json['latest'] == null
-        ? null
-        : MangaGroupList.fromJson(json['latest'] as Map<String, dynamic>),
-  );
-}
+        Map<String, dynamic> json) =>
+    HomepageMangaGroupList(
+      serial: MangaGroupList.fromJson(json['serial'] as Map<String, dynamic>),
+      finish: MangaGroupList.fromJson(json['finish'] as Map<String, dynamic>),
+      latest: MangaGroupList.fromJson(json['latest'] as Map<String, dynamic>),
+    );
 
 Map<String, dynamic> _$HomepageMangaGroupListToJson(
         HomepageMangaGroupList instance) =>
@@ -215,24 +188,21 @@ Map<String, dynamic> _$HomepageMangaGroupListToJson(
       'latest': instance.latest,
     };
 
-MangaRank _$MangaRankFromJson(Map<String, dynamic> json) {
-  return MangaRank(
-    mid: json['mid'] as int,
-    title: json['title'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    finished: json['finished'] as bool,
-    authors: (json['authors'] as List)
-        ?.map((e) =>
-            e == null ? null : TinyAuthor.fromJson(e as Map<String, dynamic>))
-        ?.toList(),
-    newestChapter: json['newest_chapter'] as String,
-    newestDate: json['newest_date'] as String,
-    order: json['order'] as int,
-    score: (json['score'] as num)?.toDouble(),
-    trend: json['trend'] as int,
-  );
-}
+MangaRank _$MangaRankFromJson(Map<String, dynamic> json) => MangaRank(
+      mid: json['mid'] as int,
+      title: json['title'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      finished: json['finished'] as bool,
+      authors: (json['authors'] as List<dynamic>)
+          .map((e) => TinyAuthor.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      newestChapter: json['newest_chapter'] as String,
+      newestDate: json['newest_date'] as String,
+      order: json['order'] as int,
+      score: (json['score'] as num).toDouble(),
+      trend: json['trend'] as int,
+    );
 
 Map<String, dynamic> _$MangaRankToJson(MangaRank instance) => <String, dynamic>{
       'mid': instance.mid,
@@ -248,18 +218,16 @@ Map<String, dynamic> _$MangaRankToJson(MangaRank instance) => <String, dynamic>{
       'trend': instance.trend,
     };
 
-ShelfManga _$ShelfMangaFromJson(Map<String, dynamic> json) {
-  return ShelfManga(
-    mid: json['mid'] as int,
-    title: json['title'] as String,
-    cover: json['cover'] as String,
-    url: json['url'] as String,
-    newestChapter: json['newest_chapter'] as String,
-    newestDuration: json['newest_duration'] as String,
-    lastChapter: json['last_chapter'] as String,
-    lastDuration: json['last_duration'] as String,
-  );
-}
+ShelfManga _$ShelfMangaFromJson(Map<String, dynamic> json) => ShelfManga(
+      mid: json['mid'] as int,
+      title: json['title'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      newestChapter: json['newest_chapter'] as String,
+      newestDuration: json['newest_duration'] as String,
+      lastChapter: json['last_chapter'] as String,
+      lastDuration: json['last_duration'] as String,
+    );
 
 Map<String, dynamic> _$ShelfMangaToJson(ShelfManga instance) =>
     <String, dynamic>{
@@ -273,12 +241,10 @@ Map<String, dynamic> _$ShelfMangaToJson(ShelfManga instance) =>
       'last_duration': instance.lastDuration,
     };
 
-ShelfStatus _$ShelfStatusFromJson(Map<String, dynamic> json) {
-  return ShelfStatus(
-    isIn: json['in'] as bool,
-    count: json['count'] as int,
-  );
-}
+ShelfStatus _$ShelfStatusFromJson(Map<String, dynamic> json) => ShelfStatus(
+      isIn: json['in'] as bool,
+      count: json['count'] as int,
+    );
 
 Map<String, dynamic> _$ShelfStatusToJson(ShelfStatus instance) =>
     <String, dynamic>{

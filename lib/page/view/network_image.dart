@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 class NetworkImageView extends StatelessWidget {
   const NetworkImageView({
     Key key,
-    @required this.url,
-    @required this.width,
-    @required this.height,
+    required this.url,
+    required this.width,
+    required this.height,
     this.fit = BoxFit.cover,
   })  : assert(url != null && url != ''),
         super(key: key);
