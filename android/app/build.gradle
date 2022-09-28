@@ -30,25 +30,32 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdkVersion 29
+    // compileSdkVersion flutter.compileSdkVersion
+    compileSdkVersion 33
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
-    lintOptions {
-        disable 'InvalidPackage'
-    }
-
     defaultConfig {
         applicationId "com.aoihosizora.manhuagui"
-        minSdkVersion 16
-        targetSdkVersion 29
-        // versionCode flutterVersionCode.toInteger()
-        // versionName flutterVersionName
+        // minSdkVersion flutter.minSdkVersion
+        minSdkVersion 19
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
 
         versionCode 3
-        versionName "1.0.2"
+        versionName "1.1.0"
     }
 
     signingConfigs {
