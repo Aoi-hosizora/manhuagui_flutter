@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/service/state/auth.dart';
 /// 订阅书架
 class ShelfSubPage extends StatefulWidget {
   const ShelfSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class ImageLoadingView extends StatelessWidget {
   const ImageLoadingView({
-    Key key,
+    Key? key,
     required this.event,
     this.title,
     this.width,
@@ -55,7 +55,7 @@ class ImageLoadingView extends StatelessWidget {
 
 class ImageLoadFailedView extends StatelessWidget {
   const ImageLoadFailedView({
-    Key key,
+    Key? key,
     this.title,
     required this.width,
     required this.height,

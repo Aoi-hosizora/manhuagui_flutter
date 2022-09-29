@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/widget.dart';
 
 class OptionPopupView<T> extends StatefulWidget {
   const OptionPopupView({
-    Key key,
+    Key? key,
     required this.title,
     this.top,
     this.height = 26.0,
@@ -207,7 +207,7 @@ class _OptionPopupRouteLayout<T> extends SingleChildLayoutDelegate {
 
 class _OptionPopupRouteView<T> extends StatefulWidget {
   const _OptionPopupRouteView({
-    Key key,
+    Key? key,
     required this.value,
     required this.items,
     required this.optionBuilder,

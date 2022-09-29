@@ -14,7 +14,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 /// 分类类别
 class GenreSubPage extends StatefulWidget {
   const GenreSubPage({
-    Key key,
+    Key? key,
     this.defaultGenre,
     this.action,
   }) : super(key: key);

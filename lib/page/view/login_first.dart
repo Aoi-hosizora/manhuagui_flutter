@@ -3,7 +3,7 @@ import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/service/auth/auth.dart';
 
 class LoginFirstView extends StatefulWidget {
-  const LoginFirstView({Key key}) : super(key: key);
+  const LoginFirstView({Key? key}) : super(key: key);
 
   @override
   _LoginFirstViewState createState() => _LoginFirstViewState();

@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/natives/browser.dart';
 /// 首页
 class HomeSubPage extends StatefulWidget {
   const HomeSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

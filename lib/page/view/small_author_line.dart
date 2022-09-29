@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 /// View for [SmallAuthor] (Line style).
 class SmallAuthorLineView extends StatefulWidget {
   const SmallAuthorLineView({
-    Key key,
+    Key? key,
     required this.author,
   })  : assert(author != null),
         super(key: key);

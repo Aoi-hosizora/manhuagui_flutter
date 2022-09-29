@@ -24,7 +24,7 @@ import 'package:manhuagui_flutter/service/state/auth.dart';
 /// Page for [Manga].
 class MangaPage extends StatefulWidget {
   const MangaPage({
-    Key key,
+    Key? key,
     required this.id,
     required this.title,
     required this.url,

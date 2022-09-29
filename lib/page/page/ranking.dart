@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 /// 首页排行
 class RankingSubPage extends StatefulWidget {
   const RankingSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

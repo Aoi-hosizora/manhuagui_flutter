@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 /// Used in [ShelfSubPage].
 class ShelfMangaLineView extends StatefulWidget {
   const ShelfMangaLineView({
-    Key key,
+    Key? key,
     required this.manga,
   })  : assert(manga != null),
         super(key: key);

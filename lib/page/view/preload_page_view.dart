@@ -8,7 +8,7 @@ const PageScrollPhysics _kPagePhysics = PageScrollPhysics();
 /// A [PageView] with [preloadPagesCount].
 class PreLoadPageView extends StatefulWidget {
   PreLoadPageView({
-    Key key,
+    Key? key,
     this.scrollDirection = Axis.horizontal,
     this.reverse = false,
     PageController controller,
@@ -26,7 +26,7 @@ class PreLoadPageView extends StatefulWidget {
         super(key: key);
 
   PreLoadPageView.builder({
-    Key key,
+    Key? key,
     this.scrollDirection = Axis.horizontal,
     this.reverse = false,
     PageController controller,
@@ -45,7 +45,7 @@ class PreLoadPageView extends StatefulWidget {
         super(key: key);
 
   PreLoadPageView.custom({
-    Key key,
+    Key? key,
     this.scrollDirection = Axis.horizontal,
     this.reverse = false,
     PageController controller,

@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 /// Used in [MangaColumnView].
 class TinyBlockMangaView extends StatefulWidget {
   const TinyBlockMangaView({
-    Key key,
+    Key? key,
     required this.manga,
     required this.width,
     required this.height,

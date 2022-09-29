@@ -14,7 +14,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 /// 分类漫画家
 class AuthorSubPage extends StatefulWidget {
   const AuthorSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

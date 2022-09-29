@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/service/natives/clipboard.dart';
 
 class MangaDetailPage extends StatefulWidget {
   const MangaDetailPage({
-    Key key,
+    Key? key,
     required this.data,
   })  : assert(data != null),
         super(key: key);

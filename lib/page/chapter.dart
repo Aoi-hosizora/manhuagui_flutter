@@ -22,7 +22,7 @@ import 'package:photo_view/photo_view.dart';
 /// Page for [TinyMangaChapter].
 class ChapterPage extends StatefulWidget {
   const ChapterPage({
-    Key key,
+    Key? key,
     this.action,
     required this.mid,
     required this.cid,

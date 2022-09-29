@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/state/auth.dart';
 
 /// 登录
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key key}) : super(key: key);
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();

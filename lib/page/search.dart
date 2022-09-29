@@ -15,7 +15,7 @@ import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
 /// 搜索
 class SearchPage extends StatefulWidget {
-  const SearchPage({Key key}) : super(key: key);
+  const SearchPage({Key? key}) : super(key: key);
 
   @override
   _SearchPageState createState() => _SearchPageState();

@@ -11,7 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
 class IndexPage extends StatefulWidget {
-  const IndexPage({Key key}) : super(key: key);
+  const IndexPage({Key? key}) : super(key: key);
 
   @override
   _IndexPageState createState() => _IndexPageState();

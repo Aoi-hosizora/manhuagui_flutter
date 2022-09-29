@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class NetworkImageView extends StatelessWidget {
   const NetworkImageView({
-    Key key,
+    Key? key,
     required this.url,
     required this.width,
     required this.height,

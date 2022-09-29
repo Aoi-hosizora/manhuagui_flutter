@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/state/auth.dart';
 /// 订阅浏览历史
 class HistorySubPage extends StatefulWidget {
   const HistorySubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

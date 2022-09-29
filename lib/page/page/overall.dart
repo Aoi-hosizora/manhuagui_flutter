@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 /// 首页全部
 class OverallSubPage extends StatefulWidget {
   const OverallSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

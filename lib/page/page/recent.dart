@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 /// 首页更新
 class RecentSubPage extends StatefulWidget {
   const RecentSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/view/manga_column.dart';
 /// Page for [MangaGroup].
 class MangaGroupPage extends StatefulWidget {
   const MangaGroupPage({
-    Key key,
+    Key? key,
     required this.group,
     required this.type,
   })  : assert(group != null),

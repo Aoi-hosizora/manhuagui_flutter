@@ -8,7 +8,7 @@ typedef GalleryPageViewBuilder = GalleryPageViewPageOptions Function(BuildContex
 /// A [PhotoViewGallery] with [FractionallySizedBox] for [itemBuilder].
 class GalleryPageView extends StatefulWidget {
   const GalleryPageView({
-    Key key,
+    Key? key,
     required this.itemCount,
     required this.builder,
     this.loadingBuilder,
@@ -106,7 +106,7 @@ class _GalleryPageViewState extends State<GalleryPageView> {
 
 class GalleryPageViewPageOptions {
   const GalleryPageViewPageOptions({
-    Key key,
+    Key? key,
     required this.imageProvider,
     this.heroAttributes,
     this.minScale,

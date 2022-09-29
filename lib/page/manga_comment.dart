@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 
 class MangaCommentPage extends StatefulWidget {
   const MangaCommentPage({
-    Key key,
+    Key? key,
     required this.mid,
   })  : assert(mid != null),
         super(key: key);

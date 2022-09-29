@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 /// Used in [RankingSubPage].
 class MangaRankView extends StatefulWidget {
   const MangaRankView({
-    Key key,
+    Key? key,
     required this.manga,
   })  : assert(manga != null),
         super(key: key);

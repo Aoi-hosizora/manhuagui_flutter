@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/service/state/auth.dart';
 /// 我的
 class MineSubPage extends StatefulWidget {
   const MineSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

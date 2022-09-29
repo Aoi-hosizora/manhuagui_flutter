@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 class MangaCarouselView extends StatefulWidget {
-  const MangaCarouselView({Key key, required this.mangas})
+  const MangaCarouselView({Key? key, required this.mangas})
       : assert(mangas != null && mangas.length != 0),
         super(key: key);
 

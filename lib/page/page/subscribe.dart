@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/search.dart';
 /// 订阅
 class SubscribeSubPage extends StatefulWidget {
   const SubscribeSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

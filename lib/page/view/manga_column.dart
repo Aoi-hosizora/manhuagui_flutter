@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/view/tiny_block_manga.dart';
 /// Used in [RecommendSubPage] and [MangaGroupPage].
 class MangaColumnView extends StatefulWidget {
   const MangaColumnView({
-    Key key,
+    Key? key,
     required this.group,
     required this.type,
     this.controller,

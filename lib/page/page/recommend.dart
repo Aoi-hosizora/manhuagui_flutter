@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
 /// Page for [HomepageMangaGroupList] / [MangaGroupList].
 class RecommendSubPage extends StatefulWidget {
   const RecommendSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 

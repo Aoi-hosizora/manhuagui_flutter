@@ -1,24 +1,22 @@
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/service/database/history.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-class DBProvider {
-  DBProvider._();
+class DBManager {
+  DBManager._();
 
-  static DBProvider _instance;
+  static DBManager? _instance;
 
-  static DBProvider get instance {
-    if (_instance == null) {
-      _instance = DBProvider._();
-    }
-    return _instance;
+  static DBManager get instance {
+    _instance ??= DBManager._();
+    return _instance!;
   }
 
-  Database _database;
+  Database? _database; // global Database instance
 
   Future<Database> getDB() async {
-    if (_database == null || !_database.isOpen) {
+    if (_database == null || !_database!.isOpen) {
       var path = await getDatabasesPath();
       _database = await openDatabase(
         join(path, DB_NAME),
@@ -29,7 +27,7 @@ class DBProvider {
         onUpgrade: (db, oldVer, newVer) async {},
       );
     }
-    return _database;
+    return _database!;
   }
 
   Future<void> closeDB() async {

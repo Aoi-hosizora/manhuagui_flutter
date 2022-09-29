@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/service/natives/clipboard.dart';
 /// 评论详情页
 class CommentPage extends StatefulWidget {
   const CommentPage({
-    Key key,
+    Key? key,
     required this.comment,
   })  : assert(comment != null),
         super(key: key);

@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 /// Used in [HistorySubPage].
 class MangaHistoryLineView extends StatefulWidget {
   const MangaHistoryLineView({
-    Key key,
+    Key? key,
     required this.history,
     required this.onLongPressed,
   })  : assert(history != null),

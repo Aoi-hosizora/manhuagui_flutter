@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/page/manga_toc.dart';
 /// Used in [MangaPage] and [MangaTocPage].
 class ChapterGroupView extends StatefulWidget {
   const ChapterGroupView({
-    Key key,
+    Key? key,
     this.action,
     required this.groups,
     required this.complete,

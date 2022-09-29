@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 /// Used in [MangaPage] and [CommentPage].
 class CommentLineView extends StatefulWidget {
   const CommentLineView({
-    Key key,
+    Key? key,
     required this.comment,
   })  : assert(comment != null),
         super(key: key);

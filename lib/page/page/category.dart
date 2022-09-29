@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/search.dart';
 /// 分类
 class CategorySubPage extends StatefulWidget {
   const CategorySubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 
