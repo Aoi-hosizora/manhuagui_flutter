@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_column.dart';
@@ -54,7 +54,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'MangaGroupPage',
+          heroTag: null,
           onPressed: () => _controller.scrollToTop(),
         ),
       ),

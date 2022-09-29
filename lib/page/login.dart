@@ -62,11 +62,10 @@ class _LoginPageState extends State<LoginPage> {
     var username = _usernameController.text.trim();
     var password = _passwordController.text.trim();
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
+    var client = RestClient(DioManager.instance.dio);
     ErrorMessage err;
-    var result = await client.login(username: username, password: password).catchError((e) {
-      err = wrapError(e);
+    var result = await client.login(username: username, password: password).catchError((e, s) {
+      err = wrapError(e, s);
     }).whenComplete(() {
       _logining = false;
       if (mounted) setState(() {});
@@ -79,9 +78,9 @@ class _LoginPageState extends State<LoginPage> {
     // state
     var token = result.data.token;
     Fluttertoast.showToast(msg: '$username 登录成功');
-    AuthState.instance.token = token;
-    AuthState.instance.username = username;
-    AuthState.instance.notifyAll();
+    AuthManager.instance.token = token;
+    AuthManager.instance.username = username;
+    AuthManager.instance.notifyAll();
 
     // prefs
     setToken(token);
@@ -171,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                         title: Text('删除登录记录'),
                         content: Text('确定要删除 $username 吗？'),
                         actions: [
-                          FlatButton(
+                          TextButton(
                             child: Text('删除'),
                             onPressed: () async {
                               Navigator.of(c).pop();
@@ -180,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                               if (mounted) setState(() {});
                             },
                           ),
-                          FlatButton(
+                          TextButton(
                             child: Text('取消'),
                             onPressed: () => Navigator.of(c).pop(),
                           ),

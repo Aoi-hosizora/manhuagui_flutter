@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/list.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -40,7 +40,7 @@ class _AuthorPageState extends State<AuthorPage> {
   final _fabController = AnimatedFabController();
   var _loading = true;
   Author _data;
-  var _error = '';
+  String? _error;
   var _mangas = <SmallManga>[];
   var _total = 0;
   var _order = MangaOrder.byPopular;
@@ -65,29 +65,27 @@ class _AuthorPageState extends State<AuthorPage> {
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
+    var client = RestClient(DioManager.instance.dio);
     return client.getAuthor(aid: widget.id).then((r) async {
       _error = '';
       _data = null;
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
-    }).catchError((e) {
+    }).catchError((e, s) {
       _data = null;
-      _error = wrapError(e).text;
+      _error = wrapError(e, s).text;
     }).whenComplete(() {
       _loading = false;
       if (mounted) setState(() {});
     });
   }
 
-  Future<PagedList<SmallManga>> _getMangas({int page}) async {
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
+  Future<PagedList<SmallManga>> _getMangas({required int page}) async {
+    var client = RestClient(DioManager.instance.dio);
     ErrorMessage err;
-    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _order).catchError((e) {
-      err = wrapError(e);
+    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _order).catchError((e, s) {
+      err = wrapError(e, s);
     });
     if (err != null) {
       return Future.error(err.text);
@@ -119,7 +117,7 @@ class _AuthorPageState extends State<AuthorPage> {
         isLoading: _loading,
         errorText: _error,
         isEmpty: _data == null,
-        setting: PlaceholderSetting().toChinese(),
+        setting: PlaceholderSetting().copyWithChinese(),
         onRefresh: () => _loadData(),
         childBuilder: (c) => NestedScrollView(
           headerSliverBuilder: (c, o) => [
@@ -297,15 +295,15 @@ class _AuthorPageState extends State<AuthorPage> {
               ),
               setting: UpdatableDataViewSetting(
                 padding: EdgeInsets.zero,
-                placeholderSetting: PlaceholderSetting().toChinese(),
+                placeholderSetting: PlaceholderSetting().copyWithChinese(),
                 refreshFirst: true,
                 clearWhenError: false,
                 clearWhenRefresh: false,
                 updateOnlyIfNotEmpty: false,
-                onStateChanged: (_, __) => _fabController.hide(),
-                onStartLoading: () => mountedSetState(() => _disableOption = true),
-                onStopLoading: () => mountedSetState(() => _disableOption = false),
-                onAppend: (l) {
+                onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+                onStartGettingData: () => mountedSetState(() => _disableOption = true),
+                onStopGettingData: () => mountedSetState(() => _disableOption = false),
+                onAppend: (l, _) {
                   if (l.length > 0) {
                     Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
                   }
@@ -320,7 +318,7 @@ class _AuthorPageState extends State<AuthorPage> {
               ),
               useOverlapInjector: true,
               separator: Divider(height: 1),
-              itemBuilder: (c, item) => TinyMangaLineView(manga: item.toTiny()),
+              itemBuilder: (c, _, item) => TinyMangaLineView(manga: item.toTiny()),
             ),
           ),
         ),
@@ -331,7 +329,7 @@ class _AuthorPageState extends State<AuthorPage> {
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'AuthorPage',
+          heroTag: null,
           onPressed: () => _controller.scrollToTop(),
         ),
       ),

@@ -15,39 +15,31 @@ class HomeSubPage extends StatefulWidget {
     this.action,
   }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
 
   @override
   _HomeSubPageState createState() => _HomeSubPageState();
 }
 
 class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStateMixin {
-  TabController _controller;
+  late final _controller = TabController(length: _tabs.length, vsync: this);
+  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   var _selectedIndex = 0;
-  var _tabs = <String>['推荐', '更新', '全部', '排行'];
-  var _actions = <ActionController>[];
-  var _pages = <Widget>[];
+  late final _tabs = [
+    Tuple2('推荐', RecommendSubPage(action: _actions[0])),
+    Tuple2('更新', RecentSubPage(action: _actions[1])),
+    Tuple2('全部', OverallSubPage(action: _actions[2])),
+    Tuple2('排行', RankingSubPage(action: _actions[3])),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _controller = TabController(
-      length: _tabs.length,
-      vsync: this,
-    );
-    _actions = List.generate(_tabs.length, (_) => ActionController());
-    _pages = [
-      RecommendSubPage(action: _actions[0]),
-      RecentSubPage(action: _actions[1]),
-      OverallSubPage(action: _actions[2]),
-      RankingSubPage(action: _actions[3]),
-    ];
-
     widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
-    _actions[0].addAction('to_shelf', () => widget.action.invoke('to_shelf'));
+    _actions[0].addAction('to_shelf', () => widget.action?.invoke('to_shelf'));
     _actions[0].addAction('to_update', () => _controller.animateTo(1));
     _actions[0].addAction('to_ranking', () => _controller.animateTo(3));
-    _actions[0].addAction('to_genre', () => widget.action.invoke('to_genre'));
+    _actions[0].addAction('to_genre', () => widget.action?.invoke('to_genre'));
   }
 
   @override
@@ -73,7 +65,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
               .map(
                 (t) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
-                  child: Text(t),
+                  child: Text(t.item1),
                 ),
               )
               .toList(),
@@ -108,7 +100,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       ),
       body: TabBarView(
         controller: _controller,
-        children: _pages,
+        children: _tabs.map((t) => t.item2).toList(),
       ),
     );
   }

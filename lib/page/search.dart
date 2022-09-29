@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/list.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -57,12 +57,11 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
-  Future<PagedList<SmallManga>> _getData({int page}) async {
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
+  Future<PagedList<SmallManga>> _getData({required int page}) async {
+    var client = RestClient(DioManager.instance.dio);
     ErrorMessage err;
-    var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).catchError((e) {
-      err = wrapError(e);
+    var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).catchError((e, s) {
+      err = wrapError(e, s);
     });
     if (err != null) {
       return Future.error(err.text);
@@ -178,15 +177,15 @@ class _SearchPageState extends State<SearchPage> {
                   placeholderSetting: PlaceholderSetting(
                     showNothingIcon: _q != null,
                     showNothingRetry: _q != null,
-                  ).toChinese(
+                  ).copyWithChinese(
                     nothingText: _q == null ? '请在搜索框中输入关键字...' : '无内容',
                   ),
                   refreshFirst: false,
                   clearWhenError: false,
                   clearWhenRefresh: true,
                   updateOnlyIfNotEmpty: false,
-                  onStateChanged: (_, __) => _fabController.hide(),
-                  onAppend: (l) {
+                  onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+                  onAppend: (l, _) {
                     if (l.length > 0) {
                       Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
                     }
@@ -200,7 +199,7 @@ class _SearchPageState extends State<SearchPage> {
                   },
                 ),
                 separator: Divider(height: 1),
-                itemBuilder: (c, item) => TinyMangaLineView(manga: item.toTiny()),
+                itemBuilder: (c, _, item) => TinyMangaLineView(manga: item.toTiny()),
                 extra: UpdatableDataViewExtraWidgets(
                   innerTopWidget: Container(
                     color: Colors.white,
@@ -373,7 +372,7 @@ class _SearchPageState extends State<SearchPage> {
                                 title: Text('删除搜索记录'),
                                 content: Text('确定要删除 $h 吗？'),
                                 actions: [
-                                  FlatButton(
+                                  TextButton(
                                     child: Text('删除'),
                                     onPressed: () async {
                                       Navigator.of(c).pop();
@@ -382,7 +381,7 @@ class _SearchPageState extends State<SearchPage> {
                                       if (mounted) setState(() {});
                                     },
                                   ),
-                                  FlatButton(
+                                  TextButton(
                                     child: Text('取消'),
                                     onPressed: () => Navigator.of(c).pop(),
                                   ),
@@ -406,7 +405,7 @@ class _SearchPageState extends State<SearchPage> {
                                 title: Text('清空历史记录'),
                                 content: Text('确定要清空所有历史记录吗？'),
                                 actions: [
-                                  FlatButton(
+                                  TextButton(
                                     child: Text('清空'),
                                     onPressed: () {
                                       _histories.clear();
@@ -415,7 +414,7 @@ class _SearchPageState extends State<SearchPage> {
                                       Navigator.of(c).pop();
                                     },
                                   ),
-                                  FlatButton(
+                                  TextButton(
                                     child: Text('取消'),
                                     onPressed: () => Navigator.of(c).pop(),
                                   ),
@@ -438,7 +437,7 @@ class _SearchPageState extends State<SearchPage> {
           condition: ScrollAnimatedCondition.direction,
           fab: FloatingActionButton(
             child: Icon(Icons.vertical_align_top),
-            heroTag: 'SearchPage',
+            heroTag: null,
             onPressed: () => _scrollController.scrollToTop(),
           ),
         ),

@@ -15,14 +15,14 @@ class AuthManager {
     return _instance!;
   }
 
-  String? _username; // global username
-  String? _token; // global token
+  String _username = ''; // global username
+  String _token = ''; // global token
 
-  String? get username => _username;
+  String get username => _username;
 
-  String? get token => _token;
+  String get token => _token;
 
-  bool get logined => _token?.isNotEmpty == true;
+  bool get logined => _token.isNotEmpty;
 
   void login({required String username, required String token}) {
     _username = username;

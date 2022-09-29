@@ -6,7 +6,8 @@ import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
-import 'package:manhuagui_flutter/service/auth/auth.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -18,31 +19,36 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> {
-  PageController _controller;
+  DateTime? _lastBackPressedTime;
+
+  final _controller = PageController();
+  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   var _selectedIndex = 0;
-  DateTime _lastBackPressedTime;
-  var _tabs = <Tuple2<String, IconData>>[
-    Tuple2('首页', Icons.home),
-    Tuple2('分类', Icons.category),
-    Tuple2('订阅', Icons.notifications),
-    Tuple2('我的', Icons.person),
+  late final _tabs = [
+    Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
+    Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1])),
+    Tuple3('订阅', Icons.notifications, SubscribeSubPage(action: _actions[2])),
+    Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
   ];
-  var _actions = <ActionController>[];
-  var _pages = <Widget>[];
 
   @override
   void initState() {
     super.initState();
-    _controller = PageController();
-    _actions = List.generate(_tabs.length, (_) => ActionController());
-    _pages = [
-      HomeSubPage(action: _actions[0]),
-      CategorySubPage(action: _actions[1]),
-      SubscribeSubPage(action: _actions[2]),
-      MineSubPage(action: _actions[3]),
-    ];
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      var ok = await _checkPermission();
+      if (!ok) {
+        Fluttertoast.showToast(msg: '权限授予失败，Manhuagui 正在退出');
+        SystemNavigator.pop();
+      }
+    });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
+    AuthManager.instance.check();
+    EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+      if (AuthManager.instance.logined) {
+        if (mounted) setState(() {});
+      }
+    });
+
     _actions[0].addAction('to_shelf', () {
       _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
       _actions[2].invoke('to_shelf');
@@ -70,9 +76,18 @@ class _IndexPageState extends State<IndexPage> {
 
   Future<bool> _onWillPop() async {
     DateTime now = DateTime.now();
-    if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime) > Duration(seconds: 2)) {
+    if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime!) > Duration(seconds: 2)) {
       _lastBackPressedTime = now;
-      Fluttertoast.showToast(msg: '再按一次退出');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('再按一次推出'),
+          duration: Duration(seconds: 2),
+          action: SnackBarAction(
+            label: '退出',
+            onPressed: () => SystemNavigator.pop(),
+          ),
+        ),
+      );
       return false;
     }
     return true;
@@ -80,13 +95,6 @@ class _IndexPageState extends State<IndexPage> {
 
   @override
   Widget build(BuildContext context) {
-    _checkPermission().then((ok) {
-      if (!ok) {
-        Fluttertoast.showToast(msg: '权限授予失败，退出应用');
-        SystemNavigator.pop();
-      }
-    });
-
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -98,7 +106,7 @@ class _IndexPageState extends State<IndexPage> {
             if (mounted) setState(() {});
           },
           itemCount: _tabs.length,
-          itemBuilder: (_, idx) => _pages[idx],
+          itemBuilder: (_, idx) => _tabs[idx].item3,
         ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,

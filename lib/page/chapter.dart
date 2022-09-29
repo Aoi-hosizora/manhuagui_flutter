@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/image.dart';
 import 'package:flutter_ahlib/util.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -61,7 +61,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   PageController _controller;
   var _loading = true;
   MangaChapter _data;
-  var _error = '';
+  String? _error;
   var _currentPage = 1;
   var _progressValue = 1;
 
@@ -101,7 +101,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _controller?.dispose();
     if (_data != null) {
       addHistory(
-        username: AuthState.instance.username,
+        username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
           mangaTitle: widget.mangaTitle ?? '?',
@@ -123,10 +123,9 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    if (AuthState.instance.logined) {
-      client.recordManga(token: AuthState.instance.token, mid: widget.mid, cid: widget.cid).catchError((_) {});
+    var client = RestClient(DioManager.instance.dio);
+    if (AuthManager.instance.logined) {
+      client.recordManga(token: AuthManager.instance.token, mid: widget.mid, cid: widget.cid).catchError((_) {});
     }
 
     return client.getMangaChapter(mid: widget.mid, cid: widget.cid).then((r) async {
@@ -147,7 +146,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       _progressValue = initialPage;
 
       addHistory(
-        username: AuthState.instance.username,
+        username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
           mangaTitle: widget.mangaTitle ?? '?',
@@ -171,9 +170,9 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           }
         });
       }
-    }).catchError((e) {
+    }).catchError((e, s) {
       _data = null;
-      _error = wrapError(e).text;
+      _error = wrapError(e, s).text;
     }).whenComplete(() {
       _loading = false;
       if (mounted) setState(() {});
@@ -239,7 +238,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           title: Text(last ? '上一章节' : '下一章节'),
           content: Text(last ? '没有上一章节了。' : '没有下一章节了。'),
           actions: [
-            FlatButton(
+            TextButton(
               child: Text('确定'),
               onPressed: () => Navigator.of(c).pop(),
             ),
@@ -272,11 +271,11 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           title: Text(last ? '上一章节' : '下一章节'),
           content: Text(last ? '即将跳转至上一章节？' : '即将跳转至下一章节？'),
           actions: [
-            FlatButton(
+            TextButton(
               child: Text('取消'),
               onPressed: () => Navigator.of(c).pop(),
             ),
-            FlatButton(
+            TextButton(
               child: Text('跳转'),
               onPressed: () {
                 Navigator.of(c).pop();
@@ -429,7 +428,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           ),
         ),
         actions: [
-          FlatButton(
+          TextButton(
             child: Text('操作'),
             onPressed: () {
               Navigator.of(c).pop();
@@ -438,7 +437,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
               if (mounted) setState(() {});
             },
           ),
-          FlatButton(
+          TextButton(
             child: Text('返回'),
             onPressed: () => Navigator.of(c).pop(),
           ),
@@ -553,7 +552,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
               ),
               buttonTextStyle: TextStyle(color: Colors.grey),
               buttonBorderSide: BorderSide(color: Colors.grey),
-            ).toChinese(),
+            ).copyWithChinese(),
             errorText: _error,
             childBuilder: (c) => Stack(
               children: [

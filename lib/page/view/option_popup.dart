@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 
 class OptionPopupView<T> extends StatefulWidget {
   const OptionPopupView({
@@ -264,7 +264,7 @@ class _OptionPopupViewRouteState<T> extends State<_OptionPopupRouteView<T>> {
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
-          child: OutlineButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.of(context).pop(value),
             child: Text(
               widget.optionBuilder(context, value),

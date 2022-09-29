@@ -33,7 +33,7 @@ class _LoginFirstViewState extends State<LoginFirstView> {
             style: TextStyle(fontSize: 20),
           ),
           SizedBox(height: 10),
-          OutlineButton(
+          OutlinedButton(
             child: Text('登录'),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(

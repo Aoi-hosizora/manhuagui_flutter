@@ -11,32 +11,24 @@ class CategorySubPage extends StatefulWidget {
     this.action,
   }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
 
   @override
   _CategorySubPageState createState() => _CategorySubPageState();
 }
 
 class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin {
-  TabController _controller;
+  late final _controller = TabController(length: _tabs.length, vsync: this);
+  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   var _selectedIndex = 0;
-  var _tabs = <String>['类别', '漫画家'];
-  var _actions = <ActionController>[];
-  var _pages = <Widget>[];
+  late final _tabs = [
+    Tuple2('类别', GenreSubPage(action: _actions[0])),
+    Tuple2('漫画家', AuthorSubPage(action: _actions[1])),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _controller = TabController(
-      length: _tabs.length,
-      vsync: this,
-    );
-    _actions = List.generate(_tabs.length, (_) => ActionController());
-    _pages = [
-      GenreSubPage(action: _actions[0]),
-      AuthorSubPage(action: _actions[1]),
-    ];
-
     widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
     widget.action?.addAction('to_genre', () => _controller.animateTo(0));
   }
@@ -65,7 +57,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
               .map(
                 (t) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
-                  child: Text(t),
+                  child: Text(t.item1),
                 ),
               )
               .toList(),
@@ -91,7 +83,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
       ),
       body: TabBarView(
         controller: _controller,
-        children: _pages,
+        children: _tabs.map((t) => t.item2).toList(),
       ),
     );
   }

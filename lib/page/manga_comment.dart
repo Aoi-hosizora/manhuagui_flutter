@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/list.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
@@ -36,12 +36,11 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
     super.dispose();
   }
 
-  Future<PagedList<Comment>> _getData({int page}) async {
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
+  Future<PagedList<Comment>> _getData({required int page}) async {
+    var client = RestClient(DioManager.instance.dio);
     ErrorMessage err;
-    var result = await client.getMangaComments(mid: widget.mid, page: page).catchError((e) {
-      err = wrapError(e);
+    var result = await client.getMangaComments(mid: widget.mid, page: page).catchError((e, s) {
+      err = wrapError(e, s);
     });
     if (err != null) {
       return Future.error(err.text);
@@ -70,13 +69,13 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
         ),
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.zero,
-          placeholderSetting: PlaceholderSetting().toChinese(),
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
           refreshFirst: true,
           clearWhenError: false,
           clearWhenRefresh: false,
           updateOnlyIfNotEmpty: false,
-          onStateChanged: (_, __) => _fabController.hide(),
-          onAppend: (l) {
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+          onAppend: (l, _) {
             if (l.length > 0) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 条评论');
             }
@@ -88,7 +87,7 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
           width: MediaQuery.of(context).size.width - 3 * 12 - 32,
           child: Divider(height: 1, thickness: 1),
         ),
-        itemBuilder: (c, item) => CommentLineView(comment: item),
+        itemBuilder: (c, _, item) => CommentLineView(comment: item),
       ),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
@@ -96,7 +95,7 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'MangaCommentPage',
+          heroTag: null,
           onPressed: () => _controller.scrollToTop(),
         ),
       ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_ahlib/util.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -48,7 +48,7 @@ class _MangaPageState extends State<MangaPage> {
   final _action = ActionController();
   var _loading = true;
   Manga _data;
-  var _error = '';
+  String? _error;
   var _subscribing = false;
   bool _subscribed;
   MangaHistory _history;
@@ -63,7 +63,7 @@ class _MangaPageState extends State<MangaPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
     _action.addAction('history', () async {
-      _history = await getHistory(username: AuthState.instance.username, mid: widget.id).catchError((_) {});
+      _history = await getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
       if (mounted) setState(() {});
     });
   }
@@ -83,10 +83,9 @@ class _MangaPageState extends State<MangaPage> {
     _comments = [];
     if (mounted) setState(() {});
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    if (AuthState.instance.logined) {
-      client.checkShelfMangas(token: AuthState.instance.token, mid: widget.id).then((r) {
+    var client = RestClient(DioManager.instance.dio);
+    if (AuthManager.instance.logined) {
+      client.checkShelfMangas(token: AuthManager.instance.token, mid: widget.id).then((r) {
         _subscribed = r.data.isIn;
         if (mounted) setState(() {});
       }).catchError((_) {});
@@ -96,10 +95,10 @@ class _MangaPageState extends State<MangaPage> {
       _commentError = '';
       _comments = r.data.data;
       _commentTotal = r.data.total;
-    }).catchError((e) {
+    }).catchError((e, s) {
       _commentTotal = 0;
       _comments.clear();
-      _commentError = wrapError(e).text;
+      _commentError = wrapError(e, s).text;
     }).whenComplete(() {
       _commentLoading = false;
       if (mounted) setState(() {});
@@ -113,11 +112,11 @@ class _MangaPageState extends State<MangaPage> {
       _data = r.data;
 
       // <<<
-      _history = await getHistory(username: AuthState.instance.username, mid: widget.id).catchError((_) {}); // 可能已经开始阅读，也可能还没访问
+      _history = await getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {}); // 可能已经开始阅读，也可能还没访问
       if (mounted) setState(() {});
       if (_history?.read != true) {
         addHistory(
-          username: AuthState.instance.username,
+          username: AuthManager.instance.username,
           history: MangaHistory(
             mangaId: _data.mid,
             mangaTitle: _data.title ?? '?',
@@ -131,7 +130,7 @@ class _MangaPageState extends State<MangaPage> {
         ).catchError((_) {});
       } else {
         updateHistory(
-          username: AuthState.instance.username,
+          username: AuthManager.instance.username,
           history: MangaHistory(
             mangaId: _data.mid,
             mangaTitle: _data.title ?? '?',
@@ -140,9 +139,9 @@ class _MangaPageState extends State<MangaPage> {
           ),
         );
       }
-    }).catchError((e) {
+    }).catchError((e, s) {
       _data = null;
-      _error = wrapError(e).text;
+      _error = wrapError(e, s).text;
     }).whenComplete(() {
       _loading = false;
       if (mounted) setState(() {});
@@ -150,20 +149,19 @@ class _MangaPageState extends State<MangaPage> {
   }
 
   void _subscribe() {
-    if (!AuthState.instance.logined) {
+    if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
       return;
     }
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
+    var client = RestClient(DioManager.instance.dio);
     var toSubscribe = _subscribed != true; // 去订阅
 
     Future<Result> result;
     if (toSubscribe) {
-      result = client.addToShelf(token: AuthState.instance.token, mid: widget.id);
+      result = client.addToShelf(token: AuthManager.instance.token, mid: widget.id);
     } else {
-      result = client.removeFromShelf(token: AuthState.instance.token, mid: widget.id);
+      result = client.removeFromShelf(token: AuthManager.instance.token, mid: widget.id);
     }
 
     _subscribing = true;
@@ -172,8 +170,8 @@ class _MangaPageState extends State<MangaPage> {
       _subscribed = toSubscribe;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
       if (mounted) setState(() {});
-    }).catchError((e) {
-      var err = wrapError(e).text;
+    }).catchError((e, s) {
+      var err = wrapError(e, s).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
     }).whenComplete(() {
       _subscribing = false;
@@ -251,7 +249,7 @@ class _MangaPageState extends State<MangaPage> {
           isLoading: _loading,
           errorText: _error,
           isEmpty: _data == null,
-          setting: PlaceholderSetting().toChinese(),
+          setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => Scrollbar(
             child: ListView(
@@ -382,7 +380,7 @@ class _MangaPageState extends State<MangaPage> {
                                 Container(
                                   height: 28,
                                   width: 75,
-                                  child: OutlineButton(
+                                  child: OutlinedButton(
                                     padding: EdgeInsets.all(2),
                                     child: Text(
                                       _subscribed == true ? '取消订阅' : '订阅漫画',
@@ -395,7 +393,7 @@ class _MangaPageState extends State<MangaPage> {
                                 Container(
                                   height: 28,
                                   width: 75,
-                                  child: OutlineButton(
+                                  child: OutlinedButton(
                                     padding: EdgeInsets.all(2),
                                     child: Text(_history?.read == true ? '继续阅读' : '开始阅读'),
                                     onPressed: () => _read(),
@@ -616,7 +614,7 @@ class _MangaPageState extends State<MangaPage> {
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'MangaPage',
+          heroTag: null,
           onPressed: () => _controller.scrollToTop(),
         ),
       ),

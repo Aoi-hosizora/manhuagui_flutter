@@ -170,6 +170,15 @@ class HomepageMangaGroupList {
   factory HomepageMangaGroupList.fromJson(Map<String, dynamic> json) => _$HomepageMangaGroupListFromJson(json);
 
   Map<String, dynamic> toJson() => _$HomepageMangaGroupListToJson(this);
+
+  List<TinyBlockManga> get carouselMangas {
+    var p1 = serial.topGroup.mangas.sublist(0, 4);
+    var p2 = serial.groups.map((e) => e.mangas.first);
+    var p3 = serial.otherGroups.map((e) => e.mangas.first);
+    return [
+      ...{...p1, ...p2, ...p3}
+    ];
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

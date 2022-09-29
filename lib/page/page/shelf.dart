@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/list.dart';
-import 'package:flutter_ahlib/widget.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 
 /// 订阅书架
 class ShelfSubPage extends StatefulWidget {
@@ -17,56 +17,46 @@ class ShelfSubPage extends StatefulWidget {
     this.action,
   }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
 
   @override
   _ShelfSubPageState createState() => _ShelfSubPageState();
 }
 
-class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin, NotifyReceiverMixin {
+class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin {
   final _controller = ScrollController();
-  final _udvController = UpdatableDataViewController();
   final _fabController = AnimatedFabController();
-  var _data = <ShelfManga>[];
-  int _total;
-
-  @override
-  String get receiverKey => 'ShelfSubPage';
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (AuthState.instance.logined) {
+
+    AuthManager.instance.check();
+    EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+      if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
       }
     });
-    AuthState.instance.registerDefault(this, () {
-      if (mounted) setState(() {});
-    });
+
     widget.action?.addAction('', () => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    AuthState.instance.unregisterDefault(this);
     widget.action?.removeAction('');
     _controller.dispose();
-    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }
 
-  Future<PagedList<ShelfManga>> _getData({int page}) async {
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    ErrorMessage err;
-    var result = await client.getShelfMangas(token: AuthState.instance.token, page: page).catchError((e) {
-      err = wrapError(e);
+  final _data = <ShelfManga>[];
+  var _total = 0;
+
+  Future<PagedList<ShelfManga>> _getData({required int page}) async {
+    var client = RestClient(DioManager.instance.dio);
+    var result = await client.getShelfMangas(token: AuthManager.instance.token, page: page).onError((e, s) {
+      return Future.error(wrapError(e, s).text);
     });
-    if (err != null) {
-      return Future.error(err.text);
-    }
     _total = result.data.total;
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
@@ -78,7 +68,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (!AuthState.instance.logined) {
+    if (!AuthManager.instance.logined) {
       _data.clear();
       return Center(
         child: LoginFirstView(),
@@ -89,7 +79,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       body: PaginationListView<ShelfManga>(
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
-        controller: _udvController,
         scrollController: _controller,
         paginationSetting: PaginationSetting(
           initialIndicator: 1,
@@ -97,13 +86,13 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         ),
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.zero,
-          placeholderSetting: PlaceholderSetting().toChinese(),
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
           refreshFirst: true,
           clearWhenError: false,
           clearWhenRefresh: false,
           updateOnlyIfNotEmpty: false,
-          onStateChanged: (_, __) => _fabController.hide(),
-          onAppend: (l) {
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+          onAppend: (l, _) {
             if (l.length > 0) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
             }
@@ -111,32 +100,34 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           onError: (e) => Fluttertoast.showToast(msg: e.toString()),
         ),
         separator: Divider(height: 1),
-        itemBuilder: (c, item) => ShelfMangaLineView(manga: item),
+        itemBuilder: (c, _, item) => ShelfMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
-          innerTopWidget: Container(
-            color: Colors.white,
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  height: 26,
-                  padding: EdgeInsets.only(left: 5),
-                  child: Center(
-                    child: Text('${AuthState.instance.username} 订阅的漫画'),
+          innerTopWidgets: [
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    height: 26,
+                    padding: EdgeInsets.only(left: 5),
+                    child: Center(
+                      child: Text('${AuthManager.instance.username} 订阅的漫画'),
+                    ),
                   ),
-                ),
-                Container(
-                  height: 26,
-                  padding: EdgeInsets.only(right: 5),
-                  child: Center(
-                    child: Text('共 ${_total == null ? '?' : _total.toString()} 部'),
+                  Container(
+                    height: 26,
+                    padding: EdgeInsets.only(right: 5),
+                    child: Center(
+                      child: Text('共 $_total 部'),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          innerTopDivider: Divider(height: 1, thickness: 1),
+            Divider(height: 1, thickness: 1),
+          ],
         ),
       ),
       floatingActionButton: ScrollAnimatedFab(
@@ -145,7 +136,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'ShelfSubPage',
+          heroTag: null,
           onPressed: () => _controller.scrollToTop(),
         ),
       ),

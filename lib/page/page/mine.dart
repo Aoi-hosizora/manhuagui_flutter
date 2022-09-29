@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
 /// 我的
 class MineSubPage extends StatefulWidget {
@@ -17,32 +18,19 @@ class MineSubPage extends StatefulWidget {
     this.action,
   }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
 
   @override
   _MineSubPageState createState() => _MineSubPageState();
 }
 
-class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin, NotifyReceiverMixin {
-  bool _loading = false;
-  User _data;
-  String _error;
-
-  @override
-  String get receiverKey => 'MineSubPage';
-
+class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (AuthState.instance.logined) {
+    EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+      if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
-        _loadUser();
-      }
-    });
-    AuthState.instance.registerDefault(this, () {
-      if (mounted) setState(() {});
-      if (AuthState.instance.logined) {
         _loadUser();
       }
     });
@@ -51,28 +39,30 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
 
   @override
   void dispose() {
-    AuthState.instance.unregisterDefault(this);
     widget.action?.removeAction('');
     super.dispose();
   }
 
-  Future<bool> _loadUser() {
+  bool _loading = false;
+  User? _data;
+  var _error = '';
+
+  Future<void> _loadUser() {
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    return client.getUserInfo(token: AuthState.instance.token).then((r) async {
+    var client = RestClient(DioManager.instance.dio);
+    return client.getUserInfo(token: AuthManager.instance.token).then((r) async {
       _error = '';
       _data = null;
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
-    }).catchError((e) {
+    }).onError((e, s) {
       _data = null;
-      var we = wrapError(e);
+      var we = wrapError(e, s);
       _error = we.text;
-      if (we.httpCode == 401) {
+      if (we.response?.statusCode == 401) {
         _logout();
       }
     }).whenComplete(() {
@@ -88,17 +78,15 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         title: Text('退出登录'),
         content: Text('确定要退出登录吗？'),
         actions: [
-          FlatButton(
+          TextButton(
             child: Text('确定'),
             onPressed: () async {
               Navigator.of(c).pop();
               await removeToken();
-              AuthState.instance.token = null;
-              AuthState.instance.username = null;
-              AuthState.instance.notifyAll();
+              AuthManager.instance.login(username: '', token: '');
             },
           ),
-          FlatButton(
+          TextButton(
             child: Text('取消'),
             onPressed: () => Navigator.of(c).pop(),
           ),
@@ -113,7 +101,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (!AuthState.instance.logined) {
+    if (!AuthManager.instance.logined) {
       _data = null;
       return LoginFirstView();
     }
@@ -124,7 +112,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         isLoading: _loading,
         errorText: _error,
         isEmpty: _data == null,
-        setting: PlaceholderSetting().toChinese(),
+        setting: PlaceholderSetting().copyWithChinese(),
         onRefresh: () => _loadUser(),
         childBuilder: (c) => ListView(
           padding: EdgeInsets.zero,
@@ -138,11 +126,11 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      stops: [0, 0.5, 1],
+                      stops: const [0, 0.5, 1],
                       colors: [
-                        Colors.blue[100],
-                        Colors.orange[100],
-                        Colors.purple[100],
+                        Colors.blue[100]!,
+                        Colors.orange[100]!,
+                        Colors.purple[100]!,
                       ],
                     ),
                   ),
@@ -153,7 +141,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           NetworkImageView(
-                            url: _data.avatar,
+                            url: _data!.avatar,
                             height: 75,
                             width: 75,
                             fit: BoxFit.cover,
@@ -161,7 +149,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                           Padding(
                             padding: EdgeInsets.only(top: 8, left: 15, right: 15),
                             child: Text(
-                              _data.username,
+                              _data!.username,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.subtitle1,
@@ -212,14 +200,14 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
                     child: Text(
-                      '您的会员等级：${_data.className}',
+                      '您的会员等级：${_data!.className}',
                       style: Theme.of(context).textTheme.subtitle1,
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
                     child: Text(
-                      '个人成长值：${_data.score} 点',
+                      '个人成长值：${_data!.score} 点',
                       style: Theme.of(context).textTheme.subtitle1,
                     ),
                   ),
@@ -247,28 +235,28 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
                     child: Text(
-                      '本次登录IP：${_data.loginIp}',
+                      '本次登录IP：${_data!.loginIp}',
                       style: Theme.of(context).textTheme.subtitle1,
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
                     child: Text(
-                      '上次登录IP：${_data.lastLoginIp}',
+                      '上次登录IP：${_data!.lastLoginIp}',
                       style: Theme.of(context).textTheme.subtitle1,
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
                     child: Text(
-                      '注册时间：${_data.registerTime}',
+                      '注册时间：${_data!.registerTime}',
                       style: Theme.of(context).textTheme.subtitle1,
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
                     child: Text(
-                      '上次登录时间：${_data.lastLoginTime}',
+                      '上次登录时间：${_data!.lastLoginTime}',
                       style: Theme.of(context).textTheme.subtitle1,
                     ),
                   ),
@@ -279,7 +267,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             Align(
               child: Container(
                 padding: EdgeInsets.only(top: 10),
-                child: OutlineButton(
+                child: OutlinedButton(
                   child: Text('退出登录'),
                   onPressed: _logout,
                 ),
