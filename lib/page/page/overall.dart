@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 首页全部
+/// 首页-全部
 class OverallSubPage extends StatefulWidget {
   const OverallSubPage({
     Key? key,
@@ -23,8 +23,8 @@ class OverallSubPage extends StatefulWidget {
 }
 
 class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAliveClientMixin {
-  final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
   @override
@@ -43,13 +43,13 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
 
   int _total = 0;
   final _data = <TinyManga>[];
-  var _order = MangaOrder.byNew;
+  var _currOrder = MangaOrder.byNew;
   var _lastOrder = MangaOrder.byNew;
-  var _disableOption = false;
+  var _getting = false;
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.getAllMangas(page: page, order: _order).onError((e, s) {
+    var result = await client.getAllMangas(page: page, order: _currOrder).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -74,25 +74,28 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
           nothingIndicator: 0,
         ),
         setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          refreshFirst: true,
-          clearWhenError: false,
-          clearWhenRefresh: false,
-          updateOnlyIfNotEmpty: false,
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          onStartGettingData: () => mountedSetState(() => _disableOption = true),
-          onStopGettingData: () => mountedSetState(() => _disableOption = false),
+          interactiveScrollbar: true,
+          scrollbarCrossAxisMargin: 2,
+          refreshFirst: true,
+          clearWhenRefresh: false,
+          clearWhenError: false,
+          updateOnlyIfNotEmpty: false,
+          onStartGettingData: () => mountedSetState(() => _getting = true),
+          onStopGettingData: () => mountedSetState(() => _getting = false),
           onAppend: (l, _) {
             if (l.length > 0) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
             }
-            _lastOrder = _order;
-            if (mounted) setState(() {});
+            _lastOrder = _currOrder;
           },
           onError: (e) {
-            Fluttertoast.showToast(msg: e.toString());
-            _order = _lastOrder; // TODO ???
+            if (_data.isNotEmpty) {
+              Fluttertoast.showToast(msg: e.toString());
+            }
+            _currOrder = _lastOrder;
             if (mounted) setState(() {});
           },
         ),
@@ -114,20 +117,20 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
                     ),
                   ),
                   OptionPopupView<MangaOrder>(
-                    title: _order.toTitle(),
+                    title: _currOrder.toTitle(),
                     top: 4,
-                    value: _order,
+                    value: _currOrder,
                     items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                    optionBuilder: (c, v) => v.toTitle(),
+                    enable: !_getting,
                     onSelect: (o) {
-                      if (_order != o) {
-                        _lastOrder = _order;
-                        _order = o;
+                      if (_currOrder != o) {
+                        _lastOrder = _currOrder;
+                        _currOrder = o;
                         if (mounted) setState(() {});
                         _pdvKey.currentState?.refresh();
                       }
                     },
-                    optionBuilder: (c, v) => v.toTitle(),
-                    enable: !_disableOption,
                   ),
                 ],
               ),

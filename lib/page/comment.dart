@@ -8,8 +8,7 @@ class CommentPage extends StatefulWidget {
   const CommentPage({
     Key? key,
     required this.comment,
-  })  : assert(comment != null),
-        super(key: key);
+  })  : super(key: key);
 
   final Comment comment;
 
@@ -19,8 +18,6 @@ class CommentPage extends StatefulWidget {
 
 class _CommentPageState extends State<CommentPage> {
   Widget _buildLine({required RepliedComment comment, required int idx}) {
-    assert(comment != null);
-    assert(idx != null);
     return Stack(
       children: [
         Container(
@@ -182,7 +179,7 @@ class _CommentPageState extends State<CommentPage> {
               idx: widget.comment.replyTimeline.length + 1,
             ),
             Container(height: 12),
-            if (widget.comment.replyTimeline.length > 0)
+            if (widget.comment.replyTimeline.isNotEmpty)
               for (var i = 0; i < widget.comment.replyTimeline.length - 1; i++) ...[
                 _buildLine(
                   comment: widget.comment.replyTimeline[i],
@@ -195,7 +192,7 @@ class _CommentPageState extends State<CommentPage> {
                   child: Divider(height: 1, thickness: 1),
                 ),
               ],
-            if (widget.comment.replyTimeline.length > 0)
+            if (widget.comment.replyTimeline.isNotEmpty)
               _buildLine(
                 comment: widget.comment.replyTimeline.last,
                 idx: widget.comment.replyTimeline.length,

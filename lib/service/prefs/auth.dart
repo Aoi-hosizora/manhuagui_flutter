@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 
 class AuthPrefs {

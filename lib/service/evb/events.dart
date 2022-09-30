@@ -6,8 +6,8 @@ class ToShelfRequestedEvent {
   ToShelfRequestedEvent();
 }
 
-class ToUpdateRequestedEvent {
-  ToUpdateRequestedEvent();
+class ToRecentRequestedEvent {
+  ToRecentRequestedEvent();
 }
 
 class ToRankingRequestedEvent {

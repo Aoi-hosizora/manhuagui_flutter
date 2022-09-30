@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/login.dart';
+import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
 class LoginFirstView extends StatefulWidget {
-  const LoginFirstView({Key? key}) : super(key: key);
+  const LoginFirstView({
+    Key? key,
+    this.showSettingButton = false,
+  }) : super(key: key);
+
+  final bool showSettingButton;
 
   @override
   _LoginFirstViewState createState() => _LoginFirstViewState();
@@ -41,6 +47,17 @@ class _LoginFirstViewState extends State<LoginFirstView> {
               ),
             ),
           ),
+          if (widget.showSettingButton) ...[
+            SizedBox(height: 10),
+            OutlinedButton(
+              child: Text('设置'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (c) => SettingPage(),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

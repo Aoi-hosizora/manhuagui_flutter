@@ -11,17 +11,19 @@ class MangaCarouselView extends StatefulWidget {
   const MangaCarouselView({
     Key? key,
     required this.mangas,
-  })  : assert(mangas.length > 0),
-        super(key: key);
+    required this.height,
+    required this.imageWidth,
+  }) : super(key: key);
 
   final List<TinyBlockManga> mangas;
+  final double height;
+  final double imageWidth;
 
   @override
   _MangaCarouselViewState createState() => _MangaCarouselViewState();
 }
 
 class _MangaCarouselViewState extends State<MangaCarouselView> {
-  final _carouselController = CarouselController();
   var _currentIndex = 0;
 
   @override
@@ -29,9 +31,8 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
     return Stack(
       children: [
         CarouselSlider.builder(
-          carouselController: _carouselController,
           options: CarouselOptions(
-            height: 220,
+            height: widget.height,
             autoPlay: true,
             autoPlayInterval: Duration(seconds: 4),
             autoPlayCurve: Curves.fastOutSlowIn,
@@ -40,7 +41,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
               if (mounted) setState(() {});
             },
             enableInfiniteScroll: true,
-            viewportFraction: 1, // 0.8,
+            viewportFraction: 1,
           ),
           itemCount: widget.mangas.length,
           itemBuilder: (c, i, _) => Container(
@@ -49,8 +50,8 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
               children: [
                 ClipRect(
                   child: Container(
-                    width: MediaQuery.of(context).size.width, // * 0.8,
-                    height: 220,
+                    width: MediaQuery.of(context).size.width,
+                    height: widget.height,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: CachedNetworkImageProvider(
@@ -73,9 +74,9 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                 Positioned.fill(
                   child: Center(
                     child: NetworkImageView(
-                      url: widget.mangas[i].cover, // 3x4
-                      height: 220,
-                      width: 165,
+                      url: widget.mangas[i].cover, // 3:4
+                      height: widget.height,
+                      width: widget.imageWidth,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -84,21 +85,15 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () {
-                        if (_currentIndex != i) {
-                          _carouselController.animateToPage(i);
-                        } else {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (c) => MangaPage(
-                                id: widget.mangas[i].mid,
-                                title: widget.mangas[i].title,
-                                url: widget.mangas[i].url,
-                              ),
-                            ),
-                          );
-                        }
-                      },
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => MangaPage(
+                            id: widget.mangas[i].mid,
+                            title: widget.mangas[i].title,
+                            url: widget.mangas[i].url,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),

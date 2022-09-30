@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-/// 订阅浏览历史
+/// 订阅-历史
 class HistorySubPage extends StatefulWidget {
   const HistorySubPage({
     Key? key,
@@ -20,8 +20,8 @@ class HistorySubPage extends StatefulWidget {
 }
 
 class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAliveClientMixin {
-  final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   VoidCallback? _cancelHandler;
 
@@ -101,15 +101,25 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           nothingIndicator: 0,
         ),
         setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          refreshFirst: true,
-          clearWhenError: false,
-          clearWhenRefresh: false,
-          updateOnlyIfNotEmpty: false,
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          onAppend: (l, _) {},
-          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+          interactiveScrollbar: true,
+          scrollbarCrossAxisMargin: 2,
+          refreshFirst: true,
+          clearWhenRefresh: false,
+          clearWhenError: false,
+          updateOnlyIfNotEmpty: false,
+          onAppend: (l, _) {
+            if (l.length > 0) {
+              Fluttertoast.showToast(msg: '新添了 ${l.length} 条记录');
+            }
+          },
+          onError: (e) {
+            if (_data.isNotEmpty) {
+              Fluttertoast.showToast(msg: e.toString());
+            }
+          },
         ),
         separator: Divider(height: 1),
         itemBuilder: (c, _, item) => MangaHistoryLineView(
@@ -128,7 +138,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                     height: 26,
                     padding: EdgeInsets.only(left: 5),
                     child: Center(
-                      child: Text(AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地的浏览历史'),
+                      child: Text(AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史'),
                     ),
                   ),
                   Container(

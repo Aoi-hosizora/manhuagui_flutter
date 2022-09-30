@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/history.dart';
 import 'package:manhuagui_flutter/page/page/shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
@@ -25,7 +25,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   var _selectedIndex = 0;
   late final _tabs = [
     Tuple2('书架', ShelfSubPage(action: _actions[0])),
-    Tuple2('浏览历史', HistorySubPage(action: _actions[1])),
+    Tuple2('历史', HistorySubPage(action: _actions[1])),
   ];
 
   @override
@@ -35,11 +35,11 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
     EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(0);
     });
-    // widget.action?.addAction('to_shelf', () => _controller.animateTo(0));
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

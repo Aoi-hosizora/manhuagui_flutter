@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 首页排行
+/// 首页-排行
 class RankingSubPage extends StatefulWidget {
   const RankingSubPage({
     Key? key,
@@ -23,8 +23,8 @@ class RankingSubPage extends StatefulWidget {
 }
 
 class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin {
-  final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
   @override
@@ -45,12 +45,6 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   var _genreLoading = true;
   final _genres = <Category>[];
   var _genreError = '';
-  final _data = <MangaRank>[];
-  var _duration = allRankDurations[0];
-  var _lastDuration = allRankDurations[0];
-  var _selectedType = allRankTypes[0];
-  var _lastType = allRankTypes[0];
-  var _disableOption = false;
 
   Future<void> _loadGenres() async {
     _genreLoading = true;
@@ -73,16 +67,23 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     }
   }
 
+  final _data = <MangaRank>[];
+  var _currType = allRankTypes[0];
+  var _lastType = allRankTypes[0];
+  var _currDuration = allRankDurations[0];
+  var _lastDuration = allRankDurations[0];
+  var _getting = false;
+
   Future<List<MangaRank>> _getData() async {
     final client = RestClient(DioManager.instance.dio);
-    var f = _duration.name == 'day'
+    var f = _currDuration.name == 'day'
         ? client.getDayRanking
-        : _duration.name == 'week'
+        : _currDuration.name == 'week'
             ? client.getWeekRanking
-            : _duration.name == 'month'
+            : _currDuration.name == 'month'
                 ? client.getMonthRanking
                 : client.getTotalRanking;
-    var result = await f(type: _selectedType.name).onError((e, s) {
+    var result = await f(type: _currType.name).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     return result.data.data;
@@ -101,35 +102,39 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
       body: PlaceholderText.from(
         isLoading: _genreLoading,
         errorText: _genreError,
-        isEmpty: _genres.isNotEmpty != true,
+        isEmpty: _genres.isEmpty,
         setting: PlaceholderSetting().copyWithChinese(),
         onRefresh: () => _loadGenres(),
+        onChanged: (_, __) => _fabController.hide(),
         childBuilder: (c) => RefreshableListView<MangaRank>(
           key: _pdvKey,
           data: _data,
           getData: () => _getData(),
           scrollController: _controller,
           setting: UpdatableDataViewSetting(
-            padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
-            refreshFirst: true,
-            clearWhenError: false,
-            clearWhenRefresh: false,
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-            onStartGettingData: () => mountedSetState(() => _disableOption = true),
-            onStopGettingData: () => mountedSetState(() => _disableOption = false),
+            interactiveScrollbar: true,
+            scrollbarCrossAxisMargin: 2,
+            refreshFirst: true,
+            clearWhenRefresh: false,
+            clearWhenError: false,
+            onStartGettingData: () => mountedSetState(() => _getting = true),
+            onStopGettingData: () => mountedSetState(() => _getting = false),
             onAppend: (l, _) {
               if (l.length > 0) {
                 Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
               }
-              _lastDuration = _duration;
-              _lastType = _selectedType;
-              if (mounted) setState(() {});
+              _lastDuration = _currDuration;
+              _lastType = _currType;
             },
             onError: (e) {
-              Fluttertoast.showToast(msg: e.toString());
-              _duration = _lastDuration;
-              _selectedType = _lastType;
+              if (_data.isNotEmpty) {
+                Fluttertoast.showToast(msg: e.toString());
+              }
+              _currDuration = _lastDuration;
+              _currType = _lastType;
               if (mounted) setState(() {});
             },
           ),
@@ -144,38 +149,38 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     OptionPopupView<TinyCategory>(
-                      title: _selectedType.isAll() ? '分类' : _selectedType.title,
+                      title: _currType.isAll() ? '分类' : _currType.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedType,
+                      highlightable: true,
+                      value: _currType,
                       items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (t) {
-                        if (_selectedType != t) {
-                          _lastType = _selectedType;
-                          _selectedType = t;
+                        if (_currType != t) {
+                          _lastType = _currType;
+                          _currType = t;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                     OptionPopupView<TinyCategory>(
-                      title: _duration.title,
+                      title: _currDuration.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _duration,
+                      highlightable: true,
+                      value: _currDuration,
                       items: allRankDurations,
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (d) {
-                        if (_duration != d) {
-                          _lastDuration = _duration;
-                          _duration = d;
+                        if (_currDuration != d) {
+                          _lastDuration = _currDuration;
+                          _currDuration = d;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                   ],
                 ),

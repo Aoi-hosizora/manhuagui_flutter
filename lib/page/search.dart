@@ -29,9 +29,9 @@ class _SearchPageState extends State<SearchPage> {
   var _histories = <String>[];
   final _data = <SmallManga>[];
   var _total = 0;
-  var _order = MangaOrder.byPopular;
+  var _currOrder = MangaOrder.byPopular;
   var _lastOrder = MangaOrder.byPopular;
-  var _disableOption = false;
+  var _getting = false;
 
   String? get _q => __q?.trim().isNotEmpty == true ? __q?.trim() : null;
 
@@ -57,7 +57,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<PagedList<SmallManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).onError((e, s) {
+    var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _currOrder).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -174,23 +174,26 @@ class _SearchPageState extends State<SearchPage> {
                   ).copyWithChinese(
                     nothingText: _q == null ? '请在搜索框中输入关键字...' : '无内容',
                   ),
-                  refreshFirst: false,
-                  clearWhenError: false,
-                  clearWhenRefresh: true,
-                  updateOnlyIfNotEmpty: false,
                   onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-                  onStartGettingData: () => mountedSetState(() => _disableOption = true),
-                  onStopGettingData: () => mountedSetState(() => _disableOption = false),
+                  interactiveScrollbar: true,
+                  scrollbarCrossAxisMargin: 2,
+                  refreshFirst: false,
+                  clearWhenRefresh: true,
+                  clearWhenError: false,
+                  updateOnlyIfNotEmpty: false,
+                  onStartGettingData: () => mountedSetState(() => _getting = true),
+                  onStopGettingData: () => mountedSetState(() => _getting = false),
                   onAppend: (l, _) {
                     if (l.length > 0) {
                       Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
                     }
-                    _lastOrder = _order;
-                    if (mounted) setState(() {});
+                    _lastOrder = _currOrder;
                   },
                   onError: (e) {
-                    Fluttertoast.showToast(msg: e.toString());
-                    _order = _lastOrder;
+                    if (_data.isNotEmpty) {
+                      Fluttertoast.showToast(msg: e.toString());
+                    }
+                    _currOrder = _lastOrder;
                     if (mounted) setState(() {});
                   },
                 ),
@@ -212,20 +215,20 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                           ),
                           OptionPopupView<MangaOrder>(
-                            title: _order.toTitle(),
+                            title: _currOrder.toTitle(),
                             top: 4,
-                            value: _order,
+                            value: _currOrder,
                             items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
                             onSelect: (o) {
-                              if (_order != o) {
-                                _lastOrder = _order;
-                                _order = o;
+                              if (_currOrder != o) {
+                                _lastOrder = _currOrder;
+                                _currOrder = o;
                                 if (mounted) setState(() {});
                                 _pdvKey.currentState?.refresh();
                               }
                             },
                             optionBuilder: (c, v) => v.toTitle(),
-                            enable: !_disableOption,
+                            enable: !_getting,
                           ),
                         ],
                       ),
@@ -243,7 +246,9 @@ class _SearchPageState extends State<SearchPage> {
                 child: AppBar(automaticallyImplyLeading: false),
               ),
             ),
-            Scrollbar(
+            ScrollbarWithMore(
+              interactive: true,
+              crossAxisMargin: 2,
               child: FloatingSearchBar(
                 controller: _searchController,
                 height: 35,

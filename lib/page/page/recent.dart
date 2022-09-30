@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 首页更新
+/// 首页-更新
 class RecentSubPage extends StatefulWidget {
   const RecentSubPage({
     Key? key,
@@ -64,19 +64,25 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
           nothingIndicator: 0,
         ),
         setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+          interactiveScrollbar: true,
+          scrollbarCrossAxisMargin: 2,
           refreshFirst: true,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           onAppend: (l, _) {
             if (l.length > 0) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
             }
           },
-          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+          onError: (e) {
+            if (_data.isNotEmpty) {
+              Fluttertoast.showToast(msg: e.toString());
+            }
+          },
         ),
         separator: Divider(height: 1),
         itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),

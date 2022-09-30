@@ -58,19 +58,25 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
           nothingIndicator: 0,
         ),
         setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          refreshFirst: true,
-          clearWhenError: false,
-          clearWhenRefresh: false,
-          updateOnlyIfNotEmpty: false,
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+          interactiveScrollbar: true,
+          scrollbarCrossAxisMargin: 2,
+          refreshFirst: true,
+          clearWhenRefresh: false,
+          clearWhenError: false,
+          updateOnlyIfNotEmpty: false,
           onAppend: (l, _) {
             if (l.length > 0) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 条评论');
             }
           },
-          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+          onError: (e) {
+            if (_data.isNotEmpty) {
+              Fluttertoast.showToast(msg: e.toString());
+            }
+          },
         ),
         separator: Container(
           margin: EdgeInsets.only(left: 2.0 * 12 + 32),

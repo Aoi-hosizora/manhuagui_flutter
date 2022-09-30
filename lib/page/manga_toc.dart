@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -47,16 +48,6 @@ class _MangaTocPageState extends State<MangaTocPage> {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).catchError((_) {});
       if (mounted) setState(() {});
     });
-    // widget.action?.addAction('history_toc', () async {
-    //   _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).catchError((_) {});
-    //   if (mounted) setState(() {});
-    // });
-  }
-
-  @override
-  void dispose() {
-    widget.action?.removeAction('history_toc');
-    super.dispose();
   }
 
   @override
@@ -77,7 +68,9 @@ class _MangaTocPageState extends State<MangaTocPage> {
       ),
       body: Container(
         color: Colors.white,
-        child: Scrollbar(
+        child: ScrollbarWithMore(
+          interactive: true,
+          crossAxisMargin: 2,
           child: ListView(
             children: [
               ChapterGroupView(

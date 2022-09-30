@@ -8,8 +8,7 @@ class NetworkImageView extends StatelessWidget {
     required this.width,
     required this.height,
     this.fit = BoxFit.cover,
-  })  : assert(url != null && url != ''),
-        super(key: key);
+  }) : super(key: key);
 
   final String url;
   final double width;
@@ -19,20 +18,20 @@ class NetworkImageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: this.width,
-      height: this.height,
+      width: width,
+      height: height,
       child: CachedNetworkImage(
-        imageUrl: this.url,
-        width: this.width,
-        height: this.height,
-        fit: this.fit,
+        imageUrl: url,
+        width: width,
+        height: height,
+        fit: fit,
         placeholder: (context, url) => Container(
           child: Icon(
             Icons.more_horiz,
             color: Colors.grey,
           ),
-          width: this.width,
-          height: this.height,
+          width: width,
+          height: height,
           color: Colors.orange[50],
         ),
         errorWidget: (context, url, error) => Container(
@@ -40,8 +39,8 @@ class NetworkImageView extends StatelessWidget {
             Icons.broken_image,
             color: Colors.grey,
           ),
-          width: this.width,
-          height: this.height,
+          width: width,
+          height: height,
           color: Colors.orange[50],
         ),
         fadeOutDuration: Duration(milliseconds: 1000),

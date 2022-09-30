@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/service/natives/clipboard.dart';
 
@@ -24,7 +24,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     _details = [
       Tuple2('mid', widget.data.mid.toString()),
       Tuple2('标题', widget.data.title),
-      Tuple2('标题别名', widget.data.aliasTitle ?? '暂无'), // TODO nullable
+      Tuple2('标题别名', widget.data.aliasTitle ?? '暂无'), // TODO nullable ???
       Tuple2('别名', widget.data.alias),
       Tuple2('封面链接', widget.data.cover),
       Tuple2('网页链接', widget.data.url),
@@ -55,7 +55,9 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
       appBar: AppBar(
         title: Text('漫画详情'),
       ),
-      body: Scrollbar(
+      body: ScrollbarWithMore(
+        interactive: true,
+        crossAxisMargin: 2,
         child: ListView(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           children: [

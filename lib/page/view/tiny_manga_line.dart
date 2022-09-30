@@ -10,8 +10,7 @@ class TinyMangaLineView extends StatefulWidget {
   const TinyMangaLineView({
     Key? key,
     required this.manga,
-  })  : assert(manga != null),
-        super(key: key);
+  }) : super(key: key);
 
   final TinyManga manga;
 

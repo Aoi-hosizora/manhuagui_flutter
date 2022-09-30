@@ -10,8 +10,7 @@ class ShelfMangaLineView extends StatefulWidget {
   const ShelfMangaLineView({
     Key? key,
     required this.manga,
-  })  : assert(manga != null),
-        super(key: key);
+  }) : super(key: key);
 
   final ShelfManga manga;
 

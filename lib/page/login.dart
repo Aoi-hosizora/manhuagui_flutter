@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';

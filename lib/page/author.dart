@@ -12,7 +12,7 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 
-/// 漫画家
+/// 作者
 /// Page for [Author].
 class AuthorPage extends StatefulWidget {
   const AuthorPage({
@@ -31,8 +31,8 @@ class AuthorPage extends StatefulWidget {
 }
 
 class _AuthorPageState extends State<AuthorPage> {
-  final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
   @override
@@ -53,9 +53,9 @@ class _AuthorPageState extends State<AuthorPage> {
   var _error = '';
   final _mangas = <SmallManga>[];
   var _total = 0;
-  var _order = MangaOrder.byPopular;
-  var _lastOrder = MangaOrder.byPopular;
-  var _disableOption = false;
+  var _currOrder = MangaOrder.byPopular;
+  late var _lastOrder = _currOrder;
+  var _getting = false;
 
   Future<void> _loadData() async {
     _loading = true;
@@ -80,7 +80,7 @@ class _AuthorPageState extends State<AuthorPage> {
 
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _order).onError((e, s) {
+    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _currOrder).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -244,20 +244,20 @@ class _AuthorPageState extends State<AuthorPage> {
                                 // ****************************************************************
                                 if (_total > 0)
                                   OptionPopupView<MangaOrder>(
-                                    title: _order.toTitle(),
+                                    title: _currOrder.toTitle(),
                                     top: 4,
-                                    value: _order,
+                                    value: _currOrder,
                                     items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
                                     onSelect: (o) {
-                                      if (_order != o) {
-                                        _lastOrder = _order;
-                                        _order = o;
+                                      if (_currOrder != o) {
+                                        _lastOrder = _currOrder;
+                                        _currOrder = o;
                                         if (mounted) setState(() {});
                                         _pdvKey.currentState?.refresh();
                                       }
                                     },
                                     optionBuilder: (c, v) => v.toTitle(),
-                                    enable: !_disableOption,
+                                    enable: !_getting,
                                   ),
                               ],
                             ),
@@ -288,23 +288,26 @@ class _AuthorPageState extends State<AuthorPage> {
               setting: UpdatableDataViewSetting(
                 padding: EdgeInsets.zero,
                 placeholderSetting: PlaceholderSetting().copyWithChinese(),
-                refreshFirst: true,
-                clearWhenError: false,
-                clearWhenRefresh: false,
-                updateOnlyIfNotEmpty: false,
                 onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-                onStartGettingData: () => mountedSetState(() => _disableOption = true),
-                onStopGettingData: () => mountedSetState(() => _disableOption = false),
+                interactiveScrollbar: true,
+                scrollbarCrossAxisMargin: 2,
+                refreshFirst: true,
+                clearWhenRefresh: false,
+                clearWhenError: false,
+                updateOnlyIfNotEmpty: false,
+                onStartGettingData: () => mountedSetState(() => _getting = true),
+                onStopGettingData: () => mountedSetState(() => _getting = false),
                 onAppend: (l, _) {
                   if (l.length > 0) {
                     Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
                   }
-                  _lastOrder = _order;
-                  if (mounted) setState(() {});
+                  _lastOrder = _currOrder;
                 },
                 onError: (e) {
-                  Fluttertoast.showToast(msg: e.toString());
-                  _order = _lastOrder;
+                  if (_mangas.isNotEmpty) {
+                    Fluttertoast.showToast(msg: e.toString());
+                  }
+                  _currOrder = _lastOrder;
                   if (mounted) setState(() {});
                 },
               ),

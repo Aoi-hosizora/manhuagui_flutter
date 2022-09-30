@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 分类漫画家
+/// 分类-作者
 class AuthorSubPage extends StatefulWidget {
   const AuthorSubPage({
     Key? key,
@@ -24,8 +24,8 @@ class AuthorSubPage extends StatefulWidget {
 }
 
 class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveClientMixin {
-  final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
   @override
@@ -46,17 +46,6 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   var _genreLoading = true;
   final _genres = <Category>[];
   var _genreError = '';
-  final _data = <SmallAuthor>[];
-  var _total = 0;
-  var _order = AuthorOrder.byPopular;
-  var _lastOrder = AuthorOrder.byPopular;
-  var _selectedGenre = allGenres[0];
-  var _selectedAge = allAges[0];
-  var _selectedZone = allZones[0];
-  var _lastGenre = allGenres[0];
-  var _lastAge = allAges[0];
-  var _lastZone = allZones[0];
-  var _disableOption = false;
 
   Future<void> _loadGenres() async {
     _genreLoading = true;
@@ -79,14 +68,26 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     }
   }
 
+  final _data = <SmallAuthor>[];
+  var _total = 0;
+  var _currOrder = AuthorOrder.byPopular;
+  var _lastOrder = AuthorOrder.byPopular;
+  var _currGenre = allGenres[0];
+  var _lastGenre = allGenres[0];
+  var _currAge = allAges[0];
+  var _lastAge = allAges[0];
+  var _currZone = allZones[0];
+  var _lastZone = allZones[0];
+  var _getting = false;
+
   Future<PagedList<SmallAuthor>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
     var f = client.getAllAuthors(
-      genre: _selectedGenre.name,
-      zone: _selectedZone.name,
-      age: _selectedAge.name,
+      genre: _currGenre.name,
+      zone: _currZone.name,
+      age: _currAge.name,
       page: page,
-      order: _order,
+      order: _currOrder,
     );
     var result = await f.onError((e, s) {
       return Future.error(wrapError(e, s).text);
@@ -123,31 +124,34 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             nothingIndicator: 0,
           ),
           setting: UpdatableDataViewSetting(
-            padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
-            refreshFirst: true,
-            clearWhenError: false,
-            clearWhenRefresh: false,
-            updateOnlyIfNotEmpty: false,
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-            onStartGettingData: () => mountedSetState(() => _disableOption = true),
-            onStopGettingData: () => mountedSetState(() => _disableOption = false),
+            interactiveScrollbar: true,
+            scrollbarCrossAxisMargin: 2,
+            refreshFirst: true,
+            clearWhenRefresh: false,
+            clearWhenError: false,
+            updateOnlyIfNotEmpty: false,
+            onStartGettingData: () => mountedSetState(() => _getting = true),
+            onStopGettingData: () => mountedSetState(() => _getting = false),
             onAppend: (l, _) {
               if (l.length > 0) {
-                Fluttertoast.showToast(msg: '新添了 ${l.length} 位漫画家');
+                Fluttertoast.showToast(msg: '新添了 ${l.length} 位作者');
               }
-              _lastOrder = _order;
-              _lastGenre = _selectedGenre;
-              _lastAge = _selectedAge;
-              _lastZone = _selectedZone;
-              if (mounted) setState(() {});
+              _lastOrder = _currOrder;
+              _lastGenre = _currGenre;
+              _lastAge = _currAge;
+              _lastZone = _currZone;
             },
             onError: (e) {
-              Fluttertoast.showToast(msg: e.toString());
-              _order = _lastOrder;
-              _selectedGenre = _lastGenre;
-              _selectedAge = _lastAge;
-              _selectedZone = _lastZone;
+              if (_data.isNotEmpty) {
+                Fluttertoast.showToast(msg: e.toString());
+              }
+              _currOrder = _lastOrder;
+              _currGenre = _lastGenre;
+              _currAge = _lastAge;
+              _currZone = _lastZone;
               if (mounted) setState(() {});
             },
           ),
@@ -157,7 +161,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             outerTopWidgets: [
               Container(
                 color: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -165,55 +169,55 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
                     // 检索条件
                     // ****************************************************************
                     OptionPopupView<TinyCategory>(
-                      title: _selectedGenre.isAll() ? '剧情' : _selectedGenre.title,
+                      title: _currGenre.isAll() ? '剧情' : _currGenre.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedGenre,
+                      highlightable: true,
+                      value: _currGenre,
                       items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (g) {
-                        if (_selectedGenre != g) {
-                          _lastGenre = _selectedGenre;
-                          _selectedGenre = g;
+                        if (_currGenre != g) {
+                          _lastGenre = _currGenre;
+                          _currGenre = g;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                     OptionPopupView<TinyCategory>(
-                      title: _selectedAge.isAll() ? '受众' : _selectedAge.title,
+                      title: _currAge.isAll() ? '受众' : _currAge.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedAge,
+                      highlightable: true,
+                      value: _currAge,
                       items: allAges,
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (a) {
-                        if (_selectedAge != a) {
-                          _lastAge = _selectedAge;
-                          _selectedAge = a;
+                        if (_currAge != a) {
+                          _lastAge = _currAge;
+                          _currAge = a;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                     OptionPopupView<TinyCategory>(
-                      title: _selectedZone.isAll() ? '地区' : _selectedZone.title,
+                      title: _currZone.isAll() ? '地区' : _currZone.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedZone,
+                      highlightable: true,
+                      value: _currZone,
                       items: allZones,
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (z) {
-                        if (_selectedZone != z) {
-                          _lastZone = _selectedZone;
-                          _selectedZone = z;
+                        if (_currZone != z) {
+                          _lastZone = _currZone;
+                          _currZone = z;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                   ],
                 ),
@@ -238,21 +242,21 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
                     // 检索排序
                     // ****************************************************************
                     OptionPopupView<AuthorOrder>(
-                      title: _order.toTitle(),
+                      title: _currOrder.toTitle(),
                       top: 4,
-                      doHighlight: true,
-                      value: _order,
+                      highlightable: true,
+                      value: _currOrder,
                       items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byUpdate],
+                      optionBuilder: (c, v) => v.toTitle(),
+                      enable: !_getting,
                       onSelect: (o) {
-                        if (_order != o) {
-                          _lastOrder = _order;
-                          _order = o;
+                        if (_currOrder != o) {
+                          _lastOrder = _currOrder;
+                          _currOrder = o;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.toTitle(),
-                      enable: !_disableOption,
                     ),
                   ],
                 ),

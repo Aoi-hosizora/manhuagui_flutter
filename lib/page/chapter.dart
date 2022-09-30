@@ -154,8 +154,6 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         ),
       ).then((_) {
         EventBusManager.instance.fire(HistoryUpdatedEvent());
-        // widget.action?.invoke('history');
-        // widget.action?.invoke('history_toc');
       }).catchError((_) {});
 
       if (mounted && (_timer == null || !_timer!.isActive)) {

@@ -10,7 +10,7 @@ class OptionPopupView<T> extends StatefulWidget {
     this.width = 88.0,
     required this.value,
     required this.items,
-    this.doHighlight = false,
+    this.highlightable = false,
     required this.optionBuilder,
     required this.onSelect,
     this.enable = true,
@@ -20,7 +20,7 @@ class OptionPopupView<T> extends StatefulWidget {
   final double top;
   final double height;
   final double width;
-  final bool doHighlight;
+  final bool highlightable;
   final T value;
   final List<T> items;
   final String Function(BuildContext, T) optionBuilder;
@@ -82,7 +82,7 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
               style: TextStyle(
                 color: !widget.enable
                     ? Colors.grey
-                    : _selected && widget.doHighlight
+                    : _selected && widget.highlightable
                         ? Colors.orange
                         : Colors.black,
               ),

@@ -1,7 +1,5 @@
-import 'dart:html';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/page/overall.dart';
 import 'package:manhuagui_flutter/page/page/ranking.dart';
@@ -40,16 +38,12 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    // _actions[0].addAction('to_shelf', () => widget.action?.invoke('to_shelf'));
-    EventBusManager.instance.listen<ToUpdateRequestedEvent>((_) {
+    EventBusManager.instance.listen<ToRecentRequestedEvent>((_) {
       _controller.animateTo(1);
     });
-    // _actions[0].addAction('to_update', () => _controller.animateTo(1));
     EventBusManager.instance.listen<ToRankingRequestedEvent>((_) {
       _controller.animateTo(3);
     });
-    // _actions[0].addAction('to_ranking', () => _controller.animateTo(3));
-    // _actions[0].addAction('to_genre', () => widget.action?.invoke('to_genre'));
   }
 
   @override

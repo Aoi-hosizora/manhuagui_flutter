@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/author.dart';
 import 'package:manhuagui_flutter/page/page/genre.dart';
 import 'package:manhuagui_flutter/page/search.dart';
@@ -25,7 +25,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   var _selectedIndex = 0;
   late final _tabs = [
     Tuple2('类别', GenreSubPage(action: _actions[0])),
-    Tuple2('漫画家', AuthorSubPage(action: _actions[1])),
+    Tuple2('作者', AuthorSubPage(action: _actions[1])),
   ];
 
   @override
@@ -35,13 +35,11 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
     EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
       _controller.animateTo(0);
     });
-    // widget.action?.addAction('to_genre', () => _controller.animateTo(0));
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
-    widget.action?.removeAction('to_genre');
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

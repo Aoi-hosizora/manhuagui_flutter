@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-/// 订阅书架
+/// 订阅-书架
 class ShelfSubPage extends StatefulWidget {
   const ShelfSubPage({
     Key? key,
@@ -23,6 +23,7 @@ class ShelfSubPage extends StatefulWidget {
 }
 
 class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin {
+  final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   VoidCallback? _cancelHandler;
@@ -30,15 +31,16 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   void initState() {
     super.initState();
-
-    AuthManager.instance.check();
-    _cancelHandler = AuthManager.instance.listen(() {
-      if (AuthManager.instance.logined) {
-        if (mounted) setState(() {});
-      }
-    });
-
     widget.action?.addAction(() => _controller.scrollToTop());
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() {
+        if (AuthManager.instance.logined) {
+          if (mounted) setState(() {});
+          _pdvKey.currentState?.refresh();
+        }
+      });
+      AuthManager.instance.check();
+    });
   }
 
   @override
@@ -78,6 +80,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
 
     return Scaffold(
       body: PaginationListView<ShelfManga>(
+        key: _pdvKey,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
@@ -86,19 +89,25 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           nothingIndicator: 0,
         ),
         setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          refreshFirst: true,
-          clearWhenError: false,
-          clearWhenRefresh: false,
-          updateOnlyIfNotEmpty: false,
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+          interactiveScrollbar: true,
+          scrollbarCrossAxisMargin: 2,
+          refreshFirst: true,
+          clearWhenRefresh: false,
+          clearWhenError: false,
+          updateOnlyIfNotEmpty: false,
           onAppend: (l, _) {
             if (l.length > 0) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
             }
           },
-          onError: (e) => Fluttertoast.showToast(msg: e.toString()),
+          onError: (e) {
+            if (_data.isNotEmpty) {
+              Fluttertoast.showToast(msg: e.toString());
+            }
+          },
         ),
         separator: Divider(height: 1),
         itemBuilder: (c, _, item) => ShelfMangaLineView(manga: item),

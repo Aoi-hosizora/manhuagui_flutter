@@ -29,19 +29,19 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    _cancelHandler = AuthManager.instance.listen(() {
-      if (AuthManager.instance.logined) {
-        if (mounted) setState(() {});
-        _loadUser();
-      }
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() {
+        if (AuthManager.instance.logined) {
+          if (mounted) setState(() {});
+          _loadUser();
+        }
+      });
     });
-    widget.action?.addAction(() {});
   }
 
   @override
   void dispose() {
     _cancelHandler?.call();
-    widget.action?.removeAction();
     super.dispose();
   }
 
@@ -66,7 +66,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       var we = wrapError(e, s);
       _error = we.text;
       if (we.response?.statusCode == 401) {
-        _logout();
+        _logout(sure: true);
       }
     } finally {
       _loading = false;
@@ -74,8 +74,15 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     }
   }
 
-  void _logout() {
-    showDialog(
+  Future<void> _logout({bool sure = false}) async {
+    if (sure) {
+      await AuthPrefs.setToken('');
+      AuthManager.instance.logout();
+      AuthManager.instance.notify();
+      return;
+    }
+
+    return showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('退出登录'),
@@ -84,10 +91,10 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
           TextButton(
             child: Text('确定'),
             onPressed: () async {
-              Navigator.of(c).pop();
               await AuthPrefs.setToken('');
               AuthManager.instance.logout();
               AuthManager.instance.notify();
+              Navigator.of(c).pop();
             },
           ),
           TextButton(
@@ -107,7 +114,9 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     super.build(context);
     if (!AuthManager.instance.logined) {
       _data = null;
-      return LoginFirstView();
+      return LoginFirstView(
+        showSettingButton: true,
+      );
     }
 
     return RefreshIndicator(
@@ -273,7 +282,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 padding: EdgeInsets.only(top: 10),
                 child: OutlinedButton(
                   child: Text('退出登录'),
-                  onPressed: _logout,
+                  onPressed: () => _logout(sure: false),
                 ),
               ),
             ),

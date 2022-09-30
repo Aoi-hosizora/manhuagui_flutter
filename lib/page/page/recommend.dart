@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
-import 'package:manhuagui_flutter/page/view/manga_column.dart';
+import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 
-/// 首页推荐
-/// Page for [HomepageMangaGroupList] / [MangaGroupList].
+/// 首页-推荐
 class RecommendSubPage extends StatefulWidget {
   const RecommendSubPage({
     Key? key,
@@ -45,7 +44,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
   var _loading = true;
   HomepageMangaGroupList? _data;
-  String? _error;
+  var _error = '';
 
   Future<void> _loadData() async {
     _loading = true;
@@ -98,13 +97,19 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           errorText: _error,
           isEmpty: _data == null,
           setting: PlaceholderSetting().copyWithChinese(),
-          onRefresh: () => _refreshIndicatorKey.currentState?.show(),
+          onRefresh: () => _loadData(),
           onChanged: (_, __) => _fabController.hide(),
-          childBuilder: (c) => Scrollbar(
+          childBuilder: (c) => ScrollbarWithMore(
+            interactive: true,
+            crossAxisMargin: 2,
             child: ListView(
               controller: _controller,
               children: [
-                if (_data!.carouselMangas.isNotEmpty) MangaCarouselView(mangas: _data!.carouselMangas),
+                MangaCarouselView(
+                  mangas: _data!.carouselMangas,
+                  height: 220,
+                  imageWidth: 165,
+                ),
                 SizedBox(height: 12),
                 Container(
                   color: Colors.white,
@@ -115,25 +120,84 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildAction('我的书架', Icons.favorite, () => EventBusManager.instance.fire(ToShelfRequestedEvent())) /* widget.action?.invoke('to_shelf') */,
-                          _buildAction('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToUpdateRequestedEvent())) /* widget.action?.invoke('to_update') */,
-                          _buildAction('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())) /* widget.action?.invoke('to_ranking') */,
-                          _buildAction('漫画分类', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())), /* widget.action?.invoke('to_genre') */
+                          _buildAction('我的书架', Icons.favorite, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+                          _buildAction('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
+                          _buildAction('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
+                          _buildAction('漫画分类', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())),
                         ],
                       ),
                     ),
                   ),
                 ),
-                SizedBox(height: 12),
-                MangaColumnView(group: _data!.serial.topGroup, type: MangaGroupType.serial, showTopMargin: false), // 热门连载
-                MangaColumnView(group: _data!.finish.topGroup, type: MangaGroupType.finish), // 经典完结
-                MangaColumnView(group: _data!.latest.topGroup, type: MangaGroupType.latest), // 最新上架
-                for (var group in _data!.serial.groups) MangaColumnView(group: group, type: MangaGroupType.serial, small: true),
-                for (var group in _data!.finish.groups) MangaColumnView(group: group, type: MangaGroupType.finish, small: true),
-                for (var group in _data!.latest.groups) MangaColumnView(group: group, type: MangaGroupType.latest, small: true),
-                for (var group in _data!.serial.otherGroups) MangaColumnView(group: group, type: MangaGroupType.serial, small: true, singleLine: true),
-                for (var group in _data!.finish.otherGroups) MangaColumnView(group: group, type: MangaGroupType.finish, small: true, singleLine: true),
-                for (var group in _data!.latest.otherGroups) MangaColumnView(group: group, type: MangaGroupType.latest, small: true, singleLine: true),
+                MangaGroupView(
+                  group: _data!.serial.topGroup,
+                  type: MangaGroupType.serial,
+                  style: MangaGroupViewStyle.normalTruncate,
+                  margin: EdgeInsets.only(top: 12),
+                  padding: EdgeInsets.only(bottom: 6),
+                ), // 热门连载
+                MangaGroupView(
+                  group: _data!.finish.topGroup,
+                  type: MangaGroupType.finish,
+                  style: MangaGroupViewStyle.normalTruncate,
+                  margin: EdgeInsets.only(top: 12),
+                  padding: EdgeInsets.only(bottom: 6),
+                ), // 经典完结
+                MangaGroupView(
+                  group: _data!.latest.topGroup,
+                  type: MangaGroupType.latest,
+                  style: MangaGroupViewStyle.normalTruncate,
+                  margin: EdgeInsets.only(top: 12),
+                  padding: EdgeInsets.only(bottom: 6),
+                ), // 最新上架
+                for (var group in _data!.serial.groups)
+                  MangaGroupView(
+                    group: group,
+                    type: MangaGroupType.serial,
+                    style: MangaGroupViewStyle.smallTruncate,
+                    margin: EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.only(bottom: 6),
+                  ), // 热门连载...
+                for (var group in _data!.finish.groups)
+                  MangaGroupView(
+                    group: group,
+                    type: MangaGroupType.finish,
+                    style: MangaGroupViewStyle.smallTruncate,
+                    margin: EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.only(bottom: 6),
+                  ), // 经典完结...
+                for (var group in _data!.latest.groups)
+                  MangaGroupView(
+                    group: group,
+                    type: MangaGroupType.latest,
+                    style: MangaGroupViewStyle.smallTruncate,
+                    margin: EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.only(bottom: 6),
+                  ), // 最新上架...
+                for (var group in _data!.serial.otherGroups)
+                  MangaGroupView(
+                    group: group,
+                    type: MangaGroupType.serial,
+                    style: MangaGroupViewStyle.smallOneLine,
+                    margin: EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.only(bottom: 6),
+                  ), // 热门连载...
+                for (var group in _data!.finish.otherGroups)
+                  MangaGroupView(
+                    group: group,
+                    type: MangaGroupType.finish,
+                    style: MangaGroupViewStyle.smallOneLine,
+                    margin: EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.only(bottom: 6),
+                  ), // 经典完结...
+                for (var group in _data!.latest.otherGroups)
+                  MangaGroupView(
+                    group: group,
+                    type: MangaGroupType.latest,
+                    style: MangaGroupViewStyle.smallOneLine,
+                    margin: EdgeInsets.only(top: 12),
+                    padding: EdgeInsets.only(bottom: 6),
+                  ), // 热门连载...
               ],
             ),
           ),

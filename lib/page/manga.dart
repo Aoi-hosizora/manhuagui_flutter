@@ -244,7 +244,9 @@ class _MangaPageState extends State<MangaPage> {
           isEmpty: _data == null,
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
-          childBuilder: (c) => Scrollbar(
+          childBuilder: (c) => ScrollbarWithMore(
+            interactive: true,
+            crossAxisMargin: 2,
             child: ListView(
               controller: _controller,
               physics: AlwaysScrollableScrollPhysics(),

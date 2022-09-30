@@ -12,9 +12,7 @@ class MangaHistoryLineView extends StatefulWidget {
     Key? key,
     required this.history,
     required this.onLongPressed,
-  })  : assert(history != null),
-        assert(onLongPressed != null),
-        super(key: key);
+  }) : super(key: key);
 
   final MangaHistory history;
   final Function() onLongPressed;
@@ -88,7 +86,7 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
                       child: IconText(
                         icon: Icon(Icons.subject, size: 20, color: Colors.orange),
                         text: Text(
-                          '还没开始阅读',
+                          '未开始阅读',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         space: 8,
@@ -118,8 +116,8 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
                 MaterialPageRoute(
                   builder: (c) => MangaPage(
                     id: widget.history.mangaId,
-                    title: widget.history.mangaTitle ?? '？',
-                    url: widget.history.mangaUrl ?? '',
+                    title: widget.history.mangaTitle,
+                    url: widget.history.mangaUrl,
                   ),
                 ),
               ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
@@ -56,17 +56,9 @@ class _IndexPageState extends State<IndexPage> {
     EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
     });
-    // _actions[0].addAction('to_shelf', () {
-    //   _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
-    //   _actions[2].invoke('to_shelf');
-    // });
     EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
       _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
     });
-    // _actions[0].addAction('to_genre', () {
-    //   _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
-    //   _actions[1].invoke('to_genre');
-    // });
   }
 
   @override
@@ -85,13 +77,13 @@ class _IndexPageState extends State<IndexPage> {
     return true;
   }
 
-  Future<bool> _onWillPop() async {
+  Future<bool> _onWillPop() {
     DateTime now = DateTime.now();
     if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime!) > Duration(seconds: 2)) {
       _lastBackPressedTime = now;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('再按一次推出'),
+          content: Text('再按一次退出'),
           duration: Duration(seconds: 2),
           action: SnackBarAction(
             label: '退出',
@@ -99,9 +91,9 @@ class _IndexPageState extends State<IndexPage> {
           ),
         ),
       );
-      return false;
+      return Future.value(false);
     }
-    return true;
+    return Future.value(true);
   }
 
   @override
@@ -131,6 +123,7 @@ class _IndexPageState extends State<IndexPage> {
               )
               .toList(),
           onTap: (index) async {
+            // TODO use _controller.page rather than _selectedIndex ???
             if (_selectedIndex == index) {
               _actions[_selectedIndex].invoke();
             } else {

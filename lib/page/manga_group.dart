@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/manga_column.dart';
+import 'package:manhuagui_flutter/page/view/manga_group.dart';
 
 /// 漫画分组
 /// Page for [MangaGroup].
@@ -11,9 +10,7 @@ class MangaGroupPage extends StatefulWidget {
     Key? key,
     required this.group,
     required this.type,
-  })  : assert(group != null),
-        assert(type != null),
-        super(key: key);
+  }) : super(key: key);
 
   final MangaGroup group;
   final MangaGroupType type;
@@ -39,12 +36,11 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
       ),
       body: Padding(
         padding: EdgeInsets.only(bottom: 4, top: 2),
-        child: MangaColumnView(
+        child: MangaGroupView(
           group: widget.group,
           type: widget.type,
           controller: _controller,
-          complete: true,
-          showTopMargin: false,
+          style: MangaGroupViewStyle.normalFull,
         ),
       ),
       floatingActionButton: ScrollAnimatedFab(

@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 分类类别
+/// 分类-类别
 class GenreSubPage extends StatefulWidget {
   const GenreSubPage({
     Key? key,
@@ -26,15 +26,15 @@ class GenreSubPage extends StatefulWidget {
 }
 
 class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClientMixin {
-  final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
   @override
   void initState() {
     super.initState();
     if (widget.defaultGenre != null) {
-      _selectedGenre = widget.defaultGenre!;
+      _currGenre = widget.defaultGenre!;
       _lastGenre = widget.defaultGenre!;
     }
 
@@ -53,19 +53,6 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   var _genreLoading = true;
   final _genres = <Category>[];
   var _genreError = '';
-  final _data = <TinyManga>[];
-  var _total = 0;
-  var _order = MangaOrder.byPopular;
-  var _lastOrder = MangaOrder.byPopular;
-  var _selectedGenre = allGenres[0];
-  var _selectedAge = allAges[0];
-  var _selectedZone = allZones[0];
-  var _selectedStatus = allStatuses[0];
-  var _lastGenre = allGenres[0];
-  var _lastAge = allAges[0];
-  var _lastZone = allZones[0];
-  var _lastStatus = allStatuses[0];
-  var _disableOption = false;
 
   Future<void> _loadGenres() async {
     _genreLoading = true;
@@ -88,15 +75,29 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     }
   }
 
+  final _data = <TinyManga>[];
+  var _total = 0;
+  var _currOrder = MangaOrder.byPopular;
+  var _lastOrder = MangaOrder.byPopular;
+  var _currGenre = allGenres[0];
+  var _lastGenre = allGenres[0];
+  var _currAge = allAges[0];
+  var _lastAge = allAges[0];
+  var _currZone = allZones[0];
+  var _lastZone = allZones[0];
+  var _currStatus = allStatuses[0];
+  var _lastStatus = allStatuses[0];
+  var _getting = false;
+
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
     var f = client.getGenreMangas(
-      genre: _selectedGenre.name,
-      zone: _selectedZone.name,
-      age: _selectedAge.name,
-      status: _selectedStatus.name,
+      genre: _currGenre.name,
+      zone: _currZone.name,
+      age: _currAge.name,
+      status: _currStatus.name,
       page: page,
-      order: _order,
+      order: _currOrder,
     );
     var result = await f.onError((e, s) {
       return Future.error(wrapError(e, s).text);
@@ -133,33 +134,36 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
             nothingIndicator: 0,
           ),
           setting: UpdatableDataViewSetting(
-            padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(vertical: 0),
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
-            refreshFirst: true,
-            clearWhenError: false,
-            clearWhenRefresh: false,
-            updateOnlyIfNotEmpty: false,
-            onStartGettingData: () => mountedSetState(() => _disableOption = true),
-            onStopGettingData: () => mountedSetState(() => _disableOption = false),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+            interactiveScrollbar: true,
+            scrollbarCrossAxisMargin: 2,
+            refreshFirst: true,
+            clearWhenRefresh: false,
+            clearWhenError: false,
+            updateOnlyIfNotEmpty: false,
+            onStartGettingData: () => mountedSetState(() => _getting = true),
+            onStopGettingData: () => mountedSetState(() => _getting = false),
             onAppend: (l, _) {
               if (l.length > 0) {
                 Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
               }
-              _lastOrder = _order;
-              _lastGenre = _selectedGenre;
-              _lastAge = _selectedAge;
-              _lastZone = _selectedZone;
-              _lastStatus = _selectedStatus;
-              if (mounted) setState(() {});
+              _lastOrder = _currOrder;
+              _lastGenre = _currGenre;
+              _lastAge = _currAge;
+              _lastZone = _currZone;
+              _lastStatus = _currStatus;
             },
             onError: (e) {
-              Fluttertoast.showToast(msg: e.toString());
-              _order = _lastOrder;
-              _selectedGenre = _lastGenre;
-              _selectedAge = _lastAge;
-              _selectedZone = _lastZone;
-              _selectedStatus = _lastStatus;
+              if (_data.isNotEmpty) {
+                Fluttertoast.showToast(msg: e.toString());
+              }
+              _currOrder = _lastOrder;
+              _currGenre = _lastGenre;
+              _currAge = _lastAge;
+              _currZone = _lastZone;
+              _currStatus = _lastStatus;
               if (mounted) setState(() {});
             },
           ),
@@ -169,7 +173,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
             outerTopWidgets: [
               Container(
                 color: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -177,72 +181,72 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                     // 检索条件
                     // ****************************************************************
                     OptionPopupView<TinyCategory>(
-                      title: _selectedGenre.isAll() ? '剧情' : _selectedGenre.title,
+                      title: _currGenre.isAll() ? '剧情' : _currGenre.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedGenre,
+                      highlightable: true,
+                      value: _currGenre,
                       items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (g) {
-                        if (_selectedGenre != g) {
-                          _lastGenre = _selectedGenre;
-                          _selectedGenre = g;
+                        if (_currGenre != g) {
+                          _lastGenre = _currGenre;
+                          _currGenre = g;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                     OptionPopupView<TinyCategory>(
-                      title: _selectedAge.isAll() ? '受众' : _selectedAge.title,
+                      title: _currAge.isAll() ? '受众' : _currAge.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedAge,
+                      highlightable: true,
+                      value: _currAge,
                       items: allAges,
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (a) {
-                        if (_selectedAge != a) {
-                          _lastAge = _selectedAge;
-                          _selectedAge = a;
+                        if (_currAge != a) {
+                          _lastAge = _currAge;
+                          _currAge = a;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                     OptionPopupView<TinyCategory>(
-                      title: _selectedZone.isAll() ? '地区' : _selectedZone.title,
+                      title: _currZone.isAll() ? '地区' : _currZone.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedZone,
+                      highlightable: true,
+                      value: _currZone,
                       items: allZones,
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (z) {
-                        if (_selectedZone != z) {
-                          _lastZone = _selectedZone;
-                          _selectedZone = z;
+                        if (_currZone != z) {
+                          _lastZone = _currZone;
+                          _currZone = z;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                     OptionPopupView<TinyCategory>(
-                      title: _selectedStatus.isAll() ? '进度' : _selectedStatus.title,
+                      title: _currStatus.isAll() ? '进度' : _currStatus.title,
                       top: 4,
-                      doHighlight: true,
-                      value: _selectedStatus,
+                      highlightable: true,
+                      value: _currStatus,
                       items: allStatuses,
+                      optionBuilder: (c, v) => v.title,
+                      enable: !_getting,
                       onSelect: (s) {
-                        if (_selectedStatus != s) {
-                          _lastStatus = _selectedStatus;
-                          _selectedStatus = s;
+                        if (_currStatus != s) {
+                          _lastStatus = _currStatus;
+                          _currStatus = s;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_disableOption,
                     ),
                   ],
                 ),
@@ -267,21 +271,21 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                     // 检索排序
                     // ****************************************************************
                     OptionPopupView<MangaOrder>(
-                      title: _order.toTitle(),
+                      title: _currOrder.toTitle(),
                       top: 4,
-                      doHighlight: true,
-                      value: _order,
+                      highlightable: true,
+                      value: _currOrder,
                       items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                      optionBuilder: (c, v) => v.toTitle(),
+                      enable: !_getting,
                       onSelect: (o) {
-                        if (_order != o) {
-                          _lastOrder = _order;
-                          _order = o;
+                        if (_currOrder != o) {
+                          _lastOrder = _currOrder;
+                          _currOrder = o;
                           if (mounted) setState(() {});
                           _pdvKey.currentState?.refresh();
                         }
                       },
-                      optionBuilder: (c, v) => v.toTitle(),
-                      enable: !_disableOption,
                     ),
                   ],
                 ),

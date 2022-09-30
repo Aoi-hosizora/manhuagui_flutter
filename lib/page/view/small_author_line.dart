@@ -9,8 +9,7 @@ class SmallAuthorLineView extends StatefulWidget {
   const SmallAuthorLineView({
     Key? key,
     required this.author,
-  })  : assert(author != null),
-        super(key: key);
+  })  : super(key: key);
 
   final SmallAuthor author;
 

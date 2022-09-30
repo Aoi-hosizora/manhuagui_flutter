@@ -8,8 +8,7 @@ class GenrePage extends StatefulWidget {
   const GenrePage({
     Key? key,
     required this.genre,
-  })  : assert(genre != null),
-        super(key: key);
+  })  : super(key: key);
 
   final TinyCategory genre;
 
