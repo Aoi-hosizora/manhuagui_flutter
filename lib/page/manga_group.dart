@@ -35,8 +35,6 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text('漫画分组详细'),
       ),
       body: Padding(

@@ -22,8 +22,6 @@ class _GenrePageState extends State<GenrePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text('漫画分类'),
       ),
       body: GenreSubPage(

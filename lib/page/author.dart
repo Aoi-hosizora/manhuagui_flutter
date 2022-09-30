@@ -57,28 +57,29 @@ class _AuthorPageState extends State<AuthorPage> {
   var _lastOrder = MangaOrder.byPopular;
   var _disableOption = false;
 
-  Future<void> _loadData() {
+  Future<void> _loadData() async {
     _loading = true;
     if (mounted) setState(() {});
 
-    var client = RestClient(DioManager.instance.dio);
-    return client.getAuthor(aid: widget.id).then((r) async {
-      _error = '';
+    final client = RestClient(DioManager.instance.dio);
+    try {
+      var result = await client.getAuthor(aid: widget.id);
       _data = null;
+      _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _data = r.data;
-    }).onError((e, s) {
+      _data = result.data;
+    } catch (e, s) {
       _data = null;
       _error = wrapError(e, s).text;
-    }).whenComplete(() {
+    } finally {
       _loading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _order).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
@@ -91,8 +92,6 @@ class _AuthorPageState extends State<AuthorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text(_data?.name ?? widget.name),
         actions: [
           IconButton(

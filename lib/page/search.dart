@@ -56,7 +56,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<PagedList<SmallManga>> _getData({required int page}) async {
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });

@@ -63,19 +63,17 @@ class _LoginPageState extends State<LoginPage> {
     var username = _usernameController.text.trim();
     var password = _passwordController.text.trim();
 
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     String token;
     try {
-      var result = await client.login(username: username, password: password).onError((e, s) {
-        return Future.error(wrapError(e, s).text);
-      }).whenComplete(() {
-        _logining = false;
-        if (mounted) setState(() {});
-      });
+      var result = await client.login(username: username, password: password);
       token = result.data.token;
-    } catch (e) {
-      Fluttertoast.showToast(msg: e.toString());
+    } catch (e, s) {
+      Fluttertoast.showToast(msg: wrapError(e, s).text);
       return;
+    } finally {
+      _logining = false;
+      if (mounted) setState(() {});
     }
 
     // state
@@ -105,8 +103,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('账号登录'),
-        centerTitle: true,
-        toolbarHeight: 48,
         actions: [
           IconButton(
             icon: Text('注册'),

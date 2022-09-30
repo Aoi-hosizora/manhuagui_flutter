@@ -48,7 +48,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   var _disableOption = false;
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     var result = await client.getAllMangas(page: page, order: _order).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });

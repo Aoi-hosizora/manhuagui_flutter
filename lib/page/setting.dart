@@ -46,8 +46,6 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text('设置'),
       ),
       body: ListView(

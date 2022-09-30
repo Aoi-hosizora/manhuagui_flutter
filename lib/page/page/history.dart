@@ -23,7 +23,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _fabController = AnimatedFabController();
-  CancelHandler? _cancelHandler;
+  VoidCallback? _cancelHandler;
 
   @override
   void initState() {

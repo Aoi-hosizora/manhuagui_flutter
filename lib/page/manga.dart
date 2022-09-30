@@ -4,7 +4,6 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/model/result.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/chapter.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
@@ -18,6 +17,8 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
 /// 漫画页
@@ -39,7 +40,7 @@ class MangaPage extends StatefulWidget {
 }
 
 class _MangaPageState extends State<MangaPage> {
-  final _indicatorKey = GlobalKey<RefreshIndicatorState>();
+  final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _action = ActionController();
@@ -47,11 +48,15 @@ class _MangaPageState extends State<MangaPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _indicatorKey.currentState?.show());
-    _action.addAction('history', () async {
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+    EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
       if (mounted) setState(() {});
     });
+    // _action.addAction('history', () async {
+    //   _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
+    //   if (mounted) setState(() {});
+    // });
   }
 
   @override
@@ -70,8 +75,8 @@ class _MangaPageState extends State<MangaPage> {
   MangaHistory? _history;
   var _showBriefIntroduction = true;
   var _commentLoading = true;
-  var _commentError = '';
   var _comments = <Comment>[];
+  var _commentError = '';
   var _commentTotal = 0;
 
   Future<void> _loadData() async {
@@ -81,7 +86,7 @@ class _MangaPageState extends State<MangaPage> {
     _comments = [];
     if (mounted) setState(() {});
 
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     if (AuthManager.instance.logined) {
       client.checkShelfMangas(token: AuthManager.instance.token, mid: widget.id).then((r) {
         _subscribed = r.data.isIn;
@@ -90,24 +95,25 @@ class _MangaPageState extends State<MangaPage> {
     }
 
     client.getMangaComments(mid: widget.id, page: 1).then((r) async {
-      _commentError = '';
       _comments = r.data.data;
+      _commentError = '';
       _commentTotal = r.data.total;
     }).catchError((e, s) {
-      _commentTotal = 0;
       _comments.clear();
       _commentError = wrapError(e, s).text;
+      _commentTotal = 0;
     }).whenComplete(() {
       _commentLoading = false;
       if (mounted) setState(() {});
     });
 
-    return client.getManga(mid: widget.id).then((r) async {
-      _error = '';
+    try {
+      var result = await client.getManga(mid: widget.id);
       _data = null;
+      _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _data = r.data;
+      _data = result.data;
 
       // <<<
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {}); // 可能已经开始阅读，也可能还没访问
@@ -135,44 +141,37 @@ class _MangaPageState extends State<MangaPage> {
           url: _data!.url,
         );
       }
-    }).catchError((e, s) {
+    } catch (e, s) {
       _data = null;
       _error = wrapError(e, s).text;
-    }).whenComplete(() {
+    } finally {
       _loading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
-  void _subscribe() {
+  void _subscribe() async {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
       return;
     }
 
-    var client = RestClient(DioManager.instance.dio);
-    var toSubscribe = _subscribed != true; // 去订阅
-
-    Future<Result> result;
-    if (toSubscribe) {
-      result = client.addToShelf(token: AuthManager.instance.token, mid: widget.id);
-    } else {
-      result = client.removeFromShelf(token: AuthManager.instance.token, mid: widget.id);
-    }
-
+    final client = RestClient(DioManager.instance.dio);
     _subscribing = true;
     if (mounted) setState(() {});
-    result.then((r) {
+    var toSubscribe = _subscribed != true; // 去订阅
+    try {
+      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.id);
       _subscribed = toSubscribe;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
       if (mounted) setState(() {});
-    }).catchError((e, s) {
+    } catch (e, s) {
       var err = wrapError(e, s).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
-    }).whenComplete(() {
+    } finally {
       _subscribing = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
   void _read() async {
@@ -224,8 +223,6 @@ class _MangaPageState extends State<MangaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text(_data?.title ?? widget.title),
         actions: [
           IconButton(
@@ -239,7 +236,7 @@ class _MangaPageState extends State<MangaPage> {
         ],
       ),
       body: RefreshIndicator(
-        key: _indicatorKey,
+        key: _refreshIndicatorKey,
         onRefresh: _loadData,
         child: PlaceholderText.from(
           isLoading: _loading,

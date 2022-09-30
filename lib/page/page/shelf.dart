@@ -25,7 +25,7 @@ class ShelfSubPage extends StatefulWidget {
 class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  CancelHandler? _cancelHandler;
+  VoidCallback? _cancelHandler;
 
   @override
   void initState() {
@@ -54,7 +54,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   var _total = 0;
 
   Future<PagedList<ShelfManga>> _getData({required int page}) async {
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     var result = await client.getShelfMangas(token: AuthManager.instance.token, page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });

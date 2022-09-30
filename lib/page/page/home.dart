@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/config.dart';
@@ -6,6 +8,8 @@ import 'package:manhuagui_flutter/page/page/ranking.dart';
 import 'package:manhuagui_flutter/page/page/recent.dart';
 import 'package:manhuagui_flutter/page/page/recommend.dart';
 import 'package:manhuagui_flutter/page/search.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
 /// 首页
@@ -36,10 +40,16 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    _actions[0].addAction('to_shelf', () => widget.action?.invoke('to_shelf'));
-    _actions[0].addAction('to_update', () => _controller.animateTo(1));
-    _actions[0].addAction('to_ranking', () => _controller.animateTo(3));
-    _actions[0].addAction('to_genre', () => widget.action?.invoke('to_genre'));
+    // _actions[0].addAction('to_shelf', () => widget.action?.invoke('to_shelf'));
+    EventBusManager.instance.listen<ToUpdateRequestedEvent>((_) {
+      _controller.animateTo(1);
+    });
+    // _actions[0].addAction('to_update', () => _controller.animateTo(1));
+    EventBusManager.instance.listen<ToRankingRequestedEvent>((_) {
+      _controller.animateTo(3);
+    });
+    // _actions[0].addAction('to_ranking', () => _controller.animateTo(3));
+    // _actions[0].addAction('to_genre', () => widget.action?.invoke('to_genre'));
   }
 
   @override
@@ -54,8 +64,6 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: TabBar(
           controller: _controller,
           isScrollable: true,
@@ -80,7 +88,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),
-            tooltip: '浏览器打开',
+            tooltip: '用浏览器打开',
             onPressed: () => launchInBrowser(
               context: context,
               url: WEB_HOMEPAGE_URL,
@@ -91,7 +99,6 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                // builder: (c) => SearchPage(),
                 builder: (c) => SearchPage(),
               ),
             ),

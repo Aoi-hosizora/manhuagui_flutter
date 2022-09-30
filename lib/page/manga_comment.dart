@@ -34,7 +34,7 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
   var _total = 0;
 
   Future<PagedList<Comment>> _getData({required int page}) async {
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     var result = await client.getMangaComments(mid: widget.mid, page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
@@ -47,8 +47,6 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text('漫画评论 (共 $_total 条)'),
       ),
       body: PaginationListView<Comment>(

@@ -24,7 +24,7 @@ class MineSubPage extends StatefulWidget {
 }
 
 class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
-  CancelHandler? _cancelHandler;
+  VoidCallback? _cancelHandler;
 
   @override
   void initState() {
@@ -34,7 +34,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         if (mounted) setState(() {});
         _loadUser();
       }
-    }); // TODO cancel
+    });
     widget.action?.addAction(() {});
   }
 
@@ -49,28 +49,29 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   User? _data;
   var _error = '';
 
-  Future<void> _loadUser() {
+  Future<void> _loadUser() async {
     _loading = true;
     if (mounted) setState(() {});
 
-    var client = RestClient(DioManager.instance.dio);
-    return client.getUserInfo(token: AuthManager.instance.token).then((r) async {
-      _error = '';
+    final client = RestClient(DioManager.instance.dio);
+    try {
+      var result = await client.getUserInfo(token: AuthManager.instance.token);
       _data = null;
+      _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _data = r.data;
-    }).onError((e, s) {
+      _data = result.data;
+    } catch (e, s) {
       _data = null;
       var we = wrapError(e, s);
       _error = we.text;
       if (we.response?.statusCode == 401) {
         _logout();
       }
-    }).whenComplete(() {
+    } finally {
       _loading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
   void _logout() {

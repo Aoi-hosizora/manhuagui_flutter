@@ -41,7 +41,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   final _data = <TinyManga>[];
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     var result = await client.getRecentUpdatedMangas(page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });

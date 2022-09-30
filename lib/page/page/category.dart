@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/page/page/author.dart';
 import 'package:manhuagui_flutter/page/page/genre.dart';
 import 'package:manhuagui_flutter/page/search.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 分类
 class CategorySubPage extends StatefulWidget {
@@ -30,7 +32,10 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    widget.action?.addAction('to_genre', () => _controller.animateTo(0));
+    EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
+      _controller.animateTo(0);
+    });
+    // widget.action?.addAction('to_genre', () => _controller.animateTo(0));
   }
 
   @override
@@ -46,8 +51,6 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: TabBar(
           controller: _controller,
           isScrollable: true,

@@ -6,6 +6,8 @@ import 'package:manhuagui_flutter/page/view/manga_column.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 首页推荐
 /// Page for [HomepageMangaGroupList] / [MangaGroupList].
@@ -22,14 +24,14 @@ class RecommendSubPage extends StatefulWidget {
 }
 
 class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepAliveClientMixin {
+  final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  final _indicatorKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _indicatorKey.currentState?.show());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     widget.action?.addAction(() => _controller.scrollToTop());
   }
 
@@ -45,24 +47,25 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   HomepageMangaGroupList? _data;
   String? _error;
 
-  Future<void> _loadData() {
+  Future<void> _loadData() async {
     _loading = true;
     if (mounted) setState(() {});
 
-    var client = RestClient(DioManager.instance.dio);
-    return client.getHomepageMangas().then((r) async {
-      _error = '';
+    final client = RestClient(DioManager.instance.dio);
+    try {
+      var r = await client.getHomepageMangas();
       _data = null;
+      _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
-    }).onError((e, s) {
+    } catch (e, s) {
       _data = null;
       _error = wrapError(e, s).text;
-    }).whenComplete(() {
+    } finally {
       _loading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
   Widget _buildAction(String text, IconData icon, void Function() action) {
@@ -88,14 +91,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     super.build(context);
     return Scaffold(
       body: RefreshIndicator(
-        key: _indicatorKey,
+        key: _refreshIndicatorKey,
         onRefresh: () => _loadData(),
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
           isEmpty: _data == null,
           setting: PlaceholderSetting().copyWithChinese(),
-          onRefresh: () => _loadData(),
+          onRefresh: () => _refreshIndicatorKey.currentState?.show(),
           onChanged: (_, __) => _fabController.hide(),
           childBuilder: (c) => Scrollbar(
             child: ListView(
@@ -112,10 +115,10 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildAction('我的书架', Icons.favorite, () => widget.action?.invoke('to_shelf')),
-                          _buildAction('最近更新', Icons.cached, () => widget.action?.invoke('to_update')),
-                          _buildAction('漫画排行', Icons.trending_up, () => widget.action?.invoke('to_ranking')),
-                          _buildAction('漫画分类', Icons.category, () => widget.action?.invoke('to_genre')),
+                          _buildAction('我的书架', Icons.favorite, () => EventBusManager.instance.fire(ToShelfRequestedEvent())) /* widget.action?.invoke('to_shelf') */,
+                          _buildAction('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToUpdateRequestedEvent())) /* widget.action?.invoke('to_update') */,
+                          _buildAction('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())) /* widget.action?.invoke('to_ranking') */,
+                          _buildAction('漫画分类', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())), /* widget.action?.invoke('to_genre') */
                         ],
                       ),
                     ),

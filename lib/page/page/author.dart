@@ -58,28 +58,29 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   var _lastZone = allZones[0];
   var _disableOption = false;
 
-  Future<void> _loadGenres() {
+  Future<void> _loadGenres() async {
     _genreLoading = true;
     if (mounted) setState(() {});
 
-    var client = RestClient(DioManager.instance.dio);
-    return client.getGenres().then((r) async {
-      _genreError = '';
+    final client = RestClient(DioManager.instance.dio);
+    try {
+      var result = await client.getGenres();
       _genres.clear();
+      _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _genres.addAll(r.data.data);
-    }).catchError((e, s) {
+      _genres.addAll(result.data.data);
+    } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
-    }).whenComplete(() {
+    } finally {
       _genreLoading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
   Future<PagedList<SmallAuthor>> _getData({required int page}) async {
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     var f = client.getAllAuthors(
       genre: _selectedGenre.name,
       zone: _selectedZone.name,

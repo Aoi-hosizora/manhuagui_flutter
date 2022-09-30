@@ -7,6 +7,8 @@ import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -29,7 +31,7 @@ class _IndexPageState extends State<IndexPage> {
     Tuple3('订阅', Icons.notifications, SubscribeSubPage(action: _actions[2])),
     Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
   ];
-  CancelHandler? _cancelHandler;
+  VoidCallback? _cancelHandler;
 
   @override
   void initState() {
@@ -42,21 +44,29 @@ class _IndexPageState extends State<IndexPage> {
       }
     });
 
-    AuthManager.instance.check();
-    _cancelHandler = AuthManager.instance.listen(() {
-      if (AuthManager.instance.logined) {
-        if (mounted) setState(() {});
-      }
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() {
+        if (AuthManager.instance.logined) {
+          if (mounted) setState(() {});
+        }
+      });
+      await AuthManager.instance.check();
     });
 
-    _actions[0].addAction('to_shelf', () {
+    EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
-      _actions[2].invoke('to_shelf');
     });
-    _actions[0].addAction('to_genre', () {
+    // _actions[0].addAction('to_shelf', () {
+    //   _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+    //   _actions[2].invoke('to_shelf');
+    // });
+    EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
       _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
-      _actions[1].invoke('to_genre');
     });
+    // _actions[0].addAction('to_genre', () {
+    //   _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+    //   _actions[1].invoke('to_genre');
+    // });
   }
 
   @override
@@ -124,7 +134,7 @@ class _IndexPageState extends State<IndexPage> {
             if (_selectedIndex == index) {
               _actions[_selectedIndex].invoke();
             } else {
-              _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+              await _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
               if (mounted) setState(() {});
             }
           },

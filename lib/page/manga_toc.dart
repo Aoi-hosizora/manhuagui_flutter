@@ -5,6 +5,8 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
 /// 漫画章节目录
@@ -39,12 +41,16 @@ class _MangaTocPageState extends State<MangaTocPage> {
   @override
   void initState() {
     super.initState();
-    HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) => _history = r).onError((_, __) => null);
+    HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) => _history = r).catchError((_) {});
 
-    widget.action?.addAction('history_toc', () async {
-      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).onError((_, __) => null);
+    EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).catchError((_) {});
       if (mounted) setState(() {});
     });
+    // widget.action?.addAction('history_toc', () async {
+    //   _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).catchError((_) {});
+    //   if (mounted) setState(() {});
+    // });
   }
 
   @override
@@ -57,8 +63,6 @@ class _MangaTocPageState extends State<MangaTocPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text(widget.title),
         actions: [
           IconButton(

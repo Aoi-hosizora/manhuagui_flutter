@@ -7,8 +7,7 @@ class MangaDetailPage extends StatefulWidget {
   const MangaDetailPage({
     Key? key,
     required this.data,
-  })  : assert(data != null),
-        super(key: key);
+  }) : super(key: key);
 
   final Manga data;
 
@@ -25,7 +24,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     _details = [
       Tuple2('mid', widget.data.mid.toString()),
       Tuple2('标题', widget.data.title),
-      Tuple2('标题别名', widget.data.aliasTitle ?? '暂无'),
+      Tuple2('标题别名', widget.data.aliasTitle ?? '暂无'), // TODO nullable
       Tuple2('别名', widget.data.alias),
       Tuple2('封面链接', widget.data.cover),
       Tuple2('网页链接', widget.data.url),
@@ -54,8 +53,6 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text('漫画详情'),
       ),
       body: Scrollbar(
@@ -63,7 +60,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           children: [
             Table(
-              columnWidths: {
+              columnWidths: const {
                 0: FractionColumnWidth(0.3),
               },
               border: TableBorder(
@@ -75,7 +72,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
               ),
               children: [
                 TableRow(
-                  children: [
+                  children: const [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       child: Text('键', style: TextStyle(color: Colors.grey)),

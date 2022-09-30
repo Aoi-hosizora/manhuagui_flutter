@@ -18,6 +18,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.purple,
         appBarTheme: AppBarTheme(
+          centerTitle: true,
+          toolbarHeight: 45,
           systemOverlayStyle: SystemUiOverlayStyle(
             systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
             systemNavigationBarIconBrightness: Brightness.dark,

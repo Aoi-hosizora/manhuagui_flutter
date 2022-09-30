@@ -1,11 +1,11 @@
+import 'dart:async';
+
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:synchronized/synchronized.dart';
-
-typedef CancelHandler = Future<void> Function();
 
 class AuthManager {
   AuthManager._();
@@ -36,11 +36,10 @@ class AuthManager {
     _token = '';
   }
 
-  CancelHandler listen(Function() onData) {
-    var stream = EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+  void Function() listen(Function() onData) {
+    return EventBusManager.instance.listen<AuthChangedEvent>((_) {
       onData.call();
     });
-    return () => stream.cancel();
   }
 
   void notify() {
@@ -61,7 +60,7 @@ class AuthManager {
       }
 
       // check token
-      var client = RestClient(DioManager.instance.dio);
+      final client = RestClient(DioManager.instance.dio);
       try {
         var r = await client.checkUserLogin(token: token);
         AuthManager.instance.login(username: r.data.username, token: token);

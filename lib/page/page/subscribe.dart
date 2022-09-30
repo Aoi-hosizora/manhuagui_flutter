@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/page/page/history.dart';
 import 'package:manhuagui_flutter/page/page/shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 订阅
 class SubscribeSubPage extends StatefulWidget {
@@ -30,7 +32,10 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    widget.action?.addAction('to_shelf', () => _controller.animateTo(0));
+    EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
+      _controller.animateTo(0);
+    });
+    // widget.action?.addAction('to_shelf', () => _controller.animateTo(0));
   }
 
   @override
@@ -44,8 +49,6 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: TabBar(
           controller: _controller,
           isScrollable: true,

@@ -12,5 +12,5 @@ Future<void> copyText(
       Fluttertoast.showToast(msg: '$text 已经复制到剪贴板');
     }
     callback?.call();
-  }).onError((_, __) {});
+  }).catchError((_) {});
 }

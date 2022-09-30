@@ -12,6 +12,8 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/chapter_setting.dart';
 import 'package:photo_view/photo_view.dart';
@@ -101,36 +103,40 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           lastTime: DateTime.now(),
         ),
       ).then((_) {
-        widget.action?.invoke('history');
-        widget.action?.invoke('history_toc');
+        EventBusManager.instance.fire(HistoryUpdatedEvent());
+        // widget.action?.invoke('history');
+        // widget.action?.invoke('history_toc');
       }).catchError((_) {});
     }
     super.dispose();
   }
 
-  Future<void> _loadData() {
+  Future<void> _loadData() async {
     _loading = true;
     if (mounted) setState(() {});
 
-    var client = RestClient(DioManager.instance.dio);
+    final client = RestClient(DioManager.instance.dio);
     if (AuthManager.instance.logined) {
       client.recordManga(token: AuthManager.instance.token, mid: widget.mid, cid: widget.cid).catchError((_) {});
     }
 
-    return client.getMangaChapter(mid: widget.mid, cid: widget.cid).then((r) async {
-      _error = '';
+    try {
+      var result = await client.getMangaChapter(mid: widget.mid, cid: widget.cid);
       _data = null;
+      _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 500));
-      _data = r.data;
+      _data = result.data;
       _imageProviders = [for (var url in _data!.pages) () async => url];
 
       // !!!
       var initialPage = widget.initialPage <= 0 ? _data!.pageCount : widget.initialPage; // 指定初始页
+      var oldController = _controller;
       _controller = PageController(
         initialPage: initialPage - 1,
         viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
       );
+      oldController?.dispose(); // TODO ??? use this
       _currentPage = initialPage;
       _progressValue = initialPage;
 
@@ -147,8 +153,9 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           lastTime: DateTime.now(),
         ),
       ).then((_) {
-        widget.action?.invoke('history');
-        widget.action?.invoke('history_toc');
+        EventBusManager.instance.fire(HistoryUpdatedEvent());
+        // widget.action?.invoke('history');
+        // widget.action?.invoke('history_toc');
       }).catchError((_) {});
 
       if (mounted && (_timer == null || !_timer!.isActive)) {
@@ -160,13 +167,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           }
         });
       }
-    }).catchError((e, s) {
+    } catch (e, s) {
       _data = null;
       _error = wrapError(e, s).text;
-    }).whenComplete(() {
+    } finally {
       _loading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
   void _onPointerDown(Offset pos) {
@@ -494,7 +501,6 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
             ? null
             : AppBar(
                 centerTitle: false,
-                toolbarHeight: 45,
                 title: Text(_data!.title),
                 actions: [
                   IconButton(

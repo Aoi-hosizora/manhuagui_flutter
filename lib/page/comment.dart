@@ -171,8 +171,6 @@ class _CommentPageState extends State<CommentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
         title: Text('评论详情'),
       ),
       body: Container(

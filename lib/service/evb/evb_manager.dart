@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:event_bus/event_bus.dart';
 
 class EventBusManager {
@@ -17,8 +19,9 @@ class EventBusManager {
     return _eventBus!;
   }
 
-  Stream<T> on<T>() {
-    return eventBus.on<T>();
+  void Function() listen<T>(void Function(T event)? onData) {
+    var stream = eventBus.on<T>().listen(onData);
+    return () => stream.cancel();
   }
 
   void fire(dynamic event) {
