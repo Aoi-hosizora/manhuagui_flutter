@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/list.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/prefs/search.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
 /// 搜索
@@ -24,54 +23,49 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   final _searchController = FloatingSearchBarController();
   final _scrollController = ScrollController();
-  final _udvController = UpdatableDataViewController();
+  final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _fabController = AnimatedFabController();
-  String __q;
+  String? __q;
   var _histories = <String>[];
-  var _data = <SmallManga>[];
-  int _total;
+  final _data = <SmallManga>[];
+  var _total = 0;
   var _order = MangaOrder.byPopular;
   var _lastOrder = MangaOrder.byPopular;
   var _disableOption = false;
 
-  String get _q => __q?.trim()?.isNotEmpty == true ? __q.trim() : null;
+  String? get _q => __q?.trim().isNotEmpty == true ? __q?.trim() : null;
 
-  set _q(String s) => __q = s?.trim();
+  set _q(String? s) => __q = s?.trim();
 
-  String get _text => _searchController?.query?.trim()?.isNotEmpty == true ? _searchController.query.trim() : null;
+  String? get _text => _searchController.query.trim().isNotEmpty == true ? _searchController.query.trim() : null;
 
-  set _text(String s) => _searchController?.query = s?.trim() ?? '';
+  set _text(String? s) => _searchController.query = s?.trim() ?? '';
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => Future.delayed(Duration(milliseconds: 200), () => _searchController.open()));
+    WidgetsBinding.instance?.addPostFrameCallback((_) => Future.delayed(Duration(milliseconds: 200), () => _searchController.open()));
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
-    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }
 
   Future<PagedList<SmallManga>> _getData({required int page}) async {
     var client = RestClient(DioManager.instance.dio);
-    ErrorMessage err;
-    var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).catchError((e, s) {
-      err = wrapError(e, s);
+    var result = await client.searchMangas(keyword: _q ?? '?', page: page, order: _order).onError((e, s) {
+      return Future.error(wrapError(e, s).text);
     });
-    if (err != null) {
-      return Future.error(err.text);
-    }
     _total = result.data.total;
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
-  Future<List<String>> _getHistories({String keyword}) async {
+  Future<List<String>> _getHistories({required String? keyword}) async {
     var histories = await getSearchHistories();
     if (keyword == null) {
       return histories;
@@ -96,8 +90,8 @@ class _SearchPageState extends State<SearchPage> {
     if (_q != _text) {
       _q = _text;
       _searchController.close();
-      _udvController.refresh();
-      addSearchHistory(_q);
+      _pdvKey.currentState?.refresh();
+      addSearchHistory(_q!);
     } else {
       _searchController.close();
     }
@@ -164,9 +158,9 @@ class _SearchPageState extends State<SearchPage> {
             Positioned.fill(
               top: MediaQuery.of(context).padding.top + 45,
               child: PaginationListView<SmallManga>(
+                key: _pdvKey,
                 data: _data,
                 getData: ({indicator}) => _getData(page: indicator),
-                controller: _udvController,
                 scrollController: _scrollController,
                 paginationSetting: PaginationSetting(
                   initialIndicator: 1,
@@ -185,6 +179,8 @@ class _SearchPageState extends State<SearchPage> {
                   clearWhenRefresh: true,
                   updateOnlyIfNotEmpty: false,
                   onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+                  onStartGettingData: () => mountedSetState(() => _disableOption = true),
+                  onStopGettingData: () => mountedSetState(() => _disableOption = false),
                   onAppend: (l, _) {
                     if (l.length > 0) {
                       Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
@@ -201,39 +197,41 @@ class _SearchPageState extends State<SearchPage> {
                 separator: Divider(height: 1),
                 itemBuilder: (c, _, item) => TinyMangaLineView(manga: item.toTiny()),
                 extra: UpdatableDataViewExtraWidgets(
-                  innerTopWidget: Container(
-                    color: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          height: 26,
-                          padding: EdgeInsets.only(left: 5),
-                          child: Center(
-                            child: Text('"$_q" 的搜索结果 (共 ${_total == null ? '?' : _total.toString()} 部)'),
+                  innerTopWidgets: [
+                    Container(
+                      color: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            height: 26,
+                            padding: EdgeInsets.only(left: 5),
+                            child: Center(
+                              child: Text('"$_q" 的搜索结果 (共 $_total 部)'),
+                            ),
                           ),
-                        ),
-                        OptionPopupView<MangaOrder>(
-                          title: _order.toTitle(),
-                          top: 4,
-                          value: _order,
-                          items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                          onSelect: (o) {
-                            if (_order != o) {
-                              _lastOrder = _order;
-                              _order = o;
-                              if (mounted) setState(() {});
-                              _udvController.refresh();
-                            }
-                          },
-                          optionBuilder: (c, v) => v.toTitle(),
-                          enable: !_disableOption,
-                        ),
-                      ],
+                          OptionPopupView<MangaOrder>(
+                            title: _order.toTitle(),
+                            top: 4,
+                            value: _order,
+                            items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                            onSelect: (o) {
+                              if (_order != o) {
+                                _lastOrder = _order;
+                                _order = o;
+                                if (mounted) setState(() {});
+                                _pdvKey.currentState?.refresh();
+                              }
+                            },
+                            optionBuilder: (c, v) => v.toTitle(),
+                            enable: !_disableOption,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  innerTopDivider: Divider(height: 1, thickness: 1),
+                    Divider(height: 1, thickness: 1),
+                  ],
                 ),
               ),
             ),
@@ -257,8 +255,10 @@ class _SearchPageState extends State<SearchPage> {
                 insets: EdgeInsets.symmetric(horizontal: 4),
                 padding: EdgeInsets.symmetric(horizontal: 3),
                 scrollPadding: EdgeInsets.only(top: 0, bottom: 32),
-                maxWidth: MediaQuery.of(context).size.width - 8 * 2,
-                openMaxWidth: MediaQuery.of(context).size.width - 8 * 2,
+                width: MediaQuery.of(context).size.width - 8 * 2,
+                openWidth: MediaQuery.of(context).size.width - 8 * 2,
+                // maxWidth: MediaQuery.of(context).size.width - 8 * 2,
+                // openMaxWidth: MediaQuery.of(context).size.width - 8 * 2,
                 elevation: 3.0,
                 borderRadius: _searchController.isClosed
                     ? BorderRadius.circular(3)
@@ -266,7 +266,7 @@ class _SearchPageState extends State<SearchPage> {
                         topLeft: Radius.circular(3),
                         topRight: Radius.circular(3),
                       ),
-                hintStyle: Theme.of(context).textTheme.bodyText2.copyWith(color: Theme.of(context).hintColor),
+                hintStyle: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).hintColor),
                 queryStyle: Theme.of(context).textTheme.bodyText2,
                 clearQueryOnClose: false,
                 closeOnBackdropTap: false,
@@ -325,7 +325,7 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             onTap: () => _search(), // 搜索
                           ),
-                        if (_text != null && (int.tryParse(_text) ?? 0) > 0)
+                        if (_text != null && (int.tryParse(_text!) ?? 0) > 0)
                           InkWell(
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -337,7 +337,7 @@ class _SearchPageState extends State<SearchPage> {
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (c) => MangaPage(
-                                  id: int.tryParse(_text),
+                                  id: int.tryParse(_text!)!,
                                   title: '漫画 mid$_text',
                                   url: '',
                                 ),

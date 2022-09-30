@@ -4,12 +4,14 @@ import 'package:manhuagui_flutter/service/natives/browser.dart';
 
 /// 设置页
 class SettingPage extends StatefulWidget {
+  const SettingPage({Key? key}) : super(key: key);
+
   @override
   _SettingPageState createState() => _SettingPageState();
 }
 
 class _SettingPageState extends State<SettingPage> {
-  Widget _item({required String title, Function action}) {
+  Widget _item({required String title, required void Function() action}) {
     return Container(
       color: Colors.white,
       child: Material(
@@ -22,7 +24,7 @@ class _SettingPageState extends State<SettingPage> {
               style: Theme.of(context).textTheme.subtitle1,
             ),
           ),
-          onTap: action ?? () {},
+          onTap: action,
         ),
       ),
     );

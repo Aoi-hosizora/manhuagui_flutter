@@ -13,17 +13,14 @@ class TinyBlockMangaView extends StatefulWidget {
     required this.height,
     required this.margin,
     this.onMorePressed,
-  })  : assert(width != null),
-        assert(height != null),
-        assert(margin != null),
-        assert(manga != null || onMorePressed != null),
+  })  : assert(manga != null || onMorePressed != null),
         super(key: key);
 
-  final TinyBlockManga manga;
+  final TinyBlockManga? manga;
   final double width;
   final double height;
   final EdgeInsets margin;
-  final void Function() onMorePressed;
+  final void Function()? onMorePressed;
 
   @override
   _TinyBlockMangaViewState createState() => _TinyBlockMangaViewState();
@@ -41,11 +38,11 @@ class _TinyBlockMangaViewState extends State<TinyBlockMangaView> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            stops: [0, 0.5, 1],
+            stops: const [0, 0.5, 1],
             colors: [
-              Colors.blue[100],
-              Colors.orange[200],
-              Colors.purple[100],
+              Colors.blue[100]!,
+              Colors.orange[200]!,
+              Colors.purple[100]!,
             ],
           ),
         ),
@@ -73,7 +70,7 @@ class _TinyBlockMangaViewState extends State<TinyBlockMangaView> {
               child: Stack(
                 children: [
                   NetworkImageView(
-                    url: widget.manga.cover,
+                    url: widget.manga!.cover,
                     width: widget.width,
                     height: widget.height,
                   ),
@@ -84,9 +81,9 @@ class _TinyBlockMangaViewState extends State<TinyBlockMangaView> {
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (c) => MangaPage(
-                              id: widget.manga.mid,
-                              title: widget.manga.title,
-                              url: widget.manga.url,
+                              id: widget.manga!.mid,
+                              title: widget.manga!.title,
+                              url: widget.manga!.url,
                             ),
                           ),
                         ),
@@ -106,15 +103,15 @@ class _TinyBlockMangaViewState extends State<TinyBlockMangaView> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: [0, 1],
-                    colors: [
+                    stops: const [0, 1],
+                    colors: const [
                       Color.fromRGBO(0, 0, 0, 0),
                       Color.fromRGBO(0, 0, 0, 1),
                     ],
                   ),
                 ),
                 child: Text(
-                  (widget.manga.finished ? '共' : '更新至') + widget.manga.newestChapter,
+                  (widget.manga!.finished ? '共' : '更新至') + widget.manga!.newestChapter,
                   style: TextStyle(color: Colors.white),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -128,7 +125,7 @@ class _TinyBlockMangaViewState extends State<TinyBlockMangaView> {
           margin: widget.margin,
           padding: EdgeInsets.symmetric(vertical: 3),
           child: Text(
-            widget.manga.title,
+            widget.manga!.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

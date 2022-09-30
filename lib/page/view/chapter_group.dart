@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/chapter.dart';
@@ -18,16 +17,9 @@ class ChapterGroupView extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
-  })  : assert(groups != null),
-        assert(complete != null),
-        assert(highlightChapter != null),
-        assert(mangaId != null),
-        assert(mangaTitle != null),
-        assert(mangaCover != null),
-        assert(mangaUrl != null),
-        super(key: key);
+  }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
   final List<MangaChapterGroup> groups;
   final bool complete;
   final int highlightChapter;
@@ -43,7 +35,7 @@ class ChapterGroupView extends StatefulWidget {
 class _ChapterGroupViewState extends State<ChapterGroupView> {
   var _invertedOrder = true;
 
-  Widget _buildGridItem(TinyMangaChapter chapter, int index, {double hSpace, double width, double height}) {
+  Widget _buildGridItem(TinyMangaChapter? chapter, int index, {required double hSpace, required double width, required double height}) {
     // ****************************************************************
     // 每个章节
     // ****************************************************************
@@ -75,7 +67,9 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  ),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (c) => chapter == null
@@ -126,8 +120,8 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
     );
   }
 
-  Widget _buildSingleGroup(MangaChapterGroup group, {double hPadding, double vPadding, bool first = false}) {
-    var chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
+  Widget _buildSingleGroup(MangaChapterGroup group, {required double hPadding, required double vPadding, bool first = false}) {
+    List<TinyMangaChapter?> chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
     if (!widget.complete) {
       if (first) {
         if (chapters.length > 12) {
@@ -148,7 +142,7 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
     var gridRows = <Widget>[];
     var rows = (chapters.length.toDouble() / 4).ceil();
     for (var r = 0; r < rows; r++) {
-      var columns = <TinyMangaChapter>[
+      var columns = <TinyMangaChapter?>[
         for (var i = 4 * r; i < 4 * (r + 1) && i < chapters.length; i++) chapters[i],
       ];
       gridRows.add(
@@ -193,7 +187,7 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.groups.length == 0) {
+    if (widget.groups.isEmpty) {
       return SizedBox(height: 0);
     }
 
@@ -201,7 +195,7 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
     var vPadding = 10.0;
     var groups = widget.groups;
     var specificGroups = widget.groups.where((g) => g.title == '单话');
-    if (specificGroups.length != 0) {
+    if (specificGroups.isNotEmpty) {
       var sGroup = specificGroups.first;
       groups = [sGroup];
       for (var group in widget.groups) {

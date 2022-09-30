@@ -5,7 +5,7 @@ class OptionPopupView<T> extends StatefulWidget {
   const OptionPopupView({
     Key? key,
     required this.title,
-    this.top,
+    this.top = 4.0,
     this.height = 26.0,
     this.width = 88.0,
     required this.value,
@@ -14,14 +14,7 @@ class OptionPopupView<T> extends StatefulWidget {
     required this.optionBuilder,
     required this.onSelect,
     this.enable = true,
-  })  : assert(title != null),
-        assert(value != null),
-        assert(doHighlight != null),
-        assert(items != null),
-        assert(onSelect != null),
-        assert(optionBuilder != null),
-        assert(enable != null),
-        super(key: key);
+  }) : super(key: key);
 
   final String title;
   final double top;
@@ -41,7 +34,7 @@ class OptionPopupView<T> extends StatefulWidget {
 class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
   var _selected = false;
 
-  void _onTap() {
+  void _onTap() async {
     final itemBox = context.findRenderObject() as RenderBox;
     final itemRect = itemBox.localToGlobal(Offset.zero) & itemBox.size;
     _selected = true;
@@ -49,24 +42,21 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
     // ****************************************************************
     // 弹出选项路由
     // ****************************************************************
-    var result = Navigator.of(context).push(
+    var result = await Navigator.of(context).push(
       _OptionPopupRoute<T>(
         buttonRect: itemRect,
         transitionDuration: Duration(milliseconds: 300),
-        barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
         top: widget.top,
         value: widget.value,
         items: widget.items,
         optionBuilder: widget.optionBuilder,
       ),
     );
-    result.then((T r) {
-      _selected = false;
-      if (mounted) setState(() {});
-      if (r != null) {
-        widget.onSelect(r);
-      }
-    });
+    _selected = false;
+    if (mounted) setState(() {});
+    if (result != null) {
+      widget.onSelect(result);
+    }
   }
 
   @override
@@ -108,16 +98,11 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
   _OptionPopupRoute({
     required this.buttonRect,
     required this.transitionDuration,
-    this.barrierLabel,
-    this.top,
+    required this.top,
     required this.value,
     required this.items,
     required this.optionBuilder,
-  })  : assert(buttonRect != null),
-        assert(transitionDuration != null),
-        assert(value != null),
-        assert(items != null),
-        assert(optionBuilder != null);
+  });
 
   final Rect buttonRect;
   final double top;
@@ -129,13 +114,13 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
   final Duration transitionDuration;
 
   @override
-  final String barrierLabel;
+  String get barrierLabel => MaterialLocalizations.of(navigator!.context).modalBarrierDismissLabel;
 
   @override
   bool get barrierDismissible => true;
 
   @override
-  Color get barrierColor => null;
+  Color get barrierColor => Colors.black54;
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
@@ -153,7 +138,7 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
           removeRight: true,
           child: FadeTransition(
             opacity: CurvedAnimation(
-              parent: this.animation,
+              parent: animation,
               curve: Interval(0, 0.25),
               reverseCurve: Interval(0.75, 1),
             ),
@@ -176,8 +161,8 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
 class _OptionPopupRouteLayout<T> extends SingleChildLayoutDelegate {
   _OptionPopupRouteLayout({
     required this.buttonRect,
-    this.top,
-  }) : assert(buttonRect != null);
+    required this.top,
+  });
 
   final Rect buttonRect;
   final double top;
@@ -196,7 +181,7 @@ class _OptionPopupRouteLayout<T> extends SingleChildLayoutDelegate {
   Offset getPositionForChild(Size size, Size childSize) {
     double left = buttonRect.left.clamp(0.0, size.width - childSize.width);
     double top = buttonRect.top.clamp(0.0, size.height - childSize.height);
-    return Offset(left, top + buttonRect.height + this.top ?? 0);
+    return Offset(left, top + buttonRect.height + this.top);
   }
 
   @override
@@ -212,11 +197,7 @@ class _OptionPopupRouteView<T> extends StatefulWidget {
     required this.items,
     required this.optionBuilder,
     required this.transitionDuration,
-  })  : assert(value != null),
-        assert(items != null),
-        assert(optionBuilder != null),
-        assert(transitionDuration != null),
-        super(key: key);
+  }) : super(key: key);
 
   final T value;
   final List<T> items;
@@ -228,19 +209,19 @@ class _OptionPopupRouteView<T> extends StatefulWidget {
 }
 
 class _OptionPopupViewRouteState<T> extends State<_OptionPopupRouteView<T>> {
-  var _containerKey = GlobalKey();
+  final _containerKey = GlobalKey();
   var _showBarrier = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
       _showBarrier = true;
       if (mounted) setState(() {});
     });
   }
 
-  Widget _buildGridItem(T value, int index, {double hSpace, double width, double height}) {
+  Widget _buildGridItem(T value, int index, {required double hSpace, required double width, required double height}) {
     var selected = widget.value != null && widget.value == value;
     // ****************************************************************
     // 每个选项
@@ -361,7 +342,7 @@ class _OptionPopupViewRouteState<T> extends State<_OptionPopupRouteView<T>> {
             duration: widget.transitionDuration,
             child: Builder(
               builder: (c) {
-                final box = _containerKey.currentContext.findRenderObject() as RenderBox;
+                final box = _containerKey.currentContext!.findRenderObject() as RenderBox;
                 final size = box.size;
                 final position = box.localToGlobal(Offset.zero);
                 final paddingV = MediaQuery.of(context).padding.top + MediaQuery.of(context).padding.bottom;

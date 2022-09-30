@@ -3,11 +3,12 @@ import 'package:flutter_ahlib/util.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
 /// 登录
 class LoginPage extends StatefulWidget {
@@ -31,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
       var remTuple = await getRememberOptions();
       _rememberUsername = remTuple.item1;
       _rememberPassword = remTuple.item2;
@@ -53,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() async {
-    if (!_formKey.currentState.validate()) {
+    if (_formKey.currentState?.validate() != true) {
       return;
     }
 
@@ -63,24 +64,24 @@ class _LoginPageState extends State<LoginPage> {
     var password = _passwordController.text.trim();
 
     var client = RestClient(DioManager.instance.dio);
-    ErrorMessage err;
-    var result = await client.login(username: username, password: password).catchError((e, s) {
-      err = wrapError(e, s);
-    }).whenComplete(() {
-      _logining = false;
-      if (mounted) setState(() {});
-    });
-    if (err != null) {
-      Fluttertoast.showToast(msg: err.text);
+    String token;
+    try {
+      var result = await client.login(username: username, password: password).onError((e, s) {
+        return Future.error(wrapError(e, s).text);
+      }).whenComplete(() {
+        _logining = false;
+        if (mounted) setState(() {});
+      });
+      token = result.data.token;
+    } catch (e) {
+      Fluttertoast.showToast(msg: e.toString());
       return;
     }
 
     // state
-    var token = result.data.token;
     Fluttertoast.showToast(msg: '$username 登录成功');
-    AuthManager.instance.token = token;
-    AuthManager.instance.username = username;
-    AuthManager.instance.notifyAll();
+    AuthManager.instance.login(username: username, token: token);
+    AuthManager.instance.notify();
 
     // prefs
     setToken(token);
@@ -133,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                       icon: Icon(Icons.person),
                     ),
                   ),
-                  validator: (value) => value.trim().isEmpty ? '用户名不能为空' : null,
+                  validator: (value) => value?.trim().isNotEmpty != true ? '用户名不能为空' : null,
                   hideOnLoading: true,
                   hideOnEmpty: true,
                   hideOnError: true,
@@ -211,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                   ),
-                  validator: (value) => value.trim().isEmpty ? '密码不能为空' : null,
+                  validator: (value) => value?.trim().isNotEmpty != true ? '密码不能为空' : null,
                 ),
               ),
               Padding(
@@ -223,7 +224,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Checkbox(
                         value: _rememberUsername,
-                        onChanged: _logining ? null : (b) => mountedSetState(() => _rememberUsername = b),
+                        onChanged: _logining ? null : (b) => mountedSetState(() => _rememberUsername = b ?? true),
                       ),
                       Text(
                         '记住账号',
@@ -242,7 +243,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Checkbox(
                         value: _rememberUsername && _rememberPassword,
-                        onChanged: (_logining ?? !_rememberUsername) ? null : (b) => mountedSetState(() => _rememberPassword = b),
+                        onChanged: (_logining) ? null : (b) => mountedSetState(() => _rememberPassword = b ?? false),
                       ),
                       Text(
                         '记住密码',

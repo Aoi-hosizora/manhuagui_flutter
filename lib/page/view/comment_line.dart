@@ -9,8 +9,7 @@ class CommentLineView extends StatefulWidget {
   const CommentLineView({
     Key? key,
     required this.comment,
-  })  : assert(comment != null),
-        super(key: key);
+  }) : super(key: key);
 
   final Comment comment;
 
@@ -87,7 +86,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                         // ****************************************************************
                         // 楼层
                         // ****************************************************************
-                        if (widget.comment.replyTimeline.length > 0)
+                        if (widget.comment.replyTimeline.isNotEmpty)
                           Container(
                             margin: EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
@@ -118,15 +117,15 @@ class _CommentLineViewState extends State<CommentLineView> {
                     child: Text(
                       widget.comment.content,
                       style: TextStyle(
-                        fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
+                        fontSize: Theme.of(context).textTheme.bodyText1?.fontSize,
                       ),
                     ),
                   ),
-                  if (widget.comment.replyTimeline.length > 0) SizedBox(height: 10),
+                  if (widget.comment.replyTimeline.isNotEmpty) SizedBox(height: 10),
                   // ****************************************************************
                   // 楼层
                   // ****************************************************************
-                  if (widget.comment.replyTimeline.length > 0)
+                  if (widget.comment.replyTimeline.isNotEmpty)
                     Container(
                       width: MediaQuery.of(context).size.width - 3 * 12 - 32,
                       decoration: BoxDecoration(
@@ -148,7 +147,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                                   Text(
                                     "${line.username == '-' ? '匿名用户' : line.username}: ",
                                     style: TextStyle(
-                                      fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
+                                      fontSize: Theme.of(context).textTheme.bodyText1?.fontSize,
                                       color: Theme.of(context).primaryColor,
                                     ),
                                     maxLines: 1,
@@ -158,7 +157,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                                     child: Text(
                                       line.content,
                                       style: TextStyle(
-                                        fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
+                                        fontSize: Theme.of(context).textTheme.bodyText1?.fontSize,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -190,7 +189,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                               padding: EdgeInsets.only(bottom: 4),
                               child: Text(
                                 '点击查看该楼层... (共 ${widget.comment.replyTimeline.length} 条评论)',
-                                style: TextStyle(fontSize: Theme.of(context).textTheme.bodyText1.fontSize, color: Theme.of(context).primaryColor),
+                                style: TextStyle(fontSize: Theme.of(context).textTheme.bodyText1?.fontSize, color: Theme.of(context).primaryColor),
                               ),
                             ),
                         ],

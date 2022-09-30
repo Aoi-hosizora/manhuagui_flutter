@@ -8,8 +8,10 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 class MangaCarouselView extends StatefulWidget {
-  const MangaCarouselView({Key? key, required this.mangas})
-      : assert(mangas != null && mangas.length != 0),
+  const MangaCarouselView({
+    Key? key,
+    required this.mangas,
+  })  : assert(mangas.length > 0),
         super(key: key);
 
   final List<TinyBlockManga> mangas;
@@ -19,14 +21,8 @@ class MangaCarouselView extends StatefulWidget {
 }
 
 class _MangaCarouselViewState extends State<MangaCarouselView> {
-  CarouselController _carouselController;
+  final _carouselController = CarouselController();
   var _currentIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _carouselController = CarouselController();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +43,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
             viewportFraction: 1, // 0.8,
           ),
           itemCount: widget.mangas.length,
-          itemBuilder: (c, i) => Container(
+          itemBuilder: (c, i, _) => Container(
             color: Colors.white, // Colors.accents[i],
             child: Stack(
               children: [

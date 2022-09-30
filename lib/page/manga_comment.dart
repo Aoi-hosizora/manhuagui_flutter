@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/list.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
 class MangaCommentPage extends StatefulWidget {
   const MangaCommentPage({
     Key? key,
     required this.mid,
-  })  : assert(mid != null),
-        super(key: key);
+  }) : super(key: key);
 
   final int mid;
 
@@ -23,28 +21,23 @@ class MangaCommentPage extends StatefulWidget {
 
 class _MangaCommentPageState extends State<MangaCommentPage> {
   final _controller = ScrollController();
-  final _udvController = UpdatableDataViewController();
   final _fabController = AnimatedFabController();
-  var _data = <Comment>[];
-  int _total;
 
   @override
   void dispose() {
     _controller.dispose();
-    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }
 
+  final _data = <Comment>[];
+  var _total = 0;
+
   Future<PagedList<Comment>> _getData({required int page}) async {
     var client = RestClient(DioManager.instance.dio);
-    ErrorMessage err;
-    var result = await client.getMangaComments(mid: widget.mid, page: page).catchError((e, s) {
-      err = wrapError(e, s);
+    var result = await client.getMangaComments(mid: widget.mid, page: page).onError((e, s) {
+      return Future.error(wrapError(e, s).text);
     });
-    if (err != null) {
-      return Future.error(err.text);
-    }
     _total = result.data.total;
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
@@ -56,13 +49,12 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 45,
-        title: Text('漫画评论${_total == null ? '' : ' (共 $_total 条)'}'),
+        title: Text('漫画评论 (共 $_total 条)'),
       ),
       body: PaginationListView<Comment>(
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
-        controller: _udvController,
         paginationSetting: PaginationSetting(
           initialIndicator: 1,
           nothingIndicator: 0,

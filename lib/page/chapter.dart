@@ -2,20 +2,18 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/image.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/gallery_page_view.dart';
 import 'package:manhuagui_flutter/page/view/image_load_view.dart';
-import 'package:manhuagui_flutter/service/database/history.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/chapter.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 章节
@@ -31,16 +29,9 @@ class ChapterPage extends StatefulWidget {
     required this.mangaUrl,
     this.initialPage = 1,
     this.showAppBar = false,
-  })  : assert(mid != null),
-        assert(cid != null),
-        assert(mangaTitle != null),
-        assert(mangaCover != null),
-        assert(mangaUrl != null),
-        assert(initialPage != null),
-        assert(showAppBar != null),
-        super(key: key);
+  }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
   final int mid;
   final int cid;
   final String mangaTitle;
@@ -53,21 +44,22 @@ class ChapterPage extends StatefulWidget {
   _ChapterPageState createState() => _ChapterPageState();
 }
 
-final _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
-final _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
-final _kViewportFraction = 1.08; // 页面间隔
+const _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
+const _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
+const _kViewportFraction = 1.08; // 页面间隔
 
 class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClientMixin {
-  PageController _controller;
+  PageController? _controller; // TODO
   var _loading = true;
-  MangaChapter _data;
-  String? _error;
+  MangaChapter? _data;
+  var _error = '';
   var _currentPage = 1;
   var _progressValue = 1;
 
-  Timer _timer;
+  Timer? _timer;
+
   var _currentTime = '00:00';
-  var _fileProvider = () async => null;
+  final _fileProvider = () async => null;
   var _imageProviders = <Future<String> Function()>[];
 
   var _showRegion = false; // 显示区域提示
@@ -89,7 +81,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       } else {
         await _setting.load();
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+      WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     });
     var now = DateTime.now();
     _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
@@ -104,12 +96,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
-          mangaTitle: widget.mangaTitle ?? '?',
-          mangaCover: widget.mangaCover ?? '?',
-          mangaUrl: widget.mangaUrl ?? '',
+          mangaTitle: widget.mangaTitle,
+          mangaCover: widget.mangaCover,
+          mangaUrl: widget.mangaUrl,
           chapterId: widget.cid,
-          chapterTitle: _data.title,
+          chapterTitle: _data!.title,
           chapterPage: _currentPage,
+          lastTime: DateTime.now(),
         ),
       ).then((_) {
         widget.action?.invoke('history');
@@ -134,10 +127,10 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 500));
       _data = r.data;
-      _imageProviders = [for (var url in _data.pages) () async => url];
+      _imageProviders = [for (var url in _data!.pages) () async => url];
 
       // !!!
-      var initialPage = widget.initialPage <= 0 ? _data.pageCount : widget.initialPage; // 指定初始页
+      var initialPage = widget.initialPage <= 0 ? _data!.pageCount : widget.initialPage; // 指定初始页
       _controller = PageController(
         initialPage: initialPage - 1,
         viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
@@ -149,19 +142,20 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
-          mangaTitle: widget.mangaTitle ?? '?',
-          mangaCover: widget.mangaCover ?? '?',
-          mangaUrl: widget.mangaUrl ?? '',
-          chapterId: _data.cid,
-          chapterTitle: _data.title,
+          mangaTitle: widget.mangaTitle,
+          mangaCover: widget.mangaCover,
+          mangaUrl: widget.mangaUrl,
+          chapterId: _data!.cid,
+          chapterTitle: _data!.title,
           chapterPage: _currentPage,
+          lastTime: DateTime.now(),
         ),
       ).then((_) {
         widget.action?.invoke('history');
         widget.action?.invoke('history_toc');
       }).catchError((_) {});
 
-      if (mounted && (_timer == null || !_timer.isActive)) {
+      if (mounted && (_timer == null || !_timer!.isActive)) {
         _timer = Timer.periodic(Duration(seconds: 1), (t) {
           if (t.isActive) {
             var now = DateTime.now();
@@ -180,21 +174,19 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   }
 
   void _onPointerDown(Offset pos) {
-    _pointerDownXPosition = pos?.dx ?? 0;
+    _pointerDownXPosition = pos.dx;
   }
 
   void _onPointerUp(Offset pos) {
     var width = MediaQuery.of(context).size.width;
-    if (pos != null) {
-      var x = pos.dx;
-      if (x == _pointerDownXPosition && x < width * _kSlideWidthRatio) {
-        _gotoPage(!_setting.reverseScroll ? _currentPage - 1 : _currentPage + 1); // 上一页 / 下一页(反)
-      } else if (x == _pointerDownXPosition && x > width * (1 - _kSlideWidthRatio)) {
-        _gotoPage(!_setting.reverseScroll ? _currentPage + 1 : _currentPage - 1); // 下一页 / 上一页(反)
-      } else {
-        _showAppBar = !_showAppBar;
-        if (mounted) setState(() {});
-      }
+    var x = pos.dx;
+    if (x == _pointerDownXPosition && x < width * _kSlideWidthRatio) {
+      _gotoPage(!_setting.reverseScroll ? _currentPage - 1 : _currentPage + 1); // 上一页 / 下一页(反)
+    } else if (x == _pointerDownXPosition && x > width * (1 - _kSlideWidthRatio)) {
+      _gotoPage(!_setting.reverseScroll ? _currentPage + 1 : _currentPage - 1); // 下一页 / 上一页(反)
+    } else {
+      _showAppBar = !_showAppBar;
+      if (mounted) setState(() {});
     }
   }
 
@@ -216,12 +208,12 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       if (_setting.useClickForChapter) {
         _gotoChapter(last: true);
       }
-    } else if (page > _data.pages.length) {
+    } else if (page > _data!.pages.length) {
       if (_setting.useClickForChapter) {
         _gotoChapter(last: false);
       }
     } else {
-      _controller.animateToPage(
+      _controller?.animateToPage(
         page - 1,
         duration: Duration(milliseconds: 1),
         curve: Curves.ease,
@@ -230,8 +222,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   }
 
   /// goto chapter
-  void _gotoChapter({bool last, bool isAppBar = false}) {
-    if ((last && _data.prevCid == 0) || (!last && _data.nextCid == 0)) {
+  void _gotoChapter({required bool last, bool isAppBar = false}) {
+    if ((last && _data!.prevCid == 0) || (!last && _data!.nextCid == 0)) {
       showDialog(
         context: context,
         builder: (c) => AlertDialog(
@@ -254,7 +246,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
           builder: (c) => ChapterPage(
             action: widget.action,
             mid: widget.mid,
-            cid: last ? _data.prevCid : _data.nextCid,
+            cid: last ? _data!.prevCid : _data!.nextCid,
             mangaTitle: widget.mangaTitle,
             mangaCover: widget.mangaCover,
             mangaUrl: widget.mangaUrl,
@@ -294,7 +286,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _showAppBar = false;
     if (mounted) setState(() {});
 
-    Widget _buildCombo<T>({String title, double width = 120, T value, List<T> values, Widget Function(T) builder, void Function(T) onChanged}) {
+    Widget _buildCombo<T>({required String title, double width = 120, required T value, required List<T> values, required Widget Function(T) builder, required void Function(T?) onChanged}) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -314,7 +306,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       );
     }
 
-    Widget _buildSlider({String title, bool value, void Function(bool) onChanged}) {
+    Widget _buildSlider({required String title, required bool value, required void Function(bool) onChanged}) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -348,7 +340,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   style: Theme.of(context).textTheme.bodyText1,
                 ),
                 onChanged: (s) async {
-                  _setting.reverseScroll = s;
+                  _setting.reverseScroll = s ?? true;
                   await _setting.save();
                   _setState(() {});
                   if (mounted) setState(() {});
@@ -402,7 +394,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   await _setting.save();
                   _setState(() {});
                   _controller = PageController(
-                    initialPage: _controller.initialPage,
+                    initialPage: _controller!.initialPage,
                     viewportFraction: b ? _kViewportFraction : 1,
                   );
                   if (mounted) setState(() {});
@@ -418,7 +410,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   style: Theme.of(context).textTheme.bodyText1,
                 ),
                 onChanged: (c) async {
-                  _setting.preloadCount = c.clamp(0, 5);
+                  _setting.preloadCount = (c ?? 2).clamp(0, 5);
                   await _setting.save();
                   _setState(() {});
                   if (mounted) setState(() {});
@@ -452,7 +444,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     }
 
     if (n is ScrollUpdateNotification) {
-      var dx = n.dragDetails?.delta?.dx;
+      var dx = n.dragDetails?.delta.dx;
       if (dx == null) {
         _swipeOffsetX = 0;
         if (_swipeFirstOver) {
@@ -464,8 +456,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         _swipeOffsetX += dx;
       }
 
-      var willSwipeFirst = ((!_setting.reverseScroll && _currentPage == 1) || (_setting.reverseScroll && _currentPage == _data.pageCount)); // 第一页 / 最后一页(反)
-      var willSwipeLast = ((!_setting.reverseScroll && _currentPage == _data.pageCount) || (_setting.reverseScroll && _currentPage == 1)); // 最后一页 / 第一页(反)
+      var willSwipeFirst = ((!_setting.reverseScroll && _currentPage == 1) || (_setting.reverseScroll && _currentPage == _data!.pageCount)); // 第一页 / 最后一页(反)
+      var willSwipeLast = ((!_setting.reverseScroll && _currentPage == _data!.pageCount) || (_setting.reverseScroll && _currentPage == 1)); // 最后一页 / 第一页(反)
       var nowSwipeFirstOver = _swipeOffsetX >= _kChapterSwipeWidth; // 当前划出第一页
       var nowSwipeLastOver = _swipeOffsetX <= -_kChapterSwipeWidth; // 当前划出最后一页
       if (willSwipeFirst && _swipeOffsetX >= 0 && _swipeOffsetX < _kChapterSwipeWidth * 2) {
@@ -507,7 +499,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
             : AppBar(
                 centerTitle: false,
                 toolbarHeight: 45,
-                title: Text(_data.title),
+                title: Text(_data!.title),
                 actions: [
                   IconButton(
                     icon: Icon(Icons.settings),
@@ -530,7 +522,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   IconButton(
                     icon: Icon(Icons.open_in_browser),
                     tooltip: '用浏览器打开',
-                    onPressed: () => launchInBrowser(context: context, url: _data.url),
+                    onPressed: () => launchInBrowser(context: context, url: _data!.url),
                   ),
                 ],
               ),
@@ -547,11 +539,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
               iconColor: Colors.grey,
               showLoadingText: false,
               textStyle: TextStyle(
-                fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                fontSize: Theme.of(context).textTheme.headline6?.fontSize,
                 color: Colors.grey,
               ),
               buttonTextStyle: TextStyle(color: Colors.grey),
-              buttonBorderSide: BorderSide(color: Colors.grey),
+              buttonStyle: ButtonStyle(
+                side: MaterialStateProperty.all(BorderSide(color: Colors.grey)),
+              ),
             ).copyWithChinese(),
             errorText: _error,
             childBuilder: (c) => Stack(
@@ -562,51 +556,50 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 Positioned.fill(
                   child: NotificationListener<ScrollUpdateNotification>(
                     onNotification: _onScrollNotification,
-                    child: GalleryPageView(
+                    child: ReloadablePhotoViewGallery.builder(
                       scrollPhysics: BouncingScrollPhysics(),
                       reverse: _setting.reverseScroll,
                       backgroundDecoration: BoxDecoration(color: Colors.black),
                       pageController: _controller,
                       onPageChanged: _onPageChanged,
-                      itemCount: _data.pages.length,
+                      itemCount: _data!.pages.length,
                       preloadPagesCount: _setting.preloadCount,
-                      // 2
-                      loadingBuilder: (c, ImageChunkEvent e) => Listener(
-                        onPointerUp: (e) => _onPointerUp(e.position),
-                        onPointerDown: (e) => _onPointerDown(e.position),
-                        child: ImageLoadingView(
-                          title: _currentPage.toString(),
-                          event: e,
-                          height: height,
-                          width: width,
-                        ),
-                      ),
-                      loadFailedChild: Listener(
-                        onPointerUp: (e) => _onPointerUp(e.position),
-                        onPointerDown: (e) => _onPointerDown(e.position),
-                        child: ImageLoadFailedView(
-                          title: _currentPage.toString(),
-                          height: height,
-                          width: width,
-                        ),
-                      ),
                       // ****************************************************************
                       // 漫画显示选项
                       // ****************************************************************
-                      builder: (c, idx) => GalleryPageViewPageOptions(
+                      builder: (c, idx) => ReloadablePhotoViewGalleryPageOptions(
                         initialScale: PhotoViewComputedScale.contained,
                         minScale: PhotoViewComputedScale.contained / 2,
                         maxScale: PhotoViewComputedScale.covered * 2,
                         filterQuality: FilterQuality.high,
                         onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
                         onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
-                        imageProvider: FileOrNetworkImageProvider(
-                          url: _imageProviders[idx],
-                          file: _fileProvider,
+                        imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fn(
+                          urlFn: _imageProviders[idx],
+                          fileFn: _fileProvider,
                           headers: {
                             'User-Agent': USER_AGENT,
                             'Referer': REFERER,
                           },
+                        ),
+                        loadingBuilder: (_, ev) => Listener(
+                          onPointerUp: (e) => _onPointerUp(e.position),
+                          onPointerDown: (e) => _onPointerDown(e.position),
+                          child: ImageLoadingView(
+                            title: _currentPage.toString(),
+                            event: ev,
+                            height: height,
+                            width: width,
+                          ),
+                        ),
+                        errorBuilder: (_, __, ___) => Listener(
+                          onPointerUp: (e) => _onPointerUp(e.position),
+                          onPointerDown: (e) => _onPointerDown(e.position),
+                          child: ImageLoadFailedView(
+                            title: _currentPage.toString(),
+                            height: height,
+                            width: width,
+                          ),
                         ),
                       ),
                     ),
@@ -637,7 +630,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                               !_setting.reverseScroll ? '前\n往\n上\n一\n章\n节' : '前\n往\n下\n一\n章\n节',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                fontSize: Theme.of(context).textTheme.headline6?.fontSize,
                               ),
                             ),
                           ],
@@ -667,7 +660,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                               !_setting.reverseScroll ? '前\n往\n下\n一\n章\n节' : '前\n往\n上\n一\n章\n节',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                fontSize: Theme.of(context).textTheme.headline6?.fontSize,
                               ),
                             ),
                           ],
@@ -686,7 +679,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                       color: Colors.black.withOpacity(0.7),
                       padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
                       child: Text(
-                        '${_data.title} $_currentPage/${_data.pageCount}页 $_currentTime',
+                        '${_data!.title} $_currentPage/${_data!.pageCount}页 $_currentTime',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -709,7 +702,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                               child: Slider(
                                 value: _progressValue.toDouble(),
                                 min: 1,
-                                max: _data.pageCount.toDouble(),
+                                max: _data!.pageCount.toDouble(),
                                 onChanged: (p) {
                                   _progressValue = p.toInt();
                                   if (mounted) setState(() {});
@@ -721,7 +714,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                           Padding(
                             padding: EdgeInsets.only(left: 4, right: 18),
                             child: Text(
-                              '$_progressValue/${_data.pageCount}页',
+                              '$_progressValue/${_data!.pageCount}页',
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
@@ -744,13 +737,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                           Container(
                             height: height,
                             width: width * _kSlideWidthRatio,
-                            color: Colors.yellow[800].withAlpha(200),
+                            color: Colors.yellow[800]!.withAlpha(200),
                             child: Center(
                               child: Text(
                                 !_setting.reverseScroll ? '上\n一\n页' : '下\n一\n页', // 上一页 / 下一页(反)
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                  fontSize: Theme.of(context).textTheme.headline6?.fontSize,
                                 ),
                               ),
                             ),
@@ -758,13 +751,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                           Container(
                             height: height,
                             width: width * (1 - 2 * _kSlideWidthRatio),
-                            color: Colors.blue[300].withAlpha(200),
+                            color: Colors.blue[300]!.withAlpha(200),
                             child: Center(
                               child: Text(
                                 '菜单',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                  fontSize: Theme.of(context).textTheme.headline6?.fontSize,
                                 ),
                               ),
                             ),
@@ -772,13 +765,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                           Container(
                             height: height,
                             width: width * _kSlideWidthRatio,
-                            color: Colors.red[200].withAlpha(200),
+                            color: Colors.red[200]!.withAlpha(200),
                             child: Center(
                               child: Text(
                                 !_setting.reverseScroll ? '下\n一\n页' : '上\n一\n页', // 下一页 / 上一页(反)
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: Theme.of(context).textTheme.headline6.fontSize,
+                                  fontSize: Theme.of(context).textTheme.headline6?.fontSize,
                                 ),
                               ),
                             ),

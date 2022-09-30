@@ -5,7 +5,6 @@ import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -28,12 +27,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+    AuthManager.instance.listen(() {
       if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
         _loadUser();
       }
-    });
+    }); // TODO cancel
     widget.action?.addAction('', () {});
   }
 
@@ -83,7 +82,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             onPressed: () async {
               Navigator.of(c).pop();
               await removeToken();
-              AuthManager.instance.login(username: '', token: '');
+              AuthManager.instance.logout();
+              AuthManager.instance.notify();
             },
           ),
           TextButton(

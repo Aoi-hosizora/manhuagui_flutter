@@ -1,11 +1,11 @@
-import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 
 class ImageLoadingView extends StatelessWidget {
   const ImageLoadingView({
     Key? key,
+    required this.title,
     required this.event,
-    this.title,
     this.width,
     this.height,
   })  : assert(width == null || width > 0),
@@ -13,9 +13,9 @@ class ImageLoadingView extends StatelessWidget {
         super(key: key);
 
   final String title;
-  final ImageChunkEvent event;
-  final double width;
-  final double height;
+  final ImageChunkEvent? event;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -26,27 +26,25 @@ class ImageLoadingView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (title != null)
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 45, color: Colors.grey),
-            ),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 45, color: Colors.grey),
+          ),
           Padding(
             padding: EdgeInsets.all(30),
             child: Container(
               width: 50,
               height: 50,
               child: CircularProgressIndicator(
-                value: (event?.expectedTotalBytes ?? 0 == 0) ? null : ((event?.cumulativeBytesLoaded ?? 0.0) / event.expectedTotalBytes),
+                value: (event?.expectedTotalBytes ?? 0) == 0 ? null : event!.cumulativeBytesLoaded / event!.expectedTotalBytes!,
               ),
             ),
           ),
-          if (event?.cumulativeBytesLoaded != null)
-            Text(
-              event?.expectedTotalBytes == null ? '${filesize(event.cumulativeBytesLoaded)}' : '${filesize(event.cumulativeBytesLoaded)} / ${filesize(event.expectedTotalBytes)}',
-              style: TextStyle(color: Colors.grey),
-            ),
+          Text(
+            event?.expectedTotalBytes == null ? filesize(event!.cumulativeBytesLoaded) : '${filesize(event!.cumulativeBytesLoaded)} / ${filesize(event!.expectedTotalBytes ?? 0)}',
+            style: TextStyle(color: Colors.grey),
+          ),
         ],
       ),
     );
@@ -56,16 +54,16 @@ class ImageLoadingView extends StatelessWidget {
 class ImageLoadFailedView extends StatelessWidget {
   const ImageLoadFailedView({
     Key? key,
-    this.title,
-    required this.width,
-    required this.height,
+    required this.title,
+    this.width,
+    this.height,
   })  : assert(width == null || width > 0),
         assert(height == null || height > 0),
         super(key: key);
 
   final String title;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -76,12 +74,11 @@ class ImageLoadFailedView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (title != null)
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 45, color: Colors.grey),
-            ),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 45, color: Colors.grey),
+          ),
           Padding(
             padding: EdgeInsets.all(30),
             child: Container(

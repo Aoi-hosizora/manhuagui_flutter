@@ -5,7 +5,6 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 
 /// 订阅浏览历史
 class HistorySubPage extends StatefulWidget {
@@ -28,7 +27,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+    AuthManager.instance.listen(() {
       _pdvKey.currentState?.refresh();
     }); // TODO cancel
     widget.action?.addAction('', () => _controller.scrollToTop());

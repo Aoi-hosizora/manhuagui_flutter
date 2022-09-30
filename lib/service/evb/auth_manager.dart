@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -29,6 +31,21 @@ class AuthManager {
     _token = token;
   }
 
+  void logout() {
+    _username = '';
+    _token = '';
+  }
+
+  StreamSubscription<AuthChangedEvent> listen(Function() onData) {
+    return EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+      onData.call();
+    });
+  }
+
+  void notify() {
+    EventBusManager.instance.fire(AuthChangedEvent());
+  }
+
   final _lock = Lock();
 
   Future<void> check() async {
@@ -47,7 +64,7 @@ class AuthManager {
       try {
         var r = await client.checkUserLogin(token: token);
         AuthManager.instance.login(username: r.data.username, token: token);
-        EventBusManager.instance.fire(AuthChangedEvent());
+        AuthManager.instance.notify();
       } catch (e, s) {
         var we = wrapError(e, s);
         print(we.text);

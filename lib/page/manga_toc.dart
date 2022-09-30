@@ -3,9 +3,9 @@ import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
-import 'package:manhuagui_flutter/service/database/history.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
 
 /// 漫画章节目录
 /// Page for [MangaChapterGroup].
@@ -18,15 +18,10 @@ class MangaTocPage extends StatefulWidget {
     required this.cover,
     required this.url,
     required this.groups,
-    this.highlightChapter,
-  })  : assert(mid != null),
-        assert(title != null),
-        assert(cover != null),
-        assert(url != null),
-        assert(groups != null),
-        super(key: key);
+    required this.highlightChapter,
+  }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
   final int mid;
   final String title;
   final String cover;
@@ -39,22 +34,22 @@ class MangaTocPage extends StatefulWidget {
 }
 
 class _MangaTocPageState extends State<MangaTocPage> {
-  MangaHistory _history;
+  MangaHistory? _history;
 
   @override
   void initState() {
     super.initState();
-    getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) => _history = r).catchError((_) {});
+    getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) => _history = r).onError((_, __) => null);
 
-    widget?.action?.addAction('history_toc', () async {
-      _history = await getHistory(username: AuthManager.instance.username, mid: widget.mid).catchError((_) {});
+    widget.action?.addAction('history_toc', () async {
+      _history = await getHistory(username: AuthManager.instance.username, mid: widget.mid).onError((_, __) => null);
       if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    widget?.action?.removeAction('history_toc');
+    widget.action?.removeAction('history_toc');
     super.dispose();
   }
 

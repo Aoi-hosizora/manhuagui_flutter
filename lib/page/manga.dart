@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
@@ -14,11 +13,12 @@ import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
-import 'package:manhuagui_flutter/service/database/history.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
 
 /// 漫画页
 /// Page for [Manga].
@@ -28,10 +28,7 @@ class MangaPage extends StatefulWidget {
     required this.id,
     required this.title,
     required this.url,
-  })  : assert(id != null),
-        assert(title != null),
-        assert(url != null),
-        super(key: key);
+  }) : super(key: key);
 
   final int id;
   final String title;
@@ -46,22 +43,11 @@ class _MangaPageState extends State<MangaPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _action = ActionController();
-  var _loading = true;
-  Manga _data;
-  String? _error;
-  var _subscribing = false;
-  bool _subscribed;
-  MangaHistory _history;
-  var _showBriefIntroduction = true;
-  var _commentLoading = true;
-  var _commentError = '';
-  var _comments = <Comment>[];
-  int _commentTotal;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _indicatorKey?.currentState?.show());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _indicatorKey.currentState?.show());
     _action.addAction('history', () async {
       _history = await getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
       if (mounted) setState(() {});
@@ -75,6 +61,18 @@ class _MangaPageState extends State<MangaPage> {
     _action.dispose();
     super.dispose();
   }
+
+  var _loading = true;
+  Manga? _data;
+  var _error = '';
+  var _subscribing = false;
+  var _subscribed = false;
+  MangaHistory? _history;
+  var _showBriefIntroduction = true;
+  var _commentLoading = true;
+  var _commentError = '';
+  var _comments = <Comment>[];
+  var _commentTotal = 0;
 
   Future<void> _loadData() async {
     _loading = true;
@@ -118,24 +116,30 @@ class _MangaPageState extends State<MangaPage> {
         addHistory(
           username: AuthManager.instance.username,
           history: MangaHistory(
-            mangaId: _data.mid,
-            mangaTitle: _data.title ?? '?',
-            mangaCover: _data.cover ?? '?',
-            mangaUrl: _data.url ?? '',
-            chapterId: 0,
-            // 还没开始阅读
+            mangaId: _data!.mid,
+            mangaTitle: _data!.title,
+            mangaCover: _data!.cover,
+            mangaUrl: _data!.url,
+            chapterId: 0 /* 还没开始阅读 */,
             chapterTitle: '',
             chapterPage: 0,
+            lastTime: DateTime.now(),
           ),
         ).catchError((_) {});
       } else {
+        // TODO
         updateHistory(
           username: AuthManager.instance.username,
           history: MangaHistory(
-            mangaId: _data.mid,
-            mangaTitle: _data.title ?? '?',
-            mangaCover: _data.cover ?? '?',
-            mangaUrl: _data.url ?? '',
+            mangaId: _data!.mid,
+            mangaTitle: _data!.title,
+            mangaCover: _data!.cover,
+            mangaUrl: _data!.url,
+            // <<<
+            chapterId: 0,
+            chapterTitle: '',
+            chapterPage: 0,
+            lastTime: DateTime.now(),
           ),
         );
       }
@@ -182,20 +186,20 @@ class _MangaPageState extends State<MangaPage> {
   void _read() async {
     int cid;
     int page;
-    if (_history?.read != true) {
+    if (_history == null || !_history!.read ) {
       // 开始阅读
-      if (_data.chapterGroups.length == 0) {
+      if (_data!.chapterGroups.isEmpty) {
         Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
         return;
       }
-      var sGroup = _data.chapterGroups.first;
-      var specificGroups = _data.chapterGroups.where((g) => g.title == '单话');
-      if (specificGroups.length != 0) {
+      var sGroup = _data!.chapterGroups.first;
+      var specificGroups = _data!.chapterGroups.where((g) => g.title == '单话');
+      if (specificGroups.isNotEmpty) {
         sGroup = specificGroups.first;
       }
-      if (sGroup.chapters.length == 0) {
-        var specificGroups = _data.chapterGroups.where((g) => g.chapters.length != 0);
-        if (specificGroups.length == 0) {
+      if (sGroup.chapters.isEmpty) {
+        var specificGroups = _data!.chapterGroups.where((g) => g.chapters.isNotEmpty);
+        if (specificGroups.isEmpty) {
           Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
           return;
         }
@@ -205,18 +209,18 @@ class _MangaPageState extends State<MangaPage> {
       page = 1;
     } else {
       // 继续阅读
-      cid = _history.chapterId;
-      page = _history.chapterPage;
+      cid = _history!.chapterId;
+      page = _history!.chapterPage;
     }
 
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (c) => ChapterPage(
           action: _action,
-          mid: _data.mid,
-          mangaTitle: _data.title,
-          mangaCover: _data.cover,
-          mangaUrl: _data.url,
+          mid: _data!.mid,
+          mangaTitle: _data!.title,
+          mangaCover: _data!.cover,
+          mangaUrl: _data!.url,
           cid: cid,
           initialPage: page,
         ),
@@ -266,11 +270,11 @@ class _MangaPageState extends State<MangaPage> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      stops: [0, 0.5, 1],
+                      stops: const [0, 0.5, 1],
                       colors: [
-                        Colors.blue[100],
-                        Colors.orange[100],
-                        Colors.purple[100],
+                        Colors.blue[100]!,
+                        Colors.orange[100]!,
+                        Colors.purple[100]!,
                       ],
                     ),
                   ),
@@ -283,7 +287,7 @@ class _MangaPageState extends State<MangaPage> {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         child: NetworkImageView(
-                          url: _data.cover,
+                          url: _data!.cover,
                           height: 160,
                           width: 120,
                           fit: BoxFit.cover,
@@ -301,28 +305,28 @@ class _MangaPageState extends State<MangaPage> {
                           children: [
                             IconText(
                               icon: Icon(Icons.date_range, size: 20, color: Colors.orange),
-                              text: Text('${_data.publishYear} ${_data.mangaZone}'),
+                              text: Text('${_data!.publishYear} ${_data!.mangaZone}'),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.bookmark, size: 20, color: Colors.orange),
-                              text: TextGroup(
+                              text: TextGroup.normal(
                                 textScaleFactor: MediaQuery.of(context).textScaleFactor,
                                 texts: [
-                                  for (var i = 0; i < _data.genres.length; i++) ...[
-                                    LinkGroupText(
-                                      text: _data.genres[i].title,
+                                  for (var i = 0; i < _data!.genres.length; i++) ...[
+                                    LinkTextItem(
+                                      text: _data!.genres[i].title,
                                       pressedColor: Theme.of(context).primaryColor,
                                       showUnderline: true,
                                       onTap: () => Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (c) => GenrePage(
-                                            genre: _data.genres[i].toTiny(),
+                                            genre: _data!.genres[i].toTiny(),
                                           ),
                                         ),
                                       ),
                                     ),
-                                    if (i != _data.genres.length - 1) NormalGroupText(text: ' / '),
+                                    if (i != _data!.genres.length - 1) PlainTextItem(text: ' / '),
                                   ],
                                 ],
                               ),
@@ -330,25 +334,25 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.person, size: 20, color: Colors.orange),
-                              text: TextGroup(
+                              text: TextGroup.normal(
                                 textScaleFactor: MediaQuery.of(context).textScaleFactor,
                                 texts: [
-                                  for (var i = 0; i < _data.authors.length; i++) ...[
-                                    LinkGroupText(
-                                      text: _data.authors[i].name,
+                                  for (var i = 0; i < _data!.authors.length; i++) ...[
+                                    LinkTextItem(
+                                      text: _data!.authors[i].name,
                                       pressedColor: Theme.of(context).primaryColor,
                                       showUnderline: true,
                                       onTap: () => Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (c) => AuthorPage(
-                                            id: _data.authors[i].aid,
-                                            name: _data.authors[i].name,
-                                            url: _data.authors[i].url,
+                                            id: _data!.authors[i].aid,
+                                            name: _data!.authors[i].name,
+                                            url: _data!.authors[i].url,
                                           ),
                                         ),
                                       ),
                                     ),
-                                    if (i != _data.authors.length - 1) NormalGroupText(text: ' / '),
+                                    if (i != _data!.authors.length - 1) PlainTextItem(text: ' / '),
                                   ],
                                 ],
                               ),
@@ -356,17 +360,17 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                              text: Text('排名 ${_data.mangaRank}'),
+                              text: Text('排名 ${_data!.mangaRank}'),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.subject, size: 20, color: Colors.orange),
-                              text: Text((_data.finished ? '共 ' : '更新至 ') + _data.newestChapter),
+                              text: Text((_data!.finished ? '共 ' : '更新至 ') + _data!.newestChapter),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                              text: Text(_data.newestDate + (_data.finished ? ' 已完结' : ' 连载中')),
+                              text: Text(_data!.newestDate + (_data!.finished ? ' 已完结' : ' 连载中')),
                               space: 8,
                             ),
                             // SizedBox(height: 4),
@@ -381,10 +385,12 @@ class _MangaPageState extends State<MangaPage> {
                                   height: 28,
                                   width: 75,
                                   child: OutlinedButton(
-                                    padding: EdgeInsets.all(2),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: EdgeInsets.all(2),
+                                    ),
                                     child: Text(
                                       _subscribed == true ? '取消订阅' : '订阅漫画',
-                                      style: TextStyle(color: _subscribing ? Colors.grey : Theme.of(context).textTheme.button.color),
+                                      style: TextStyle(color: _subscribing ? Colors.grey : Theme.of(context).textTheme.button?.color),
                                     ),
                                     onPressed: _subscribing == true ? null : () => _subscribe(),
                                   ),
@@ -394,7 +400,9 @@ class _MangaPageState extends State<MangaPage> {
                                   height: 28,
                                   width: 75,
                                   child: OutlinedButton(
-                                    padding: EdgeInsets.all(2),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: EdgeInsets.all(2),
+                                    ),
                                     child: Text(_history?.read == true ? '继续阅读' : '开始阅读'),
                                     onPressed: () => _read(),
                                   ),
@@ -425,14 +433,14 @@ class _MangaPageState extends State<MangaPage> {
                             style: TextStyle(color: Colors.black),
                             children: [
                               if (_showBriefIntroduction) ...[
-                                TextSpan(text: _data.briefIntroduction),
+                                TextSpan(text: _data!.briefIntroduction),
                                 TextSpan(
                                   text: ' 展开详情',
                                   style: TextStyle(color: Theme.of(context).primaryColor),
                                 ),
                               ],
                               if (!_showBriefIntroduction) ...[
-                                TextSpan(text: _data.introduction),
+                                TextSpan(text: _data!.introduction),
                                 TextSpan(
                                   text: ' 收起介绍',
                                   style: TextStyle(color: Theme.of(context).primaryColor),
@@ -461,7 +469,7 @@ class _MangaPageState extends State<MangaPage> {
                     child: InkWell(
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (c) => MangaDetailPage(data: _data),
+                          builder: (c) => MangaDetailPage(data: _data!),
                         ),
                       ),
                       child: Container(
@@ -478,14 +486,14 @@ class _MangaPageState extends State<MangaPage> {
                                     itemCount: 5,
                                     itemPadding: EdgeInsets.symmetric(horizontal: 4),
                                     itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
-                                    initialRating: _data.averageScore / 2.0,
+                                    initialRating: _data!.averageScore / 2.0,
                                     minRating: 0,
                                     itemSize: 32,
                                     ignoreGestures: true,
                                     onRatingUpdate: (_) {},
                                   ),
                                   SizedBox(height: 4),
-                                  Text('平均分数: ${_data.averageScore} / 10.0，共 ${_data.scoreCount} 人评价'),
+                                  Text('平均分数: ${_data!.averageScore} / 10.0，共 ${_data!.scoreCount} 人评价'),
                                 ],
                               ),
                             ),
@@ -511,13 +519,13 @@ class _MangaPageState extends State<MangaPage> {
                   color: Colors.white,
                   child: ChapterGroupView(
                     action: _action,
-                    groups: _data.chapterGroups,
+                    groups: _data!.chapterGroups,
                     complete: false,
                     highlightChapter: _history?.chapterId ?? 0,
-                    mangaId: _data.mid,
-                    mangaTitle: _data.title,
-                    mangaCover: _data.cover,
-                    mangaUrl: _data.url,
+                    mangaId: _data!.mid,
+                    mangaTitle: _data!.title,
+                    mangaCover: _data!.cover,
+                    mangaUrl: _data!.url,
                   ),
                 ),
                 Container(height: 12),
@@ -530,7 +538,7 @@ class _MangaPageState extends State<MangaPage> {
                   child: PlaceholderText(
                     state: _commentLoading
                         ? PlaceholderState.loading
-                        : _commentError?.isNotEmpty == true
+                        : _commentError.isNotEmpty
                             ? PlaceholderState.error
                             : _comments.isEmpty
                                 ? PlaceholderState.nothing
@@ -554,7 +562,8 @@ class _MangaPageState extends State<MangaPage> {
                                 style: Theme.of(context).textTheme.subtitle1,
                               ),
                               Text(
-                                '共 ${_commentTotal == null ? '?' : _commentTotal} 条',
+
+                                '共 $_commentTotal 条',
                                 style: Theme.of(context).textTheme.subtitle1,
                               ),
                             ],

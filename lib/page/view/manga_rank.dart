@@ -10,8 +10,7 @@ class MangaRankView extends StatefulWidget {
   const MangaRankView({
     Key? key,
     required this.manga,
-  })  : assert(manga != null),
-        super(key: key);
+  }) : super(key: key);
 
   final MangaRank manga;
 
@@ -100,7 +99,7 @@ class _MangaRankViewState extends State<MangaRankView> {
                           : Icon(Icons.remove, color: Colors.grey),
                   Text(
                     widget.manga.score.toString(),
-                    style: Theme.of(context).textTheme.subtitle1.copyWith(color: Colors.grey[600]),
+                    style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.grey[600]),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

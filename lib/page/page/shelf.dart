@@ -8,7 +8,6 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 
 /// 订阅书架
 class ShelfSubPage extends StatefulWidget {
@@ -32,7 +31,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     super.initState();
 
     AuthManager.instance.check();
-    EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+    AuthManager.instance.listen(() {
       if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
       }

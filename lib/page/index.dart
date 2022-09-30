@@ -7,7 +7,6 @@ import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -43,7 +42,7 @@ class _IndexPageState extends State<IndexPage> {
     });
 
     AuthManager.instance.check();
-    EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+    AuthManager.instance.listen(() {
       if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
       }

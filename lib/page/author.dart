@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/list.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/model/author.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 
 /// 漫画家
 /// Page for [Author].
@@ -21,10 +20,7 @@ class AuthorPage extends StatefulWidget {
     required this.id,
     required this.name,
     required this.url,
-  })  : assert(id != null),
-        assert(name != null),
-        assert(url != null),
-        super(key: key);
+  }) : super(key: key);
 
   final int id;
   final String name;
@@ -36,30 +32,30 @@ class AuthorPage extends StatefulWidget {
 
 class _AuthorPageState extends State<AuthorPage> {
   final _controller = ScrollController();
-  final _udvController = UpdatableDataViewController();
+  final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _fabController = AnimatedFabController();
-  var _loading = true;
-  Author _data;
-  String? _error;
-  var _mangas = <SmallManga>[];
-  var _total = 0;
-  var _order = MangaOrder.byPopular;
-  var _lastOrder = MangaOrder.byPopular;
-  var _disableOption = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }
+
+  var _loading = true;
+  Author? _data;
+  var _error = '';
+  final _mangas = <SmallManga>[];
+  var _total = 0;
+  var _order = MangaOrder.byPopular;
+  var _lastOrder = MangaOrder.byPopular;
+  var _disableOption = false;
 
   Future<void> _loadData() {
     _loading = true;
@@ -72,7 +68,7 @@ class _AuthorPageState extends State<AuthorPage> {
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = r.data;
-    }).catchError((e, s) {
+    }).onError((e, s) {
       _data = null;
       _error = wrapError(e, s).text;
     }).whenComplete(() {
@@ -83,13 +79,9 @@ class _AuthorPageState extends State<AuthorPage> {
 
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {
     var client = RestClient(DioManager.instance.dio);
-    ErrorMessage err;
-    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _order).catchError((e, s) {
-      err = wrapError(e, s);
+    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _order).onError((e, s) {
+      return Future.error(wrapError(e, s).text);
     });
-    if (err != null) {
-      return Future.error(err.text);
-    }
     _total = result.data.total;
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
@@ -132,11 +124,11 @@ class _AuthorPageState extends State<AuthorPage> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    stops: [0, 0.5, 1],
+                    stops: const [0, 0.5, 1],
                     colors: [
-                      Colors.blue[100],
-                      Colors.orange[100],
-                      Colors.purple[100],
+                      Colors.blue[100]!,
+                      Colors.orange[100]!,
+                      Colors.purple[100]!,
                     ],
                   ),
                 ),
@@ -149,7 +141,7 @@ class _AuthorPageState extends State<AuthorPage> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       child: NetworkImageView(
-                        url: _data.cover,
+                        url: _data!.cover,
                         height: 130,
                         width: 100,
                         fit: BoxFit.cover,
@@ -168,28 +160,28 @@ class _AuthorPageState extends State<AuthorPage> {
                           children: [
                             IconText(
                               icon: Icon(Icons.person, size: 20, color: Colors.orange),
-                              text: Text('别名 ${_data.alias}'),
+                              text: Text('别名 ${_data!.alias}'),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.place, size: 20, color: Colors.orange),
-                              text: Text(_data.zone),
+                              text: Text(_data!.zone),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                              text: Text('平均评分 ${_data.averageScore}'),
+                              text: Text('平均评分 ${_data!.averageScore}'),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.edit, size: 20, color: Colors.orange),
-                              text: Text('共收录 ${_data.mangaCount} 部漫画'),
+                              text: Text('共收录 ${_data!.mangaCount} 部漫画'),
                               space: 8,
                             ),
                             IconText(
                               icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
                               text: Text(
-                                '最新收录 ${_data.newestMangaTitle}',
+                                '最新收录 ${_data!.newestMangaTitle}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -197,7 +189,7 @@ class _AuthorPageState extends State<AuthorPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                              text: Text('更新于 ${_data.newestDate}'),
+                              text: Text('更新于 ${_data!.newestDate}'),
                               space: 8,
                             ),
                           ],
@@ -216,7 +208,7 @@ class _AuthorPageState extends State<AuthorPage> {
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 color: Colors.white,
                 child: Text(
-                  _data.introduction.trim().isEmpty ? '暂无介绍' : _data.introduction.trim(),
+                  _data!.introduction.trim().isEmpty ? '暂无介绍' : _data!.introduction.trim(),
                   style: Theme.of(context).textTheme.subtitle1,
                 ),
               ),
@@ -229,50 +221,51 @@ class _AuthorPageState extends State<AuthorPage> {
               sliver: SliverPersistentHeader(
                 pinned: true,
                 floating: true,
-                delegate: SliverAppBarSizedDelegate(
-                  minHeight: 26.0 + 5 * 2 + 1,
-                  maxHeight: 26.0 + 5 * 2 + 1,
-                  child: Container(
-                    color: Colors.white,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                height: 26,
-                                padding: EdgeInsets.only(left: 5),
-                                child: Center(
-                                  child: Text('全部漫画 (共 $_total 部)'),
+                delegate: SliverHeaderDelegate(
+                  child: PreferredSize(
+                    preferredSize: Size.fromHeight(26.0 + 5 * 2 + 1),
+                    child: Container(
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  height: 26,
+                                  padding: EdgeInsets.only(left: 5),
+                                  child: Center(
+                                    child: Text('全部漫画 (共 $_total 部)'),
+                                  ),
                                 ),
-                              ),
-                              // ****************************************************************
-                              // 漫画排序
-                              // ****************************************************************
-                              if (_total > 0)
-                                OptionPopupView<MangaOrder>(
-                                  title: _order.toTitle(),
-                                  top: 4,
-                                  value: _order,
-                                  items: [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                                  onSelect: (o) {
-                                    if (_order != o) {
-                                      _lastOrder = _order;
-                                      _order = o;
-                                      if (mounted) setState(() {});
-                                      _udvController.refresh();
-                                    }
-                                  },
-                                  optionBuilder: (c, v) => v.toTitle(),
-                                  enable: !_disableOption,
-                                ),
-                            ],
+                                // ****************************************************************
+                                // 漫画排序
+                                // ****************************************************************
+                                if (_total > 0)
+                                  OptionPopupView<MangaOrder>(
+                                    title: _order.toTitle(),
+                                    top: 4,
+                                    value: _order,
+                                    items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                                    onSelect: (o) {
+                                      if (_order != o) {
+                                        _lastOrder = _order;
+                                        _order = o;
+                                        if (mounted) setState(() {});
+                                        _pdvKey.currentState?.refresh();
+                                      }
+                                    },
+                                    optionBuilder: (c, v) => v.toTitle(),
+                                    enable: !_disableOption,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Divider(height: 1, thickness: 1),
-                      ],
+                          Divider(height: 1, thickness: 1),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -285,9 +278,9 @@ class _AuthorPageState extends State<AuthorPage> {
           // ****************************************************************
           body: Builder(
             builder: (c) => PaginationSliverListView<SmallManga>(
+              key: _pdvKey,
               data: _mangas,
               getData: ({indicator}) => _getMangas(page: indicator),
-              controller: _udvController,
               scrollController: PrimaryScrollController.of(c),
               paginationSetting: PaginationSetting(
                 initialIndicator: 1,

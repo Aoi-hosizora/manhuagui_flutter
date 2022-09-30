@@ -17,19 +17,12 @@ class MangaColumnView extends StatefulWidget {
     this.complete = false,
     this.small = false,
     this.singleLine = false,
-  })  : assert(group != null),
-        assert(type != null),
-        assert(showTopMargin != null),
-        assert(showTopMargin != null),
-        assert(complete != null),
-        assert(small != null),
-        assert(singleLine != null),
-        assert(!(complete && (small || singleLine))),
+  })  : assert(!(complete && (small || singleLine))),
         super(key: key);
 
   final MangaGroup group;
   final MangaGroupType type;
-  final ScrollController controller;
+  final ScrollController? controller;
   final double marginV;
   final bool showTopMargin;
   final bool complete;
@@ -41,8 +34,8 @@ class MangaColumnView extends StatefulWidget {
 }
 
 class _MangaColumnViewState extends State<MangaColumnView> {
-  Widget _buildBlock(TinyBlockManga manga, {bool left = false}) {
-    final hSpace = 5.0;
+  Widget _buildBlock(TinyBlockManga? manga, {bool left = false}) {
+    const hSpace = 5.0;
     var width = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
     if (widget.small) {
       width = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
@@ -66,7 +59,7 @@ class _MangaColumnViewState extends State<MangaColumnView> {
   }
 
   List<Widget> _buildRows(double vSpace) {
-    var mangas = widget.group.mangas;
+    List<TinyBlockManga?> mangas = widget.group.mangas.map((m) => m).toList();
     var cs = 3;
     if (!widget.complete) {
       if (!widget.small) {
@@ -96,7 +89,7 @@ class _MangaColumnViewState extends State<MangaColumnView> {
     var gridRows = <Widget>[];
     var rows = (mangas.length.toDouble() / cs).ceil();
     for (var r = 0; r < rows; r++) {
-      var columns = <TinyBlockManga>[
+      var columns = <TinyBlockManga?>[
         for (var i = cs * r; i < cs * (r + 1) && i < mangas.length; i++) mangas[i],
       ];
       gridRows.add(

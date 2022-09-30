@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/login.dart';
-import 'package:manhuagui_flutter/service/auth/auth.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
 class LoginFirstView extends StatefulWidget {
   const LoginFirstView({Key? key}) : super(key: key);
@@ -13,7 +13,7 @@ class _LoginFirstViewState extends State<LoginFirstView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
+    AuthManager.instance.check();
   }
 
   @override
