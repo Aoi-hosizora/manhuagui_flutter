@@ -24,23 +24,29 @@ class MineSubPage extends StatefulWidget {
 }
 
 class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
+  bool _loginChecking = true;
   VoidCallback? _cancelHandler;
 
   @override
   void initState() {
     super.initState();
+    widget.action?.addAction(() {});
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _loginChecking = true;
       _cancelHandler = AuthManager.instance.listen(() {
+        _loginChecking = false;
+        if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
-          if (mounted) setState(() {});
           _loadUser();
         }
       });
+      AuthManager.instance.check();
     });
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction();
     _cancelHandler?.call();
     super.dispose();
   }
@@ -112,10 +118,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (!AuthManager.instance.logined) {
+    if (_loginChecking || !AuthManager.instance.logined) {
       _data = null;
-      return LoginFirstView(
-        showSettingButton: true,
+      return Scaffold(
+        body: LoginFirstView(
+          checking: _loginChecking,
+          showSettingButton: true,
+        ),
       );
     }
 

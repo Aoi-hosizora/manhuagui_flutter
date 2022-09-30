@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_rank.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -112,7 +113,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
           getData: () => _getData(),
           scrollController: _controller,
           setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.symmetric(vertical: 0),
+            padding: EdgeInsets.symmetric(vertical: 0),
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
             interactiveScrollbar: true,
@@ -142,50 +143,44 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
           itemBuilder: (c, _, item) => MangaRankView(manga: item),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
-              Container(
-                color: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    OptionPopupView<TinyCategory>(
-                      title: _currType.isAll() ? '分类' : _currType.title,
-                      top: 4,
-                      highlightable: true,
-                      value: _currType,
-                      items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_getting,
-                      onSelect: (t) {
-                        if (_currType != t) {
-                          _lastType = _currType;
-                          _currType = t;
-                          if (mounted) setState(() {});
-                          _pdvKey.currentState?.refresh();
-                        }
-                      },
-                    ),
-                    OptionPopupView<TinyCategory>(
-                      title: _currDuration.title,
-                      top: 4,
-                      highlightable: true,
-                      value: _currDuration,
-                      items: allRankDurations,
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_getting,
-                      onSelect: (d) {
-                        if (_currDuration != d) {
-                          _lastDuration = _currDuration;
-                          _currDuration = d;
-                          if (mounted) setState(() {});
-                          _pdvKey.currentState?.refresh();
-                        }
-                      },
-                    ),
-                  ],
-                ),
+              ListHintView.widgets(
+                widgets: [
+                  OptionPopupView<TinyCategory>(
+                    title: _currType.isAll() ? '分类' : _currType.title,
+                    top: 4,
+                    highlightable: true,
+                    value: _currType,
+                    items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
+                    optionBuilder: (c, v) => v.title,
+                    enable: !_getting,
+                    onSelect: (t) {
+                      if (_currType != t) {
+                        _lastType = _currType;
+                        _currType = t;
+                        if (mounted) setState(() {});
+                        _pdvKey.currentState?.refresh();
+                      }
+                    },
+                  ),
+                  OptionPopupView<TinyCategory>(
+                    title: _currDuration.title,
+                    top: 4,
+                    highlightable: true,
+                    value: _currDuration,
+                    items: allRankDurations,
+                    optionBuilder: (c, v) => v.title,
+                    enable: !_getting,
+                    onSelect: (d) {
+                      if (_currDuration != d) {
+                        _lastDuration = _currDuration;
+                        _currDuration = d;
+                        if (mounted) setState(() {});
+                        _pdvKey.currentState?.refresh();
+                      }
+                    },
+                  ),
+                ],
               ),
-              Divider(height: 1, thickness: 1),
             ],
           ),
         ),

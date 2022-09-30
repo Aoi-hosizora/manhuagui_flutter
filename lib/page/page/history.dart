@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -28,16 +29,16 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
+    widget.action?.addAction(() => _controller.scrollToTop());
     _cancelHandler = AuthManager.instance.listen(() {
       _pdvKey.currentState?.refresh();
     });
-    widget.action?.addAction(() => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
     widget.action?.removeAction();
+    _cancelHandler?.call();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -128,30 +129,10 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
-            Container(
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    height: 26,
-                    padding: EdgeInsets.only(left: 5),
-                    child: Center(
-                      child: Text(AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史'),
-                    ),
-                  ),
-                  Container(
-                    height: 26,
-                    padding: EdgeInsets.only(right: 5),
-                    child: Center(
-                      child: Text('共 $_total 部'),
-                    ),
-                  ),
-                ],
-              ),
+            ListHintView.textText(
+              leftText: AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史',
+              rightText: '共 $_total 部',
             ),
-            Divider(height: 1, thickness: 1),
           ],
         ),
       ),

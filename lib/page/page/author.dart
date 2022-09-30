@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/small_author_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -124,7 +125,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             nothingIndicator: 0,
           ),
           setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.symmetric(vertical: 0),
+            padding: EdgeInsets.symmetric(vertical: 0),
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
             interactiveScrollbar: true,
@@ -159,109 +160,89 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
           itemBuilder: (c, _, item) => SmallAuthorLineView(author: item),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
-              Container(
-                color: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    // ****************************************************************
-                    // 检索条件
-                    // ****************************************************************
-                    OptionPopupView<TinyCategory>(
-                      title: _currGenre.isAll() ? '剧情' : _currGenre.title,
-                      top: 4,
-                      highlightable: true,
-                      value: _currGenre,
-                      items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_getting,
-                      onSelect: (g) {
-                        if (_currGenre != g) {
-                          _lastGenre = _currGenre;
-                          _currGenre = g;
-                          if (mounted) setState(() {});
-                          _pdvKey.currentState?.refresh();
-                        }
-                      },
-                    ),
-                    OptionPopupView<TinyCategory>(
-                      title: _currAge.isAll() ? '受众' : _currAge.title,
-                      top: 4,
-                      highlightable: true,
-                      value: _currAge,
-                      items: allAges,
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_getting,
-                      onSelect: (a) {
-                        if (_currAge != a) {
-                          _lastAge = _currAge;
-                          _currAge = a;
-                          if (mounted) setState(() {});
-                          _pdvKey.currentState?.refresh();
-                        }
-                      },
-                    ),
-                    OptionPopupView<TinyCategory>(
-                      title: _currZone.isAll() ? '地区' : _currZone.title,
-                      top: 4,
-                      highlightable: true,
-                      value: _currZone,
-                      items: allZones,
-                      optionBuilder: (c, v) => v.title,
-                      enable: !_getting,
-                      onSelect: (z) {
-                        if (_currZone != z) {
-                          _lastZone = _currZone;
-                          _currZone = z;
-                          if (mounted) setState(() {});
-                          _pdvKey.currentState?.refresh();
-                        }
-                      },
-                    ),
-                  ],
-                ),
+              ListHintView.widgets(
+                // ****************************************************************
+                // 检索条件
+                // ****************************************************************
+                widgets: [
+                  OptionPopupView<TinyCategory>(
+                    title: _currGenre.isAll() ? '剧情' : _currGenre.title,
+                    top: 4,
+                    highlightable: true,
+                    value: _currGenre,
+                    items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
+                    optionBuilder: (c, v) => v.title,
+                    enable: !_getting,
+                    onSelect: (g) {
+                      if (_currGenre != g) {
+                        _lastGenre = _currGenre;
+                        _currGenre = g;
+                        if (mounted) setState(() {});
+                        _pdvKey.currentState?.refresh();
+                      }
+                    },
+                  ),
+                  OptionPopupView<TinyCategory>(
+                    title: _currAge.isAll() ? '受众' : _currAge.title,
+                    top: 4,
+                    highlightable: true,
+                    value: _currAge,
+                    items: allAges,
+                    optionBuilder: (c, v) => v.title,
+                    enable: !_getting,
+                    onSelect: (a) {
+                      if (_currAge != a) {
+                        _lastAge = _currAge;
+                        _currAge = a;
+                        if (mounted) setState(() {});
+                        _pdvKey.currentState?.refresh();
+                      }
+                    },
+                  ),
+                  OptionPopupView<TinyCategory>(
+                    title: _currZone.isAll() ? '地区' : _currZone.title,
+                    top: 4,
+                    highlightable: true,
+                    value: _currZone,
+                    items: allZones,
+                    optionBuilder: (c, v) => v.title,
+                    enable: !_getting,
+                    onSelect: (z) {
+                      if (_currZone != z) {
+                        _lastZone = _currZone;
+                        _currZone = z;
+                        if (mounted) setState(() {});
+                        _pdvKey.currentState?.refresh();
+                      }
+                    },
+                  ),
+                ],
               ),
-              Divider(height: 1, thickness: 1),
             ],
             innerTopWidgets: [
-              Container(
-                color: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 26,
-                      padding: EdgeInsets.only(left: 5),
-                      child: Center(
-                        child: Text('搜索结果 (共 $_total 位)'),
-                      ),
-                    ),
-                    // ****************************************************************
-                    // 检索排序
-                    // ****************************************************************
-                    OptionPopupView<AuthorOrder>(
-                      title: _currOrder.toTitle(),
-                      top: 4,
-                      highlightable: true,
-                      value: _currOrder,
-                      items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byUpdate],
-                      optionBuilder: (c, v) => v.toTitle(),
-                      enable: !_getting,
-                      onSelect: (o) {
-                        if (_currOrder != o) {
-                          _lastOrder = _currOrder;
-                          _currOrder = o;
-                          if (mounted) setState(() {});
-                          _pdvKey.currentState?.refresh();
-                        }
-                      },
-                    ),
-                  ],
+              ListHintView.textWidget(
+                leftText: '搜索结果 (共 $_total 位)',
+                // ****************************************************************
+                // 检索排序
+                // ****************************************************************
+                rightWidget: OptionPopupView<AuthorOrder>(
+                  title: _currOrder.toTitle(),
+                  top: 4,
+                  highlightable: true,
+                  value: _currOrder,
+                  items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byUpdate],
+                  optionBuilder: (c, v) => v.toTitle(),
+                  enable: !_getting,
+                  onSelect: (o) {
+                    if (_currOrder != o) {
+                      _lastOrder = _currOrder;
+                      _currOrder = o;
+                      if (mounted) setState(() {});
+                      _pdvKey.currentState?.refresh();
+                    }
+                  },
                 ),
               ),
-              Divider(height: 1, thickness: 1),
             ],
           ),
         ),

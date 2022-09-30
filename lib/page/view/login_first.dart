@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
-import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-class LoginFirstView extends StatefulWidget {
+class LoginFirstView extends StatelessWidget {
   const LoginFirstView({
     Key? key,
+    required this.checking,
     this.showSettingButton = false,
   }) : super(key: key);
 
+  final bool checking;
   final bool showSettingButton;
 
   @override
-  _LoginFirstViewState createState() => _LoginFirstViewState();
-}
-
-class _LoginFirstViewState extends State<LoginFirstView> {
-  @override
-  void initState() {
-    super.initState();
-    AuthManager.instance.check();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    if (checking) {
+      return Center(
+        child: SizedBox(
+          height: 45,
+          width: 45,
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -35,7 +35,7 @@ class _LoginFirstViewState extends State<LoginFirstView> {
           ),
           SizedBox(height: 10),
           Text(
-            '未登录，请先登录',
+            '当前未登录，请先登录 Manhuagui',
             style: TextStyle(fontSize: 20),
           ),
           SizedBox(height: 10),
@@ -47,7 +47,7 @@ class _LoginFirstViewState extends State<LoginFirstView> {
               ),
             ),
           ),
-          if (widget.showSettingButton) ...[
+          if (showSettingButton) ...[
             SizedBox(height: 10),
             OutlinedButton(
               child: Text('设置'),

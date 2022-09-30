@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -103,39 +104,25 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
-            Container(
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    height: 26,
-                    padding: EdgeInsets.only(left: 5),
-                    child: Center(
-                      child: Text('全部漫画 (共 $_total 部)'),
-                    ),
-                  ),
-                  OptionPopupView<MangaOrder>(
-                    title: _currOrder.toTitle(),
-                    top: 4,
-                    value: _currOrder,
-                    items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                    optionBuilder: (c, v) => v.toTitle(),
-                    enable: !_getting,
-                    onSelect: (o) {
-                      if (_currOrder != o) {
-                        _lastOrder = _currOrder;
-                        _currOrder = o;
-                        if (mounted) setState(() {});
-                        _pdvKey.currentState?.refresh();
-                      }
-                    },
-                  ),
-                ],
+            ListHintView.textWidget(
+              leftText: '全部漫画 (共 $_total 部)',
+              rightWidget: OptionPopupView<MangaOrder>(
+                title: _currOrder.toTitle(),
+                top: 4,
+                value: _currOrder,
+                items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                optionBuilder: (c, v) => v.toTitle(),
+                enable: !_getting,
+                onSelect: (o) {
+                  if (_currOrder != o) {
+                    _lastOrder = _currOrder;
+                    _currOrder = o;
+                    if (mounted) setState(() {});
+                    _pdvKey.currentState?.refresh();
+                  }
+                },
               ),
             ),
-            Divider(height: 1, thickness: 1),
           ],
         ),
       ),

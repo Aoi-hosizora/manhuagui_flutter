@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -26,6 +27,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  bool _loginChecking = true;
   VoidCallback? _cancelHandler;
 
   @override
@@ -33,9 +35,11 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _loginChecking = true;
       _cancelHandler = AuthManager.instance.listen(() {
+        _loginChecking = false;
+        if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
-          if (mounted) setState(() {});
           _pdvKey.currentState?.refresh();
         }
       });
@@ -45,8 +49,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
 
   @override
   void dispose() {
-    _cancelHandler?.call();
     widget.action?.removeAction();
+    _cancelHandler?.call();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -71,10 +75,12 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (!AuthManager.instance.logined) {
+    if (_loginChecking || !AuthManager.instance.logined) {
       _data.clear();
-      return Center(
-        child: LoginFirstView(),
+      return Scaffold(
+        body: LoginFirstView(
+          checking: _loginChecking,
+        ),
       );
     }
 
@@ -113,30 +119,10 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         itemBuilder: (c, _, item) => ShelfMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
-            Container(
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    height: 26,
-                    padding: EdgeInsets.only(left: 5),
-                    child: Center(
-                      child: Text('${AuthManager.instance.username} 订阅的漫画'),
-                    ),
-                  ),
-                  Container(
-                    height: 26,
-                    padding: EdgeInsets.only(right: 5),
-                    child: Center(
-                      child: Text('共 $_total 部'),
-                    ),
-                  ),
-                ],
-              ),
+            ListHintView.textText(
+              leftText: '${AuthManager.instance.username} 订阅的漫画',
+              rightText: '共 $_total 部',
             ),
-            Divider(height: 1, thickness: 1),
           ],
         ),
       ),
