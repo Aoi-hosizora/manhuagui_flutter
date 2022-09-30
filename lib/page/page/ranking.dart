@@ -31,12 +31,12 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
-    widget.action?.addAction('', () => _controller.scrollToTop());
+    widget.action?.addAction(() => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    widget.action?.removeAction();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();

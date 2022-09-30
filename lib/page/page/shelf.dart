@@ -25,24 +25,26 @@ class ShelfSubPage extends StatefulWidget {
 class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  CancelHandler? _cancelHandler;
 
   @override
   void initState() {
     super.initState();
 
     AuthManager.instance.check();
-    AuthManager.instance.listen(() {
+    _cancelHandler = AuthManager.instance.listen(() {
       if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
       }
     });
 
-    widget.action?.addAction('', () => _controller.scrollToTop());
+    widget.action?.addAction(() => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    _cancelHandler?.call();
+    widget.action?.removeAction();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();

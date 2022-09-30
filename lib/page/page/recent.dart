@@ -27,12 +27,12 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction('', () => _controller.scrollToTop());
+    widget.action?.addAction(() => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    widget.action?.removeAction();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();

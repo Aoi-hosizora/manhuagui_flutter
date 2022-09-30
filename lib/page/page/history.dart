@@ -23,19 +23,21 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _controller = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _fabController = AnimatedFabController();
+  CancelHandler? _cancelHandler;
 
   @override
   void initState() {
     super.initState();
-    AuthManager.instance.listen(() {
+    _cancelHandler = AuthManager.instance.listen(() {
       _pdvKey.currentState?.refresh();
-    }); // TODO cancel
-    widget.action?.addAction('', () => _controller.scrollToTop());
+    });
+    widget.action?.addAction(() => _controller.scrollToTop());
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    _cancelHandler?.call();
+    widget.action?.removeAction();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -49,8 +51,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     if (page == 1) {
       _removed = 0; // refresh
     }
-    var data = await getHistories(username: AuthManager.instance.username, page: page, offset: _removed);
-    _total = await getHistoryCount(username: AuthManager.instance.username);
+    var data = await HistoryDao.getHistories(username: AuthManager.instance.username, page: page, offset: _removed);
+    _total = await HistoryDao.getHistoryCount(username: AuthManager.instance.username);
     if (mounted) setState(() {});
     return PagedList(list: data, next: page + 1);
   }
@@ -68,7 +70,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               _data.remove(history);
               _removed++;
               _total--;
-              await deleteHistory(username: AuthManager.instance.username, mid: history.mangaId);
+              await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: history.mangaId);
               if (mounted) setState(() {});
               Navigator.of(c).pop();
             },

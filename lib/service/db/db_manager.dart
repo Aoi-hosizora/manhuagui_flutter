@@ -22,7 +22,7 @@ class DBManager {
         join(path, DB_NAME),
         version: 1,
         onCreate: (db, ver) async {
-          await db.execute(createTblHistory);
+          await db.execute(HistoryDao.createTblHistory);
         },
         onUpgrade: (db, oldVer, newVer) async {},
       );

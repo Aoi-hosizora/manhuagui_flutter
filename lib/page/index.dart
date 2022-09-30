@@ -29,6 +29,7 @@ class _IndexPageState extends State<IndexPage> {
     Tuple3('订阅', Icons.notifications, SubscribeSubPage(action: _actions[2])),
     Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
   ];
+  CancelHandler? _cancelHandler;
 
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _IndexPageState extends State<IndexPage> {
     });
 
     AuthManager.instance.check();
-    AuthManager.instance.listen(() {
+    _cancelHandler = AuthManager.instance.listen(() {
       if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
       }
@@ -60,6 +61,7 @@ class _IndexPageState extends State<IndexPage> {
 
   @override
   void dispose() {
+    _cancelHandler?.call();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();
@@ -120,7 +122,7 @@ class _IndexPageState extends State<IndexPage> {
               .toList(),
           onTap: (index) async {
             if (_selectedIndex == index) {
-              _actions[_selectedIndex].invoke('');
+              _actions[_selectedIndex].invoke();
             } else {
               _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
               if (mounted) setState(() {});

@@ -35,7 +35,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
+    widget.action?.addAction(() => _actions[_controller.index].invoke());
     _actions[0].addAction('to_shelf', () => widget.action?.invoke('to_shelf'));
     _actions[0].addAction('to_update', () => _controller.animateTo(1));
     _actions[0].addAction('to_ranking', () => _controller.animateTo(3));
@@ -44,7 +44,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    widget.action?.removeAction();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();
@@ -71,7 +71,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
               .toList(),
           onTap: (idx) {
             if (idx == _selectedIndex) {
-              _actions[idx].invoke('');
+              _actions[idx].invoke();
             } else {
               _selectedIndex = idx;
             }

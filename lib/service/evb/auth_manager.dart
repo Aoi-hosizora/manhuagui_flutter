@@ -1,11 +1,11 @@
-import 'dart:async';
-
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
-import 'package:manhuagui_flutter/service/prefs/auth.dart' as prefs;
+import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:synchronized/synchronized.dart';
+
+typedef CancelHandler = Future<void> Function();
 
 class AuthManager {
   AuthManager._();
@@ -36,10 +36,11 @@ class AuthManager {
     _token = '';
   }
 
-  StreamSubscription<AuthChangedEvent> listen(Function() onData) {
-    return EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
+  CancelHandler listen(Function() onData) {
+    var stream = EventBusManager.instance.on<AuthChangedEvent>().listen((_) {
       onData.call();
     });
+    return () => stream.cancel();
   }
 
   void notify() {
@@ -54,8 +55,8 @@ class AuthManager {
       if (AuthManager.instance.logined) {
         return;
       }
-      var token = await prefs.getToken();
-      if (token == null || token.isEmpty) {
+      var token = await AuthPrefs.getToken();
+      if (token.isEmpty) {
         return;
       }
 
@@ -69,7 +70,7 @@ class AuthManager {
         var we = wrapError(e, s);
         print(we.text);
         if (we.type == ErrorType.resultError) {
-          await prefs.removeToken();
+          await AuthPrefs.setToken('');
         }
       }
     });

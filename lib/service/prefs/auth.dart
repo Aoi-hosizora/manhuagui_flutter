@@ -3,74 +3,75 @@ import 'dart:convert';
 import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 
-const _token = 'TOKEN'; // string
-const _rememberUsername = 'REMEMBER_USERNAME'; // bool
-const _rememberPassword = 'REMEMBER_PASSWORD'; // bool
-const _usernamePasswordPairs = 'USERNAME_PASSWORD_PAIRS'; // list
+class AuthPrefs {
+  AuthPrefs._();
 
-Future<String?> getToken() async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  return prefs.getString(_token);
-}
+  static const _tokenKey = 'TOKEN'; // string
+  static const _rememberUsernameKey = 'REMEMBER_USERNAME'; // bool
+  static const _rememberPasswordKey = 'REMEMBER_PASSWORD'; // bool
+  static const _usernamePasswordPairsKey = 'USERNAME_PASSWORD_PAIRS'; // list
 
-Future<void> setToken(String token) async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  await prefs.setString(_token, token);
-}
+  static Future<String> getToken() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    return prefs.getString(_tokenKey) ?? '';
+  }
 
-Future<void> removeToken() async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  await prefs.remove(_token);
-}
+  static Future<void> setToken(String token) async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    await prefs.setString(_tokenKey, token);
+  }
 
-Future<Tuple2<bool, bool>> getRememberOptions() async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  return Tuple2(prefs.getBool(_rememberUsername) ?? true, prefs.getBool(_rememberPassword) ?? false);
-}
+  static Future<Tuple2<bool, bool>> getRememberOption() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    return Tuple2(prefs.getBool(_rememberUsernameKey) ?? true, prefs.getBool(_rememberPasswordKey) ?? false);
+  }
 
-Future<void> setRememberOptions(bool rememberUsername, bool rememberPassword) async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  await prefs.setBool(_rememberUsername, rememberUsername);
-  await prefs.setBool(_rememberPassword, rememberPassword);
-}
+  static Future<void> setRememberOption(bool rememberUsername, bool rememberPassword) async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    await prefs.setBool(_rememberUsernameKey, rememberUsername);
+    await prefs.setBool(_rememberPasswordKey, rememberPassword);
+  }
 
-Future<List<Tuple2<String, String>>> getUsernamePasswordPairs() async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  var pairs = prefs.getStringList(_usernamePasswordPairs) ?? [];
-  var out = <Tuple2<String, String>>[];
-  for (var jsn in pairs) {
-    var m = json.decode(jsn) as Map<String, dynamic>;
-    var username = m['username'];
-    var password = m['password'];
-    if (username == null || password == null) {
-      continue;
+  static Future<List<Tuple2<String, String>>> getUsernamePasswordPairs() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    var pairs = prefs.getStringList(_usernamePasswordPairsKey) ?? []; // 新 > 旧
+    var out = <Tuple2<String, String>>[];
+    for (var jsn in pairs) {
+      var m = json.decode(jsn) as Map<String, dynamic>;
+      var username = m['username'];
+      var password = m['password'];
+      if (username == null || password == null) {
+        continue;
+      }
+      out.add(Tuple2(username, password));
     }
-    out.add(Tuple2(username, password));
+    return out;
   }
-  return out;
-}
 
-Future<void> addUsernamePasswordPair(String username, String password) async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  var list = await getUsernamePasswordPairs();
-  list.removeWhere((t) => t.item1 == username);
-  list.insert(0, Tuple2(username, password)); // 新 > 旧
-  var pairs = <String>[];
-  for (var pair in list) {
-    var jsn = '{"username": "${pair.item1}", "password": "${pair.item2}"}';
-    pairs.add(jsn);
+  static Future<void> addUsernamePasswordPair(String username, String password) async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    var list = await getUsernamePasswordPairs();
+    list.removeWhere((t) => t.item1 == username);
+    list.insert(0, Tuple2(username, password)); // 新 > 旧
+    var pairs = <String>[];
+    for (var pair in list) {
+      var m = <String, dynamic>{'username': pair.item1, 'password': pair.item2};
+      var jsn = json.encode(m);
+      pairs.add(jsn);
+    }
+    await prefs.setStringList(_usernamePasswordPairsKey, pairs);
   }
-  await prefs.setStringList(_usernamePasswordPairs, pairs);
-}
 
-Future<void> removeUsernamePasswordPair(String username) async {
-  var prefs = await PrefsManager.instance.loadPrefs();
-  var list = await getUsernamePasswordPairs();
-  list.removeWhere((t) => t.item1 == username);
-  var pairs = <String>[];
-  for (var pair in list) {
-    var jsn = '{"username": "${pair.item1}", "password": "${pair.item2}"}';
-    pairs.add(jsn);
+  static Future<void> removeUsernamePasswordPair(String username) async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    var list = await getUsernamePasswordPairs();
+    list.removeWhere((t) => t.item1 == username);
+    var pairs = <String>[];
+    for (var pair in list) {
+      var m = <String, dynamic>{'username': pair.item1, 'password': pair.item2};
+      var jsn = json.encode(m);
+      pairs.add(jsn);
+    }
+    await prefs.setStringList(_usernamePasswordPairsKey, pairs);
   }
-  await prefs.setStringList(_usernamePasswordPairs, pairs);
 }

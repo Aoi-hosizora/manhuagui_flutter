@@ -49,7 +49,7 @@ class _MangaPageState extends State<MangaPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _indicatorKey.currentState?.show());
     _action.addAction('history', () async {
-      _history = await getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
       if (mounted) setState(() {});
     });
   }
@@ -110,10 +110,10 @@ class _MangaPageState extends State<MangaPage> {
       _data = r.data;
 
       // <<<
-      _history = await getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {}); // 可能已经开始阅读，也可能还没访问
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {}); // 可能已经开始阅读，也可能还没访问
       if (mounted) setState(() {});
       if (_history?.read != true) {
-        addHistory(
+        await HistoryDao.addHistory(
           username: AuthManager.instance.username,
           history: MangaHistory(
             mangaId: _data!.mid,
@@ -127,20 +127,12 @@ class _MangaPageState extends State<MangaPage> {
           ),
         ).catchError((_) {});
       } else {
-        // TODO
-        updateHistory(
+        await HistoryDao.updateHistory(
           username: AuthManager.instance.username,
-          history: MangaHistory(
-            mangaId: _data!.mid,
-            mangaTitle: _data!.title,
-            mangaCover: _data!.cover,
-            mangaUrl: _data!.url,
-            // <<<
-            chapterId: 0,
-            chapterTitle: '',
-            chapterPage: 0,
-            lastTime: DateTime.now(),
-          ),
+          mid: _data!.mid,
+          title: _data!.title,
+          cover: _data!.cover,
+          url: _data!.url,
         );
       }
     }).catchError((e, s) {
@@ -186,7 +178,7 @@ class _MangaPageState extends State<MangaPage> {
   void _read() async {
     int cid;
     int page;
-    if (_history == null || !_history!.read ) {
+    if (_history == null || !_history!.read) {
       // 开始阅读
       if (_data!.chapterGroups.isEmpty) {
         Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
@@ -562,7 +554,6 @@ class _MangaPageState extends State<MangaPage> {
                                 style: Theme.of(context).textTheme.subtitle1,
                               ),
                               Text(
-
                                 '共 $_commentTotal 条',
                                 style: Theme.of(context).textTheme.subtitle1,
                               ),

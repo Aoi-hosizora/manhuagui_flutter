@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
-import 'package:manhuagui_flutter/service/prefs/chapter.dart';
+import 'package:manhuagui_flutter/service/prefs/chapter_setting.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 章节
@@ -49,7 +49,7 @@ const _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
 const _kViewportFraction = 1.08; // 页面间隔
 
 class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClientMixin {
-  PageController? _controller; // TODO
+  PageController? _controller;
   var _loading = true;
   MangaChapter? _data;
   var _error = '';
@@ -64,7 +64,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
 
   var _showRegion = false; // 显示区域提示
   var _showAppBar = false; // 显示工具栏
-  var _setting = ChapterPageSetting.defaultSetting();
+  var _setting = ChapterSetting.defaultSetting();
   var _pointerDownXPosition = 0.0; // 按住的横坐标
   var _swipeOffsetX = 0.0; // 滑动的水平偏移量
   var _swipeFirstOver = false; // 是否划出第一页
@@ -74,15 +74,11 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   void initState() {
     super.initState();
     _showAppBar = widget.showAppBar;
-    _setting.existed().then((ok) async {
-      if (!ok) {
-        _setting = ChapterPageSetting.defaultSetting();
-        await _setting.save();
-      } else {
-        await _setting.load();
-      }
-      WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    ChapterSettingPrefs.load().then((value) {
+      _setting = value;
+      if (mounted) setState(() {});
     });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     var now = DateTime.now();
     _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
   }
@@ -92,7 +88,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
     _timer?.cancel();
     _controller?.dispose();
     if (_data != null) {
-      addHistory(
+      HistoryDao.addHistory(
         username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
@@ -138,7 +134,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       _currentPage = initialPage;
       _progressValue = initialPage;
 
-      addHistory(
+      HistoryDao.addHistory(
         username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
@@ -291,7 +287,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title),
-          Container(
+          SizedBox(
             height: 38,
             width: width,
             child: DropdownButton<T>(
@@ -311,7 +307,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title),
-          Container(
+          SizedBox(
             height: 38,
             child: Switch(
               value: value,
@@ -340,8 +336,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   style: Theme.of(context).textTheme.bodyText1,
                 ),
                 onChanged: (s) async {
-                  _setting.reverseScroll = s ?? true;
-                  await _setting.save();
+                  _setting = _setting.copyWith(reverseScroll: s ?? true);
+                  await ChapterSettingPrefs.save(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -350,8 +346,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 title: '显示页码',
                 value: _setting.showPageHint,
                 onChanged: (b) async {
-                  _setting.showPageHint = b;
-                  await _setting.save();
+                  _setting = _setting.copyWith(showPageHint: b);
+                  await ChapterSettingPrefs.save(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -360,8 +356,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 title: '滑动跳转至章节',
                 value: _setting.useSwipeForChapter,
                 onChanged: (b) async {
-                  _setting.useSwipeForChapter = b;
-                  await _setting.save();
+                  _setting = _setting.copyWith(useSwipeForChapter: b);
+                  await ChapterSettingPrefs.save(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -370,8 +366,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 title: '点击跳转至章节',
                 value: _setting.useClickForChapter,
                 onChanged: (b) async {
-                  _setting.useClickForChapter = b;
-                  await _setting.save();
+                  _setting = _setting.copyWith(useClickForChapter: b);
+                  await ChapterSettingPrefs.save(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -380,8 +376,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 title: '跳转章节时弹出提示',
                 value: _setting.needCheckForChapter,
                 onChanged: (b) async {
-                  _setting.needCheckForChapter = b;
-                  await _setting.save();
+                  _setting = _setting.copyWith(needCheckForChapter: b);
+                  await ChapterSettingPrefs.save(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -390,8 +386,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                 title: '显示页面间隔',
                 value: _setting.enablePageSpace,
                 onChanged: (b) async {
-                  _setting.enablePageSpace = b;
-                  await _setting.save();
+                  _setting = _setting.copyWith(enablePageSpace: b);
+                  await ChapterSettingPrefs.save(_setting);
                   _setState(() {});
                   _controller = PageController(
                     initialPage: _controller!.initialPage,
@@ -410,8 +406,8 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
                   style: Theme.of(context).textTheme.bodyText1,
                 ),
                 onChanged: (c) async {
-                  _setting.preloadCount = (c ?? 2).clamp(0, 5);
-                  await _setting.save();
+                  _setting = _setting.copyWith(preloadCount: (c ?? 2).clamp(0, 5));
+                  await ChapterSettingPrefs.save(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },

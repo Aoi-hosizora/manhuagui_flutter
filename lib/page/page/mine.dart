@@ -24,21 +24,24 @@ class MineSubPage extends StatefulWidget {
 }
 
 class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
+  CancelHandler? _cancelHandler;
+
   @override
   void initState() {
     super.initState();
-    AuthManager.instance.listen(() {
+    _cancelHandler = AuthManager.instance.listen(() {
       if (AuthManager.instance.logined) {
         if (mounted) setState(() {});
         _loadUser();
       }
     }); // TODO cancel
-    widget.action?.addAction('', () {});
+    widget.action?.addAction(() {});
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    _cancelHandler?.call();
+    widget.action?.removeAction();
     super.dispose();
   }
 
@@ -81,7 +84,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             child: Text('确定'),
             onPressed: () async {
               Navigator.of(c).pop();
-              await removeToken();
+              await AuthPrefs.setToken('');
               AuthManager.instance.logout();
               AuthManager.instance.notify();
             },

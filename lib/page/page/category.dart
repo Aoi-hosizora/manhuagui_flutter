@@ -29,13 +29,13 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
+    widget.action?.addAction(() => _actions[_controller.index].invoke());
     widget.action?.addAction('to_genre', () => _controller.animateTo(0));
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    widget.action?.removeAction();
     widget.action?.removeAction('to_genre');
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
@@ -63,7 +63,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
               .toList(),
           onTap: (idx) {
             if (idx == _selectedIndex) {
-              _actions[idx].invoke('');
+              _actions[idx].invoke();
             } else {
               _selectedIndex = idx;
             }

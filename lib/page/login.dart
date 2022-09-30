@@ -33,10 +33,10 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      var remTuple = await getRememberOptions();
+      var remTuple = await AuthPrefs.getRememberOption();
       _rememberUsername = remTuple.item1;
       _rememberPassword = remTuple.item2;
-      _usernamePasswordPairs = await getUsernamePasswordPairs();
+      _usernamePasswordPairs = await AuthPrefs.getUsernamePasswordPairs();
       if (_usernamePasswordPairs.isNotEmpty) {
         var currentUser = _usernamePasswordPairs.first;
         _usernameController.text = currentUser.item1;
@@ -84,15 +84,15 @@ class _LoginPageState extends State<LoginPage> {
     AuthManager.instance.notify();
 
     // prefs
-    setToken(token);
-    await setRememberOptions(_rememberUsername, _rememberPassword);
+    await AuthPrefs.setToken(token);
+    await AuthPrefs.setRememberOption(_rememberUsername, _rememberPassword);
     if (!_rememberUsername) {
-      await removeUsernamePasswordPair(username);
+      await AuthPrefs.removeUsernamePasswordPair(username);
     } else {
       if (_rememberPassword) {
-        await addUsernamePasswordPair(username, password);
+        await AuthPrefs.addUsernamePasswordPair(username, password);
       } else {
-        await addUsernamePasswordPair(username, '');
+        await AuthPrefs.addUsernamePasswordPair(username, '');
       }
     }
 
@@ -176,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () async {
                               Navigator.of(c).pop();
                               _usernamePasswordPairs.removeWhere((t) => t.item1 == username);
-                              await removeUsernamePasswordPair(username);
+                              await AuthPrefs.removeUsernamePasswordPair(username);
                               if (mounted) setState(() {});
                             },
                           ),

@@ -39,10 +39,10 @@ class _MangaTocPageState extends State<MangaTocPage> {
   @override
   void initState() {
     super.initState();
-    getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) => _history = r).onError((_, __) => null);
+    HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) => _history = r).onError((_, __) => null);
 
     widget.action?.addAction('history_toc', () async {
-      _history = await getHistory(username: AuthManager.instance.username, mid: widget.mid).onError((_, __) => null);
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).onError((_, __) => null);
       if (mounted) setState(() {});
     });
   }

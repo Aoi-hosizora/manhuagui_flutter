@@ -29,7 +29,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction('', () => _actions[_controller.index].invoke(''));
+    widget.action?.addAction(() => _actions[_controller.index].invoke());
     widget.action?.addAction('to_shelf', () => _controller.animateTo(0));
   }
 
@@ -61,7 +61,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
               .toList(),
           onTap: (idx) {
             if (idx == _selectedIndex) {
-              _actions[idx].invoke('');
+              _actions[idx].invoke();
             } else {
               _selectedIndex = idx;
             }

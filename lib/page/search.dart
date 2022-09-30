@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/prefs/search.dart';
+import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
@@ -66,7 +66,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<List<String>> _getHistories({required String? keyword}) async {
-    var histories = await getSearchHistories();
+    var histories = await SearchHistoryPrefs.getSearchHistories();
     if (keyword == null) {
       return histories;
     }
@@ -81,7 +81,7 @@ class _SearchPageState extends State<SearchPage> {
     }).toList();
   }
 
-  void _search() {
+  void _search() async {
     if (_text == null) {
       Fluttertoast.showToast(msg: '请输入搜索内容');
       return;
@@ -90,8 +90,8 @@ class _SearchPageState extends State<SearchPage> {
     if (_q != _text) {
       _q = _text;
       _searchController.close();
+      await SearchHistoryPrefs.addSearchHistory(_q!);
       _pdvKey.currentState?.refresh();
-      addSearchHistory(_q!);
     } else {
       _searchController.close();
     }
@@ -149,7 +149,7 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             Positioned(
               top: 0,
-              child: Container(
+              child: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).padding.top,
                 child: Container(color: Theme.of(context).primaryColor),
@@ -237,7 +237,7 @@ class _SearchPageState extends State<SearchPage> {
             ),
             Positioned(
               top: MediaQuery.of(context).padding.top,
-              child: Container(
+              child: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: 35.0 + 5 * 2, // 45
                 child: AppBar(automaticallyImplyLeading: false),
@@ -377,7 +377,7 @@ class _SearchPageState extends State<SearchPage> {
                                     onPressed: () async {
                                       Navigator.of(c).pop();
                                       _histories.remove(h);
-                                      await removeSearchHistory(h);
+                                      await SearchHistoryPrefs.removeSearchHistory(h);
                                       if (mounted) setState(() {});
                                     },
                                   ),
@@ -407,9 +407,9 @@ class _SearchPageState extends State<SearchPage> {
                                 actions: [
                                   TextButton(
                                     child: Text('清空'),
-                                    onPressed: () {
+                                    onPressed: () async {
                                       _histories.clear();
-                                      clearSearchHistories();
+                                      await SearchHistoryPrefs.clearSearchHistories();
                                       if (mounted) setState(() {});
                                       Navigator.of(c).pop();
                                     },
