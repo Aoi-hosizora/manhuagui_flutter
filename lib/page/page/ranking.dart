@@ -4,7 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
-import 'package:manhuagui_flutter/page/view/manga_rank.dart';
+import 'package:manhuagui_flutter/page/view/manga_rank_line.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -97,9 +97,6 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      // ****************************************************************
-      // 加载 Genre
-      // ****************************************************************
       body: PlaceholderText.from(
         isLoading: _genreLoading,
         errorText: _genreError,
@@ -140,7 +137,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             },
           ),
           separator: Divider(height: 1),
-          itemBuilder: (c, _, item) => MangaRankView(manga: item),
+          itemBuilder: (c, _, item) => MangaRankLineView(manga: item),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
               ListHintView.widgets(

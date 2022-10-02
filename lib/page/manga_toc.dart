@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/chapter_group.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -82,7 +82,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
           crossAxisMargin: 2,
           child: SingleChildScrollView(
             controller: _controller,
-            child: ChapterGroupView(
+            child: MangaTocView(
               groups: widget.groups,
               full: true,
               highlightedChapter: _history?.chapterId ?? widget.highlightedChapter,

@@ -106,9 +106,6 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      // ****************************************************************
-      // 加载 Genre
-      // ****************************************************************
       body: PlaceholderText.from(
         isLoading: _genreLoading,
         errorText: _genreError,
@@ -161,9 +158,6 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
               ListHintView.widgets(
-                // ****************************************************************
-                // 检索条件
-                // ****************************************************************
                 widgets: [
                   OptionPopupView<TinyCategory>(
                     title: _currGenre.isAll() ? '剧情' : _currGenre.title,
@@ -222,9 +216,6 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             innerTopWidgets: [
               ListHintView.textWidget(
                 leftText: '搜索结果 (共 $_total 位)',
-                // ****************************************************************
-                // 检索排序
-                // ****************************************************************
                 rightWidget: OptionPopupView<AuthorOrder>(
                   title: _currOrder.toTitle(),
                   top: 4,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
+/// 可弹出扩展选项的 Widget
 class OptionPopupView<T> extends StatefulWidget {
   const OptionPopupView({
     Key? key,
@@ -8,23 +9,23 @@ class OptionPopupView<T> extends StatefulWidget {
     this.top = 4.0,
     this.height = 26.0,
     this.width = 88.0,
-    required this.value,
     required this.items,
-    this.highlightable = false,
+    required this.value,
     required this.optionBuilder,
     required this.onSelect,
+    this.highlightable = false,
     this.enable = true,
   }) : super(key: key);
 
   final String title;
-  final double top;
+  final double top; // TODO
   final double height;
   final double width;
-  final bool highlightable;
-  final T value;
   final List<T> items;
+  final T value;
   final String Function(BuildContext, T) optionBuilder;
   final void Function(T) onSelect;
+  final bool highlightable;
   final bool enable;
 
   @override
@@ -35,23 +36,22 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
   var _selected = false;
 
   void _onTap() async {
-    final itemBox = context.findRenderObject() as RenderBox;
+    final itemBox = context.findRenderObject()! as RenderBox;
     final itemRect = itemBox.localToGlobal(Offset.zero) & itemBox.size;
     _selected = true;
     if (mounted) setState(() {});
-    // ****************************************************************
-    // 弹出选项路由
-    // ****************************************************************
+
     var result = await Navigator.of(context).push(
       _OptionPopupRoute<T>(
-        buttonRect: itemRect,
-        transitionDuration: Duration(milliseconds: 300),
-        top: widget.top,
+        // buttonRect: itemRect,
+        // top: widget.top,
+        rect: Rect.fromLTRB(itemRect.left, itemRect.top + widget.top, itemRect.right, itemRect.bottom), // TODO
         value: widget.value,
         items: widget.items,
         optionBuilder: widget.optionBuilder,
       ),
     );
+
     _selected = false;
     if (mounted) setState(() {});
     if (result != null) {
@@ -94,24 +94,26 @@ class _OptionPopupRouteViewState<T> extends State<OptionPopupView<T>> {
   }
 }
 
+/// 弹出扩展选项的路由设置
 class _OptionPopupRoute<T> extends PopupRoute<T> {
   _OptionPopupRoute({
-    required this.buttonRect,
-    required this.transitionDuration,
-    required this.top,
+    // required this.buttonRect,
+    // required this.top,
+    required this.rect,
     required this.value,
     required this.items,
     required this.optionBuilder,
   });
 
-  final Rect buttonRect;
-  final double top;
+  // final Rect buttonRect;
+  // final double top; // TODO
+  final Rect rect;
   final T value;
   final List<T> items;
   final String Function(BuildContext, T) optionBuilder;
 
   @override
-  final Duration transitionDuration;
+  Duration get transitionDuration => const Duration(milliseconds: 300);
 
   @override
   String get barrierLabel => MaterialLocalizations.of(navigator!.context).modalBarrierDismissLabel;
@@ -127,8 +129,9 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
     return LayoutBuilder(
       builder: (c, _) => CustomSingleChildLayout(
         delegate: _OptionPopupRouteLayout<T>(
-          buttonRect: buttonRect,
-          top: top,
+          // buttonRect: buttonRect,
+          // top: top,
+          rect: rect, // TODO
         ),
         child: MediaQuery.removePadding(
           context: c,
@@ -142,9 +145,6 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
               curve: Interval(0, 0.25),
               reverseCurve: Interval(0.75, 1),
             ),
-            // ****************************************************************
-            // 选项界面
-            // ****************************************************************
             child: _OptionPopupRouteView<T>(
               value: value,
               items: items,
@@ -158,14 +158,17 @@ class _OptionPopupRoute<T> extends PopupRoute<T> {
   }
 }
 
+/// 路由需要指定的布局设置，主要是显示位置
 class _OptionPopupRouteLayout<T> extends SingleChildLayoutDelegate {
   _OptionPopupRouteLayout({
-    required this.buttonRect,
-    required this.top,
+    // required this.buttonRect,
+    // required this.top,
+    required this.rect,
   });
 
-  final Rect buttonRect;
-  final double top;
+  // final Rect buttonRect;
+  // final double top;
+  final Rect rect;
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
@@ -179,17 +182,22 @@ class _OptionPopupRouteLayout<T> extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    double left = buttonRect.left.clamp(0.0, size.width - childSize.width);
-    double top = buttonRect.top.clamp(0.0, size.height - childSize.height);
-    return Offset(left, top + buttonRect.height + this.top);
+    // double left = buttonRect.left.clamp(0.0, size.width - childSize.width);
+    // double top = buttonRect.top.clamp(0.0, size.height - childSize.height);
+    // return Offset(left, top + buttonRect.height + this.top);
+    double left = rect.left.clamp(0.0, size.width - childSize.width);
+    double top = rect.top.clamp(0.0, size.height - childSize.height);
+    return Offset(left, top + rect.height); // TODO
   }
 
   @override
   bool shouldRelayout(_OptionPopupRouteLayout<T> oldDelegate) {
-    return buttonRect != oldDelegate.buttonRect || top != oldDelegate.top;
+    // return buttonRect != oldDelegate.buttonRect || top != oldDelegate.top;
+    return rect != oldDelegate.rect;
   }
 }
 
+/// 扩展选项的具体 Widget
 class _OptionPopupRouteView<T> extends StatefulWidget {
   const _OptionPopupRouteView({
     Key? key,
@@ -221,85 +229,59 @@ class _OptionPopupViewRouteState<T> extends State<_OptionPopupRouteView<T>> {
     });
   }
 
-  Widget _buildGridItem(T value, int index, {required double hSpace, required double width, required double height}) {
+  Widget _buildItem({required T value, required double width, required double height}) {
     var selected = widget.value != null && widget.value == value;
-    // ****************************************************************
-    // 每个选项
-    // ****************************************************************
     return Container(
       width: width,
       height: height,
-      margin: index == 0
-          ? EdgeInsets.only(right: hSpace)
-          : index == 3
-              ? EdgeInsets.only(left: hSpace)
-              : EdgeInsets.symmetric(horizontal: hSpace),
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(3),
           color: selected ? Theme.of(context).primaryColor : Colors.white,
         ),
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            buttonTheme: ButtonTheme.of(context).copyWith(
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        child: OutlinedButton(
+          child: Text(
+            widget.optionBuilder(context, value),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: selected ? Colors.white : Colors.black,
             ),
           ),
-          child: OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(value),
-            child: Text(
-              widget.optionBuilder(context, value),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: selected ? Colors.white : Colors.black,
-              ),
-            ),
+          onPressed: () => Navigator.of(context).pop(value),
+          style: OutlinedButton.styleFrom(
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    var hPadding = 15.0;
-    var vPadding = 10.0;
-    var hSpace = 3.0;
-    var vSpace = 2 * hSpace;
-    var width = (MediaQuery.of(context).size.width - 2 * hPadding - 6 * hSpace) / 4; // |   ▢  ▢  ▢  ▢   |
-    var height = 36.0;
+  Widget _buildGroupItems({required double hPadding}) {
+    const hSpace = 6.0;
+    const vSpace = 9.0;
 
-    var gridRows = <Widget>[];
-    var rows = (widget.items.length.toDouble() / 4).ceil();
-    for (var r = 0; r < rows; r++) {
-      var columns = <T>[
-        for (var i = 4 * r; i < 4 * (r + 1) && i < widget.items.length; i++) widget.items[i],
-      ];
-      gridRows.add(
-        // ****************************************************************
-        // 选项中的每一行
-        // ****************************************************************
-        Row(
-          children: [
-            for (var i = 0; i < columns.length; i++)
-              _buildGridItem(
-                columns[i],
-                i,
-                hSpace: hSpace,
-                width: width,
-                height: height,
-              ),
-          ],
+    var width = (MediaQuery.of(context).size.width - 2 * hPadding - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
+    var widgets = <Widget>[];
+    for (var item in widget.items) {
+      widgets.add(
+        _buildItem(
+          value: item,
+          width: width,
+          height: 36,
         ),
       );
-      if (r != rows - 1) {
-        gridRows.add(
-          SizedBox(height: vSpace),
-        );
-      }
     }
 
+    return Wrap(
+      spacing: hSpace,
+      runSpacing: vSpace,
+      children: widgets,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Container(
@@ -318,16 +300,10 @@ class _OptionPopupViewRouteState<T> extends State<_OptionPopupRouteView<T>> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ****************************************************************
-              // 所有选项
-              // ****************************************************************
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ...gridRows,
-                  ],
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                child: _buildGroupItems(
+                  hPadding: 15,
                 ),
               ),
             ],
@@ -336,13 +312,14 @@ class _OptionPopupViewRouteState<T> extends State<_OptionPopupRouteView<T>> {
         // ****************************************************************
         // 背景
         // ****************************************************************
+        // TODO 需要嗎，如何优化 ???
         if (_showBarrier)
           AnimatedOpacity(
-            opacity: _showBarrier ? 1 : 0,
+            opacity: _showBarrier ? 1.0 : 0.0,
             duration: widget.transitionDuration,
             child: Builder(
               builder: (c) {
-                final box = _containerKey.currentContext!.findRenderObject() as RenderBox;
+                final box = _containerKey.currentContext!.findRenderObject()! as RenderBox;
                 final size = box.size;
                 final position = box.localToGlobal(Offset.zero);
                 final paddingV = MediaQuery.of(context).padding.top + MediaQuery.of(context).padding.bottom;

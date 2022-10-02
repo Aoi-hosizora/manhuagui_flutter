@@ -12,8 +12,7 @@ enum MangaGroupViewStyle {
   smallOneLine,
 }
 
-/// View for [MangaGroup].
-/// Used in [RecommendSubPage] and [MangaGroupPage].
+/// 单个漫画分组，在 [RecommendSubPage] / [MangaGroupPage] 使用
 class MangaGroupView extends StatefulWidget {
   const MangaGroupView({
     Key? key,
@@ -37,9 +36,7 @@ class MangaGroupView extends StatefulWidget {
 }
 
 class _MangaGroupViewState extends State<MangaGroupView> {
-  bool get isSmall => widget.style == MangaGroupViewStyle.smallTruncate || widget.style == MangaGroupViewStyle.smallOneLine;
-
-  Widget _buildBlock({required TinyBlockManga? manga, required double width, required double height, void Function()? onMorePressed}) {
+  Widget _buildItem({required TinyBlockManga? manga, required double width, required double height, void Function()? onMorePressed}) {
     if (manga == null) {
       return Container(
         width: width,
@@ -141,7 +138,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     );
   }
 
-  Widget _buildItems() {
+  Widget _buildGroupItems() {
     const hSpace = 5.0;
     const vSpace = 6.0;
 
@@ -170,9 +167,9 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     var smallerWidth = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
     var widgets = <Widget>[];
     for (var manga in mangas) {
-      var width = !isSmall ? largerWidth : smallerWidth;
+      var width = widget.style == MangaGroupViewStyle.smallTruncate || widget.style == MangaGroupViewStyle.smallOneLine ? smallerWidth : largerWidth;
       widgets.add(
-        _buildBlock(
+        _buildItem(
           manga: manga,
           width: width,
           height: width / 3 * 4,
@@ -222,7 +219,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
               space: 6,
             ),
           ),
-          _buildItems(),
+          _buildGroupItems(),
         ],
       ),
     );

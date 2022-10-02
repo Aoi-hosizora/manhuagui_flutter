@@ -3,8 +3,7 @@ import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
-/// View for [Comment].
-/// Used in [MangaPage] and [CommentPage].
+/// 漫画评论行，在 [MangaPage] / [MangaCommentPage] 使用
 class CommentLineView extends StatefulWidget {
   const CommentLineView({
     Key? key,

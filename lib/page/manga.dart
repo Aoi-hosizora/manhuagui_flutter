@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/page/chapter.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/manga_comment.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
-import 'package:manhuagui_flutter/page/view/chapter_group.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -504,7 +504,7 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  child: ChapterGroupView(
+                  child: MangaTocView(
                     groups: _data!.chapterGroups,
                     full: false,
                     highlightedChapter: _history?.chapterId ?? 0,
@@ -564,6 +564,7 @@ class _MangaPageState extends State<MangaPage> {
                           Container(
                             margin: EdgeInsets.only(left: 2.0 * 12 + 32),
                             width: MediaQuery.of(context).size.width - 3 * 12 - 32,
+                            color: Colors.white,
                             child: Divider(height: 1, thickness: 1),
                           ),
                         ],

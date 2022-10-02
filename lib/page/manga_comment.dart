@@ -81,6 +81,7 @@ class _MangaCommentPageState extends State<MangaCommentPage> {
         separator: Container(
           margin: EdgeInsets.only(left: 2.0 * 12 + 32),
           width: MediaQuery.of(context).size.width - 3 * 12 - 32,
+          color: Colors.white,
           child: Divider(height: 1, thickness: 1),
         ),
         itemBuilder: (c, _, item) => CommentLineView(comment: item),

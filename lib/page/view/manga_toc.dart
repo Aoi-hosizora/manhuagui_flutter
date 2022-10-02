@@ -4,10 +4,9 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/chapter.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 
-/// View for [MangaChapterGroup].
-/// Used in [MangaPage] and [MangaTocPage].
-class ChapterGroupView extends StatefulWidget {
-  const ChapterGroupView({
+/// 漫画章节目录，在 [MangaPage] / [MangaTocPage] 使用
+class MangaTocView extends StatefulWidget {
+  const MangaTocView({
     Key? key,
     required this.groups,
     required this.full,
@@ -27,10 +26,10 @@ class ChapterGroupView extends StatefulWidget {
   final String mangaUrl;
 
   @override
-  _ChapterGroupViewState createState() => _ChapterGroupViewState();
+  _MangaTocViewState createState() => _MangaTocViewState();
 }
 
-class _ChapterGroupViewState extends State<ChapterGroupView> {
+class _MangaTocViewState extends State<MangaTocView> {
   var _invertedOrder = true;
 
   Widget _buildHeader() {
@@ -178,17 +177,17 @@ class _ChapterGroupViewState extends State<ChapterGroupView> {
 
   Widget _buildGroupItems({required MangaChapterGroup group, required double hPadding, bool firstGroup = false}) {
     const hSpace = 6.0;
-    const vSpace = 6.0;
+    const vSpace = 9.0;
 
     List<TinyMangaChapter?> chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
     if (!widget.full) {
       if (firstGroup) {
         if (chapters.length > 12) {
-          chapters = [...chapters.sublist(0, 11), null];
+          chapters = [...chapters.sublist(0, 11), null]; // X X X X | X X X X | X X X O
         }
       } else {
         if (chapters.length > 4) {
-          chapters = [...chapters.sublist(0, 3), null];
+          chapters = [...chapters.sublist(0, 3), null]; // X X X O
         }
       }
     }
