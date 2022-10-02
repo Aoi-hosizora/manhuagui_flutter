@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 分类-作者
+/// 分类-漫画作者
 class AuthorSubPage extends StatefulWidget {
   const AuthorSubPage({
     Key? key,
@@ -160,12 +160,9 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
               ListHintView.widgets(
                 widgets: [
                   OptionPopupView<TinyCategory>(
-                    title: _currGenre.isAll() ? '剧情' : _currGenre.title,
-                    top: 4,
-                    highlightable: true,
-                    value: _currGenre,
                     items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
-                    optionBuilder: (c, v) => v.title,
+                    value: _currGenre,
+                    titleBuilder: (c, v) => v.isAll() ? '剧情' : v.title,
                     enable: !_getting,
                     onSelect: (g) {
                       if (_currGenre != g) {
@@ -177,12 +174,9 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
                     },
                   ),
                   OptionPopupView<TinyCategory>(
-                    title: _currAge.isAll() ? '受众' : _currAge.title,
-                    top: 4,
-                    highlightable: true,
-                    value: _currAge,
                     items: allAges,
-                    optionBuilder: (c, v) => v.title,
+                    value: _currAge,
+                    titleBuilder: (c, v) => v.isAll() ? '受众' : v.title,
                     enable: !_getting,
                     onSelect: (a) {
                       if (_currAge != a) {
@@ -194,12 +188,9 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
                     },
                   ),
                   OptionPopupView<TinyCategory>(
-                    title: _currZone.isAll() ? '地区' : _currZone.title,
-                    top: 4,
-                    highlightable: true,
-                    value: _currZone,
                     items: allZones,
-                    optionBuilder: (c, v) => v.title,
+                    value: _currZone,
+                    titleBuilder: (c, v) => v.isAll() ? '地区' : v.title,
                     enable: !_getting,
                     onSelect: (z) {
                       if (_currZone != z) {
@@ -217,12 +208,9 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
               ListHintView.textWidget(
                 leftText: '搜索结果 (共 $_total 位)',
                 rightWidget: OptionPopupView<AuthorOrder>(
-                  title: _currOrder.toTitle(),
-                  top: 4,
-                  highlightable: true,
-                  value: _currOrder,
                   items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byUpdate],
-                  optionBuilder: (c, v) => v.toTitle(),
+                  value: _currOrder,
+                  titleBuilder: (c, v) => v.toTitle(),
                   enable: !_getting,
                   onSelect: (o) {
                     if (_currOrder != o) {

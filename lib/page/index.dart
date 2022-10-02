@@ -20,11 +20,9 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> {
-  DateTime? _lastBackPressedTime;
-
   final _controller = PageController();
-  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   var _selectedIndex = 0;
+  late final _actions = List.generate(_tabs.length, (_) => ActionController()); // TODO recursive ???
   late final _tabs = [
     Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
     Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1])),
@@ -39,26 +37,27 @@ class _IndexPageState extends State<IndexPage> {
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       var ok = await _checkPermission();
       if (!ok) {
-        Fluttertoast.showToast(msg: '权限授予失败，Manhuagui 正在退出');
+        Fluttertoast.showToast(msg: '权限授予失败，Manhuagui 即将退出');
         SystemNavigator.pop();
       }
     });
 
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      // TODO necessary to use addPostFrameCallback ???
       _cancelHandlers.add(AuthManager.instance.listen(() {
         if (AuthManager.instance.logined) {
           if (mounted) setState(() {});
         }
       }));
       await AuthManager.instance.check();
-
-      _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
-        _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
-      }));
-      _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-        _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
-      }));
     });
+
+    _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
+      _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
+      _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+    }));
   }
 
   @override
@@ -76,6 +75,8 @@ class _IndexPageState extends State<IndexPage> {
     }
     return true;
   }
+
+  DateTime? _lastBackPressedTime;
 
   Future<bool> _onWillPop() {
     DateTime now = DateTime.now();

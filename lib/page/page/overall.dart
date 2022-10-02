@@ -107,11 +107,9 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
             ListHintView.textWidget(
               leftText: '全部漫画 (共 $_total 部)',
               rightWidget: OptionPopupView<MangaOrder>(
-                title: _currOrder.toTitle(),
-                top: 4,
-                value: _currOrder,
                 items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                optionBuilder: (c, v) => v.toTitle(),
+                value: _currOrder,
+                titleBuilder: (c, v) => v.toTitle(),
                 enable: !_getting,
                 onSelect: (o) {
                   if (_currOrder != o) {

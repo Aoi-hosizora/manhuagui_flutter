@@ -120,29 +120,6 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: EdgeInsets.only(left: 15, right: 15, top: 10),
                 child: TypeAheadFormField(
-                  textFieldConfiguration: TextFieldConfiguration(
-                    autofocus: true,
-                    controller: _usernameController,
-                    enabled: !_logining,
-                    decoration: InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(vertical: 5),
-                      labelText: '用户名',
-                      hintText: '请输入用户名',
-                      icon: Icon(Icons.person),
-                    ),
-                  ),
-                  validator: (value) => value?.trim().isNotEmpty != true ? '用户名不能为空' : null,
-                  hideOnLoading: true,
-                  hideOnEmpty: true,
-                  hideOnError: true,
-                  hideSuggestionsOnKeyboardHide: true,
-                  suggestionsBoxVerticalOffset: 5,
-                  suggestionsBoxDecoration: SuggestionsBoxDecoration(
-                    offsetX: 40,
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width - 70,
-                    ),
-                  ),
                   suggestionsBoxController: _suggestionController,
                   suggestionsCallback: (pattern) => _usernamePasswordPairs.map((e) => e.item1).where((t) => t.contains(pattern)),
                   onSuggestionSelected: (_) {},
@@ -183,6 +160,29 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  validator: (value) => value?.trim().isNotEmpty != true ? '用户名不能为空' : null,
+                  textFieldConfiguration: TextFieldConfiguration(
+                    controller: _usernameController,
+                    autofocus: true,
+                    enabled: !_logining,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(vertical: 5),
+                      labelText: '用户名',
+                      hintText: '请输入用户名',
+                      icon: Icon(Icons.person),
+                    ),
+                  ),
+                  hideOnLoading: true,
+                  hideOnEmpty: true,
+                  hideOnError: true,
+                  hideSuggestionsOnKeyboardHide: true,
+                  suggestionsBoxVerticalOffset: 5,
+                  suggestionsBoxDecoration: SuggestionsBoxDecoration(
+                    offsetX: 40,
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width - 70,
                     ),
                   ),
                 ),

@@ -30,14 +30,16 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    _cancelHandler = AuthManager.instance.listen(() {
-      _loginChecking = false;
-      if (mounted) setState(() {});
-      if (AuthManager.instance.logined) {
-        _loadUser();
-      }
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() {
+        _loginChecking = false;
+        if (mounted) setState(() {});
+        if (AuthManager.instance.logined) {
+          _loadUser();
+        }
+      });
+      await AuthManager.instance.check();
     });
-    WidgetsBinding.instance?.addPostFrameCallback((_) => AuthManager.instance.check());
   }
 
   @override
@@ -67,7 +69,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       var we = wrapError(e, s);
       _error = we.text;
       if (we.response?.statusCode == 401) {
-        _logout(sure: true);
+        _logout(sure: true); // TODO need ???
       }
     } finally {
       _loading = false;

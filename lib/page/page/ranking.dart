@@ -143,12 +143,9 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
               ListHintView.widgets(
                 widgets: [
                   OptionPopupView<TinyCategory>(
-                    title: _currType.isAll() ? '分类' : _currType.title,
-                    top: 4,
-                    highlightable: true,
-                    value: _currType,
                     items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
-                    optionBuilder: (c, v) => v.title,
+                    value: _currType,
+                    titleBuilder: (c, v) => v.isAll() ? '分类' : v.title,
                     enable: !_getting,
                     onSelect: (t) {
                       if (_currType != t) {
@@ -160,12 +157,9 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                     },
                   ),
                   OptionPopupView<TinyCategory>(
-                    title: _currDuration.title,
-                    top: 4,
-                    highlightable: true,
-                    value: _currDuration,
                     items: allRankDurations,
-                    optionBuilder: (c, v) => v.title,
+                    value: _currDuration,
+                    titleBuilder: (c, v) => v.title,
                     enable: !_getting,
                     onSelect: (d) {
                       if (_currDuration != d) {

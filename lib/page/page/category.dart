@@ -21,11 +21,11 @@ class CategorySubPage extends StatefulWidget {
 
 class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin {
   late final _controller = TabController(length: _tabs.length, vsync: this);
-  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   var _selectedIndex = 0;
+  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   late final _tabs = [
     Tuple2('类别', GenreSubPage(action: _actions[0])),
-    Tuple2('作者', AuthorSubPage(action: _actions[1])),
+    Tuple2('漫画作者', AuthorSubPage(action: _actions[1])),
   ];
   VoidCallback? _cancelHandler;
 
@@ -34,7 +34,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
     _cancelHandler = EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateTo(0);
+      _controller.animateTo(0); // TODO use addPostFrameCallback ???
     });
   }
 
@@ -55,7 +55,6 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: Theme.of(context).primaryTextTheme.subtitle1,
           tabs: _tabs
               .map(
                 (t) => Padding(

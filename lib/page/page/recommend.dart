@@ -30,8 +30,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     widget.action?.addAction(() => _controller.scrollToTop());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
   }
 
   @override
@@ -79,6 +79,16 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           text: Text(text),
         ),
       ),
+    );
+  }
+
+  Widget _buildGroup(MangaGroup group, MangaGroupType type, MangaGroupViewStyle style) {
+    return MangaGroupView(
+      group: group,
+      type: type,
+      style: style,
+      margin: EdgeInsets.only(top: 12),
+      padding: EdgeInsets.only(bottom: 6),
     );
   }
 
@@ -130,75 +140,16 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     ),
                   ),
                 ),
-                MangaGroupView(
-                  group: _data!.serial.topGroup,
-                  type: MangaGroupType.serial,
-                  style: MangaGroupViewStyle.normalTruncate,
-                  margin: EdgeInsets.only(top: 12),
-                  padding: EdgeInsets.only(bottom: 6),
-                ), // 热门连载
-                MangaGroupView(
-                  group: _data!.finish.topGroup,
-                  type: MangaGroupType.finish,
-                  style: MangaGroupViewStyle.normalTruncate,
-                  margin: EdgeInsets.only(top: 12),
-                  padding: EdgeInsets.only(bottom: 6),
-                ), // 经典完结
-                MangaGroupView(
-                  group: _data!.latest.topGroup,
-                  type: MangaGroupType.latest,
-                  style: MangaGroupViewStyle.normalTruncate,
-                  margin: EdgeInsets.only(top: 12),
-                  padding: EdgeInsets.only(bottom: 6),
-                ), // 最新上架
-                for (var group in _data!.serial.groups)
-                  MangaGroupView(
-                    group: group,
-                    type: MangaGroupType.serial,
-                    style: MangaGroupViewStyle.smallTruncate,
-                    margin: EdgeInsets.only(top: 12),
-                    padding: EdgeInsets.only(bottom: 6),
-                  ), // 热门连载...
-                for (var group in _data!.finish.groups)
-                  MangaGroupView(
-                    group: group,
-                    type: MangaGroupType.finish,
-                    style: MangaGroupViewStyle.smallTruncate,
-                    margin: EdgeInsets.only(top: 12),
-                    padding: EdgeInsets.only(bottom: 6),
-                  ), // 经典完结...
-                for (var group in _data!.latest.groups)
-                  MangaGroupView(
-                    group: group,
-                    type: MangaGroupType.latest,
-                    style: MangaGroupViewStyle.smallTruncate,
-                    margin: EdgeInsets.only(top: 12),
-                    padding: EdgeInsets.only(bottom: 6),
-                  ), // 最新上架...
-                for (var group in _data!.serial.otherGroups)
-                  MangaGroupView(
-                    group: group,
-                    type: MangaGroupType.serial,
-                    style: MangaGroupViewStyle.smallOneLine,
-                    margin: EdgeInsets.only(top: 12),
-                    padding: EdgeInsets.only(bottom: 6),
-                  ), // 热门连载...
-                for (var group in _data!.finish.otherGroups)
-                  MangaGroupView(
-                    group: group,
-                    type: MangaGroupType.finish,
-                    style: MangaGroupViewStyle.smallOneLine,
-                    margin: EdgeInsets.only(top: 12),
-                    padding: EdgeInsets.only(bottom: 6),
-                  ), // 经典完结...
-                for (var group in _data!.latest.otherGroups)
-                  MangaGroupView(
-                    group: group,
-                    type: MangaGroupType.latest,
-                    style: MangaGroupViewStyle.smallOneLine,
-                    margin: EdgeInsets.only(top: 12),
-                    padding: EdgeInsets.only(bottom: 6),
-                  ), // 热门连载...
+                _buildGroup(_data!.serial.topGroup, MangaGroupType.serial, MangaGroupViewStyle.normalTruncate), // 热门连载
+                _buildGroup(_data!.finish.topGroup, MangaGroupType.finish, MangaGroupViewStyle.normalTruncate), // 经典完结
+                _buildGroup(_data!.latest.topGroup, MangaGroupType.latest, MangaGroupViewStyle.normalTruncate), // 最新上架
+                for (var group in _data!.serial.groups) _buildGroup(group, MangaGroupType.serial, MangaGroupViewStyle.smallTruncate), // 热门连载...
+                for (var group in _data!.finish.groups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallTruncate), // 经典完结...
+                for (var group in _data!.latest.groups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallTruncate), // 最新上架...
+                for (var group in _data!.serial.otherGroups) _buildGroup(group, MangaGroupType.serial, MangaGroupViewStyle.smallOneLine), // 热门连载...
+                for (var group in _data!.finish.otherGroups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallOneLine), // 经典完结...
+                for (var group in _data!.latest.otherGroups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallOneLine), // 最新上架...
+                SizedBox(height: 12),
               ],
             ),
           ),

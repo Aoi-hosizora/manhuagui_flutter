@@ -132,7 +132,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         initialPage: initialPage - 1,
         viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
       );
-      oldController?.dispose(); // TODO ??? use this
+      oldController?.dispose(); // TODO use this way to update controller ???
       _currentPage = initialPage;
       _progressValue = initialPage;
 

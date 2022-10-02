@@ -227,6 +227,7 @@ class _AuthorPageState extends State<AuthorPage> {
                       color: Colors.white,
                       child: Column(
                         children: [
+                          // TODO use ListHint
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             child: Row(
@@ -244,10 +245,10 @@ class _AuthorPageState extends State<AuthorPage> {
                                 // ****************************************************************
                                 if (_total > 0)
                                   OptionPopupView<MangaOrder>(
-                                    title: _currOrder.toTitle(),
-                                    top: 4,
-                                    value: _currOrder,
                                     items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                                    value: _currOrder,
+                                    titleBuilder: (c, v) => v.toTitle(),
+                                    enable: !_getting,
                                     onSelect: (o) {
                                       if (_currOrder != o) {
                                         _lastOrder = _currOrder;
@@ -256,8 +257,6 @@ class _AuthorPageState extends State<AuthorPage> {
                                         _pdvKey.currentState?.refresh();
                                       }
                                     },
-                                    optionBuilder: (c, v) => v.toTitle(),
-                                    enable: !_getting,
                                   ),
                               ],
                             ),

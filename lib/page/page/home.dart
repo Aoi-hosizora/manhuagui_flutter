@@ -25,8 +25,8 @@ class HomeSubPage extends StatefulWidget {
 
 class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStateMixin {
   late final _controller = TabController(length: _tabs.length, vsync: this);
-  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   var _selectedIndex = 0;
+  late final _actions = List.generate(_tabs.length, (_) => ActionController());
   late final _tabs = [
     Tuple2('推荐', RecommendSubPage(action: _actions[0])),
     Tuple2('更新', RecentSubPage(action: _actions[1])),
@@ -64,7 +64,6 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: Theme.of(context).primaryTextTheme.subtitle1,
           tabs: _tabs
               .map(
                 (t) => Padding(

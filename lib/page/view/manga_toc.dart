@@ -175,7 +175,7 @@ class _MangaTocViewState extends State<MangaTocView> {
     );
   }
 
-  Widget _buildGroupItems({required MangaChapterGroup group, required double hPadding, bool firstGroup = false}) {
+  Widget _buildGroupItems({required MangaChapterGroup group, required EdgeInsets padding, bool firstGroup = false}) {
     const hSpace = 6.0;
     const vSpace = 9.0;
 
@@ -192,7 +192,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       }
     }
 
-    var width = (MediaQuery.of(context).size.width - 2 * hPadding - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
+    var width = (MediaQuery.of(context).size.width - 2 * padding.horizontal - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
     var widgets = <Widget>[];
     for (var chapter in group.chapters) {
       widgets.add(
@@ -204,10 +204,13 @@ class _MangaTocViewState extends State<MangaTocView> {
       );
     }
 
-    return Wrap(
-      spacing: hSpace,
-      runSpacing: vSpace,
-      children: widgets,
+    return Padding(
+      padding: padding,
+      child: Wrap(
+        spacing: hSpace,
+        runSpacing: vSpace,
+        children: widgets,
+      ),
     );
   }
 
@@ -251,13 +254,10 @@ class _MangaTocViewState extends State<MangaTocView> {
             ),
           ),
           SizedBox(height: 10),
-          Padding(
+          _buildGroupItems(
+            group: groups[i],
             padding: EdgeInsets.symmetric(horizontal: 12),
-            child: _buildGroupItems(
-              group: groups[i],
-              hPadding: 12,
-              firstGroup: i == 0,
-            ),
+            firstGroup: i == 0,
           ),
         ],
         SizedBox(height: 5),

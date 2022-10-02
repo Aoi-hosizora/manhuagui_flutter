@@ -54,7 +54,7 @@ class ListHintView extends StatelessWidget {
             children: style == ListHintViewStyle.textText
                 ? [
                     Container(
-                      height: 26,
+                      height: 26, // <<<
                       padding: EdgeInsets.only(left: 5),
                       child: Center(
                         child: Text(leftText!),

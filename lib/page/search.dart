@@ -45,7 +45,10 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => Future.delayed(Duration(milliseconds: 200), () => _searchController.open()));
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      await Future.delayed(Duration(milliseconds: 200));
+      _searchController.open();
+    });
   }
 
   @override
@@ -205,10 +208,10 @@ class _SearchPageState extends State<SearchPage> {
                     ListHintView.textWidget(
                       leftText: '"$_q" 的搜索结果 (共 $_total 部)',
                       rightWidget: OptionPopupView<MangaOrder>(
-                        title: _currOrder.toTitle(),
-                        top: 4,
-                        value: _currOrder,
                         items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                        value: _currOrder,
+                        titleBuilder: (c, v) => v.toTitle(),
+                        enable: !_getting,
                         onSelect: (o) {
                           if (_currOrder != o) {
                             _lastOrder = _currOrder;
@@ -217,8 +220,6 @@ class _SearchPageState extends State<SearchPage> {
                             _pdvKey.currentState?.refresh();
                           }
                         },
-                        optionBuilder: (c, v) => v.toTitle(),
-                        enable: !_getting,
                       ),
                     ),
                   ],
