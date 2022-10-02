@@ -163,8 +163,8 @@ class _MangaGroupViewState extends State<MangaGroupView> {
         break;
     }
 
-    var largerWidth = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
-    var smallerWidth = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
+    final largerWidth = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
+    final smallerWidth = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
     var widgets = <Widget>[];
     for (var manga in mangas) {
       var width = widget.style == MangaGroupViewStyle.smallTruncate || widget.style == MangaGroupViewStyle.smallOneLine ? smallerWidth : largerWidth;

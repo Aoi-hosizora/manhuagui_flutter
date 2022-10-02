@@ -12,8 +12,7 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 
-/// 作者
-/// Page for [Author].
+/// 漫画作者页，网络请求并展示 [Author] 信息
 class AuthorPage extends StatefulWidget {
   const AuthorPage({
     Key? key,
@@ -150,7 +149,7 @@ class _AuthorPageState extends State<AuthorPage> {
                     // 信息
                     // ****************************************************************
                     Container(
-                      width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢ |
+                      width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢▢ |
                       height: 150,
                       margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
                       child: Center(

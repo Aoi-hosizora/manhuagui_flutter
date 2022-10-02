@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
-/// 设置
+/// 设置页，从 [MineSubPage] 进入
 class SettingPage extends StatefulWidget {
   const SettingPage({Key? key}) : super(key: key);
 

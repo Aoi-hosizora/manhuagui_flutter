@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 可弹出扩展选项的 Widget
 class OptionPopupView<T extends Object> extends StatefulWidget {
   const OptionPopupView({
     Key? key,
@@ -119,7 +118,6 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
   }
 }
 
-/// 扩展选项的具体 Widget
 class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
   const _OptionPopupRouteView({
     Key? key,

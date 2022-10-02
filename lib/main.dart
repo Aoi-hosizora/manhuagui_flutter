@@ -25,6 +25,11 @@ class MyApp extends StatelessWidget {
             systemNavigationBarIconBrightness: Brightness.dark,
           ),
         ),
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: const {
+            TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          },
+        ),
         splashFactory: CustomInkRipple.preferredSplashFactory,
       ).withPreferredButtonStyles(),
       debugShowCheckedModeBanner: false,

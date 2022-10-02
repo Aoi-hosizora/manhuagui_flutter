@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/page/chapter.dart';
+import 'package:manhuagui_flutter/page/manga_browser.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 
 /// 漫画章节目录，在 [MangaPage] / [MangaTocPage] 使用
@@ -130,7 +130,7 @@ class _MangaTocViewState extends State<MangaTocView> {
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (c) => chapter != null
-                          ? ChapterPage(
+                          ? MangaBrowserPage(
                               mid: chapter.mid,
                               cid: chapter.cid,
                               mangaTitle: widget.mangaTitle,
@@ -143,7 +143,6 @@ class _MangaTocViewState extends State<MangaTocView> {
                               mangaCover: widget.mangaCover,
                               mangaUrl: widget.mangaUrl,
                               groups: widget.groups,
-                              highlightedChapter: widget.highlightedChapter,
                             ),
                     ),
                   ),
@@ -178,6 +177,7 @@ class _MangaTocViewState extends State<MangaTocView> {
   Widget _buildGroupItems({required MangaChapterGroup group, required EdgeInsets padding, bool firstGroup = false}) {
     const hSpace = 6.0;
     const vSpace = 9.0;
+    final width = (MediaQuery.of(context).size.width - 2 * padding.horizontal - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
 
     List<TinyMangaChapter?> chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
     if (!widget.full) {
@@ -192,24 +192,19 @@ class _MangaTocViewState extends State<MangaTocView> {
       }
     }
 
-    var width = (MediaQuery.of(context).size.width - 2 * padding.horizontal - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
-    var widgets = <Widget>[];
-    for (var chapter in group.chapters) {
-      widgets.add(
-        _buildItem(
-          chapter: chapter,
-          width: width,
-          height: 36,
-        ),
-      );
-    }
-
     return Padding(
       padding: padding,
       child: Wrap(
         spacing: hSpace,
         runSpacing: vSpace,
-        children: widgets,
+        children: [
+          for (var chapter in group.chapters)
+            _buildItem(
+              chapter: chapter,
+              width: width,
+              height: 36,
+            ),
+        ],
       ),
     );
   }

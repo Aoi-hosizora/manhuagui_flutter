@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
+/// 漫画评论列表页，网络请求并展示 [Comment] 信息
 class MangaCommentPage extends StatefulWidget {
   const MangaCommentPage({
     Key? key,

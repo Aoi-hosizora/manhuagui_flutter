@@ -65,6 +65,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     // DioError [DioErrorType.connectTimeout]: Connecting timed out [1ms]
     // DioError [DioErrorType.response]: Http status error [502]
     // DioError [DioErrorType.other]: type 'String' is not a subtype of type 'Map<String, dynamic>?' in type cast
+    // DioError [DioErrorType.other]: type 'Null' is not a subtype of type 'Map<String, dynamic>' in type cast
 
     // ======================================================================================================================
     // ErrorType.networkError
@@ -140,7 +141,12 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ======================================================================================================================
   // ErrorType.otherError
   var err = '${e.runtimeType}: ${e.toString()}';
-  var text = DEBUG ? '[DEBUG] $err' : 'Something went wrong.'; // [DEBUG] _CastError: type 'xxx' is not a subtype of type 'yyy' in type cast
+  String text;
+  if (!DEBUG) {
+    text = 'Something went wrong.\nIf this error occurs frequently, please send feedback to the developer.';
+  } else {
+    text = '[DEBUG] $err\n\n' + s.toString(); // [DEBUG] _CastError: type 'xxx' is not a subtype of type 'yyy' in type cast
+  }
   var cast = e.runtimeType.toString() == '_CastError';
   print('type: ${ErrorType.otherError}');
   print('error: $e');

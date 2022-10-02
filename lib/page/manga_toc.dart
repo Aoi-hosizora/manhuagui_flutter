@@ -9,8 +9,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
-/// 漫画章节目录
-/// Page for [MangaChapterGroup].
+/// 漫画章节目录页，展示所给 [MangaChapterGroup] 信息
 class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
     Key? key,
@@ -19,7 +18,6 @@ class MangaTocPage extends StatefulWidget {
     required this.mangaCover,
     required this.mangaUrl,
     required this.groups,
-    required this.highlightedChapter,
   }) : super(key: key);
 
   final int mid;
@@ -27,7 +25,6 @@ class MangaTocPage extends StatefulWidget {
   final String mangaCover;
   final String mangaUrl;
   final List<MangaChapterGroup> groups;
-  final int highlightedChapter;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
@@ -41,13 +38,17 @@ class _MangaTocPageState extends State<MangaTocPage> {
   @override
   void initState() {
     super.initState();
-    HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) {
-      _history = r;
-      if (mounted) setState(() {});
-    }).catchError((_) {});
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      try {
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid);
+        if (mounted) setState(() {});
+      } catch (_) {}
+    });
     _cancelHandler = EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
-      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).catchError((_) {});
-      if (mounted) setState(() {});
+      try {
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid);
+        if (mounted) setState(() {});
+      } catch (_) {}
     });
   }
 
@@ -85,7 +86,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
             child: MangaTocView(
               groups: widget.groups,
               full: true,
-              highlightedChapter: _history?.chapterId ?? widget.highlightedChapter,
+              highlightedChapter: _history?.chapterId ?? 0,
               mangaId: widget.mid,
               mangaTitle: widget.mangaTitle,
               mangaCover: widget.mangaCover,

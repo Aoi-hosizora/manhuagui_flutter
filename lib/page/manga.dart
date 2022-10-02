@@ -5,8 +5,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
-import 'package:manhuagui_flutter/page/chapter.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
+import 'package:manhuagui_flutter/page/manga_browser.dart';
 import 'package:manhuagui_flutter/page/manga_comment.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
@@ -21,8 +21,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
-/// 漫画页
-/// Page for [Manga].
+/// 漫画详细页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
   const MangaPage({
     Key? key,
@@ -202,7 +201,7 @@ class _MangaPageState extends State<MangaPage> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (c) => ChapterPage(
+        builder: (c) => MangaBrowserPage(
           mid: _data!.mid,
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
@@ -284,7 +283,7 @@ class _MangaPageState extends State<MangaPage> {
                       // 信息
                       // ****************************************************************
                       Container(
-                        width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢ |
+                        width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢▢ |
                         height: 180,
                         padding: EdgeInsets.only(top: 14, bottom: 14, right: 14),
                         child: Column(

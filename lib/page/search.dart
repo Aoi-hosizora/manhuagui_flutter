@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
-/// 搜索
+/// 搜索页，从 [HomeSubPage] / [CategorySubPage] / [SubscribeSubPage] 进入
 class SearchPage extends StatefulWidget {
   const SearchPage({Key? key}) : super(key: key);
 

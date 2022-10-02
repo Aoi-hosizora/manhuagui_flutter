@@ -46,7 +46,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                   // 第一行
                   // ****************************************************************
                   Container(
-                    width: MediaQuery.of(context).size.width - 3 * 12 - 32, // | ▢▢ ▢▢▢▢▢ |
+                    width: MediaQuery.of(context).size.width - 3 * 12 - 32, // | ▢ ▢▢ |
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [

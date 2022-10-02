@@ -18,10 +18,9 @@ import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/chapter_setting.dart';
 import 'package:photo_view/photo_view.dart';
 
-/// 章节
-/// Page for [TinyMangaChapter].
-class ChapterPage extends StatefulWidget {
-  const ChapterPage({
+/// 漫画章节浏览页
+class MangaBrowserPage extends StatefulWidget {
+  const MangaBrowserPage({
     Key? key,
     required this.mid,
     required this.cid,
@@ -41,14 +40,14 @@ class ChapterPage extends StatefulWidget {
   final bool showAppBar;
 
   @override
-  _ChapterPageState createState() => _ChapterPageState();
+  _MangaBrowserPageState createState() => _MangaBrowserPageState();
 }
 
 const _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
 const _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
 const _kViewportFraction = 1.08; // 页面间隔
 
-class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClientMixin {
+class _MangaBrowserPageState extends State<MangaBrowserPage> with AutomaticKeepAliveClientMixin {
   PageController? _controller;
   var _loading = true;
   MangaChapter? _data;
@@ -63,7 +62,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   var _imageProviders = <Future<String> Function()>[];
 
   var _showRegion = false; // 显示区域提示
-  var _showAppBar = false; // 显示工具栏
+  late var _showAppBar = widget.showAppBar; // 显示工具栏
   var _setting = ChapterSetting.defaultSetting();
   var _pointerDownXPosition = 0.0; // 按住的横坐标
   var _swipeOffsetX = 0.0; // 滑动的水平偏移量
@@ -73,14 +72,13 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    _showAppBar = widget.showAppBar;
-    ChapterSettingPrefs.load().then((value) {
-      _setting = value;
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      var now = DateTime.now();
+      _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+      _setting = await ChapterSettingPrefs.load();
       if (mounted) setState(() {});
     });
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
-    var now = DateTime.now();
-    _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -240,7 +238,7 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       Navigator.of(context).pop();
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (c) => ChapterPage(
+          builder: (c) => MangaBrowserPage(
             mid: widget.mid,
             cid: last ? _data!.prevCid : _data!.nextCid,
             mangaTitle: widget.mangaTitle,

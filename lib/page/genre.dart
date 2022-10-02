@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/page/page/genre.dart';
 
-/// 类别
-/// Page for [TinyCategory].
+/// 漫画类别页，同 [GenreSubPage]
 class GenrePage extends StatefulWidget {
   const GenrePage({
     Key? key,
@@ -21,7 +20,7 @@ class _GenrePageState extends State<GenrePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('漫画分类'),
+        title: Text('漫画类别'),
       ),
       body: GenreSubPage(
         defaultGenre: widget.genre,

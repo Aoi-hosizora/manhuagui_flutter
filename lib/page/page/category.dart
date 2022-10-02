@@ -34,7 +34,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
     _cancelHandler = EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateTo(0); // TODO use addPostFrameCallback ???
+      _controller.animateTo(0);
     });
   }
 

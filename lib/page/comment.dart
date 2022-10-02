@@ -3,7 +3,7 @@ import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/natives/clipboard.dart';
 
-/// 评论详情页
+/// 评论详情页，展示所给 [Comment] 信息
 class CommentPage extends StatefulWidget {
   const CommentPage({
     Key? key,
@@ -42,7 +42,7 @@ class _CommentPageState extends State<CommentPage> {
                   // 第一行
                   // ****************************************************************
                   Container(
-                    width: MediaQuery.of(context).size.width - 3 * 15 - 40, // | ▢▢ ▢▢▢▢▢ |
+                    width: MediaQuery.of(context).size.width - 3 * 15 - 40, // | ▢ ▢▢ |
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [

@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
+/// 漫画推荐展示，在 [RecommendSubPage] 使用
 class MangaCarouselView extends StatefulWidget {
   const MangaCarouselView({
     Key? key,

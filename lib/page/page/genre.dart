@@ -34,11 +34,6 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   @override
   void initState() {
     super.initState();
-    if (widget.defaultGenre != null) {
-      _currGenre = widget.defaultGenre!;
-      _lastGenre = widget.defaultGenre!;
-    }
-
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
   }
@@ -80,8 +75,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   var _total = 0;
   var _currOrder = MangaOrder.byPopular;
   var _lastOrder = MangaOrder.byPopular;
-  var _currGenre = allGenres[0];
-  var _lastGenre = allGenres[0];
+  late var _currGenre = widget.defaultGenre ?? allGenres[0];
+  late var _lastGenre = widget.defaultGenre ?? allGenres[0];
   var _currAge = allAges[0];
   var _lastAge = allAges[0];
   var _currZone = allZones[0];

@@ -43,7 +43,6 @@ class _IndexPageState extends State<IndexPage> {
     });
 
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      // TODO necessary to use addPostFrameCallback ???
       _cancelHandlers.add(AuthManager.instance.listen(() {
         if (AuthManager.instance.logined) {
           if (mounted) setState(() {});

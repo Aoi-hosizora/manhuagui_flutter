@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 
+/// 登录提示，在 [ShelfSubPage] / [MineSubPage] 使用
 class LoginFirstView extends StatelessWidget {
   const LoginFirstView({
     Key? key,

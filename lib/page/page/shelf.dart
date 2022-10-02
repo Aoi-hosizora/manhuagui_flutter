@@ -27,7 +27,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  bool _loginChecking = true;
+  var _loginChecking = true;
   VoidCallback? _cancelHandler;
 
   @override
@@ -35,7 +35,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _loginChecking = true;
       _cancelHandler = AuthManager.instance.listen(() {
         _loginChecking = false;
         if (mounted) setState(() {});
