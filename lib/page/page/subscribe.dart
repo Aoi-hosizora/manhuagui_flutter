@@ -25,14 +25,15 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   var _selectedIndex = 0;
   late final _tabs = [
     Tuple2('书架', ShelfSubPage(action: _actions[0])),
-    Tuple2('历史', HistorySubPage(action: _actions[1])),
+    Tuple2('浏览历史', HistorySubPage(action: _actions[1])),
   ];
+  VoidCallback? _cancelHandler;
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
+    _cancelHandler = EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(0);
     });
   }
@@ -40,6 +41,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   @override
   void dispose() {
     widget.action?.removeAction();
+    _cancelHandler?.call();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

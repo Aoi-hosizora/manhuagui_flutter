@@ -23,7 +23,6 @@ import 'package:photo_view/photo_view.dart';
 class ChapterPage extends StatefulWidget {
   const ChapterPage({
     Key? key,
-    this.action,
     required this.mid,
     required this.cid,
     required this.mangaTitle,
@@ -33,7 +32,6 @@ class ChapterPage extends StatefulWidget {
     this.showAppBar = false,
   }) : super(key: key);
 
-  final ActionController? action;
   final int mid;
   final int cid;
   final String mangaTitle;
@@ -104,8 +102,6 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
         ),
       ).then((_) {
         EventBusManager.instance.fire(HistoryUpdatedEvent());
-        // widget.action?.invoke('history');
-        // widget.action?.invoke('history_toc');
       }).catchError((_) {});
     }
     super.dispose();
@@ -245,7 +241,6 @@ class _ChapterPageState extends State<ChapterPage> with AutomaticKeepAliveClient
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (c) => ChapterPage(
-            action: widget.action,
             mid: widget.mid,
             cid: last ? _data!.prevCid : _data!.nextCid,
             mangaTitle: widget.mangaTitle,

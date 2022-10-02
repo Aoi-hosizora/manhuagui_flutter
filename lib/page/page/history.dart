@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-/// 订阅-历史
+/// 订阅-浏览历史
 class HistorySubPage extends StatefulWidget {
   const HistorySubPage({
     Key? key,

@@ -53,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() async {
+  Future<void> _login() async {
     if (_formKey.currentState?.validate() != true) {
       return;
     }
@@ -86,12 +86,10 @@ class _LoginPageState extends State<LoginPage> {
     await AuthPrefs.setRememberOption(_rememberUsername, _rememberPassword);
     if (!_rememberUsername) {
       await AuthPrefs.removeUsernamePasswordPair(username);
+    } else if (_rememberPassword) {
+      await AuthPrefs.addUsernamePasswordPair(username, password);
     } else {
-      if (_rememberPassword) {
-        await AuthPrefs.addUsernamePasswordPair(username, password);
-      } else {
-        await AuthPrefs.addUsernamePasswordPair(username, '');
-      }
+      await AuthPrefs.addUsernamePasswordPair(username, '');
     }
 
     // pop
@@ -106,7 +104,10 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           IconButton(
             icon: Text('注册'),
-            onPressed: () => launchInBrowser(context: context, url: REGISTER_URL),
+            onPressed: () => launchInBrowser(
+              context: context,
+              url: REGISTER_URL,
+            ),
           ),
         ],
       ),

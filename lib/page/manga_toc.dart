@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_ahlib/util.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/chapter_group.dart';
@@ -15,53 +14,62 @@ import 'package:manhuagui_flutter/service/natives/browser.dart';
 class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
     Key? key,
-    this.action,
     required this.mid,
-    required this.title,
-    required this.cover,
-    required this.url,
+    required this.mangaTitle,
+    required this.mangaCover,
+    required this.mangaUrl,
     required this.groups,
-    required this.highlightChapter,
+    required this.highlightedChapter,
   }) : super(key: key);
 
-  final ActionController? action;
   final int mid;
-  final String title;
-  final String cover;
-  final String url;
+  final String mangaTitle;
+  final String mangaCover;
+  final String mangaUrl;
   final List<MangaChapterGroup> groups;
-  final int highlightChapter;
+  final int highlightedChapter;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
 }
 
 class _MangaTocPageState extends State<MangaTocPage> {
+  final _controller = ScrollController();
+  VoidCallback? _cancelHandler;
   MangaHistory? _history;
 
   @override
   void initState() {
     super.initState();
-    HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) => _history = r).catchError((_) {});
-
-    EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
+    HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).then((r) {
+      _history = r;
+      if (mounted) setState(() {});
+    }).catchError((_) {});
+    _cancelHandler = EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid).catchError((_) {});
       if (mounted) setState(() {});
     });
   }
 
   @override
+  void dispose() {
+    _cancelHandler?.call();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(widget.mangaTitle),
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '打开浏览器',
             onPressed: () => launchInBrowser(
               context: context,
-              url: widget.url,
+              url: widget.mangaUrl,
             ),
           ),
         ],
@@ -69,21 +77,20 @@ class _MangaTocPageState extends State<MangaTocPage> {
       body: Container(
         color: Colors.white,
         child: ScrollbarWithMore(
+          controller: _controller,
           interactive: true,
           crossAxisMargin: 2,
-          child: ListView(
-            children: [
-              ChapterGroupView(
-                action: widget.action,
-                groups: widget.groups,
-                complete: true,
-                highlightChapter: _history?.chapterId ?? widget.highlightChapter,
-                mangaId: widget.mid,
-                mangaTitle: widget.title,
-                mangaCover: widget.cover,
-                mangaUrl: widget.url,
-              ),
-            ],
+          child: SingleChildScrollView(
+            controller: _controller,
+            child: ChapterGroupView(
+              groups: widget.groups,
+              full: true,
+              highlightedChapter: _history?.chapterId ?? widget.highlightedChapter,
+              mangaId: widget.mid,
+              mangaTitle: widget.mangaTitle,
+              mangaCover: widget.mangaCover,
+              mangaUrl: widget.mangaUrl,
+            ),
           ),
         ),
       ),

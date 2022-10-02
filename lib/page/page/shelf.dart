@@ -77,10 +77,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     super.build(context);
     if (_loginChecking || !AuthManager.instance.logined) {
       _data.clear();
-      return Scaffold(
-        body: LoginFirstView(
-          checking: _loginChecking,
-        ),
+      return LoginFirstView(
+        checking: _loginChecking,
       );
     }
 

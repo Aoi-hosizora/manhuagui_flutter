@@ -141,7 +141,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     );
   }
 
-  Widget _buildRows() {
+  Widget _buildItems() {
     const hSpace = 5.0;
     const vSpace = 6.0;
 
@@ -166,12 +166,11 @@ class _MangaGroupViewState extends State<MangaGroupView> {
         break;
     }
 
+    var largerWidth = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
+    var smallerWidth = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
     var widgets = <Widget>[];
     for (var manga in mangas) {
-      var width = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
-      if (isSmall) {
-        width = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
-      }
+      var width = !isSmall ? largerWidth : smallerWidth;
       widgets.add(
         _buildBlock(
           manga: manga,
@@ -189,10 +188,13 @@ class _MangaGroupViewState extends State<MangaGroupView> {
       );
     }
 
-    return Wrap(
-      spacing: hSpace,
-      runSpacing: vSpace,
-      children: widgets,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: hSpace),
+      child: Wrap(
+        spacing: hSpace,
+        runSpacing: vSpace,
+        children: widgets,
+      ),
     );
   }
 
@@ -205,29 +207,24 @@ class _MangaGroupViewState extends State<MangaGroupView> {
             ? Icons.check_circle_outline
             : Icons.fiber_new;
 
-    var titleLine = Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      child: IconText(
-        icon: Icon(icon, size: 20, color: Colors.orange),
-        text: Text(title, style: Theme.of(context).textTheme.subtitle1),
-        space: 6,
-      ),
-    );
-    var rows = _buildRows();
-
     return Container(
       color: Colors.white,
       margin: widget.margin,
       padding: widget.padding,
-      child: widget.style != MangaGroupViewStyle.normalFull
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [titleLine, rows],
-            )
-          : ListView(
-              controller: widget.controller,
-              children: [titleLine, rows],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: IconText(
+              icon: Icon(icon, size: 20, color: Colors.orange),
+              text: Text(title, style: Theme.of(context).textTheme.subtitle1),
+              space: 6,
             ),
+          ),
+          _buildItems(),
+        ],
+      ),
     );
   }
 }

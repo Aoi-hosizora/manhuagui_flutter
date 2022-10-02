@@ -233,9 +233,7 @@ class _SearchPageState extends State<SearchPage> {
                 child: AppBar(automaticallyImplyLeading: false),
               ),
             ),
-            ScrollbarWithMore(
-              interactive: true,
-              crossAxisMargin: 2,
+            Scrollbar(
               child: FloatingSearchBar(
                 controller: _searchController,
                 height: 35,

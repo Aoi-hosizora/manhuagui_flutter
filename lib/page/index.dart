@@ -31,7 +31,7 @@ class _IndexPageState extends State<IndexPage> {
     Tuple3('订阅', Icons.notifications, SubscribeSubPage(action: _actions[2])),
     Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
   ];
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
@@ -45,25 +45,25 @@ class _IndexPageState extends State<IndexPage> {
     });
 
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() {
+      _cancelHandlers.add(AuthManager.instance.listen(() {
         if (AuthManager.instance.logined) {
           if (mounted) setState(() {});
         }
-      });
+      }));
       await AuthManager.instance.check();
-    });
 
-    EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
-      _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
-    });
-    EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+      _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
+        _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+      }));
+      _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
+        _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+      }));
     });
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((h) => h.call());
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

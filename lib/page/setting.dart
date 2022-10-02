@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
-/// 设置页
+/// 设置
 class SettingPage extends StatefulWidget {
   const SettingPage({Key? key}) : super(key: key);
 
@@ -18,7 +18,7 @@ class _SettingPageState extends State<SettingPage> {
         color: Colors.transparent,
         child: InkWell(
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 13),
             child: Text(
               title,
               style: Theme.of(context).textTheme.subtitle1,
@@ -81,7 +81,7 @@ class _SettingPageState extends State<SettingPage> {
             title: '检查更新',
             action: () => launchInBrowser(
               context: context,
-              url: RELEASE_URL,
+              url: RELEASE_URL, // TODO !!!
             ),
           ),
           _divider(),
@@ -97,12 +97,12 @@ class _SettingPageState extends State<SettingPage> {
                 width: 50,
                 child: Image.asset('lib/assets/ic_launcher_xxhdpi.png'),
               ),
-              applicationLegalese: '© 2020-2021 Aoi-hosizora',
+              applicationLegalese: LEGALESE,
               children: [
                 SizedBox(height: 20),
-                for (var r in APP_DESCRIPTIONS)
+                for (var description in APP_DESCRIPTIONS)
                   Text(
-                    r,
+                    description,
                     style: Theme.of(context).textTheme.subtitle1,
                   ),
               ],
@@ -113,7 +113,7 @@ class _SettingPageState extends State<SettingPage> {
           Align(
             alignment: Alignment.center,
             child: Text(
-              '© 2020-2021 Aoi-hosizora',
+              LEGALESE,
               style: TextStyle(color: Colors.grey),
             ),
           ),

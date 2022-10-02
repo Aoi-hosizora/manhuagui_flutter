@@ -30,23 +30,18 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction(() {});
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _loginChecking = true;
-      _cancelHandler = AuthManager.instance.listen(() {
-        _loginChecking = false;
-        if (mounted) setState(() {});
-        if (AuthManager.instance.logined) {
-          _loadUser();
-        }
-      });
-      AuthManager.instance.check();
+    _cancelHandler = AuthManager.instance.listen(() {
+      _loginChecking = false;
+      if (mounted) setState(() {});
+      if (AuthManager.instance.logined) {
+        _loadUser();
+      }
     });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => AuthManager.instance.check());
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction();
     _cancelHandler?.call();
     super.dispose();
   }
@@ -118,13 +113,36 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    var positionedSettingButton = Positioned(
+      top: MediaQuery.of(context).padding.top - 10,
+      right: 2.0 - 10,
+      child: ClipOval(
+        child: Material(
+          color: Colors.transparent,
+          child: IconButton(
+            icon: Icon(Icons.settings, color: Colors.black54),
+            tooltip: '设置',
+            padding: EdgeInsets.all(25),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (c) => SettingPage(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
     if (_loginChecking || !AuthManager.instance.logined) {
       _data = null;
-      return Scaffold(
-        body: LoginFirstView(
-          checking: _loginChecking,
-          showSettingButton: true,
-        ),
+      _error = '';
+      return Stack(
+        children: [
+          LoginFirstView(
+            checking: _loginChecking,
+          ),
+          positionedSettingButton,
+        ],
       );
     }
 
@@ -182,25 +200,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                     ),
                   ),
                 ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top - 10,
-                  right: 2.0 - 10,
-                  child: ClipOval(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: IconButton(
-                        icon: Icon(Icons.settings, color: Colors.black54),
-                        tooltip: '设置',
-                        padding: EdgeInsets.all(25),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (c) => SettingPage(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                positionedSettingButton,
               ],
             ),
             Container(

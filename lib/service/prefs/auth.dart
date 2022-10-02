@@ -23,7 +23,9 @@ class AuthPrefs {
 
   static Future<Tuple2<bool, bool>> getRememberOption() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    return Tuple2(prefs.getBool(_rememberUsernameKey) ?? true, prefs.getBool(_rememberPasswordKey) ?? false);
+    var rememberUsername = prefs.getBool(_rememberUsernameKey) ?? true;
+    var rememberPassword =  prefs.getBool(_rememberPasswordKey) ?? false;
+    return Tuple2(rememberUsername, rememberPassword);
   }
 
   static Future<void> setRememberOption(bool rememberUsername, bool rememberPassword) async {

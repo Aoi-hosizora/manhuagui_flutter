@@ -34,13 +34,19 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
       appBar: AppBar(
         title: Text('漫画分组详细'),
       ),
-      body: Padding(
-        padding: EdgeInsets.only(bottom: 4, top: 2),
-        child: MangaGroupView(
-          group: widget.group,
-          type: widget.type,
+      body: ScrollbarWithMore(
+        controller: _controller,
+        interactive: true,
+        crossAxisMargin: 2,
+        child: SingleChildScrollView(
           controller: _controller,
-          style: MangaGroupViewStyle.normalFull,
+          padding: EdgeInsets.only(top: 2, bottom: 4),
+          child: MangaGroupView(
+            group: widget.group,
+            type: widget.type,
+            controller: _controller,
+            style: MangaGroupViewStyle.normalFull,
+          ),
         ),
       ),
       floatingActionButton: ScrollAnimatedFab(

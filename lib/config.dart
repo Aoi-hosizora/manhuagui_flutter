@@ -10,7 +10,7 @@ const APP_DESCRIPTIONS = [
   '该客户端仅供学习研究使用，请勿用于商业用途。',
   '本应用与内容提供方无任何联系，若有任何问题，请发邮件或 Issue 联系。',
 ];
-const LEGALESE = '© 2022 青いほしぞら';
+const LEGALESE = '© 2020-2022 青いほしぞら';
 const DB_NAME = 'db_manhuagui';
 
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';

@@ -100,6 +100,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           onRefresh: () => _loadData(),
           onChanged: (_, __) => _fabController.hide(),
           childBuilder: (c) => ScrollbarWithMore(
+            controller: _controller,
             interactive: true,
             crossAxisMargin: 2,
             child: ListView(

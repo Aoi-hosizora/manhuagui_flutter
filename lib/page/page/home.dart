@@ -33,22 +33,24 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
     Tuple2('全部', OverallSubPage(action: _actions[2])),
     Tuple2('排行', RankingSubPage(action: _actions[3])),
   ];
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    EventBusManager.instance.listen<ToRecentRequestedEvent>((_) {
+    _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((_) {
       _controller.animateTo(1);
-    });
-    EventBusManager.instance.listen<ToRankingRequestedEvent>((_) {
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((_) {
       _controller.animateTo(3);
-    });
+    }));
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
+    _cancelHandlers.forEach((h) => h.call());
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

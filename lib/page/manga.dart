@@ -43,27 +43,23 @@ class _MangaPageState extends State<MangaPage> {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  final _action = ActionController();
+  VoidCallback? _cancelHandler;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
-    EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
+    _cancelHandler = EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
       if (mounted) setState(() {});
     });
-    // _action.addAction('history', () async {
-    //   _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
-    //   if (mounted) setState(() {});
-    // });
   }
 
   @override
   void dispose() {
+    _cancelHandler?.call();
     _controller.dispose();
     _fabController.dispose();
-    _action.dispose();
     super.dispose();
   }
 
@@ -207,7 +203,6 @@ class _MangaPageState extends State<MangaPage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (c) => ChapterPage(
-          action: _action,
           mid: _data!.mid,
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
@@ -245,6 +240,7 @@ class _MangaPageState extends State<MangaPage> {
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => ScrollbarWithMore(
+            controller: _controller,
             interactive: true,
             crossAxisMargin: 2,
             child: ListView(
@@ -509,10 +505,9 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   color: Colors.white,
                   child: ChapterGroupView(
-                    action: _action,
                     groups: _data!.chapterGroups,
-                    complete: false,
-                    highlightChapter: _history?.chapterId ?? 0,
+                    full: false,
+                    highlightedChapter: _history?.chapterId ?? 0,
                     mangaId: _data!.mid,
                     mangaTitle: _data!.title,
                     mangaCover: _data!.cover,

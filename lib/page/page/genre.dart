@@ -39,8 +39,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
       _lastGenre = widget.defaultGenre!;
     }
 
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
     widget.action?.addAction(() => _controller.scrollToTop());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
   }
 
   @override
