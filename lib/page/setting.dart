@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
-/// 设置页，从 [MineSubPage] 进入
+/// 设置页
 class SettingPage extends StatefulWidget {
   const SettingPage({Key? key}) : super(key: key);
 
@@ -92,12 +92,8 @@ class _SettingPageState extends State<SettingPage> {
               useRootNavigator: false,
               applicationName: APP_NAME,
               applicationVersion: APP_VERSION,
-              applicationIcon: SizedBox(
-                height: 50,
-                width: 50,
-                child: Image.asset('lib/assets/ic_launcher_xxhdpi.png'),
-              ),
               applicationLegalese: LEGALESE,
+              applicationIcon: Image.asset('lib/assets/ic_launcher_xxhdpi.png', height: 60, width: 60),
               children: [
                 SizedBox(height: 20),
                 for (var description in APP_DESCRIPTIONS)

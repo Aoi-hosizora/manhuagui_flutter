@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/page/manga_browser.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
+import 'package:manhuagui_flutter/page/manga_viewer.dart';
 
 /// 漫画章节目录，在 [MangaPage] / [MangaTocPage] 使用
 class MangaTocView extends StatefulWidget {
@@ -130,7 +130,7 @@ class _MangaTocViewState extends State<MangaTocView> {
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (c) => chapter != null
-                          ? MangaBrowserPage(
+                          ? MangaViewerPage(
                               mid: chapter.mid,
                               cid: chapter.cid,
                               mangaTitle: widget.mangaTitle,

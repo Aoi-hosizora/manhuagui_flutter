@@ -19,8 +19,8 @@ import 'package:manhuagui_flutter/service/prefs/chapter_setting.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 漫画章节浏览页
-class MangaBrowserPage extends StatefulWidget {
-  const MangaBrowserPage({
+class MangaViewerPage extends StatefulWidget {
+  const MangaViewerPage({
     Key? key,
     required this.mid,
     required this.cid,
@@ -40,14 +40,14 @@ class MangaBrowserPage extends StatefulWidget {
   final bool showAppBar;
 
   @override
-  _MangaBrowserPageState createState() => _MangaBrowserPageState();
+  _MangaViewerPageState createState() => _MangaViewerPageState();
 }
 
 const _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
 const _kChapterSwipeWidth = 75; // 滑动跳转章节的比例
 const _kViewportFraction = 1.08; // 页面间隔
 
-class _MangaBrowserPageState extends State<MangaBrowserPage> with AutomaticKeepAliveClientMixin {
+class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   PageController? _controller;
   var _loading = true;
   MangaChapter? _data;
@@ -56,7 +56,6 @@ class _MangaBrowserPageState extends State<MangaBrowserPage> with AutomaticKeepA
   var _progressValue = 1;
 
   Timer? _timer;
-
   var _currentTime = '00:00';
   final _fileProvider = () async => null;
   var _imageProviders = <Future<String> Function()>[];
@@ -238,7 +237,7 @@ class _MangaBrowserPageState extends State<MangaBrowserPage> with AutomaticKeepA
       Navigator.of(context).pop();
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (c) => MangaBrowserPage(
+          builder: (c) => MangaViewerPage(
             mid: widget.mid,
             cid: last ? _data!.prevCid : _data!.nextCid,
             mangaTitle: widget.mangaTitle,

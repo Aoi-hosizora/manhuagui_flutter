@@ -95,7 +95,7 @@ class _AuthorPageState extends State<AuthorPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),
-            tooltip: '打开浏览器',
+            tooltip: '用浏览器打开',
             onPressed: () => launchInBrowser(
               context: context,
               url: widget.url,

@@ -31,7 +31,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('漫画分组详细'),
+        title: Text('漫画分组'),
       ),
       body: ScrollbarWithMore(
         controller: _controller,
@@ -39,7 +39,6 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         crossAxisMargin: 2,
         child: SingleChildScrollView(
           controller: _controller,
-          padding: EdgeInsets.only(top: 2, bottom: 4),
           child: MangaGroupView(
             group: widget.group,
             type: widget.type,

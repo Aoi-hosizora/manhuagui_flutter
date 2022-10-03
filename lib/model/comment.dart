@@ -20,10 +20,6 @@ class Comment {
   factory Comment.fromJson(Map<String, dynamic> json) => _$CommentFromJson(json);
 
   Map<String, dynamic> toJson() => _$CommentToJson(this);
-
-  RepliedComment toRepliedComment() {
-    return RepliedComment(cid: cid, uid: uid, username: username, avatar: avatar, gender: gender, content: content, likeCount: likeCount, replyCount: replyCount, commentTime: commentTime);
-  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -43,4 +39,8 @@ class RepliedComment {
   factory RepliedComment.fromJson(Map<String, dynamic> json) => _$RepliedCommentFromJson(json);
 
   Map<String, dynamic> toJson() => _$RepliedCommentToJson(this);
+
+  Comment toComment() {
+    return Comment(cid: cid, uid: uid, username: username, avatar: avatar, gender: gender, content: content, likeCount: likeCount, replyCount: replyCount, commentTime: commentTime, replyTimeline: []);
+  }
 }

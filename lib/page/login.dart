@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 登录页，从 [LoginFirstView]，即 [ShelfSubPage] / [MineSubPage] 进入
+/// 登录页
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 

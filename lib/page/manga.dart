@@ -6,9 +6,9 @@ import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
-import 'package:manhuagui_flutter/page/manga_browser.dart';
-import 'package:manhuagui_flutter/page/manga_comment.dart';
+import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
+import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -21,7 +21,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
-/// 漫画详细页，网络请求并展示 [Manga] 和 [Comment] 信息
+/// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
   const MangaPage({
     Key? key,
@@ -201,7 +201,7 @@ class _MangaPageState extends State<MangaPage> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (c) => MangaBrowserPage(
+        builder: (c) => MangaViewerPage(
           mid: _data!.mid,
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
@@ -221,7 +221,7 @@ class _MangaPageState extends State<MangaPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.open_in_browser),
-            tooltip: '打开浏览器',
+            tooltip: '用浏览器打开',
             onPressed: () => launchInBrowser(
               context: context,
               url: _data?.url ?? widget.url,
@@ -559,7 +559,10 @@ class _MangaPageState extends State<MangaPage> {
                           child: Divider(height: 1, thickness: 1),
                         ),
                         for (var comment in _comments.sublist(0, _comments.length - 1)) ...[
-                          CommentLineView(comment: comment),
+                          CommentLineView(
+                            comment: comment,
+                            style: CommentLineViewStyle.normal,
+                          ),
                           Container(
                             margin: EdgeInsets.only(left: 2.0 * 12 + 32),
                             width: MediaQuery.of(context).size.width - 3 * 12 - 32,
@@ -567,7 +570,10 @@ class _MangaPageState extends State<MangaPage> {
                             child: Divider(height: 1, thickness: 1),
                           ),
                         ],
-                        CommentLineView(comment: _comments.last),
+                        CommentLineView(
+                          comment: _comments.last,
+                          style: CommentLineViewStyle.normal,
+                        ),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 12),
                           color: Colors.white,
@@ -578,7 +584,10 @@ class _MangaPageState extends State<MangaPage> {
                           child: InkWell(
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (c) => MangaCommentPage(mid: widget.id),
+                                builder: (c) => CommentsPage(
+                                  mid: widget.id,
+                                  title: _data!.title,
+                                ),
                               ),
                             ),
                             child: Container(
