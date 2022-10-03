@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -39,12 +40,15 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   }
 
   final _data = <TinyManga>[];
+  var _total = 0;
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
     var result = await client.getRecentUpdatedMangas(page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
+    _total = result.data.total;
+    if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -65,16 +69,16 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
         ),
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
-          placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           interactiveScrollbar: true,
           scrollbarCrossAxisMargin: 2,
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           refreshFirst: true,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onAppend: (l, _) {
-            if (l.length > 0) {
+          onAppend: (_, l) {
+            if (l.isNotEmpty) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
             }
           },
@@ -86,6 +90,14 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
         ),
         separator: Divider(height: 1),
         itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
+        extra: UpdatableDataViewExtraWidgets(
+          innerTopWidgets: [
+            ListHintView.textText(
+              leftText: '30天内更新的漫画',
+              rightText: '共 $_total 部',
+            ),
+          ],
+        ),
       ),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,

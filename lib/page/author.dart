@@ -12,6 +12,8 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 
+// TODO
+
 /// 漫画作者页，网络请求并展示 [Author] 信息
 class AuthorPage extends StatefulWidget {
   const AuthorPage({
@@ -117,7 +119,7 @@ class _AuthorPageState extends State<AuthorPage> {
             SliverToBoxAdapter(
               child: Container(
                 width: MediaQuery.of(context).size.width,
-                height: 150,
+                // height: 150, // TODO x
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -131,7 +133,7 @@ class _AuthorPageState extends State<AuthorPage> {
                   ),
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // ****************************************************************
                     // 封面
@@ -150,7 +152,7 @@ class _AuthorPageState extends State<AuthorPage> {
                     // ****************************************************************
                     Container(
                       width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢▢ |
-                      height: 150,
+                      // height: 150, // TODO x
                       margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
                       child: Center(
                         child: Column(
@@ -285,18 +287,18 @@ class _AuthorPageState extends State<AuthorPage> {
               ),
               setting: UpdatableDataViewSetting(
                 padding: EdgeInsets.zero,
-                placeholderSetting: PlaceholderSetting().copyWithChinese(),
-                onPlaceholderStateChanged: (_, __) => _fabController.hide(),
                 interactiveScrollbar: true,
                 scrollbarCrossAxisMargin: 2,
+                placeholderSetting: PlaceholderSetting().copyWithChinese(),
+                onPlaceholderStateChanged: (_, __) => _fabController.hide(),
                 refreshFirst: true,
                 clearWhenRefresh: false,
                 clearWhenError: false,
                 updateOnlyIfNotEmpty: false,
                 onStartGettingData: () => mountedSetState(() => _getting = true),
                 onStopGettingData: () => mountedSetState(() => _getting = false),
-                onAppend: (l, _) {
-                  if (l.length > 0) {
+                onAppend: (_, l) {
+                  if (l.isNotEmpty) {
                     Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
                   }
                   _lastOrder = _currOrder;

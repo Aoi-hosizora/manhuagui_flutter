@@ -73,30 +73,10 @@ class _MangaGroupViewState extends State<MangaGroupView> {
             Container(
               width: width,
               height: height,
-              child: Stack(
-                children: [
-                  NetworkImageView(
-                    url: manga.cover,
-                    width: width,
-                    height: height,
-                  ),
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (c) => MangaPage(
-                              id: manga.mid,
-                              title: manga.title,
-                              url: manga.url,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              child: NetworkImageView(
+                url: manga.cover,
+                width: width,
+                height: height,
               ),
             ),
             Positioned(
@@ -123,6 +103,22 @@ class _MangaGroupViewState extends State<MangaGroupView> {
                 ),
               ),
             ),
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (c) => MangaPage(
+                        id: manga.mid,
+                        title: manga.title,
+                        url: manga.url,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
         Container(
@@ -139,7 +135,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
   }
 
   Widget _buildGroupItems() {
-    const hSpace = 5.0;
+    const hSpace = 8.0;
     const vSpace = 6.0;
 
     List<TinyBlockManga?> mangas = widget.group.mangas;

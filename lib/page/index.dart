@@ -22,7 +22,7 @@ class IndexPage extends StatefulWidget {
 class _IndexPageState extends State<IndexPage> {
   final _controller = PageController();
   var _selectedIndex = 0;
-  late final _actions = List.generate(_tabs.length, (_) => ActionController()); // TODO recursive ???
+  late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
     Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
     Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1])),

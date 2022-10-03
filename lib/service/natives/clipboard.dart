@@ -4,13 +4,12 @@ import 'package:fluttertoast/fluttertoast.dart';
 Future<void> copyText(
   String text, {
   bool showToast = true,
-  Function()? callback,
-}) {
+}) async {
   var data = ClipboardData(text: text);
-  return Clipboard.setData(data).then((_) {
+  try {
+    await Clipboard.setData(data);
     if (showToast) {
       Fluttertoast.showToast(msg: '$text 已经复制到剪贴板');
     }
-    callback?.call();
-  }).catchError((_) {});
+  } catch (_) {}
 }

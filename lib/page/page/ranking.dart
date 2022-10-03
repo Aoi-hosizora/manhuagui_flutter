@@ -24,7 +24,7 @@ class RankingSubPage extends StatefulWidget {
 }
 
 class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin {
-  final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _rdvKey = GlobalKey<RefreshableDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -44,7 +44,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   }
 
   var _genreLoading = true;
-  final _genres = <Category>[];
+  final _genres = <TinyCategory>[];
   var _genreError = '';
 
   Future<void> _loadGenres() async {
@@ -58,7 +58,8 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _genres.addAll(result.data.data);
+      _genres.addAll(allRankTypes);
+      _genres.addAll(result.data.data.map((c) => c.toTiny()));
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -105,23 +106,23 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         onRefresh: () => _loadGenres(),
         onChanged: (_, __) => _fabController.hide(),
         childBuilder: (c) => RefreshableListView<MangaRank>(
-          key: _pdvKey,
+          key: _rdvKey,
           data: _data,
           getData: () => _getData(),
           scrollController: _controller,
           setting: UpdatableDataViewSetting(
             padding: EdgeInsets.symmetric(vertical: 0),
-            placeholderSetting: PlaceholderSetting().copyWithChinese(),
-            onPlaceholderStateChanged: (_, __) => _fabController.hide(),
             interactiveScrollbar: true,
             scrollbarCrossAxisMargin: 2,
+            placeholderSetting: PlaceholderSetting().copyWithChinese(),
+            onPlaceholderStateChanged: (_, __) => _fabController.hide(),
             refreshFirst: true,
             clearWhenRefresh: false,
             clearWhenError: false,
             onStartGettingData: () => mountedSetState(() => _getting = true),
             onStopGettingData: () => mountedSetState(() => _getting = false),
-            onAppend: (l, _) {
-              if (l.length > 0) {
+            onAppend: (_, l) {
+              if (l.isNotEmpty) {
                 Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
               }
               _lastDuration = _currDuration;
@@ -143,7 +144,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
               ListHintView.widgets(
                 widgets: [
                   OptionPopupView<TinyCategory>(
-                    items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
+                    items: _genres,
                     value: _currType,
                     titleBuilder: (c, v) => v.isAll() ? '分类' : v.title,
                     enable: !_getting,
@@ -152,10 +153,12 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                         _lastType = _currType;
                         _currType = t;
                         if (mounted) setState(() {});
-                        _pdvKey.currentState?.refresh();
+                        print('${_currType.title} ${_lastType.title}');
+                        _rdvKey.currentState?.refresh();
                       }
                     },
                   ),
+                  Expanded(child: SizedBox(width: 0)),
                   OptionPopupView<TinyCategory>(
                     items: allRankDurations,
                     value: _currDuration,
@@ -166,7 +169,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                         _lastDuration = _currDuration;
                         _currDuration = d;
                         if (mounted) setState(() {});
-                        _pdvKey.currentState?.refresh();
+                        _rdvKey.currentState?.refresh();
                       }
                     },
                   ),

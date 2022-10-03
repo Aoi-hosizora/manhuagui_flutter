@@ -3,11 +3,8 @@ import 'package:flutter_web_browser/flutter_web_browser.dart';
 
 Future<void> launchInBrowser({
   required BuildContext context,
-  required String? url,
+  required String url,
 }) async {
-  if (url == null) {
-    return;
-  }
   try {
     return await FlutterWebBrowser.openWebPage(
       url: url,
@@ -15,13 +12,13 @@ Future<void> launchInBrowser({
         defaultColorSchemeParams: CustomTabsColorSchemeParams(
           toolbarColor: Theme.of(context).primaryColor,
         ),
-        // shareState: CustomTabsShareState.on,
-        // instantAppsEnabled: true,
-        // showTitle: true,
-        // urlBarHidingEnabled: true,
+        shareState: CustomTabsShareState.on,
+        instantAppsEnabled: true,
+        showTitle: true,
+        urlBarHidingEnabled: true,
       ),
     );
-  } catch (ex) {
-    return Future.error(ex);
+  } catch (e) {
+    return Future.error(e);
   }
 }

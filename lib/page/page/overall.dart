@@ -42,8 +42,8 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
     super.dispose();
   }
 
-  int _total = 0;
   final _data = <TinyManga>[];
+  var _total = 0;
   var _currOrder = MangaOrder.byNew;
   var _lastOrder = MangaOrder.byNew;
   var _getting = false;
@@ -76,18 +76,18 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         ),
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
-          placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           interactiveScrollbar: true,
           scrollbarCrossAxisMargin: 2,
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           refreshFirst: true,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
           onStartGettingData: () => mountedSetState(() => _getting = true),
           onStopGettingData: () => mountedSetState(() => _getting = false),
-          onAppend: (l, _) {
-            if (l.length > 0) {
+          onAppend: (_, l) {
+            if (l.isNotEmpty) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
             }
             _lastOrder = _currOrder;

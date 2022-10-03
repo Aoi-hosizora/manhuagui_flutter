@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/widget.dart';
 import 'package:manhuagui_flutter/page/login.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
 /// 登录提示，在 [ShelfSubPage] / [MineSubPage] 使用
 class LoginFirstView extends StatelessWidget {
@@ -12,45 +14,25 @@ class LoginFirstView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (checking) ...[
-            SizedBox(
-              height: 45,
-              width: 45,
-              child: CircularProgressIndicator(),
-            ),
-            SizedBox(height: 10),
-            Text(
-              '检查登录状态中...',
-              style: TextStyle(fontSize: 20),
-            ),
-          ],
-          if (!checking) ...[
-            Icon(
-              Icons.lock_open,
-              size: 50,
-              color: Colors.grey,
-            ),
-            SizedBox(height: 10),
-            Text(
-              '当前未登录，请先登录 Manhuagui',
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(height: 10),
-            OutlinedButton(
-              child: Text('登录'),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (c) => LoginPage(),
-                ),
-              ),
-            ),
-          ],
-        ],
+    return PlaceholderText(
+      state: checking ? PlaceholderState.loading : PlaceholderState.error,
+      childBuilder: (c) => SizedBox(height: 0),
+      setting: PlaceholderSetting().copyWithChinese(
+        loadingText: '检查登录状态中...',
+        unknownErrorText: '当前未登录，请先登录 Manhuagui',
+        retryText: '登录',
       ),
+      onRefresh: () {
+        if (AuthManager.instance.logined) {
+          AuthManager.instance.notify();
+          return;
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (c) => LoginPage(),
+          ),
+        );
+      },
     );
   }
 }

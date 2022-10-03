@@ -32,13 +32,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() {
-        _loginChecking = false;
-        if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
           _loadUser();
         }
       });
       await AuthManager.instance.check();
+      _loginChecking = false;
+      if (mounted) setState(() {});
     });
   }
 

@@ -121,6 +121,7 @@ class _MangaTocViewState extends State<MangaTocView> {
                 child: OutlinedButton(
                   child: Text(
                     chapter?.title ?? '...',
+                    style: TextStyle(color: Colors.black),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -177,7 +178,7 @@ class _MangaTocViewState extends State<MangaTocView> {
   Widget _buildGroupItems({required MangaChapterGroup group, required EdgeInsets padding, bool firstGroup = false}) {
     const hSpace = 6.0;
     const vSpace = 9.0;
-    final width = (MediaQuery.of(context).size.width - 2 * padding.horizontal - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
+    final width = (MediaQuery.of(context).size.width - 2 * padding.left - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
 
     List<TinyMangaChapter?> chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
     if (!widget.full) {

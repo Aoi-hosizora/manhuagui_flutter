@@ -45,7 +45,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   }
 
   var _genreLoading = true;
-  final _genres = <Category>[];
+  final _genres = <TinyCategory>[];
   var _genreError = '';
 
   Future<void> _loadGenres() async {
@@ -59,7 +59,8 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _genres.addAll(result.data.data);
+      _genres.add(allGenres[0]);
+      _genres.addAll(result.data.data.map((c) => c.toTiny()));
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -123,18 +124,18 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
           ),
           setting: UpdatableDataViewSetting(
             padding: EdgeInsets.symmetric(vertical: 0),
-            placeholderSetting: PlaceholderSetting().copyWithChinese(),
-            onPlaceholderStateChanged: (_, __) => _fabController.hide(),
             interactiveScrollbar: true,
             scrollbarCrossAxisMargin: 2,
+            placeholderSetting: PlaceholderSetting().copyWithChinese(),
+            onPlaceholderStateChanged: (_, __) => _fabController.hide(),
             refreshFirst: true,
             clearWhenRefresh: false,
             clearWhenError: false,
             updateOnlyIfNotEmpty: false,
             onStartGettingData: () => mountedSetState(() => _getting = true),
             onStopGettingData: () => mountedSetState(() => _getting = false),
-            onAppend: (l, _) {
-              if (l.length > 0) {
+            onAppend: (_, l) {
+              if (l.isNotEmpty) {
                 Fluttertoast.showToast(msg: '新添了 ${l.length} 位作者');
               }
               _lastOrder = _currOrder;
@@ -160,7 +161,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
               ListHintView.widgets(
                 widgets: [
                   OptionPopupView<TinyCategory>(
-                    items: _genres.map((g) => g.toTiny()).toList()..insert(0, allGenres[0]),
+                    items: _genres,
                     value: _currGenre,
                     titleBuilder: (c, v) => v.isAll() ? '剧情' : v.title,
                     enable: !_getting,

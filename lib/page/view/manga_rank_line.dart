@@ -28,7 +28,7 @@ class _MangaRankLineViewState extends State<MangaRankLineView> {
       text2: (widget.manga.finished ? '共 ' : '更新至 ') + widget.manga.newestChapter,
       icon3: Icons.access_time,
       text3: '更新于 ${widget.manga.newestDate}',
-      extraWidthInRow: 35,
+      extraWidthInRow: 35 + 14,
       extraInRow: Container(
         margin: EdgeInsets.only(right: 14, top: 5, bottom: 5),
         width: 35,
@@ -42,7 +42,7 @@ class _MangaRankLineViewState extends State<MangaRankLineView> {
                     : Icon(Icons.remove, color: Colors.grey),
             Text(
               widget.manga.score.toString(),
-              style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.subtitle1,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -66,10 +66,10 @@ class _MangaRankLineViewState extends State<MangaRankLineView> {
             borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24)),
           ),
           child: Container(
-            padding: EdgeInsets.only(top: 3, left: widget.manga.order < 10 ? 12 : 7),
+            padding: EdgeInsets.only(top: 2, left: widget.manga.order < 10 ? 12 : 6.5),
             child: Text(
               widget.manga.order.toString(),
-              style: TextStyle(color: Colors.white),
+              style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.white),
             ),
           ),
         ),

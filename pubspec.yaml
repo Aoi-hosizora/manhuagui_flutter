@@ -31,7 +31,7 @@ dependencies:
   material_floating_search_bar: ^0.3.7
   flutter_rating_bar: ^4.0.1
   carousel_slider: ^4.1.1
-  flutter_typeahead: ^4.1.1
+  flutter_typeahead: 3.2.7
 
   # file system & others
   path: 1.8.0

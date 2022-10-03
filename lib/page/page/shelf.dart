@@ -36,13 +36,13 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() {
-        _loginChecking = false;
-        if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
-          _pdvKey.currentState?.refresh();
+          _pdvKey.currentState?.refresh(); // TODO ??? no notified
         }
       });
-      AuthManager.instance.check();
+      await AuthManager.instance.check();
+      _loginChecking = false;
+      if (mounted) setState(() {});
     });
   }
 
@@ -93,16 +93,16 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         ),
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
-          placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           interactiveScrollbar: true,
           scrollbarCrossAxisMargin: 2,
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           refreshFirst: true,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onAppend: (l, _) {
-            if (l.length > 0) {
+          onAppend: (_, l) {
+            if (l.isNotEmpty) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
             }
           },

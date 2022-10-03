@@ -127,7 +127,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                         return Container(
                           width: chose ? 10 : 8,
                           height: chose ? 10 : 8,
-                          margin: EdgeInsets.symmetric(horizontal: 2),
+                          margin: EdgeInsets.symmetric(horizontal: 2.5),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: chose ? Colors.black87 : Colors.black26,

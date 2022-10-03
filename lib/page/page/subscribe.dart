@@ -22,7 +22,7 @@ class SubscribeSubPage extends StatefulWidget {
 class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerProviderStateMixin {
   late final _controller = TabController(length: _tabs.length, vsync: this);
   var _selectedIndex = 0;
-  late final _actions = List.generate(_tabs.length, (_) => ActionController());
+  late final _actions = List.generate(2, (_) => ActionController());
   late final _tabs = [
     Tuple2('书架', ShelfSubPage(action: _actions[0])),
     Tuple2('浏览历史', HistorySubPage(action: _actions[1])),

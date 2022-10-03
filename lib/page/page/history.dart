@@ -105,16 +105,16 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         ),
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
-          placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           interactiveScrollbar: true,
           scrollbarCrossAxisMargin: 2,
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
           refreshFirst: true,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onAppend: (l, _) {
-            if (l.length > 0) {
+          onAppend: (_, l) {
+            if (l.isNotEmpty) {
               Fluttertoast.showToast(msg: '新添了 ${l.length} 条记录');
             }
           },

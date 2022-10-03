@@ -9,7 +9,7 @@ class OptionPopupView<T extends Object> extends StatefulWidget {
     required this.titleBuilder,
     required this.onSelect,
     this.height = 26.0, // <<<
-    this.width = 88.0,
+    this.width,
     this.enable = true,
   }) : super(key: key);
 
@@ -18,7 +18,7 @@ class OptionPopupView<T extends Object> extends StatefulWidget {
   final String Function(BuildContext, T) titleBuilder;
   final void Function(T) onSelect;
   final double height;
-  final double width;
+  final double? width;
   final bool enable;
 
   @override
@@ -38,11 +38,12 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
     var result = await showGeneralDialog<T>(
       context: context,
       barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.transparent,
       pageBuilder: (c, _, __) => Stack(
         children: [
           Positioned(
-            top: itemRect.bottom + 1,
+            top: itemRect.bottom,
             bottom: 0,
             left: 0,
             right: 0,
@@ -54,7 +55,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
             ),
           ),
           Positioned(
-            top: itemRect.bottom + 1,
+            top: itemRect.bottom,
             left: 0,
             right: 0,
             child: Container(
@@ -95,7 +96,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
         onTap: widget.enable ? _onTap : null,
         child: Container(
           height: widget.height, // 26
-          width: widget.width, // 88
+          width: widget.width,
           child: IconText(
             alignment: IconTextAlignment.r2l,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -163,7 +164,7 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
     const hSpace = 6.0;
     const vSpace = 9.0;
     const padding = EdgeInsets.symmetric(horizontal: 15, vertical: 10);
-    final width = (MediaQuery.of(context).size.width - 2 * padding.horizontal - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
+    final width = (MediaQuery.of(context).size.width - 2 * padding.left - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
 
     return Padding(
       padding: padding,

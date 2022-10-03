@@ -21,6 +21,8 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
+// TODO
+
 /// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
   const MangaPage({
@@ -251,7 +253,7 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  height: 180,
+                  height: 180, // TODO x
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -284,7 +286,7 @@ class _MangaPageState extends State<MangaPage> {
                       // ****************************************************************
                       Container(
                         width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢▢ |
-                        height: 180,
+                        // height: 180, // TODO x
                         padding: EdgeInsets.only(top: 14, bottom: 14, right: 14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

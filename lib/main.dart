@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Manhuagui',
       theme: ThemeData(
-        primarySwatch: Colors.purple,
+        primarySwatch: Colors.deepOrange,
         appBarTheme: AppBarTheme(
           centerTitle: true,
           toolbarHeight: 45,
@@ -25,9 +25,10 @@ class MyApp extends StatelessWidget {
             systemNavigationBarIconBrightness: Brightness.dark,
           ),
         ),
+        scaffoldBackgroundColor: Color.fromRGBO(245, 245, 245, 1.0),
         pageTransitionsTheme: PageTransitionsTheme(
           builders: const {
-            TargetPlatform.android: ZoomPageTransitionsBuilder(),
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           },
         ),
         splashFactory: CustomInkRipple.preferredSplashFactory,
