@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
 /// 漫画浏览历史行，在 [HistorySubPage] 使用
-class MangaHistoryLineView extends StatefulWidget {
+class MangaHistoryLineView extends StatelessWidget {
   const MangaHistoryLineView({
     Key? key,
     required this.history,
@@ -16,31 +16,26 @@ class MangaHistoryLineView extends StatefulWidget {
   final Function() onLongPressed;
 
   @override
-  _MangaHistoryLineViewState createState() => _MangaHistoryLineViewState();
-}
-
-class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
-  @override
   Widget build(BuildContext context) {
     return GeneralLineView(
-      imageUrl: widget.history.mangaCover,
-      title: widget.history.mangaTitle,
-      icon1: widget.history.read ? Icons.subject : null,
-      text1: widget.history.read ? '阅读至 ${widget.history.chapterTitle}' : null,
-      icon2: widget.history.read ? Icons.import_contacts : Icons.subject,
-      text2: widget.history.read ? '第${widget.history.chapterPage}页' : '未开始阅读',
+      imageUrl: history.mangaCover,
+      title: history.mangaTitle,
+      icon1: history.read ? Icons.subject : null,
+      text1: history.read ? '阅读至 ${history.chapterTitle}' : null,
+      icon2: history.read ? Icons.import_contacts : Icons.subject,
+      text2: history.read ? '第${history.chapterPage}页' : '未开始阅读',
       icon3: Icons.access_time,
-      text3: DateFormat('yyyy-MM-dd HH:mm:ss').format(widget.history.lastTime),
+      text3: DateFormat('yyyy-MM-dd HH:mm:ss').format(history.lastTime),
       onPressed: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (c) => MangaPage(
-            id: widget.history.mangaId,
-            title: widget.history.mangaTitle,
-            url: widget.history.mangaUrl,
+            id: history.mangaId,
+            title: history.mangaTitle,
+            url: history.mangaUrl,
           ),
         ),
       ),
-      onLongPressed: widget.onLongPressed,
+      onLongPressed: onLongPressed,
     );
   }
 }

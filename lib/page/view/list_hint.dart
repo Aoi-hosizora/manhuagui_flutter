@@ -63,15 +63,10 @@ class ListHintView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 26, width: 15),
-                    Flexible(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 5),
-                        child: Text(
-                          rightText!,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                    SizedBox(height: 26, width: 20),
+                    Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Text(rightText!),
                     ),
                   ]
                 : style == ListHintViewStyle.textWidget

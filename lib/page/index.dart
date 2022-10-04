@@ -19,8 +19,8 @@ class IndexPage extends StatefulWidget {
   _IndexPageState createState() => _IndexPageState();
 }
 
-class _IndexPageState extends State<IndexPage> {
-  final _controller = PageController();
+class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMixin {
+  late final _controller = TabController(length: 4, vsync: this);
   var _selectedIndex = 0;
   late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
@@ -45,10 +45,10 @@ class _IndexPageState extends State<IndexPage> {
       await AuthManager.instance.check();
     });
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
-      _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+      _controller.animateTo(2);
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateToPage(1, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+      _controller.animateTo(1);
     }));
   }
 
@@ -94,15 +94,10 @@ class _IndexPageState extends State<IndexPage> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        body: PageView.builder(
+        body: TabBarView(
           physics: NeverScrollableScrollPhysics(),
           controller: _controller,
-          onPageChanged: (index) {
-            _selectedIndex = index;
-            if (mounted) setState(() {});
-          },
-          itemCount: _tabs.length,
-          itemBuilder: (_, idx) => _tabs[idx].item3,
+          children: _tabs.map((t) => t.item3).toList(),
         ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -116,11 +111,11 @@ class _IndexPageState extends State<IndexPage> {
               )
               .toList(),
           onTap: (index) async {
-            // TODO use _controller.page rather than _selectedIndex ???
             if (_selectedIndex == index) {
               _actions[_selectedIndex].invoke();
             } else {
-              await _controller.animateToPage(index, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
+              _controller.animateTo(index);
+              _selectedIndex = index;
               if (mounted) setState(() {});
             }
           },

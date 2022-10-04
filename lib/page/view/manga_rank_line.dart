@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
 /// 漫画排名行，在 [RankingSubPage] 使用
-class MangaRankLineView extends StatefulWidget {
+class MangaRankLineView extends StatelessWidget {
   const MangaRankLineView({
     Key? key,
     required this.manga,
@@ -13,21 +13,16 @@ class MangaRankLineView extends StatefulWidget {
   final MangaRank manga;
 
   @override
-  _MangaRankLineViewState createState() => _MangaRankLineViewState();
-}
-
-class _MangaRankLineViewState extends State<MangaRankLineView> {
-  @override
   Widget build(BuildContext context) {
     return GeneralLineView(
-      imageUrl: widget.manga.cover,
-      title: widget.manga.title,
+      imageUrl: manga.cover,
+      title: manga.title,
       icon1: Icons.edit,
-      text1: widget.manga.finished ? '已完结' : '连载中',
+      text1: manga.finished ? '已完结' : '连载中',
       icon2: Icons.subject,
-      text2: (widget.manga.finished ? '共 ' : '更新至 ') + widget.manga.newestChapter,
+      text2: (manga.finished ? '共 ' : '更新至 ') + manga.newestChapter,
       icon3: Icons.access_time,
-      text3: '更新于 ${widget.manga.newestDate}',
+      text3: '更新于 ${manga.newestDate}',
       extraWidthInRow: 35 + 14,
       extraInRow: Container(
         margin: EdgeInsets.only(right: 14, top: 5, bottom: 5),
@@ -35,13 +30,13 @@ class _MangaRankLineViewState extends State<MangaRankLineView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            widget.manga.trend == 1
+            manga.trend == 1
                 ? Icon(Icons.arrow_drop_up, color: Colors.red) // up
-                : widget.manga.trend == 2
+                : manga.trend == 2
                     ? Icon(Icons.arrow_drop_down, color: Colors.blue[400]) // down
                     : Icon(Icons.remove, color: Colors.grey),
             Text(
-              widget.manga.score.toString(),
+              manga.score.toString(),
               style: Theme.of(context).textTheme.subtitle1,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -56,19 +51,19 @@ class _MangaRankLineViewState extends State<MangaRankLineView> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: widget.manga.order == 1
+            color: manga.order == 1
                 ? Colors.red
-                : widget.manga.order == 2
+                : manga.order == 2
                     ? Colors.deepOrange
-                    : widget.manga.order == 3
+                    : manga.order == 3
                         ? Colors.orange
                         : Colors.grey[400],
             borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24)),
           ),
           child: Container(
-            padding: EdgeInsets.only(top: 2, left: widget.manga.order < 10 ? 12 : 6.5),
+            padding: EdgeInsets.only(top: 2, left: manga.order < 10 ? 12 : 6.5),
             child: Text(
-              widget.manga.order.toString(),
+              manga.order.toString(),
               style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.white),
             ),
           ),
@@ -77,9 +72,9 @@ class _MangaRankLineViewState extends State<MangaRankLineView> {
       onPressed: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (c) => MangaPage(
-            id: widget.manga.mid,
-            title: widget.manga.title,
-            url: widget.manga.url,
+            id: manga.mid,
+            title: manga.title,
+            url: manga.url,
           ),
         ),
       ),

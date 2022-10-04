@@ -13,7 +13,7 @@ enum MangaGroupViewStyle {
 }
 
 /// 单个漫画分组，在 [RecommendSubPage] / [MangaGroupPage] 使用
-class MangaGroupView extends StatefulWidget {
+class MangaGroupView extends StatelessWidget {
   const MangaGroupView({
     Key? key,
     required this.group,
@@ -31,12 +31,7 @@ class MangaGroupView extends StatefulWidget {
   final EdgeInsets margin;
   final EdgeInsets padding;
 
-  @override
-  _MangaGroupViewState createState() => _MangaGroupViewState();
-}
-
-class _MangaGroupViewState extends State<MangaGroupView> {
-  Widget _buildItem({required TinyBlockManga? manga, required double width, required double height, void Function()? onMorePressed}) {
+  Widget _buildItem({required BuildContext context, required TinyBlockManga? manga, required double width, required double height, void Function()? onMorePressed}) {
     if (manga == null) {
       return Container(
         width: width,
@@ -134,12 +129,12 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     );
   }
 
-  Widget _buildGroupItems() {
+  Widget _buildGroupItems({required BuildContext context}) {
     const hSpace = 8.0;
     const vSpace = 8.0;
 
-    List<TinyBlockManga?> mangas = widget.group.mangas;
-    switch (widget.style) {
+    List<TinyBlockManga?> mangas = group.mangas;
+    switch (style) {
       case MangaGroupViewStyle.normalFull:
         break;
       case MangaGroupViewStyle.normalTruncate:
@@ -163,17 +158,18 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     final smallerWidth = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
     var widgets = <Widget>[];
     for (var manga in mangas) {
-      var width = widget.style == MangaGroupViewStyle.smallTruncate || widget.style == MangaGroupViewStyle.smallOneLine ? smallerWidth : largerWidth;
+      var width = style == MangaGroupViewStyle.smallTruncate || style == MangaGroupViewStyle.smallOneLine ? smallerWidth : largerWidth;
       widgets.add(
         _buildItem(
+          context: context,
           manga: manga,
           width: width,
           height: width / 3 * 4,
           onMorePressed: () => Navigator.of(context).push(
             MaterialPageRoute(
               builder: (c) => MangaGroupPage(
-                group: widget.group,
-                type: widget.type,
+                group: group,
+                type: type,
               ),
             ),
           ),
@@ -193,17 +189,17 @@ class _MangaGroupViewState extends State<MangaGroupView> {
 
   @override
   Widget build(BuildContext context) {
-    var title = widget.group.title.isEmpty ? widget.type.toTitle() : (widget.type.toTitle() + '・' + widget.group.title);
-    var icon = widget.type == MangaGroupType.serial
+    var title = group.title.isEmpty ? type.toTitle() : (type.toTitle() + '・' + group.title);
+    var icon = type == MangaGroupType.serial
         ? Icons.whatshot
-        : widget.type == MangaGroupType.finish
+        : type == MangaGroupType.finish
             ? Icons.check_circle_outline
             : Icons.fiber_new;
 
     return Container(
       color: Colors.white,
-      margin: widget.margin,
-      padding: widget.padding,
+      margin: margin,
+      padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -215,7 +211,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
               space: 6,
             ),
           ),
-          _buildGroupItems(),
+          _buildGroupItems(context: context),
         ],
       ),
     );

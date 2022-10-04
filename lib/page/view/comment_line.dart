@@ -10,7 +10,7 @@ enum CommentLineViewStyle {
 }
 
 /// 漫画评论行，在 [MangaPage] / [MangaCommentsPage] / [CommentPage] 使用
-class CommentLineView extends StatefulWidget {
+class CommentLineView extends StatelessWidget {
   const CommentLineView({
     Key? key,
     required this.comment,
@@ -24,16 +24,9 @@ class CommentLineView extends StatefulWidget {
   final int? index; // only for large replied comment
   final CommentLineViewStyle style;
 
-  @override
-  _CommentLineViewState createState() => _CommentLineViewState();
-}
+  bool get large => style == CommentLineViewStyle.large;
 
-class _CommentLineViewState extends State<CommentLineView> {
-  bool get large => widget.style == CommentLineViewStyle.large;
-
-  int get index => widget.index ?? widget.comment.replyTimeline.length + 1;
-
-  Widget _buildReplyLines() {
+  Widget _buildReplyLines({required BuildContext context}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[200],
@@ -46,7 +39,7 @@ class _CommentLineViewState extends State<CommentLineView> {
           // ****************************************************************
           // 每一楼评论
           // ****************************************************************
-          for (var line in widget.comment.replyTimeline.sublist(0, widget.comment.replyTimeline.length.clamp(0, 3)))
+          for (var line in comment.replyTimeline.sublist(0, comment.replyTimeline.length.clamp(0, 3)))
             Padding(
               padding: EdgeInsets.only(bottom: 4),
               child: Row(
@@ -75,7 +68,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                     width: 15,
                     child: Center(
                       child: Text(
-                        (widget.comment.replyTimeline.indexOf(line) + 1).toString(),
+                        (comment.replyTimeline.indexOf(line) + 1).toString(),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 11,
@@ -86,11 +79,11 @@ class _CommentLineViewState extends State<CommentLineView> {
                 ],
               ),
             ),
-          if (widget.comment.replyTimeline.length > 3)
+          if (comment.replyTimeline.length > 3)
             Padding(
               padding: EdgeInsets.only(bottom: 4),
               child: Text(
-                '共 ${widget.comment.replyTimeline.length} 条评论，点击查看该楼层...',
+                '共 ${comment.replyTimeline.length} 条评论，点击查看该楼层...',
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).primaryColor),
               ),
             ),
@@ -115,7 +108,7 @@ class _CommentLineViewState extends State<CommentLineView> {
               // ****************************************************************
               ClipOval(
                 child: NetworkImageView(
-                  url: widget.comment.avatar,
+                  url: comment.avatar,
                   height: !large ? 32 : 40,
                   width: !large ? 32 : 40,
                   fit: BoxFit.cover,
@@ -140,7 +133,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  widget.comment.username == '-' ? '匿名用户' : widget.comment.username,
+                                  comment.username == '-' ? '匿名用户' : comment.username,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
@@ -149,14 +142,14 @@ class _CommentLineViewState extends State<CommentLineView> {
                               SizedBox(width: 8),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: widget.comment.gender == 1 ? Colors.blue[300] : Colors.red[400],
+                                  color: comment.gender == 1 ? Colors.blue[300] : Colors.red[400],
                                   borderRadius: BorderRadius.all(Radius.circular(3)),
                                 ),
                                 height: 18,
                                 width: 18,
                                 child: Center(
                                   child: Text(
-                                    widget.comment.gender == 1 ? '♂' : '♀',
+                                    comment.gender == 1 ? '♂' : '♀',
                                     style: TextStyle(fontSize: 14, color: Colors.white),
                                   ),
                                 ),
@@ -167,7 +160,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                         // ****************************************************************
                         // 楼层数
                         // ****************************************************************
-                        if (widget.comment.replyTimeline.isNotEmpty)
+                        if (comment.replyTimeline.isNotEmpty)
                           Container(
                             margin: EdgeInsets.only(right: !large ? 8 : 0),
                             decoration: BoxDecoration(
@@ -178,7 +171,9 @@ class _CommentLineViewState extends State<CommentLineView> {
                             width: !large ? 15 : 26,
                             child: Center(
                               child: Text(
-                                !large ? '$index' : '#$index',
+                                !large
+                                    ? '${index ?? comment.replyTimeline.length + 1}' //
+                                    : '#${index ?? comment.replyTimeline.length + 1}',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: !large ? 11 : 14,
@@ -193,17 +188,17 @@ class _CommentLineViewState extends State<CommentLineView> {
                     // 评论内容
                     // ****************************************************************
                     Text(
-                      widget.comment.content,
+                      comment.content,
                       style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
                     ),
                     SizedBox(height: !large ? 8 : 15),
                     // ****************************************************************
                     // 回复评论
                     // ****************************************************************
-                    if (!large && widget.comment.replyTimeline.isNotEmpty)
+                    if (!large && comment.replyTimeline.isNotEmpty)
                       Padding(
                         padding: EdgeInsets.only(bottom: 8),
-                        child: _buildReplyLines(),
+                        child: _buildReplyLines(context: context),
                       ),
                     // ****************************************************************
                     // 评论数据
@@ -212,7 +207,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          widget.comment.commentTime,
+                          comment.commentTime,
                           style: TextStyle(color: Colors.grey),
                         ),
                         Row(
@@ -223,7 +218,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                               size: 16,
                             ),
                             SizedBox(width: 4),
-                            Text(widget.comment.likeCount.toString()),
+                            Text(comment.likeCount.toString()),
                             SizedBox(width: 10),
                             Icon(
                               Icons.chat_bubble,
@@ -231,7 +226,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                               size: 16,
                             ),
                             SizedBox(width: 4),
-                            Text(widget.comment.replyCount.toString()),
+                            Text(comment.replyCount.toString()),
                           ],
                         ),
                       ],
@@ -250,11 +245,11 @@ class _CommentLineViewState extends State<CommentLineView> {
                   ? () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (c) => CommentPage(
-                            comment: widget.comment,
+                            comment: comment,
                           ),
                         ),
                       )
-                  : () => copyText(widget.comment.content),
+                  : () => copyText(comment.content),
             ),
           ),
         ),

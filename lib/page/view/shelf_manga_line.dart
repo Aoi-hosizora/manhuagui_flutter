@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
 /// 书架漫画行，在 [ShelfSubPage] 使用
-class ShelfMangaLineView extends StatefulWidget {
+class ShelfMangaLineView extends StatelessWidget {
   const ShelfMangaLineView({
     Key? key,
     required this.manga,
@@ -13,27 +13,22 @@ class ShelfMangaLineView extends StatefulWidget {
   final ShelfManga manga;
 
   @override
-  _ShelfMangaLineViewState createState() => _ShelfMangaLineViewState();
-}
-
-class _ShelfMangaLineViewState extends State<ShelfMangaLineView> {
-  @override
   Widget build(BuildContext context) {
     return GeneralLineView(
-      imageUrl: widget.manga.cover,
-      title: widget.manga.title,
+      imageUrl: manga.cover,
+      title: manga.title,
       icon1: Icons.subject,
-      text1: '更新至 ' + widget.manga.newestChapter,
+      text1: '更新至 ' + manga.newestChapter,
       icon2: Icons.access_time,
-      text2: '更新于 ${widget.manga.newestDuration}',
+      text2: '更新于 ${manga.newestDuration}',
       icon3: Icons.import_contacts,
-      text3: '最近阅读至 ${widget.manga.lastChapter.isEmpty ? '未知话' : widget.manga.lastChapter} (${widget.manga.lastDuration})',
+      text3: '最近阅读至 ${manga.lastChapter.isEmpty ? '未知话' : manga.lastChapter} (${manga.lastDuration})',
       onPressed: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (c) => MangaPage(
-            id: widget.manga.mid,
-            title: widget.manga.title,
-            url: widget.manga.url,
+            id: manga.mid,
+            title: manga.title,
+            url: manga.url,
           ),
         ),
       ),

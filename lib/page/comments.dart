@@ -51,7 +51,7 @@ class _CommentsPageState extends State<CommentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text('漫画评论'),
       ),
       body: PaginationListView<Comment>(
         data: _data,
@@ -88,7 +88,7 @@ class _CommentsPageState extends State<CommentsPage> {
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textText(
-              leftText: '漫画评论',
+              leftText: '《${widget.title}》',
               rightText: '共 $_total 条评论',
             ),
           ],

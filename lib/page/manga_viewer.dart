@@ -332,7 +332,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 values: [false, true],
                 builder: (s) => Text(
                   s == false ? '从左往右' : '从右往左',
-                  style: Theme.of(context).textTheme.bodyText1,
+                  style: Theme.of(context).textTheme.bodyText2,
                 ),
                 onChanged: (s) async {
                   _setting = _setting.copyWith(reverseScroll: s ?? true);
@@ -402,7 +402,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 values: [0, 1, 2, 3, 4, 5],
                 builder: (s) => Text(
                   '$s页',
-                  style: Theme.of(context).textTheme.bodyText1,
+                  style: Theme.of(context).textTheme.bodyText2,
                 ),
                 onChanged: (c) async {
                   _setting = _setting.copyWith(preloadCount: (c ?? 2).clamp(0, 5));
@@ -532,10 +532,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             setting: PlaceholderSetting(
               iconColor: Colors.grey,
               showLoadingText: false,
-              textStyle: TextStyle(
-                fontSize: Theme.of(context).textTheme.headline6?.fontSize,
-                color: Colors.grey,
-              ),
+              textStyle: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.grey),
               buttonTextStyle: TextStyle(color: Colors.grey),
               buttonStyle: ButtonStyle(
                 side: MaterialStateProperty.all(BorderSide(color: Colors.grey)),
@@ -622,10 +619,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                             ),
                             Text(
                               !_setting.reverseScroll ? '前\n往\n上\n一\n章\n节' : '前\n往\n下\n一\n章\n节',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: Theme.of(context).textTheme.headline6?.fontSize,
-                              ),
+                              style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
                             ),
                           ],
                         ),
@@ -652,10 +646,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                             Icon(Icons.arrow_right_alt, size: 24, color: Colors.white),
                             Text(
                               !_setting.reverseScroll ? '前\n往\n下\n一\n章\n节' : '前\n往\n上\n一\n章\n节',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: Theme.of(context).textTheme.headline6?.fontSize,
-                              ),
+                              style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
                             ),
                           ],
                         ),
@@ -735,10 +726,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                             child: Center(
                               child: Text(
                                 !_setting.reverseScroll ? '上\n一\n页' : '下\n一\n页', // 上一页 / 下一页(反)
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: Theme.of(context).textTheme.headline6?.fontSize,
-                                ),
+                                style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
                               ),
                             ),
                           ),
@@ -749,10 +737,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                             child: Center(
                               child: Text(
                                 '菜单',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: Theme.of(context).textTheme.headline6?.fontSize,
-                                ),
+                                style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
                               ),
                             ),
                           ),
@@ -763,10 +748,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                             child: Center(
                               child: Text(
                                 !_setting.reverseScroll ? '下\n一\n页' : '上\n一\n页', // 下一页 / 上一页(反)
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: Theme.of(context).textTheme.headline6?.fontSize,
-                                ),
+                                style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
                               ),
                             ),
                           ),

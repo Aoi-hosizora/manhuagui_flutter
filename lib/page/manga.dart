@@ -286,7 +286,7 @@ class _MangaPageState extends State<MangaPage> {
                       // ****************************************************************
                       Container(
                         width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢▢ |
-                        // height: 180, // TODO x
+                        height: 180, // TODO x
                         padding: EdgeInsets.only(top: 14, bottom: 14, right: 14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,7 +378,7 @@ class _MangaPageState extends State<MangaPage> {
                                     ),
                                     child: Text(
                                       _subscribed == true ? '取消订阅' : '订阅漫画',
-                                      style: TextStyle(color: _subscribing ? Colors.grey : Theme.of(context).textTheme.button?.color),
+                                      style: TextStyle(color: _subscribing ? Colors.grey : Colors.black),
                                     ),
                                     onPressed: _subscribing == true ? null : () => _subscribe(),
                                   ),
