@@ -110,7 +110,7 @@ class _MangaTocViewState extends State<MangaTocView> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3),
-                color: widget.highlightedChapter == chapter?.cid ? Theme.of(context).primaryColor.withOpacity(0.5) : null,
+                color: widget.highlightedChapter == chapter?.cid ? Theme.of(context).primaryColorLight.withOpacity(0.6) : null,
               ),
               child: Theme(
                 data: Theme.of(context).copyWith(
@@ -176,8 +176,8 @@ class _MangaTocViewState extends State<MangaTocView> {
   }
 
   Widget _buildGroupItems({required MangaChapterGroup group, required EdgeInsets padding, bool firstGroup = false}) {
-    const hSpace = 6.0;
-    const vSpace = 9.0;
+    const hSpace = 8.0;
+    const vSpace = 8.0;
     final width = (MediaQuery.of(context).size.width - 2 * padding.left - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
 
     List<TinyMangaChapter?> chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
@@ -199,7 +199,7 @@ class _MangaTocViewState extends State<MangaTocView> {
         spacing: hSpace,
         runSpacing: vSpace,
         children: [
-          for (var chapter in group.chapters)
+          for (var chapter in chapters)
             _buildItem(
               chapter: chapter,
               width: width,
@@ -238,7 +238,7 @@ class _MangaTocViewState extends State<MangaTocView> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 12),
           color: Colors.white,
-          child: Divider(height: 1, thickness: 1),
+          child: Divider(height: 0, thickness: 1),
         ),
         for (var i = 0; i < groups.length; i++) ...[
           SizedBox(height: 10),
@@ -250,13 +250,16 @@ class _MangaTocViewState extends State<MangaTocView> {
             ),
           ),
           SizedBox(height: 10),
-          _buildGroupItems(
-            group: groups[i],
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            firstGroup: i == 0,
+          SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: _buildGroupItems(
+              group: groups[i],
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              firstGroup: i == 0,
+            ),
           ),
         ],
-        SizedBox(height: 5),
+        SizedBox(height: 10),
       ],
     );
   }

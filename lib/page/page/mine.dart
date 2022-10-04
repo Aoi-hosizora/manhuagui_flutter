@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/user.dart';
+import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -24,6 +26,7 @@ class MineSubPage extends StatefulWidget {
 }
 
 class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
+  final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   bool _loginChecking = true;
   VoidCallback? _cancelHandler;
 
@@ -32,10 +35,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() {
+        _loginChecking = false;
+        if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
-          _loadUser();
+          WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
         }
       });
+      _loginChecking = true;
       await AuthManager.instance.check();
       _loginChecking = false;
       if (mounted) setState(() {});
@@ -69,7 +75,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       var we = wrapError(e, s);
       _error = we.text;
       if (we.response?.statusCode == 401) {
-        _logout(sure: true); // TODO need ???
+        Fluttertoast.showToast(msg: '登录失效，请重新登录');
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (c) => LoginPage(),
+          ),
+        );
       }
     } finally {
       _loading = false;
@@ -80,7 +91,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   Future<void> _logout({bool sure = false}) async {
     if (sure) {
       await AuthPrefs.setToken('');
-      AuthManager.instance.logout();
+      AuthManager.instance.record(username: '', token: '');
       AuthManager.instance.notify();
       return;
     }
@@ -95,7 +106,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             child: Text('确定'),
             onPressed: () async {
               await AuthPrefs.setToken('');
-              AuthManager.instance.logout();
+              AuthManager.instance.record(username: '', token: '');
               AuthManager.instance.notify();
               Navigator.of(c).pop();
             },
@@ -149,7 +160,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     }
 
     return RefreshIndicator(
-      onRefresh: _loadUser,
+      key: _refreshIndicatorKey,
+      onRefresh: () => _loadUser(),
       child: PlaceholderText.from(
         isLoading: _loading,
         errorText: _error,
@@ -219,7 +231,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   ),
                   Padding(
                     padding: EdgeInsets.only(left: 10, right: 10, bottom: 4),
-                    child: Divider(height: 1, thickness: 1),
+                    child: Divider(height: 0, thickness: 1),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
@@ -254,7 +266,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   ),
                   Padding(
                     padding: EdgeInsets.only(left: 10, right: 10, bottom: 4),
-                    child: Divider(height: 1, thickness: 1),
+                    child: Divider(height: 0, thickness: 1),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),

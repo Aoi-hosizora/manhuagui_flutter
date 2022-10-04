@@ -123,7 +123,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
         ),
         Container(
           width: width,
-          padding: EdgeInsets.symmetric(vertical: 3),
+          padding: EdgeInsets.only(top: 1.5),
           child: Text(
             manga.title,
             maxLines: 1,
@@ -136,7 +136,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
 
   Widget _buildGroupItems() {
     const hSpace = 8.0;
-    const vSpace = 6.0;
+    const vSpace = 8.0;
 
     List<TinyBlockManga?> mangas = widget.group.mangas;
     switch (widget.style) {

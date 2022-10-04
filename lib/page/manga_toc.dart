@@ -95,6 +95,15 @@ class _MangaTocPageState extends State<MangaTocPage> {
           ),
         ),
       ),
+      floatingActionButton: ScrollAnimatedFab(
+        scrollController: _controller,
+        condition: ScrollAnimatedCondition.direction,
+        fab: FloatingActionButton(
+          child: Icon(Icons.vertical_align_top),
+          heroTag: null,
+          onPressed: () => _controller.scrollToTop(),
+        ),
+      ),
     );
   }
 }

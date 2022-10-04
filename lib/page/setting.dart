@@ -33,8 +33,8 @@ class _SettingPageState extends State<SettingPage> {
   Widget _divider() {
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.only(left: 10, right: 10),
-      child: Divider(height: 1, thickness: 1),
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      child: Divider(height: 0, thickness: 1),
     );
   }
 

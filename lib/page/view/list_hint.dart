@@ -51,38 +51,47 @@ class ListHintView extends StatelessWidget {
             mainAxisAlignment: style == ListHintViewStyle.widgets
                 ? MainAxisAlignment.spaceAround /* | 　 　 　 | */
                 : MainAxisAlignment.spaceBetween /* | 　   　 | */,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: style == ListHintViewStyle.textText
                 ? [
-                    Container(
-                      height: 26, // <<<
-                      padding: EdgeInsets.only(left: 5),
-                      child: Center(
-                        child: Text(leftText!),
+                    Flexible(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 5),
+                        child: Text(
+                          leftText!,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                    Container(
-                      height: 26,
-                      padding: EdgeInsets.only(right: 5),
-                      child: Center(
-                        child: Text(rightText!),
+                    SizedBox(height: 26, width: 15),
+                    Flexible(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 5),
+                        child: Text(
+                          rightText!,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ]
                 : style == ListHintViewStyle.textWidget
                     ? [
-                        Container(
-                          height: 26,
-                          padding: EdgeInsets.only(left: 5),
-                          child: Center(
-                            child: Text(leftText!),
+                        Flexible(
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 5),
+                            child: Text(
+                              leftText!,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
+                        SizedBox(height: 26, width: 15),
                         rightWidget!,
                       ]
                     : widgets!,
           ),
         ),
-        Divider(height: 1, thickness: 1),
+        Divider(height: 0, thickness: 1),
       ],
     );
   }

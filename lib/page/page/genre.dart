@@ -140,9 +140,6 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
             onStartGettingData: () => mountedSetState(() => _getting = true),
             onStopGettingData: () => mountedSetState(() => _getting = false),
             onAppend: (_, l) {
-              if (l.isNotEmpty) {
-                Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-              }
               _lastOrder = _currOrder;
               _lastGenre = _currGenre;
               _lastAge = _currAge;
@@ -161,7 +158,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
               if (mounted) setState(() {});
             },
           ),
-          separator: Divider(height: 1),
+          separator: Divider(height: 0, thickness: 1),
           itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [

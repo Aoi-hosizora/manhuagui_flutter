@@ -53,14 +53,14 @@ class _CommentLineViewState extends State<CommentLineView> {
                 children: [
                   Text(
                     "${line.username == '-' ? '匿名用户' : line.username}: ",
-                    style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Theme.of(context).primaryColor),
+                    style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).primaryColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Expanded(
                     child: Text(
                       line.content,
-                      style: Theme.of(context).textTheme.bodyText1,
+                      style: Theme.of(context).textTheme.bodyText2,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -91,7 +91,7 @@ class _CommentLineViewState extends State<CommentLineView> {
               padding: EdgeInsets.only(bottom: 4),
               child: Text(
                 '共 ${widget.comment.replyTimeline.length} 条评论，点击查看该楼层...',
-                style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Theme.of(context).primaryColor),
+                style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).primaryColor),
               ),
             ),
         ],
@@ -104,8 +104,9 @@ class _CommentLineViewState extends State<CommentLineView> {
     return Stack(
       children: [
         Container(
+          color: Colors.white,
           width: MediaQuery.of(context).size.width,
-          padding: EdgeInsets.symmetric(horizontal: !large ? 12 : 15, vertical: !large ? 10 : 15),
+          padding: EdgeInsets.symmetric(horizontal: !large ? 12 : 15, vertical: !large ? 8 : 15),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -142,7 +143,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                                   widget.comment.username == '-' ? '匿名用户' : widget.comment.username,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: !large ? Theme.of(context).textTheme.bodyText1 : Theme.of(context).textTheme.subtitle1,
+                                  style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
                                 ),
                               ),
                               SizedBox(width: 8),
@@ -193,15 +194,15 @@ class _CommentLineViewState extends State<CommentLineView> {
                     // ****************************************************************
                     Text(
                       widget.comment.content,
-                      style: !large ? Theme.of(context).textTheme.bodyText1 : Theme.of(context).textTheme.subtitle1,
+                      style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
                     ),
-                    SizedBox(height: !large ? 10 : 15),
+                    SizedBox(height: !large ? 8 : 15),
                     // ****************************************************************
                     // 回复评论
                     // ****************************************************************
                     if (!large && widget.comment.replyTimeline.isNotEmpty)
                       Padding(
-                        padding: EdgeInsets.only(bottom: 10),
+                        padding: EdgeInsets.only(bottom: 8),
                         child: _buildReplyLines(),
                       ),
                     // ****************************************************************

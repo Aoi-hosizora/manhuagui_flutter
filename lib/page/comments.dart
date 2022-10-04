@@ -51,7 +51,7 @@ class _CommentsPageState extends State<CommentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('漫画评论'),
+        title: Text(widget.title),
       ),
       body: PaginationListView<Comment>(
         data: _data,
@@ -71,11 +71,6 @@ class _CommentsPageState extends State<CommentsPage> {
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onAppend: (_, l) {
-            if (l.isNotEmpty) {
-              Fluttertoast.showToast(msg: '新添了 ${l.length} 条评论');
-            }
-          },
           onError: (e) {
             if (_data.isNotEmpty) {
               Fluttertoast.showToast(msg: e.toString());
@@ -83,10 +78,8 @@ class _CommentsPageState extends State<CommentsPage> {
           },
         ),
         separator: Container(
-          margin: EdgeInsets.only(left: 2.0 * 12 + 32),
-          width: MediaQuery.of(context).size.width - 3 * 12 - 32,
           color: Colors.white,
-          child: Divider(height: 1, thickness: 1),
+          child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
         ),
         itemBuilder: (c, _, item) => CommentLineView(
           comment: item,
@@ -95,8 +88,8 @@ class _CommentsPageState extends State<CommentsPage> {
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textText(
-              leftText: widget.title,
-              rightText: '共 $_total 条',
+              leftText: '漫画评论',
+              rightText: '共 $_total 条评论',
             ),
           ],
         ),

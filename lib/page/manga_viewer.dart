@@ -142,7 +142,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
-          chapterId: _data!.cid,
+          chapterId: widget.cid,
           chapterTitle: _data!.title,
           chapterPage: _currentPage,
           lastTime: DateTime.now(),

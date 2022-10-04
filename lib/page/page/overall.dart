@@ -87,9 +87,6 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
           onStartGettingData: () => mountedSetState(() => _getting = true),
           onStopGettingData: () => mountedSetState(() => _getting = false),
           onAppend: (_, l) {
-            if (l.isNotEmpty) {
-              Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-            }
             _lastOrder = _currOrder;
           },
           onError: (e) {
@@ -100,7 +97,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
             if (mounted) setState(() {});
           },
         ),
-        separator: Divider(height: 1),
+        separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

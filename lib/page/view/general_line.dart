@@ -17,6 +17,7 @@ class GeneralLineView extends StatelessWidget {
     this.extraInRow,
     this.extraWidthInRow,
     required this.onPressed,
+    this.onLongPressed,
   }) : super(key: key);
 
   final String imageUrl;
@@ -31,6 +32,7 @@ class GeneralLineView extends StatelessWidget {
   final Widget? extraInRow;
   final double? extraWidthInRow;
   final void Function() onPressed;
+  final void Function()? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +123,8 @@ class GeneralLineView extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => onPressed.call(),
+              onTap: onPressed,
+              onLongPress: onLongPressed,
             ),
           ),
         ),

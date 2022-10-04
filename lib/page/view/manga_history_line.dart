@@ -40,6 +40,7 @@ class _MangaHistoryLineViewState extends State<MangaHistoryLineView> {
           ),
         ),
       ),
+      onLongPressed: widget.onLongPressed,
     );
   }
 }

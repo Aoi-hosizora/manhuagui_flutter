@@ -26,14 +26,9 @@ class AuthManager {
 
   bool get logined => _token.isNotEmpty;
 
-  void login({required String username, required String token}) {
+  void record({required String username, required String token}) {
     _username = username;
     _token = token;
-  }
-
-  void logout() {
-    _username = '';
-    _token = '';
   }
 
   void Function() listen(Function() onData) {
@@ -48,29 +43,36 @@ class AuthManager {
 
   final _lock = Lock();
 
-  Future<void> check() async {
-    return _lock.synchronized(() async {
-      // logined or no token stored
+  Future<bool> check() async {
+    return _lock.synchronized<bool>(() async {
+      // logined
       if (AuthManager.instance.logined) {
-        return;
-      }
-      var token = await AuthPrefs.getToken();
-      if (token.isEmpty) {
-        return;
+        AuthManager.instance.notify();
+        return true;
       }
 
-      // check token
+      // no token stored in prefs
+      var token = await AuthPrefs.getToken();
+      if (token.isEmpty) {
+        AuthManager.instance.notify(); // need ???
+        return false;
+      }
+
+      // check stored token
       final client = RestClient(DioManager.instance.dio);
       try {
         var r = await client.checkUserLogin(token: token);
-        AuthManager.instance.login(username: r.data.username, token: token);
+        AuthManager.instance.record(username: r.data.username, token: token);
         AuthManager.instance.notify();
+        return true;
       } catch (e, s) {
         var we = wrapError(e, s);
         print(we.text);
         if (we.type == ErrorType.resultError) {
           await AuthPrefs.setToken('');
         }
+        AuthManager.instance.notify();
+        return false;
       }
     });
   }

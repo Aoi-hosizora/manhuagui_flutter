@@ -22,37 +22,32 @@ class _CommentPageState extends State<CommentPage> {
       appBar: AppBar(
         title: Text('评论详情'),
       ),
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        child: ListView(
-          children: [
-            CommentLineView(
-              comment: widget.comment,
-              style: CommentLineViewStyle.large,
-            ),
-            if (widget.comment.replyTimeline.isNotEmpty) ...[
-              Container(height: 12),
-              for (var i = 0; i < widget.comment.replyTimeline.length - 1; i++) ...[
-                CommentLineView(
-                  comment: widget.comment.replyTimeline[i].toComment(),
-                  index: i + 1,
-                  style: CommentLineViewStyle.large,
-                ),
-                Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.only(left: 2.0 * 15 + 40),
-                  width: MediaQuery.of(context).size.width - 3 * 15 - 40,
-                  child: Divider(height: 1, thickness: 1),
-                ),
-              ],
+      body: ListView(
+        children: [
+          CommentLineView(
+            comment: widget.comment,
+            style: CommentLineViewStyle.large,
+          ),
+          if (widget.comment.replyTimeline.isNotEmpty) ...[
+            Container(height: 12),
+            for (var i = 0; i < widget.comment.replyTimeline.length - 1; i++) ...[
               CommentLineView(
-                comment: widget.comment.replyTimeline.last.toComment(),
-                index: widget.comment.replyTimeline.length,
+                comment: widget.comment.replyTimeline[i].toComment(),
+                index: i + 1,
                 style: CommentLineViewStyle.large,
               ),
+              Container(
+                color: Colors.white,
+                child: Divider(height: 0, thickness: 1, indent: 40 + 2.0 * 15),
+              )
             ],
+            CommentLineView(
+              comment: widget.comment.replyTimeline.last.toComment(),
+              index: widget.comment.replyTimeline.length,
+              style: CommentLineViewStyle.large,
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

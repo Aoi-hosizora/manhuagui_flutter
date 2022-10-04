@@ -135,9 +135,6 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             onStartGettingData: () => mountedSetState(() => _getting = true),
             onStopGettingData: () => mountedSetState(() => _getting = false),
             onAppend: (_, l) {
-              if (l.isNotEmpty) {
-                Fluttertoast.showToast(msg: '新添了 ${l.length} 位作者');
-              }
               _lastOrder = _currOrder;
               _lastGenre = _currGenre;
               _lastAge = _currAge;
@@ -154,7 +151,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
               if (mounted) setState(() {});
             },
           ),
-          separator: Divider(height: 1),
+          separator: Divider(height: 0, thickness: 1),
           itemBuilder: (c, _, item) => SmallAuthorLineView(author: item),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [

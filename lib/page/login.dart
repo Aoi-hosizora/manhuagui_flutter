@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
 
     // state
     Fluttertoast.showToast(msg: '$username 登录成功');
-    AuthManager.instance.login(username: username, token: token);
+    AuthManager.instance.record(username: username, token: token);
     AuthManager.instance.notify();
 
     // prefs
@@ -104,9 +104,25 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           IconButton(
             icon: Text('注册'),
-            onPressed: () => launchInBrowser(
+            onPressed: () => showDialog(
               context: context,
-              url: REGISTER_URL,
+              builder: (c) => AlertDialog(
+                title: Text('用户注册'),
+                content: Text('是否跳转到 Manhuagui 官网来注册？'),
+                actions: [
+                  TextButton(
+                    child: Text('跳转'),
+                    onPressed: () => launchInBrowser(
+                      context: context,
+                      url: REGISTER_URL,
+                    ),
+                  ),
+                  TextButton(
+                    child: Text('取消'),
+                    onPressed: () => Navigator.of(c).pop(),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -251,7 +267,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(top: 2),
+                padding: EdgeInsets.only(top: 12),
                 child: !_logining
                     ? SizedBox(
                         height: 42,

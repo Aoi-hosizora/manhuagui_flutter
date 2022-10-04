@@ -188,9 +188,6 @@ class _SearchPageState extends State<SearchPage> {
                     onStartGettingData: () => mountedSetState(() => _getting = true),
                     onStopGettingData: () => mountedSetState(() => _getting = false),
                     onAppend: (_, l) {
-                      if (l.isNotEmpty) {
-                        Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-                      }
                       _lastOrder = _currOrder;
                     },
                     onError: (e) {
@@ -201,7 +198,7 @@ class _SearchPageState extends State<SearchPage> {
                       if (mounted) setState(() {});
                     },
                   ),
-                  separator: Divider(height: 1),
+                  separator: Divider(height: 0, thickness: 1),
                   itemBuilder: (c, _, item) => TinyMangaLineView(manga: item.toTiny()),
                   extra: UpdatableDataViewExtraWidgets(
                     innerTopWidgets: [
@@ -238,6 +235,12 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
             ),
+            // ScrollbarWithMore(
+            //   // controller: _searchScrollController,
+            //   // interactive: false, // TODO waiting for test, interactive make list view unable to be tappable ???
+            //   crossAxisMargin: 8 + 2,
+            //   mainAxisMargin: 35 + 5 /* TODO bottom padding */,
+            //   child:
             FloatingSearchBar(
               controller: _searchController,
               scrollController: _searchScrollController,
@@ -251,7 +254,7 @@ class _SearchPageState extends State<SearchPage> {
               elevation: 3.0,
               borderRadius: _searchController.isClosed
                   ? BorderRadius.all(Radius.circular(4)) // all border sides have radius
-                  : BorderRadius.only(topLeft: Radius.circular(3), topRight: Radius.circular(3)) /* only top borders have radius */,
+                  : BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)) /* only top borders have radius */,
               transitionDuration: Duration(milliseconds: 500),
               transitionCurve: Curves.easeInOut,
               transition: CircularFloatingSearchBarTransition(),
@@ -266,41 +269,61 @@ class _SearchPageState extends State<SearchPage> {
               automaticallyImplyBackButton: false,
               automaticallyImplyDrawerHamburger: false,
               leadingActions: [
-                FloatingSearchBarAction.icon(
-                  icon: Icon(Icons.arrow_back, size: 18),
-                  size: 18,
+                FloatingSearchBarAction(
                   showIfOpened: true,
                   showIfClosed: true,
-                  onTap: () => Navigator.of(context).maybePop(), // 返回
+                  child: CircularButton(
+                    size: 18,
+                    icon: Icon(Icons.arrow_back, size: 18),
+                    tooltip: '返回',
+                    onPressed: () => Navigator.of(context).maybePop(), // 返回
+                  ),
                 ),
               ],
               actions: [
-                FloatingSearchBarAction.icon(
-                  icon: Icon(Icons.close, size: 18),
-                  size: 18,
+                FloatingSearchBarAction(
                   showIfOpened: true,
                   showIfClosed: false,
-                  onTap: () => mountedSetState(() => _searchController.clear()), // 清空 TODO need setState ???
+                  child: CircularButton(
+                    size: 18,
+                    icon: Icon(Icons.close, size: 18),
+                    tooltip: '清空',
+                    onPressed: () => mountedSetState(() => _searchController.clear()), // 清空 TODO need setState ???
+                  ),
                 ),
-                FloatingSearchBarAction.icon(
-                  icon: Icon(Icons.search, size: 18),
-                  size: 18,
+                FloatingSearchBarAction(
                   showIfOpened: true,
                   showIfClosed: true,
-                  onTap: () => _search(), // 搜索
+                  child: CircularButton(
+                    size: 18,
+                    icon: Icon(Icons.search, size: 18),
+                    tooltip: '清空',
+                    onPressed: () => _search(), // 搜索
+                  ),
                 ),
               ],
               debounceDelay: Duration(milliseconds: 100),
               onSubmitted: (_) => _search(),
               onFocusChanged: (focus) => _changeFocus(focus),
               onQueryChanged: (_) => _changeQuery(),
-              builder: (_, __) => ClipRRect(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(4),
-                  bottomRight: Radius.circular(4),
+              builder: (_, __) => Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 4,
+                      spreadRadius: -1,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(4),
+                    bottomRight: Radius.circular(4),
+                  ),
                 ),
                 child: Material(
-                  color: Colors.white,
+                  color: Colors.transparent,
                   child: Column(
                     children: [
                       // ===================================================================
@@ -321,14 +344,14 @@ class _SearchPageState extends State<SearchPage> {
                             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             child: IconText(
                               icon: Icon(Icons.arrow_forward, color: Colors.black45),
-                              text: Text('访问漫画 mid$_text'),
+                              text: Text('访问漫画 mid: $_text'),
                             ),
                           ),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (c) => MangaPage(
                                 id: int.tryParse(_text)!,
-                                title: '漫画 mid$_text',
+                                title: '漫画 mid: $_text',
                                 url: '',
                               ),
                             ),
@@ -346,7 +369,7 @@ class _SearchPageState extends State<SearchPage> {
                           onTap: () => Navigator.of(context).maybePop(), // 返回
                         ),
                       // ===================================================================
-                      for (var h in _histories.repeat(20))
+                      for (var h in _histories.repeat(20) /* TODO only for test, remove repeat */)
                         InkWell(
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -355,7 +378,10 @@ class _SearchPageState extends State<SearchPage> {
                               text: Text(h),
                             ),
                           ),
-                          onTap: () => _searchController.query = h, // 候选
+                          onTap: () {
+                            _text = h;
+                            _search(); // 候选并搜索
+                          },
                           onLongPress: () => showDialog(
                             context: context,
                             builder: (c) => AlertDialog(
@@ -380,7 +406,7 @@ class _SearchPageState extends State<SearchPage> {
                           ), // 删除
                         ),
                       // ===================================================================
-                      if (_histories.isNotEmpty && _text.isEmpty)
+                      if (_histories.isNotEmpty && (_text.isEmpty || _q == _text))
                         InkWell(
                           child: Padding(
                             padding: EdgeInsets.symmetric(vertical: 10),

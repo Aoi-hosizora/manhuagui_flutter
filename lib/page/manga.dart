@@ -445,7 +445,7 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   color: Colors.white,
-                  child: Divider(height: 1, thickness: 1),
+                  child: Divider(height: 0, thickness: 1),
                 ),
                 // ****************************************************************
                 // 排名
@@ -519,95 +519,90 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 // 评论
                 // ****************************************************************
-                Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: PlaceholderText(
-                    state: _commentLoading
-                        ? PlaceholderState.loading
-                        : _commentError.isNotEmpty
-                            ? PlaceholderState.error
-                            : _comments.isEmpty
-                                ? PlaceholderState.nothing
-                                : PlaceholderState.normal,
-                    errorText: _commentError,
-                    setting: PlaceholderSetting(
-                      loadingText: '评论加载中...',
-                      nothingText: '暂无评论',
-                    ),
-                    childBuilder: (_) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          color: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '评论区',
-                                style: Theme.of(context).textTheme.subtitle1,
-                              ),
-                              Text(
-                                '共 $_commentTotal 条',
-                                style: Theme.of(context).textTheme.subtitle1,
-                              ),
-                            ],
-                          ),
+                PlaceholderText(
+                  state: _commentLoading
+                      ? PlaceholderState.loading
+                      : _commentError.isNotEmpty
+                          ? PlaceholderState.error
+                          : _comments.isEmpty
+                              ? PlaceholderState.nothing
+                              : PlaceholderState.normal,
+                  errorText: _commentError,
+                  setting: PlaceholderSetting(
+                    loadingText: '评论加载中...',
+                    nothingText: '暂无评论',
+                  ),
+                  childBuilder: (_) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        color: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '评论区',
+                              style: Theme.of(context).textTheme.subtitle1,
+                            ),
+                            Text(
+                              '共 $_commentTotal 条',
+                              style: Theme.of(context).textTheme.subtitle1,
+                            ),
+                          ],
                         ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          color: Colors.white,
-                          child: Divider(height: 1, thickness: 1),
-                        ),
-                        for (var comment in _comments.sublist(0, _comments.length - 1)) ...[
-                          CommentLineView(
-                            comment: comment,
-                            style: CommentLineViewStyle.normal,
-                          ),
-                          Container(
-                            margin: EdgeInsets.only(left: 2.0 * 12 + 32),
-                            width: MediaQuery.of(context).size.width - 3 * 12 - 32,
-                            color: Colors.white,
-                            child: Divider(height: 1, thickness: 1),
-                          ),
-                        ],
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        color: Colors.white,
+                        child: Divider(height: 0, thickness: 1),
+                      ),
+                      for (var comment in _comments.sublist(0, _comments.length - 1)) ...[
                         CommentLineView(
-                          comment: _comments.last,
+                          comment: comment,
                           style: CommentLineViewStyle.normal,
                         ),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
                           color: Colors.white,
-                          child: Divider(height: 1, thickness: 1),
+                          child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
                         ),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (c) => CommentsPage(
-                                  mid: widget.id,
-                                  title: _data!.title,
-                                ),
-                              ),
-                            ),
-                            child: Container(
-                              width: MediaQuery.of(context).size.width,
-                              height: 42,
-                              child: Center(
-                                child: Text(
-                                  '查看更多评论...',
-                                  style: Theme.of(context).textTheme.subtitle1,
-                                ),
+                      ],
+                      CommentLineView(
+                        comment: _comments.last,
+                        style: CommentLineViewStyle.normal,
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        color: Colors.white,
+                        child: Divider(height: 0, thickness: 1),
+                      ),
+                      Material(
+                        color: Colors.white,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (c) => CommentsPage(
+                                mid: widget.id,
+                                title: _data!.title,
                               ),
                             ),
                           ),
-                        )
-                      ],
-                    ),
+                          child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 42,
+                            child: Center(
+                              child: Text(
+                                '查看更多评论...',
+                                style: Theme.of(context).textTheme.subtitle1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
                   ),
                 ),
+                Container(height: 12),
               ],
             ),
           ),

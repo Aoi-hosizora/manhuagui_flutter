@@ -122,9 +122,6 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             onStartGettingData: () => mountedSetState(() => _getting = true),
             onStopGettingData: () => mountedSetState(() => _getting = false),
             onAppend: (_, l) {
-              if (l.isNotEmpty) {
-                Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-              }
               _lastDuration = _currDuration;
               _lastType = _currType;
             },
@@ -137,7 +134,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
               if (mounted) setState(() {});
             },
           ),
-          separator: Divider(height: 1),
+          separator: Divider(height: 0, thickness: 1),
           itemBuilder: (c, _, item) => MangaRankLineView(manga: item),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [

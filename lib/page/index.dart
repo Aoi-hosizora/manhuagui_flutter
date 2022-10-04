@@ -41,16 +41,9 @@ class _IndexPageState extends State<IndexPage> {
         SystemNavigator.pop();
       }
     });
-
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() {
-        if (AuthManager.instance.logined) {
-          if (mounted) setState(() {});
-        }
-      }));
       await AuthManager.instance.check();
     });
-
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateToPage(2, duration: kTabScrollDuration, curve: Curves.easeOutQuad);
     }));

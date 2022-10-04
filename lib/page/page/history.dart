@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
@@ -30,10 +29,11 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() {
         _pdvKey.currentState?.refresh();
       });
+      await AuthManager.instance.check();
     });
   }
 
@@ -54,8 +54,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     if (page == 1) {
       _removed = 0; // refresh
     }
-    var data = await HistoryDao.getHistories(username: AuthManager.instance.username, page: page, offset: _removed);
-    _total = await HistoryDao.getHistoryCount(username: AuthManager.instance.username);
+    var username = AuthManager.instance.username; // maybe empty, which represents local history
+    var data = await HistoryDao.getHistories(username: username, page: page, offset: _removed);
+    _total = await HistoryDao.getHistoryCount(username: username);
     if (mounted) setState(() {});
     return PagedList(list: data, next: page + 1);
   }
@@ -113,18 +114,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onAppend: (_, l) {
-            if (l.isNotEmpty) {
-              Fluttertoast.showToast(msg: '新添了 ${l.length} 条记录');
-            }
-          },
-          onError: (e) {
-            if (_data.isNotEmpty) {
-              Fluttertoast.showToast(msg: e.toString());
-            }
-          },
         ),
-        separator: Divider(height: 1),
+        separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => MangaHistoryLineView(
           history: item,
           onLongPressed: () => _delete(history: item),

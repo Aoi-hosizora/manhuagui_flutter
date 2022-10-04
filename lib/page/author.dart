@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
@@ -223,47 +224,22 @@ class _AuthorPageState extends State<AuthorPage> {
                 floating: true,
                 delegate: SliverHeaderDelegate(
                   child: PreferredSize(
-                    preferredSize: Size.fromHeight(26.0 + 5 * 2 + 1),
-                    child: Container(
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          // TODO use ListHint
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  height: 26,
-                                  padding: EdgeInsets.only(left: 5),
-                                  child: Center(
-                                    child: Text('全部漫画 (共 $_total 部)'),
-                                  ),
-                                ),
-                                // ****************************************************************
-                                // 漫画排序
-                                // ****************************************************************
-                                if (_total > 0)
-                                  OptionPopupView<MangaOrder>(
-                                    items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                                    value: _currOrder,
-                                    titleBuilder: (c, v) => v.toTitle(),
-                                    enable: !_getting,
-                                    onSelect: (o) {
-                                      if (_currOrder != o) {
-                                        _lastOrder = _currOrder;
-                                        _currOrder = o;
-                                        if (mounted) setState(() {});
-                                        _pdvKey.currentState?.refresh();
-                                      }
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Divider(height: 1, thickness: 1),
-                        ],
+                    preferredSize: Size.fromHeight(26.0 + 5 * 2 + 1), // height: 26, padding: vertical_5, extra: divider_1
+                    child: ListHintView.textWidget(
+                      leftText: '全部漫画 (共 $_total 部)',
+                      rightWidget: OptionPopupView<MangaOrder>(
+                        items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                        value: _currOrder,
+                        titleBuilder: (c, v) => v.toTitle(),
+                        enable: !_getting,
+                        onSelect: (o) {
+                          if (_currOrder != o) {
+                            _lastOrder = _currOrder;
+                            _currOrder = o;
+                            if (mounted) setState(() {});
+                            _pdvKey.currentState?.refresh();
+                          }
+                        },
                       ),
                     ),
                   ),
@@ -298,9 +274,6 @@ class _AuthorPageState extends State<AuthorPage> {
                 onStartGettingData: () => mountedSetState(() => _getting = true),
                 onStopGettingData: () => mountedSetState(() => _getting = false),
                 onAppend: (_, l) {
-                  if (l.isNotEmpty) {
-                    Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-                  }
                   _lastOrder = _currOrder;
                 },
                 onError: (e) {
@@ -312,7 +285,7 @@ class _AuthorPageState extends State<AuthorPage> {
                 },
               ),
               useOverlapInjector: true,
-              separator: Divider(height: 1),
+              separator: Divider(height: 0, thickness: 1),
               itemBuilder: (c, _, item) => TinyMangaLineView(manga: item.toTiny()),
             ),
           ),

@@ -20,6 +20,10 @@ class NetworkImageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var url =this.url;
+    if (url.startsWith('//')) {
+      url = 'https:$url';
+    }
     return ClipRRect(
       borderRadius: radius ?? BorderRadius.zero,
       child: SizedBox(

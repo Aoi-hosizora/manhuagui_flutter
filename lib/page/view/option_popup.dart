@@ -43,7 +43,8 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
       pageBuilder: (c, _, __) => Stack(
         children: [
           Positioned(
-            top: itemRect.bottom,
+            top: itemRect.bottom + 5 - 1,
+            // keep the same as ListHint vertical padding
             bottom: 0,
             left: 0,
             right: 0,
@@ -55,7 +56,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
             ),
           ),
           Positioned(
-            top: itemRect.bottom,
+            top: itemRect.bottom + 5 - 1,
             left: 0,
             right: 0,
             child: Container(
@@ -161,8 +162,8 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const hSpace = 6.0;
-    const vSpace = 9.0;
+    const hSpace = 8.0;
+    const vSpace = 8.0;
     const padding = EdgeInsets.symmetric(horizontal: 15, vertical: 10);
     final width = (MediaQuery.of(context).size.width - 2 * padding.left - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
 

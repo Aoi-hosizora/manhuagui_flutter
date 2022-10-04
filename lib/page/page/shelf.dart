@@ -36,10 +36,13 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() {
+        _loginChecking = false;
+        if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
-          _pdvKey.currentState?.refresh(); // TODO ??? no notified
+          WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
         }
       });
+      _loginChecking = true;
       await AuthManager.instance.check();
       _loginChecking = false;
       if (mounted) setState(() {});
@@ -101,18 +104,13 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onAppend: (_, l) {
-            if (l.isNotEmpty) {
-              Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-            }
-          },
           onError: (e) {
             if (_data.isNotEmpty) {
               Fluttertoast.showToast(msg: e.toString());
             }
           },
         ),
-        separator: Divider(height: 1),
+        separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => ShelfMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

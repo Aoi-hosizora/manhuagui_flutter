@@ -15,14 +15,16 @@ class LoginFirstView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PlaceholderText(
-      state: checking ? PlaceholderState.loading : PlaceholderState.error,
+      state: checking ? PlaceholderState.loading : PlaceholderState.nothing,
       childBuilder: (c) => SizedBox(height: 0),
-      setting: PlaceholderSetting().copyWithChinese(
+      setting: PlaceholderSetting(
+        nothingIcon: Icons.lock_open,
+      ).copyWithChinese(
         loadingText: '检查登录状态中...',
-        unknownErrorText: '当前未登录，请先登录 Manhuagui',
-        retryText: '登录',
+        nothingText: '当前未登录，请先登录 Manhuagui',
+        nothingRetryText: '登录',
       ),
-      onRefresh: () {
+      onRetryForNothing: () {
         if (AuthManager.instance.logined) {
           AuthManager.instance.notify();
           return;

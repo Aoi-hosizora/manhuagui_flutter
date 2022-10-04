@@ -77,18 +77,13 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onAppend: (_, l) {
-            if (l.isNotEmpty) {
-              Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-            }
-          },
           onError: (e) {
             if (_data.isNotEmpty) {
               Fluttertoast.showToast(msg: e.toString());
             }
           },
         ),
-        separator: Divider(height: 1),
+        separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

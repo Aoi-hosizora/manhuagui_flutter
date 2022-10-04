@@ -21,8 +21,8 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
   late final _details = [
     Tuple2('mid', widget.data.mid.toString()),
     Tuple2('标题', widget.data.title),
-    Tuple2('标题别名', widget.data.aliasTitle.isNotEmpty ? widget.data.aliasTitle : '暂无'),
-    Tuple2('别名', widget.data.alias),
+    Tuple2('标题别名', widget.data.aliasTitle.trim().isNotEmpty ? widget.data.aliasTitle.trim() : '暂无'),
+    Tuple2('别名', widget.data.alias.trim().isNotEmpty ? widget.data.alias.trim() : '暂无'),
     Tuple2('封面链接', widget.data.cover),
     Tuple2('网页链接', widget.data.url),
     Tuple2('状态', widget.data.finished ? '已完结' : '连载中'),
