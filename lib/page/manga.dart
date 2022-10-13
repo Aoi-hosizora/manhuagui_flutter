@@ -51,8 +51,11 @@ class _MangaPageState extends State<MangaPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     _cancelHandler = EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
-      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {});
-      if (mounted) setState(() {});
+      try {
+        // TODO history
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
+        if (mounted) setState(() {});
+      } catch (_) {}
     });
   }
 
@@ -67,12 +70,9 @@ class _MangaPageState extends State<MangaPage> {
   var _loading = true;
   Manga? _data;
   var _error = '';
-  var _subscribing = false;
-  var _subscribed = false;
   MangaHistory? _history;
-  var _showBriefIntroduction = true;
   var _commentLoading = true;
-  var _comments = <Comment>[];
+  final _comments = <Comment>[];
   var _commentError = '';
   var _commentTotal = 0;
 
@@ -80,7 +80,7 @@ class _MangaPageState extends State<MangaPage> {
     _loading = true;
     _commentLoading = true;
     _data = null;
-    _comments = [];
+    _comments.clear();
     if (mounted) setState(() {});
 
     final client = RestClient(DioManager.instance.dio);
@@ -92,7 +92,7 @@ class _MangaPageState extends State<MangaPage> {
     }
 
     client.getMangaComments(mid: widget.id, page: 1).then((r) async {
-      _comments = r.data.data;
+      _comments.addAll(r.data.data);
       _commentError = '';
       _commentTotal = r.data.total;
     }).catchError((e, s) {
@@ -113,6 +113,7 @@ class _MangaPageState extends State<MangaPage> {
       _data = result.data;
 
       // <<<
+      // TODO history
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id).catchError((_) {}); // 可能已经开始阅读，也可能还没访问
       if (mounted) setState(() {});
       if (_history?.read != true) {
@@ -147,6 +148,10 @@ class _MangaPageState extends State<MangaPage> {
     }
   }
 
+  var _subscribing = false;
+  var _subscribed = false;
+  var _showBriefIntroduction = true;
+
   void _subscribe() async {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
@@ -172,6 +177,7 @@ class _MangaPageState extends State<MangaPage> {
   }
 
   void _read() async {
+    // TODO history
     int cid;
     int page;
     if (_history == null || !_history!.read) {
@@ -233,7 +239,7 @@ class _MangaPageState extends State<MangaPage> {
       ),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
-        onRefresh: _loadData,
+        onRefresh: () => _loadData(),
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
@@ -253,7 +259,6 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  height: 180, // TODO x
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -267,7 +272,7 @@ class _MangaPageState extends State<MangaPage> {
                     ),
                   ),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // ****************************************************************
                       // 封面
@@ -278,7 +283,6 @@ class _MangaPageState extends State<MangaPage> {
                           url: _data!.cover,
                           height: 160,
                           width: 120,
-                          fit: BoxFit.cover,
                         ),
                       ),
                       // ****************************************************************
@@ -286,9 +290,10 @@ class _MangaPageState extends State<MangaPage> {
                       // ****************************************************************
                       Container(
                         width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢▢ |
-                        height: 180, // TODO x
-                        padding: EdgeInsets.only(top: 14, bottom: 14, right: 14),
+                        padding: EdgeInsets.only(top: 10, bottom: 10, right: 14),
+                        alignment: Alignment.centerLeft,
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             IconText(
@@ -299,7 +304,6 @@ class _MangaPageState extends State<MangaPage> {
                             IconText(
                               icon: Icon(Icons.bookmark, size: 20, color: Colors.orange),
                               text: TextGroup.normal(
-                                textScaleFactor: MediaQuery.of(context).textScaleFactor,
                                 texts: [
                                   for (var i = 0; i < _data!.genres.length; i++) ...[
                                     LinkTextItem(
@@ -323,7 +327,6 @@ class _MangaPageState extends State<MangaPage> {
                             IconText(
                               icon: Icon(Icons.person, size: 20, color: Colors.orange),
                               text: TextGroup.normal(
-                                textScaleFactor: MediaQuery.of(context).textScaleFactor,
                                 texts: [
                                   for (var i = 0; i < _data!.authors.length; i++) ...[
                                     LinkTextItem(
@@ -353,7 +356,13 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.subject, size: 20, color: Colors.orange),
-                              text: Text((_data!.finished ? '共 ' : '更新至 ') + _data!.newestChapter),
+                              text: Flexible(
+                                child: Text(
+                                  (_data!.finished ? '共 ' : '更新至 ') + _data!.newestChapter,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                               space: 8,
                             ),
                             IconText(
@@ -361,8 +370,7 @@ class _MangaPageState extends State<MangaPage> {
                               text: Text(_data!.newestDate + (_data!.finished ? ' 已完结' : ' 连载中')),
                               space: 8,
                             ),
-                            // SizedBox(height: 4),
-                            Spacer(),
+                            SizedBox(height: 4),
                             // ****************************************************************
                             // 两个按钮
                             // ****************************************************************
@@ -371,11 +379,9 @@ class _MangaPageState extends State<MangaPage> {
                               children: [
                                 Container(
                                   height: 28,
-                                  width: 75,
+                                  width: 84,
                                   child: OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      padding: EdgeInsets.all(2),
-                                    ),
+                                    style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
                                     child: Text(
                                       _subscribed == true ? '取消订阅' : '订阅漫画',
                                       style: TextStyle(color: _subscribing ? Colors.grey : Colors.black),
@@ -383,15 +389,16 @@ class _MangaPageState extends State<MangaPage> {
                                     onPressed: _subscribing == true ? null : () => _subscribe(),
                                   ),
                                 ),
-                                SizedBox(width: 14),
+                                SizedBox(width: 6),
                                 Container(
                                   height: 28,
-                                  width: 75,
+                                  width: 84,
                                   child: OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      padding: EdgeInsets.all(2),
+                                    style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
+                                    child: Text(
+                                      _history?.read == true ? '继续阅读' : '开始阅读', // TODO history
+                                      style: TextStyle(color: Colors.black),
                                     ),
-                                    child: Text(_history?.read == true ? '继续阅读' : '开始阅读'),
                                     onPressed: () => _read(),
                                   ),
                                 ),
@@ -411,32 +418,30 @@ class _MangaPageState extends State<MangaPage> {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => mountedSetState(() => _showBriefIntroduction = !_showBriefIntroduction),
+                      onTap: () {
+                        _showBriefIntroduction = !_showBriefIntroduction;
+                        if (mounted) setState(() {});
+                      },
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        child: RichText(
-                          textScaleFactor: MediaQuery.of(context).textScaleFactor,
-                          text: TextSpan(
-                            text: '',
-                            style: TextStyle(color: Colors.black),
-                            children: [
-                              if (_showBriefIntroduction) ...[
-                                TextSpan(text: _data!.briefIntroduction),
-                                TextSpan(
-                                  text: ' 展开详情',
-                                  style: TextStyle(color: Theme.of(context).primaryColor),
-                                ),
-                              ],
-                              if (!_showBriefIntroduction) ...[
-                                TextSpan(text: _data!.introduction),
-                                TextSpan(
-                                  text: ' 收起介绍',
-                                  style: TextStyle(color: Theme.of(context).primaryColor),
-                                ),
-                              ],
-                              TextSpan(text: ' '),
+                        child: TextGroup.normal(
+                          style: TextStyle(color: Colors.black),
+                          texts: [
+                            if (_showBriefIntroduction) ...[
+                              PlainTextItem(text: _data!.briefIntroduction),
+                              PlainTextItem(
+                                text: ' 展开详情',
+                                style: TextStyle(color: Theme.of(context).primaryColor),
+                              ),
                             ],
-                          ),
+                            if (!_showBriefIntroduction) ...[
+                              PlainTextItem(text: _data!.introduction),
+                              PlainTextItem(
+                                text: ' 收起介绍',
+                                style: TextStyle(color: Theme.of(context).primaryColor),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
@@ -489,7 +494,7 @@ class _MangaPageState extends State<MangaPage> {
                               bottom: 0,
                               right: 0,
                               child: Text(
-                                '查看详情',
+                                '查看漫画详情',
                                 style: TextStyle(color: Theme.of(context).primaryColor),
                               ),
                             ),
@@ -513,7 +518,7 @@ class _MangaPageState extends State<MangaPage> {
                     mangaTitle: _data!.title,
                     mangaCover: _data!.cover,
                     mangaUrl: _data!.url,
-                  ),
+                  ), // TODO history
                 ),
                 Container(height: 12),
                 // ****************************************************************

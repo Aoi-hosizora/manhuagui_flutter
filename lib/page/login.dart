@@ -25,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   final _suggestionController = SuggestionsBoxController();
   var _passwordVisible = false;
   var _logining = false;
+
   var _rememberUsername = true;
   var _rememberPassword = false;
   var _usernamePasswordPairs = <Tuple2<String, String>>[];

@@ -40,61 +40,64 @@ class _MangaTocViewState extends State<MangaTocView> {
           '章节列表',
           style: Theme.of(context).textTheme.subtitle1,
         ),
-        Row(
-          children: [
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  _invertedOrder = false;
-                  if (mounted) setState(() {});
-                },
-                child: Padding(
-                  padding: EdgeInsets.only(top: 6, bottom: 6, left: 5, right: 10),
-                  child: IconText(
-                    icon: Icon(
-                      Icons.keyboard_arrow_up,
-                      size: 18,
-                      color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                    ),
-                    text: Text(
-                      '正序',
-                      style: TextStyle(
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    _invertedOrder = false;
+                    if (mounted) setState(() {});
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
+                    child: IconText(
+                      icon: Icon(
+                        Icons.keyboard_arrow_up,
+                        size: 18,
                         color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
                       ),
+                      text: Text(
+                        '正序',
+                        style: TextStyle(
+                          color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
+                        ),
+                      ),
+                      space: 0,
                     ),
-                    space: 0,
                   ),
                 ),
               ),
-            ),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  _invertedOrder = true;
-                  if (mounted) setState(() {});
-                },
-                child: Padding(
-                  padding: EdgeInsets.only(top: 6, bottom: 6, left: 5, right: 10),
-                  child: IconText(
-                    icon: Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 18,
-                      color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                    ),
-                    text: Text(
-                      '倒序',
-                      style: TextStyle(
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    _invertedOrder = true;
+                    if (mounted) setState(() {});
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
+                    child: IconText(
+                      icon: Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 18,
                         color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
                       ),
+                      text: Text(
+                        '倒序',
+                        style: TextStyle(
+                          color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
+                        ),
+                      ),
+                      space: 0,
                     ),
-                    space: 0,
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

@@ -111,7 +111,6 @@ class CommentLineView extends StatelessWidget {
                   url: comment.avatar,
                   height: !large ? 32 : 40,
                   width: !large ? 32 : 40,
-                  fit: BoxFit.cover,
                 ),
               ),
               SizedBox(width: !large ? 12 : 15),

@@ -185,7 +185,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             Stack(
               children: [
                 Container(
-                  height: 200,
+                  height: MediaQuery.of(context).padding.top + 180,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -208,7 +208,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                             url: _data!.avatar,
                             height: 75,
                             width: 75,
-                            fit: BoxFit.cover,
                           ),
                           Padding(
                             padding: EdgeInsets.only(top: 8, left: 15, right: 15),

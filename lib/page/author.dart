@@ -13,8 +13,6 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 
-// TODO
-
 /// 漫画作者页，网络请求并展示 [Author] 信息
 class AuthorPage extends StatefulWidget {
   const AuthorPage({
@@ -53,11 +51,6 @@ class _AuthorPageState extends State<AuthorPage> {
   var _loading = true;
   Author? _data;
   var _error = '';
-  final _mangas = <SmallManga>[];
-  var _total = 0;
-  var _currOrder = MangaOrder.byPopular;
-  late var _lastOrder = _currOrder;
-  var _getting = false;
 
   Future<void> _loadData() async {
     _loading = true;
@@ -80,6 +73,12 @@ class _AuthorPageState extends State<AuthorPage> {
     }
   }
 
+  final _mangas = <SmallManga>[];
+  var _total = 0;
+  var _currOrder = MangaOrder.byPopular;
+  late var _lastOrder = _currOrder;
+  var _getting = false;
+
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
     var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _currOrder).onError((e, s) {
@@ -101,7 +100,7 @@ class _AuthorPageState extends State<AuthorPage> {
             tooltip: '用浏览器打开',
             onPressed: () => launchInBrowser(
               context: context,
-              url: widget.url,
+              url: _data?.url ?? widget.url,
             ),
           ),
         ],
@@ -120,7 +119,6 @@ class _AuthorPageState extends State<AuthorPage> {
             SliverToBoxAdapter(
               child: Container(
                 width: MediaQuery.of(context).size.width,
-                // height: 150, // TODO x
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -145,7 +143,6 @@ class _AuthorPageState extends State<AuthorPage> {
                         url: _data!.cover,
                         height: 130,
                         width: 100,
-                        fit: BoxFit.cover,
                       ),
                     ),
                     // ****************************************************************
@@ -153,48 +150,55 @@ class _AuthorPageState extends State<AuthorPage> {
                     // ****************************************************************
                     Container(
                       width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢▢ |
-                      // height: 150, // TODO x
-                      margin: EdgeInsets.only(top: 14, bottom: 14, right: 14),
-                      child: Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            IconText(
-                              icon: Icon(Icons.person, size: 20, color: Colors.orange),
-                              text: Text('别名 ${_data!.alias}'),
-                              space: 8,
+                      padding: EdgeInsets.only(top: 10, bottom: 10, right: 14),
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          IconText(
+                            icon: Icon(Icons.person, size: 20, color: Colors.orange),
+                            text: Flexible(
+                              child: Text(
+                                '别名 ${_data!.alias}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            IconText(
-                              icon: Icon(Icons.place, size: 20, color: Colors.orange),
-                              text: Text(_data!.zone),
-                              space: 8,
-                            ),
-                            IconText(
-                              icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                              text: Text('平均评分 ${_data!.averageScore}'),
-                              space: 8,
-                            ),
-                            IconText(
-                              icon: Icon(Icons.edit, size: 20, color: Colors.orange),
-                              text: Text('共收录 ${_data!.mangaCount} 部漫画'),
-                              space: 8,
-                            ),
-                            IconText(
-                              icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
-                              text: Text(
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.place, size: 20, color: Colors.orange),
+                            text: Text(_data!.zone),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
+                            text: Text('平均评分 ${_data!.averageScore}'),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.edit, size: 20, color: Colors.orange),
+                            text: Text('共收录 ${_data!.mangaCount} 部漫画'),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
+                            text: Flexible(
+                              child: Text(
                                 '最新收录 ${_data!.newestMangaTitle}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              space: 8,
                             ),
-                            IconText(
-                              icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                              text: Text('更新于 ${_data!.newestDate}'),
-                              space: 8,
-                            ),
-                          ],
-                        ),
+                            space: 8,
+                          ),
+                          IconText(
+                            icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
+                            text: Text('更新于 ${_data!.newestDate}'),
+                            space: 8,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -210,7 +214,7 @@ class _AuthorPageState extends State<AuthorPage> {
                 color: Colors.white,
                 child: Text(
                   _data!.introduction.trim().isEmpty ? '暂无介绍' : _data!.introduction.trim(),
-                  style: Theme.of(context).textTheme.subtitle1,
+                  style: Theme.of(context).textTheme.bodyText2,
                 ),
               ),
             ),

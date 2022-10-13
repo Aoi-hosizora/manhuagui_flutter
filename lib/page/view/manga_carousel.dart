@@ -78,7 +78,6 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                       url: widget.mangas[i].cover, // 3:4
                       height: widget.height,
                       width: widget.imageWidth,
-                      fit: BoxFit.cover,
                     ),
                   ),
                 ),

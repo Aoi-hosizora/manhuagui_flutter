@@ -47,7 +47,6 @@ class GeneralLineView extends StatelessWidget {
                 url: imageUrl,
                 height: 100,
                 width: 75,
-                fit: BoxFit.cover,
               ),
             ),
             Container(
