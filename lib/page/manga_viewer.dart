@@ -77,7 +77,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       var now = DateTime.now();
       _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-      _setting = await ChapterSettingPrefs.load();
+      _setting = await ChapterSettingPrefs.getSetting();
       if (mounted) setState(() {});
     });
   }
@@ -336,7 +336,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 ),
                 onChanged: (s) async {
                   _setting = _setting.copyWith(reverseScroll: s ?? true);
-                  await ChapterSettingPrefs.save(_setting);
+                  await ChapterSettingPrefs.setSetting(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -346,7 +346,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 value: _setting.showPageHint,
                 onChanged: (b) async {
                   _setting = _setting.copyWith(showPageHint: b);
-                  await ChapterSettingPrefs.save(_setting);
+                  await ChapterSettingPrefs.setSetting(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -356,7 +356,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 value: _setting.useSwipeForChapter,
                 onChanged: (b) async {
                   _setting = _setting.copyWith(useSwipeForChapter: b);
-                  await ChapterSettingPrefs.save(_setting);
+                  await ChapterSettingPrefs.setSetting(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -366,7 +366,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 value: _setting.useClickForChapter,
                 onChanged: (b) async {
                   _setting = _setting.copyWith(useClickForChapter: b);
-                  await ChapterSettingPrefs.save(_setting);
+                  await ChapterSettingPrefs.setSetting(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -376,7 +376,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 value: _setting.needCheckForChapter,
                 onChanged: (b) async {
                   _setting = _setting.copyWith(needCheckForChapter: b);
-                  await ChapterSettingPrefs.save(_setting);
+                  await ChapterSettingPrefs.setSetting(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },
@@ -386,7 +386,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 value: _setting.enablePageSpace,
                 onChanged: (b) async {
                   _setting = _setting.copyWith(enablePageSpace: b);
-                  await ChapterSettingPrefs.save(_setting);
+                  await ChapterSettingPrefs.setSetting(_setting);
                   _setState(() {});
                   _controller = PageController(
                     initialPage: _controller!.initialPage,
@@ -406,7 +406,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 ),
                 onChanged: (c) async {
                   _setting = _setting.copyWith(preloadCount: (c ?? 2).clamp(0, 5));
-                  await ChapterSettingPrefs.save(_setting);
+                  await ChapterSettingPrefs.setSetting(_setting);
                   _setState(() {});
                   if (mounted) setState(() {});
                 },

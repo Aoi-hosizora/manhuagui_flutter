@@ -30,7 +30,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() {
+      _cancelHandler = AuthManager.instance.listen((_) {
         _pdvKey.currentState?.refresh();
       });
       await AuthManager.instance.check();

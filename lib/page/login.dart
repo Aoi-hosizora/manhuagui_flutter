@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
     // state
     Fluttertoast.showToast(msg: '$username 登录成功');
     AuthManager.instance.record(username: username, token: token);
-    AuthManager.instance.notify();
+    AuthManager.instance.notify(logined: true);
 
     // prefs
     await AuthPrefs.setToken(token);

@@ -27,16 +27,19 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  var _loginChecking = true;
   VoidCallback? _cancelHandler;
+
+  var _loginChecking = true;
+  var _loginCheckError = '';
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() {
+      _cancelHandler = AuthManager.instance.listen((ev) {
         _loginChecking = false;
+        _loginCheckError = ev.error?.text ?? '';
         if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
           WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
@@ -44,8 +47,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       });
       _loginChecking = true;
       await AuthManager.instance.check();
-      _loginChecking = false;
-      if (mounted) setState(() {});
+      // _loginChecking = false;
+      // if (mounted) setState(() {});
     });
   }
 
@@ -77,10 +80,19 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_loginChecking || !AuthManager.instance.logined) {
+    if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
       _data.clear();
       return LoginFirstView(
         checking: _loginChecking,
+        error: _loginCheckError,
+        onErrorRetry: () async {
+          _loginChecking = true;
+          _loginCheckError = '';
+          if (mounted) setState(() {});
+          await AuthManager.instance.check();
+          // _loginChecking = false;
+          // if (mounted) setState(() {});
+        },
       );
     }
 

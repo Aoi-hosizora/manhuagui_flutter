@@ -1,4 +1,5 @@
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChapterSetting {
   ChapterSetting({
@@ -54,29 +55,29 @@ class ChapterSetting {
 class ChapterSettingPrefs {
   ChapterSettingPrefs._();
 
-  static const _scrollDirectionKey = 'SCROLL_DIRECTION'; // bool
-  static const _showPageHintKey = 'SHOW_PAGE_HINT'; // bool
-  static const _useSwipeForChapterKey = 'USE_SWIPE_FOR_CHAPTER'; // bool
-  static const _useClickForChapterKey = 'USE_CLICK_FOR_CHAPTER'; // bool
-  static const _needCheckForChapterKey = 'NEED_CHECK_FOR_CHAPTER'; // bool
-  static const _enablePageSpaceKey = 'ENABLE_PAGE_SPACE'; // bool
-  static const _preloadCountKey = 'PRELOAD_COUNT'; // int
+  static const _scrollDirectionKey = 'ChapterSettingPrefs_scrollDirection'; // bool
+  static const _showPageHintKey = 'ChapterSettingPrefs_showPageHint'; // bool
+  static const _useSwipeForChapterKey = 'ChapterSettingPrefs_useSwipeForChapter'; // bool
+  static const _useClickForChapterKey = 'ChapterSettingPrefs_useClickForChapter'; // bool
+  static const _needCheckForChapterKey = 'ChapterSettingPrefs_needCheckForChapter'; // bool
+  static const _enablePageSpaceKey = 'ChapterSettingPrefs_enablePageSpace'; // bool
+  static const _preloadCountKey = 'ChapterSettingPrefs_preloadCount'; // int
 
-  static Future<ChapterSetting> load() async {
-    var def = ChapterSetting.defaultSetting();
+  static Future<ChapterSetting> getSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
+    var def = ChapterSetting.defaultSetting();
     return ChapterSetting(
-      reverseScroll: prefs.getBool(_scrollDirectionKey) ?? def.reverseScroll,
-      showPageHint: prefs.getBool(_showPageHintKey) ?? def.showPageHint,
-      useSwipeForChapter: prefs.getBool(_useSwipeForChapterKey) ?? def.useSwipeForChapter,
-      useClickForChapter: prefs.getBool(_useClickForChapterKey) ?? def.useClickForChapter,
-      needCheckForChapter: prefs.getBool(_needCheckForChapterKey) ?? def.needCheckForChapter,
-      enablePageSpace: prefs.getBool(_enablePageSpaceKey) ?? def.enablePageSpace,
-      preloadCount: prefs.getInt(_preloadCountKey) ?? def.preloadCount,
+      reverseScroll: prefs.safeGetBool(_scrollDirectionKey) ?? def.reverseScroll,
+      showPageHint: prefs.safeGetBool(_showPageHintKey) ?? def.showPageHint,
+      useSwipeForChapter: prefs.safeGetBool(_useSwipeForChapterKey) ?? def.useSwipeForChapter,
+      useClickForChapter: prefs.safeGetBool(_useClickForChapterKey) ?? def.useClickForChapter,
+      needCheckForChapter: prefs.safeGetBool(_needCheckForChapterKey) ?? def.needCheckForChapter,
+      enablePageSpace: prefs.safeGetBool(_enablePageSpaceKey) ?? def.enablePageSpace,
+      preloadCount: prefs.safeGetInt(_preloadCountKey) ?? def.preloadCount,
     );
   }
 
-  static Future<void> save(ChapterSetting setting) async {
+  static Future<void> setSetting(ChapterSetting setting) async {
     final prefs = await PrefsManager.instance.loadPrefs();
     await prefs.setBool(_scrollDirectionKey, setting.reverseScroll);
     await prefs.setBool(_showPageHintKey, setting.showPageHint);
@@ -85,5 +86,16 @@ class ChapterSettingPrefs {
     await prefs.setBool(_needCheckForChapterKey, setting.needCheckForChapter);
     await prefs.setBool(_enablePageSpaceKey, setting.enablePageSpace);
     await prefs.setInt(_preloadCountKey, setting.preloadCount);
+  }
+
+  static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {
+    var def = ChapterSetting.defaultSetting();
+    await prefs.migrateBool(oldKey: 'SCROLL_DIRECTION', newKey: _scrollDirectionKey, defaultValue: def.reverseScroll);
+    await prefs.migrateBool(oldKey: 'SHOW_PAGE_HINT', newKey: _showPageHintKey, defaultValue: def.showPageHint);
+    await prefs.migrateBool(oldKey: 'USE_SWIPE_FOR_CHAPTER', newKey: _useSwipeForChapterKey, defaultValue: def.useSwipeForChapter);
+    await prefs.migrateBool(oldKey: 'USE_CLICK_FOR_CHAPTER', newKey: _useClickForChapterKey, defaultValue: def.useClickForChapter);
+    await prefs.migrateBool(oldKey: 'NEED_CHECK_FOR_CHAPTER', newKey: _needCheckForChapterKey, defaultValue: def.needCheckForChapter);
+    await prefs.migrateBool(oldKey: 'ENABLE_PAGE_SPACE', newKey: _enablePageSpaceKey, defaultValue: def.enablePageSpace);
+    await prefs.migrateInt(oldKey: 'PRELOAD_COUNT', newKey: _preloadCountKey, defaultValue: def.preloadCount);
   }
 }

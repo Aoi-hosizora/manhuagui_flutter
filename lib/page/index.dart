@@ -42,7 +42,13 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
       }
     });
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await AuthManager.instance.check();
+      print('check');
+      var r = await AuthManager.instance.check();
+      print('check 2');
+      print(r);
+      if (!r.logined && r.error != null) {
+        Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');
+      }
     });
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(2);

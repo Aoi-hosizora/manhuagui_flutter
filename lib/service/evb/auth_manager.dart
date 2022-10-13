@@ -31,31 +31,31 @@ class AuthManager {
     _token = token;
   }
 
-  void Function() listen(Function() onData) {
-    return EventBusManager.instance.listen<AuthChangedEvent>((_) {
-      onData.call();
+  void Function() listen(Function(AuthChangedEvent) onData) {
+    return EventBusManager.instance.listen<AuthChangedEvent>((ev) {
+      onData.call(ev);
     });
   }
 
-  void notify() {
-    EventBusManager.instance.fire(AuthChangedEvent());
+  AuthChangedEvent notify({required bool logined, ErrorMessage? error}) {
+    final ev = AuthChangedEvent(logined: logined, error: error);
+    EventBusManager.instance.fire(ev);
+    return ev;
   }
 
   final _lock = Lock();
 
-  Future<bool> check() async {
-    return _lock.synchronized<bool>(() async {
+  Future<AuthChangedEvent> check() async {
+    return _lock.synchronized<AuthChangedEvent>(() async {
       // logined
       if (AuthManager.instance.logined) {
-        AuthManager.instance.notify();
-        return true;
+        return AuthManager.instance.notify(logined: true);
       }
 
       // no token stored in prefs
       var token = await AuthPrefs.getToken();
       if (token.isEmpty) {
-        AuthManager.instance.notify(); // need ???
-        return false;
+        return AuthManager.instance.notify(logined: false);
       }
 
       // check stored token
@@ -63,21 +63,26 @@ class AuthManager {
       try {
         var r = await client.checkUserLogin(token: token);
         AuthManager.instance.record(username: r.data.username, token: token);
-        AuthManager.instance.notify();
-        return true;
+        return AuthManager.instance.notify(logined: true);
       } catch (e, s) {
         var we = wrapError(e, s);
-        print(we.text);
-        if (we.type == ErrorType.resultError) {
+        if (we.type == ErrorType.resultError && we.response!.statusCode == 401) {
           await AuthPrefs.setToken('');
         }
-        AuthManager.instance.notify();
-        return false;
+        return AuthManager.instance.notify(logined: false, error: we);
       }
     });
   }
 }
 
 class AuthChangedEvent {
-  const AuthChangedEvent();
+  const AuthChangedEvent({required this.logined, this.error});
+
+  final bool logined;
+  final ErrorMessage? error;
+
+  @override
+  String toString() {
+    return 'logined: $logined, error: $error';
+  }
 }

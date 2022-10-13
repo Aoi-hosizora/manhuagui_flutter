@@ -374,7 +374,7 @@ class _SearchPageState extends State<SearchPage> {
                                 onTap: () => Navigator.of(context).maybePop(), // 返回
                               ),
                             // ===================================================================
-                            for (var h in _histories.repeat(5))
+                            for (var h in _histories)
                               InkWell(
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -411,6 +411,16 @@ class _SearchPageState extends State<SearchPage> {
                                 ), // 删除
                               ),
                             // ===================================================================
+                            if (_histories.isEmpty)
+                              InkWell(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 10),
+                                  child: Center(
+                                    child: Text('暂无历史记录'),
+                                  ),
+                                ),
+                                onTap: () {}, // 返回
+                              ),
                             if (_histories.isNotEmpty && (_text.isEmpty || _q == _text))
                               InkWell(
                                 child: Padding(
