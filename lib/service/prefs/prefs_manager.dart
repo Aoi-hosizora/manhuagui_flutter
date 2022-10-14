@@ -1,6 +1,6 @@
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/prefs/chapter_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
+import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefsManager {
@@ -39,8 +39,8 @@ class PrefsManager {
     if (version == 1) {
       version = 2; // 1 -> 2 upgrade
       await AuthPrefs.upgradeFromVer1To2(prefs);
-      await ChapterSettingPrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
+      await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }
     prefs.setInt('VERSION', newestVersion);
   }

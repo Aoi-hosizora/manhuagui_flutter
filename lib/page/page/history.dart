@@ -5,6 +5,8 @@ import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 订阅-浏览历史
 class HistorySubPage extends StatefulWidget {
@@ -23,24 +25,29 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
+  var _historyUpdated = false;
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen((_) {
+      _cancelHandlers.add(AuthManager.instance.listen((_) {
         _pdvKey.currentState?.refresh();
-      });
+      }));
       await AuthManager.instance.check();
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) {
+      _historyUpdated = true;
+      if (mounted) setState(() {});
+    }));
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -52,7 +59,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
 
   Future<PagedList<MangaHistory>> _getData({required int page}) async {
     if (page == 1) {
-      _removed = 0; // refresh
+      // refresh
+      _removed = 0;
+      _historyUpdated = false;
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local history
     var data = await HistoryDao.getHistories(username: username, page: page, offset: _removed) ?? [];
@@ -123,7 +132,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textWidget(
-              leftText: AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史',
+              leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史')  + (_historyUpdated ? ' (有更新)' : ''),
               rightWidget: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

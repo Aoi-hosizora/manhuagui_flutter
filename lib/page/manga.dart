@@ -108,33 +108,27 @@ class _MangaPageState extends State<MangaPage> {
 
       // 4. 获取并更新漫画阅读历史
       _history ??= await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
-      _history = _history?.copyWith(
-        mangaId: _data!.mid,
-        mangaTitle: _data!.title,
-        mangaCover: _data!.cover,
-        mangaUrl: _data!.url,
-      );
-      if (_history?.read != true) {
-        // 未访问 or 未开始阅读 => 添加或更新历史
-        await HistoryDao.addOrUpdateHistory(
-          username: AuthManager.instance.username,
-          history: MangaHistory.unread(
+      var newHistory = _history?.copyWith(
             mangaId: _data!.mid,
             mangaTitle: _data!.title,
             mangaCover: _data!.cover,
             mangaUrl: _data!.url,
+            lastTime: _history?.read == true ? _history!.lastTime : DateTime.now(), // 只有未阅读过才修改时间
+          ) ??
+          MangaHistory(
+            mangaId: _data!.mid,
+            mangaTitle: _data!.title,
+            mangaCover: _data!.cover,
+            mangaUrl: _data!.url,
+            chapterId: 0 /* 未开始阅读 */,
+            chapterTitle: '',
+            chapterPage: 1,
             lastTime: DateTime.now(),
-          ),
-        );
-      } else {
-        // 更新历史中的漫画信息
-        await HistoryDao.patchHistory(
-          username: AuthManager.instance.username,
-          mid: _data!.mid,
-          title: _data!.title,
-          cover: _data!.cover,
-          url: _data!.url,
-        );
+          );
+      if (_history == null || !newHistory.equals(_history!)) {
+        _history = newHistory;
+        await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
+        EventBusManager.instance.fire(HistoryUpdatedEvent());
       }
     } catch (e, s) {
       _data = null;
@@ -432,6 +426,9 @@ class _MangaPageState extends State<MangaPage> {
                     ],
                   ),
                 ),
+                // ****************************************************************
+                // 四个按钮
+                // ****************************************************************
                 Container(
                   color: Colors.white,
                   child: Material(
@@ -522,29 +519,108 @@ class _MangaPageState extends State<MangaPage> {
                   child: Divider(height: 0, thickness: 1),
                 ),
                 // ****************************************************************
-                // 排名
+                // 排名评价
                 // ****************************************************************
-                Container(
+                Material(
                   color: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        RatingBar.builder(
-                          direction: Axis.horizontal,
-                          allowHalfRating: true,
-                          itemCount: 5,
-                          itemPadding: EdgeInsets.symmetric(horizontal: 4),
-                          itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
-                          initialRating: _data!.averageScore / 2.0,
-                          minRating: 0,
-                          itemSize: 32,
-                          ignoreGestures: true,
-                          onRatingUpdate: (_) {},
+                  child: InkWell(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Column(
+                        children: [
+                          RatingBar.builder(
+                            itemCount: 5,
+                            itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+                            initialRating: _data!.averageScore / 2.0,
+                            minRating: 0,
+                            itemSize: 32,
+                            itemPadding: EdgeInsets.symmetric(horizontal: 4),
+                            direction: Axis.horizontal,
+                            allowHalfRating: true,
+                            ignoreGestures: true,
+                            onRatingUpdate: (_) {},
+                          ),
+                          SizedBox(height: 4),
+                          Text('平均分数: ${_data!.averageScore} / 10.0，共 ${_data!.scoreCount} 人评分'),
+                        ],
+                      ),
+                    ),
+                    onTap: () => showDialog(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: Text('评分投票'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RatingBar.builder(
+                                  itemCount: 5,
+                                  itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+                                  initialRating: _data!.averageScore / 2.0,
+                                  itemSize: 32,
+                                  itemPadding: EdgeInsets.symmetric(horizontal: 2),
+                                  allowHalfRating: true,
+                                  ignoreGestures: true,
+                                  onRatingUpdate: (_) {},
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  _data!.averageScore.toString(),
+                                  style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                                        fontSize: 28,
+                                        color: Colors.orangeAccent,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 2),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                '共 ${_data!.scoreCount} 人评分',
+                                style: Theme.of(context).textTheme.bodyText2,
+                              ),
+                            ),
+                            Divider(height: 16, thickness: 1),
+                            for (var i = 4; i >= 0; i--)
+                              Padding(
+                                padding: EdgeInsets.only(bottom: i == 0 ? 0 : 5),
+                                child: Row(
+                                  children: [
+                                    RatingBar.builder(
+                                      itemCount: 5,
+                                      itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+                                      initialRating: (i + 1).toDouble(),
+                                      itemSize: 16,
+                                      allowHalfRating: false,
+                                      ignoreGestures: true,
+                                      onRatingUpdate: (_) {},
+                                    ),
+                                    Container(
+                                      width: 200 * (double.tryParse(_data!.perScores[i + 1].replaceAll('%', '')) ?? 0) / 100,
+                                      height: 16,
+                                      color: Colors.amber,
+                                      margin: EdgeInsets.only(left: 4, right: 6),
+                                    ),
+                                    Text(
+                                      _data!.perScores[i + 1],
+                                      style: Theme.of(context).textTheme.bodyText2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
-                        SizedBox(height: 4),
-                        Text('平均分数: ${_data!.averageScore} / 10.0，共 ${_data!.scoreCount} 人评价'),
-                      ],
+                        actions: [
+                          TextButton(
+                            child: Text('确定'),
+                            onPressed: () => Navigator.of(c).pop(),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

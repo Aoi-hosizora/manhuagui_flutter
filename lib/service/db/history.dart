@@ -132,17 +132,6 @@ class HistoryDao {
     return rows != null && rows >= 1;
   }
 
-  static Future<bool> patchHistory({required String username, required int mid, required String title, required String cover, required String url}) async {
-    final db = await DBManager.instance.getDB();
-    var rows = await db.safeRawUpdate(
-      '''UPDATE $_tblHistory
-         SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?
-         WHERE $_colUsername = ? AND $_colMangaId = ?''',
-      [title, cover, url, username, mid],
-    );
-    return rows != null && rows >= 1;
-  }
-
   static Future<bool> deleteHistory({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
     var rows = await db.safeRawUpdate(

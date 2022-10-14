@@ -247,11 +247,6 @@ class MangaHistory {
 
   const MangaHistory({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.mangaUrl, required this.chapterId, required this.chapterTitle, required this.chapterPage, required this.lastTime});
 
-  const MangaHistory.unread({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.mangaUrl, required this.lastTime})
-      : chapterId = 0,
-        chapterTitle = '',
-        chapterPage = 0;
-
   MangaHistory copyWith({
     int? mangaId,
     String? mangaTitle,
@@ -272,5 +267,9 @@ class MangaHistory {
       chapterPage: chapterPage ?? this.chapterPage,
       lastTime: lastTime ?? this.lastTime,
     );
+  }
+
+  bool equals(MangaHistory o) {
+    return mangaId == o.mangaId && mangaTitle == o.mangaTitle && mangaCover == o.mangaCover && mangaUrl == o.mangaUrl && chapterId == o.chapterId && chapterTitle == o.chapterTitle && chapterPage == o.chapterPage && lastTime == o.lastTime;
   }
 }

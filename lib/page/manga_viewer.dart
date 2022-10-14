@@ -6,7 +6,9 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/image_load_view.dart';
+import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -15,7 +17,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
-import 'package:manhuagui_flutter/service/prefs/chapter_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:photo_view/photo_view.dart';
 
 // TODO
@@ -51,20 +53,14 @@ const _kViewportFraction = 1.08; // 页面间隔
 
 class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   PageController? _controller;
-  var _loading = true;
-  MangaChapter? _data;
-  var _error = '';
+  Timer? _timer;
+  var _currentTime = '00:00';
   var _currentPage = 1;
   var _progressValue = 1;
 
-  Timer? _timer;
-  var _currentTime = '00:00';
-  final _fileProvider = () async => null;
-  var _imageProviders = <Future<String> Function()>[];
-
-  var _showRegion = false; // 显示区域提示
+  var _setting = ViewSetting.defaultSetting();
   late var _showAppBar = widget.showAppBar; // 显示工具栏
-  var _setting = ChapterSetting.defaultSetting();
+  var _showRegion = false; // 显示区域提示
   var _pointerDownXPosition = 0.0; // 按住的横坐标
   var _swipeOffsetX = 0.0; // 滑动的水平偏移量
   var _swipeFirstOver = false; // 是否划出第一页
@@ -75,82 +71,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      var now = DateTime.now();
-      _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-      _setting = await ChapterSettingPrefs.getSetting();
+      _setting = await ViewSettingPrefs.getSetting();
       if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _controller?.dispose();
-    if (_data != null) {
-      HistoryDao.addOrUpdateHistory(
-        username: AuthManager.instance.username,
-        history: MangaHistory(
-          mangaId: widget.mid,
-          mangaTitle: widget.mangaTitle,
-          mangaCover: widget.mangaCover,
-          mangaUrl: widget.mangaUrl,
-          chapterId: widget.cid,
-          chapterTitle: _data!.title,
-          chapterPage: _currentPage,
-          lastTime: DateTime.now(),
-        ), // TODO history
-      ).then((_) {
-        EventBusManager.instance.fire(HistoryUpdatedEvent());
-      }).catchError((_) {}); // TODO history error
-    }
-    super.dispose();
-  }
-
-  Future<void> _loadData() async {
-    _loading = true;
-    if (mounted) setState(() {});
-
-    final client = RestClient(DioManager.instance.dio);
-    if (AuthManager.instance.logined) {
-      client.recordManga(token: AuthManager.instance.token, mid: widget.mid, cid: widget.cid).catchError((_) {});
-    }
-
-    try {
-      var result = await client.getMangaChapter(mid: widget.mid, cid: widget.cid);
-      _data = null;
-      _error = '';
-      if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 500));
-      _data = result.data;
-      _imageProviders = [for (var url in _data!.pages) () async => url];
-
-      // !!!
-      var initialPage = widget.initialPage <= 0 ? _data!.pageCount : widget.initialPage; // 指定初始页
-      var oldController = _controller;
-      _controller = PageController(
-        initialPage: initialPage - 1,
-        viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
-      );
-      oldController?.dispose(); // TODO use this way to update controller ???
-      _currentPage = initialPage;
-      _progressValue = initialPage;
-
-      HistoryDao.addOrUpdateHistory(
-        username: AuthManager.instance.username,
-        history: MangaHistory(
-          mangaId: widget.mid,
-          mangaTitle: widget.mangaTitle,
-          mangaCover: widget.mangaCover,
-          mangaUrl: widget.mangaUrl,
-          chapterId: widget.cid,
-          chapterTitle: _data!.title,
-          chapterPage: _currentPage,
-          lastTime: DateTime.now(),
-        ), // TODO history
-      ).then((_) {
-        EventBusManager.instance.fire(HistoryUpdatedEvent());
-      }).catchError((_) {});// TODO history error
-
       if (mounted && (_timer == null || !_timer!.isActive)) {
         _timer = Timer.periodic(Duration(seconds: 1), (t) {
           if (t.isActive) {
@@ -160,6 +82,98 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           }
         });
       }
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_data != null) {
+      Future.microtask(() async {
+        await HistoryDao.addOrUpdateHistory(
+          username: AuthManager.instance.username,
+          history: MangaHistory(
+            mangaId: widget.mid,
+            mangaTitle: widget.mangaTitle,
+            mangaCover: widget.mangaCover,
+            mangaUrl: widget.mangaUrl,
+            chapterId: _data!.cid,
+            chapterTitle: _data!.title,
+            chapterPage: _currentPage,
+            lastTime: DateTime.now(),
+          ),
+        );
+        EventBusManager.instance.fire(HistoryUpdatedEvent());
+      });
+    }
+    _timer?.cancel();
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  void _updatePageController({int? initialPage, double? viewportFraction}) {
+    var oldController = _controller;
+    _controller = PageController(
+      initialPage: initialPage ?? _controller!.initialPage,
+      viewportFraction: viewportFraction ?? _controller!.viewportFraction,
+    );
+    if (mounted) setState(() {});
+    WidgetsBinding.instance?.addPostFrameCallback((_) => oldController?.dispose());
+  }
+
+  var _loading = true;
+  MangaChapter? _data;
+  var _error = '';
+
+  Future<void> _loadData() async {
+    _loading = true;
+    if (mounted) setState(() {});
+
+    final client = RestClient(DioManager.instance.dio);
+
+    // 1. 异步更新章节阅读记录
+    if (AuthManager.instance.logined) {
+      Future.microtask(() async {
+        try {
+          await client.recordManga(token: AuthManager.instance.token, mid: widget.mid, cid: widget.cid);
+        } catch (_) {}
+      });
+    }
+
+    try {
+      // 2. 获取章节数据
+      var result = await client.getMangaChapter(mid: widget.mid, cid: widget.cid);
+      _data = null;
+      _error = '';
+      if (mounted) setState(() {});
+      await Future.delayed(Duration(milliseconds: 200));
+      _data = result.data;
+
+      // 3. 指定起始页并更新 PageController
+      var initialPage = widget.initialPage > 0 && widget.initialPage <= _data!.pageCount ? widget.initialPage : 1;
+      _updatePageController(
+        initialPage: initialPage - 1,
+        viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
+      );
+      _currentPage = initialPage;
+      _progressValue = initialPage;
+
+      // 4. 更新浏览历史
+      Future.microtask(() async {
+        await HistoryDao.addOrUpdateHistory(
+          username: AuthManager.instance.username,
+          history: MangaHistory(
+            mangaId: widget.mid,
+            mangaTitle: widget.mangaTitle,
+            mangaCover: widget.mangaCover,
+            mangaUrl: widget.mangaUrl,
+            chapterId: _data!.cid,
+            chapterTitle: _data!.title,
+            chapterPage: _currentPage,
+            lastTime: DateTime.now(),
+          ),
+        );
+        EventBusManager.instance.fire(HistoryUpdatedEvent());
+      });
     } catch (e, s) {
       _data = null;
       _error = wrapError(e, s).text;
@@ -167,6 +181,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _loading = false;
       if (mounted) setState(() {});
     }
+  }
+
+  // TODO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+  void _onPageChanged(int page) {
+    _currentPage = page + 1;
+    _progressValue = page + 1;
+    if (mounted) setState(() {});
   }
 
   void _onPointerDown(Offset pos) {
@@ -186,19 +208,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
-  void _onPageChanged(int page) {
-    _currentPage = page + 1;
-    _progressValue = page + 1;
-    if (mounted) setState(() {});
-  }
-
   void _onSliderChanged(double p) {
     _progressValue = p.toInt();
     _gotoPage(_progressValue);
     if (mounted) setState(() {});
   }
 
-  /// goto page
   void _gotoPage(int page) {
     if (page <= 0) {
       if (_setting.useClickForChapter) {
@@ -217,7 +232,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
-  /// goto chapter
   void _gotoChapter({required bool last, bool isAppBar = false}) {
     if ((last && _data!.prevCid == 0) || (!last && _data!.nextCid == 0)) {
       showDialog(
@@ -277,142 +291,24 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
+  // TODO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
   void _onSettingPressed() {
-    _showAppBar = false;
-    if (mounted) setState(() {});
-
-    Widget _buildCombo<T>({required String title, double width = 120, required T value, required List<T> values, required Widget Function(T) builder, required void Function(T?) onChanged}) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title),
-          SizedBox(
-            height: 38,
-            width: width,
-            child: DropdownButton<T>(
-              value: value,
-              items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
-              underline: Container(color: Colors.white),
-              isExpanded: true,
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      );
-    }
-
-    Widget _buildSlider({required String title, required bool value, required void Function(bool) onChanged}) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title),
-          SizedBox(
-            height: 38,
-            child: Switch(
-              value: value,
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      );
-    }
-
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('设置'),
-        content: StatefulBuilder(
-          builder: (_, _setState) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildCombo<bool>(
-                title: '阅读方向',
-                value: _setting.reverseScroll,
-                values: [false, true],
-                builder: (s) => Text(
-                  s == false ? '从左往右' : '从右往左',
-                  style: Theme.of(context).textTheme.bodyText2,
-                ),
-                onChanged: (s) async {
-                  _setting = _setting.copyWith(reverseScroll: s ?? true);
-                  await ChapterSettingPrefs.setSetting(_setting);
-                  _setState(() {});
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildSlider(
-                title: '显示页码',
-                value: _setting.showPageHint,
-                onChanged: (b) async {
-                  _setting = _setting.copyWith(showPageHint: b);
-                  await ChapterSettingPrefs.setSetting(_setting);
-                  _setState(() {});
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildSlider(
-                title: '滑动跳转至章节',
-                value: _setting.useSwipeForChapter,
-                onChanged: (b) async {
-                  _setting = _setting.copyWith(useSwipeForChapter: b);
-                  await ChapterSettingPrefs.setSetting(_setting);
-                  _setState(() {});
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildSlider(
-                title: '点击跳转至章节',
-                value: _setting.useClickForChapter,
-                onChanged: (b) async {
-                  _setting = _setting.copyWith(useClickForChapter: b);
-                  await ChapterSettingPrefs.setSetting(_setting);
-                  _setState(() {});
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildSlider(
-                title: '跳转章节时弹出提示',
-                value: _setting.needCheckForChapter,
-                onChanged: (b) async {
-                  _setting = _setting.copyWith(needCheckForChapter: b);
-                  await ChapterSettingPrefs.setSetting(_setting);
-                  _setState(() {});
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildSlider(
-                title: '显示页面间隔',
-                value: _setting.enablePageSpace,
-                onChanged: (b) async {
-                  _setting = _setting.copyWith(enablePageSpace: b);
-                  await ChapterSettingPrefs.setSetting(_setting);
-                  _setState(() {});
-                  _controller = PageController(
-                    initialPage: _controller!.initialPage,
-                    viewportFraction: b ? _kViewportFraction : 1,
-                  );
-                  if (mounted) setState(() {});
-                },
-              ),
-              _buildCombo<int>(
-                title: '预加载页数',
-                width: 80,
-                value: _setting.preloadCount.clamp(0, 5),
-                values: [0, 1, 2, 3, 4, 5],
-                builder: (s) => Text(
-                  '$s页',
-                  style: Theme.of(context).textTheme.bodyText2,
-                ),
-                onChanged: (c) async {
-                  _setting = _setting.copyWith(preloadCount: (c ?? 2).clamp(0, 5));
-                  await ChapterSettingPrefs.setSetting(_setting);
-                  _setState(() {});
-                  if (mounted) setState(() {});
-                },
-              ),
-            ],
-          ),
+        content: ViewSettingSubPage(
+          setting: _setting,
+          onSettingChanged: (s) async {
+            var oldSetting = _setting;
+            _setting = s;
+            if (oldSetting.enablePageSpace != s.enablePageSpace) {
+              _updatePageController(viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1);
+            }
+            if (mounted) setState(() {});
+            await ViewSettingPrefs.setSetting(_setting);
+          },
         ),
         actions: [
           TextButton(
@@ -492,27 +388,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         appBar: _loading || _data == null || !_showAppBar
             ? null
             : AppBar(
-                centerTitle: false,
                 title: Text(_data!.title),
                 actions: [
-                  IconButton(
-                    icon: Icon(Icons.settings),
-                    tooltip: '设置',
-                    onPressed: _onSettingPressed,
-                  ),
-                  IconButton(
-                    icon: Transform.rotate(
-                      angle: pi,
-                      child: Icon(Icons.arrow_right_alt),
-                    ),
-                    tooltip: !_setting.reverseScroll ? '上一章节' : '下一章节', // 上一章节 / 下一章节(反)
-                    onPressed: () => _gotoChapter(last: !_setting.reverseScroll, isAppBar: true),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.arrow_right_alt),
-                    tooltip: !_setting.reverseScroll ? '下一章节' : '上一章节', // 下一章节 / 上一章节(反)
-                    onPressed: () => _gotoChapter(last: _setting.reverseScroll, isAppBar: true),
-                  ),
                   IconButton(
                     icon: Icon(Icons.open_in_browser),
                     tooltip: '用浏览器打开',
@@ -529,6 +406,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 : _data == null
                     ? PlaceholderState.error
                     : PlaceholderState.normal,
+            errorText: _error,
             setting: PlaceholderSetting(
               iconColor: Colors.grey,
               showLoadingText: false,
@@ -538,7 +416,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 side: MaterialStateProperty.all(BorderSide(color: Colors.grey)),
               ),
             ).copyWithChinese(),
-            errorText: _error,
             childBuilder: (c) => Stack(
               children: [
                 // ****************************************************************
@@ -547,7 +424,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Positioned.fill(
                   child: NotificationListener<ScrollUpdateNotification>(
                     onNotification: _onScrollNotification,
-                    child: ReloadablePhotoViewGallery.builder(
+                    // TODO add reload and long pressed popup menu
+                    child: MangaGalleryView(
                       scrollPhysics: BouncingScrollPhysics(),
                       reverse: _setting.reverseScroll,
                       backgroundDecoration: BoxDecoration(color: Colors.black),
@@ -565,9 +443,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         filterQuality: FilterQuality.high,
                         onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
                         onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
-                        imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fn(
-                          urlFn: _imageProviders[idx],
-                          fileFn: _fileProvider,
+                        imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
+                          url: _data!.pages[idx],
                           headers: {
                             'User-Agent': USER_AGENT,
                             'Referer': REFERER,
@@ -599,7 +476,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 // ****************************************************************
                 // 左边导航: 上一章节 / 下一章节(反)
                 // ****************************************************************
-                if (_setting.useSwipeForChapter)
+                if (_setting.useSwipeForChapter) // TODO 如何优化？？？
                   AnimatedPositioned(
                     left: _swipeFirstOver ? 0 : -30,
                     duration: Duration(milliseconds: 200),
@@ -661,7 +538,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withOpacity(0.65),
                       padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
                       child: Text(
                         '${_data!.title} $_currentPage/${_data!.pageCount}页 $_currentTime',
@@ -670,37 +547,97 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     ),
                   ),
                 // ****************************************************************
-                // 最下面的滚动条
+                // 最下面的滚动条和按钮
                 // ****************************************************************
-                if (_showAppBar && _data != null)
+                if (_showAppBar && _data != null) // TODO use Animation
                   Positioned(
                     bottom: 0,
                     child: Container(
                       color: Colors.black.withOpacity(0.75),
                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                       width: MediaQuery.of(context).size.width,
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: Directionality(
-                              textDirection: !_setting.reverseScroll ? TextDirection.ltr : TextDirection.rtl,
-                              child: Slider(
-                                value: _progressValue.toDouble(),
-                                min: 1,
-                                max: _data!.pageCount.toDouble(),
-                                onChanged: (p) {
-                                  _progressValue = p.toInt();
-                                  if (mounted) setState(() {});
-                                },
-                                onChangeEnd: _onSliderChanged,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Directionality(
+                                  textDirection: !_setting.reverseScroll ? TextDirection.ltr : TextDirection.rtl,
+                                  child: Slider(
+                                    value: _progressValue.toDouble(),
+                                    min: 1,
+                                    max: _data!.pageCount.toDouble(),
+                                    onChanged: (p) {
+                                      _progressValue = p.toInt();
+                                      if (mounted) setState(() {});
+                                    },
+                                    onChangeEnd: _onSliderChanged,
+                                  ),
+                                ),
                               ),
-                            ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 4, right: 18),
+                                child: Text(
+                                  '$_progressValue/${_data!.pageCount}页',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 4, right: 18),
-                            child: Text(
-                              '$_progressValue/${_data!.pageCount}页',
-                              style: TextStyle(color: Colors.white),
+                          Material(
+                            color: Colors.transparent,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                InkWell(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    child: IconText(
+                                      icon: Transform.rotate(
+                                        angle: pi,
+                                        child: Icon(Icons.arrow_right_alt, color: Colors.white),
+                                      ),
+                                      text: Text(
+                                        !_setting.reverseScroll ? '上一章节' : '下一章节',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      alignment: IconTextAlignment.t2b,
+                                      space: 2,
+                                    ),
+                                  ),
+                                  onTap: () => _gotoChapter(last: !_setting.reverseScroll, isAppBar: true),
+                                ),
+                                InkWell(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    child: IconText(
+                                      icon: Icon(Icons.settings, color: Colors.white),
+                                      text: Text(
+                                        '设置',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      alignment: IconTextAlignment.t2b,
+                                      space: 2,
+                                    ),
+                                  ),
+                                  onTap: _onSettingPressed,
+                                ),
+                                InkWell(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    child: IconText(
+                                      icon: Icon(Icons.arrow_right_alt, color: Colors.white),
+                                      text: Text(
+                                        !_setting.reverseScroll ? '下一章节' : '上一章节',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      alignment: IconTextAlignment.t2b,
+                                      space: 2,
+                                    ),
+                                  ),
+                                  onTap: () => _gotoChapter(last: _setting.reverseScroll, isAppBar: true),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -757,7 +694,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     ),
                   ),
                 // ****************************************************************
-                // ================================================================
+                // Stack children 结束
                 // ****************************************************************
               ],
             ),
