@@ -89,7 +89,7 @@ abstract class RestClient {
   Future<Result<ResultPage<ShelfManga>>> getShelfMangas({@Header('Authorization') required String token, @Query('page') required int page});
 
   @GET('/shelf/{mid}')
-  Future<Result<ShelfStatus>> checkShelfMangas({@Header('Authorization') required String token, @Path() required int mid});
+  Future<Result<ShelfStatus>> checkShelfManga({@Header('Authorization') required String token, @Path() required int mid});
 
   @POST('/shelf/{mid}')
   Future<Result> addToShelf({@Header('Authorization') required String token, @Path() required int mid});

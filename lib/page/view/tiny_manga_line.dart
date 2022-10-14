@@ -20,7 +20,7 @@ class TinyMangaLineView extends StatelessWidget {
       icon1: Icons.edit,
       text1: manga.finished ? '已完结' : '连载中',
       icon2: Icons.subject,
-      text2: (manga.finished ? '共 ' : '更新至 ') + manga.newestChapter,
+      text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.access_time,
       text3: '更新于 ${manga.newestDate}',
       onPressed: () => Navigator.of(context).push(

@@ -87,7 +87,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _timer?.cancel();
     _controller?.dispose();
     if (_data != null) {
-      HistoryDao.addHistory(
+      HistoryDao.addOrUpdateHistory(
         username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
@@ -98,10 +98,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           chapterTitle: _data!.title,
           chapterPage: _currentPage,
           lastTime: DateTime.now(),
-        ),
+        ), // TODO history
       ).then((_) {
         EventBusManager.instance.fire(HistoryUpdatedEvent());
-      }).catchError((_) {});
+      }).catchError((_) {}); // TODO history error
     }
     super.dispose();
   }
@@ -135,7 +135,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _currentPage = initialPage;
       _progressValue = initialPage;
 
-      HistoryDao.addHistory(
+      HistoryDao.addOrUpdateHistory(
         username: AuthManager.instance.username,
         history: MangaHistory(
           mangaId: widget.mid,
@@ -146,10 +146,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           chapterTitle: _data!.title,
           chapterPage: _currentPage,
           lastTime: DateTime.now(),
-        ),
+        ), // TODO history
       ).then((_) {
         EventBusManager.instance.fire(HistoryUpdatedEvent());
-      }).catchError((_) {});
+      }).catchError((_) {});// TODO history error
 
       if (mounted && (_timer == null || !_timer!.isActive)) {
         _timer = Timer.periodic(Duration(seconds: 1), (t) {

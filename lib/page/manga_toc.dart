@@ -40,7 +40,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       try {
-        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid);
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid); // TODO history
         if (mounted) setState(() {});
       } catch (_) {}
     });
@@ -87,11 +87,12 @@ class _MangaTocPageState extends State<MangaTocPage> {
               groups: widget.groups,
               full: true,
               highlightedChapter: _history?.chapterId ?? 0,
+              lastChapterPage: _history?.chapterPage ?? 1,
               mangaId: widget.mid,
               mangaTitle: widget.mangaTitle,
               mangaCover: widget.mangaCover,
               mangaUrl: widget.mangaUrl,
-            ),
+            ), // TODO history
           ),
         ),
       ),

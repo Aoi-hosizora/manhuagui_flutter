@@ -246,4 +246,31 @@ class MangaHistory {
   bool get read => chapterId != 0;
 
   const MangaHistory({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.mangaUrl, required this.chapterId, required this.chapterTitle, required this.chapterPage, required this.lastTime});
+
+  const MangaHistory.unread({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.mangaUrl, required this.lastTime})
+      : chapterId = 0,
+        chapterTitle = '',
+        chapterPage = 0;
+
+  MangaHistory copyWith({
+    int? mangaId,
+    String? mangaTitle,
+    String? mangaCover,
+    String? mangaUrl,
+    int? chapterId,
+    String? chapterTitle,
+    int? chapterPage,
+    DateTime? lastTime,
+  }) {
+    return MangaHistory(
+      mangaId: mangaId ?? this.mangaId,
+      mangaTitle: mangaTitle ?? this.mangaTitle,
+      mangaCover: mangaCover ?? this.mangaCover,
+      mangaUrl: mangaUrl ?? this.mangaUrl,
+      chapterId: chapterId ?? this.chapterId,
+      chapterTitle: chapterTitle ?? this.chapterTitle,
+      chapterPage: chapterPage ?? this.chapterPage,
+      lastTime: lastTime ?? this.lastTime,
+    );
+  }
 }

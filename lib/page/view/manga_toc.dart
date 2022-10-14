@@ -11,6 +11,7 @@ class MangaTocView extends StatefulWidget {
     required this.groups,
     required this.full,
     this.highlightedChapter = 0,
+    this.lastChapterPage = 1,
     required this.mangaId,
     required this.mangaTitle,
     required this.mangaCover,
@@ -20,6 +21,7 @@ class MangaTocView extends StatefulWidget {
   final List<MangaChapterGroup> groups;
   final bool full;
   final int highlightedChapter;
+  final int lastChapterPage;
   final int mangaId;
   final String mangaTitle;
   final String mangaCover;
@@ -140,6 +142,9 @@ class _MangaTocViewState extends State<MangaTocView> {
                               mangaTitle: widget.mangaTitle,
                               mangaCover: widget.mangaCover,
                               mangaUrl: widget.mangaUrl,
+                              initialPage: widget.highlightedChapter == chapter.cid
+                                  ? widget.lastChapterPage // has read
+                                  : 1, // has not read
                             )
                           : MangaTocPage(
                               mid: widget.mangaId,
@@ -225,7 +230,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       var sGroup = specificGroups.first;
       groups = [sGroup];
       for (var group in widget.groups) {
-        if (group.title != sGroup.title && group.chapters.length != sGroup.chapters.length) {
+        if (group.title != '单话' && group.chapters.length != sGroup.chapters.length) {
           groups.add(group);
         }
       }

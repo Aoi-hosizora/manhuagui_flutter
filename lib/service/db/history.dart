@@ -28,31 +28,34 @@ class HistoryDao {
       PRIMARY KEY ($_colUsername, $_colMangaId)
     )''';
 
-  static Future<int> getHistoryCount({required String username}) async {
-    var db = await DBManager.instance.getDB();
-    var count = firstIntValue(await db.rawQuery(
+  static Future<int?> getHistoryCount({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
-       FROM $_tblHistory
-       WHERE $_colUsername = ?''',
+         FROM $_tblHistory
+         WHERE $_colUsername = ?''',
       [username],
-    ));
-    return count!;
+    );
+    if (results == null) {
+      return null;
+    }
+    return firstIntValue(results);
   }
 
   static Future<MangaHistory?> getHistory({required String username, required int mid}) async {
-    var db = await DBManager.instance.getDB();
-    var maps = await db.rawQuery(
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
       '''SELECT $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime
-       FROM $_tblHistory
-       WHERE $_colUsername = ? AND $_colMangaId = ?
-       ORDER BY $_colLastTime DESC
-       LIMIT 1''',
+         FROM $_tblHistory
+         WHERE $_colUsername = ? AND $_colMangaId = ?
+         ORDER BY $_colLastTime DESC
+         LIMIT 1''',
       [username, mid],
     );
-    if (maps.isEmpty) {
+    if (results == null || results.isEmpty) {
       return null;
     }
-    var m = maps.first;
+    var m = results.first;
     return MangaHistory(
       mangaId: mid,
       mangaTitle: m[_colMangaTitle]! as String,
@@ -65,22 +68,25 @@ class HistoryDao {
     );
   }
 
-  static Future<List<MangaHistory>> getHistories({required String username, required int page, int limit = 20, int offset = 0}) async {
+  static Future<List<MangaHistory>?> getHistories({required String username, required int page, int limit = 20, int offset = 0}) async {
+    final db = await DBManager.instance.getDB();
     offset = limit * (page - 1) - offset;
     if (offset < 0) {
       offset = 0;
     }
-    var db = await DBManager.instance.getDB();
-    var maps = await db.rawQuery(
+    var results = await db.safeRawQuery(
       '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime 
-       FROM $_tblHistory
-       WHERE $_colUsername = ?
-       ORDER BY $_colLastTime DESC
-       LIMIT $limit OFFSET $offset''',
+         FROM $_tblHistory
+         WHERE $_colUsername = ?
+         ORDER BY $_colLastTime DESC
+         LIMIT $limit OFFSET $offset''',
       [username],
     );
+    if (results == null) {
+      return null;
+    }
     var out = <MangaHistory>[];
-    for (var m in maps) {
+    for (var m in results) {
       out.add(MangaHistory(
         mangaId: m[_colMangaId]! as int,
         mangaTitle: m[_colMangaTitle]! as String,
@@ -95,53 +101,55 @@ class HistoryDao {
     return out;
   }
 
-  static Future<bool> addHistory({required String username, required MangaHistory history}) async {
-    var db = await DBManager.instance.getDB();
-    var count = firstIntValue(await db.rawQuery(
+  static Future<bool> addOrUpdateHistory({required String username, required MangaHistory history}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
-       FROM $_tblHistory
-       WHERE $_colUsername = ? AND $_colMangaId = ?''',
-      [username, history.mangaId],
-    ));
-
-    var rows = 0;
-    if (count == 0) {
-      // INSERT
-      rows = await db.rawInsert(
-        '''INSERT INTO $_tblHistory ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        [username, history.mangaId, history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String()],
-      ).catchError((_) {});
-    } else {
-      // UPDATE
-      rows = await db.rawUpdate(
-        '''UPDATE $_tblHistory
-         SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colChapterId = ?, $_colChapterTitle = ?, $_colChapterPage = ?, $_colLastTime = ?
+         FROM $_tblHistory
          WHERE $_colUsername = ? AND $_colMangaId = ?''',
-        [history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String(), username, history.mangaId],
-      ).catchError((_) {});
+      [username, history.mangaId],
+    );
+    if (results == null) {
+      return false;
     }
-    return rows >= 1;
+    var count = firstIntValue(results);
+
+    int? rows = 0;
+    if (count == 0) {
+      rows = await db.safeRawInsert(
+        '''INSERT INTO $_tblHistory ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        [username, history.mangaId, history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String()],
+      );
+    } else {
+      rows = await db.safeRawInsert(
+        '''UPDATE $_tblHistory
+           SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colChapterId = ?, $_colChapterTitle = ?, $_colChapterPage = ?, $_colLastTime = ?
+           WHERE $_colUsername = ? AND $_colMangaId = ?''',
+        [history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String(), username, history.mangaId],
+      );
+    }
+    return rows != null && rows >= 1;
   }
 
-  static Future<bool> updateHistory({required String username, required int mid, required String title, required String cover, required String url}) async {
-    var db = await DBManager.instance.getDB();
-    var rows = await db.rawUpdate(
+  static Future<bool> patchHistory({required String username, required int mid, required String title, required String cover, required String url}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawUpdate(
       '''UPDATE $_tblHistory
          SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?
          WHERE $_colUsername = ? AND $_colMangaId = ?''',
       [title, cover, url, username, mid],
-    ).catchError((_) {});
-    return rows >= 1;
+    );
+    return rows != null && rows >= 1;
   }
 
   static Future<bool> deleteHistory({required String username, required int mid}) async {
-    var db = await DBManager.instance.getDB();
-    var rows = await db.rawDelete(
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawUpdate(
       '''DELETE FROM $_tblHistory
-       WHERE $_colUsername = ? AND $_colMangaId = ?''',
+         WHERE $_colUsername = ? AND $_colMangaId = ?''',
       [username, mid],
-    ).catchError((_) {});
-    return rows >= 1;
+    );
+    return rows != null && rows >= 1;
   }
 }

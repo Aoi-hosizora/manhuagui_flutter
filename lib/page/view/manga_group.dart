@@ -77,21 +77,21 @@ class MangaGroupView extends StatelessWidget {
             Positioned(
               bottom: 0,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 width: width,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     stops: const [0, 1],
-                    colors: const [
-                      Color.fromRGBO(0, 0, 0, 0),
-                      Color.fromRGBO(0, 0, 0, 1),
+                    colors: [
+                      Colors.grey[800]!.withOpacity(0),
+                      Colors.grey[800]!.withOpacity(0.9),
                     ],
                   ),
                 ),
                 child: Text(
-                  (manga.finished ? '共' : '更新至') + manga.newestChapter,
+                  manga.finished ? '${manga.newestChapter} 全' : '更新至 ${manga.newestChapter}',
                   style: TextStyle(color: Colors.white),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

@@ -50,7 +50,7 @@ class ErrorMessage {
 /// Wraps given error to [ErrorMessage].
 ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   print('┌─────────────────── WrapError ───────────────────┐');
-  print('date: ${DateTime.now().toIso8601String()}');
+  print('===> date: ${DateTime.now().toIso8601String()}');
 
   // DioError [DioErrorType.other]: SocketException: Connection failed (OS Error: Network is unreachable, errno = 101)
   // DioError [DioErrorType.other]: SocketException: Failed host lookup: '...' (OS Error: No address associated with hostname, errno = 7)
@@ -63,11 +63,12 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // DioError [DioErrorType.response]: Http status error [502]
   // _CastError: type 'String' is not a subtype of type 'Map<String, dynamic>?' in type cast
   // _CastError: type 'Null' is not a subtype of type 'Map<String, dynamic>' in type cast
+  // _CastError: Null check operator used on a null value
 
   if (e is DioError) {
     var response = e.response;
-    print('uri: ${e.requestOptions.uri}');
-    print('method: ${e.requestOptions.method}');
+    print('===> uri: ${e.requestOptions.uri}');
+    print('===> method: ${e.requestOptions.method}');
 
     // ======================================================================================================================
     // ErrorType.networkError
@@ -155,18 +156,26 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   }
   var cast = e.runtimeType.toString() == '_CastError';
   if (cast) {
-    var match = RegExp("type '(.+)' is not a subtype of type '(.+)' in type cast").firstMatch(e.toString());
-    if (match != null) {
-      text = '[DEBUG] Want "${match.group(2)}" but got "${match.group(1)}" when typecasting';
-      var top = RegExp('#0\\s*(.+) \\(package:.+').firstMatch(s.toString())?.group(1); // #0      _$LoginCheckResultFromJson (package:manhuagui_flutter/model/user.g.dart:41:35)
-      if (top != null) {
-        text = '$text, in $top';
+    var newText = '';
+    if (e.toString().contains('Null check operator used on a null value')) {
+      newText = '[DEBUG] Got unexpected null value';
+    } else {
+      var match = RegExp("type '(.+)' is not a subtype of type '(.+)' in type cast").firstMatch(e.toString());
+      if (match != null) {
+        newText = '[DEBUG] Want "${match.group(2)}" but got "${match.group(1)}" when typecasting';
       }
     }
+    if (newText.isNotEmpty) {
+      var top = RegExp('#0\\s*(.+) \\(package:.+').firstMatch(s.toString())?.group(1); // #0      _$LoginCheckResultFromJson (package:manhuagui_flutter/model/user.g.dart:41:35)
+      if (top != null) {
+        newText = '$newText, in $top';
+      }
+    }
+    text = newText;
   }
   print('===> type: ${ErrorType.otherError}');
   print('===> text: $text');
-  print('===> error: $e');
+  print('===> error: ${e.runtimeType}: $e');
   print('===> trace:\n$s');
   print('└─────────────────── WrapError ───────────────────┘');
   return ErrorMessage.other(e, s, text, castError: cast);

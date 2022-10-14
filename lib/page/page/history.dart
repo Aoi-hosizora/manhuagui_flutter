@@ -55,8 +55,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       _removed = 0; // refresh
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local history
-    var data = await HistoryDao.getHistories(username: username, page: page, offset: _removed);
-    _total = await HistoryDao.getHistoryCount(username: username);
+    var data = await HistoryDao.getHistories(username: username, page: page, offset: _removed) ?? [];
+    _total = await HistoryDao.getHistoryCount(username: username) ?? 0;
     if (mounted) setState(() {});
     return PagedList(list: data, next: page + 1);
   }
@@ -122,9 +122,37 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
-            ListHintView.textText(
+            ListHintView.textWidget(
               leftText: AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史',
-              rightText: '共 $_total 部',
+              rightWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('共 $_total 部'),
+                  SizedBox(width: 5),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkResponse(
+                      child: Padding(
+                        padding: EdgeInsets.all(3),
+                        child: Icon(Icons.help_outline, size: 20),
+                      ),
+                      onTap: () => showDialog(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: Text('浏览历史'),
+                          content: Text('注意：由于漫画柜官方并未提供漫画浏览历史记录的功能，所以本应用的浏览历史仅被记录在移动端本地，且不同账号的浏览历史互不影响。'),
+                          actions: [
+                            TextButton(
+                              child: Text('确定'),
+                              onPressed: () => Navigator.of(c).pop(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

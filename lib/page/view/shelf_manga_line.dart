@@ -18,7 +18,7 @@ class ShelfMangaLineView extends StatelessWidget {
       imageUrl: manga.cover,
       title: manga.title,
       icon1: Icons.subject,
-      text1: '更新至 ' + manga.newestChapter,
+      text1: '最新章节 ' + manga.newestChapter,
       icon2: Icons.access_time,
       text2: '更新于 ${manga.newestDuration}',
       icon3: Icons.import_contacts,

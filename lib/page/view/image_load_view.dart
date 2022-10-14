@@ -37,12 +37,16 @@ class ImageLoadingView extends StatelessWidget {
               width: 50,
               height: 50,
               child: CircularProgressIndicator(
-                value: (event?.expectedTotalBytes ?? 0) == 0 ? null : event!.cumulativeBytesLoaded / event!.expectedTotalBytes!,
+                value: (event == null || (event!.expectedTotalBytes ?? 0) == 0) ? null : event!.cumulativeBytesLoaded / event!.expectedTotalBytes!,
               ),
             ),
           ),
           Text(
-            event?.expectedTotalBytes == null ? filesize(event!.cumulativeBytesLoaded) : '${filesize(event!.cumulativeBytesLoaded)} / ${filesize(event!.expectedTotalBytes ?? 0)}',
+            event == null
+                ? ''
+                : (event!.expectedTotalBytes ?? 0) == 0
+                    ? filesize(event!.cumulativeBytesLoaded)
+                    : '${filesize(event!.cumulativeBytesLoaded)} / ${filesize(event!.expectedTotalBytes!)}',
             style: TextStyle(color: Colors.grey),
           ),
         ],

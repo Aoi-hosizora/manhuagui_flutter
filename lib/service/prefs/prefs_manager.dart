@@ -60,7 +60,8 @@ extension SharedPreferencesExtension on SharedPreferences {
   T? _safeGet<T>(T? Function() getter) {
     try {
       return getter();
-    } catch (_) {
+    } catch (e, s) {
+      print('===> exception when _safeGet:\n$e\n$s');
       return null;
     }
   }
@@ -82,7 +83,7 @@ extension SharedPreferencesExtension on SharedPreferences {
 
   Future<bool> _migrate<T>(String oldKey, String newKey, T? Function(String) getter, Future<bool> Function(String, T) setter, T? defaultValue) async {
     if (oldKey == newKey) {
-      return false;
+      return true;
     }
     try {
       T? data = getter(oldKey) ?? defaultValue;
@@ -91,7 +92,9 @@ extension SharedPreferencesExtension on SharedPreferences {
         remove(oldKey);
         return result;
       }
-    } catch (_) {}
+    } catch (e, s) {
+      print('===> exception when migrate:\n$e\n$s');
+    }
     return false;
   }
 }

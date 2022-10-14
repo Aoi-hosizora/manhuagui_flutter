@@ -560,7 +560,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ShelfStatus>> checkShelfMangas(
+  Future<Result<ShelfStatus>> checkShelfManga(
       {required token, required mid}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
