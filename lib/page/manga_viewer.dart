@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -28,6 +29,7 @@ class MangaViewerPage extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    required this.chapterGroups,
     this.initialPage = 1, // starts from 1
     this.showAppBar = false,
   }) : super(key: key);
@@ -37,6 +39,7 @@ class MangaViewerPage extends StatefulWidget {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final List<MangaChapterGroup> chapterGroups;
   final int initialPage;
   final bool showAppBar;
 
@@ -129,7 +132,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _data = result.data;
 
       // 3. 指定起始页
-      _initialPage = widget.initialPage > 0 && widget.initialPage <= _data!.pageCount ? widget.initialPage : 1;
+      _initialPage = widget.initialPage > 0 && widget.initialPage <= _data!.pageCount ? widget.initialPage : 1; // TODO given -1
       _currentPage = _initialPage!;
       _progressValue = _initialPage!;
 
@@ -161,14 +164,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _currentPage = 1; // image page only, starts from 1
   var _progressValue = 1; // image page only, starts from 1
-  var _inFirstExtraPage = false;
-  var _inLastExtraPage = false;
+  var _inExtraPage = false;
 
-  void _onPageChanged(int imageIndex, bool isFirstExtraPage, bool isLastExtraPage) {
+  void _onPageChanged(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) {
     _currentPage = imageIndex;
     _progressValue = imageIndex;
-    _inFirstExtraPage = isFirstExtraPage;
-    _inLastExtraPage = isLastExtraPage;
+    _inExtraPage = inFirstExtraPage || inLastExtraPage;
     if (mounted) setState(() {});
   }
 
@@ -178,7 +179,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     if (mounted) setState(() {});
   }
 
-  void _gotoChapter({required bool last, bool isAppBar = false}) {
+  void _gotoChapter({required bool last}) {
     if ((last && _data!.prevCid == 0) || (!last && _data!.nextCid == 0)) {
       showDialog(
         context: context,
@@ -196,7 +197,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       return;
     }
 
-    // TODO
+
     Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -206,8 +207,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
+          chapterGroups:  widget. chapterGroups,
+          initialPage: (!last /* || isAppBar */) ? 1 : -1, // 下一章节 || 工具栏点击的上一章节 => 第一页，否则 => 最后一页 // TODO
           showAppBar: _showAppBar,
-          initialPage: (!last || isAppBar) ? 1 : -1, // 下一章节 || 工具栏点击的上一章节 => 第一页，否则 => 最后一页
         ),
       ),
     );
@@ -248,7 +250,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   Widget _buildAction({required String text, required IconData icon, required void Function() action, double? rotateAngle}) {
     return InkWell(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         child: IconText(
           icon: rotateAngle == null
               ? Icon(icon, color: Colors.white)
@@ -333,108 +335,161 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       if (mounted) setState(() {});
                     },
                     firstPageBuilder: (c) => Center(
-                      child: Text('first page'),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('first page'),
+                          OutlinedButton(
+                            child: Text('下一页'),
+                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(1),
+                          ),
+                          OutlinedButton(
+                            child: Text('下一章节'),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
                     ),
                     lastPageBuilder: (c) => Center(
-                      child: Text('last page'),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('last page'),
+                          OutlinedButton(
+                            child: Text('上一页'),
+                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(_data!.pages.length),
+                          ),
+                          OutlinedButton(
+                            child: Text('回到首页'),
+                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(1),
+                          ),
+                          OutlinedButton(
+                            child: Text('上一章节'),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 // ****************************************************************
                 // 右下角的提示文字
                 // ****************************************************************
-                if (_setting.showPageHint && !_showAppBar && _data != null)
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      color: Colors.black.withOpacity(0.65),
-                      padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
-                      child: Text(
-                        !_inFirstExtraPage && !_inLastExtraPage
-                            ? '${_data!.title} $_currentPage/${_data!.pageCount}页 $_currentTime' //
-                            : '${_data!.title} $_currentTime',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 200),
+                    child: !(_data != null && (!_showAppBar || _inExtraPage) && _setting.showPageHint)
+                        ? SizedBox(height: 0)
+                        : Container(
+                            color: Colors.black.withOpacity(0.65),
+                            padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
+                            child: Text(
+                              !_inExtraPage
+                                  ? '${_data!.title} $_currentPage/${_data!.pageCount}页 $_currentTime' //
+                                  : '${_data!.title} $_currentTime',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
                   ),
+                ),
                 // ****************************************************************
                 // 最下面的滚动条和按钮
                 // ****************************************************************
-                if (_showAppBar && _data != null && !_inFirstExtraPage && !_inLastExtraPage) // TODO use Animation
-                  Positioned(
-                    bottom: 0,
-                    child: Container(
-                      color: Colors.black.withOpacity(0.75),
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                      width: MediaQuery.of(context).size.width,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Directionality(
-                                  textDirection: !_setting.reverseScroll ? TextDirection.ltr : TextDirection.rtl,
-                                  child: Slider(
-                                    value: _progressValue.toDouble(),
-                                    min: 1,
-                                    max: _data!.pageCount.toDouble(),
-                                    onChanged: (p) {
-                                      _progressValue = p.toInt();
-                                      if (mounted) setState(() {});
-                                    },
-                                    onChangeEnd: _onSliderChanged,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(left: 4, right: 18),
-                                child: Text(
-                                  '$_progressValue/${_data!.pageCount}页',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Material(
-                            color: Colors.transparent,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 200),
+                    child: !(_data != null && _showAppBar && !_inExtraPage)
+                        ? SizedBox(height: 0)
+                        : Container(
+                            color: Colors.black.withOpacity(0.75),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                            width: MediaQuery.of(context).size.width,
+                            child: Column(
                               children: [
-                                _buildAction(
-                                  text: !_setting.reverseScroll ? '上一章节' : '下一章节',
-                                  icon: Icons.arrow_right_alt,
-                                  rotateAngle: pi,
-                                  action: () => _gotoChapter(last: !_setting.reverseScroll, isAppBar: true),
-                                ),
-                                _buildAction(
-                                  text: !_setting.reverseScroll ? '下一章节' : '上一章节',
-                                  icon: Icons.arrow_right_alt,
-                                  action: () => _gotoChapter(last: _setting.reverseScroll, isAppBar: true),
-                                ),
-                                _buildAction(
-                                  text: '浏览设置',
-                                  icon: Icons.settings,
-                                  action: () => _onSettingPressed(),
-                                ),
-                                _buildAction(
-                                  text: '漫画目录',
-                                  icon: Icons.menu,
-                                  action: () => showModalBottomSheet(
-                                    context: context,
-                                    builder: (c) => Container(
-                                      height: 200,
-                                      color: Colors.yellow,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Directionality(
+                                        textDirection: !_setting.reverseScroll ? TextDirection.ltr : TextDirection.rtl,
+                                        child: SliderTheme(
+                                          data: Theme.of(context).sliderTheme.copyWith(
+                                                thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10.0),
+                                                overlayShape: RoundSliderOverlayShape(overlayRadius: 20.0),
+                                              ),
+                                          child: Slider(
+                                            value: _progressValue.toDouble(),
+                                            min: 1,
+                                            max: _data!.pageCount.toDouble(),
+                                            onChanged: (p) {
+                                              _progressValue = p.toInt();
+                                              if (mounted) setState(() {});
+                                            },
+                                            onChangeEnd: _onSliderChanged,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ), // TODO
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 4, right: 18),
+                                      child: Text(
+                                        '$_progressValue/${_data!.pageCount}页',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      _buildAction(
+                                        text: !_setting.reverseScroll ? '上一章节' : '下一章节',
+                                        icon: Icons.arrow_right_alt,
+                                        rotateAngle: pi,
+                                        action: () => _gotoChapter(last: !_setting.reverseScroll),
+                                      ),
+                                      _buildAction(
+                                        text: !_setting.reverseScroll ? '下一章节' : '上一章节',
+                                        icon: Icons.arrow_right_alt,
+                                        action: () => _gotoChapter(last: _setting.reverseScroll),
+                                      ),
+                                      _buildAction(
+                                        text: '浏览设置',
+                                        icon: Icons.settings,
+                                        action: () => _onSettingPressed(),
+                                      ),
+                                      _buildAction(
+                                        text: '漫画目录',
+                                        icon: Icons.menu,
+                                        action: () => showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          builder: (c) => Container(
+                                            height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - Theme.of(context).appBarTheme.toolbarHeight!,
+                                            child: MangaTocPage(
+                                              mid: widget.mid,
+                                              mangaTitle: widget.mangaTitle,
+                                              mangaCover: widget.mangaCover,
+                                              mangaUrl: widget.mangaUrl,
+                                              groups: widget. chapterGroups,
+                                            ),
+                                          ),
+                                        ), // TODO
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
                   ),
+                ),
                 // ****************************************************************
                 // 帮助区域显示
                 // ****************************************************************

@@ -138,10 +138,11 @@ class _MangaTocViewState extends State<MangaTocView> {
                       builder: (c) => chapter != null
                           ? MangaViewerPage(
                               mid: chapter.mid,
-                              cid: chapter.cid,
                               mangaTitle: widget.mangaTitle,
                               mangaCover: widget.mangaCover,
                               mangaUrl: widget.mangaUrl,
+                              chapterGroups: widget.groups,
+                              cid: chapter.cid,
                               initialPage: widget.highlightedChapter == chapter.cid
                                   ? widget.lastChapterPage // has read
                                   : 1, // has not read

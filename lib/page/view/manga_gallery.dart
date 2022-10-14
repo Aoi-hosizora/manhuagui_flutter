@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load_view.dart';
 import 'package:photo_view/photo_view.dart';
 
+/// 漫画画廊展示，在 [MangaViewerPage] 使用
 class MangaGalleryView extends StatefulWidget {
   const MangaGalleryView({
     Key? key,
@@ -27,7 +28,7 @@ class MangaGalleryView extends StatefulWidget {
   final bool reverseScroll;
   final double viewportFraction;
   final double slideWidthRatio;
-  final void Function(int imageIndex, bool isFirstExtraPage, bool isLastExtraPage) onPageChanged;
+  final void Function(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) onPageChanged;
   final int initialImageIndex;
   final void Function()? onCenterAreaTapped;
   final Widget Function(BuildContext) firstPageBuilder;
@@ -51,16 +52,15 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
 
   @override
   void didUpdateWidget(covariant MangaGalleryView oldWidget) {
-    super.didUpdateWidget(oldWidget);
     if (oldWidget.viewportFraction != widget.viewportFraction) {
       var oldController = _controller;
       _controller = PageController(
         initialPage: _currentPageIndex, // initial to current page
-        viewportFraction: widget.viewportFraction, // TODO bug
+        viewportFraction: widget.viewportFraction,
       );
-      if (mounted) setState(() {});
       WidgetsBinding.instance?.addPostFrameCallback((_) => oldController.dispose());
     }
+    super.didUpdateWidget(oldWidget);
   }
 
   var _pointerDownXPosition = 0.0;

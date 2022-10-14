@@ -49,7 +49,7 @@ class ExtendedPhotoViewGallery extends StatefulWidget {
 }
 
 class ExtendedPhotoViewGalleryState extends State<ExtendedPhotoViewGallery> {
-  late final PageController _controller = widget.pageController ?? PageController();
+  late var _controller = widget.pageController ?? PageController();
   late List<ValueNotifier<String>> _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
 
   int get currentPage => _controller.hasClients ? _controller.page!.floor() : 0;
@@ -64,6 +64,9 @@ class ExtendedPhotoViewGalleryState extends State<ExtendedPhotoViewGallery> {
   void didUpdateWidget(covariant ExtendedPhotoViewGallery oldWidget) {
     if (widget.imageCount != oldWidget.imageCount) {
       _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
+    }
+    if (widget.pageController != oldWidget.pageController) {
+      _controller = widget.pageController ?? PageController();
     }
     super.didUpdateWidget(oldWidget);
   }

@@ -226,6 +226,7 @@ class _MangaPageState extends State<MangaPage> {
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
           mangaUrl: _data!.url,
+          chapterGroups: _data!.chapterGroups,
           cid: cid,
           initialPage: page,
         ),
