@@ -6,23 +6,19 @@ class ImageLoadingView extends StatelessWidget {
     Key? key,
     required this.title,
     required this.event,
-    this.width,
-    this.height,
-  })  : assert(width == null || width > 0),
-        assert(height == null || height > 0),
-        super(key: key);
+  }) : super(key: key);
 
   final String title;
   final ImageChunkEvent? event;
-  final double? width;
-  final double? height;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.black,
-      width: width,
-      height: height,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+        maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -59,22 +55,18 @@ class ImageLoadFailedView extends StatelessWidget {
   const ImageLoadFailedView({
     Key? key,
     required this.title,
-    this.width,
-    this.height,
-  })  : assert(width == null || width > 0),
-        assert(height == null || height > 0),
-        super(key: key);
+  }) : super(key: key);
 
   final String title;
-  final double? width;
-  final double? height;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.black,
-      width: width,
-      height: height,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+        maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

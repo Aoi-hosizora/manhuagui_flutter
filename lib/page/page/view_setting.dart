@@ -5,18 +5,12 @@ class ViewSetting {
   ViewSetting({
     required this.reverseScroll,
     required this.showPageHint,
-    required this.useSwipeForChapter,
-    required this.useClickForChapter,
-    required this.needCheckForChapter,
     required this.enablePageSpace,
     required this.preloadCount,
   });
 
   final bool reverseScroll; // 反转拖动
   final bool showPageHint; // 显示页码提示
-  final bool useSwipeForChapter; // 滑动跳转至章节
-  final bool useClickForChapter; // 点击跳转至章节
-  final bool needCheckForChapter; // 跳转章节时确认
   final bool enablePageSpace; // 显示页面间隔
   final int preloadCount; // 预加载页数
 
@@ -24,9 +18,6 @@ class ViewSetting {
       : this(
           reverseScroll: false,
           showPageHint: true,
-          useSwipeForChapter: true,
-          useClickForChapter: true,
-          needCheckForChapter: true,
           enablePageSpace: true,
           preloadCount: 2,
         );
@@ -43,9 +34,6 @@ class ViewSetting {
     return ViewSetting(
       reverseScroll: reverseScroll ?? this.reverseScroll,
       showPageHint: showPageHint ?? this.showPageHint,
-      useSwipeForChapter: useSwipeForChapter ?? this.useSwipeForChapter,
-      useClickForChapter: useClickForChapter ?? this.useClickForChapter,
-      needCheckForChapter: needCheckForChapter ?? this.needCheckForChapter,
       enablePageSpace: enablePageSpace ?? this.enablePageSpace,
       preloadCount: preloadCount ?? this.preloadCount,
     );
@@ -69,9 +57,6 @@ class ViewSettingSubPage extends StatefulWidget {
 class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late bool _reverseScroll = widget.setting.reverseScroll;
   late bool _showPageHint = widget.setting.showPageHint;
-  late bool _useSwipeForChapter = widget.setting.useSwipeForChapter;
-  late bool _useClickForChapter = widget.setting.useClickForChapter;
-  late bool _needCheckForChapter = widget.setting.needCheckForChapter;
   late bool _enablePageSpace = widget.setting.enablePageSpace;
   late int _preloadCount = widget.setting.preloadCount;
 
@@ -149,36 +134,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           onChanged: (b) {
             _showPageHint = b;
             var setting = widget.setting.copyWith(showPageHint: b);
-            widget.onSettingChanged.call(setting);
-            if (mounted) setState(() {});
-          },
-        ),
-        _buildSlider(
-          title: '滑动跳转至章节',
-          value: _useSwipeForChapter,
-          onChanged: (b) {
-            _useSwipeForChapter = b;
-            var setting = widget.setting.copyWith(useSwipeForChapter: b);
-            widget.onSettingChanged.call(setting);
-            if (mounted) setState(() {});
-          },
-        ),
-        _buildSlider(
-          title: '点击跳转至章节',
-          value: _useClickForChapter,
-          onChanged: (b) {
-            _useClickForChapter = b;
-            var setting = widget.setting.copyWith(useClickForChapter: b);
-            widget.onSettingChanged.call(setting);
-            if (mounted) setState(() {});
-          },
-        ),
-        _buildSlider(
-          title: '跳转章节时确认',
-          value: _needCheckForChapter,
-          onChanged: (b) {
-            _needCheckForChapter = b;
-            var setting = widget.setting.copyWith(needCheckForChapter: b);
             widget.onSettingChanged.call(setting);
             if (mounted) setState(() {});
           },
