@@ -5,6 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/index.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle(
+      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Color.fromRGBO(250, 250, 250, 1.0),
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
   runApp(const MyApp());
 }
 
@@ -20,10 +29,6 @@ class MyApp extends StatelessWidget {
         appBarTheme: AppBarTheme(
           centerTitle: true,
           toolbarHeight: 45,
-          systemOverlayStyle: SystemUiOverlayStyle(
-            systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-            systemNavigationBarIconBrightness: Brightness.dark,
-          ),
         ),
         scaffoldBackgroundColor: Color.fromRGBO(245, 245, 245, 1.0),
         pageTransitionsTheme: PageTransitionsTheme(

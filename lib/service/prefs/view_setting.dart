@@ -9,7 +9,6 @@ class ViewSettingPrefs {
   static const _showPageHintKey = 'ViewSettingPrefs_showPageHint'; // bool
   static const _enablePageSpaceKey = 'ViewSettingPrefs_enablePageSpace'; // bool
   static const _keepScreenOnKey = 'ViewSettingPrefs_keepScreenOn'; // bool
-  static const _fullscreenKey = 'ViewSettingPrefs_fullscreen'; // bool
   static const _preloadCountKey = 'ViewSettingPrefs_preloadCount'; // int
 
   static Future<ViewSetting> getSetting() async {
@@ -20,7 +19,6 @@ class ViewSettingPrefs {
       showPageHint: prefs.safeGetBool(_showPageHintKey) ?? def.showPageHint,
       enablePageSpace: prefs.safeGetBool(_enablePageSpaceKey) ?? def.enablePageSpace,
       keepScreenOn: prefs.safeGetBool(_keepScreenOnKey) ?? def.keepScreenOn,
-      fullscreen: prefs.safeGetBool(_fullscreenKey) ?? def.fullscreen,
       preloadCount: prefs.safeGetInt(_preloadCountKey) ?? def.preloadCount,
     );
   }
@@ -31,7 +29,6 @@ class ViewSettingPrefs {
     await prefs.setBool(_showPageHintKey, setting.showPageHint);
     await prefs.setBool(_enablePageSpaceKey, setting.enablePageSpace);
     await prefs.setBool(_keepScreenOnKey, setting.keepScreenOn);
-    await prefs.setBool(_fullscreenKey, setting.fullscreen);
     await prefs.setInt(_preloadCountKey, setting.preloadCount);
   }
 

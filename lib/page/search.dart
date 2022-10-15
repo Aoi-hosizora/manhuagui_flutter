@@ -338,7 +338,13 @@ class _SearchPageState extends State<SearchPage> {
                                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                   child: IconText(
                                     icon: Icon(Icons.search, color: Colors.black45),
-                                    text: Text('搜索 "$_text"'),
+                                    text: Flexible(
+                                      child: Text(
+                                        '搜索 "$_text"',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 onTap: () => _search(), // 搜索
@@ -366,9 +372,19 @@ class _SearchPageState extends State<SearchPage> {
                               InkWell(
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: IconText(
+                                  child: IconText.texts(
                                     icon: Icon(Icons.arrow_back, color: Colors.black45),
-                                    text: Text('返回 "$_q" 的搜索结果'),
+                                    texts: [
+                                      Text('返回 "'),
+                                      Flexible(
+                                        child: Text(
+                                          _q!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Text('" 的搜索结果'),
+                                    ],
                                   ),
                                 ),
                                 onTap: () => Navigator.of(context).maybePop(), // 返回
@@ -380,7 +396,13 @@ class _SearchPageState extends State<SearchPage> {
                                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                   child: IconText(
                                     icon: Icon(Icons.history, color: Colors.black45),
-                                    text: Text(h),
+                                    text: Flexible(
+                                      child: Text(
+                                        h,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 onTap: () {

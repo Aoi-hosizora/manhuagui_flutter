@@ -16,7 +16,6 @@ class ViewSetting {
     this.showBattery = false, // TODO
     required this.enablePageSpace,
     required this.keepScreenOn,
-    required this.fullscreen,
     required this.preloadCount,
   });
 
@@ -27,7 +26,6 @@ class ViewSetting {
   final bool showBattery; // 显示电源信息
   final bool enablePageSpace; // 显示页间空白
   final bool keepScreenOn; // 屏幕常亮
-  final bool fullscreen; // 全屏浏览
   final int preloadCount; // 预加载页数
 
   ViewSetting.defaultSetting()
@@ -39,7 +37,6 @@ class ViewSetting {
           showBattery: false,
           enablePageSpace: true,
           keepScreenOn: true,
-          fullscreen: false,
           preloadCount: 2,
         );
 
@@ -51,7 +48,6 @@ class ViewSetting {
     bool? showBattery,
     bool? enablePageSpace,
     bool? keepScreenOn,
-    bool? fullscreen,
     int? preloadCount,
   }) {
     return ViewSetting(
@@ -62,7 +58,6 @@ class ViewSetting {
       showNetwork: showNetwork ?? this.showNetwork,
       showBattery: showBattery ?? this.showBattery,
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
-      fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
     );
   }
@@ -87,7 +82,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late bool _showPageHint = widget.setting.showPageHint;
   late bool _enablePageSpace = widget.setting.enablePageSpace;
   late bool _keepScreenOn = widget.setting.keepScreenOn;
-  late bool _fullscreen = widget.setting.fullscreen;
   late int _preloadCount = widget.setting.preloadCount;
 
   Widget _buildComboBox<T>({
@@ -184,16 +178,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           onChanged: (b) {
             _keepScreenOn = b;
             var setting = widget.setting.copyWith(keepScreenOn: b);
-            widget.onSettingChanged.call(setting);
-            if (mounted) setState(() {});
-          },
-        ),
-        _buildSwitcher(
-          title: '全屏浏览',
-          value: _fullscreen,
-          onChanged: (b) {
-            _fullscreen = b;
-            var setting = widget.setting.copyWith(fullscreen: b);
             widget.onSettingChanged.call(setting);
             if (mounted) setState(() {});
           },

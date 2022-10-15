@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:photo_view/photo_view.dart';
 
+/// 基本与 [ReloadablePhotoViewGallery] 保持一致
 class ExtendedPhotoGalleryView extends StatefulWidget {
   const ExtendedPhotoGalleryView({
     Key? key,
     required this.imageCount,
-    required this.firstPageBuilder,
+    required this.firstPageBuilder, // <<<
     required this.imagePageBuilder,
-    required this.lastPageBuilder,
+    required this.lastPageBuilder, // <<<
     this.backgroundDecoration,
     this.wantKeepAlive = false,
     this.gaplessPlayback = false,
@@ -23,13 +24,12 @@ class ExtendedPhotoGalleryView extends StatefulWidget {
     this.customSize,
     this.pageMainAxisAverageSize,
     this.preloadPagesCount = 0,
-    this.onPointerMove,
   }) : super(key: key);
 
   final int imageCount;
-  final Widget Function(BuildContext context) firstPageBuilder;
-  final ReloadablePhotoViewGalleryPageOptions Function(BuildContext context, int index) imagePageBuilder;
-  final Widget Function(BuildContext context) lastPageBuilder;
+  final Widget Function(BuildContext context) firstPageBuilder; // <<<
+  final ExtendedPhotoGalleryPageOptions Function(BuildContext context, int index) imagePageBuilder;
+  final Widget Function(BuildContext context) lastPageBuilder; // <<<
   final ScrollPhysics? scrollPhysics;
   final BoxDecoration? backgroundDecoration;
   final bool wantKeepAlive;
@@ -44,7 +44,6 @@ class ExtendedPhotoGalleryView extends StatefulWidget {
   final Axis scrollDirection;
   final double? pageMainAxisAverageSize;
   final int preloadPagesCount;
-  final void Function(PointerMoveEvent)? onPointerMove; // <<<
 
   @override
   State<StatefulWidget> createState() => ExtendedPhotoGalleryViewState();
@@ -87,46 +86,41 @@ class ExtendedPhotoGalleryViewState extends State<ExtendedPhotoGalleryView> {
   // without extra pages, starts from 0.
   Widget _buildItem(BuildContext context, int index) {
     final pageOption = widget.imagePageBuilder(context, index);
-    final view = ClipRect(
-      child: ValueListenableBuilder<String>(
-        valueListenable: _notifiers[index], // <<<
-        builder: (_, v, __) => PhotoView(
-          key: ValueKey('$index-$v') /* ObjectKey(index) */,
-          imageProvider: pageOption.imageProviderBuilder(ValueKey('$index-$v')),
-          backgroundDecoration: widget.backgroundDecoration,
-          wantKeepAlive: widget.wantKeepAlive,
-          controller: pageOption.controller,
-          scaleStateController: pageOption.scaleStateController,
-          customSize: widget.customSize,
-          gaplessPlayback: widget.gaplessPlayback,
-          heroAttributes: pageOption.heroAttributes,
-          scaleStateChangedCallback: _scaleStateChangedCallback,
-          enableRotation: widget.enableRotation,
-          initialScale: pageOption.initialScale,
-          minScale: pageOption.minScale,
-          maxScale: pageOption.maxScale,
-          scaleStateCycle: pageOption.scaleStateCycle,
-          onTapUp: pageOption.onTapUp,
-          onTapDown: pageOption.onTapDown,
-          onScaleEnd: pageOption.onScaleEnd,
-          gestureDetectorBehavior: pageOption.gestureDetectorBehavior,
-          tightMode: pageOption.tightMode,
-          filterQuality: pageOption.filterQuality,
-          basePosition: pageOption.basePosition,
-          disableGestures: pageOption.disableGestures,
-          loadingBuilder: pageOption.loadingBuilder,
-          errorBuilder: pageOption.errorBuilder,
+    return GestureDetector(
+      onLongPress: pageOption.onLongPress, // <<<
+      child: ClipRect(
+        child: ValueListenableBuilder<String>(
+          valueListenable: _notifiers[index],
+          builder: (_, v, __) => PhotoView(
+            key: ValueKey('$index-$v'),
+            imageProvider: pageOption.imageProviderBuilder(ValueKey('$index-$v')),
+            backgroundDecoration: widget.backgroundDecoration,
+            wantKeepAlive: widget.wantKeepAlive,
+            controller: pageOption.controller,
+            scaleStateController: pageOption.scaleStateController,
+            customSize: widget.customSize,
+            gaplessPlayback: widget.gaplessPlayback,
+            heroAttributes: pageOption.heroAttributes,
+            scaleStateChangedCallback: _scaleStateChangedCallback,
+            enableRotation: widget.enableRotation,
+            initialScale: pageOption.initialScale,
+            minScale: pageOption.minScale,
+            maxScale: pageOption.maxScale,
+            scaleStateCycle: pageOption.scaleStateCycle,
+            onTapUp: pageOption.onTapUp,
+            onTapDown: pageOption.onTapDown,
+            onScaleEnd: pageOption.onScaleEnd,
+            gestureDetectorBehavior: pageOption.gestureDetectorBehavior,
+            tightMode: pageOption.tightMode,
+            filterQuality: pageOption.filterQuality,
+            basePosition: pageOption.basePosition,
+            disableGestures: pageOption.disableGestures,
+            loadingBuilder: pageOption.loadingBuilder,
+            errorBuilder: pageOption.errorBuilder,
+          ),
         ),
       ),
     );
-
-    if (widget.onPointerMove != null) {
-      return Listener(
-        onPointerMove: widget.onPointerMove, // <<<
-        child: view,
-      );
-    }
-    return view;
   }
 
   @override
@@ -153,4 +147,49 @@ class ExtendedPhotoGalleryViewState extends State<ExtendedPhotoGalleryView> {
       ),
     );
   }
+}
+
+/// 基本与 [ReloadablePhotoViewGalleryPageOptions] 保持一致
+class ExtendedPhotoGalleryPageOptions {
+  const ExtendedPhotoGalleryPageOptions({
+    required this.imageProviderBuilder,
+    this.heroAttributes,
+    this.minScale,
+    this.maxScale,
+    this.initialScale,
+    this.controller,
+    this.scaleStateController,
+    this.basePosition,
+    this.scaleStateCycle,
+    this.onTapDown,
+    this.onTapUp,
+    this.onLongPress, // <<<
+    this.onScaleEnd,
+    this.gestureDetectorBehavior,
+    this.tightMode,
+    this.filterQuality,
+    this.disableGestures,
+    this.loadingBuilder,
+    this.errorBuilder,
+  });
+
+  final ImageProvider Function(ValueKey key) imageProviderBuilder;
+  final PhotoViewHeroAttributes? heroAttributes;
+  final dynamic minScale;
+  final dynamic maxScale;
+  final dynamic initialScale;
+  final PhotoViewController? controller;
+  final PhotoViewScaleStateController? scaleStateController;
+  final Alignment? basePosition;
+  final ScaleStateCycle? scaleStateCycle;
+  final PhotoViewImageTapDownCallback? onTapDown;
+  final PhotoViewImageTapUpCallback? onTapUp;
+  final void Function()? onLongPress; // <<<
+  final PhotoViewImageScaleEndCallback? onScaleEnd;
+  final HitTestBehavior? gestureDetectorBehavior;
+  final bool? tightMode;
+  final bool? disableGestures;
+  final FilterQuality? filterQuality;
+  final LoadingBuilder? loadingBuilder;
+  final ImageErrorWidgetBuilder? errorBuilder;
 }

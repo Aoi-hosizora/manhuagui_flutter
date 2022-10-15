@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:photo_view/photo_view.dart';
@@ -45,6 +46,7 @@ class MangaGalleryView extends StatefulWidget {
 
 class MangaGalleryViewState extends State<MangaGalleryView> {
   final _galleryKey = GlobalKey<ExtendedPhotoGalleryViewState>();
+  final CacheManager _cache = DefaultCacheManager();
   late var _controller = PageController(
     initialPage: widget.initialImageIndex - 1 + 1, // without extra pages, starts from 0
     viewportFraction: widget.viewportFraction,
@@ -70,34 +72,13 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   }
 
   Offset? _pointerDownPosition;
-  bool _pointerMoved = false;
-  var _longPressed = false;
 
   void _onPointerDown(Offset pos) {
     _pointerDownPosition = pos;
-    _longPressed = false;
-
-    Future.delayed(Duration(milliseconds: 500), () async {
-      if (_pointerDownPosition != null && !_pointerMoved) {
-        // tapped down, no swiped
-        _longPressed = true;
-        await _onLongPressed();
-
-        // restore
-        _pointerDownPosition = null;
-        _pointerMoved = false;
-        _longPressed = false;
-      }
-    });
-  }
-
-  void _onPointerMove(Offset pos) {
-    _pointerMoved = true; // _pointerDownPosition != pos
   }
 
   void _onPointerUp(Offset pos) {
-    if (_pointerDownPosition != null && !_pointerMoved && !_longPressed) {
-      // tapped down, no swiped, no long pressed
+    if (_pointerDownPosition != null && _pointerDownPosition == pos) {
       var width = MediaQuery.of(context).size.width;
       if (pos.dx < width * widget.slideWidthRatio) {
         _jumpToPage(!widget.reverseScroll ? _currentPageIndex - 1 : _currentPageIndex + 1); // 上一页 / 下一页(反)
@@ -107,11 +88,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         widget.onCenterAreaTapped?.call();
       }
     }
-
-    // restore
     _pointerDownPosition = null;
-    _pointerMoved = false;
-    _longPressed = false;
   }
 
   Future<void> _onLongPressed() async {
@@ -122,7 +99,10 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       items: [
         IconTextMenuItem(
           iconText: IconText.simple(Icons.refresh, '重新加载'),
-          action: () => _galleryKey.currentState?.reload(_currentImageIndex), // without extra pages, starts from 0
+          action: () async {
+            await _cache.removeFile(widget.imageUrls[_currentImageIndex]);
+            _galleryKey.currentState?.reload(_currentImageIndex); // without extra pages, starts from 0
+          },
         ),
         IconTextMenuItem(
           iconText: IconText.simple(Icons.download, '保存该页'),
@@ -167,39 +147,41 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       // ****************************************************************
       // 漫画页
       // ****************************************************************
-      imagePageBuilder: (c, idx) => ReloadablePhotoViewGalleryPageOptions(
+      imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
         initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained / 2,
         maxScale: PhotoViewComputedScale.covered * 2,
         filterQuality: FilterQuality.high,
         onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
         onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
-        imageProviderBuilder: (_) => LocalOrCachedNetworkImageProvider.fromNetwork(
+        onLongPress: () => _onLongPressed(),
+        imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
+          key: key,
           url: widget.imageUrls[idx],
+          cacheManager: _cache,
           headers: {
             'User-Agent': USER_AGENT,
             'Referer': REFERER,
           },
         ),
-        loadingBuilder: (_, ev) => Listener(
-          onPointerDown: (e) => _onPointerDown(e.position),
-          onPointerMove: (e) => _onPointerMove(e.position),
-          onPointerUp: (e) => _onPointerUp(e.position),
+        loadingBuilder: (_, ev) => GestureDetector(
+          onTapDown: (d) => _onPointerDown(d.globalPosition),
+          onTapUp: (d) => _onPointerUp(d.globalPosition),
+          onLongPress: () => _onLongPressed(),
           child: ImageLoadingView(
             title: (_currentImageIndex + 1).toString(),
             event: ev,
           ),
         ),
-        errorBuilder: (_, __, ___) => Listener(
-          onPointerDown: (e) => _onPointerDown(e.position),
-          onPointerMove: (e) => _onPointerMove(e.position),
-          onPointerUp: (e) => _onPointerUp(e.position),
+        errorBuilder: (_, __, ___) => GestureDetector(
+          onTapDown: (d) => _onPointerDown(d.globalPosition),
+          onTapUp: (d) => _onPointerUp(d.globalPosition),
+          onLongPress: () => _onLongPressed(),
           child: ImageLoadFailedView(
             title: (_currentImageIndex + 1).toString(),
           ),
         ),
       ),
-      onPointerMove: (e) => _onPointerMove(e.position) /* <<< */,
       // ****************************************************************
       // 首页和尾页
       // ****************************************************************
