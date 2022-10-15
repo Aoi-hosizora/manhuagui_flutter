@@ -16,6 +16,7 @@ class MangaTocView extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    this.predicate,
   }) : super(key: key);
 
   final List<MangaChapterGroup> groups;
@@ -26,6 +27,7 @@ class MangaTocView extends StatefulWidget {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final bool Function(int cid)? predicate;
 
   @override
   _MangaTocViewState createState() => _MangaTocViewState();
@@ -133,10 +135,25 @@ class _MangaTocViewState extends State<MangaTocView> {
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                   ),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (c) => chapter != null
-                          ? MangaViewerPage(
+                  onPressed: () {
+                    if (chapter == null) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => MangaTocPage(
+                            mid: widget.mangaId,
+                            mangaTitle: widget.mangaTitle,
+                            mangaCover: widget.mangaCover,
+                            mangaUrl: widget.mangaUrl,
+                            groups: widget.groups,
+                          ),
+                        ),
+                      );
+                    } else {
+                      var ok = widget.predicate?.call(chapter.cid) ?? true;
+                      if (ok) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (c) => MangaViewerPage(
                               mid: chapter.mid,
                               mangaTitle: widget.mangaTitle,
                               mangaCover: widget.mangaCover,
@@ -146,16 +163,12 @@ class _MangaTocViewState extends State<MangaTocView> {
                               initialPage: widget.highlightedChapter == chapter.cid
                                   ? widget.lastChapterPage // has read
                                   : 1, // has not read
-                            )
-                          : MangaTocPage(
-                              mid: widget.mangaId,
-                              mangaTitle: widget.mangaTitle,
-                              mangaCover: widget.mangaCover,
-                              mangaUrl: widget.mangaUrl,
-                              groups: widget.groups,
                             ),
-                    ),
-                  ),
+                          ),
+                        );
+                      }
+                    }
+                  },
                 ),
               ),
             ),

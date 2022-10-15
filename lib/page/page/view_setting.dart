@@ -1,40 +1,68 @@
 import 'package:flutter/material.dart';
 
+enum ViewDirection {
+  leftToRight,
+  rightToLeft,
+  topToBottom, // TODO
+}
+
 /// 漫画章节浏览页-设置对话框
 class ViewSetting {
   ViewSetting({
     required this.reverseScroll,
     required this.showPageHint,
+    this.showNowTime = true, // TODO
+    this.showNetwork = false, // TODO
+    this.showBattery = false, // TODO
     required this.enablePageSpace,
+    required this.keepScreenOn,
+    required this.fullscreen,
     required this.preloadCount,
   });
 
-  final bool reverseScroll; // 反转拖动
-  final bool showPageHint; // 显示页码提示
-  final bool enablePageSpace; // 显示页面间隔
+  final bool reverseScroll; // 反向拖动
+  final bool showPageHint; // 显示提示信息
+  final bool showNowTime; // 显示当前时间
+  final bool showNetwork; // 显示网络信息
+  final bool showBattery; // 显示电源信息
+  final bool enablePageSpace; // 显示页间空白
+  final bool keepScreenOn; // 屏幕常亮
+  final bool fullscreen; // 全屏浏览
   final int preloadCount; // 预加载页数
 
   ViewSetting.defaultSetting()
       : this(
           reverseScroll: false,
           showPageHint: true,
+          showNowTime: true,
+          showNetwork: false,
+          showBattery: false,
           enablePageSpace: true,
+          keepScreenOn: true,
+          fullscreen: false,
           preloadCount: 2,
         );
 
   ViewSetting copyWith({
     bool? reverseScroll,
     bool? showPageHint,
-    bool? useSwipeForChapter,
-    bool? useClickForChapter,
-    bool? needCheckForChapter,
+    bool? showNowTime,
+    bool? showNetwork,
+    bool? showBattery,
     bool? enablePageSpace,
+    bool? keepScreenOn,
+    bool? fullscreen,
     int? preloadCount,
   }) {
     return ViewSetting(
       reverseScroll: reverseScroll ?? this.reverseScroll,
       showPageHint: showPageHint ?? this.showPageHint,
       enablePageSpace: enablePageSpace ?? this.enablePageSpace,
+      showNowTime: showNowTime ?? this.showNowTime,
+      showNetwork: showNetwork ?? this.showNetwork,
+      showBattery: showBattery ?? this.showBattery,
+      keepScreenOn: keepScreenOn ?? this.keepScreenOn,
+      fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
     );
   }
@@ -58,9 +86,11 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late bool _reverseScroll = widget.setting.reverseScroll;
   late bool _showPageHint = widget.setting.showPageHint;
   late bool _enablePageSpace = widget.setting.enablePageSpace;
+  late bool _keepScreenOn = widget.setting.keepScreenOn;
+  late bool _fullscreen = widget.setting.fullscreen;
   late int _preloadCount = widget.setting.preloadCount;
 
-  Widget _buildCombo<T>({
+  Widget _buildComboBox<T>({
     required String title,
     double width = 120,
     required T value,
@@ -87,7 +117,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     );
   }
 
-  Widget _buildSlider({
+  Widget _buildSwitcher({
     required String title,
     required bool value,
     required void Function(bool) onChanged,
@@ -113,7 +143,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildCombo<bool>(
+        _buildComboBox<bool>(
           title: '阅读方向',
           value: _reverseScroll,
           values: [false, true],
@@ -128,8 +158,8 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
-        _buildSlider(
-          title: '显示页码',
+        _buildSwitcher(
+          title: '显示提示信息', // TODO
           value: _showPageHint,
           onChanged: (b) {
             _showPageHint = b;
@@ -138,8 +168,8 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
-        _buildSlider(
-          title: '显示页面间隔',
+        _buildSwitcher(
+          title: '显示页间空白',
           value: _enablePageSpace,
           onChanged: (b) {
             _enablePageSpace = b;
@@ -148,7 +178,27 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
-        _buildCombo<int>(
+        _buildSwitcher(
+          title: '屏幕常亮',
+          value: _keepScreenOn,
+          onChanged: (b) {
+            _keepScreenOn = b;
+            var setting = widget.setting.copyWith(keepScreenOn: b);
+            widget.onSettingChanged.call(setting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildSwitcher(
+          title: '全屏浏览',
+          value: _fullscreen,
+          onChanged: (b) {
+            _fullscreen = b;
+            var setting = widget.setting.copyWith(fullscreen: b);
+            widget.onSettingChanged.call(setting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildComboBox<int>(
           title: '预加载页数',
           width: 80,
           value: _preloadCount.clamp(0, 5),

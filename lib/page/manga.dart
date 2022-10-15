@@ -20,6 +20,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/natives/share.dart';
 
 /// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
@@ -435,7 +436,7 @@ class _MangaPageState extends State<MangaPage> {
                   child: Material(
                     color: Colors.transparent,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35, vertical: 6),
+                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 6),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -448,7 +449,7 @@ class _MangaPageState extends State<MangaPage> {
                           _buildAction(
                             text: '漫画下载',
                             icon: Icons.download,
-                            action: () => Fluttertoast.showToast(msg: 'TODO'), // TODO
+                            action: () => Fluttertoast.showToast(msg: 'TODO'), // TODO download manga
                           ),
                           _buildAction(
                             text: _history?.read == true ? '继续阅读' : '开始阅读',
@@ -469,6 +470,14 @@ class _MangaPageState extends State<MangaPage> {
                               MaterialPageRoute(
                                 builder: (c) => MangaDetailPage(data: _data!),
                               ),
+                            ),
+                          ),
+                          _buildAction(
+                            text: '分享漫画',
+                            icon: Icons.share,
+                            action: () => shareText(
+                              title: '【漫画柜】${_data!.title}', // TODO without test
+                              link: _data!.url,
                             ),
                           ),
                         ],
@@ -633,13 +642,13 @@ class _MangaPageState extends State<MangaPage> {
                   color: Colors.white,
                   child: MangaTocView(
                     groups: _data!.chapterGroups,
-                    full: false,
-                    highlightedChapter: _history?.chapterId ?? 0,
-                    lastChapterPage: _history?.chapterPage ?? 1,
                     mangaId: _data!.mid,
                     mangaTitle: _data!.title,
                     mangaCover: _data!.cover,
                     mangaUrl: _data!.url,
+                    full: false,
+                    highlightedChapter: _history?.chapterId ?? 0,
+                    lastChapterPage: _history?.chapterPage ?? 1,
                   ),
                 ),
                 Container(height: 12),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:photo_view/photo_view.dart';
 
-class ExtendedPhotoViewGallery extends StatefulWidget {
-  const ExtendedPhotoViewGallery({
+class ExtendedPhotoGalleryView extends StatefulWidget {
+  const ExtendedPhotoGalleryView({
     Key? key,
     required this.imageCount,
     required this.firstPageBuilder,
@@ -23,6 +23,7 @@ class ExtendedPhotoViewGallery extends StatefulWidget {
     this.customSize,
     this.pageMainAxisAverageSize,
     this.preloadPagesCount = 0,
+    this.onPointerMove,
   }) : super(key: key);
 
   final int imageCount;
@@ -43,30 +44,36 @@ class ExtendedPhotoViewGallery extends StatefulWidget {
   final Axis scrollDirection;
   final double? pageMainAxisAverageSize;
   final int preloadPagesCount;
+  final void Function(PointerMoveEvent)? onPointerMove; // <<<
 
   @override
-  State<StatefulWidget> createState() => ExtendedPhotoViewGalleryState();
+  State<StatefulWidget> createState() => ExtendedPhotoGalleryViewState();
 }
 
-class ExtendedPhotoViewGalleryState extends State<ExtendedPhotoViewGallery> {
+class ExtendedPhotoGalleryViewState extends State<ExtendedPhotoGalleryView> {
   late var _controller = widget.pageController ?? PageController();
+
+  // reload notifiers, without extra pages, starts from 0.
   late List<ValueNotifier<String>> _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
 
+  // current page index, with extra pages, starts from 0.
   int get currentPage => _controller.hasClients ? _controller.page!.floor() : 0;
 
-  int get itemCount => widget.imageCount;
+  // page total, with extra pages, starts from 0.
+  int get pageCount => widget.imageCount + 2;
 
+  // reload image page, without extra pages, starts from 0.
   void reload(int index) {
     _notifiers[index].value = DateTime.now().microsecondsSinceEpoch.toString();
   }
 
   @override
-  void didUpdateWidget(covariant ExtendedPhotoViewGallery oldWidget) {
+  void didUpdateWidget(covariant ExtendedPhotoGalleryView oldWidget) {
     if (widget.imageCount != oldWidget.imageCount) {
       _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
     }
     if (widget.pageController != oldWidget.pageController) {
-      _controller = widget.pageController ?? PageController();
+      _controller = widget.pageController ?? PageController(); // <<<
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -77,9 +84,10 @@ class ExtendedPhotoViewGalleryState extends State<ExtendedPhotoViewGallery> {
     }
   }
 
+  // without extra pages, starts from 0.
   Widget _buildItem(BuildContext context, int index) {
     final pageOption = widget.imagePageBuilder(context, index);
-    return ClipRect(
+    final view = ClipRect(
       child: ValueListenableBuilder<String>(
         valueListenable: _notifiers[index], // <<<
         builder: (_, v, __) => PhotoView(
@@ -111,6 +119,14 @@ class ExtendedPhotoViewGalleryState extends State<ExtendedPhotoViewGallery> {
         ),
       ),
     );
+
+    if (widget.onPointerMove != null) {
+      return Listener(
+        onPointerMove: widget.onPointerMove, // <<<
+        child: view,
+      );
+    }
+    return view;
   }
 
   @override
@@ -123,12 +139,12 @@ class ExtendedPhotoViewGalleryState extends State<ExtendedPhotoViewGallery> {
         onPageChanged: widget.onPageChanged,
         itemCount: widget.imageCount + 2,
         itemBuilder: (context, index) => FractionallySizedBox(
-          widthFactor: widget.keepViewportWidth ? 1 / (widget.pageController?.viewportFraction ?? 1) : 1, // <<<
+          widthFactor: widget.keepViewportWidth ? 1 / (widget.pageController?.viewportFraction ?? 1) : 1,
           child: index == 0
               ? widget.firstPageBuilder(context)
               : index == widget.imageCount + 1
                   ? widget.lastPageBuilder(context)
-                  : _buildItem(context, index - 1),
+                  : _buildItem(context, index - 1), // <<< without extra pages, starts from 0
         ),
         scrollDirection: widget.scrollDirection,
         physics: widget.scrollPhysics,
