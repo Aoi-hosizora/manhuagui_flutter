@@ -9,6 +9,7 @@ class NetworkImageView extends StatelessWidget {
     required this.width,
     required this.height,
     this.fit = BoxFit.cover,
+    this.border,
     this.radius,
   }) : super(key: key);
 
@@ -16,17 +17,19 @@ class NetworkImageView extends StatelessWidget {
   final double width;
   final double height;
   final BoxFit fit;
+  final BoxBorder? border;
   final BorderRadius? radius;
 
   @override
   Widget build(BuildContext context) {
-    var url =this.url;
+    var url = this.url;
     if (url.startsWith('//')) {
       url = 'https:$url';
     }
     return ClipRRect(
       borderRadius: radius ?? BorderRadius.zero,
-      child: SizedBox(
+      child: Container(
+        decoration: border == null ? null : BoxDecoration(border: border),
         width: width,
         height: height,
         child: CachedNetworkImage(

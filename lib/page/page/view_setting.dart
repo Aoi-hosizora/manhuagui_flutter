@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// 漫画章节浏览页-浏览设置
+/// 漫画章节阅读页-阅读设置
 
 class ViewSetting {
   ViewSetting({
     required this.viewDirection,
     required this.showPageHint,
-    this.showClock = true, // TODO
-    this.showNetwork = false, // TODO
-    this.showBattery = false, // TODO
+    this.showClock = true,
+    this.showNetwork = false,
+    this.showBattery = false,
     required this.enablePageSpace,
     required this.keepScreenOn,
     required this.fullscreen,
@@ -139,7 +139,10 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.bodyText1,
+        ),
         SizedBox(
           height: 38,
           width: width,
@@ -164,7 +167,10 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.bodyText1,
+        ),
         SizedBox(
           height: 38,
           child: Switch(
@@ -183,7 +189,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildComboBox<ViewDirection>(
-          title: '阅读方向',
+          title: '阅读方向　　　　　　　　',
           value: _viewDirection,
           values: [ViewDirection.leftToRight, ViewDirection.rightToLeft],
           builder: (s) => Text(

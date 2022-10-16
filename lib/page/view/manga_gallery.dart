@@ -5,8 +5,6 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/vertical_gallery.dart';
 import 'package:photo_view/photo_view.dart';
 
-// TODO
-
 /// 漫画画廊展示，在 [MangaViewerPage] 使用
 class MangaGalleryView extends StatefulWidget {
   const MangaGalleryView({
@@ -53,7 +51,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   );
 
   // current page index, include extra pages, starts from 0.
-  var _currentPageIndex = 0;
+  late var _currentPageIndex = widget.initialImageIndex - 1 + 1;
 
   // current image index, exclude extra pages, starts from 0.
   int get _currentImageIndex => (_currentPageIndex - 1).clamp(0, widget.imageCount - 1);
@@ -181,9 +179,9 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
         ),
       ),
-      onImageLongPressed: () => _onLongPressed() /* TODO bug ??? */,
+      onImageLongPressed: () => _onLongPressed(),
       // ****************************************************************
-      // 首页和尾页
+      // 额外页
       // ****************************************************************
       firstPageBuilder: (c) => Container(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -191,7 +189,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
         ),
-        child: widget.firstPageBuilder.call(c), // 首页
+        child: widget.firstPageBuilder.call(c), // 额外页-开头
       ),
       lastPageBuilder: (c) => Container(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -199,7 +197,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
         ),
-        child: widget.lastPageBuilder.call(c), // 尾页
+        child: widget.lastPageBuilder.call(c), // 额外页-末尾
       ),
     );
   }

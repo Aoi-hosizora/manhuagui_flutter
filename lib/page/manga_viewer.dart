@@ -11,6 +11,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
@@ -28,7 +29,7 @@ import 'package:wakelock/wakelock.dart';
 
 // TODO
 
-/// 漫画章节浏览页
+/// 漫画章节阅读页
 class MangaViewerPage extends StatefulWidget {
   const MangaViewerPage({
     Key? key,
@@ -364,43 +365,21 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             preferredSize: Size.fromHeight(Theme.of(context).appBarTheme.toolbarHeight!),
             child: AnimatedSwitcher(
               duration: _kAnimationDuration,
-              child: _loading || _data == null
-                  ? SizedBox(height: 0)
-                  : _inExtraPage // TODO
-                      ? AppBar(
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          leading: IconButton(
-                            icon: Icon(Icons.arrow_back, color: Colors.black54),
-                            tooltip: '返回',
-                            onPressed: () => Navigator.of(context).maybePop(),
-                          ),
-                        )
-                      : !_ScreenHelper.showAppBar
-                          ? SizedBox(height: 0)
-                          : AppBar(
-                              backgroundColor: Colors.black.withOpacity(0.65),
-                              elevation: 0,
-                              title: Text(
-                                _data!.title,
-                                style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),
-                              ),
-                              leading: IconButton(
-                                icon: Icon(Icons.arrow_back),
-                                tooltip: '返回',
-                                onPressed: () => Navigator.of(context).maybePop(),
-                              ),
-                              actions: [
-                                IconButton(
-                                  icon: Icon(Icons.open_in_browser),
-                                  tooltip: '用浏览器打开',
-                                  onPressed: () => launchInBrowser(
-                                    context: context,
-                                    url: _data!.url,
-                                  ),
-                                ),
-                              ],
-                            ),
+              child: !(!_loading && _data != null && _ScreenHelper.showAppBar && !_inExtraPage)
+                  ? SizedBox(height: 0) // TODO extra page full screen
+                  : AppBar(
+                      backgroundColor: Colors.black.withOpacity(0.65),
+                      elevation: 0,
+                      title: Text(
+                        _data!.title,
+                        style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),
+                      ),
+                      leading: IconButton(
+                        icon: Icon(Icons.arrow_back),
+                        tooltip: '返回',
+                        onPressed: () => Navigator.of(context).maybePop(),
+                      ),
+                    ),
             ),
           ),
           body: PlaceholderText(
@@ -445,63 +424,27 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       _ScreenHelper.toggleAppBarVisibility(show: !_ScreenHelper.showAppBar, fullscreen: _setting.fullscreen);
                       if (mounted) setState(() {});
                     },
-                    firstPageBuilder: (c) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(_data!.mangaTitle),
-                          Text(_data!.title),
-                          OutlinedButton(
-                            child: Text('开始阅读'),
-                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(1),
-                          ),
-                          if (_data!.prevCid != 0)
-                            OutlinedButton(
-                              child: Text('阅读上一章节: ${widget.chapterGroups.findTitle(_data!.prevCid) ?? '未知话'}'),
-                              onPressed: () => _gotoChapter(gotoPrevious: true),
-                            ),
-                          if (_data!.nextCid != 0)
-                            OutlinedButton(
-                              child: Text('阅读下一章节: ${widget.chapterGroups.findTitle(_data!.nextCid) ?? '未知话'}'),
-                              onPressed: () => _gotoChapter(gotoPrevious: false),
-                            ),
-                          OutlinedButton(
-                            child: Text('漫画目录'),
-                            onPressed: () => _onTocPressed(),
-                          ),
-                        ],
-                      ),
+                    firstPageBuilder: (c) => ViewExtraSubPage(
+                      isHeader: true,
+                      chapter: _data!,
+                      mangaCover: widget.mangaCover,
+                      chapterGroups: widget.chapterGroups,
+                      onJumpToImage: (index) => _mangaGalleryViewKey.currentState?.jumpToImage(index),
+                      onGotoChapter: _gotoChapter,
+                      onShowToc: _onTocPressed,
+                        onShowComments: (){}, // TODO
+                      onPop: () => Navigator.of(context).maybePop(),
                     ),
-                    lastPageBuilder: (c) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(_data!.mangaTitle),
-                          Text(_data!.title),
-                          OutlinedButton(
-                            child: Text('重新阅读'),
-                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(1),
-                          ),
-                          OutlinedButton(
-                            child: Text('返回上一页'),
-                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(_data!.pages.length),
-                          ),
-                          if (_data!.prevCid != 0)
-                            OutlinedButton(
-                              child: Text('阅读上一章节: ${widget.chapterGroups.findTitle(_data!.prevCid) ?? '未知话'}'),
-                              onPressed: () => _gotoChapter(gotoPrevious: true),
-                            ),
-                          if (_data!.nextCid != 0)
-                            OutlinedButton(
-                              child: Text('阅读下一章节: ${widget.chapterGroups.findTitle(_data!.nextCid) ?? '未知话'}'),
-                              onPressed: () => _gotoChapter(gotoPrevious: false),
-                            ),
-                          OutlinedButton(
-                            child: Text('漫画目录'),
-                            onPressed: () => _onTocPressed(),
-                          ),
-                        ],
-                      ),
+                    lastPageBuilder: (c) => ViewExtraSubPage(
+                      isHeader: false,
+                      chapter: _data!,
+                      mangaCover: widget.mangaCover,
+                      chapterGroups: widget.chapterGroups,
+                      onJumpToImage: (index) => _mangaGalleryViewKey.currentState?.jumpToImage(index),
+                      onGotoChapter: _gotoChapter,
+                      onShowToc: _onTocPressed,
+                      onShowComments: (){}, // TODO
+                      onPop: () => Navigator.of(context).maybePop(),
                     ),
                   ),
                 ),
@@ -705,11 +648,15 @@ class _ScreenHelper {
     if (_showAppBar == true && show == false) {
       _showAppBar = show;
       _setState();
-      await Future.delayed(_kAnimationDuration + Duration(milliseconds: 50));
-      await _ScreenHelper.setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: false);
+      if (fullscreen) {
+        await Future.delayed(_kAnimationDuration + Duration(milliseconds: 50));
+        await _ScreenHelper.setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: false);
+      }
     } else if (_showAppBar == false && show == true) {
-      await _ScreenHelper.setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: true);
-      await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));
+      if (fullscreen) {
+        await _ScreenHelper.setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: true);
+        await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));
+      }
       _showAppBar = show;
       _setState();
     }

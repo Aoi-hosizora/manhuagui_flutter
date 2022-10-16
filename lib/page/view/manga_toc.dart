@@ -10,23 +10,23 @@ class MangaTocView extends StatefulWidget {
     Key? key,
     required this.groups,
     required this.full,
-    this.highlightedChapter = 0,
-    this.lastChapterPage = 1,
     required this.mangaId,
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    this.highlightedChapter = 0,
+    this.lastChapterPage = 1,
     this.predicate,
   }) : super(key: key);
 
   final List<MangaChapterGroup> groups;
   final bool full;
-  final int highlightedChapter;
-  final int lastChapterPage;
   final int mangaId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final int highlightedChapter;
+  final int lastChapterPage;
   final bool Function(int cid)? predicate;
 
   @override

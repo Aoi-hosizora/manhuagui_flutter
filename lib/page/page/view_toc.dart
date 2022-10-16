@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 
-/// 漫画章节浏览页-章节目录
+/// 漫画章节阅读页-章节目录
 class ViewTocSubPage extends StatefulWidget {
   const ViewTocSubPage({
     Key? key,
@@ -55,7 +55,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('漫画章节目录'),
+        title: Text(widget.mangaTitle),
       ),
       body: PlaceholderText(
         state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
