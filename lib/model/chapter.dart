@@ -48,3 +48,16 @@ class MangaChapterGroup {
 
   Map<String, dynamic> toJson() => _$MangaChapterGroupToJson(this);
 }
+
+extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
+  String? findTitle(int cid) {
+    for (var group in this) {
+      for (var chapter in group.chapters) {
+        if (chapter.cid == cid) {
+          return chapter.title;
+        }
+      }
+    }
+    return null;
+  }
+}

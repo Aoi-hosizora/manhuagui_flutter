@@ -150,7 +150,6 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                         _lastType = _currType;
                         _currType = t;
                         if (mounted) setState(() {});
-                        print('${_currType.title} ${_lastType.title}');
                         _rdvKey.currentState?.refresh();
                       }
                     },

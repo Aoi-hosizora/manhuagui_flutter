@@ -5,8 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ViewSettingPrefs {
   ViewSettingPrefs._();
 
-  static const _scrollDirectionKey = 'ViewSettingPrefs_scrollDirection'; // bool
+  static const _viewDirectionKey = 'ViewSettingPrefs_viewDirection'; // int
   static const _showPageHintKey = 'ViewSettingPrefs_showPageHint'; // bool
+  static const _showClockKey = 'ViewSettingPrefs_showClock'; // bool
+  static const _showNetworkKey = 'ViewSettingPrefs_showNetwork'; // bool
+  static const _showBatteryKey = 'ViewSettingPrefs_showBattery'; // bool
   static const _enablePageSpaceKey = 'ViewSettingPrefs_enablePageSpace'; // bool
   static const _keepScreenOnKey = 'ViewSettingPrefs_keepScreenOn'; // bool
   static const _fullscreenKey = 'ViewSettingPrefs_fullscreen'; // bool
@@ -16,8 +19,11 @@ class ViewSettingPrefs {
     final prefs = await PrefsManager.instance.loadPrefs();
     var def = ViewSetting.defaultSetting();
     return ViewSetting(
-      reverseScroll: prefs.safeGetBool(_scrollDirectionKey) ?? def.reverseScroll,
+      viewDirection: ViewDirectionExtension.fromInt(prefs.safeGetInt(_viewDirectionKey) ?? def.viewDirection.toInt()),
       showPageHint: prefs.safeGetBool(_showPageHintKey) ?? def.showPageHint,
+      showClock: prefs.safeGetBool(_showClockKey) ?? def.showClock,
+      showNetwork: prefs.safeGetBool(_showNetworkKey) ?? def.showNetwork,
+      showBattery: prefs.safeGetBool(_showBatteryKey) ?? def.showBattery,
       enablePageSpace: prefs.safeGetBool(_enablePageSpaceKey) ?? def.enablePageSpace,
       keepScreenOn: prefs.safeGetBool(_keepScreenOnKey) ?? def.keepScreenOn,
       fullscreen: prefs.safeGetBool(_fullscreenKey) ?? def.fullscreen,
@@ -27,8 +33,11 @@ class ViewSettingPrefs {
 
   static Future<void> setSetting(ViewSetting setting) async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    await prefs.setBool(_scrollDirectionKey, setting.reverseScroll);
+    await prefs.setInt(_viewDirectionKey, setting.viewDirection.toInt());
     await prefs.setBool(_showPageHintKey, setting.showPageHint);
+    await prefs.setBool(_showClockKey, setting.showClock);
+    await prefs.setBool(_showNetworkKey, setting.showNetwork);
+    await prefs.setBool(_showBatteryKey, setting.showBattery);
     await prefs.setBool(_enablePageSpaceKey, setting.enablePageSpace);
     await prefs.setBool(_keepScreenOnKey, setting.keepScreenOn);
     await prefs.setBool(_fullscreenKey, setting.fullscreen);
@@ -37,7 +46,7 @@ class ViewSettingPrefs {
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {
     var def = ViewSetting.defaultSetting();
-    await prefs.migrateBool(oldKey: 'SCROLL_DIRECTION', newKey: _scrollDirectionKey, defaultValue: def.reverseScroll);
+    await prefs.remove('SCROLL_DIRECTION');
     await prefs.migrateBool(oldKey: 'SHOW_PAGE_HINT', newKey: _showPageHintKey, defaultValue: def.showPageHint);
     await prefs.remove('USE_SWIPE_FOR_CHAPTER');
     await prefs.remove('USE_CLICK_FOR_CHAPTER');

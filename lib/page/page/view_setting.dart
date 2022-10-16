@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 
-enum ViewDirection {
-  leftToRight,
-  rightToLeft,
-  topToBottom, // TODO
-}
+/// 漫画章节浏览页-浏览设置
 
-/// 漫画章节浏览页-设置对话框
 class ViewSetting {
   ViewSetting({
-    required this.reverseScroll,
+    required this.viewDirection,
     required this.showPageHint,
-    this.showNowTime = true, // TODO
+    this.showClock = true, // TODO
     this.showNetwork = false, // TODO
     this.showBattery = false, // TODO
     required this.enablePageSpace,
@@ -20,21 +15,21 @@ class ViewSetting {
     required this.preloadCount,
   });
 
-  final bool reverseScroll; // 反向拖动
-  final bool showPageHint; // 显示提示信息
-  final bool showNowTime; // 显示当前时间
-  final bool showNetwork; // 显示网络信息
-  final bool showBattery; // 显示电源信息
-  final bool enablePageSpace; // 显示页间空白
+  final ViewDirection viewDirection; // 阅读方向
+  final bool showPageHint; // 显示页面提示
+  final bool showClock; // 显示当前时间
+  final bool showNetwork; // 显示网络状态
+  final bool showBattery; // 显示电源余量
+  final bool enablePageSpace; // 显示页面间空白
   final bool keepScreenOn; // 屏幕常亮
-  final bool fullscreen; // 全屏浏览
+  final bool fullscreen; // 全屏阅读
   final int preloadCount; // 预加载页数
 
   ViewSetting.defaultSetting()
       : this(
-          reverseScroll: false,
+          viewDirection: ViewDirection.leftToRight,
           showPageHint: true,
-          showNowTime: true,
+          showClock: true,
           showNetwork: false,
           showBattery: false,
           enablePageSpace: true,
@@ -44,9 +39,9 @@ class ViewSetting {
         );
 
   ViewSetting copyWith({
-    bool? reverseScroll,
+    ViewDirection? viewDirection,
     bool? showPageHint,
-    bool? showNowTime,
+    bool? showClock,
     bool? showNetwork,
     bool? showBattery,
     bool? enablePageSpace,
@@ -55,16 +50,44 @@ class ViewSetting {
     int? preloadCount,
   }) {
     return ViewSetting(
-      reverseScroll: reverseScroll ?? this.reverseScroll,
+      viewDirection: viewDirection ?? this.viewDirection,
       showPageHint: showPageHint ?? this.showPageHint,
       enablePageSpace: enablePageSpace ?? this.enablePageSpace,
-      showNowTime: showNowTime ?? this.showNowTime,
+      showClock: showClock ?? this.showClock,
       showNetwork: showNetwork ?? this.showNetwork,
       showBattery: showBattery ?? this.showBattery,
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
     );
+  }
+}
+
+enum ViewDirection {
+  leftToRight,
+  rightToLeft,
+  // topToBottom, // TODO
+}
+
+extension ViewDirectionExtension on ViewDirection {
+  int toInt() {
+    if (this == ViewDirection.leftToRight) {
+      return 0;
+    }
+    if (this == ViewDirection.rightToLeft) {
+      return 1;
+    }
+    return 2;
+  }
+
+  static ViewDirection fromInt(int i) {
+    if (i == 0) {
+      return ViewDirection.leftToRight;
+    }
+    if (i == 1) {
+      return ViewDirection.rightToLeft;
+    }
+    return ViewDirection.leftToRight;
   }
 }
 
@@ -83,16 +106,22 @@ class ViewSettingSubPage extends StatefulWidget {
 }
 
 class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
-  late bool _reverseScroll = widget.setting.reverseScroll;
-  late bool _showPageHint = widget.setting.showPageHint;
-  late bool _enablePageSpace = widget.setting.enablePageSpace;
-  late bool _keepScreenOn = widget.setting.keepScreenOn;
-  late bool _fullscreen = widget.setting.fullscreen;
-  late int _preloadCount = widget.setting.preloadCount;
+  late var _viewDirection = widget.setting.viewDirection;
+  late var _showPageHint = widget.setting.showPageHint;
+  late var _showClock = widget.setting.showClock;
+  late var _showNetwork = widget.setting.showNetwork;
+  late var _showBattery = widget.setting.showBattery;
+  late var _enablePageSpace = widget.setting.enablePageSpace;
+  late var _keepScreenOn = widget.setting.keepScreenOn;
+  late var _fullscreen = widget.setting.fullscreen;
+  late var _preloadCount = widget.setting.preloadCount;
 
   ViewSetting get _newestSetting => ViewSetting(
-        reverseScroll: _reverseScroll,
+        viewDirection: _viewDirection,
         showPageHint: _showPageHint,
+        showClock: _showClock,
+        showNetwork: _showNetwork,
+        showBattery: _showBattery,
         enablePageSpace: _enablePageSpace,
         keepScreenOn: _keepScreenOn,
         fullscreen: _fullscreen,
@@ -130,6 +159,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     required String title,
     required bool value,
     required void Function(bool) onChanged,
+    bool enable = true,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -139,7 +169,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           height: 38,
           child: Switch(
             value: value,
-            onChanged: onChanged,
+            onChanged: enable ? onChanged : null,
           ),
         ),
       ],
@@ -152,22 +182,22 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildComboBox<bool>(
+        _buildComboBox<ViewDirection>(
           title: '阅读方向',
-          value: _reverseScroll,
-          values: [false, true],
+          value: _viewDirection,
+          values: [ViewDirection.leftToRight, ViewDirection.rightToLeft],
           builder: (s) => Text(
-            s == false ? '从左往右' : '从右往左',
+            s == ViewDirection.leftToRight ? '从左往右' : '从右往左',
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (s) {
-            _reverseScroll = s ?? true;
+            _viewDirection = s ?? ViewDirection.leftToRight;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
         _buildSwitcher(
-          title: '显示提示信息', // TODO
+          title: '显示页面提示文字',
           value: _showPageHint,
           onChanged: (b) {
             _showPageHint = b;
@@ -176,7 +206,37 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           },
         ),
         _buildSwitcher(
-          title: '显示页间空白',
+          title: '显示当前时间',
+          value: _showClock,
+          enable: _showPageHint,
+          onChanged: (b) {
+            _showClock = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildSwitcher(
+          title: '显示网络状态',
+          value: _showNetwork,
+          enable: _showPageHint,
+          onChanged: (b) {
+            _showNetwork = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildSwitcher(
+          title: '显示电源余量',
+          value: _showBattery,
+          enable: _showPageHint,
+          onChanged: (b) {
+            _showBattery = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildSwitcher(
+          title: '显示页面间空白',
           value: _enablePageSpace,
           onChanged: (b) {
             _enablePageSpace = b;
@@ -194,7 +254,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           },
         ),
         _buildSwitcher(
-          title: '全屏浏览',
+          title: '全屏阅读',
           value: _fullscreen,
           onChanged: (b) {
             _fullscreen = b;

@@ -14,6 +14,7 @@ class ViewTocSubPage extends StatefulWidget {
     required this.groups,
     required this.highlightedChapter,
     required this.predicate,
+    this.scrollViewPadding = EdgeInsets.zero,
   }) : super(key: key);
 
   final int mid;
@@ -23,6 +24,7 @@ class ViewTocSubPage extends StatefulWidget {
   final List<MangaChapterGroup> groups;
   final int highlightedChapter;
   final bool Function(int cid) predicate;
+  final EdgeInsets scrollViewPadding;
 
   @override
   State<ViewTocSubPage> createState() => _ViewTocSubPageState();
@@ -66,6 +68,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
             crossAxisMargin: 2,
             child: SingleChildScrollView(
               controller: _controller,
+              padding: widget.scrollViewPadding,
               child: MangaTocView(
                 groups: widget.groups,
                 mangaId: widget.mid,

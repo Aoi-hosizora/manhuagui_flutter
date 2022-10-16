@@ -20,8 +20,8 @@ class MangaGalleryView extends StatefulWidget {
     required this.onPageChanged, // exclude extra pages, starts from 1
     this.initialImageIndex = 1, // exclude extra pages, starts from 1
     this.onCenterAreaTapped,
-    required this.firstPageBuilder,
-    required this.lastPageBuilder,
+    required this.firstPageBuilder, // always the first
+    required this.lastPageBuilder, // always the last
     required this.onSaveImage, // exclude extra pages, starts from 1
     required this.onShareImage, // exclude extra pages, starts from 1
   }) : super(key: key);
@@ -75,7 +75,6 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
 
   void _onPointerDown(Offset pos) {
     _pointerDownPosition = pos;
-    print(pos);
   }
 
   void _onPointerUp(Offset pos) {
@@ -192,7 +191,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
         ),
-        child: widget.firstPageBuilder.call(c),
+        child: widget.firstPageBuilder.call(c), // 首页
       ),
       lastPageBuilder: (c) => Container(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -200,7 +199,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
         ),
-        child: widget.lastPageBuilder.call(c),
+        child: widget.lastPageBuilder.call(c), // 尾页
       ),
     );
   }

@@ -26,6 +26,8 @@ dependencies:
   flutter_share: ^2.0.0
   wakelock: ^0.6.2
   device_info_plus: 4.0.0
+  battery_info: ^1.1.1
+  connectivity_plus: 2.3.6+1
 
   # widgets
   flutter_ahlib:
