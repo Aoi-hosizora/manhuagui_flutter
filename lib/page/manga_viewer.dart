@@ -11,6 +11,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -22,7 +23,6 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
 import 'package:manhuagui_flutter/service/natives/share.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:wakelock/wakelock.dart';
@@ -57,7 +57,7 @@ class MangaViewerPage extends StatefulWidget {
 const _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
 const _kViewportFraction = 1.08; // 页面间隔
 const _kAnimationDuration = Duration(milliseconds: 150); // 动画时长
-const _kOverlayAnimationDuration = Duration(milliseconds: 350); // SystemUI 动画时长
+const _kOverlayAnimationDuration = Duration(milliseconds: 300); // SystemUI 动画时长
 
 class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   final _mangaGalleryViewKey = GlobalKey<MangaGalleryViewState>();
@@ -195,7 +195,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   void _onPageChanged(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) {
     _currentPage = imageIndex;
     _progressValue = imageIndex;
-    _inExtraPage = inFirstExtraPage || inLastExtraPage;
+    var inExtraPage = inFirstExtraPage || inLastExtraPage;
+    if (inExtraPage != _inExtraPage) {
+      _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
+      _inExtraPage = inExtraPage;
+    }
     if (mounted) setState(() {});
   }
 
@@ -289,29 +293,54 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
   }
 
-  Future<void> _onTocPressed() {
-    return showModalBottomSheet(
+  void _onTocPressed() {
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (c) => Container(
-        height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - Theme.of(context).appBarTheme.toolbarHeight!,
-        child: ViewTocSubPage(
-          mid: widget.mid,
-          mangaTitle: widget.mangaTitle,
-          mangaCover: widget.mangaCover,
-          mangaUrl: widget.mangaUrl,
-          groups: widget.chapterGroups,
-          highlightedChapter: widget.cid,
-          scrollViewPadding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-          predicate: (cid) {
-            if (cid == _data!.cid) {
-              Fluttertoast.showToast(msg: '当前正在阅读 ${_data!.title}');
-              return false;
-            }
-            Navigator.of(c).pop(); // bottom sheet
-            Navigator.of(context).pop(); // this page, should not use maybePop
-            return true;
-          },
+      builder: (c) => MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        removeBottom: true,
+        child: Container(
+          height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
+          margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+          child: ViewTocSubPage(
+            mid: widget.mid,
+            mangaTitle: widget.mangaTitle,
+            mangaCover: widget.mangaCover,
+            mangaUrl: widget.mangaUrl,
+            groups: widget.chapterGroups,
+            highlightedChapter: widget.cid,
+            predicate: (cid) {
+              if (cid == _data!.cid) {
+                Fluttertoast.showToast(msg: '当前正在阅读 ${_data!.title}');
+                return false;
+              }
+              Navigator.of(c).pop(); // bottom sheet
+              Navigator.of(context).pop(); // this page, should not use maybePop
+              return true;
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onCommentsPressed() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (c) => MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        removeBottom: true,
+        child: Container(
+          height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
+          margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+          child: CommentsPage(
+            mid: _data!.mid,
+            title: _data!.mangaTitle,
+          ),
         ),
       ),
     );
@@ -365,8 +394,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             preferredSize: Size.fromHeight(Theme.of(context).appBarTheme.toolbarHeight!),
             child: AnimatedSwitcher(
               duration: _kAnimationDuration,
-              child: !(!_loading && _data != null && _ScreenHelper.showAppBar && !_inExtraPage)
-                  ? SizedBox(height: 0) // TODO extra page full screen
+              child: !(!_loading && _data != null && _ScreenHelper.showAppBar)
+                  ? SizedBox(height: 0)
                   : AppBar(
                       backgroundColor: Colors.black.withOpacity(0.65),
                       elevation: 0,
@@ -429,10 +458,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
-                      onJumpToImage: (index) => _mangaGalleryViewKey.currentState?.jumpToImage(index),
-                      onGotoChapter: _gotoChapter,
+                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, anim),
+                      onGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       onShowToc: _onTocPressed,
-                        onShowComments: (){}, // TODO
+                      onShowComments: _onCommentsPressed,
                       onPop: () => Navigator.of(context).maybePop(),
                     ),
                     lastPageBuilder: (c) => ViewExtraSubPage(
@@ -440,10 +469,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
-                      onJumpToImage: (index) => _mangaGalleryViewKey.currentState?.jumpToImage(index),
-                      onGotoChapter: _gotoChapter,
+                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, anim),
+                      onGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       onShowToc: _onTocPressed,
-                      onShowComments: (){}, // TODO
+                      onShowComments: _onCommentsPressed,
                       onPop: () => Navigator.of(context).maybePop(),
                     ),
                   ),
@@ -483,7 +512,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   bottom: _ScreenHelper.bottomPanelDistance,
                   child: AnimatedSwitcher(
                     duration: _kAnimationDuration,
-                    child: !(_data != null && _ScreenHelper.showAppBar && !_inExtraPage)
+                    child: !(_data != null && _ScreenHelper.showAppBar)
                         ? SizedBox(height: 0)
                         : Container(
                             color: Colors.black.withOpacity(0.75),

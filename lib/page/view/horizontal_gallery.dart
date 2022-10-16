@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:photo_view/photo_view.dart';
 
-class VerticalGalleryView extends ExtendedPhotoGallery {
-  VerticalGalleryView({
+class HorizontalGalleryView extends ExtendedPhotoGallery {
+  HorizontalGalleryView({
     Key? key,
     required int imageCount,
     required ExtendedPhotoGalleryPageOptions Function(BuildContext, int) imagePageBuilder,
@@ -16,6 +16,7 @@ class VerticalGalleryView extends ExtendedPhotoGallery {
     bool reverse = false,
     PageController? pageController,
     void Function(int)? onPageChanged,
+    bool changePageWhenFinished = false,
     bool keepViewportMainAxisSize = true,
     double? viewportMainAxisFactor,
     void Function(PhotoViewScaleState)? scaleStateChangedCallback,
@@ -48,6 +49,7 @@ class VerticalGalleryView extends ExtendedPhotoGallery {
           reverse: reverse,
           pageController: pageController,
           onPageChanged: onPageChanged,
+          changePageWhenFinished: changePageWhenFinished,
           keepViewportMainAxisSize: keepViewportMainAxisSize,
           viewportMainAxisFactor: viewportMainAxisFactor,
           scaleStateChangedCallback: scaleStateChangedCallback,

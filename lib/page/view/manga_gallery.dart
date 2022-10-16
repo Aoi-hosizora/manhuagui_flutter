@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/view/vertical_gallery.dart';
+import 'package:manhuagui_flutter/page/view/horizontal_gallery.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 漫画画廊展示，在 [MangaViewerPage] 使用
@@ -121,15 +121,20 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   }
 
   // jump to image page, exclude extra pages, starts from 1.
-  void jumpToImage(int imageIndex) {
+  void jumpToImage(int imageIndex, [bool animated = false]) {
     if (imageIndex >= 1 && imageIndex <= widget.imageCount) {
-      _controller.jumpToPage(imageIndex + 1 - 1); // include extra pages, starts from 0
+      var pageIndex = imageIndex + 1 - 1; // include extra pages, starts from 0
+      if (!animated) {
+        _controller.jumpToPage(pageIndex);
+      } else {
+        _controller.defaultAnimateToPage(pageIndex);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return VerticalGalleryView(
+    return HorizontalGalleryView(
       key: _galleryKey,
       pageController: _controller,
       imageCount: widget.imageCount,
@@ -138,6 +143,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       backgroundDecoration: BoxDecoration(color: Colors.black),
       scrollPhysics: AlwaysScrollableScrollPhysics(),
       keepViewportMainAxisSize: true,
+      changePageWhenFinished: true,
       onPageChanged: (idx) {
         _currentPageIndex = idx;
         widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
