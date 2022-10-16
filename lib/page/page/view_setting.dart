@@ -16,6 +16,7 @@ class ViewSetting {
     this.showBattery = false, // TODO
     required this.enablePageSpace,
     required this.keepScreenOn,
+    required this.fullscreen,
     required this.preloadCount,
   });
 
@@ -26,6 +27,7 @@ class ViewSetting {
   final bool showBattery; // 显示电源信息
   final bool enablePageSpace; // 显示页间空白
   final bool keepScreenOn; // 屏幕常亮
+  final bool fullscreen; // 全屏浏览
   final int preloadCount; // 预加载页数
 
   ViewSetting.defaultSetting()
@@ -37,6 +39,7 @@ class ViewSetting {
           showBattery: false,
           enablePageSpace: true,
           keepScreenOn: true,
+          fullscreen: false,
           preloadCount: 2,
         );
 
@@ -48,6 +51,7 @@ class ViewSetting {
     bool? showBattery,
     bool? enablePageSpace,
     bool? keepScreenOn,
+    bool? fullscreen,
     int? preloadCount,
   }) {
     return ViewSetting(
@@ -58,6 +62,7 @@ class ViewSetting {
       showNetwork: showNetwork ?? this.showNetwork,
       showBattery: showBattery ?? this.showBattery,
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
+      fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
     );
   }
@@ -82,7 +87,17 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late bool _showPageHint = widget.setting.showPageHint;
   late bool _enablePageSpace = widget.setting.enablePageSpace;
   late bool _keepScreenOn = widget.setting.keepScreenOn;
+  late bool _fullscreen = widget.setting.fullscreen;
   late int _preloadCount = widget.setting.preloadCount;
+
+  ViewSetting get _newestSetting => ViewSetting(
+        reverseScroll: _reverseScroll,
+        showPageHint: _showPageHint,
+        enablePageSpace: _enablePageSpace,
+        keepScreenOn: _keepScreenOn,
+        fullscreen: _fullscreen,
+        preloadCount: _preloadCount,
+      );
 
   Widget _buildComboBox<T>({
     required String title,
@@ -147,8 +162,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           ),
           onChanged: (s) {
             _reverseScroll = s ?? true;
-            var setting = widget.setting.copyWith(reverseScroll: _reverseScroll);
-            widget.onSettingChanged.call(setting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -157,8 +171,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _showPageHint,
           onChanged: (b) {
             _showPageHint = b;
-            var setting = widget.setting.copyWith(showPageHint: b);
-            widget.onSettingChanged.call(setting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -167,8 +180,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _enablePageSpace,
           onChanged: (b) {
             _enablePageSpace = b;
-            var setting = widget.setting.copyWith(enablePageSpace: b);
-            widget.onSettingChanged.call(setting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -177,8 +189,16 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _keepScreenOn,
           onChanged: (b) {
             _keepScreenOn = b;
-            var setting = widget.setting.copyWith(keepScreenOn: b);
-            widget.onSettingChanged.call(setting);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildSwitcher(
+          title: '全屏浏览',
+          value: _fullscreen,
+          onChanged: (b) {
+            _fullscreen = b;
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -193,8 +213,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           ),
           onChanged: (c) {
             _preloadCount = (c ?? 2).clamp(0, 5);
-            var setting = widget.setting.copyWith(preloadCount: _preloadCount);
-            widget.onSettingChanged.call(setting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),

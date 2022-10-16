@@ -1,6 +1,8 @@
-import 'dart:async';
-import 'dart:math';
+import 'dart:async' show Timer;
+import 'dart:io' show Platform;
+import 'dart:math' as math;
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
@@ -53,7 +55,8 @@ class MangaViewerPage extends StatefulWidget {
 
 const _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
 const _kViewportFraction = 1.08; // 页面间隔
-const _animationDuration = Duration(milliseconds: 150); // 动画时长
+const _kAnimationDuration = Duration(milliseconds: 150); // 动画时长
+const _kOverlayAnimationDuration = Duration(milliseconds: 350); // SystemUI 动画时长
 
 class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   final _mangaGalleryViewKey = GlobalKey<MangaGalleryViewState>();
@@ -62,32 +65,56 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _setting = ViewSetting.defaultSetting();
   var _showRegion = false; // 显示区域提示
-  late var _showAppBar = widget.showAppBar; // 显示工具栏
+  late var __showAppBar = widget.showAppBar; // 显示工具栏
+
+  bool get _showAppBar => __showAppBar;
+
+  set _showAppBar(bool b) {
+    // TODO move to _ScreenHelper
+    if (__showAppBar == true && b == false) {
+      __showAppBar = b;
+      if (mounted) setState(() {});
+      Future.delayed(_kAnimationDuration + Duration(milliseconds: 50), () {
+        _ScreenHelper.setSystemUIWhenAppbarChanged(fullscreen: _setting.fullscreen, isAppbarShown: b);
+      });
+    } else if (__showAppBar == false && b == true) {
+      _ScreenHelper.setSystemUIWhenAppbarChanged(fullscreen: _setting.fullscreen, isAppbarShown: b);
+      Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50), () async {
+        __showAppBar = b;
+        if (mounted) setState(() {});
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      var edgeToEdge = true; // TODO
-      SystemChrome.setEnabledSystemUIMode(!edgeToEdge ? SystemUiMode.manual : SystemUiMode.edgeToEdge, overlays: SystemUiOverlay.values);
-      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: !edgeToEdge ? Colors.black : Colors.black26,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
-    });
 
+    // data related
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+
+    // setting and screen related
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      // initialize in async manner
+      await _ScreenHelper.initialize(
+        setState: () {
+          if (mounted) setState(() {});
+        },
+        context: context,
+        showAppBar: widget.showAppBar,
+      );
+
       // setting
       _setting = await ViewSettingPrefs.getSetting();
       if (mounted) setState(() {});
-      if (_setting.keepScreenOn) {
-        Wakelock.enable();
-      }
 
-      // timer
+      // apply settings
+      await _ScreenHelper.toggleWakelock(enable: _setting.keepScreenOn);
+      await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen, isAppbarShown: _showAppBar);
+    });
+
+    // timer related
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
       var now = DateTime.now();
       _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
       if (mounted) setState(() {});
@@ -226,19 +253,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   }
 
   void _onSettingPressed() {
+    var setting = _setting.copyWith();
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('设置'),
         content: ViewSettingSubPage(
-          setting: _setting,
-          onSettingChanged: (s) async {
-            _setting = s;
-            if (mounted) setState(() {});
-            await ViewSettingPrefs.setSetting(_setting);
-            Wakelock.toggle(enable: _setting.keepScreenOn);
-          },
+          setting: setting,
+          onSettingChanged: (s) => setting = s,
         ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
           TextButton(
             child: Text('操作'),
@@ -249,9 +273,27 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
               if (mounted) setState(() {});
             },
           ),
-          TextButton(
-            child: Text('返回'),
-            onPressed: () => Navigator.of(c).pop(),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                child: Text('确定'),
+                onPressed: () async {
+                  Navigator.of(c).pop();
+                  _setting = setting;
+                  if (mounted) setState(() {});
+                  await ViewSettingPrefs.setSetting(_setting);
+
+                  // apply settings
+                  await _ScreenHelper.toggleWakelock(enable: _setting.keepScreenOn);
+                  await _ScreenHelper.setSystemUIWhenSettingChanged(fullscreen: _setting.fullscreen, isAppbarShown: _showAppBar);
+                },
+              ),
+              TextButton(
+                child: Text('取消'),
+                onPressed: () => Navigator.of(c).pop(),
+              ),
+            ],
           ),
         ],
       ),
@@ -292,21 +334,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     var viewHeight = MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - (_showAppBar ? Theme.of(context).appBarTheme.toolbarHeight! : 0);
     return WillPopScope(
       onWillPop: () async {
-        _updateHistory(); // 异步执行
-        Wakelock.disable();
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
-        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          statusBarBrightness: Brightness.dark,
-          statusBarIconBrightness: Brightness.light,
-          systemNavigationBarColor: Color.fromRGBO(250, 250, 250, 1.0),
-          systemNavigationBarIconBrightness: Brightness.dark,
-        ));
-        if (mounted) setState(() {});
+        // 全部都异步执行
+        _updateHistory();
+        _ScreenHelper.restoreWakelock();
+        _ScreenHelper.restoreSystemUI();
+        if (mounted) setState(() {}); // TODO need ???
         await WidgetsBinding.instance?.endOfFrame;
         return true;
       },
       child: SafeArea(
-        top: false,
+        top: _ScreenHelper.safeAreaTop,
         bottom: false,
         child: Scaffold(
           backgroundColor: Colors.black,
@@ -314,7 +351,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           appBar: PreferredSize(
             preferredSize: Size.fromHeight(Theme.of(context).appBarTheme.toolbarHeight!),
             child: AnimatedSwitcher(
-              duration: _animationDuration,
+              duration: _kAnimationDuration,
               child: _loading || _data == null || !_showAppBar
                   ? SizedBox(height: 0)
                   : AppBar(
@@ -387,12 +424,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         children: [
                           Text('first page'),
                           OutlinedButton(
-                            child: Text('下一页'),
+                            child: Text('首页'),
                             onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(1),
                           ),
                           OutlinedButton(
+                            child: Text('末页'),
+                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(_data!.pages.length),
+                          ),
+                          OutlinedButton(
                             child: Text('下一章节'),
-                            onPressed: () {},
+                            onPressed: () => Fluttertoast.showToast(msg: 'TODO'), // TODO
                           ),
                         ],
                       ),
@@ -403,16 +444,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         children: [
                           Text('last page'),
                           OutlinedButton(
-                            child: Text('上一页'),
-                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(_data!.pages.length),
-                          ),
-                          OutlinedButton(
-                            child: Text('回到首页'),
+                            child: Text('首页'),
                             onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(1),
                           ),
                           OutlinedButton(
+                            child: Text('末页'),
+                            onPressed: () => _mangaGalleryViewKey.currentState?.jumpToImage(_data!.pages.length),
+                          ),
+                          OutlinedButton(
                             child: Text('上一章节'),
-                            onPressed: () {},
+                            onPressed: () => Fluttertoast.showToast(msg: 'TODO'), // TODO
                           ),
                         ],
                       ),
@@ -426,7 +467,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   bottom: 0,
                   right: 0,
                   child: AnimatedSwitcher(
-                    duration: _animationDuration,
+                    duration: _kAnimationDuration,
                     child: !(_data != null && !_showAppBar && !_inExtraPage && _setting.showPageHint)
                         ? SizedBox(height: 0)
                         : Container(
@@ -445,14 +486,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 0,
+                  bottom: _ScreenHelper.bottomPanelDistance,
                   child: AnimatedSwitcher(
-                    duration: _animationDuration,
+                    duration: _kAnimationDuration,
                     child: !(_data != null && _showAppBar && !_inExtraPage)
                         ? SizedBox(height: 0)
                         : Container(
                             color: Colors.black.withOpacity(0.75),
-                            padding: EdgeInsets.only(left: 12, right: 12, top: 0, bottom: 4),
+                            padding: EdgeInsets.only(left: 12, right: 12, top: 0, bottom: 6),
                             width: MediaQuery.of(context).size.width,
                             child: Column(
                               children: [
@@ -496,7 +537,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                       _buildAction(
                                         text: !_setting.reverseScroll ? '上一章节' : '下一章节',
                                         icon: Icons.arrow_right_alt,
-                                        rotateAngle: pi,
+                                        rotateAngle: math.pi,
                                         action: () => _gotoChapter(gotoPrevious: !_setting.reverseScroll),
                                       ),
                                       _buildAction(
@@ -603,5 +644,105 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         ),
       ),
     );
+  }
+}
+
+class _ScreenHelper {
+  static bool _initialWakelock = false;
+  static void Function() _setState = () {};
+  static late BuildContext _context;
+  static bool _showAppBar = true; // TODO
+
+  static Future<void> initialize({required void Function() setState, required BuildContext context, required bool showAppBar}) async {
+    _initialWakelock = await Wakelock.enabled;
+    _setState = setState;
+    _context = context;
+    _showAppBar = showAppBar;
+  }
+
+  static bool? __lowerThanAndroidQ;
+
+  static Future<bool> _lowerThanAndroidQ() async {
+    __lowerThanAndroidQ ??= Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt! < 29; // SDK29 => Android 10
+    return true; // __lowerThanAndroidQ!;
+  }
+
+  static Future<void> toggleWakelock({required bool enable}) {
+    return Wakelock.toggle(enable: enable);
+  }
+
+  static Future<void> restoreWakelock() {
+    return Wakelock.toggle(enable: _initialWakelock);
+  }
+
+  static bool _safeAreaTop = true;
+
+  static bool get safeAreaTop => _safeAreaTop;
+
+  static double _bottomPanelDistance = 0;
+
+  static double get bottomPanelDistance => _bottomPanelDistance;
+
+  static Future<void> setSystemUIWhenEnter({required bool fullscreen, required bool isAppbarShown}) async {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.black.withOpacity(0.75),
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
+    await setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: isAppbarShown);
+  }
+
+  static Future<void> setSystemUIWhenSettingChanged({required bool fullscreen, required bool isAppbarShown}) async {
+    await setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: isAppbarShown);
+  }
+
+  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool isAppbarShown}) async {
+    // https://hiyoko-programming.com/953/
+    if (!fullscreen) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+      _safeAreaTop = true;
+      _bottomPanelDistance = 0;
+    } else {
+      var lowerThanQ = await _lowerThanAndroidQ();
+      if (isAppbarShown) {
+        if (!lowerThanQ) {
+          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: SystemUiOverlay.values);
+          _safeAreaTop = false;
+          await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50), () => _bottomPanelDistance = MediaQuery.of(_context).padding.bottom);
+        } else {
+          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+          _safeAreaTop = false;
+          _bottomPanelDistance = 0;
+        }
+      } else {
+        if (!lowerThanQ) {
+          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+          _safeAreaTop = false;
+          _bottomPanelDistance = 0;
+        } else {
+          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+          _safeAreaTop = false;
+          _bottomPanelDistance = 0;
+        }
+      }
+    }
+    _setState();
+  }
+
+  static Future<void> restoreSystemUI() async {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Color.fromRGBO(250, 250, 250, 1.0),
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
   }
 }

@@ -21,10 +21,11 @@ dependencies:
   intl: ^0.17.0
   basic_utils: ^5.2.2
 
-  # assist
+  # assists
   flutter_web_browser: ^0.17.1
   flutter_share: ^2.0.0
   wakelock: ^0.6.2
+  device_info_plus: 4.0.0
 
   # widgets
   flutter_ahlib:

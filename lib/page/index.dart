@@ -102,26 +102,31 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
           controller: _controller,
           children: _tabs.map((t) => t.item3).toList(),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex,
-          items: _tabs
-              .map(
-                (t) => BottomNavigationBarItem(
-                  label: t.item1,
-                  icon: Icon(t.item2),
-                ),
-              )
-              .toList(),
-          onTap: (index) async {
-            if (_selectedIndex == index) {
-              _actions[_selectedIndex].invoke();
-            } else {
-              _controller.animateTo(index);
-              _selectedIndex = index;
-              if (mounted) setState(() {});
-            }
-          },
+        bottomNavigationBar: Theme(
+          data: Theme.of(context).copyWith(
+            highlightColor: Colors.transparent,
+          ),
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedIndex,
+            items: _tabs
+                .map(
+                  (t) => BottomNavigationBarItem(
+                    label: t.item1,
+                    icon: Icon(t.item2),
+                  ),
+                )
+                .toList(),
+            onTap: (index) async {
+              if (_selectedIndex == index) {
+                _actions[_selectedIndex].invoke();
+              } else {
+                _controller.animateTo(index);
+                _selectedIndex = index;
+                if (mounted) setState(() {});
+              }
+            },
+          ),
         ),
       ),
     );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
+import 'package:manhuagui_flutter/page/view/vertical_gallery.dart';
 import 'package:photo_view/photo_view.dart';
 
 // TODO
@@ -17,13 +17,13 @@ class MangaGalleryView extends StatefulWidget {
     required this.reverseScroll,
     required this.viewportFraction,
     required this.slideWidthRatio,
-    required this.onPageChanged, // without extra pages, starts from 1
-    this.initialImageIndex = 1, // without extra pages, starts from 1
+    required this.onPageChanged, // exclude extra pages, starts from 1
+    this.initialImageIndex = 1, // exclude extra pages, starts from 1
     this.onCenterAreaTapped,
     required this.firstPageBuilder,
     required this.lastPageBuilder,
-    required this.onSaveImage, // without extra pages, starts from 1
-    required this.onShareImage, // without extra pages, starts from 1
+    required this.onSaveImage, // exclude extra pages, starts from 1
+    required this.onShareImage, // exclude extra pages, starts from 1
   }) : super(key: key);
 
   final int imageCount;
@@ -45,21 +45,22 @@ class MangaGalleryView extends StatefulWidget {
 }
 
 class MangaGalleryViewState extends State<MangaGalleryView> {
-  final _galleryKey = GlobalKey<ExtendedPhotoGalleryViewState>();
+  final _galleryKey = GlobalKey<ExtendedPhotoGalleryState>();
   final CacheManager _cache = DefaultCacheManager();
   late var _controller = PageController(
-    initialPage: widget.initialImageIndex - 1 + 1, // without extra pages, starts from 0
+    initialPage: widget.initialImageIndex - 1 + 1, // exclude extra pages, starts from 0
     viewportFraction: widget.viewportFraction,
   );
 
-  // current page index, with extra pages, starts from 0.
+  // current page index, include extra pages, starts from 0.
   var _currentPageIndex = 0;
 
-  // current image index, without extra pages, starts from 0.
+  // current image index, exclude extra pages, starts from 0.
   int get _currentImageIndex => (_currentPageIndex - 1).clamp(0, widget.imageCount - 1);
 
   @override
   void didUpdateWidget(covariant MangaGalleryView oldWidget) {
+    super.didUpdateWidget(oldWidget);
     if (oldWidget.viewportFraction != widget.viewportFraction) {
       var oldController = _controller;
       _controller = PageController(
@@ -68,13 +69,13 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       );
       WidgetsBinding.instance?.addPostFrameCallback((_) => oldController.dispose());
     }
-    super.didUpdateWidget(oldWidget);
   }
 
   Offset? _pointerDownPosition;
 
   void _onPointerDown(Offset pos) {
     _pointerDownPosition = pos;
+    print(pos);
   }
 
   void _onPointerUp(Offset pos) {
@@ -101,7 +102,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           iconText: IconText.simple(Icons.refresh, '重新加载'),
           action: () async {
             await _cache.removeFile(widget.imageUrls[_currentImageIndex]);
-            _galleryKey.currentState?.reload(_currentImageIndex); // without extra pages, starts from 0
+            _galleryKey.currentState?.reload(_currentImageIndex); // exclude extra pages, starts from 0
           },
         ),
         IconTextMenuItem(
@@ -122,24 +123,24 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     }
   }
 
-  // jump to image page, without extra pages, starts from 1.
+  // jump to image page, exclude extra pages, starts from 1.
   void jumpToImage(int imageIndex) {
     if (imageIndex >= 1 && imageIndex <= widget.imageCount) {
-      _controller.jumpToPage(imageIndex + 1 - 1);
+      _controller.jumpToPage(imageIndex + 1 - 1); // include extra pages, starts from 0
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ExtendedPhotoGalleryView(
+    return VerticalGalleryView(
       key: _galleryKey,
       pageController: _controller,
       imageCount: widget.imageCount,
       preloadPagesCount: widget.preloadPagesCount,
       reverse: widget.reverseScroll,
       backgroundDecoration: BoxDecoration(color: Colors.black),
-      scrollPhysics: BouncingScrollPhysics(),
-      keepViewportWidth: true,
+      scrollPhysics: AlwaysScrollableScrollPhysics(),
+      keepViewportMainAxisSize: true,
       onPageChanged: (idx) {
         _currentPageIndex = idx;
         widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
@@ -154,7 +155,6 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         filterQuality: FilterQuality.high,
         onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
         onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
-        onLongPress: () => _onLongPressed(),
         imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
           key: key,
           url: widget.imageUrls[idx],
@@ -182,11 +182,12 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
         ),
       ),
+      onImageLongPressed: () => _onLongPressed() /* TODO bug ??? */,
       // ****************************************************************
       // 首页和尾页
       // ****************************************************************
       firstPageBuilder: (c) => Container(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
@@ -194,7 +195,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         child: widget.firstPageBuilder.call(c),
       ),
       lastPageBuilder: (c) => Container(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
