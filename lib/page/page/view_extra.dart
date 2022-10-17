@@ -9,6 +9,7 @@ class ViewExtraSubPage extends StatelessWidget {
   const ViewExtraSubPage({
     Key? key,
     required this.isHeader,
+    required this.reverseScroll,
     required this.chapter,
     required this.mangaCover,
     required this.chapterGroups,
@@ -20,6 +21,7 @@ class ViewExtraSubPage extends StatelessWidget {
   }) : super(key: key);
 
   final bool isHeader;
+  final bool reverseScroll;
   final MangaChapter chapter;
   final String mangaCover;
   final List<MangaChapterGroup> chapterGroups;
@@ -74,28 +76,34 @@ class ViewExtraSubPage extends StatelessWidget {
       );
     }
 
+    var prev = Expanded(
+      child: _buildAction(
+        text: chapter.prevCid != 0 ? '阅读上一章节' : '暂无上一章节',
+        subText: (chapterGroups.findTitle(chapter.prevCid) ?? '未知话'),
+        left: !reverseScroll ? true : false,
+        disable: chapter.prevCid == 0,
+        action: () => onGotoChapter.call(true),
+      ),
+    );
+
+    var next = Expanded(
+      child: _buildAction(
+        text: chapter.nextCid != 0 ? '阅读下一章节' : '暂无下一章节',
+        subText: (chapterGroups.findTitle(chapter.nextCid) ?? '未知话'),
+        left: !reverseScroll ? false : true,
+        disable: chapter.nextCid == 0,
+        action: () => onGotoChapter.call(false),
+      ),
+    );
+
     return IntrinsicHeight(
       child: Row(
         children: [
-          Expanded(
-            child: _buildAction(
-              text: chapter.prevCid != 0 ? '阅读上一章节' : '暂无上一章节',
-              subText: (chapterGroups.findTitle(chapter.prevCid) ?? '未知话'),
-              left: true,
-              disable: chapter.prevCid == 0,
-              action: () => onGotoChapter.call(true),
-            ),
-          ),
+          if (!reverseScroll) prev, // 上一章
+          if (reverseScroll) next, // 下一章(反)
           VerticalDivider(width: 36, thickness: 2),
-          Expanded(
-            child: _buildAction(
-              text: chapter.nextCid != 0 ? '阅读下一章节' : '暂无下一章节',
-              subText: (chapterGroups.findTitle(chapter.nextCid) ?? '未知话'),
-              left: false,
-              disable: chapter.nextCid == 0,
-              action: () => onGotoChapter.call(false),
-            ),
-          ),
+          if (!reverseScroll) next, // 下一章(反)
+          if (reverseScroll) prev, // 上一章
         ],
       ),
     );

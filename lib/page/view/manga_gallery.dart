@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/view/horizontal_gallery.dart';
+import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 漫画画廊展示，在 [MangaViewerPage] 使用
@@ -12,6 +13,7 @@ class MangaGalleryView extends StatefulWidget {
     required this.imageCount,
     required this.imageUrls,
     required this.preloadPagesCount,
+    required this.verticalScroll,
     required this.reverseScroll,
     required this.viewportFraction,
     required this.slideWidthRatio,
@@ -27,6 +29,7 @@ class MangaGalleryView extends StatefulWidget {
   final int imageCount;
   final List<String> imageUrls;
   final int preloadPagesCount;
+  final bool verticalScroll;
   final bool reverseScroll;
   final double viewportFraction;
   final double slideWidthRatio;
@@ -134,20 +137,97 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
 
   @override
   Widget build(BuildContext context) {
-    return HorizontalGalleryView(
+    if (!widget.verticalScroll) {
+      return HorizontalGalleryView(
+        key: _galleryKey,
+        pageController: _controller,
+        imageCount: widget.imageCount,
+        preloadPagesCount: widget.preloadPagesCount,
+        reverse: widget.reverseScroll,
+        backgroundDecoration: BoxDecoration(color: Colors.black),
+        scrollPhysics: AlwaysScrollableScrollPhysics(),
+        keepViewportMainAxisSize: true,
+        changePageWhenFinished: true,
+        onPageChanged: (idx) {
+          _currentPageIndex = idx;
+          widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
+        },
+        // ****************************************************************
+        // 漫画页
+        // ****************************************************************
+        imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
+          initialScale: PhotoViewComputedScale.contained,
+          minScale: PhotoViewComputedScale.contained / 2,
+          maxScale: PhotoViewComputedScale.covered * 2,
+          filterQuality: FilterQuality.high,
+          onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
+          onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
+          imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
+            key: key,
+            url: widget.imageUrls[idx],
+            cacheManager: _cache,
+            headers: {
+              'User-Agent': USER_AGENT,
+              'Referer': REFERER,
+            },
+          ),
+          loadingBuilder: (_, ev) => GestureDetector(
+            onTapDown: (d) => _onPointerDown(d.globalPosition),
+            onTapUp: (d) => _onPointerUp(d.globalPosition),
+            onLongPress: () => _onLongPressed(),
+            child: ImageLoadingView(
+              title: (idx + 1).toString(),
+              event: ev,
+            ),
+          ),
+          errorBuilder: (_, err, ___) => GestureDetector(
+            onTapDown: (d) => _onPointerDown(d.globalPosition),
+            onTapUp: (d) => _onPointerUp(d.globalPosition),
+            onLongPress: () => _onLongPressed(),
+            child: ImageLoadFailedView(
+              title: (idx + 1).toString(),
+              error: err,
+            ),
+          ),
+        ),
+        onImageLongPressed: () => _onLongPressed(),
+        // ****************************************************************
+        // 额外页
+        // ****************************************************************
+        firstPageBuilder: (c) => Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+            maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
+          ),
+          child: widget.firstPageBuilder.call(c), // 额外页-开头
+        ),
+        lastPageBuilder: (c) => Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+            maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
+          ),
+          child: widget.lastPageBuilder.call(c), // 额外页-末尾
+        ),
+      );
+    }
+
+    return VerticalGalleryView(
       key: _galleryKey,
-      pageController: _controller,
+      pageController: _controller /* TODO */,
       imageCount: widget.imageCount,
-      preloadPagesCount: widget.preloadPagesCount,
-      reverse: widget.reverseScroll,
+      preloadPagesCount: widget.preloadPagesCount /* TODO */,
+      reverse: widget.reverseScroll /* TODO */,
       backgroundDecoration: BoxDecoration(color: Colors.black),
-      scrollPhysics: AlwaysScrollableScrollPhysics(),
-      keepViewportMainAxisSize: true,
-      changePageWhenFinished: true,
+      scrollPhysics: AlwaysScrollableScrollPhysics() /* TODO */,
+      keepViewportMainAxisSize: true /* TODO */,
+      changePageWhenFinished: true /* TODO */,
+      betweenPageSpace: widget.viewportFraction == 1.0 ? 0 : 25,
       onPageChanged: (idx) {
         _currentPageIndex = idx;
         widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
-      },
+      } /* TODO */,
       // ****************************************************************
       // 漫画页
       // ****************************************************************
@@ -172,35 +252,38 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onTapUp: (d) => _onPointerUp(d.globalPosition),
           onLongPress: () => _onLongPressed(),
           child: ImageLoadingView(
-            title: (_currentImageIndex + 1).toString(),
+            title: (idx + 1).toString(),
             event: ev,
           ),
         ),
-        errorBuilder: (_, __, ___) => GestureDetector(
+        errorBuilder: (_, err, ___) => GestureDetector(
           onTapDown: (d) => _onPointerDown(d.globalPosition),
           onTapUp: (d) => _onPointerUp(d.globalPosition),
           onLongPress: () => _onLongPressed(),
           child: ImageLoadFailedView(
-            title: (_currentImageIndex + 1).toString(),
+            title: (idx + 1).toString(),
+            error: err,
           ),
         ),
       ),
-      onImageLongPressed: () => _onLongPressed(),
+      onImageLongPressed: () => _onLongPressed() /* TODO */,
       // ****************************************************************
       // 额外页
       // ****************************************************************
       firstPageBuilder: (c) => Container(
         color: Theme.of(context).scaffoldBackgroundColor,
+        padding: EdgeInsets.only(bottom: 25),
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+          // maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical, // TODO test
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
         ),
         child: widget.firstPageBuilder.call(c), // 额外页-开头
       ),
       lastPageBuilder: (c) => Container(
         color: Theme.of(context).scaffoldBackgroundColor,
+        padding: EdgeInsets.only(bottom: 25),
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+          // maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical, // TODO test
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
         ),
         child: widget.lastPageBuilder.call(c), // 额外页-末尾
@@ -223,8 +306,9 @@ class ImageLoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.black,
+      padding: EdgeInsets.symmetric(vertical: 30),
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+        // maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical, // TODO use switcher ???
         maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
       ),
       child: Column(
@@ -263,16 +347,19 @@ class ImageLoadFailedView extends StatelessWidget {
   const ImageLoadFailedView({
     Key? key,
     required this.title,
+    this.error,
   }) : super(key: key);
 
   final String title;
+  final dynamic error;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.black,
+      padding: EdgeInsets.symmetric(vertical: 30),
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
+        // maxHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical, // TODO use switcher ???
         maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
       ),
       child: Column(
@@ -294,6 +381,10 @@ class ImageLoadFailedView extends StatelessWidget {
                 size: 50,
               ),
             ),
+          ),
+          Text(
+            error == null ? '' : wrapError(error, StackTrace.empty).text,
+            style: TextStyle(color: Colors.grey),
           ),
         ],
       ),

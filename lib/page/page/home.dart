@@ -84,6 +84,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           IconButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '用浏览器打开',
+            splashRadius: 22, // TODO <<<
             onPressed: () => launchInBrowser(
               context: context,
               url: WEB_HOMEPAGE_URL,
@@ -92,6 +93,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           IconButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
+            splashRadius: 22, // TODO <<<
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (c) => SearchPage(),

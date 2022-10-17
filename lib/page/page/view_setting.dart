@@ -66,7 +66,7 @@ class ViewSetting {
 enum ViewDirection {
   leftToRight,
   rightToLeft,
-  // topToBottom, // TODO
+  topToBottom,
 }
 
 extension ViewDirectionExtension on ViewDirection {
@@ -191,9 +191,9 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         _buildComboBox<ViewDirection>(
           title: '阅读方向　　　　　　　　',
           value: _viewDirection,
-          values: [ViewDirection.leftToRight, ViewDirection.rightToLeft],
+          values: [ViewDirection.leftToRight, ViewDirection.rightToLeft, ViewDirection.topToBottom],
           builder: (s) => Text(
-            s == ViewDirection.leftToRight ? '从左往右' : '从右往左',
+            s == ViewDirection.leftToRight ? '从左往右' : (s == ViewDirection.rightToLeft ? '从右往左' : '从上往下'),
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (s) {
@@ -274,7 +274,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _preloadCount.clamp(0, 5),
           values: [0, 1, 2, 3, 4, 5],
           builder: (s) => Text(
-            '$s页',
+            s == 0 ? '禁用预加载' : '预加载前后$s页',
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (c) {

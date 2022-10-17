@@ -439,6 +439,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     imageCount: _data!.pages.length,
                     imageUrls: _data!.pages,
                     preloadPagesCount: _setting.preloadCount,
+                    verticalScroll: _setting.viewDirection == ViewDirection.topToBottom,
                     reverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,
                     viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
                     slideWidthRatio: _kSlideWidthRatio,
@@ -455,6 +456,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     },
                     firstPageBuilder: (c) => ViewExtraSubPage(
                       isHeader: true,
+                      reverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
@@ -466,6 +468,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     ),
                     lastPageBuilder: (c) => ViewExtraSubPage(
                       isHeader: false,
+                      reverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
@@ -524,7 +527,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   children: [
                                     Expanded(
                                       child: Directionality(
-                                        textDirection: _setting.viewDirection == ViewDirection.leftToRight ? TextDirection.ltr : TextDirection.rtl,
+                                        textDirection: _setting.viewDirection == ViewDirection.rightToLeft ? TextDirection.rtl : TextDirection.ltr,
                                         child: SliderTheme(
                                           data: Theme.of(context).sliderTheme.copyWith(
                                                 thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10.0),

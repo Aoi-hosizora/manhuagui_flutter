@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/result.dart';
 import 'package:basic_utils/basic_utils.dart';
@@ -58,9 +60,10 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // DioError [DioErrorType.other]: SocketException: Write failed (OS Error: Broken pipe, errno = 32), address = ...
   // DioError [DioErrorType.other]: HttpException: Connection reset by peer, uri = ...
   // DioError [DioErrorType.other]: HttpException: Connection closed before full header was received, uri = ...
-  // DioError [DioErrorType.other]: HandshakeException: Handshake error in client (OS Error: SSLV3_ALERT_HANDSHAKE_FAILURE)
   // DioError [DioErrorType.connectTimeout]: Connecting timed out [1ms]
   // DioError [DioErrorType.response]: Http status error [502]
+  // TlsException [HandshakeException]: Handshake error in client (OS Error: SSLV3_ALERT_HANDSHAKE_FAILURE)
+  // TlsException [HandshakeException]: Connection terminated during handshake
   // _CastError: type 'String' is not a subtype of type 'Map<String, dynamic>?' in type cast
   // _CastError: type 'Null' is not a subtype of type 'Map<String, dynamic>' in type cast
   // _CastError: Null check operator used on a null value
@@ -71,7 +74,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     print('===> method: ${e.requestOptions.method}');
 
     // ======================================================================================================================
-    // ErrorType.networkError
+    // ErrorType.networkError (DioError)
     if (response == null) {
       var text = 'Unknown error';
       switch (e.type) {
@@ -87,10 +90,10 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
             text = 'Bad server (Connection reset)'; // TODO => Network is unavailable
           } else if (msg.contains('connection closed')) {
             text = 'Bad server (Connection closed)'; // TODO => Network is unavailable
-          } else if (msg.contains('handshake') && msg.contains('ssl')) {
+          } else if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
             text = 'Bad server (HTTPS error)';
           } else if (DEBUG) {
-            text = '[DEBUG] ${e.error.toString()}';
+            text = '[DEBUG] DioError: ${e.error.toString()}';
           } else {
             text = 'Unknown error';
           }
@@ -144,6 +147,29 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       // never be DioError, must goto ErrorType.otherError
       return wrapError(e, s);
     }
+  }
+
+  // ======================================================================================================================
+  // ErrorType.networkError (TlsException)
+  if (e is TlsException) {
+    var text = 'Unknown error';
+    var msg = e.message.toLowerCase(); // HandshakeException or CertificateException
+    if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
+      text = 'Bad server (HTTPS error)';
+    } else if (DEBUG) {
+      text = '[DEBUG] ${e.type}: ${e.message.toString()}';
+    } else {
+      text = 'Unknown error';
+    }
+
+    print('===> uri: ?');
+    print('===> method: ?');
+    print('===> type: ${ErrorType.networkError}');
+    print('===> text: $text');
+    print('===> error: TlsException [${e.type}]: ${e.message}${e.osError == null ? '' : ' ${e.osError}'}');
+    print('===> trace:\n$s');
+    print('└─────────────────── WrapError ───────────────────┘');
+    return ErrorMessage.network(e, s, text);
   }
 
   // ======================================================================================================================
