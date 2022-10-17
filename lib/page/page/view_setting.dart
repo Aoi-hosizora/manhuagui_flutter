@@ -77,7 +77,10 @@ extension ViewDirectionExtension on ViewDirection {
     if (this == ViewDirection.rightToLeft) {
       return 1;
     }
-    return 2;
+    if (this == ViewDirection.topToBottom) {
+      return 2;
+    }
+    return 0;
   }
 
   static ViewDirection fromInt(int i) {
@@ -86,6 +89,9 @@ extension ViewDirectionExtension on ViewDirection {
     }
     if (i == 1) {
       return ViewDirection.rightToLeft;
+    }
+    if (i == 2) {
+      return ViewDirection.topToBottom;
     }
     return ViewDirection.leftToRight;
   }
@@ -274,7 +280,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _preloadCount.clamp(0, 5),
           values: [0, 1, 2, 3, 4, 5],
           builder: (s) => Text(
-            s == 0 ? '禁用预加载' : '预加载前后$s页',
+            s == 0 ? '禁用' : '前后$s页',
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (c) {

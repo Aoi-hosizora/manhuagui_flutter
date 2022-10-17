@@ -190,7 +190,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _currentPage = 1; // image page only, starts from 1
   var _progressValue = 1; // image page only, starts from 1
-  var _inExtraPage = false;
+  var _inExtraPage = true;
 
   void _onPageChanged(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) {
     _currentPage = imageIndex;

@@ -176,163 +176,161 @@ class ViewExtraSubPage extends StatelessWidget {
       context: context,
       removeTop: true,
       removeBottom: true,
-      child: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width,
-          child: Column(
-            children: [
-              // ****************************************************************
-              // 额外页首页-头部框
-              // ****************************************************************
-              if (isHeader)
-                Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
-                  child: Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          NetworkImageView(
-                            url: mangaCover,
-                            height: 200,
-                            width: 150,
-                            border: Border.all(
-                              width: 1.0,
-                              color: Colors.grey[400]!,
-                            ),
-                          ),
-                          SizedBox(width: 18),
-                          Container(
-                            width: MediaQuery.of(context).size.width - 18 * 3 - 150 - 2, // | ▢ ▢▢ |
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    chapter.mangaTitle,
-                                    style: Theme.of(context).textTheme.headline6,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Flexible(
-                                  child: Text(
-                                    chapter.title,
-                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                          color: Theme.of(context).primaryColor,
-                                        ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 18),
-                      SizedBox(
-                        height: 42,
-                        width: 200,
-                        child: ElevatedButton(
-                          child: Text('开始阅读'),
-                          onPressed: () => onJumpToImage.call(1, true),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              // ****************************************************************
-              // 额外页尾页-头部框
-              // ****************************************************************
-              if (!isHeader)
-                Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
-                  child: Column(
-                    children: [
-                      NetworkImageView(
-                        url: chapter.pages[0],
-                        height: 150,
-                        width: 150 / 0.618,
-                        fit: BoxFit.cover,
-                        border: Border.all(
-                          width: 1.0,
-                          color: Colors.grey[400]!,
-                        ),
-                      ),
-                      SizedBox(height: 18),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              '- ${chapter.title} -',
-                              style: Theme.of(context).textTheme.headline6?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 18),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            height: 42,
-                            width: 150,
-                            child: ElevatedButton(
-                              child: Text('重新阅读'),
-                              onPressed: () => onJumpToImage.call(1, false),
-                            ),
-                          ),
-                          SizedBox(width: 18),
-                          SizedBox(
-                            height: 42,
-                            width: 150,
-                            child: ElevatedButton(
-                              child: Text('返回上一页'),
-                              onPressed: () => onJumpToImage.call(chapter.pages.length, true),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              // ****************************************************************
-              // 上下章节 / 五个按钮
-              // ****************************************************************
-              SizedBox(height: 18),
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width,
+        child: Column(
+          children: [
+            // ****************************************************************
+            // 额外页首页-头部框
+            // ****************************************************************
+            if (isHeader)
               Container(
                 color: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18 - 6),
-                child: Material(
-                  color: Colors.transparent,
-                  child: _buildChapters(context), // InkWell vertical padding: 6
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        NetworkImageView(
+                          url: mangaCover,
+                          height: 200,
+                          width: 150,
+                          border: Border.all(
+                            width: 1.0,
+                            color: Colors.grey[400]!,
+                          ),
+                        ),
+                        SizedBox(width: 18),
+                        Container(
+                          width: MediaQuery.of(context).size.width - 18 * 3 - 150 - 2, // | ▢ ▢▢ |
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  chapter.mangaTitle,
+                                  style: Theme.of(context).textTheme.headline6,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Flexible(
+                                child: Text(
+                                  chapter.title,
+                                  style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 18),
+                    SizedBox(
+                      height: 42,
+                      width: 200,
+                      child: ElevatedButton(
+                        child: Text('开始阅读'),
+                        onPressed: () => onJumpToImage.call(1, true),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 18),
+            // ****************************************************************
+            // 额外页尾页-头部框
+            // ****************************************************************
+            if (!isHeader)
               Container(
                 color: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18 - 6),
-                child: Material(
-                  color: Colors.transparent,
-                  child: _buildActions(context), // InkWell vertical padding: 6
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                child: Column(
+                  children: [
+                    NetworkImageView(
+                      url: chapter.pages[0],
+                      height: 150,
+                      width: 150 / 0.618,
+                      fit: BoxFit.cover,
+                      border: Border.all(
+                        width: 1.0,
+                        color: Colors.grey[400]!,
+                      ),
+                    ),
+                    SizedBox(height: 18),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '- ${chapter.title} -',
+                            style: Theme.of(context).textTheme.headline6?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 18),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 42,
+                          width: 150,
+                          child: ElevatedButton(
+                            child: Text('重新阅读'),
+                            onPressed: () => onJumpToImage.call(1, false),
+                          ),
+                        ),
+                        SizedBox(width: 18),
+                        SizedBox(
+                          height: 42,
+                          width: 150,
+                          child: ElevatedButton(
+                            child: Text('返回上一页'),
+                            onPressed: () => onJumpToImage.call(chapter.pages.length, true),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            // ****************************************************************
+            // 上下章节 / 五个按钮
+            // ****************************************************************
+            SizedBox(height: 18),
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18 - 6),
+              child: Material(
+                color: Colors.transparent,
+                child: _buildChapters(context), // InkWell vertical padding: 6
+              ),
+            ),
+            SizedBox(height: 18),
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18 - 6),
+              child: Material(
+                color: Colors.transparent,
+                child: _buildActions(context), // InkWell vertical padding: 6
+              ),
+            ),
+          ],
         ),
       ),
     );

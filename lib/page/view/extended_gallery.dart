@@ -9,7 +9,7 @@ class HorizontalGalleryView extends ExtendedPhotoGallery {
     required ExtendedPhotoGalleryPageOptions Function(BuildContext, int) imagePageBuilder,
     required Widget Function(BuildContext context) firstPageBuilder, // <<<
     required Widget Function(BuildContext context) lastPageBuilder, // <<<
-    void Function()? onImageLongPressed, // <<<
+    void Function(int index)? onImageLongPressed, // <<<
     BoxDecoration? backgroundDecoration,
     bool wantKeepAlive = false,
     bool gaplessPlayback = false,
@@ -41,7 +41,7 @@ class HorizontalGalleryView extends ExtendedPhotoGallery {
               return lastPageBuilder(c); // <<<
             }
             return GestureDetector(
-              onLongPress: onImageLongPressed, // <<<
+              onLongPress: onImageLongPressed == null ? null : () => onImageLongPressed(index - 1), // <<<
               child: builder(c, index - 1),
             );
             // return builder(c, index - 1);
@@ -75,63 +75,153 @@ class VerticalGalleryView extends StatefulWidget {
     required this.imagePageBuilder,
     required this.firstPageBuilder,
     required this.lastPageBuilder,
-    this.onImageLongPressed, // x
+    this.onImageTapDown,
+    this.onImageTapUp,
+    this.onImageLongPressed,
     this.backgroundDecoration,
     this.wantKeepAlive = false,
     this.gaplessPlayback = false,
-    this.reverse = false, // x
-    this.pageController, // x
-    this.onPageChanged, // x
-    this.changePageWhenFinished = false, // x
-    this.keepViewportMainAxisSize = true, // x
-    this.viewportMainAxisFactor, // x
+    this.onPageChanged,
+    this.betweenPageSpace = 0.0,
     this.scaleStateChangedCallback,
     this.enableRotation = false,
-    this.scrollPhysics, // x
-    this.scrollDirection = Axis.horizontal, // x
+    this.scrollPhysics,
     this.customSize,
     this.loadingBuilder,
     this.errorBuilder,
-    this.pageMainAxisHintSize, // x
-    this.preloadPagesCount = 0, // x
-    this.betweenPageSpace = 0.0, // <<<
+    this.pageMainAxisHintSize,
+    this.preloadPagesCount = 0,
   }) : super(key: key);
 
   final int imageCount;
   final ExtendedPhotoGalleryPageOptions Function(BuildContext, int) imagePageBuilder;
   final Widget Function(BuildContext context) firstPageBuilder;
   final Widget Function(BuildContext context) lastPageBuilder;
-  final void Function()? onImageLongPressed; // TODO
+  final void Function(int index, TapDownDetails details)? onImageTapDown;
+  final void Function(int index, TapUpDetails details)? onImageTapUp;
+  final void Function(int index)? onImageLongPressed;
   final BoxDecoration? backgroundDecoration;
   final bool wantKeepAlive;
   final bool gaplessPlayback;
-  final bool reverse; // TODO
-  final PageController? pageController; // TODO
-  final void Function(int)? onPageChanged; // TODO
-  final bool changePageWhenFinished; // TODO
-  final bool keepViewportMainAxisSize; // TODO
-  final double? viewportMainAxisFactor; // TODO
+  final void Function(int)? onPageChanged;
+  final double betweenPageSpace;
   final void Function(PhotoViewScaleState)? scaleStateChangedCallback;
   final bool enableRotation;
-  final ScrollPhysics? scrollPhysics; // TODO
-  final Axis scrollDirection; // TODO
+  final ScrollPhysics? scrollPhysics;
   final Size? customSize;
   final Widget Function(BuildContext, ImageChunkEvent?)? loadingBuilder;
   final Widget Function(BuildContext, Object, StackTrace?)? errorBuilder;
-  final double? pageMainAxisHintSize; // TODO
-  final int preloadPagesCount; // TODO
-  final double betweenPageSpace; // <<<
+  final double? pageMainAxisHintSize;
+  final int preloadPagesCount;
 
   @override
-  State<VerticalGalleryView> createState() => _VerticalGalleryViewState();
+  State<VerticalGalleryView> createState() => VerticalGalleryViewState();
 }
 
-class _VerticalGalleryViewState extends State<VerticalGalleryView> {
+class VerticalGalleryViewState extends State<VerticalGalleryView> {
+  final _listKey = GlobalKey<State<StatefulWidget>>();
+  late final _controller = ScrollController()..addListener(_onScrollChanged);
   late List<ValueNotifier<String>> _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
+  late List<GlobalKey<State<StatefulWidget>>> _listKeys = List.generate(widget.imageCount + 2, (index) => GlobalKey<State<StatefulWidget>>());
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _onScrollChanged());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   void reload(int index) {
     _notifiers[index].value = DateTime.now().microsecondsSinceEpoch.toString();
     // no need to setState
+  }
+
+  void _onScrollChanged() {
+    if (_controller.offset == 0) {
+      widget.onPageChanged?.call(0);
+    } else if (_controller.offset == _controller.position.maxScrollExtent) {
+      widget.onPageChanged?.call(widget.imageCount + 1);
+    } else {
+      var scrollRect = _listKey.currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+      if (scrollRect != null) {
+        var index = _getVisibleTargetItemIndex(scrollRect);
+        if (index != null) {
+          widget.onPageChanged?.call(index);
+        }
+      }
+    }
+  }
+
+  Future<void> jumpToPage(int page) async {
+    var scrollRect = _listKey.currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+    if (scrollRect != null) {
+      if (await _scrollToTargetIndex(scrollRect, page)) {
+        // TODO jump no smooth ???
+        widget.onPageChanged?.call(page);
+      }
+    }
+  }
+
+  int? _getVisibleTargetItemIndex(Rect scrollRect) {
+    int outIndex = -1;
+    for (var i = 0; i < widget.imageCount + 2; i++) {
+      var itemRect = _listKeys[i].currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+      if (itemRect != null) {
+        if (itemRect.top <= scrollRect.top && itemRect.bottom > scrollRect.top) {
+          outIndex = i;
+          break;
+        }
+      }
+    }
+    if (outIndex < 0 || outIndex >= widget.imageCount + 2) {
+      return null;
+    }
+    return outIndex;
+  }
+
+  // TODO move _scrollToTargetIndex and manhuagui's _scrollToTargetIndex to flutter_ahlib
+
+  Future<bool> _scrollToTargetIndex(Rect scrollRect, int targetIndex) async {
+    Rect? getItemRect(int index) {
+      if (index < 0 || index >= widget.imageCount + 2) {
+        return null;
+      }
+      return _listKeys[index].currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+    }
+
+    // automatically scroll the data view, to make sure if the target item rect is not null
+    var targetItemRect = getItemRect(targetIndex);
+    while (targetItemRect == null) {
+      // get current visible item and check validity
+      var currIndex = _getVisibleTargetItemIndex(scrollRect) ?? -1;
+      if (currIndex < 0) {
+        return false; // almost unreachable
+      }
+      if (currIndex == targetIndex) {
+        targetItemRect = getItemRect(targetIndex);
+        break; // almost unreachable
+      }
+
+      // automatically scroll (almost the real height of scroll view)
+      var direction = currIndex > targetIndex ? -1 : 1;
+      await _controller.jumpToAndWait(_controller.offset + direction * scrollRect.height * 0.95); // jump and wait for widget building
+      if (_controller.offset < 0 || _controller.offset > 500000) {
+        return false; // almost unreachable, only for exception
+      }
+      targetItemRect = getItemRect(targetIndex);
+    }
+    if (targetItemRect == null) {
+      return false; // almost unreachable
+    }
+
+    // scroll to target index in new data view style
+    await _controller.jumpToAndWait(_controller.offset + targetItemRect.top - scrollRect.top);
+    return true;
   }
 
   @override
@@ -139,6 +229,7 @@ class _VerticalGalleryViewState extends State<VerticalGalleryView> {
     super.didUpdateWidget(oldWidget);
     if (widget.imageCount != oldWidget.imageCount) {
       _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
+      _listKeys = List.generate(widget.imageCount + 2, (index) => GlobalKey<State<StatefulWidget>>());
     }
   }
 
@@ -163,19 +254,15 @@ class _VerticalGalleryViewState extends State<VerticalGalleryView> {
           minScale: pageOption.minScale,
           maxScale: pageOption.maxScale,
           scaleStateCycle: pageOption.scaleStateCycle,
-          onTapUp: pageOption.onTapUp,
-          onTapDown: pageOption.onTapDown,
+          onTapUp: null /* pageOption.onTapUp */,
+          onTapDown: null /* pageOption.onTapDown */,
           onScaleEnd: pageOption.onScaleEnd,
           gestureDetectorBehavior: pageOption.gestureDetectorBehavior,
-          // tightMode: pageOption.tightMode,
-          tightMode: true,
+          tightMode: true /* pageOption.tightMode */,
           filterQuality: pageOption.filterQuality,
           basePosition: pageOption.basePosition,
-          // disableGestures: pageOption.disableGestures,
-          disableGestures: true,
+          disableGestures: true /* pageOption.disableGestures */,
           enablePanAlways: pageOption.enablePanAlways,
-          // loadingBuilder: (_, __) => Container(height: 200, color: Colors.yellow, child: Text('loading $index')),
-          // errorBuilder: (_, __, ___) => Container(height: 200, color: Colors.blue, child: Text('error $index')),
           loadingBuilder: pageOption.loadingBuilder ?? widget.loadingBuilder,
           errorBuilder: pageOption.errorBuilder ?? widget.errorBuilder,
         ),
@@ -183,90 +270,43 @@ class _VerticalGalleryViewState extends State<VerticalGalleryView> {
     );
   }
 
-  // TODO
-
-  final controller = ScrollController();
-  var atTop = false;
-
   @override
   Widget build(BuildContext context) {
-    // controller ...
-    // scroll to page ...
-
+    final pageMainAxisHintSize = widget.pageMainAxisHintSize ?? MediaQuery.of(context).size.height;
     return ListView(
-      // TODO cacheExtent 上下都包括？
+      key: _listKey,
+      controller: _controller,
       padding: EdgeInsets.zero,
+      physics: widget.scrollPhysics,
+      cacheExtent: widget.preloadPagesCount < 1 ? 0 : pageMainAxisHintSize * widget.preloadPagesCount - 1,
       children: [
-        widget.firstPageBuilder(context),
-        SizedBox(height: widget.betweenPageSpace),
-        for (var i = 0; i < widget.imageCount; i++)
-          Container(
-            margin: EdgeInsets.only(bottom: widget.betweenPageSpace),
-            child: _buildPhotoItem(context, i),
-          ),
-        widget.firstPageBuilder(context),
-      ],
-    );
+        // 1
+        Padding(
+          key: _listKeys[0],
+          padding: EdgeInsets.only(top: 0),
+          child: widget.firstPageBuilder(context),
+        ),
 
-    return InteractiveViewer(
-      minScale: 1.0,
-      maxScale: 2.0,
-      constrained: false,
-      scaleEnabled: true,
-      child: SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical,
-        child: Listener(
-          onPointerMove: (e) {
-            // print('onPointerMove, ${DateTime.now()} ${e.delta}');
-            if (atTop && e.delta.dy > 0) {
-              atTop = false;
-              if (mounted) setState(() {});
-            }
-          },
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (e) {
-              // print('onNotification, ${DateTime.now()}, ${e.metrics.pixels} ');
-              if (e.metrics.pixels == e.metrics.minScrollExtent) {
-                atTop = true;
-                if (mounted) setState(() {});
-              }
-              return false;
-            },
-            child: ListView(
-              physics: !atTop ? AlwaysScrollableScrollPhysics() : NeverScrollableScrollPhysics(),
-              controller: controller,
-              cacheExtent: MediaQuery.of(context).size.height,
-              children: [
-                // SizedBox(
-                //   width: MediaQuery.of(context).size.width,
-                //   child: widget.firstPageBuilder(context),
-                // ),
-                // SizedBox(height: widget.betweenPageSpace),
-                for (var i = 0; i < widget.imageCount; i++)
-                  StatefulBuilder(
-                    builder: (c, _setState) {
-                      // WidgetsBinding.instance?.addPostFrameCallback((_) {
-                      //   var rect = c.findRenderObject()?.getBoundInRootAncestorCoordinate();
-                      //   print('$i: $rect');
-                      // });
-                      // print('build $i');
-                      return Container(
-                        width: MediaQuery.of(context).size.width,
-                        margin: EdgeInsets.only(top: i == 0 ? 0 : widget.betweenPageSpace),
-                        child: _buildPhotoItem(context, i),
-                      );
-                    },
-                  ),
-                // SizedBox(
-                //   width: MediaQuery.of(context).size.width,
-                //   child: widget.lastPageBuilder(context),
-                // ),
-              ],
+        // 2
+        for (var i = 0; i < widget.imageCount; i++)
+          Padding(
+            key: _listKeys[i + 1],
+            padding: EdgeInsets.only(top: widget.betweenPageSpace),
+            child: GestureDetector(
+              onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(i) /* <<< */,
+              onTapDown: widget.onImageTapDown == null ? null : (d) => widget.onImageTapDown!(i, d) /* <<< */,
+              onTapUp: widget.onImageTapUp == null ? null : (d) => widget.onImageTapUp!(i, d) /* <<< */,
+              child: _buildPhotoItem(context, i),
             ),
           ),
+
+        // 3
+        Padding(
+          key: _listKeys[widget.imageCount + 1],
+          padding: EdgeInsets.only(top: widget.betweenPageSpace),
+          child: widget.lastPageBuilder(context),
         ),
-      ),
+      ],
     );
   }
 }
