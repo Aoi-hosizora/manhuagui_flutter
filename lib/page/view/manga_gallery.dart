@@ -14,9 +14,11 @@ class MangaGalleryView extends StatefulWidget {
     required this.imageUrls,
     required this.preloadPagesCount,
     required this.verticalScroll,
-    required this.reverseScroll,
-    required this.viewportFraction,
+    required this.horizontalReverseScroll,
+    required this.horizontalViewportFraction,
+    required this.verticalViewportPageSpace,
     required this.slideWidthRatio,
+    required this.slideHeightRatio,
     required this.onPageChanged, // exclude extra pages, starts from 1
     this.initialImageIndex = 1, // exclude extra pages, starts from 1
     this.onCenterAreaTapped,
@@ -30,9 +32,11 @@ class MangaGalleryView extends StatefulWidget {
   final List<String> imageUrls;
   final int preloadPagesCount;
   final bool verticalScroll;
-  final bool reverseScroll;
-  final double viewportFraction;
+  final bool horizontalReverseScroll;
+  final double horizontalViewportFraction;
+  final double verticalViewportPageSpace;
   final double slideWidthRatio;
+  final double slideHeightRatio;
   final void Function(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) onPageChanged;
   final int initialImageIndex;
   final void Function()? onCenterAreaTapped;
@@ -47,31 +51,14 @@ class MangaGalleryView extends StatefulWidget {
 
 class MangaGalleryViewState extends State<MangaGalleryView> {
   final CacheManager _cache = DefaultCacheManager();
-  final _horizontalGalleryKey = GlobalKey<ExtendedPhotoGalleryState>();
+  final _horizontalGalleryKey = GlobalKey<HorizontalGalleryViewState>();
   final _verticalGalleryKey = GlobalKey<VerticalGalleryViewState>();
-  late var _horizontalController = PageController(
-    initialPage: widget.initialImageIndex - 1 + 1, // exclude extra pages, starts from 0
-    viewportFraction: widget.viewportFraction,
-  );
 
   // current page index, include extra pages, starts from 0.
   late var _currentPageIndex = widget.initialImageIndex - 1 + 1;
 
   // current image index, exclude extra pages, starts from 0.
   int get _currentImageIndex => (_currentPageIndex - 1).clamp(0, widget.imageCount - 1);
-
-  @override
-  void didUpdateWidget(covariant MangaGalleryView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.viewportFraction != widget.viewportFraction) {
-      var oldController = _horizontalController;
-      _horizontalController = PageController(
-        initialPage: _currentPageIndex, // initial to current page
-        viewportFraction: widget.viewportFraction,
-      );
-      WidgetsBinding.instance?.addPostFrameCallback((_) => oldController.dispose());
-    }
-  }
 
   Offset? _pointerDownPosition;
 
@@ -81,18 +68,49 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
 
   void _onPointerUp(Offset pos) {
     if (_pointerDownPosition != null && _pointerDownPosition == pos) {
-      // TODO up2down
-      var width = MediaQuery.of(context).size.width;
-      var reverse = !widget.verticalScroll && widget.reverseScroll;
-      if (pos.dx < width * widget.slideWidthRatio) {
-        _jumpToPage(!reverse ? _currentPageIndex - 1 : _currentPageIndex + 1); // 上一页 / 下一页(反)
-      } else if (pos.dx > width * (1 - widget.slideWidthRatio)) {
-        _jumpToPage(!reverse ? _currentPageIndex + 1 : _currentPageIndex - 1); // 下一页 / 上一页(反)
+      if (!widget.verticalScroll) {
+        var width = MediaQuery.of(context).size.width;
+        if (pos.dx < width * widget.slideWidthRatio) {
+          _jumpToPage(!widget.horizontalReverseScroll ? _currentPageIndex - 1 : _currentPageIndex + 1); // 上一页 / 下一页(反)
+        } else if (pos.dx > width * (1 - widget.slideWidthRatio)) {
+          _jumpToPage(!widget.horizontalReverseScroll ? _currentPageIndex + 1 : _currentPageIndex - 1); // 下一页 / 上一页(反)
+        } else {
+          widget.onCenterAreaTapped?.call();
+        }
       } else {
-        widget.onCenterAreaTapped?.call();
+        var height = MediaQuery.of(context).size.height;
+        if (pos.dy < height * widget.slideHeightRatio) {
+          _jumpToPage(_currentPageIndex - 1); // 上一页
+        } else if (pos.dy > height * (1 - widget.slideHeightRatio)) {
+          _jumpToPage(_currentPageIndex + 1); // 下一页
+        } else {
+          widget.onCenterAreaTapped?.call();
+        }
       }
     }
     _pointerDownPosition = null;
+  }
+
+  void _jumpToPage(int pageIndex) {
+    if (pageIndex >= 0 && pageIndex <= widget.imageCount + 1) {
+      if (!widget.verticalScroll) {
+        _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: false);
+      } else {
+        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: false);
+      }
+    }
+  }
+
+  // jump to image page, exclude extra pages, starts from 1.
+  void jumpToImage(int imageIndex, {bool animated = false}) {
+    if (imageIndex >= 1 && imageIndex <= widget.imageCount) {
+      var pageIndex = imageIndex + 1 - 1; // include extra pages, starts from 0
+      if (!widget.verticalScroll) {
+        _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated);
+      } else {
+        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: !animated);
+      }
+    }
   }
 
   Future<void> _onLongPressed(int index) async {
@@ -124,45 +142,18 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     );
   }
 
-  void _jumpToPage(int pageIndex) {
-    if (pageIndex >= 0 && pageIndex <= widget.imageCount + 1) {
-      if (!widget.verticalScroll) {
-        _horizontalController.jumpToPage(pageIndex);
-      } else {
-        _verticalGalleryKey.currentState?.jumpToPage(pageIndex);
-      }
-    }
-  }
-
-  // jump to image page, exclude extra pages, starts from 1.
-  void jumpToImage(int imageIndex, [bool animated = false]) {
-    if (imageIndex >= 1 && imageIndex <= widget.imageCount) {
-      var pageIndex = imageIndex + 1 - 1; // include extra pages, starts from 0
-      if (!widget.verticalScroll) {
-        if (!animated) {
-          _horizontalController.jumpToPage(pageIndex);
-        } else {
-          _horizontalController.defaultAnimateToPage(pageIndex);
-        }
-      } else {
-        _verticalGalleryKey.currentState?.jumpToPage(pageIndex);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (!widget.verticalScroll) {
       return HorizontalGalleryView(
         key: _horizontalGalleryKey,
-        pageController: _horizontalController,
         imageCount: widget.imageCount,
         preloadPagesCount: widget.preloadPagesCount,
-        reverse: widget.reverseScroll,
+        initialPage: widget.initialImageIndex - 1 + 1,
+        viewportFraction: widget.horizontalViewportFraction,
+        reverse: widget.horizontalReverseScroll,
         backgroundDecoration: BoxDecoration(color: Colors.black),
         scrollPhysics: AlwaysScrollableScrollPhysics(),
-        keepViewportMainAxisSize: true,
-        changePageWhenFinished: true,
         onPageChanged: (idx) {
           _currentPageIndex = idx;
           widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
@@ -232,9 +223,10 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       key: _verticalGalleryKey,
       imageCount: widget.imageCount,
       preloadPagesCount: widget.preloadPagesCount,
+      initialPage: widget.initialImageIndex - 1 + 1,
+      viewportPageSpace: widget.verticalViewportPageSpace,
       backgroundDecoration: BoxDecoration(color: Colors.black),
       scrollPhysics: AlwaysScrollableScrollPhysics(),
-      betweenPageSpace: widget.viewportFraction == 1.0 ? 0 : 25,
       onPageChanged: (idx) {
         _currentPageIndex = idx;
         widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
@@ -247,6 +239,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         minScale: PhotoViewComputedScale.contained / 2,
         maxScale: PhotoViewComputedScale.covered * 2,
         filterQuality: FilterQuality.high,
+        onTapDown: null,
+        onTapUp: null,
         imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
           key: key,
           url: widget.imageUrls[idx],
@@ -275,8 +269,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
         ),
       ),
-      onImageTapDown: (idx, d) => _onPointerDown(d.globalPosition),
-      onImageTapUp: (idx, d) => _onPointerUp(d.globalPosition),
+      onImageTapDown: (d) => _onPointerDown(d.globalPosition),
+      onImageTapUp: (d) => _onPointerUp(d.globalPosition),
       onImageLongPressed: (idx) => _onLongPressed(idx),
       // ****************************************************************
       // 额外页

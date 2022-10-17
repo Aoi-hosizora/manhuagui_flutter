@@ -55,7 +55,9 @@ class MangaViewerPage extends StatefulWidget {
 }
 
 const _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
+const _kSlideHeightRatio = 0.2; // 点击跳转页面的区域比例
 const _kViewportFraction = 1.08; // 页面间隔
+const _kViewportPageSpace = 25.0; // 页面间隔
 const _kAnimationDuration = Duration(milliseconds: 150); // 动画时长
 const _kOverlayAnimationDuration = Duration(milliseconds: 300); // SystemUI 动画时长
 
@@ -440,9 +442,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     imageUrls: _data!.pages,
                     preloadPagesCount: _setting.preloadCount,
                     verticalScroll: _setting.viewDirection == ViewDirection.topToBottom,
-                    reverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,
-                    viewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
+                    horizontalReverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,
+                    horizontalViewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
+                    verticalViewportPageSpace: _setting.enablePageSpace ? _kViewportPageSpace : 0,
                     slideWidthRatio: _kSlideWidthRatio,
+                    slideHeightRatio: _kSlideHeightRatio,
                     initialImageIndex: _initialPage ?? 1,
                     onPageChanged: _onPageChanged,
                     onSaveImage: (imageIndex) => Fluttertoast.showToast(msg: '第$imageIndex页') /* TODO save image */,
@@ -460,7 +464,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
-                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, anim),
+                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
                       onGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       onShowToc: _onTocPressed,
                       onShowComments: _onCommentsPressed,
@@ -472,7 +476,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
-                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, anim),
+                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
                       onGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       onShowToc: _onTocPressed,
                       onShowComments: _onCommentsPressed,
@@ -599,39 +603,53 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         _showHelpRegion = false;
                         if (mounted) setState(() {});
                       },
-                      child: Row(
-                        children: [
-                          Container(
-                            width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
-                            color: Colors.yellow[800]!.withOpacity(0.75),
-                            child: Center(
-                              child: Text(
-                                _setting.viewDirection == ViewDirection.leftToRight ? '上\n一\n页' : '下\n一\n页',
-                                style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
+                      child: DefaultTextStyle(
+                        style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
+                        child: _setting.viewDirection != ViewDirection.topToBottom
+                            ? Row(
+                                children: [
+                                  Container(
+                                    width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
+                                    color: Colors.orange[300]!.withOpacity(0.75),
+                                    alignment: Alignment.center,
+                                    child: Text(_setting.viewDirection == ViewDirection.leftToRight ? '上\n一\n页' : '下\n一\n页'),
+                                  ),
+                                  Container(
+                                    width: MediaQuery.of(context).size.width * (1 - 2 * _kSlideWidthRatio),
+                                    color: Colors.blue[300]!.withOpacity(0.75),
+                                    alignment: Alignment.center,
+                                    child: Text('菜单'),
+                                  ),
+                                  Container(
+                                    width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
+                                    color: Colors.pink[300]!.withOpacity(0.75),
+                                    alignment: Alignment.center,
+                                    child: Text(_setting.viewDirection == ViewDirection.leftToRight ? '下\n一\n页' : '上\n一\n页'),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  Container(
+                                    height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
+                                    color: Colors.orange[300]!.withOpacity(0.75),
+                                    alignment: Alignment.center,
+                                    child: Text('上一页'),
+                                  ),
+                                  Container(
+                                    height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * (1 - 2 * _kSlideHeightRatio),
+                                    color: Colors.blue[300]!.withOpacity(0.75),
+                                    alignment: Alignment.center,
+                                    child: Text('菜单'),
+                                  ),
+                                  Container(
+                                    height:(MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
+                                    color: Colors.pink[300]!.withOpacity(0.75),
+                                    alignment: Alignment.center,
+                                    child: Text('下一页'),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width * (1 - 2 * _kSlideWidthRatio),
-                            color: Colors.blue[300]!.withOpacity(0.75),
-                            child: Center(
-                              child: Text(
-                                '菜单',
-                                style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
-                            color: Colors.pink[300]!.withOpacity(0.75),
-                            child: Center(
-                              child: Text(
-                                _setting.viewDirection == ViewDirection.leftToRight ? '下\n一\n页' : '上\n一\n页',
-                                style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
