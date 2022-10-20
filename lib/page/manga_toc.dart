@@ -64,8 +64,9 @@ class _MangaTocPageState extends State<MangaTocPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.mangaTitle),
+        leading: AppBarActionButton.leading(context: context),
         actions: [
-          IconButton(
+          AppBarActionButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '用浏览器打开',
             onPressed: () => launchInBrowser(

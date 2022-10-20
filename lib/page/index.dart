@@ -104,7 +104,8 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
         ),
         bottomNavigationBar: Theme(
           data: Theme.of(context).copyWith(
-            highlightColor: Colors.transparent,
+            highlightColor: null,
+            splashColor: Colors.transparent,
           ),
           child: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,

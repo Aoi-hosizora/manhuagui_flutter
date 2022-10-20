@@ -102,8 +102,9 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('账号登录'),
+        leading: AppBarActionButton.leading(context: context),
         actions: [
-          IconButton(
+          AppBarActionButton(
             icon: Text('注册'),
             onPressed: () => showDialog(
               context: context,

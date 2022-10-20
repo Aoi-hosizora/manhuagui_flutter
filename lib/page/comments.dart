@@ -52,6 +52,7 @@ class _CommentsPageState extends State<CommentsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('漫画评论'),
+        leading: AppBarActionButton.leading(context: context),
       ),
       body: PaginationListView<Comment>(
         data: _data,

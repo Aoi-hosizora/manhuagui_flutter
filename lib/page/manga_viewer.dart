@@ -27,8 +27,6 @@ import 'package:manhuagui_flutter/service/natives/share.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:wakelock/wakelock.dart';
 
-// TODO
-
 /// 漫画章节阅读页
 class MangaViewerPage extends StatefulWidget {
   const MangaViewerPage({
@@ -129,6 +127,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _loading = true;
   MangaChapter? _data;
   int? _initialPage;
+  var _subscribing = false;
+  var _subscribed = false;
   var _error = '';
 
   Future<void> _loadData() async {
@@ -146,8 +146,19 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       });
     }
 
+    // 2. 异步获取漫画订阅信息
+    if (AuthManager.instance.logined) {
+      Future.microtask(() async {
+        try {
+          var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mid);
+          _subscribed = r.data.isIn;
+          if (mounted) setState(() {});
+        } catch (_) {}
+      });
+    }
+
     try {
-      // 2. 获取章节数据
+      // 3. 获取章节数据
       var result = await client.getMangaChapter(mid: widget.mid, cid: widget.cid);
       _data = null;
       _error = '';
@@ -155,12 +166,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       await Future.delayed(Duration(milliseconds: 20));
       _data = result.data;
 
-      // 3. 指定起始页
+      // 4. 指定起始页
       _initialPage = widget.initialPage.clamp(1, _data!.pageCount);
       _currentPage = _initialPage!;
       _progressValue = _initialPage!;
 
-      // 4. 异步更新浏览历史
+      // 5. 异步更新浏览历史
       _updateHistory();
     } catch (e, s) {
       _data = null;
@@ -295,7 +306,31 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
   }
 
-  void _onTocPressed() {
+  Future<void> _subscribe() async {
+    if (!AuthManager.instance.logined) {
+      Fluttertoast.showToast(msg: '用户未登录');
+      return;
+    }
+
+    _subscribing = true;
+    if (mounted) setState(() {});
+
+    final client = RestClient(DioManager.instance.dio);
+    var toSubscribe = _subscribed != true; // 去订阅
+    try {
+      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.mid);
+      _subscribed = toSubscribe;
+      Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
+    } catch (e, s) {
+      var err = wrapError(e, s).text;
+      Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
+    } finally {
+      _subscribing = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _showToc() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -328,7 +363,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
   }
 
-  void _onCommentsPressed() {
+  void _showComments() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -405,10 +440,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         _data!.title,
                         style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),
                       ),
-                      leading: IconButton(
-                        icon: Icon(Icons.arrow_back),
-                        tooltip: '返回',
-                        onPressed: () => Navigator.of(context).maybePop(),
+                      leading: AppBarActionButton.leading(
+                        context: context,
+                        highlightColor: Colors.transparent,
                       ),
                     ),
             ),
@@ -451,8 +485,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     onPageChanged: _onPageChanged,
                     onSaveImage: (imageIndex) => Fluttertoast.showToast(msg: '第$imageIndex页') /* TODO save image */,
                     onShareImage: (imageIndex) => shareText(
-                      title: '【漫画柜】《${_data!.title}》 第$imageIndex页', // TODO without test
-                      link: _data!.pages[imageIndex - 1],
+                      title: '漫画柜分享',
+                      text: '【${_data!.title}】第$imageIndex页 ${_data!.pages[imageIndex - 1]}',
                     ),
                     onCenterAreaTapped: () {
                       _ScreenHelper.toggleAppBarVisibility(show: !_ScreenHelper.showAppBar, fullscreen: _setting.fullscreen);
@@ -464,11 +498,15 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
-                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
-                      onGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
-                      onShowToc: _onTocPressed,
-                      onShowComments: _onCommentsPressed,
-                      onPop: () => Navigator.of(context).maybePop(),
+                      subscribing: _subscribing,
+                      subscribed: _subscribed,
+                      toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
+                      toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
+                      toSubscribe: _subscribe,
+                      toDownload: () => Fluttertoast.showToast(msg: 'TODO') /* TODO download manga */,
+                      toShowToc: _showToc,
+                      toShowComments: _showComments,
+                      toPop: () => Navigator.of(context).maybePop(),
                     ),
                     lastPageBuilder: (c) => ViewExtraSubPage(
                       isHeader: false,
@@ -476,11 +514,15 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
                       chapterGroups: widget.chapterGroups,
-                      onJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
-                      onGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
-                      onShowToc: _onTocPressed,
-                      onShowComments: _onCommentsPressed,
-                      onPop: () => Navigator.of(context).maybePop(),
+                      subscribing: _subscribing,
+                      subscribed: _subscribed,
+                      toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
+                      toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
+                      toSubscribe: _subscribe,
+                      toDownload: () => Fluttertoast.showToast(msg: 'TODO') /* TODO download manga */,
+                      toShowToc: _showToc,
+                      toShowComments: _showComments,
+                      toPop: () => Navigator.of(context).maybePop(),
                     ),
                   ),
                 ),
@@ -583,7 +625,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                       _buildAction(
                                         text: '漫画目录',
                                         icon: Icons.menu,
-                                        action: () => _onTocPressed(),
+                                        action: () => _showToc(),
                                       ),
                                     ],
                                   ),
@@ -643,7 +685,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                     child: Text('菜单'),
                                   ),
                                   Container(
-                                    height:(MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
+                                    height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
                                     color: Colors.pink[300]!.withOpacity(0.75),
                                     alignment: Alignment.center,
                                     child: Text('下一页'),

@@ -25,6 +25,7 @@ class _CommentPageState extends State<CommentPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('评论详情'),
+        leading: AppBarActionButton.leading(context: context),
       ),
       body: ScrollbarWithMore(
         controller: _controller,

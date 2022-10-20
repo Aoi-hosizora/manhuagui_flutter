@@ -80,20 +80,19 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
             }
           },
         ),
+        leading: AppBarActionButton.leading(context: context),
         actions: [
-          IconButton(
+          AppBarActionButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '用浏览器打开',
-            splashRadius: Material.defaultSplashRadius / 2, // TODO <<<
             onPressed: () => launchInBrowser(
               context: context,
               url: WEB_HOMEPAGE_URL,
             ),
           ),
-          IconButton(
+          AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
-            splashRadius: 22, // TODO <<<
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (c) => SearchPage(),

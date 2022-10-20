@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/natives/browser.dart';
 
@@ -47,6 +48,7 @@ class _SettingPageState extends State<SettingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('设置'),
+        leading: AppBarActionButton.leading(context: context),
       ),
       body: ListView(
         children: [

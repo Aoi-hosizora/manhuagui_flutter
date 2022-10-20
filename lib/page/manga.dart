@@ -85,10 +85,9 @@ class _MangaPageState extends State<MangaPage> {
     // 1. 异步加载漫画评论首页
     _getComments();
 
-    // 2. 获取漫画订阅信息
+    // 2. 异步获取漫画订阅信息
     if (AuthManager.instance.logined) {
       Future.microtask(() async {
-        // TODO all use Future.microtask
         try {
           var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.id);
           _subscribed = r.data.isIn;
@@ -166,7 +165,7 @@ class _MangaPageState extends State<MangaPage> {
     }
   }
 
-  void _subscribe() async {
+  Future<void> _subscribe() async {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
       return;
@@ -270,8 +269,9 @@ class _MangaPageState extends State<MangaPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_data?.title ?? widget.title),
+        leading: AppBarActionButton.leading(context: context),
         actions: [
-          IconButton(
+          AppBarActionButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '用浏览器打开',
             onPressed: () => launchInBrowser(
@@ -429,14 +429,14 @@ class _MangaPageState extends State<MangaPage> {
                   ),
                 ),
                 // ****************************************************************
-                // 四个按钮
+                // 五个按钮
                 // ****************************************************************
                 Container(
                   color: Colors.white,
                   child: Material(
                     color: Colors.transparent,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 6),
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -447,7 +447,7 @@ class _MangaPageState extends State<MangaPage> {
                             enable: !_subscribing,
                           ),
                           _buildAction(
-                            text: '漫画下载',
+                            text: '下载漫画',
                             icon: Icons.download,
                             action: () => Fluttertoast.showToast(msg: 'TODO'), // TODO download manga
                           ),
@@ -476,8 +476,8 @@ class _MangaPageState extends State<MangaPage> {
                             text: '分享漫画',
                             icon: Icons.share,
                             action: () => shareText(
-                              title: '【漫画柜】${_data!.title}', // TODO without test
-                              link: _data!.url,
+                              title: '漫画柜分享',
+                              text: '【${_data!.title}】${_data!.url}',
                             ),
                           ),
                         ],

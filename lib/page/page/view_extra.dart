@@ -12,24 +12,32 @@ class ViewExtraSubPage extends StatelessWidget {
     required this.reverseScroll,
     required this.chapter,
     required this.mangaCover,
+    required this.subscribing,
+    required this.subscribed,
     required this.chapterGroups,
-    required this.onJumpToImage,
-    required this.onGotoChapter,
-    required this.onShowToc,
-    required this.onShowComments,
-    required this.onPop,
+    required this.toJumpToImage,
+    required this.toSubscribe,
+    required this.toDownload,
+    required this.toGotoChapter,
+    required this.toShowToc,
+    required this.toShowComments,
+    required this.toPop,
   }) : super(key: key);
 
   final bool isHeader;
   final bool reverseScroll;
   final MangaChapter chapter;
   final String mangaCover;
+  final bool subscribing;
+  final bool subscribed;
   final List<MangaChapterGroup> chapterGroups;
-  final void Function(int imageIndex, bool animated) onJumpToImage;
-  final void Function(bool gotoPrevious) onGotoChapter;
-  final void Function() onShowToc;
-  final void Function() onShowComments;
-  final void Function() onPop;
+  final void Function(int imageIndex, bool animated) toJumpToImage;
+  final void Function(bool gotoPrevious) toGotoChapter;
+  final void Function() toSubscribe;
+  final void Function() toDownload;
+  final void Function() toShowToc;
+  final void Function() toShowComments;
+  final void Function() toPop;
 
   Widget _buildChapters(BuildContext context) {
     Widget _buildAction({required String text, required String subText, required bool left, required void Function() action, required bool disable}) {
@@ -82,7 +90,7 @@ class ViewExtraSubPage extends StatelessWidget {
         subText: (chapterGroups.findTitle(chapter.prevCid) ?? '未知话'),
         left: !reverseScroll ? true : false,
         disable: chapter.prevCid == 0,
-        action: () => onGotoChapter.call(true),
+        action: () => toGotoChapter.call(true),
       ),
     );
 
@@ -92,7 +100,7 @@ class ViewExtraSubPage extends StatelessWidget {
         subText: (chapterGroups.findTitle(chapter.nextCid) ?? '未知话'),
         left: !reverseScroll ? false : true,
         disable: chapter.nextCid == 0,
-        action: () => onGotoChapter.call(false),
+        action: () => toGotoChapter.call(false),
       ),
     );
 
@@ -110,9 +118,9 @@ class ViewExtraSubPage extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
-    Widget _buildAction({required String text, required IconData icon, required void Function() action}) {
+    Widget _buildAction({required String text, required IconData icon, required void Function() action, bool enable = true}) {
       return InkWell(
-        onTap: action,
+        onTap: enable ? action : null,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Column(
@@ -127,11 +135,14 @@ class ViewExtraSubPage extends StatelessWidget {
                 child: Icon(
                   icon,
                   size: 22,
-                  color: Colors.grey[800],
+                  color: enable ? Colors.grey[800] : Colors.grey,
                 ),
               ),
               SizedBox(height: 10),
-              Text(text),
+              Text(
+                text,
+                style: TextStyle(color: enable ? Colors.black : Colors.grey),
+              ),
             ],
           ),
         ),
@@ -142,29 +153,30 @@ class ViewExtraSubPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildAction(
-          text: '收藏漫画',
-          icon: Icons.star_outlined,
-          action: () {}, // TODO
+          text: !subscribed ? '订阅漫画' : '取消订阅',
+          icon: !subscribed ? Icons.star_border : Icons.star,
+          action: () => toSubscribe.call(),
+          enable: !subscribing,
         ),
         _buildAction(
           text: '下载漫画',
           icon: Icons.download,
-          action: () {}, // TODO
+          action: () => toDownload.call(),
         ),
         _buildAction(
           text: '漫画目录',
           icon: Icons.menu,
-          action: () => onShowToc.call(),
+          action: () => toShowToc.call(),
         ),
         _buildAction(
           text: '查看评论',
           icon: Icons.forum,
-          action: () => onShowComments.call(),
+          action: () => toShowComments.call(),
         ),
         _buildAction(
           text: '结束阅读',
           icon: Icons.arrow_back,
-          action: () => onPop.call(),
+          action: () => toPop.call(),
         ),
       ],
     );
@@ -241,7 +253,7 @@ class ViewExtraSubPage extends StatelessWidget {
                       width: 200,
                       child: ElevatedButton(
                         child: Text('开始阅读'),
-                        onPressed: () => onJumpToImage.call(1, true),
+                        onPressed: () => toJumpToImage.call(1, true),
                       ),
                     ),
                   ],
@@ -292,7 +304,7 @@ class ViewExtraSubPage extends StatelessWidget {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('重新阅读'),
-                            onPressed: () => onJumpToImage.call(1, false),
+                            onPressed: () => toJumpToImage.call(1, false),
                           ),
                         ),
                         SizedBox(width: 18),
@@ -301,7 +313,7 @@ class ViewExtraSubPage extends StatelessWidget {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('返回上一页'),
-                            onPressed: () => onJumpToImage.call(chapter.pages.length, true),
+                            onPressed: () => toJumpToImage.call(chapter.pages.length, true),
                           ),
                         ),
                       ],

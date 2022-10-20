@@ -54,6 +54,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.mangaTitle),
+        leading: AppBarActionButton.leading(context: context),
       ),
       body: PlaceholderText(
         state: _loading ? PlaceholderState.loading : PlaceholderState.normal,

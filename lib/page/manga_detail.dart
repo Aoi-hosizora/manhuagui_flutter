@@ -59,6 +59,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('漫画详情'),
+        leading: AppBarActionButton.leading(context: context),
       ),
       body: ScrollbarWithMore(
         controller: _controller,

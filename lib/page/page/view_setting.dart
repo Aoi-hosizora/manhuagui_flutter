@@ -276,11 +276,10 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         ),
         _buildComboBox<int>(
           title: '预加载页数',
-          width: 80,
           value: _preloadCount.clamp(0, 5),
           values: [0, 1, 2, 3, 4, 5],
           builder: (s) => Text(
-            s == 0 ? '禁用' : '前后$s页',
+            s == 0 ? '禁用预加载' : '前后$s页',
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (c) {

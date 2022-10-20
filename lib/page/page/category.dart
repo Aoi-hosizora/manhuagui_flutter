@@ -71,8 +71,9 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
             }
           },
         ),
+        leading: AppBarActionButton.leading(context: context),
         actions: [
-          IconButton(
+          AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(

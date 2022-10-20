@@ -50,6 +50,12 @@ class MyApp extends StatelessWidget {
         Locale('zh', 'CN'),
       ],
       home: IndexPage(),
+      builder: (context, child) => AppBarActionButtonTheme(
+        data: AppBarActionButtonThemeData(
+          splashRadius: 19,
+        ),
+        child: child!,
+      ),
     );
   }
 }

@@ -71,8 +71,9 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             }
           },
         ),
+        leading: AppBarActionButton.leading(context: context),
         actions: [
-          IconButton(
+          AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
