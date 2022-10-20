@@ -43,23 +43,29 @@ class _MangaPageState extends State<MangaPage> {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
-    _cancelHandler = EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       try {
         _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
         if (mounted) setState(() {});
       } catch (_) {}
-    });
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
+      if (e.mid == widget.id) {
+        _subscribed = e.subscribe;
+        if (mounted) setState(() {});
+      }
+    }));
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -93,7 +99,11 @@ class _MangaPageState extends State<MangaPage> {
           _subscribed = r.data.isIn;
           _subscribeCount = r.data.count;
           if (mounted) setState(() {});
-        } catch (_) {}
+        } catch (e, s) {
+          if (_error.isEmpty) {
+            Fluttertoast.showToast(msg: wrapError(e, s).text);
+          }
+        }
       });
     }
 
@@ -180,6 +190,7 @@ class _MangaPageState extends State<MangaPage> {
       await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.id);
       _subscribed = toSubscribe;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
+      EventBusManager.instance.fire(SubscribeUpdatedEvent(mid: widget.id, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');

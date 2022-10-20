@@ -80,9 +80,4 @@ class AuthChangedEvent {
 
   final bool logined;
   final ErrorMessage? error;
-
-  @override
-  String toString() {
-    return 'logined: $logined, error: $error';
-  }
 }

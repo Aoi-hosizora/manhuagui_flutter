@@ -76,35 +76,37 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     // ======================================================================================================================
     // ErrorType.networkError (DioError)
     if (response == null) {
-      var text = 'Unknown error';
+      var text = '网络连接异常 (未知错误)'; // Unknown error
       switch (e.type) {
         case DioErrorType.other:
           var msg = e.error.toString().toLowerCase();
           if (msg.contains('unreachable') || msg.contains('failed host lookup')) {
-            text = 'Network is unavailable';
+            text = '网络不可用'; // Network is unavailable
           } else if (msg.contains('connection refused')) {
-            text = 'Bad server (Connection refused)';
+            text = '网络连接异常 (Connection refused)'; // Bad server (Connection refused)
           } else if (msg.contains('broken pipe')) {
-            text = 'Bad server (Broken pipe)'; // TODO => Network is unavailable
+            text = '网络连接异常 (Broken pipe)'; // Bad server (Broken pipe)
           } else if (msg.contains('connection reset')) {
-            text = 'Bad server (Connection reset)'; // TODO => Network is unavailable
+            text = '网络连接异常 (Connection reset)'; // Bad server (Connection reset)
           } else if (msg.contains('connection closed')) {
-            text = 'Bad server (Connection closed)'; // TODO => Network is unavailable
+            text = '网络连接异常 (Connection closed)'; // Bad server (Connection closed)
           } else if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
-            text = 'Bad server (HTTPS error)';
+            text = '网络连接异常 (HTTPS error)'; // Bad server (HTTPS error)
           } else if (DEBUG) {
-            text = '[DEBUG] DioError: ${e.error.toString()}';
+            text = '网络连接异常 ([DEBUG] DioError: ${e.error.toString()})'; // [DEBUG] DioError: ${e.error.toString()}
           } else {
-            text = 'Unknown error';
+            text = '网络连接异常 (未知错误)'; // Unknown error
           }
           break;
         case DioErrorType.connectTimeout:
+          text = '连接超时'; // Connection timed out
+          break;
         case DioErrorType.sendTimeout:
         case DioErrorType.receiveTimeout:
-          text = 'Timed out';
+          text = '请求超时'; // Timed out
           break;
         case DioErrorType.cancel:
-          text = 'Request is cancelled';
+          text = '请求被取消'; // Request is cancelled
           break;
         case DioErrorType.response:
           break; // unreachable
@@ -121,7 +123,12 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     // ErrorType.statusError
     if (!useResult || response.data is! Map<String, dynamic>) {
       var err = '${response.statusCode!} ${StringUtils.capitalize(response.statusMessage!, allWords: true)}';
-      var text = response.statusCode! < 500 ? 'Bad request ($err)' : 'Bad server ($err)';
+      String text;
+      if (response.statusCode! < 500) {
+        text = '请求有误 ($err)'; // Bad request ($err)
+      } else {
+        text = '服务器出错 ($err)'; // Bad server ($err)
+      }
       print('===> type: ${ErrorType.statusError}');
       print('===> text: $text');
       print('===> error: $err');
@@ -135,7 +142,12 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       var r = Result<dynamic>.fromJson(response.data, (_) => null); // <<<
       var msg = StringUtils.capitalize(r.message, allWords: true);
       var err = '${r.code} $msg (${response.statusCode!} ${StringUtils.capitalize(response.statusMessage!, allWords: true)})';
-      var text = r.code < 50000 ? msg : '${r.code} $msg';
+      String text;
+      if (r.code < 50000) {
+        text = msg;
+      } else {
+        text = '服务器出错 (${r.code} $msg)'; // ${r.code} $msg
+      }
       var detail = response.data['error'] is Map<String, dynamic> ? response.data['error']['detail'] : null;
       print('===> type: ${ErrorType.resultError}');
       print('===> text: $text');
@@ -152,14 +164,14 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ======================================================================================================================
   // ErrorType.networkError (TlsException)
   if (e is TlsException) {
-    var text = 'Unknown error';
+    var text = '网络连接异常 (未知错误)'; // Unknown error
     var msg = e.message.toLowerCase(); // HandshakeException or CertificateException
     if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
-      text = 'Bad server (HTTPS error)';
+      text = '网络连接异常 (HTTPS error)'; // Bad server (HTTPS error)
     } else if (DEBUG) {
-      text = '[DEBUG] ${e.type}: ${e.message.toString()}';
+      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message.toString()})'; // [DEBUG] ${e.type}: ${e.message.toString()}
     } else {
-      text = 'Unknown error';
+      text = '网络连接异常 (未知错误)'; // Unknown error
     }
 
     print('===> uri: ?');
@@ -176,9 +188,11 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ErrorType.otherError
   String text;
   if (!DEBUG) {
-    text = 'Something went wrong.\nIf this error occurs frequently, please send feedback to the developer.';
+    text = '程序发生错误 (${e.runtimeType})\n如果该错误反复出现，请向开发者反馈';
+    // text = 'Something went wrong (${e.runtimeType})\nIf this error occurs frequently, please send feedback to the developer';
   } else {
-    text = '[DEBUG] ${e.runtimeType}: $e'; // [DEBUG] _CastError: type 'xxx' is not a subtype of type 'yyy' in type cast
+    // [DEBUG] _CastError: type 'xxx' is not a subtype of type 'yyy' in type cast
+    text = '程序发生错误 ([DEBUG] ${e.runtimeType}: $e)'; // [DEBUG] ${e.runtimeType}: $e
   }
   var cast = e.runtimeType.toString() == '_CastError';
   if (cast) {
@@ -192,12 +206,13 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       }
     }
     if (newText.isNotEmpty) {
-      var top = RegExp('#0\\s*(.+) \\(package:.+').firstMatch(s.toString())?.group(1); // #0      _$LoginCheckResultFromJson (package:manhuagui_flutter/model/user.g.dart:41:35)
+      // #0      _$LoginCheckResultFromJson (package:manhuagui_flutter/model/user.g.dart:41:35)
+      var top = RegExp('#0\\s*(.+) \\(package:.+').firstMatch(s.toString())?.group(1);
       if (top != null) {
         newText = '$newText, in $top';
       }
     }
-    text = newText;
+    text = '程序发生错误 ($newText)'; // $newText
   }
   print('===> type: ${ErrorType.otherError}');
   print('===> text: $text');

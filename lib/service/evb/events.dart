@@ -1,19 +1,26 @@
 class ToGenreRequestedEvent {
-  ToGenreRequestedEvent();
+  const ToGenreRequestedEvent();
 }
 
 class ToShelfRequestedEvent {
-  ToShelfRequestedEvent();
+  const ToShelfRequestedEvent();
 }
 
 class ToRecentRequestedEvent {
-  ToRecentRequestedEvent();
+  const ToRecentRequestedEvent();
 }
 
 class ToRankingRequestedEvent {
-  ToRankingRequestedEvent();
+  const ToRankingRequestedEvent();
 }
 
 class HistoryUpdatedEvent {
-  HistoryUpdatedEvent();
+  const HistoryUpdatedEvent();
+}
+
+class SubscribeUpdatedEvent {
+  const SubscribeUpdatedEvent({required this.mid, required this.subscribe});
+
+  final int mid;
+  final bool subscribe;
 }

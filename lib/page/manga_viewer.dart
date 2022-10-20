@@ -61,6 +61,8 @@ const _kOverlayAnimationDuration = Duration(milliseconds: 300); // SystemUI 动�
 
 class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   final _mangaGalleryViewKey = GlobalKey<MangaGalleryViewState>();
+  VoidCallback? _cancelHandler;
+
   var _setting = ViewSetting.defaultSetting();
   Timer? _timer;
   var _currentTime = '00:00';
@@ -73,6 +75,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     // data related
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    _cancelHandler = EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
+      if (e.mid == widget.mid) {
+        _subscribed = e.subscribe;
+        if (mounted) setState(() {});
+      }
+    });
 
     // setting and screen related
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
@@ -120,6 +128,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   @override
   void dispose() {
+    _cancelHandler?.call();
     _timer?.cancel();
     super.dispose();
   }
@@ -127,9 +136,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _loading = true;
   MangaChapter? _data;
   int? _initialPage;
+  var _error = '';
+
   var _subscribing = false;
   var _subscribed = false;
-  var _error = '';
 
   Future<void> _loadData() async {
     _loading = true;
@@ -137,23 +147,25 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     final client = RestClient(DioManager.instance.dio);
 
-    // 1. 异步更新章节阅读记录
     if (AuthManager.instance.logined) {
+      // 1. 异步更新章节阅读记录
       Future.microtask(() async {
         try {
           await client.recordManga(token: AuthManager.instance.token, mid: widget.mid, cid: widget.cid);
         } catch (_) {}
       });
-    }
 
-    // 2. 异步获取漫画订阅信息
-    if (AuthManager.instance.logined) {
+      // 2. 异步获取漫画订阅信息
       Future.microtask(() async {
         try {
           var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mid);
           _subscribed = r.data.isIn;
           if (mounted) setState(() {});
-        } catch (_) {}
+        } catch (e, s) {
+          if (_error.isEmpty) {
+            Fluttertoast.showToast(msg: wrapError(e, s).text);
+          }
+        }
       });
     }
 
@@ -321,6 +333,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.mid);
       _subscribed = toSubscribe;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
+      EventBusManager.instance.fire(SubscribeUpdatedEvent(mid: widget.mid, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
