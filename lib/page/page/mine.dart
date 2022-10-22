@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/user.dart';
+import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
+import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -210,10 +212,20 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            NetworkImageView(
-                              url: _data!.avatar,
-                              height: 75,
-                              width: 75,
+                            FullRippleWidget(
+                              child: NetworkImageView(
+                                url: _data!.avatar,
+                                height: 75,
+                                width: 75,
+                              ),
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (c) => ImageViewerPage(
+                                    url: _data!.avatar,
+                                    title: '我的头像',
+                                  ),
+                                ),
+                              ),
                             ),
                             Padding(
                               padding: EdgeInsets.only(top: 8, left: 15, right: 15),

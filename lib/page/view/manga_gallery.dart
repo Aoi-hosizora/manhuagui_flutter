@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
-import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 漫画画廊展示，在 [MangaViewerPage] 使用
@@ -186,7 +186,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
               event: ev,
             ),
           ),
-          errorBuilder: (_, err, ___) => GestureDetector(
+          errorBuilder: (_, err, __) => GestureDetector(
             onTapDown: (d) => _onPointerDown(d.globalPosition),
             onTapUp: (d) => _onPointerUp(d.globalPosition),
             onLongPress: () => _onLongPressed(idx),
@@ -288,112 +288,6 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
         ),
         child: widget.lastPageBuilder.call(c), // 额外页-末尾
-      ),
-    );
-  }
-}
-
-class ImageLoadingView extends StatelessWidget {
-  const ImageLoadingView({
-    Key? key,
-    required this.title,
-    required this.event,
-  }) : super(key: key);
-
-  final String title;
-  final ImageChunkEvent? event;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: EdgeInsets.symmetric(vertical: 30),
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 45, color: Colors.grey),
-          ),
-          Padding(
-            padding: EdgeInsets.all(30),
-            child: Container(
-              width: 50,
-              height: 50,
-              child: CircularProgressIndicator(
-                value: (event == null || (event!.expectedTotalBytes ?? 0) == 0) ? null : event!.cumulativeBytesLoaded / event!.expectedTotalBytes!,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 30),
-            child: Text(
-              event == null
-                  ? ''
-                  : (event!.expectedTotalBytes ?? 0) == 0
-                      ? filesize(event!.cumulativeBytesLoaded)
-                      : '${filesize(event!.cumulativeBytesLoaded)} / ${filesize(event!.expectedTotalBytes!)}',
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ImageLoadFailedView extends StatelessWidget {
-  const ImageLoadFailedView({
-    Key? key,
-    required this.title,
-    this.error,
-  }) : super(key: key);
-
-  final String title;
-  final dynamic error;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: EdgeInsets.symmetric(vertical: 30),
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 45, color: Colors.grey),
-          ),
-          Padding(
-            padding: EdgeInsets.all(30),
-            child: Container(
-              width: 50,
-              height: 50,
-              child: Icon(
-                Icons.broken_image,
-                color: Colors.grey,
-                size: 50,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 30),
-            child: Text(
-              error == null ? '' : wrapError(error, StackTrace.empty).text,
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
       ),
     );
   }

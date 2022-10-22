@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -136,14 +138,24 @@ class _AuthorPageState extends State<AuthorPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // ****************************************************************
-                    // 封面
+                    // 头像
                     // ****************************************************************
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      child: NetworkImageView(
-                        url: _data!.cover,
-                        height: 130,
-                        width: 100,
+                      child: FullRippleWidget(
+                        child: NetworkImageView(
+                          url: _data!.cover,
+                          height: 130,
+                          width: 100,
+                        ),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (c) => ImageViewerPage(
+                              url: _data!.cover,
+                              title: '作者头像',
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     // ****************************************************************

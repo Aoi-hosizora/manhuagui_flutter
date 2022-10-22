@@ -7,8 +7,10 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
+import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
+import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -341,10 +343,20 @@ class _MangaPageState extends State<MangaPage> {
                       // ****************************************************************
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        child: NetworkImageView(
-                          url: _data!.cover,
-                          height: 160,
-                          width: 120,
+                        child: FullRippleWidget(
+                          child: NetworkImageView(
+                            url: _data!.cover,
+                            height: 160,
+                            width: 120,
+                          ),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (c) => ImageViewerPage(
+                                url: _data!.cover,
+                                title: '漫画封面',
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                       // ****************************************************************
