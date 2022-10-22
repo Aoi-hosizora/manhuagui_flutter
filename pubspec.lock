@@ -763,6 +763,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.2.1"
+  queue:
+    dependency: "direct main"
+    description:
+      name: queue
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.1.0+1"
   quiver:
     dependency: transitive
     description:
@@ -930,7 +937,7 @@ packages:
     source: hosted
     version: "1.1.0"
   synchronized:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: synchronized
       url: "https://pub.flutter-io.cn"

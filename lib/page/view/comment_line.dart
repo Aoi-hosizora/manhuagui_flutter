@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
-import 'package:manhuagui_flutter/service/natives/clipboard.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 enum CommentLineViewStyle {
   normal, // used in list view, will also show reply lines of given comment

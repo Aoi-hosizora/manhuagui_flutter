@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 
 /// 设置页
 class SettingPage extends StatefulWidget {
@@ -55,7 +55,7 @@ class _SettingPageState extends State<SettingPage> {
           _spacer(),
           // *******************************************************
           _item(
-            title: '漫画官网',
+            title: '漫画柜官网',
             action: () => launchInBrowser(
               context: context,
               url: WEB_HOMEPAGE_URL,
@@ -66,7 +66,7 @@ class _SettingPageState extends State<SettingPage> {
             title: '客户端源码',
             action: () => launchInBrowser(
               context: context,
-              url: APP_HOMEPAGE_URL,
+              url: SOURCE_CODE_URL,
             ),
           ),
           _spacer(),
@@ -80,10 +80,10 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '检查更新',
+            title: '检查更新', // TODO !!!
             action: () => launchInBrowser(
               context: context,
-              url: RELEASE_URL, // TODO !!!
+              url: RELEASE_URL,
             ),
           ),
           _divider(),

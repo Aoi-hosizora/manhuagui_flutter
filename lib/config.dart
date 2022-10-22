@@ -14,7 +14,8 @@ const LEGALESE = '© 2020-2022 Aoi-hosizora';
 const DB_NAME = 'db_manhuagui';
 
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';
-const APP_HOMEPAGE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter';
+const WEB_CATEGORY_URL = 'https://www.manhuagui.com/list/';
+const SOURCE_CODE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter';
 const FEEDBACK_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/issues/new';
 const RELEASE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/releases';
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/page/history.dart';
 import 'package:manhuagui_flutter/page/page/shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
@@ -73,6 +74,15 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
         ),
         leading: AppBarActionButton.leading(context: context),
         actions: [
+          AppBarActionButton(
+            icon: Icon(Icons.download),
+            tooltip: '下载列表',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (c) => DownloadPage(),
+              ),
+            ),
+          ),
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',

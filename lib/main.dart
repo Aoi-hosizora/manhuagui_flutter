@@ -1,20 +1,12 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/index.dart';
+import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      // statusBarColor: Colors.transparent,
-      statusBarBrightness: Brightness.dark,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color.fromRGBO(250, 250, 250, 1.0),
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
+  setDefaultSystemUIOverlayStyle();
   runApp(const MyApp());
 }
 

@@ -25,8 +25,10 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/natives/share.dart';
-import 'package:manhuagui_flutter/service/natives/storage.dart';
+import 'package:manhuagui_flutter/service/native/share.dart';
+import 'package:manhuagui_flutter/service/native/system_ui.dart';
+import 'package:manhuagui_flutter/service/storage/download.dart';
+import 'package:manhuagui_flutter/service/storage/storage.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:path/path.dart' as path_;
 import 'package:wakelock/wakelock.dart';
@@ -814,14 +816,8 @@ class _ScreenHelper {
   static double get bottomPanelDistance => _bottomPanelDistance;
 
   static Future<void> setSystemUIWhenEnter({required bool fullscreen}) async {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        // statusBarColor: Colors.transparent,
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.black.withOpacity(0.75),
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
+    setSystemUIOverlayStyle(
+      navigationBarColor: !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.black.withOpacity(0.75),
     );
     await setSystemUIWhenAppbarChanged(fullscreen: fullscreen);
   }
@@ -833,22 +829,25 @@ class _ScreenHelper {
   static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, bool? isAppbarShown}) async {
     // https://hiyoko-programming.com/953/
     if (!fullscreen) {
-      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+      // 不全屏 => 全部显示，不透明 (manual)
+      await setManualSystemUIMode(SystemUiOverlay.values);
       _safeAreaTop = true;
       _bottomPanelDistance = 0;
     } else {
       if (isAppbarShown ?? _showAppBar) {
+        // 全屏，且显示 AppBar => 全部显示，尽量透明 (edgeToEdge / manual)
         if (!(await _lowerThanAndroidQ())) {
-          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: SystemUiOverlay.values);
+          await setEdgeToEdgeSystemUIMode();
           _safeAreaTop = false;
           await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50), () => _bottomPanelDistance = MediaQuery.of(_context).padding.bottom);
         } else {
-          await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+          await setManualSystemUIMode(SystemUiOverlay.values);
           _safeAreaTop = false;
           _bottomPanelDistance = 0;
         }
       } else {
-        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+        // 全屏，且不显示 AppBar => 全部隐藏 (manual)
+        await setManualSystemUIMode([]);
         _safeAreaTop = false;
         _bottomPanelDistance = 0;
       }
@@ -858,15 +857,7 @@ class _ScreenHelper {
   }
 
   static Future<void> restoreSystemUI() async {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        // statusBarColor: Colors.transparent,
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Color.fromRGBO(250, 250, 250, 1.0),
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    setDefaultSystemUIOverlayStyle();
+    await setManualSystemUIMode(SystemUiOverlay.values);
   }
 }

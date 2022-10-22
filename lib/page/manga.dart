@@ -21,8 +21,8 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
-import 'package:manhuagui_flutter/service/natives/share.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/native/share.dart';
 
 /// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
@@ -640,7 +640,7 @@ class _MangaPageState extends State<MangaPage> {
                                       onRatingUpdate: (_) {},
                                     ),
                                     Container(
-                                      width: 200 * (double.tryParse(_data!.perScores[i + 1].replaceAll('%', '')) ?? 0) / 100,
+                                      width: 250 * (double.tryParse(_data!.perScores[i + 1].replaceAll('%', '')) ?? 0) / 100,
                                       height: 16,
                                       color: Colors.amber,
                                       margin: EdgeInsets.only(left: 4, right: 6),

@@ -20,6 +20,8 @@ dependencies:
   retrofit: ^3.0.1+1
   intl: ^0.17.0
   basic_utils: ^5.2.2
+  synchronized: ^3.0.0+3
+  queue: ^3.1.0+1
 
   # assists
   flutter_web_browser: ^0.17.1

@@ -1,7 +1,3 @@
-class ToGenreRequestedEvent {
-  const ToGenreRequestedEvent();
-}
-
 class ToShelfRequestedEvent {
   const ToShelfRequestedEvent();
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/page/author.dart';
 import 'package:manhuagui_flutter/page/page/genre.dart';
 import 'package:manhuagui_flutter/page/search.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
-import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 
 /// 分类
 class CategorySubPage extends StatefulWidget {
@@ -27,21 +27,16 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
     Tuple2('类别', GenreSubPage(action: _actions[0])),
     Tuple2('漫画作者', AuthorSubPage(action: _actions[1])),
   ];
-  VoidCallback? _cancelHandler;
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    _cancelHandler = EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateTo(0);
-    });
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
-    _cancelHandler?.call();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();
@@ -73,6 +68,14 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
         ),
         leading: AppBarActionButton.leading(context: context),
         actions: [
+          AppBarActionButton(
+            icon: Icon(Icons.open_in_browser),
+            tooltip: '用浏览器打开',
+            onPressed: () => launchInBrowser(
+              context: context,
+              url: WEB_CATEGORY_URL,
+            ),
+          ),
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',

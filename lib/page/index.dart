@@ -50,9 +50,6 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(2);
     }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateTo(1);
-    }));
   }
 
   @override

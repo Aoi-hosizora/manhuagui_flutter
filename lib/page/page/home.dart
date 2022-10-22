@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/page/recommend.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 
 /// 首页
 class HomeSubPage extends StatefulWidget {

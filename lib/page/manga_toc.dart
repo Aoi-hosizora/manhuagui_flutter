@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 
 /// 漫画章节目录页，展示所给 [MangaChapterGroup] 信息
 class MangaTocPage extends StatefulWidget {

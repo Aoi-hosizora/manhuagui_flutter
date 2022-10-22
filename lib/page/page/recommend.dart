@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -71,7 +72,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     return InkWell(
       onTap: () => action(),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: IconText(
           alignment: IconTextAlignment.t2b,
           space: 8,
@@ -127,14 +128,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   child: Material(
                     color: Colors.transparent,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35, vertical: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 35, vertical: 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildAction('我的书架', Icons.favorite, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+                          _buildAction('下载列表', Icons.download, () => Navigator.of(context).push(MaterialPageRoute(builder: (c) => DownloadPage()))),
                           _buildAction('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
                           _buildAction('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
-                          _buildAction('漫画分类', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())),
                         ],
                       ),
                     ),

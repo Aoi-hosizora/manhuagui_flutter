@@ -1,54 +1,10 @@
-import 'dart:io' show File, Directory, Platform;
+import 'dart:io' show File;
 
-import 'package:external_path/external_path.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:path/path.dart' as path_;
-import 'package:path_provider/path_provider.dart';
-
-Future<String> getExternalStorageDirectoryPath() async {
-  final storageDirectories = await ExternalPath.getExternalStorageDirectories();
-  if (storageDirectories.isEmpty) {
-    throw Exception('Cannot get external storage directory.');
-  }
-  return await joinPath(
-    [storageDirectories.first, APP_NAME],
-    checkDirectory: true,
-    directoryPath: true,
-  ); // /storage/emulated/0/Manhuagui
-}
-
-Future<String> getPrivateStorageDirectoryPath() async {
-  final storageDirectory = await getExternalStorageDirectory(); // sandbox
-  return await joinPath(
-    [storageDirectory!.path],
-    checkDirectory: true,
-    directoryPath: true,
-  ); // /storage/emulated/0/android/com.aoihosizora.manhuagui_flutter
-}
-
-Future<String> joinPath(List<String> paths, {bool checkDirectory = false, bool directoryPath = false}) async {
-  var newPath = path_.joinAll(paths);
-  if (checkDirectory) {
-    var directory = Directory(directoryPath ? newPath : path_.dirname(newPath));
-    if (!(await directory.exists())) {
-      await directory.create(recursive: true);
-    }
-  }
-  return newPath;
-}
-
-String getTimestampTokenForFilename([String? pattern]) {
-  return DateFormat(pattern ?? 'yyyyMMdd_HHmmss_SSS').format(DateTime.now());
-}
-
-// ========
-// download
-// ========
 
 enum DownloadBehavior {
   preferUsingCache,
@@ -216,21 +172,5 @@ Future<File> downloadFile({
       await destination.delete();
     } catch (_) {}
     throw DownloadException._fromObject(e);
-  }
-}
-
-// =======
-// gallery
-// =======
-
-const _channelName = 'com.example.manhuagui_flutter';
-const _methodInsertMedia = 'insertMedia';
-const _channel = MethodChannel(_channelName);
-
-Future<void> addToGallery(File file) async {
-  if (Platform.isAndroid) {
-    await _channel.invokeMethod(_methodInsertMedia, <String, dynamic>{
-      'filepath': file.path,
-    });
   }
 }

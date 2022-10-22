@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
