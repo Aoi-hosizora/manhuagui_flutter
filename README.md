@@ -13,8 +13,7 @@
 
 ### Screenshots
 
-|![screenshot1](./assets/screenshot1.png)|![screenshot2](./assets/screenshot2.png)|![screenshot3](./assets/screenshot3.png)|
-|---|---|---|
-|![screenshot4](./assets/screenshot4.png)|![screenshot5](./assets/screenshot5.png)|![screenshot6](./assets/screenshot6.png)|
-|---|---|---|
-|![screenshot7](./assets/screenshot7.png)|![screenshot8](./assets/screenshot8.png)|![screenshot9](./assets/screenshot9.png)|
+| ![screenshot1](./assets/screenshot1.png) | ![screenshot2](./assets/screenshot2.png) | ![screenshot3](./assets/screenshot3.png) |
+|------------------------------------------|------------------------------------------|------------------------------------------|
+| ![screenshot4](./assets/screenshot4.png) | ![screenshot5](./assets/screenshot5.png) | ![screenshot6](./assets/screenshot6.png) |
+| ![screenshot7](./assets/screenshot7.png) | ![screenshot8](./assets/screenshot8.png) | ![screenshot9](./assets/screenshot9.png) |
