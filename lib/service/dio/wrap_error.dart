@@ -76,7 +76,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     // ======================================================================================================================
     // ErrorType.networkError (DioError)
     if (response == null) {
-      var text = '网络连接异常 (未知错误)'; // Unknown error
+      var text = '网络连接异常 (未知错误)'; // Unknown network error
       switch (e.type) {
         case DioErrorType.other:
           var msg = e.error.toString().toLowerCase();
@@ -95,7 +95,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
           } else if (DEBUG) {
             text = '网络连接异常 ([DEBUG] DioError: ${e.error.toString()})'; // [DEBUG] DioError: ${e.error.toString()}
           } else {
-            text = '网络连接异常 (未知错误)'; // Unknown error
+            text = '网络连接异常 (未知错误)'; // Unknown network error
           }
           break;
         case DioErrorType.connectTimeout:
@@ -109,7 +109,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
           text = '请求被取消'; // Request is cancelled
           break;
         case DioErrorType.response:
-          break; // unreachable
+          break;
       }
       print('===> type: ${ErrorType.networkError}');
       print('===> text: $text');
@@ -122,7 +122,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     // ======================================================================================================================
     // ErrorType.statusError
     if (!useResult || response.data is! Map<String, dynamic>) {
-      var err = '${response.statusCode!} ${StringUtils.capitalize(response.statusMessage!, allWords: true)}';
+      var err = '${response.statusCode!} ${StringUtils.capitalize(response.statusMessage!, allWords: true)}'.trim();
       String text;
       if (response.statusCode! < 500) {
         text = '请求有误 ($err)'; // Bad request ($err)
@@ -133,7 +133,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       print('===> text: $text');
       print('===> error: $err');
       print('└─────────────────── WrapError ───────────────────┘');
-      return ErrorMessage.status(err, s, text, response: response);
+      return ErrorMessage.status(err, e.stackTrace!, text, response: response);
     }
 
     // ======================================================================================================================
@@ -141,7 +141,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     try {
       var r = Result<dynamic>.fromJson(response.data, (_) => null); // <<<
       var msg = StringUtils.capitalize(r.message, allWords: true);
-      var err = '${r.code} $msg (${response.statusCode!} ${StringUtils.capitalize(response.statusMessage!, allWords: true)})';
+      var err = '${r.code} $msg (${response.statusCode!} ${StringUtils.capitalize(response.statusMessage!, allWords: true)})'.trim();
       String text;
       if (r.code < 50000) {
         text = msg;
@@ -154,9 +154,9 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       print('===> detail: $detail');
       print('===> error: $err');
       print('└─────────────────── WrapError ───────────────────┘');
-      return ErrorMessage.result(err, s, text, response: response, serviceCode: r.code, detail: detail);
+      return ErrorMessage.result(err, e.stackTrace!, text, response: response, serviceCode: r.code, detail: detail);
     } catch (e, s) {
-      // never be DioError, must goto ErrorType.otherError
+      // must goto ErrorType.otherError
       return wrapError(e, s);
     }
   }
@@ -164,14 +164,15 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ======================================================================================================================
   // ErrorType.networkError (TlsException)
   if (e is TlsException) {
-    var text = '网络连接异常 (未知错误)'; // Unknown error
-    var msg = e.message.toLowerCase(); // HandshakeException or CertificateException
+    var text = '网络连接异常 (未知错误)'; // Unknown network error
+    var msg = e.message.toLowerCase();
     if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
       text = '网络连接异常 (HTTPS error)'; // Bad server (HTTPS error)
     } else if (DEBUG) {
-      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message.toString()})'; // [DEBUG] ${e.type}: ${e.message.toString()}
+      // type: HandshakeException / CertificateException
+      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // [DEBUG] ${e.type}: ${e.message}
     } else {
-      text = '网络连接异常 (未知错误)'; // Unknown error
+      text = '网络连接异常 (未知错误)'; // Unknown network error
     }
 
     print('===> uri: ?');
@@ -196,13 +197,15 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   }
   var cast = e.runtimeType.toString() == '_CastError';
   if (cast) {
+    var msg = e.toString();
     var newText = '';
-    if (e.toString().contains('Null check operator used on a null value')) {
+    if (msg.contains('Null check operator used on a null value')) {
       newText = '[DEBUG] Got unexpected null value';
     } else {
-      var match = RegExp("type '(.+)' is not a subtype of type '(.+)' in type cast").firstMatch(e.toString());
+      // type 'String' is not a subtype of type 'Map<String, dynamic>?' in type cast
+      var match = RegExp("type '(.+)' is not a subtype of type '(.+)' in type cast").firstMatch(msg);
       if (match != null) {
-        newText = '[DEBUG] Want "${match.group(2)}" but got "${match.group(1)}" when typecasting';
+        newText = '[DEBUG] Want "${match.group(2)}" type but got "${match.group(1)}" type';
       }
     }
     if (newText.isNotEmpty) {

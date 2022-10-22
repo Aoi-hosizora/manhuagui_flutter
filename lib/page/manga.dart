@@ -49,6 +49,13 @@ class _MangaPageState extends State<MangaPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandlers.add(AuthManager.instance.listen((_) async {
+        _history = null;
+        _refreshIndicatorKey.currentState?.show();
+      }));
+      await AuthManager.instance.check();
+    });
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       try {
         _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);

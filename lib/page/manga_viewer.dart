@@ -8,7 +8,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
@@ -24,7 +26,9 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/natives/share.dart';
+import 'package:manhuagui_flutter/service/natives/storage.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
+import 'package:path/path.dart' as path_;
 import 'package:wakelock/wakelock.dart';
 
 /// 漫画章节阅读页
@@ -318,6 +322,32 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
   }
 
+  Future<void> _download({required String url, required int imageIndex}) async {
+    var basename = getTimestampTokenForFilename();
+    var extension = path_.extension(url.split('?')[0]);
+    var filename = '$basename$extension';
+    var filepath = await joinPath([await getExternalStorageDirectoryPath(), 'manhuagui_image', 'IMG_$filename']);
+    try {
+      var f = await downloadFile(
+        url: url,
+        filepath: filepath,
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Referer': REFERER,
+        },
+        cacheManager: DefaultCacheManager(),
+        option: DownloadOption(
+          behavior: DownloadBehavior.preferUsingCache,
+          whenOverwrite: (_) async => OverwriteBehavior.addSuffix,
+        ),
+      ); // IMG_20220917_131013_206.jpg
+      await addToGallery(f);
+      Fluttertoast.showToast(msg: '第$imageIndex页已保存至 ${f.path}');
+    } catch (e) {
+      Fluttertoast.showToast(msg: '无法保存第$imageIndex页');
+    }
+  }
+
   Future<void> _subscribe() async {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
@@ -496,7 +526,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     slideHeightRatio: _kSlideHeightRatio,
                     initialImageIndex: _initialPage ?? 1,
                     onPageChanged: _onPageChanged,
-                    onSaveImage: (imageIndex) => Fluttertoast.showToast(msg: '第$imageIndex页') /* TODO save image */,
+                    onSaveImage: (imageIndex) => _download(url: _data!.pages[imageIndex - 1], imageIndex: imageIndex),
                     onShareImage: (imageIndex) => shareText(
                       title: '漫画柜分享',
                       text: '【${_data!.title}】第$imageIndex页 ${_data!.pages[imageIndex - 1]}',
