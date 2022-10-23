@@ -4,7 +4,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart' as http;
 import 'package:manhuagui_flutter/config.dart';
-import 'package:path/path.dart' as path_;
+import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 enum DownloadBehavior {
   preferUsingCache,
@@ -122,7 +122,9 @@ Future<File> downloadFile({
           break;
         case OverwriteBehavior.addSuffix:
           for (var i = 1;; i++) {
-            var fallbackFile = File('${path_.withoutExtension(filepath)}${option.suffixBuilder(i)}${path_.extension(filepath)}');
+            var basename = PathUtils.getWithoutExtension(filepath);
+            var extension = PathUtils.getExtension(filepath);
+            var fallbackFile = File('$basename${option.suffixBuilder(i)}$extension');
             if (!(await fallbackFile.exists())) {
               newFile = fallbackFile;
               break;

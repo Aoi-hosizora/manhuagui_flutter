@@ -4,9 +4,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
-import 'package:manhuagui_flutter/service/storage/download.dart';
-import 'package:manhuagui_flutter/service/storage/storage.dart';
-import 'package:path/path.dart' as path_;
+import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:photo_view/photo_view.dart';
 
 class ImageViewerPage extends StatefulWidget {
@@ -48,24 +46,11 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
   }
 
   Future<void> _download(String url) async {
-    var basename = getTimestampTokenForFilename();
-    var extension = path_.extension(url.split('?')[0]);
-    var filename = '$basename$extension';
-    var filepath = await joinPath([await getExternalStorageDirectoryPath(), 'manhuagui_image', 'IMG_$filename']);
-    try {
-      var f = await downloadFile(
-        url: url,
-        filepath: filepath,
-        cacheManager: _cache,
-        option: DownloadOption(
-          behavior: DownloadBehavior.preferUsingCache,
-          whenOverwrite: (_) async => OverwriteBehavior.addSuffix,
-        ),
-      );
-      await addToGallery(f);
+    var f = await downloadImageToGallery(url);
+    if (f != null) {
       Fluttertoast.showToast(msg: '图片已保存至 ${f.path}');
-    } catch (e) {
-      Fluttertoast.showToast(msg: '无法保存图片');
+    } else {
+    Fluttertoast.showToast(msg: '无法保存图片');
     }
   }
 

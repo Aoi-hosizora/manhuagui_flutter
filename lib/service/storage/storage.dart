@@ -11,36 +11,23 @@ import 'package:path_provider/path_provider.dart';
 // path and name
 // =============
 
-Future<String> getExternalStorageDirectoryPath() async {
+Future<String> getPublicStorageDirectoryPath() async {
   final storageDirectories = await ExternalPath.getExternalStorageDirectories();
   if (storageDirectories.isEmpty) {
     throw Exception('Cannot get external storage directory.');
   }
-  return await joinPath(
+  return await PathUtils.joinPathAndCheck(
     [storageDirectories.first, APP_NAME],
-    checkDirectory: true,
-    directoryPath: true,
+    isDirectoryPath: true,
   ); // /storage/emulated/0/Manhuagui
 }
 
 Future<String> getPrivateStorageDirectoryPath() async {
   final storageDirectory = await getExternalStorageDirectory(); // sandbox
-  return await joinPath(
+  return await PathUtils.joinPathAndCheck(
     [storageDirectory!.path],
-    checkDirectory: true,
-    directoryPath: true,
+    isDirectoryPath: true,
   ); // /storage/emulated/0/android/com.aoihosizora.manhuagui_flutter
-}
-
-Future<String> joinPath(List<String> paths, {bool checkDirectory = false, bool directoryPath = false}) async {
-  var newPath = path_.joinAll(paths);
-  if (checkDirectory) {
-    var directory = Directory(directoryPath ? newPath : path_.dirname(newPath));
-    if (!(await directory.exists())) {
-      await directory.create(recursive: true);
-    }
-  }
-  return newPath;
 }
 
 String getTimestampTokenForFilename([DateTime? time, String? pattern]) {
@@ -48,18 +35,48 @@ String getTimestampTokenForFilename([DateTime? time, String? pattern]) {
   return df.format(time ?? DateTime.now());
 }
 
+// ==========
+// path utils
+// ==========
+
+class PathUtils {
+  static String joinPath(List<String> paths) {
+    return path_.joinAll(paths);
+  }
+
+  static String getWithoutExtension(String path) {
+    return path_.withoutExtension(path);
+  }
+
+  static String getExtension(String path) {
+    return path_.extension(path);
+  }
+
+  static Future<String> joinPathAndCheck(List<String> paths, {bool isDirectoryPath = false}) async {
+    var newPath = path_.joinAll(paths);
+    var directory = Directory(isDirectoryPath ? newPath : path_.dirname(newPath));
+    if (!(await directory.exists())) {
+      await directory.create(recursive: true);
+    }
+    return newPath;
+  }
+}
+
 // =======
 // gallery
 // =======
 
 const _channelName = 'com.example.manhuagui_flutter';
-const _methodInsertMedia = 'insertMedia';
 const _channel = MethodChannel(_channelName);
+const _insertMediaMethodName = 'insertMedia';
 
 Future<void> addToGallery(File file) async {
-  if (Platform.isAndroid) {
-    await _channel.invokeMethod(_methodInsertMedia, <String, dynamic>{
-      'filepath': file.path,
-    });
+  if (!Platform.isAndroid) {
+    return; // unreachable
   }
+
+  // Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
+  await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
+    'filepath': file.path,
+  });
 }
