@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
 
 class DownloadPage extends StatefulWidget {
   const DownloadPage({
@@ -13,11 +15,84 @@ class DownloadPage extends StatefulWidget {
 }
 
 class _DownloadPageState extends State<DownloadPage> {
-  var _downloading1 = false;
-  var _downloading2 = true;
+  final _controller = ScrollController();
+  final _fabController = AnimatedFabController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _fabController.dispose();
+    super.dispose();
+  }
+
+  final _data = <DownloadedManga>[];
+  var _total = 0;
+
+  Future<List<DownloadedManga>> _getData() async {
+    var data = await DownloadDao.getMangas() ?? [];
+    _total = await DownloadDao.getMangaCount() ?? 0;
+    if (mounted) setState(() {});
+    return data;
+  }
+
+  // var _downloading1 = false;
+  // var _downloading2 = true;
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('下载列表'),
+      ),
+      body: RefreshableListView<DownloadedManga>(
+        data: _data,
+        getData: () => _getData(),
+        scrollController: _controller,
+        setting: UpdatableDataViewSetting(
+          padding: EdgeInsets.symmetric(vertical: 0),
+          interactiveScrollbar: true,
+          scrollbarCrossAxisMargin: 2,
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+          refreshFirst: true,
+          clearWhenRefresh: false,
+          clearWhenError: false,
+        ),
+        separator: Divider(height: 0, thickness: 1),
+        itemBuilder: (c, _, item) => DownloadMangaLineView(
+          mangaTitle: item.mangaTitle,
+          mangaCover: item.mangaCover,
+          startedChaptersCount: item.startedChaptersCount,
+          totalChaptersCountInTask: item.totalChaptersCount,
+          lastDownloadTime: item.updatedAt,
+          downloadStatus: null /* TODO */,
+          downloadingChapterTitle: null /* TODO */,
+          downloadProgress: null /* TODO */,
+          onActionPressed: () {} /* TODO */,
+          onLinePressed: () {} /* TODO */,
+        ),
+        extra: UpdatableDataViewExtraWidgets(
+          innerTopWidgets: [
+            ListHintView.textText(
+              leftText: '',
+              rightText: '共 $_total 部',
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
+        scrollController: _controller,
+        condition: ScrollAnimatedCondition.direction,
+        fab: FloatingActionButton(
+          child: Icon(Icons.vertical_align_top),
+          heroTag: null,
+          onPressed: () => _controller.scrollToTop(),
+        ),
+      ),
+    );
+
+    /*
     return Scaffold(
       appBar: AppBar(
         title: Text('下载列表'),
@@ -53,5 +128,6 @@ class _DownloadPageState extends State<DownloadPage> {
         ],
       ),
     );
+    */
   }
 }

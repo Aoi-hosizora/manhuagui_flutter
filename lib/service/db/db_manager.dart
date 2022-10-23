@@ -1,4 +1,5 @@
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -20,11 +21,21 @@ class DBManager {
       var path = await getDatabasesPath();
       _database = await openDatabase(
         join(path, DB_NAME),
-        version: 1,
-        onCreate: (db, ver) async {
-          await db.execute(HistoryDao.createTblHistory);
+        version: 2,
+        onCreate: (db, _) async {
+          await HistoryDao.createTable(db);
+          await DownloadDao.createTable(db);
         },
-        onUpgrade: (db, oldVer, newVer) async {},
+        onUpgrade: (db, version, _) async {
+          if (version == 1) {
+            version = 2; // 1 -> 2 upgrade
+            await HistoryDao.upgradeFromVer1To2(db);
+            await DownloadDao.upgradeFromVer1To2(db);
+          }
+          if (version == 2) {
+            // ...
+          }
+        },
       );
     }
     return _database!;

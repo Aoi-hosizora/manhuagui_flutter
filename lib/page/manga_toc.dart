@@ -13,14 +13,14 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
     Key? key,
-    required this.mid,
+    required this.mangaId,
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
     required this.groups,
   }) : super(key: key);
 
-  final int mid;
+  final int mangaId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
@@ -40,13 +40,13 @@ class _MangaTocPageState extends State<MangaTocPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       try {
-        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid);
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
         if (mounted) setState(() {});
       } catch (_) {}
     });
     _cancelHandler = EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       try {
-        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mid);
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
         if (mounted) setState(() {});
       } catch (_) {}
     });
@@ -86,12 +86,12 @@ class _MangaTocPageState extends State<MangaTocPage> {
             controller: _controller,
             child: MangaTocView(
               groups: widget.groups,
-              mangaId: widget.mid,
+              mangaId: widget.mangaId,
               mangaTitle: widget.mangaTitle,
               mangaCover: widget.mangaCover,
               mangaUrl: widget.mangaUrl,
               full: true,
-              highlightedChapter: _history?.chapterId ?? 0,
+              highlightedChapters: [_history?.chapterId ?? 0],
               lastChapterPage: _history?.chapterPage ?? 1,
             ),
           ),

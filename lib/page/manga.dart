@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
@@ -479,7 +480,17 @@ class _MangaPageState extends State<MangaPage> {
                           _buildAction(
                             text: '下载漫画',
                             icon: Icons.download,
-                            action: () => Fluttertoast.showToast(msg: 'TODO'), // TODO download manga
+                            action: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (c) => DownloadTocPage(
+                                  mangaId: _data!.mid,
+                                  mangaTitle: _data!.title,
+                                  mangaCover: _data!.cover,
+                                  mangaUrl: _data!.url,
+                                  groups: _data!.chapterGroups,
+                                ),
+                              ),
+                            ),
                           ),
                           _buildAction(
                             text: _history?.read == true ? '继续阅读' : '开始阅读',
@@ -677,7 +688,7 @@ class _MangaPageState extends State<MangaPage> {
                     mangaCover: _data!.cover,
                     mangaUrl: _data!.url,
                     full: false,
-                    highlightedChapter: _history?.chapterId ?? 0,
+                    highlightedChapters: [_history?.chapterId ?? 0],
                     lastChapterPage: _history?.chapterPage ?? 1,
                   ),
                 ),

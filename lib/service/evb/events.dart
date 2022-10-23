@@ -1,3 +1,5 @@
+import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+
 class ToShelfRequestedEvent {
   const ToShelfRequestedEvent();
 }
@@ -19,4 +21,11 @@ class SubscribeUpdatedEvent {
 
   final int mid;
   final bool subscribe;
+}
+
+class DownloadProgressChangedEvent {
+  const DownloadProgressChangedEvent({required this.progress, required this.result});
+
+  final MangaDownloadProgress? progress;
+  final MangaDownloadResult? result;
 }

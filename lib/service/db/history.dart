@@ -1,5 +1,6 @@
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
 class HistoryDao {
@@ -14,7 +15,7 @@ class HistoryDao {
   static const _colChapterPage = 'chapter_page';
   static const _colLastTime = 'last_time';
 
-  static const createTblHistory = '''
+  static const _createTblHistory = '''
     CREATE TABLE $_tblHistory(
       $_colUsername VARCHAR(1023),
       $_colMangaId INTEGER,
@@ -27,6 +28,15 @@ class HistoryDao {
       $_colLastTime DATETIME,
       PRIMARY KEY ($_colUsername, $_colMangaId)
     )''';
+
+  static Future<bool?> createTable(Database db) async {
+    try {
+      await db.execute(_createTblHistory);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   static Future<int?> getHistoryCount({required String username}) async {
     final db = await DBManager.instance.getDB();
@@ -140,5 +150,9 @@ class HistoryDao {
       [username, mid],
     );
     return rows != null && rows >= 1;
+  }
+
+  static Future<void> upgradeFromVer1To2(Database db) async {
+    // skip
   }
 }

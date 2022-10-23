@@ -279,10 +279,11 @@ class DownloadedManga {
   final String mangaTitle;
   final String mangaCover;
   final int totalChaptersCount;
+  final int startedChaptersCount;
   final int successChaptersCount;
   final DateTime updatedAt;
 
-  const DownloadedManga({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.totalChaptersCount, required this.successChaptersCount, required this.updatedAt});
+  const DownloadedManga({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.totalChaptersCount, required this.startedChaptersCount, required this.successChaptersCount, required this.updatedAt});
 }
 
 class DownloadedChapter {
@@ -290,8 +291,8 @@ class DownloadedChapter {
   final int chapterId;
   final String chapterTitle;
   final String chapterGroup;
-  final int? totalPagesCount;
-  final int? successPagesCount;
+  final int totalPagesCount;
+  final int successPagesCount;
 
   const DownloadedChapter({required this.mangaId, required this.chapterId, required this.chapterTitle, required this.chapterGroup, required this.totalPagesCount, required this.successPagesCount});
 }

@@ -14,8 +14,9 @@ class MangaTocView extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
-    this.highlightedChapter = 0,
+    this.highlightedChapters = const [],
     this.lastChapterPage = 1,
+    this.showNewBadge = true,
     this.predicate,
   }) : super(key: key);
 
@@ -25,8 +26,9 @@ class MangaTocView extends StatefulWidget {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final int highlightedChapter;
+  final List<int> highlightedChapters;
   final int lastChapterPage;
+  final bool showNewBadge;
   final bool Function(int cid)? predicate;
 
   @override
@@ -117,7 +119,7 @@ class _MangaTocViewState extends State<MangaTocView> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3),
-                color: widget.highlightedChapter == chapter?.cid ? Theme.of(context).primaryColorLight.withOpacity(0.6) : null,
+                color: widget.highlightedChapters.contains(chapter?.cid) ? Theme.of(context).primaryColorLight.withOpacity(0.6) : null,
               ),
               child: Theme(
                 data: Theme.of(context).copyWith(
@@ -140,7 +142,7 @@ class _MangaTocViewState extends State<MangaTocView> {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (c) => MangaTocPage(
-                            mid: widget.mangaId,
+                            mangaId: widget.mangaId,
                             mangaTitle: widget.mangaTitle,
                             mangaCover: widget.mangaCover,
                             mangaUrl: widget.mangaUrl,
@@ -160,7 +162,7 @@ class _MangaTocViewState extends State<MangaTocView> {
                               mangaUrl: widget.mangaUrl,
                               chapterGroups: widget.groups,
                               cid: chapter.cid,
-                              initialPage: widget.highlightedChapter == chapter.cid
+                              initialPage: widget.highlightedChapters.contains(chapter.cid)
                                   ? widget.lastChapterPage // has read
                                   : 1, // has not read
                             ),
@@ -173,7 +175,7 @@ class _MangaTocViewState extends State<MangaTocView> {
               ),
             ),
           ),
-          if (chapter?.isNew == true)
+          if (chapter?.isNew == true && widget.showNewBadge)
             Positioned(
               top: 0,
               right: 0,

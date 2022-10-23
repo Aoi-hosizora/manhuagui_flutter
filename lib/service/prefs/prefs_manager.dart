@@ -42,6 +42,10 @@ class PrefsManager {
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
       await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }
+    if (version == 2) {
+      // ...
+    }
+
     prefs.setInt('VERSION', newestVersion);
   }
 }

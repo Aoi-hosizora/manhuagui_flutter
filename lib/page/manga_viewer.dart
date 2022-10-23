@@ -12,6 +12,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
+import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -354,6 +355,20 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
+  void _downloadManga() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (c) => DownloadTocPage(
+          mangaId: widget.mid,
+          mangaTitle: widget.mangaTitle,
+          mangaCover: widget.mangaCover,
+          mangaUrl: widget.mangaUrl,
+          groups: widget.chapterGroups,
+        ),
+      ),
+    );
+  }
+
   void _showToc() {
     showModalBottomSheet(
       context: context,
@@ -366,7 +381,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
           margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           child: ViewTocSubPage(
-            mid: widget.mid,
+            mangaId: widget.mid,
             mangaTitle: widget.mangaTitle,
             mangaCover: widget.mangaCover,
             mangaUrl: widget.mangaUrl,
@@ -527,7 +542,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
                       toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       toSubscribe: _subscribe,
-                      toDownload: () => Fluttertoast.showToast(msg: 'TODO') /* TODO download manga */,
+                      toDownload: _downloadManga,
                       toShowToc: _showToc,
                       toShowComments: _showComments,
                       toPop: () => Navigator.of(context).maybePop(),
@@ -543,7 +558,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
                       toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       toSubscribe: _subscribe,
-                      toDownload: () => Fluttertoast.showToast(msg: 'TODO') /* TODO download manga */,
+                      toDownload: _downloadManga,
                       toShowToc: _showToc,
                       toShowComments: _showComments,
                       toPop: () => Navigator.of(context).maybePop(),

@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 class ViewTocSubPage extends StatefulWidget {
   const ViewTocSubPage({
     Key? key,
-    required this.mid,
+    required this.mangaId,
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
@@ -16,7 +16,7 @@ class ViewTocSubPage extends StatefulWidget {
     required this.predicate,
   }) : super(key: key);
 
-  final int mid;
+  final int mangaId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
@@ -69,12 +69,12 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
               controller: _controller,
               child: MangaTocView(
                 groups: widget.groups,
-                mangaId: widget.mid,
+                mangaId: widget.mangaId,
                 mangaTitle: widget.mangaTitle,
                 mangaCover: widget.mangaCover,
                 mangaUrl: widget.mangaUrl,
                 full: true,
-                highlightedChapter: widget.highlightedChapter,
+                highlightedChapters: [widget.highlightedChapter],
                 lastChapterPage: 1,
                 predicate: widget.predicate,
               ),

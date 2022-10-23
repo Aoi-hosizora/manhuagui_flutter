@@ -1,5 +1,6 @@
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
 class DownloadDao {
@@ -9,7 +10,7 @@ class DownloadDao {
   static const _colDmMangaCover = 'cover';
   static const _colDmUpdatedAt = 'updated_at';
 
-  static const createTblDownloadManga = '''
+  static const _createTblDownloadManga = '''
     CREATE TABLE $_tblDownloadManga(
       $_colDmMangaId INTEGER,
       $_colDmMangaTitle VARCHAR(1023),
@@ -26,7 +27,7 @@ class DownloadDao {
   static const _colDcTotalCount = 'total_count';
   static const _colDcSuccessCount = 'success_count';
 
-  static const createTblDownloadChapter = '''
+  static const _createTblDownloadChapter = '''
     CREATE TABLE $_tblDownloadChapter(
       $_colDcMangaId INTEGER,
       $_colDcChapterId INTEGER,
@@ -36,6 +37,16 @@ class DownloadDao {
       $_colDcSuccessCount INTEGER,
       PRIMARY KEY ($_colDcMangaId, $_colDcChapterId)
     )''';
+
+  static Future<bool?> createTable(Database db) async {
+    try {
+      await db.execute(_createTblDownloadManga);
+      await db.execute(_createTblDownloadChapter);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   static Future<int?> getMangaCount() async {
     final db = await DBManager.instance.getDB();
@@ -88,7 +99,8 @@ class DownloadDao {
       var successPages = r[_colDcSuccessCount]! as int;
       countMap[mid] = [
         (countMap[mid]?[0] ?? 0) + 1, // total
-        (countMap[mid]?[1] ?? 0) + (totalPages == successPages ? 1 : 0), // success
+        (countMap[mid]?[1] ?? 0) + (successPages > 0 ? 1 : 0), // started
+        (countMap[mid]?[2] ?? 0) + (totalPages == successPages ? 1 : 0), // success
       ];
     }
 
@@ -101,7 +113,8 @@ class DownloadDao {
           mangaTitle: r[_colDmMangaTitle]! as String,
           mangaCover: r[_colDmMangaCover]! as String,
           totalChaptersCount: countMap[mid]?[0] ?? 0,
-          successChaptersCount: countMap[mid]?[1] ?? 0,
+          startedChaptersCount: countMap[mid]?[1] ?? 0,
+          successChaptersCount: countMap[mid]?[2] ?? 0,
           updatedAt: DateTime.parse(r[_colDmUpdatedAt]! as String),
         ),
       );
@@ -131,11 +144,13 @@ class DownloadDao {
     }
 
     var totalChapters = 0;
+    var startedChapters = 0;
     var successChapters = 0;
     for (var r in chapterResults) {
       var totalPages = r[_colDcTotalCount]! as int;
       var successPages = r[_colDcSuccessCount]! as int;
       totalChapters++;
+      startedChapters += successPages > 0 ? 1 : 0;
       successChapters += totalPages == successPages ? 1 : 0;
     }
 
@@ -145,6 +160,7 @@ class DownloadDao {
       mangaTitle: r[_colDmMangaTitle]! as String,
       mangaCover: r[_colDmMangaCover]! as String,
       totalChaptersCount: totalChapters,
+      startedChaptersCount: startedChapters,
       successChaptersCount: successChapters,
       updatedAt: DateTime.parse(r[_colDmUpdatedAt]! as String),
     );
@@ -228,24 +244,15 @@ class DownloadDao {
       rows = await db.safeRawInsert(
         '''INSERT INTO $_tblDownloadChapter ($_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcSuccessCount)
            VALUES (?, ?, ?, ?, ?, ?)''',
-        [chapter.mangaId, chapter.chapterId, chapter.chapterTitle, chapter.chapterGroup, chapter.totalPagesCount ?? 0, chapter.successPagesCount ?? 0],
+        [chapter.mangaId, chapter.chapterId, chapter.chapterTitle, chapter.chapterGroup, chapter.totalPagesCount, chapter.successPagesCount],
       );
     } else {
-      if (chapter.totalPagesCount == null) {
-        rows = await db.safeRawUpdate(
-          '''UPDATE $_tblDownloadManga
-           SET $_colDcChapterTitle = ?, $_tblDcChapterGroup = ?
-           WHERE $_colDcMangaId = ? AND $_colDcChapterId = ?''',
-          [chapter.chapterTitle, chapter.chapterGroup, chapter.mangaId, chapter.chapterId],
-        );
-      } else {
-        rows = await db.safeRawUpdate(
-          '''UPDATE $_tblDownloadManga
+      rows = await db.safeRawUpdate(
+        '''UPDATE $_tblDownloadManga
            SET $_colDcChapterTitle = ?, $_tblDcChapterGroup = ?, $_colDcTotalCount = ?, $_colDcSuccessCount = ?
            WHERE $_colDcMangaId = ? AND $_colDcChapterId = ?''',
-          [chapter.chapterTitle, chapter.chapterGroup, chapter.totalPagesCount!, chapter.successPagesCount ?? 0, chapter.mangaId, chapter.chapterId],
-        );
-      }
+        [chapter.chapterTitle, chapter.chapterGroup, chapter.totalPagesCount, chapter.successPagesCount, chapter.mangaId, chapter.chapterId],
+      );
     }
     return rows != null && rows >= 1;
   }
@@ -268,5 +275,9 @@ class DownloadDao {
       [mid, cid],
     );
     return rows != null && rows >= 1;
+  }
+
+  static Future<void> upgradeFromVer1To2(Database db) async {
+    await createTable(db);
   }
 }

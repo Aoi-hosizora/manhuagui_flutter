@@ -26,8 +26,8 @@ class DownloadMangaLineView extends StatelessWidget {
     Key? key,
     required this.mangaTitle,
     required this.mangaCover,
-    required this.finishedChapterCount,
-    required this.chapterCountInTask,
+    required this.startedChaptersCount,
+    required this.totalChaptersCountInTask,
     required this.lastDownloadTime,
     required this.downloadStatus,
     required this.downloadingChapterTitle,
@@ -38,8 +38,8 @@ class DownloadMangaLineView extends StatelessWidget {
 
   final String mangaTitle;
   final String mangaCover;
-  final int finishedChapterCount;
-  final int chapterCountInTask;
+  final int startedChaptersCount; // TODO 开始下载 / 正下载 / 已下载
+  final int totalChaptersCountInTask;
   final DateTime lastDownloadTime;
   final DownloadStatus downloadStatus;
   final String downloadingChapterTitle;
@@ -55,7 +55,7 @@ class DownloadMangaLineView extends StatelessWidget {
       rowsExceptTitle: [
         GeneralLineIconText(
           icon: Icons.download,
-          text: '已下载章节 $finishedChapterCount/$chapterCountInTask (635.76K/?)',
+          text: '已下载章节数 $startedChaptersCount/$totalChaptersCountInTask (635.76K/?)',
         ),
         if (downloadStatus != DownloadStatus.downloading) ...[
           GeneralLineIconText(
