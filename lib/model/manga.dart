@@ -243,9 +243,9 @@ class MangaHistory {
   final int chapterPage;
   final DateTime lastTime;
 
-  bool get read => chapterId != 0;
-
   const MangaHistory({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.mangaUrl, required this.chapterId, required this.chapterTitle, required this.chapterPage, required this.lastTime});
+
+  bool get read => chapterId != 0;
 
   MangaHistory copyWith({
     int? mangaId,
@@ -272,4 +272,26 @@ class MangaHistory {
   bool equals(MangaHistory o) {
     return mangaId == o.mangaId && mangaTitle == o.mangaTitle && mangaCover == o.mangaCover && mangaUrl == o.mangaUrl && chapterId == o.chapterId && chapterTitle == o.chapterTitle && chapterPage == o.chapterPage && lastTime == o.lastTime;
   }
+}
+
+class DownloadedManga {
+  final int mangaId;
+  final String mangaTitle;
+  final String mangaCover;
+  final int totalChaptersCount;
+  final int successChaptersCount;
+  final DateTime updatedAt;
+
+  const DownloadedManga({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.totalChaptersCount, required this.successChaptersCount, required this.updatedAt});
+}
+
+class DownloadedChapter {
+  final int mangaId;
+  final int chapterId;
+  final String chapterTitle;
+  final String chapterGroup;
+  final int? totalPagesCount;
+  final int? successPagesCount;
+
+  const DownloadedChapter({required this.mangaId, required this.chapterId, required this.chapterTitle, required this.chapterGroup, required this.totalPagesCount, required this.successPagesCount});
 }

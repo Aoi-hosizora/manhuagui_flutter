@@ -27,7 +27,6 @@ class _DownloadPageState extends State<DownloadPage> {
           DownloadMangaLineView(
             mangaTitle: '辉夜姬想让人告白~天才们的恋爱头脑战~',
             mangaCover: 'https://cf.hamreus.com/cpic/b/17332.jpg',
-            mangaAuthor: '赤坂アカ',
             finishedChapterCount: 3,
             chapterCountInTask: 20,
             lastDownloadTime: DateTime.now(),
@@ -41,7 +40,6 @@ class _DownloadPageState extends State<DownloadPage> {
           DownloadMangaLineView(
             mangaTitle: '和歌酱今天也很腹黑',
             mangaCover: 'https://cf.hamreus.com/cpic/m/37124.jpg',
-            mangaAuthor: '岛村',
             finishedChapterCount: 10,
             chapterCountInTask: 10,
             lastDownloadTime: DateTime.now(),

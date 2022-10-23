@@ -1,3 +1,4 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'chapter.g.dart';
@@ -50,11 +51,22 @@ class MangaChapterGroup {
 }
 
 extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
-  String? findTitle(int cid) {
+  TinyMangaChapter? findChapter(int cid) {
     for (var group in this) {
       for (var chapter in group.chapters) {
         if (chapter.cid == cid) {
-          return chapter.title;
+          return chapter;
+        }
+      }
+    }
+    return null;
+  }
+
+  Tuple2<TinyMangaChapter, String>? findChapterAndGroupName(int cid) {
+    for (var group in this) {
+      for (var chapter in group.chapters) {
+        if (chapter.cid == cid) {
+          return Tuple2(chapter, group.title);
         }
       }
     }
