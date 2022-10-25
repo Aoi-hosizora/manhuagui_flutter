@@ -15,7 +15,7 @@ class QueueManager {
 
   Queue get queue {
     if (_queue == null) {
-      _queue = Queue();
+      _queue = Queue(parallel: 1);
       _tasks = <QueueTask<dynamic>>[];
     }
     return _queue!;

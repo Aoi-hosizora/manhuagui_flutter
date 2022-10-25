@@ -8,6 +8,7 @@ class DownloadDao {
   static const _colDmMangaId = 'mid';
   static const _colDmMangaTitle = 'title';
   static const _colDmMangaCover = 'cover';
+  static const _colDmMangaUrl = 'url';
   static const _colDmUpdatedAt = 'updated_at';
 
   static const _createTblDownloadManga = '''
@@ -15,6 +16,7 @@ class DownloadDao {
       $_colDmMangaId INTEGER,
       $_colDmMangaTitle VARCHAR(1023),
       $_colDmMangaCover VARCHAR(1023),
+      $_colDmMangaUrl VARCHAR(1023),
       $_colDmUpdatedAt DATETIME,
       PRIMARY KEY ($_colDmMangaId)
     )''';
@@ -77,7 +79,7 @@ class DownloadDao {
   static Future<List<DownloadedManga>?> getMangas() async {
     final db = await DBManager.instance.getDB();
     var mangaResults = await db.safeRawQuery(
-      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmUpdatedAt
+      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmUpdatedAt
          FROM $_tblDownloadManga
          ORDER BY $_colDmUpdatedAt DESC''',
     );
@@ -112,6 +114,7 @@ class DownloadDao {
           mangaId: mid,
           mangaTitle: r[_colDmMangaTitle]! as String,
           mangaCover: r[_colDmMangaCover]! as String,
+          mangaUrl: r[_colDmMangaUrl]! as String,
           totalChaptersCount: countMap[mid]?[0] ?? 0,
           startedChaptersCount: countMap[mid]?[1] ?? 0,
           successChaptersCount: countMap[mid]?[2] ?? 0,
@@ -125,7 +128,7 @@ class DownloadDao {
   static Future<DownloadedManga?> getManga({required int mid}) async {
     final db = await DBManager.instance.getDB();
     var mangaResults = await db.safeRawQuery(
-      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmUpdatedAt
+      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmUpdatedAt
          FROM $_tblDownloadManga
          WHERE $_colDmMangaId = ?''',
       [mid],
@@ -159,6 +162,7 @@ class DownloadDao {
       mangaId: mid,
       mangaTitle: r[_colDmMangaTitle]! as String,
       mangaCover: r[_colDmMangaCover]! as String,
+      mangaUrl: r[_colDmMangaUrl]! as String,
       totalChaptersCount: totalChapters,
       startedChaptersCount: startedChapters,
       successChaptersCount: successChapters,
@@ -211,16 +215,16 @@ class DownloadDao {
     int? rows = 0;
     if (count == 0) {
       rows = await db.safeRawInsert(
-        '''INSERT INTO $_tblDownloadManga ($_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmUpdatedAt)
-           VALUES (?, ?, ?, ?)''',
-        [manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.updatedAt.toIso8601String()],
+        '''INSERT INTO $_tblDownloadManga ($_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmUpdatedAt)
+           VALUES (?, ?, ?, ?, ?)''',
+        [manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.updatedAt.toIso8601String()],
       );
     } else {
       rows = await db.safeRawUpdate(
         '''UPDATE $_tblDownloadManga
-           SET $_colDmMangaTitle = ?, $_colDmMangaCover = ?, $_colDmUpdatedAt = ?
+           SET $_colDmMangaTitle = ?, $_colDmMangaCover = ?, $_colDmMangaUrl = ?, $_colDmUpdatedAt = ?
            WHERE $_colDmMangaId = ?''',
-        [manga.mangaTitle, manga.mangaCover, manga.updatedAt.toIso8601String(), manga.mangaId],
+        [manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.updatedAt.toIso8601String(), manga.mangaId],
       );
     }
     return rows != null && rows >= 1;

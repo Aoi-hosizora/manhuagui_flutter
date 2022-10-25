@@ -23,9 +23,9 @@ class SubscribeUpdatedEvent {
   final bool subscribe;
 }
 
-class DownloadProgressChangedEvent {
-  const DownloadProgressChangedEvent({required this.progress, required this.result});
+class MangaDownloadProgressChangedEvent {
+  const MangaDownloadProgressChangedEvent({required this.progress, required this.result});
 
   final MangaDownloadProgress? progress;
-  final MangaDownloadResult? result;
+  final MangaDownloadTaskResult? result;
 }

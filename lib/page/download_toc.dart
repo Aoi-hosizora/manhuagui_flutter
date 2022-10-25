@@ -5,9 +5,6 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
-import 'package:manhuagui_flutter/service/db/download.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
-import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
@@ -42,52 +39,39 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
   }
 
   Future<void> _downloadManga() async {
-    // 1. 将漫画信息与所有需要下载的章节信息都更新至数据库
-    await DownloadDao.addOrUpdateManga(
-      manga: DownloadedManga(
-        mangaId: widget.mangaId,
-        mangaTitle: widget.mangaTitle,
-        mangaCover: widget.mangaCover,
-        totalChaptersCount: 0,
-        startedChaptersCount: 0,
-        successChaptersCount: 0,
-        updatedAt: DateTime.now(),
-      ),
+    // TODO 检查 _selected 中已经在下载列表中的章节
+
+    // 1. 构造下载任务
+    var task = MangaDownloadQueueTask(
+      mangaId: widget.mangaId,
+      chapterIds: _selected,
     );
-    for (var chapterId in _selected) {
-      var tuple = widget.groups.findChapterAndGroupName(chapterId)!;
-      var chapter = tuple.item1;
-      await DownloadDao.addOrUpdateChapter(
-        chapter: DownloadedChapter(
-          mangaId: chapter.mid,
-          chapterId: chapter.cid,
-          chapterTitle: chapter.title,
-          chapterGroup: tuple.item2,
-          totalPagesCount: chapter.pageCount,
-          successPagesCount: 0,
-        ),
-      );
-    }
 
     // !!!
     unawaited(
       Future.microtask(() async {
-        // 2. 构造下载任务
-        var task = MangaDownloadQueueTask(
-          mangaId: widget.mangaId,
-          chapterIds: _selected,
-          progressNotifier: (progress) {
-            var ev = DownloadProgressChangedEvent(progress: progress, result: null);
-            EventBusManager.instance.fire(ev);
+        // 2. 更新数据库
+        await task.prepare(
+          mangaTitle: widget.mangaTitle,
+          mangaCover: widget.mangaCover,
+          mangaUrl: widget.mangaUrl,
+          getChapter: (cid) {
+            var tuple = widget.groups.findChapterAndGroupName(cid)!;
+            var chapter = tuple.item1;
+            var groupName = tuple.item2;
+            return DownloadedChapter(
+              mangaId: chapter.mid,
+              chapterId: chapter.cid,
+              chapterTitle: chapter.title,
+              chapterGroup: groupName,
+              totalPagesCount: chapter.pageCount,
+              successPagesCount: 0,
+            );
           },
         );
 
-        // 3. 入队
-        var result = await QueueManager.instance.addTask(task) ?? MangaDownloadResult.canceled;
-
-        // 4. 任务结束
-        var ev = DownloadProgressChangedEvent(progress: null, result: result);
-        EventBusManager.instance.fire(ev);
+        // 3. 入队等待执行结束
+        await QueueManager.instance.addTask(task) ?? MangaDownloadTaskResult.canceled;
       }),
     );
   }

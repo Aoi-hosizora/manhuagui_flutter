@@ -15,8 +15,8 @@ class GeneralLineView extends StatelessWidget {
     required this.text3,
     this.extraInRow,
     this.extraWidthInRow,
-    this.extraInStack,
-    this.extraInStack2,
+    this.extrasInStack,
+    this.topExtrasInStack,
     required this.onPressed,
     this.onLongPressed,
   })  : rowsExceptTitle = null,
@@ -29,8 +29,8 @@ class GeneralLineView extends StatelessWidget {
     required List<Widget> this.rowsExceptTitle,
     this.extraInRow,
     this.extraWidthInRow,
-    this.extraInStack,
-    this.extraInStack2,
+    this.extrasInStack,
+    this.topExtrasInStack,
     required this.onPressed,
     this.onLongPressed,
   })  : icon1 = null,
@@ -52,8 +52,8 @@ class GeneralLineView extends StatelessWidget {
   final List<Widget>? rowsExceptTitle;
   final Widget? extraInRow;
   final double? extraWidthInRow;
-  final Widget? extraInStack;
-  final Widget? extraInStack2;
+  final List<Widget>? extrasInStack;
+  final List<Widget>? topExtrasInStack;
   final void Function() onPressed;
   final void Function()? onLongPressed;
 
@@ -115,7 +115,7 @@ class GeneralLineView extends StatelessWidget {
             if (extraInRow != null) extraInRow!,
           ],
         ),
-        if (extraInStack != null) extraInStack!,
+        if (extrasInStack != null) ...extrasInStack!,
         // ****************************************************************
         // 点击效果
         // ****************************************************************
@@ -128,7 +128,7 @@ class GeneralLineView extends StatelessWidget {
             ),
           ),
         ),
-        if (extraInStack2 != null) extraInStack2!,
+        if (topExtrasInStack != null) ...topExtrasInStack!,
       ],
     );
   }
