@@ -37,20 +37,17 @@ class QueueManager {
       });
       return result;
     } catch (e, s) {
+      // QueueCancelledException
       return Future.error(e, s);
     } finally {
       tasks.remove(task);
+      await task.doDefer();
     }
   }
 
-  void removeTask(QueueTask<dynamic> task) {
-    task.cancel();
-    tasks.remove(task);
-  }
-
   void cancelAllTasks() {
-    tasks.clear();
     queue.cancel();
+    // tasks.clear();
   }
 }
 
@@ -64,17 +61,28 @@ abstract class QueueTask<T> {
   }
 
   Future<T?> doTask();
+
+  Future<void> doDefer() {
+    return Future.value(null);
+  }
 }
 
 class FuncQueueTask<T> extends QueueTask {
   FuncQueueTask({
     required this.task,
+    this.defer,
   });
 
   final Future<T?> Function() task;
+  final Future<void> Function()? defer;
 
   @override
   Future<T?> doTask() {
     return task.call();
+  }
+
+  @override
+  Future<void> doDefer() {
+    return defer?.call() ?? Future.value(null);
   }
 }

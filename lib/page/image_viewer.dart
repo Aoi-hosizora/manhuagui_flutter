@@ -29,7 +29,11 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      setSystemUIOverlayStyle(navigationBarColor: Colors.black);
+      setSystemUIOverlayStyle(
+        navigationBarIconBrightness: Brightness.light,
+        navigationBarColor: Colors.black,
+        navigationBarDividerColor: Colors.black,
+      );
     });
   }
 
@@ -50,7 +54,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
     if (f != null) {
       Fluttertoast.showToast(msg: '图片已保存至 ${f.path}');
     } else {
-    Fluttertoast.showToast(msg: '无法保存图片');
+      Fluttertoast.showToast(msg: '无法保存图片');
     }
   }
 

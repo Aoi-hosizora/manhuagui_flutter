@@ -6,7 +6,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
-import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -65,27 +64,34 @@ class _DownloadPageState extends State<DownloadPage> {
     return DownloadMangaLineView(
       mangaTitle: item.mangaTitle,
       mangaCover: item.mangaCover,
-      status: task != null
+      status: task != null && !task.succeeded
           ? !task.canceled
               ? task.progress.stage == DownloadMangaProgressStage.waiting
-                  ? DownloadLineStatus.waiting
-                  : DownloadLineStatus.downloading
-              : DownloadLineStatus.pausing
+                  ? DownloadLineStatus.waiting // stopped
+                  : DownloadLineStatus.downloading // preparing / running
+              : DownloadLineStatus.pausing // preparing / running
           : item.startedChapterCount != item.totalChapterCount
-              ? DownloadLineStatus.paused
+              ? DownloadLineStatus.paused // stopped
               : item.successChapterCount == item.totalChapterCount
-                  ? DownloadLineStatus.succeeded
-                  : DownloadLineStatus.failed,
-      startedChapterCount: task?.progress.startedChapters?.length ?? item.startedChapterCount,
-      totalChapterCountInTask: task?.chapterIds.length ?? item.totalChapterCount,
-      lastDownloadTime: item.updatedAt,
-      downloadProgress: task == null
-          ? null
+                  ? DownloadLineStatus.succeeded // stopped
+                  : DownloadLineStatus.failed /* stopped */,
+      progress: task == null || task.succeeded || (!task.canceled && task.progress.stage == DownloadMangaProgressStage.waiting)
+          ? DownloadLineProgress.stopped(
+              startedChapterCount: item.startedChapterCount,
+              totalChapterCount: item.totalChapterCount,
+              failedPageCountInAll: item.failedPageCountInAll,
+              lastDownloadTime: item.updatedAt,
+            )
           : task.progress.currentChapter == null
-              ? DownloadLineProgress.preparing()
-              : DownloadLineProgress(
+              ? DownloadLineProgress.preparing(
+                  startedChapterCount: task.progress.startedChapters?.length ?? 0,
+                  totalChapterCount: item.totalChapterCount,
+                )
+              : DownloadLineProgress.running(
+                  startedChapterCount: task.progress.startedChapters!.length,
+                  totalChapterCount: item.totalChapterCount,
                   chapterTitle: task.progress.currentChapter!.title,
-                  currentPageIndex: task.progress.currentChapterStartedPages?.length ?? 0,
+                  triedPageCount: (task.progress.successPageCountInChapter ?? 0) + (task.progress.failedPageCountInChapter ?? 0),
                   totalPageCount: task.progress.currentChapter!.pageCount,
                 ),
       onActionPressed: () async {
@@ -152,7 +158,7 @@ class _DownloadPageState extends State<DownloadPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('下载列表'),
+        title: Text('下载列表 (共 $_total 部)'),
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
@@ -183,14 +189,6 @@ class _DownloadPageState extends State<DownloadPage> {
         ),
         separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => _buildItem(item),
-        extra: UpdatableDataViewExtraWidgets(
-          innerTopWidgets: [
-            ListHintView.textText(
-              leftText: '',
-              rightText: '共 $_total 部',
-            ),
-          ],
-        ),
       ),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,

@@ -14,9 +14,10 @@ class MangaTocView extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    this.highlightColor,
     this.highlightedChapters = const [],
     this.lastChapterPage = 1,
-    this.showNewBadge = true,
+    this.customBadgeBuilder,
     this.predicate,
   }) : super(key: key);
 
@@ -26,9 +27,10 @@ class MangaTocView extends StatefulWidget {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final Color? highlightColor;
   final List<int> highlightedChapters;
   final int lastChapterPage;
-  final bool showNewBadge;
+  final Widget? Function(int cid)? customBadgeBuilder;
   final bool Function(int cid)? predicate;
 
   @override
@@ -119,7 +121,9 @@ class _MangaTocViewState extends State<MangaTocView> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3),
-                color: widget.highlightedChapters.contains(chapter?.cid) ? Theme.of(context).primaryColorLight.withOpacity(0.6) : null,
+                color: widget.highlightedChapters.contains(chapter?.cid)
+                    ? (widget.highlightColor ?? Theme.of(context).primaryColorLight.withOpacity(0.6)) //
+                    : null,
               ),
               child: Theme(
                 data: Theme.of(context).copyWith(
@@ -175,7 +179,7 @@ class _MangaTocViewState extends State<MangaTocView> {
               ),
             ),
           ),
-          if (chapter?.isNew == true && widget.showNewBadge)
+          if (widget.customBadgeBuilder == null && chapter != null && chapter.isNew)
             Positioned(
               top: 0,
               right: 0,
@@ -193,6 +197,13 @@ class _MangaTocViewState extends State<MangaTocView> {
                   style: TextStyle(fontSize: 9, color: Colors.white),
                 ),
               ),
+            ),
+          if (widget.customBadgeBuilder != null && chapter != null)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: widget.customBadgeBuilder!(chapter.cid) ?? //
+                  SizedBox(height: 0, width: 0),
             ),
         ],
       ),

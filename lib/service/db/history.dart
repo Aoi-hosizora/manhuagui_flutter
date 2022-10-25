@@ -29,13 +29,8 @@ class HistoryDao {
       PRIMARY KEY ($_colUsername, $_colMangaId)
     )''';
 
-  static Future<bool?> createTable(Database db) async {
-    try {
-      await db.execute(_createTblHistory);
-      return true;
-    } catch (_) {
-      return false;
-    }
+  static Future<void> createTable(Database db) async {
+    await db.safeExecute(_createTblHistory);
   }
 
   static Future<int?> getHistoryCount({required String username}) async {

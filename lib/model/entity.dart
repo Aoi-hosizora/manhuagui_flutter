@@ -65,6 +65,7 @@ class DownloadedManga {
   final int totalChapterCount;
   final int startedChapterCount;
   final int successChapterCount;
+  final int failedPageCountInAll;
 
   const DownloadedManga({
     required this.mangaId,
@@ -75,6 +76,7 @@ class DownloadedManga {
     required this.totalChapterCount,
     required this.startedChapterCount,
     required this.successChapterCount,
+    required this.failedPageCountInAll,
   });
 
   const DownloadedManga.forDatabase({
@@ -85,7 +87,8 @@ class DownloadedManga {
     required this.updatedAt,
   })  : totalChapterCount = 0,
         startedChapterCount = 0,
-        successChapterCount = 0;
+        successChapterCount = 0,
+        failedPageCountInAll = 0;
 }
 
 class DownloadedChapter {
@@ -96,6 +99,8 @@ class DownloadedChapter {
   final int totalPageCount;
   final int startedPageCount;
   final int successPageCount;
+
+  bool get success => successPageCount == totalPageCount;
 
   const DownloadedChapter({
     required this.mangaId,

@@ -27,7 +27,7 @@ class DBManager {
           await DownloadDao.createTable(db);
         },
         onUpgrade: (db, version, _) async {
-          if (version == 1) {
+          if (version <= 1) {
             version = 2; // 1 -> 2 upgrade
             await HistoryDao.upgradeFromVer1To2(db);
             await DownloadDao.upgradeFromVer1To2(db);
@@ -48,12 +48,6 @@ class DBManager {
 }
 
 extension DatabaseExtension on Database {
-  /// Executes a raw SQL SELECT query and returns a list
-  /// of the rows that were found.
-  ///
-  /// ```
-  /// List<Map> list = await database.rawQuery('SELECT * FROM Test');
-  /// ```
   Future<List<Map<String, Object?>>?> safeRawQuery(String sql, [List<Object?>? arguments]) async {
     try {
       return await rawQuery(sql, arguments);
@@ -63,14 +57,6 @@ extension DatabaseExtension on Database {
     }
   }
 
-  /// Executes a raw SQL INSERT query and returns the last inserted row ID.
-  ///
-  /// ```
-  /// int id1 = await database.rawInsert(
-  ///   'INSERT INTO Test(name, value, num) VALUES("some name", 1234, 456.789)');
-  /// ```
-  ///
-  /// 0 could be returned for some specific conflict algorithms if not inserted.
   Future<int?> safeRawInsert(String sql, [List<Object?>? arguments]) async {
     try {
       return await rawInsert(sql, arguments);
@@ -80,14 +66,6 @@ extension DatabaseExtension on Database {
     }
   }
 
-  /// Executes a raw SQL UPDATE query and returns
-  /// the number of changes made.
-  ///
-  /// ```
-  /// int count = await database.rawUpdate(
-  ///   'UPDATE Test SET name = ?, value = ? WHERE name = ?',
-  ///   ['updated name', '9876', 'some name']);
-  /// ```
   Future<int?> safeRawUpdate(String sql, [List<Object?>? arguments]) async {
     try {
       return await rawUpdate(sql, arguments);
@@ -97,19 +75,20 @@ extension DatabaseExtension on Database {
     }
   }
 
-  /// Executes a raw SQL DELETE query and returns the
-  /// number of changes made.
-  ///
-  /// ```
-  /// int count = await database
-  ///   .rawDelete('DELETE FROM Test WHERE name = ?', ['another name']);
-  /// ```
   Future<int?> safeRawDelete(String sql, [List<Object?>? arguments]) async {
     try {
       return await rawDelete(sql, arguments);
     } catch (e, s) {
       print('===> exception when rawDelete:\n$e\n$s');
       return null;
+    }
+  }
+
+  Future<void> safeExecute(String sql, [List<Object?>? arguments]) async {
+    try {
+      return await execute(sql, arguments);
+    } catch (e, s) {
+      print('===> exception when execute:\n$e\n$s');
     }
   }
 }

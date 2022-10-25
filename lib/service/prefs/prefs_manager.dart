@@ -36,7 +36,7 @@ class PrefsManager {
       return;
     }
 
-    if (version == 1) {
+    if (version <= 1) {
       version = 2; // 1 -> 2 upgrade
       await AuthPrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);

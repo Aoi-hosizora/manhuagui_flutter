@@ -810,8 +810,11 @@ class _ScreenHelper {
   static double get bottomPanelDistance => _bottomPanelDistance;
 
   static Future<void> setSystemUIWhenEnter({required bool fullscreen}) async {
+    var color = !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.black.withOpacity(0.75);
     setSystemUIOverlayStyle(
-      navigationBarColor: !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.black.withOpacity(0.75),
+      navigationBarIconBrightness: Brightness.light,
+      navigationBarColor: color,
+      navigationBarDividerColor: color,
     );
     await setSystemUIWhenAppbarChanged(fullscreen: fullscreen);
   }

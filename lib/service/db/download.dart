@@ -25,7 +25,7 @@ class DownloadDao {
   static const _colDcMangaId = 'mid';
   static const _colDcChapterId = 'cid';
   static const _colDcChapterTitle = 'title';
-  static const _tblDcChapterGroup = 'group';
+  static const _tblDcChapterGroup = 'group_name';
   static const _colDcTotalCount = 'total_count';
   static const _colDcStartedCount = 'started_count'; // <<<
   static const _colDcSuccessCount = 'success_count';
@@ -42,14 +42,11 @@ class DownloadDao {
       PRIMARY KEY ($_colDcMangaId, $_colDcChapterId)
     )''';
 
-  static Future<bool?> createTable(Database db) async {
-    try {
-      await db.execute(_createTblDownloadManga);
-      await db.execute(_createTblDownloadChapter);
-      return true;
-    } catch (_) {
-      return false;
-    }
+  static Future<void> createTable(Database db) async {
+    // await db.safeExecute('DROP TABLE tbl_download_manga');
+    // await db.safeExecute('DROP TABLE tbl_download_chapter');
+    await db.safeExecute(_createTblDownloadManga);
+    await db.safeExecute(_createTblDownloadChapter);
   }
 
   static Future<int?> getMangaCount() async {
@@ -106,6 +103,7 @@ class DownloadDao {
         (countMap[mid]?[0] ?? 0) + 1, // total
         (countMap[mid]?[1] ?? 0) + (startedPages > 0 ? 1 : 0), // started
         (countMap[mid]?[2] ?? 0) + (successPages == totalPages ? 1 : 0), // success
+        (countMap[mid]?[3] ?? 0) + totalPages - successPages, // failed pages
       ];
     }
 
@@ -122,6 +120,7 @@ class DownloadDao {
           totalChapterCount: countMap[mid]?[0] ?? 0,
           startedChapterCount: countMap[mid]?[1] ?? 0,
           successChapterCount: countMap[mid]?[2] ?? 0,
+          failedPageCountInAll: countMap[mid]?[3] ?? 0,
         ),
       );
     }
@@ -152,6 +151,7 @@ class DownloadDao {
     var totalChapters = 0; // <<<
     var startedChapters = 0;
     var successChapters = 0;
+    var failedPages = 0;
     for (var r in chapterResults) {
       var totalPages = r[_colDcTotalCount]! as int;
       var startedPages = r[_colDcStartedCount]! as int;
@@ -159,6 +159,7 @@ class DownloadDao {
       totalChapters += 1;
       startedChapters += startedPages > 0 ? 1 : 0;
       successChapters += successPages == totalPages ? 1 : 0;
+      failedPages += totalPages - successPages;
     }
 
     var r = mangaResults.first;
@@ -171,6 +172,7 @@ class DownloadDao {
       totalChapterCount: totalChapters,
       startedChapterCount: startedChapters,
       successChapterCount: successChapters,
+      failedPageCountInAll: failedPages,
     );
   }
 
@@ -254,12 +256,12 @@ class DownloadDao {
       rows = await db.safeRawInsert(
         '''INSERT INTO $_tblDownloadChapter
            ($_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount)
-           VALUES (?, ?, ?, ?, ?, ?)''',
+           VALUES (?, ?, ?, ?, ?, ?, ?)''',
         [chapter.mangaId, chapter.chapterId, chapter.chapterTitle, chapter.chapterGroup, chapter.totalPageCount, chapter.startedPageCount, chapter.successPageCount],
       );
     } else {
       rows = await db.safeRawUpdate(
-        '''UPDATE $_tblDownloadManga
+        '''UPDATE $_tblDownloadChapter
            SET $_colDcChapterTitle = ?, $_tblDcChapterGroup = ?, $_colDcTotalCount = ?, $_colDcStartedCount = ?, $_colDcSuccessCount = ?
            WHERE $_colDcMangaId = ? AND $_colDcChapterId = ?''',
         [chapter.chapterTitle, chapter.chapterGroup, chapter.totalPageCount, chapter.startedPageCount, chapter.successPageCount, chapter.mangaId, chapter.chapterId],
