@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';

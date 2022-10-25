@@ -10,27 +10,27 @@ enum DownloadLineStatus {
 
   // 任务已结束
   paused,
-  succeed,
+  succeeded,
   failed,
 }
 
-class DownloadTaskProgress {
-  const DownloadTaskProgress.preparing()
+class DownloadLineProgress {
+  const DownloadLineProgress.preparing()
       : preparingChapter = true,
         chapterTitle = null,
         currentPageIndex = null,
-        totalPagesCount = null;
+        totalPageCount = null;
 
-  const DownloadTaskProgress({
+  const DownloadLineProgress({
     required String this.chapterTitle,
     required int this.currentPageIndex,
-    required int this.totalPagesCount,
+    required int this.totalPageCount,
   }) : preparingChapter = false;
 
   final bool preparingChapter;
   final String? chapterTitle;
   final int? currentPageIndex;
-  final int? totalPagesCount;
+  final int? totalPageCount;
 }
 
 class DownloadMangaLineView extends StatelessWidget {
@@ -39,8 +39,8 @@ class DownloadMangaLineView extends StatelessWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.status,
-    required this.startedChaptersCount,
-    required this.totalChaptersCountInTask,
+    required this.startedChapterCount,
+    required this.totalChapterCountInTask,
     required this.lastDownloadTime,
     required this.downloadProgress,
     required this.onActionPressed,
@@ -51,10 +51,10 @@ class DownloadMangaLineView extends StatelessWidget {
   final String mangaTitle;
   final String mangaCover;
   final DownloadLineStatus status;
-  final int startedChaptersCount;
-  final int totalChaptersCountInTask;
+  final int startedChapterCount;
+  final int totalChapterCountInTask;
   final DateTime lastDownloadTime;
-  final DownloadTaskProgress? downloadProgress;
+  final DownloadLineProgress? downloadProgress;
   final void Function() onActionPressed;
   final void Function() onLinePressed;
   final void Function()? onLineLongPressed;
@@ -64,21 +64,23 @@ class DownloadMangaLineView extends StatelessWidget {
     switch (status) {
       case DownloadLineStatus.waiting:
       case DownloadLineStatus.paused:
-      case DownloadLineStatus.succeed:
+      case DownloadLineStatus.succeeded:
       case DownloadLineStatus.failed:
         return _buildGeneral(
           context: context,
           icon1: Icons.download,
-          text1: '已下载章节 $startedChaptersCount/$totalChaptersCountInTask (635.76K)',
+          text1: '已下载章节 $startedChapterCount/$totalChapterCountInTask (635.76K)',
           icon2: Icons.access_time,
           text2: '下载于 ${DateFormat('yyyy-MM-dd HH:mm:ss').format(lastDownloadTime)}',
+          icon3: null,
+          text3: '　',
           showProgressBar: false,
           progressBarValue: null,
           statusText: status == DownloadLineStatus.waiting
               ? '等待中'
               : status == DownloadLineStatus.paused
                   ? '已暂停'
-                  : status == DownloadLineStatus.succeed
+                  : status == DownloadLineStatus.succeeded
                       ? '已完成'
                       : '未完成 (xxx 页)',
           disableAction: false,
@@ -86,17 +88,23 @@ class DownloadMangaLineView extends StatelessWidget {
         );
       case DownloadLineStatus.downloading:
       case DownloadLineStatus.pausing:
+        assert(
+          downloadProgress != null,
+          'downloadProgress must be not null when status is downloading and pausing',
+        );
         return _buildGeneral(
           context: context,
           icon1: Icons.download,
-          text1: '正在下载章节 $startedChaptersCount/$totalChaptersCountInTask (635.76K)',
+          text1: '正在下载章节 $startedChapterCount/$totalChapterCountInTask (635.76K)',
           icon2: Icons.download,
           text2: '当前正在下载 ${downloadProgress!.chapterTitle ?? '未知章节'} ' + //
-              (downloadProgress!.preparingChapter ? '' : '${downloadProgress!.currentPageIndex!}/${downloadProgress!.totalPagesCount!}页'),
+              (downloadProgress!.preparingChapter ? '' : '${downloadProgress!.currentPageIndex!}/${downloadProgress!.totalPageCount!}页'),
+          icon3: null,
+          text3: '　',
           showProgressBar: true,
-          progressBarValue: status == DownloadLineStatus.pausing || downloadProgress!.preparingChapter || downloadProgress!.totalPagesCount! == 0
+          progressBarValue: status == DownloadLineStatus.pausing || downloadProgress!.preparingChapter || downloadProgress!.totalPageCount! == 0
               ? null //
-              : downloadProgress!.currentPageIndex! / downloadProgress!.totalPagesCount!,
+              : downloadProgress!.currentPageIndex! / downloadProgress!.totalPageCount!,
           statusText: status == DownloadLineStatus.downloading
               ? '下载中 (1.23M/s)' //
               : '暂停中，请稍后',
@@ -112,6 +120,8 @@ class DownloadMangaLineView extends StatelessWidget {
     required String text1,
     required IconData icon2,
     required String text2,
+    required IconData? icon3,
+    required String? text3,
     required bool showProgressBar,
     required double? progressBarValue,
     required String statusText,
@@ -131,8 +141,8 @@ class DownloadMangaLineView extends StatelessWidget {
           text: text2,
         ),
         GeneralLineIconText(
-          icon: null,
-          text: '　',
+          icon: icon3,
+          text: text3,
         ),
         // GeneralLineIconText(
         //   icon: Icons.subject,

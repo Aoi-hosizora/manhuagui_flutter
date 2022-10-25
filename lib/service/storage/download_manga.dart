@@ -1,8 +1,10 @@
 import 'dart:io' show File;
 
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -13,98 +15,125 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/storage/download_file.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
+import 'package:queue/queue.dart';
 
-enum MangaDownloadTaskResult {
-  success,
-  failed,
-  canceled, // canceled when downloading
-}
-
-class MangaDownloadQueueTask extends QueueTask<MangaDownloadTaskResult> {
-  MangaDownloadQueueTask({
+class DownloadMangaQueueTask extends QueueTask<void> {
+  DownloadMangaQueueTask({
     required this.mangaId,
     required this.chapterIds,
-  }) : _progress = MangaDownloadProgress.beforeGettingManga(
-          mangaId: mangaId,
-          chapterIds: chapterIds,
-        );
+    int parallel = 1,
+  })  : _canceled = false,
+        _succeeded = false,
+        _progress = DownloadMangaProgress.waiting(),
+        _pageQueue = Queue(parallel: parallel);
 
   final int mangaId;
   final List<int> chapterIds;
 
-  MangaDownloadProgress _progress;
-
-  MangaDownloadProgress get progress => _progress;
-
-  void _updateProgress(MangaDownloadProgress progress) {
-    _progress = progress;
-    var ev = MangaDownloadProgressChangedEvent(progress: progress, result: null);
-    EventBusManager.instance.fire(ev);
-  }
-
-  var _canceled = false;
+  bool _canceled;
 
   @override
   bool get canceled => _canceled;
 
   @override
   void cancel() {
+    super.cancel();
     _canceled = true;
-    var ev = MangaDownloadProgressChangedEvent(progress: null, result: null);
+    var ev = DownloadMangaProgressChangedEvent(task: this);
     EventBusManager.instance.fire(ev);
   }
 
-  Future<void> prepare({
+  bool _succeeded;
+
+  bool get succeeded => _succeeded;
+
+  @override
+  Future<void> doTask() async {
+    _succeeded = await _coreDoTask();
+    var ev = DownloadMangaProgressChangedEvent(task: this);
+    EventBusManager.instance.fire(ev);
+  }
+
+  DownloadMangaProgress _progress;
+
+  DownloadMangaProgress get progress => _progress;
+
+  void _updateProgress(DownloadMangaProgress progress) {
+    _progress = progress;
+    var ev = DownloadMangaProgressChangedEvent(task: this);
+    EventBusManager.instance.fire(ev);
+  }
+
+  final Queue _pageQueue;
+
+  void changeParallel(int parallel) {
+    _pageQueue.parallel = parallel;
+  }
+
+  Future<bool> prepare({
     required String mangaTitle,
     required String mangaCover,
     required String mangaUrl,
-    required DownloadedChapter Function(int cid) getChapter,
+    required Tuple3<String, String, int>? Function(int cid) getChapterTitleGroupPages,
   }) async {
-    // 更新漫画下载表
+    // 1. 更新漫画下载表
     await DownloadDao.addOrUpdateManga(
-      manga: DownloadedManga(
+      manga: DownloadedManga.forDatabase(
         mangaId: mangaId,
         mangaTitle: mangaTitle,
         mangaCover: mangaCover,
         mangaUrl: mangaUrl,
-        totalChaptersCount: 0,
-        startedChaptersCount: 0,
-        successChaptersCount: 0,
         updatedAt: DateTime.now(),
       ),
     );
 
-    // 更新章节下载表
-    for (var chapterId in chapterIds) {
-      var chapter = getChapter(chapterId);
+    // 2. 检查下载任务是否存在，找到新增的章节
+    List<int> needToAdd;
+    var currentTasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().toList();
+    var previousTask = currentTasks.where((el) => el.mangaId == mangaId && !el.canceled).toList().firstOrNull;
+    if (previousTask == null) {
+      needToAdd = chapterIds.toList();
+    } else {
+      needToAdd = chapterIds.where((el) => !previousTask.chapterIds.contains(el)).toList();
+    }
+    if (needToAdd.isEmpty) {
+      return false; // 没有新增章节，不需要入队
+    }
+
+    // 3. 更新章节下载表
+    for (var chapterId in needToAdd.toList()) {
+      var chapter = getChapterTitleGroupPages(chapterId);
+      if (chapter == null) {
+        needToAdd.remove(chapterId); // <<<
+        continue;
+      }
       await DownloadDao.addOrUpdateChapter(
         chapter: DownloadedChapter(
-          mangaId: chapter.mangaId,
-          chapterId: chapter.chapterId,
-          chapterTitle: chapter.chapterTitle,
-          chapterGroup: chapter.chapterGroup,
-          totalPagesCount: chapter.totalPagesCount,
-          successPagesCount: 0,
+          mangaId: mangaId,
+          chapterId: chapterId,
+          chapterTitle: chapter.item1,
+          chapterGroup: chapter.item2,
+          totalPageCount: chapter.item3,
+          startedPageCount: 0 /* <<< */,
+          successPageCount: 0 /* <<< */,
         ),
       );
     }
+
+    // 4. 判断是否入队
+    if (previousTask != null) {
+      previousTask.chapterIds.addAll(needToAdd); // <<<
+      return false; // 漫画下载任务已存在，不需要入队
+    }
+    return true; // 新的漫画下载任务，入队
   }
 
-  @override
-  Future<MangaDownloadTaskResult> doTask() async {
-    var result = await coreDoTask();
-    var ev = MangaDownloadProgressChangedEvent(progress: null, result: result);
-    EventBusManager.instance.fire(ev);
-    return result;
-  }
-
-  Future<MangaDownloadTaskResult> coreDoTask() async {
+  Future<bool> _coreDoTask() async {
     final client = RestClient(DioManager.instance.dio);
-
-    // TODO old duplicate download task ??? need to merge chapters and cancel the new task
+    _updateProgress(DownloadMangaProgress.beforeGettingManga());
 
     // 1. 创建必要文件
-    var nomediaPath = PathUtils.joinPath([await _getMangaDownloadDirectory(), '.nomedia']);
+    var nomediaPath = PathUtils.joinPath([await _getDownloadMangaDirectory(), '.nomedia']);
     var nomediaFile = File(nomediaPath);
     if (!(await nomediaFile.exists())) {
       await nomediaFile.create(recursive: true);
@@ -116,62 +145,36 @@ class MangaDownloadQueueTask extends QueueTask<MangaDownloadTaskResult> {
       manga = (await client.getManga(mid: mangaId)).data;
     } catch (e, s) {
       print(wrapError(e, s).text);
-      return MangaDownloadTaskResult.failed;
+      return false;
     }
-    _updateProgress(MangaDownloadProgress.gotManga(
-      mangaId: mangaId,
-      chapterIds: chapterIds,
+    _updateProgress(DownloadMangaProgress.gotManga(
       manga: manga,
     ));
 
-    // 3. 更新漫画下载表和章节下载表
+    // 3. 更新漫画下载表
     await DownloadDao.addOrUpdateManga(
-      manga: DownloadedManga(
+      manga: DownloadedManga.forDatabase(
         mangaId: manga.mid,
         mangaTitle: manga.title,
         mangaCover: manga.cover,
         mangaUrl: manga.url,
-        totalChaptersCount: 0,
-        // ignored
-        startedChaptersCount: 0,
-        successChaptersCount: 0,
         updatedAt: DateTime.now(),
       ),
     );
-    var chapterGroupMap = <int, String>{};
-    for (var chapterId in chapterIds) {
-      var tuple = manga.chapterGroups.findChapterAndGroupName(chapterId)!;
-      var chapter = tuple.item1;
-      chapterGroupMap[chapterId] = tuple.item2;
-      await DownloadDao.addOrUpdateChapter(
-        chapter: DownloadedChapter(
-          mangaId: chapter.mid,
-          chapterId: chapter.cid,
-          chapterTitle: chapter.title,
-          chapterGroup: tuple.item2,
-          totalPagesCount: chapter.pageCount,
-          successPagesCount: 0, // <<< starts from zero
-        ),
-      );
-    }
 
     // 4. 按顺序处理每一章节
     var startedChapters = <MangaChapter>[];
-    var successPagesInAll = 0;
-    var failedPagesInAll = 0;
-    for (var chapterId in chapterIds) {
-      // 4.1. 判断请求是否被取消，若被取消则直接结束
-      if (super.canceled) {
-        return MangaDownloadTaskResult.canceled;
+    var somePagesFailed = false;
+    for (var i = 0; i < chapterIds.length /* appendable */; i++) {
+      // 4.1. 判断请求是否被取消
+      if (canceled) {
+        // 被取消 => 直接结束
+        return false;
       }
-      _updateProgress(MangaDownloadProgress.beforeGettingChapter(
-        mangaId: mangaId,
-        chapterIds: chapterIds,
+      var chapterId = chapterIds[i];
+      _updateProgress(DownloadMangaProgress.beforeGettingChapter(
         manga: manga,
         startedChapters: startedChapters,
-        successPagesCount: successPagesInAll,
-        failedPagesCount: failedPagesInAll,
-        currentChapterId: chapterId,
       ));
 
       // 4.2. 获取章节数据
@@ -180,89 +183,108 @@ class MangaDownloadQueueTask extends QueueTask<MangaDownloadTaskResult> {
         chapter = (await client.getMangaChapter(mid: mangaId, cid: chapterId)).data;
       } catch (e, s) {
         print(wrapError(e, s).text);
-        return MangaDownloadTaskResult.failed;
+        return false;
       }
       startedChapters.add(chapter);
-      _updateProgress(MangaDownloadProgress.gotChapter(
-        mangaId: mangaId,
-        chapterIds: chapterIds,
+      _updateProgress(DownloadMangaProgress.gotChapter(
         manga: manga,
         startedChapters: startedChapters,
-        successPagesCount: successPagesInAll,
-        failedPagesCount: failedPagesInAll,
-        currentChapterId: chapterId,
         currentChapter: chapter,
       ));
 
-      // 4.3. 按顺序下载章节每一页
-      var successPagesInChapter = 0;
-      for (int pageIndex = 0; pageIndex < chapter.pages.length; pageIndex++) {
-        // 4.3.1. 判断请求是否被取消，若被取消则更新章节下载表并结束
-        if (super.canceled) {
-          await DownloadDao.addOrUpdateChapter(
-            chapter: DownloadedChapter(
-              mangaId: chapter.mid,
-              chapterId: chapter.cid,
-              chapterTitle: chapter.title,
-              chapterGroup: chapterGroupMap[chapter.cid] ?? '',
-              totalPagesCount: chapter.pages.length,
-              successPagesCount: successPagesInChapter,
-            ),
-          );
-          return MangaDownloadTaskResult.canceled;
-        }
-
-        // 4.3.2. 下载章节页面
-        var url = chapter.pages[pageIndex];
-        var ok = await _downloadChapterPage(
-          mangaId: chapter.mid,
-          chapterId: chapter.cid,
-          pageIndex: pageIndex,
-          url: url,
-        );
-        if (ok) {
-          successPagesInChapter++;
-          successPagesInAll++;
-        } else {
-          failedPagesInAll++;
-        }
-
-        // 4.3.3 通知章节页面下载进度
-        _updateProgress(MangaDownloadProgress.gotPage(
-          mangaId: mangaId,
-          chapterIds: chapterIds,
-          manga: manga,
-          startedChapters: startedChapters,
-          successPagesCount: successPagesInAll,
-          failedPagesCount: failedPagesInAll,
-          currentChapterId: chapterId,
-          currentChapter: chapter,
-          currentChapterPageIndex: pageIndex,
-        ));
-      }
-
-      // 4.4. 更新章节下载表
+      // 4.3. 更新章节信息表
+      var chapterGroup = manga.chapterGroups.findChapterAndGroupName(chapterId)?.item2 ?? '';
       await DownloadDao.addOrUpdateChapter(
         chapter: DownloadedChapter(
           mangaId: chapter.mid,
           chapterId: chapter.cid,
           chapterTitle: chapter.title,
-          chapterGroup: chapterGroupMap[chapter.cid] ?? '',
-          totalPagesCount: chapter.pages.length,
-          successPagesCount: successPagesInChapter,
+          chapterGroup: chapterGroup,
+          totalPageCount: chapter.pageCount,
+          startedPageCount: 0 /* <<< */,
+          successPageCount: 0 /* <<< */,
         ),
       );
-    }
+
+      // 4.4. 按顺序处理章节每一页
+      var startedChapterPages = <String>[];
+      var successPagesInChapter = 0;
+      for (int i = 0; i < chapter.pages.length; i++) {
+        int pageIndex = i;
+        _pageQueue.add<void>(() async {
+          // 4.4.1. 判断请求是否被取消
+          if (canceled) {
+            // 被取消 => 跳出当前页面处理逻辑
+            return;
+          }
+
+          // 4.4.2. 记录当前待下载的章节页面
+          var pageUrl = chapter.pages[pageIndex];
+          startedChapterPages.add(pageUrl);
+
+          // 4.4.3. 下载页面
+          var ok = await _downloadChapterPage(
+            mangaId: chapter.mid,
+            chapterId: chapter.cid,
+            pageIndex: pageIndex,
+            url: pageUrl,
+          );
+          if (!ok) {
+            somePagesFailed = true;
+          } else {
+            successPagesInChapter++;
+          }
+
+          // 4.4.4. 通知页面下载进度
+          _updateProgress(DownloadMangaProgress.gotPage(
+            manga: manga,
+            startedChapters: startedChapters,
+            currentChapter: chapter,
+            currentChapterStartedPages: startedChapterPages,
+          ));
+        }).onError((e, s) {
+          print(wrapError(e, s).text);
+        });
+      } // for in chapter.pages
+
+      try {
+        // 4.5. 判断请求是否被取消
+        if (canceled) {
+          // 被取消 => 直接取消页面下载队列
+          _pageQueue.cancel(); // QueueCancelledException
+          return false; // 在返回之前，会更新章节下载表
+        } else {
+          // 不被取消 => 等待章节中所有页面处理结束
+          await _pageQueue.onComplete;
+        }
+      } catch (e, s) {
+        print(wrapError(e, s).text);
+      } finally {
+        // 4.6. 更新章节下载表 (无论是否被取消，都需要更新)
+        await DownloadDao.addOrUpdateChapter(
+          chapter: DownloadedChapter(
+            mangaId: chapter.mid,
+            chapterId: chapter.cid,
+            chapterTitle: chapter.title,
+            chapterGroup: chapterGroup,
+            totalPageCount: chapter.pages.length,
+            startedPageCount: chapter.pages.length,
+            successPageCount: successPagesInChapter,
+          ),
+        );
+      }
+    } // for in chapterIds
 
     // 5. 返回下载结果
-    if (failedPagesInAll > 0) {
-      return MangaDownloadTaskResult.failed;
+    if (somePagesFailed) {
+      return false;
     }
-    return MangaDownloadTaskResult.success;
+    return true;
   }
 }
 
-enum MangaDownloadProgressStage {
+enum DownloadMangaProgressStage {
+  waiting,
   beforeGettingManga,
   gotManga,
   beforeGettingChapter,
@@ -270,87 +292,62 @@ enum MangaDownloadProgressStage {
   gotPage,
 }
 
-class MangaDownloadProgress {
-  const MangaDownloadProgress.beforeGettingManga({
-    required this.mangaId,
-    required this.chapterIds,
-  })  : stage = MangaDownloadProgressStage.beforeGettingManga,
+class DownloadMangaProgress {
+  const DownloadMangaProgress.waiting()
+      : stage = DownloadMangaProgressStage.waiting,
         manga = null,
         startedChapters = null,
-        successPagesCount = 0,
-        failedPagesCount = 0,
-        currentChapterId = null,
         currentChapter = null,
-        currentChapterPageIndex = null;
+        currentChapterStartedPages = null;
 
-  const MangaDownloadProgress.gotManga({
-    required this.mangaId,
-    required this.chapterIds,
-    required Manga this.manga,
-  })  : stage = MangaDownloadProgressStage.gotManga,
+  const DownloadMangaProgress.beforeGettingManga()
+      : stage = DownloadMangaProgressStage.beforeGettingManga,
+        manga = null,
         startedChapters = null,
-        successPagesCount = 0,
-        failedPagesCount = 0,
-        currentChapterId = null,
         currentChapter = null,
-        currentChapterPageIndex = null;
+        currentChapterStartedPages = null;
 
-  const MangaDownloadProgress.beforeGettingChapter({
-    required this.mangaId,
-    required this.chapterIds,
+  const DownloadMangaProgress.gotManga({
     required Manga this.manga,
-    required List<MangaChapter> this.startedChapters,
-    required this.successPagesCount,
-    required this.failedPagesCount,
-    required int this.currentChapterId,
-  })  : stage = MangaDownloadProgressStage.beforeGettingChapter,
+  })  : stage = DownloadMangaProgressStage.gotManga,
+        startedChapters = null,
         currentChapter = null,
-        currentChapterPageIndex = null;
+        currentChapterStartedPages = null;
 
-  const MangaDownloadProgress.gotChapter({
-    required this.mangaId,
-    required this.chapterIds,
+  const DownloadMangaProgress.beforeGettingChapter({
     required Manga this.manga,
     required List<MangaChapter> this.startedChapters,
-    required this.successPagesCount,
-    required this.failedPagesCount,
-    required int this.currentChapterId,
-    required MangaChapter this.currentChapter,
-  })  : stage = MangaDownloadProgressStage.gotChapter,
-        currentChapterPageIndex = null;
+  })  : stage = DownloadMangaProgressStage.beforeGettingChapter,
+        currentChapter = null,
+        currentChapterStartedPages = null;
 
-  const MangaDownloadProgress.gotPage({
-    required this.mangaId,
-    required this.chapterIds,
+  const DownloadMangaProgress.gotChapter({
     required Manga this.manga,
     required List<MangaChapter> this.startedChapters,
-    required this.successPagesCount,
-    required this.failedPagesCount,
-    required int this.currentChapterId,
     required MangaChapter this.currentChapter,
-    required int this.currentChapterPageIndex,
-  }) : stage = MangaDownloadProgressStage.gotPage;
+  })  : stage = DownloadMangaProgressStage.gotChapter,
+        currentChapterStartedPages = null;
 
-  // 原始请求
-  final int mangaId;
-  final List<int> chapterIds;
+  const DownloadMangaProgress.gotPage({
+    required Manga this.manga,
+    required List<MangaChapter> this.startedChapters,
+    required MangaChapter this.currentChapter,
+    required List<String> this.currentChapterStartedPages,
+  }) : stage = DownloadMangaProgressStage.gotPage;
+
+  // 当前阶段
+  final DownloadMangaProgressStage stage;
 
   // 已获得的数据
-  final MangaDownloadProgressStage stage;
   final Manga? manga;
   final List<MangaChapter>? startedChapters;
 
-  // 页面汇总
-  final int successPagesCount;
-  final int failedPagesCount;
-
   // 当前下载
-  final int? currentChapterId;
   final MangaChapter? currentChapter;
-  final int? currentChapterPageIndex;
+  final List<String>? currentChapterStartedPages;
 }
 
-Future<String> _getMangaDownloadDirectory([int? mangaId, int? chapterId]) async {
+Future<String> _getDownloadMangaDirectory([int? mangaId, int? chapterId]) async {
   var download = PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download']);
   if (mangaId == null || chapterId == null) {
     return download;
@@ -362,7 +359,7 @@ Future<bool> _downloadChapterPage({required int mangaId, required int chapterId,
   var basename = (pageIndex + 1).toString().padLeft(4, '0');
   var extension = PathUtils.getExtension(url.split('?')[0]);
   var filename = '$basename$extension';
-  var filepath = PathUtils.joinPath([await _getMangaDownloadDirectory(mangaId, chapterId), filename]);
+  var filepath = PathUtils.joinPath([await _getDownloadMangaDirectory(mangaId, chapterId), filename]);
   if (await File(filepath).exists()) {
     return true;
   }

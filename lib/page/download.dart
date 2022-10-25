@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -30,9 +30,8 @@ class _DownloadPageState extends State<DownloadPage> {
   @override
   void initState() {
     super.initState();
-    _cancelHandler = EventBusManager.instance.listen<MangaDownloadProgressChangedEvent>((event) {
-      _tasks.clear();
-      _tasks.addAll(QueueManager.instance.tasks.whereType<MangaDownloadQueueTask>()); // TODO <<<
+    _cancelHandler = EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) {
+      _tasks[event.task.mangaId] = event.task;
       if (mounted) setState(() {});
     });
   }
@@ -47,43 +46,47 @@ class _DownloadPageState extends State<DownloadPage> {
 
   final _data = <DownloadedManga>[];
   var _total = 0;
-  final _tasks = <MangaDownloadQueueTask>[];
+  final _tasks = <int, DownloadMangaQueueTask>{};
 
   Future<List<DownloadedManga>> _getData() async {
     var data = await DownloadDao.getMangas() ?? [];
     _total = await DownloadDao.getMangaCount() ?? 0;
     _tasks.clear();
-    _tasks.addAll(QueueManager.instance.tasks.whereType<MangaDownloadQueueTask>());
+    for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
+      _tasks[t.mangaId] = t;
+    }
     if (mounted) setState(() {});
     return data;
   }
 
   Widget _buildItem(DownloadedManga item) {
-    var task = _tasks.where((el) => el.mangaId == item.mangaId).toList().firstOrNull;
+    DownloadMangaQueueTask? task = _tasks[item.mangaId];
 
     return DownloadMangaLineView(
       mangaTitle: item.mangaTitle,
       mangaCover: item.mangaCover,
       status: task != null
           ? !task.canceled
-              ? DownloadLineStatus.downloading
+              ? task.progress.stage == DownloadMangaProgressStage.waiting
+                  ? DownloadLineStatus.waiting
+                  : DownloadLineStatus.downloading
               : DownloadLineStatus.pausing
-          : item.startedChaptersCount != item.totalChaptersCount
+          : item.startedChapterCount != item.totalChapterCount
               ? DownloadLineStatus.paused
-              : item.successChaptersCount == item.totalChaptersCount
-                  ? DownloadLineStatus.succeed
+              : item.successChapterCount == item.totalChapterCount
+                  ? DownloadLineStatus.succeeded
                   : DownloadLineStatus.failed,
-      startedChaptersCount: item.startedChaptersCount,
-      totalChaptersCountInTask: item.totalChaptersCount,
+      startedChapterCount: task?.progress.startedChapters?.length ?? item.startedChapterCount,
+      totalChapterCountInTask: task?.chapterIds.length ?? item.totalChapterCount,
       lastDownloadTime: item.updatedAt,
       downloadProgress: task == null
           ? null
           : task.progress.currentChapter == null
-              ? DownloadTaskProgress.preparing()
-              : DownloadTaskProgress(
+              ? DownloadLineProgress.preparing()
+              : DownloadLineProgress(
                   chapterTitle: task.progress.currentChapter!.title,
-                  currentPageIndex: task.progress.currentChapterPageIndex ?? 0 + 1,
-                  totalPagesCount: task.progress.currentChapter!.pageCount,
+                  currentPageIndex: task.progress.currentChapterStartedPages?.length ?? 0,
+                  totalPageCount: task.progress.currentChapter!.pageCount,
                 ),
       onActionPressed: () async {
         if (task != null) {
@@ -97,7 +100,7 @@ class _DownloadPageState extends State<DownloadPage> {
           }
 
           // 2. 构造下载任务
-          var task = MangaDownloadQueueTask(
+          var task = DownloadMangaQueueTask(
             mangaId: item.mangaId,
             chapterIds: chapters.map((el) => el.chapterId).toList(),
           );
@@ -106,15 +109,26 @@ class _DownloadPageState extends State<DownloadPage> {
           unawaited(
             Future.microtask(() async {
               // 3. 更新数据库
-              await task.prepare(
+              var need = await task.prepare(
                 mangaTitle: item.mangaTitle,
                 mangaCover: item.mangaCover,
                 mangaUrl: item.mangaUrl,
-                getChapter: (cid) => chapters.where((el) => el.chapterId == cid).toList().firstOrNull!,
+                getChapterTitleGroupPages: (cid) {
+                  var chapter = chapters.where((el) => el.chapterId == cid).toList().firstOrNull;
+                  if (chapter == null) {
+                    return null;
+                  }
+                  var chapterTitle = chapter.chapterTitle;
+                  var groupName = chapter.chapterGroup;
+                  var chapterPageCount = chapter.totalPageCount;
+                  return Tuple3(chapterTitle, groupName, chapterPageCount);
+                },
               );
 
-              // 4. 入队等待执行结束
-              await QueueManager.instance.addTask(task) ?? MangaDownloadTaskResult.canceled;
+              if (need) {
+                // 4. 入队等待执行结束
+                await QueueManager.instance.addTask(task);
+              }
             }),
           );
         }

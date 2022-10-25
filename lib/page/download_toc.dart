@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
@@ -42,7 +42,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
     // TODO 检查 _selected 中已经在下载列表中的章节
 
     // 1. 构造下载任务
-    var task = MangaDownloadQueueTask(
+    var task = DownloadMangaQueueTask(
       mangaId: widget.mangaId,
       chapterIds: _selected,
     );
@@ -51,27 +51,26 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
     unawaited(
       Future.microtask(() async {
         // 2. 更新数据库
-        await task.prepare(
+        var need = await task.prepare(
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
-          getChapter: (cid) {
-            var tuple = widget.groups.findChapterAndGroupName(cid)!;
-            var chapter = tuple.item1;
+          getChapterTitleGroupPages: (cid) {
+            var tuple = widget.groups.findChapterAndGroupName(cid);
+            if (tuple == null) {
+              return null;
+            }
+            var chapterTitle = tuple.item1.title;
             var groupName = tuple.item2;
-            return DownloadedChapter(
-              mangaId: chapter.mid,
-              chapterId: chapter.cid,
-              chapterTitle: chapter.title,
-              chapterGroup: groupName,
-              totalPagesCount: chapter.pageCount,
-              successPagesCount: 0,
-            );
+            var chapterPageCount = tuple.item1.pageCount;
+            return Tuple3(chapterTitle, groupName, chapterPageCount);
           },
         );
 
-        // 3. 入队等待执行结束
-        await QueueManager.instance.addTask(task) ?? MangaDownloadTaskResult.canceled;
+        if (need) {
+          // 3. 入队等待执行结束
+          await QueueManager.instance.addTask(task);
+        }
       }),
     );
   }
