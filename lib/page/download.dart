@@ -58,87 +58,151 @@ class _DownloadPageState extends State<DownloadPage> {
     return data;
   }
 
+  Future<void> _onItemActionPressed(DownloadedManga item, DownloadMangaQueueTask? task) async {
+    if (task != null && !task.canceled && !task.succeeded) {
+      // => 暂停
+      task.cancel();
+      return;
+    }
+
+    // => 继续
+    // 1. 搜索章节列表
+    var chapters = await DownloadDao.getChapters(mid: item.mangaId);
+    if (chapters == null || chapters.isEmpty) {
+      Fluttertoast.showToast(msg: '无法开始下载');
+      return;
+    }
+
+    // 2. 构造下载任务
+    var newTask = DownloadMangaQueueTask(
+      mangaId: item.mangaId,
+      chapterIds: chapters.map((el) => el.chapterId).toList(),
+    );
+
+    // !!!
+    unawaited(
+      Future.microtask(() async {
+        // 3. 更新数据库
+        var need = await newTask.prepare(
+          mangaTitle: item.mangaTitle,
+          mangaCover: item.mangaCover,
+          mangaUrl: item.mangaUrl,
+          getChapterTitleGroupPages: (cid) {
+            var chapter = chapters.where((el) => el.chapterId == cid).toList().firstOrNull;
+            if (chapter == null) {
+              return null;
+            }
+            var chapterTitle = chapter.chapterTitle;
+            var groupName = chapter.chapterGroup;
+            var chapterPageCount = chapter.totalPageCount;
+            return Tuple3(chapterTitle, groupName, chapterPageCount);
+          },
+        );
+
+        if (need) {
+          // 4. 入队等待执行结束
+          await QueueManager.instance.addTask(newTask);
+        }
+      }),
+    );
+  }
+
+  Future<void> _delete(DownloadedManga item) async {
+    Future<void> delete(bool alsoDeleteFile) async {
+      _data.remove(item);
+      _total--;
+      await DownloadDao.deleteManga(mid: item.mangaId);
+      await DownloadDao.deleteAllChapters(mid: item.mangaId);
+      if (mounted) setState(() {});
+      if (alsoDeleteFile) {
+        await deleteDownloadedManga(item.mangaId);
+      }
+    }
+
+    await showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('漫画删除确认'),
+        content: Text('是否删除 ${item.mangaTitle}？'),
+        actions: [
+          TextButton(
+            child: Text('删除记录'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              await delete(false);
+            },
+          ),
+          TextButton(
+            child: Text('删除记录与文件'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              await delete(true);
+            },
+          ),
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildItem(DownloadedManga item) {
     DownloadMangaQueueTask? task = _tasks[item.mangaId];
+
+    DownloadLineStatus status;
+    if (task != null && !task.succeeded) {
+      if (!task.canceled) {
+        if (task.progress.stage == DownloadMangaProgressStage.waiting) {
+          status = DownloadLineStatus.waiting; // stopped
+        } else {
+          status = DownloadLineStatus.downloading; // preparing / running
+        }
+      } else {
+        status = DownloadLineStatus.pausing; // preparing / running
+      }
+    } else {
+      if (item.startedChapterIds.length != item.totalChapterIds.length) {
+        status = DownloadLineStatus.paused; // stopped
+      } else {
+        if (item.successChapterIds.length == item.totalChapterIds.length) {
+          status = DownloadLineStatus.succeeded; // stopped
+        } else {
+          status = DownloadLineStatus.failed; // stopped
+        }
+      }
+    }
+
+    DownloadLineProgress progress;
+    if (task == null || task.succeeded || (!task.canceled && task.progress.stage == DownloadMangaProgressStage.waiting)) {
+      progress = DownloadLineProgress.stopped(
+        startedChapterCount: item.startedChapterIds.length,
+        totalChapterCount: item.totalChapterIds.length,
+        failedPageCountInAll: item.failedPageCountInAll,
+        lastDownloadTime: item.updatedAt,
+      );
+    } else if (task.progress.currentChapter == null) {
+      progress = DownloadLineProgress.preparing(
+        startedChapterCount: <int>{...item.startedChapterIds, ...(task.progress.startedChapters?.map((el) => el.cid) ?? <int>[])}.length,
+        totalChapterCount: <int>{...item.totalChapterIds, ...task.chapterIds}.length,
+      );
+    } else {
+      progress = DownloadLineProgress.running(
+        startedChapterCount: <int>{...item.startedChapterIds, ...(task.progress.startedChapters?.map((el) => el.cid) ?? <int>[])}.length,
+        totalChapterCount: <int>{...item.totalChapterIds, ...task.chapterIds}.length,
+        chapterTitle: task.progress.currentChapter!.title,
+        triedPageCount: (task.progress.successPageCountInChapter ?? 0) + (task.progress.failedPageCountInChapter ?? 0),
+        totalPageCount: task.progress.currentChapter!.pageCount,
+      );
+    }
 
     return DownloadMangaLineView(
       mangaTitle: item.mangaTitle,
       mangaCover: item.mangaCover,
-      status: task != null && !task.succeeded
-          ? !task.canceled
-              ? task.progress.stage == DownloadMangaProgressStage.waiting
-                  ? DownloadLineStatus.waiting // stopped
-                  : DownloadLineStatus.downloading // preparing / running
-              : DownloadLineStatus.pausing // preparing / running
-          : item.startedChapterCount != item.totalChapterCount
-              ? DownloadLineStatus.paused // stopped
-              : item.successChapterCount == item.totalChapterCount
-                  ? DownloadLineStatus.succeeded // stopped
-                  : DownloadLineStatus.failed /* stopped */,
-      progress: task == null || task.succeeded || (!task.canceled && task.progress.stage == DownloadMangaProgressStage.waiting)
-          ? DownloadLineProgress.stopped(
-              startedChapterCount: item.startedChapterCount,
-              totalChapterCount: item.totalChapterCount,
-              failedPageCountInAll: item.failedPageCountInAll,
-              lastDownloadTime: item.updatedAt,
-            )
-          : task.progress.currentChapter == null
-              ? DownloadLineProgress.preparing(
-                  startedChapterCount: task.progress.startedChapters?.length ?? 0,
-                  totalChapterCount: item.totalChapterCount,
-                )
-              : DownloadLineProgress.running(
-                  startedChapterCount: task.progress.startedChapters!.length,
-                  totalChapterCount: item.totalChapterCount,
-                  chapterTitle: task.progress.currentChapter!.title,
-                  triedPageCount: (task.progress.successPageCountInChapter ?? 0) + (task.progress.failedPageCountInChapter ?? 0),
-                  totalPageCount: task.progress.currentChapter!.pageCount,
-                ),
-      onActionPressed: () async {
-        if (task != null) {
-          task.cancel();
-        } else {
-          // 1. 搜索章节列表
-          var chapters = await DownloadDao.getChapters(mid: item.mangaId);
-          if (chapters == null || chapters.isEmpty) {
-            Fluttertoast.showToast(msg: '无法开始下载');
-            return;
-          }
-
-          // 2. 构造下载任务
-          var task = DownloadMangaQueueTask(
-            mangaId: item.mangaId,
-            chapterIds: chapters.map((el) => el.chapterId).toList(),
-          );
-
-          // !!!
-          unawaited(
-            Future.microtask(() async {
-              // 3. 更新数据库
-              var need = await task.prepare(
-                mangaTitle: item.mangaTitle,
-                mangaCover: item.mangaCover,
-                mangaUrl: item.mangaUrl,
-                getChapterTitleGroupPages: (cid) {
-                  var chapter = chapters.where((el) => el.chapterId == cid).toList().firstOrNull;
-                  if (chapter == null) {
-                    return null;
-                  }
-                  var chapterTitle = chapter.chapterTitle;
-                  var groupName = chapter.chapterGroup;
-                  var chapterPageCount = chapter.totalPageCount;
-                  return Tuple3(chapterTitle, groupName, chapterPageCount);
-                },
-              );
-
-              if (need) {
-                // 4. 入队等待执行结束
-                await QueueManager.instance.addTask(task);
-              }
-            }),
-          );
-        }
-      },
+      status: status,
+      progress: progress,
+      onActionPressed: () => _onItemActionPressed(item, task),
       onLinePressed: () {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -150,7 +214,7 @@ class _DownloadPageState extends State<DownloadPage> {
           ),
         );
       },
-      onLineLongPressed: null,
+      onLineLongPressed: () => _delete(item),
     );
   }
 

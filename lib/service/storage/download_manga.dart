@@ -1,4 +1,4 @@
-import 'dart:io' show File;
+import 'dart:io' show File, Directory;
 
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -16,6 +16,84 @@ import 'package:manhuagui_flutter/service/storage/download_file.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 import 'package:queue/queue.dart';
+
+Future<File?> downloadImageToGallery(String url) async {
+  var basename = getTimestampTokenForFilename();
+  var extension = PathUtils.getExtension(url.split('?')[0]);
+  var filename = '$basename$extension';
+  var filepath = PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_image', 'IMG_$filename']);
+
+  try {
+    var f = await downloadFile(
+      url: url,
+      filepath: filepath,
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Referer': REFERER,
+      },
+      cacheManager: DefaultCacheManager(),
+      option: DownloadOption(
+        behavior: DownloadBehavior.preferUsingCache,
+        whenOverwrite: (_) async => OverwriteBehavior.addSuffix,
+      ),
+    ); // IMG_20220917_131013_206.jpg
+    await addToGallery(f); // <<<
+    return f;
+  } catch (e) {
+    print(e);
+    return null;
+  }
+}
+
+Future<String> _getDownloadMangaDirectory([int? mangaId, int? chapterId]) async {
+  if (mangaId == null) {
+    return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download']);
+  }
+  if (chapterId == null) {
+    return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download', mangaId.toString()]);
+  }
+  return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download', mangaId.toString(), chapterId.toString()]);
+}
+
+Future<bool> _downloadChapterPage({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
+  var basename = (pageIndex + 1).toString().padLeft(4, '0');
+  var extension = PathUtils.getExtension(url.split('?')[0]);
+  var filename = '$basename$extension';
+  var filepath = PathUtils.joinPath([await _getDownloadMangaDirectory(mangaId, chapterId), filename]);
+  if (await File(filepath).exists()) {
+    return true;
+  }
+
+  try {
+    await downloadFile(
+      url: url,
+      filepath: filepath,
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Referer': REFERER,
+      },
+      cacheManager: DefaultCacheManager(),
+      option: DownloadOption(
+        behavior: DownloadBehavior.preferUsingCache,
+        whenOverwrite: (_) async => OverwriteBehavior.overwrite,
+      ),
+    );
+    return true;
+  } catch (e) {
+    print(e);
+    return false;
+  }
+}
+
+Future<void> deleteDownloadedManga(int mangaId) async {
+  var mangaPath = await _getDownloadMangaDirectory(mangaId, null);
+  var directory = Directory(mangaPath);
+  try {
+    await directory.delete(recursive: true);
+  } catch (e) {
+    print(e);
+  }
+}
 
 class DownloadMangaQueueTask extends QueueTask<void> {
   DownloadMangaQueueTask({
@@ -83,18 +161,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     required String mangaUrl,
     required Tuple3<String, String, int>? Function(int cid) getChapterTitleGroupPages,
   }) async {
-    // 1. 更新漫画下载表
-    await DownloadDao.addOrUpdateManga(
-      manga: DownloadedManga.forDatabase(
-        mangaId: mangaId,
-        mangaTitle: mangaTitle,
-        mangaCover: mangaCover,
-        mangaUrl: mangaUrl,
-        updatedAt: DateTime.now(),
-      ),
-    );
-
-    // 2. 检查下载任务是否存在，找到新增的章节
+    // 1. 检查下载任务是否存在，找到新增的章节
     List<int> needToAdd;
     var currentTasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().toList();
     var previousTask = currentTasks.where((el) => el.mangaId == mangaId && !el.canceled).toList().firstOrNull;
@@ -106,6 +173,18 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     if (needToAdd.isEmpty) {
       return false; // 没有新增章节，不需要入队
     }
+
+    // 2. 更新漫画下载表
+    var oldItem = await DownloadDao.getManga(mid: mangaId);
+    await DownloadDao.addOrUpdateManga(
+      manga: DownloadedManga.forDatabase(
+        mangaId: mangaId,
+        mangaTitle: mangaTitle,
+        mangaCover: mangaCover,
+        mangaUrl: mangaUrl,
+        updatedAt: needToAdd.isEmpty ? (oldItem?.updatedAt ?? DateTime.now()) : DateTime.now(),
+      ),
+    );
 
     // 3. 更新章节下载表
     for (var chapterId in needToAdd.toList()) {
@@ -159,13 +238,14 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     ));
 
     // 3. 更新漫画下载表
+    var oldItem = await DownloadDao.getManga(mid: mangaId);
     await DownloadDao.addOrUpdateManga(
       manga: DownloadedManga.forDatabase(
         mangaId: manga.mid,
         mangaTitle: manga.title,
         mangaCover: manga.cover,
         mangaUrl: manga.url,
-        updatedAt: DateTime.now(),
+        updatedAt: oldItem?.updatedAt ?? DateTime.now(),
       ),
     );
 
@@ -368,70 +448,4 @@ class DownloadMangaProgress {
   final MangaChapter? currentChapter;
   final int? successPageCountInChapter;
   final int? failedPageCountInChapter;
-}
-
-Future<String> _getDownloadMangaDirectory([int? mangaId, int? chapterId]) async {
-  var download = PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download']);
-  if (mangaId == null || chapterId == null) {
-    return download;
-  }
-  return PathUtils.joinPath([download, mangaId.toString(), chapterId.toString()]);
-}
-
-Future<bool> _downloadChapterPage({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
-  var basename = (pageIndex + 1).toString().padLeft(4, '0');
-  var extension = PathUtils.getExtension(url.split('?')[0]);
-  var filename = '$basename$extension';
-  var filepath = PathUtils.joinPath([await _getDownloadMangaDirectory(mangaId, chapterId), filename]);
-  if (await File(filepath).exists()) {
-    return true;
-  }
-
-  try {
-    await downloadFile(
-      url: url,
-      filepath: filepath,
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Referer': REFERER,
-      },
-      cacheManager: DefaultCacheManager(),
-      option: DownloadOption(
-        behavior: DownloadBehavior.preferUsingCache,
-        whenOverwrite: (_) async => OverwriteBehavior.overwrite,
-      ),
-    );
-    return true;
-  } catch (e) {
-    print(e);
-    return false;
-  }
-}
-
-Future<File?> downloadImageToGallery(String url) async {
-  var basename = getTimestampTokenForFilename();
-  var extension = PathUtils.getExtension(url.split('?')[0]);
-  var filename = '$basename$extension';
-  var filepath = PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_image', 'IMG_$filename']);
-
-  try {
-    var f = await downloadFile(
-      url: url,
-      filepath: filepath,
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Referer': REFERER,
-      },
-      cacheManager: DefaultCacheManager(),
-      option: DownloadOption(
-        behavior: DownloadBehavior.preferUsingCache,
-        whenOverwrite: (_) async => OverwriteBehavior.addSuffix,
-      ),
-    ); // IMG_20220917_131013_206.jpg
-    await addToGallery(f); // <<<
-    return f;
-  } catch (e) {
-    print(e);
-    return null;
-  }
 }

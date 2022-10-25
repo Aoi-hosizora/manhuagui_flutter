@@ -96,11 +96,11 @@ class DownloadMangaLineView extends StatelessWidget {
         return _buildGeneral(
           context: context,
           icon1: Icons.download,
-          text1: '已下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount} (635.76K)',
+          text1: '已下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount}' /* (635.76K) */,
           icon2: Icons.access_time,
           text2: '下载于 ${DateFormat('yyyy-MM-dd HH:mm:ss').format(progress.lastDownloadTime!)}',
-          icon3: null,
-          text3: '　',
+          icon3: Icons.check,
+          text3: 'xxx　',
           showProgressBar: false,
           progressBarValue: null,
           statusText: status == DownloadLineStatus.waiting
@@ -122,11 +122,11 @@ class DownloadMangaLineView extends StatelessWidget {
         return _buildGeneral(
           context: context,
           icon1: Icons.download,
-          text1: '正在下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount} (635.76K)',
+          text1: '正在下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount}' /* (635.76K) */,
           icon2: Icons.download,
           text2: progress.preparing
               ? '当前正在下载 未知章节' //
-              : '当前正在下载 ${progress.chapterTitle!}，已下载 ${progress.triedPageCount!}/${progress.totalPageCount!}页',
+              : '当前正在下载 ${progress.chapterTitle!} ${progress.triedPageCount!}/${progress.totalPageCount!}页',
           icon3: null,
           text3: '　',
           showProgressBar: true,
@@ -134,8 +134,8 @@ class DownloadMangaLineView extends StatelessWidget {
               ? null //
               : progress.triedPageCount! / progress.totalPageCount!,
           statusText: status == DownloadLineStatus.downloading
-              ? '下载中 (1.23M/s)' //
-              : '暂停中，请稍后',
+              ? '下载中' // (1.23M/s)
+              : '暂停中',
           disableAction: status == DownloadLineStatus.pausing,
           actionIcon: Icons.pause,
         );
@@ -180,7 +180,7 @@ class DownloadMangaLineView extends StatelessWidget {
       extrasInStack: [
         if (showProgressBar)
           Positioned(
-            bottom: 15, // 5 + 24 / 2
+            bottom: 5 + 24 / 2 - (Theme.of(context).progressIndicatorTheme.linearMinHeight ?? 4) / 2,
             left: 75 + 14 * 2,
             right: 24 + 5 * 2 + 14,
             child: LinearProgressIndicator(
@@ -189,13 +189,10 @@ class DownloadMangaLineView extends StatelessWidget {
           ),
         Positioned(
           bottom: 24 + 5 * 2,
-          right: 5,
+          right: 6,
           child: Text(
             statusText,
-            style: Theme.of(context).textTheme.bodyText2?.copyWith(
-                  color: Colors.grey,
-                  fontSize: 14,
-                ),
+            style: DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
           ),
         ),
       ],

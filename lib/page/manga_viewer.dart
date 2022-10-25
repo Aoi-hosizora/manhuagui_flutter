@@ -355,8 +355,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
-  void _downloadManga() {
-    Navigator.of(context).push(
+  Future<void> _downloadManga() async {
+    await _ScreenHelper.restoreSystemUI();
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (c) => DownloadTocPage(
           mangaId: widget.mid,
@@ -367,6 +368,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         ),
       ),
     );
+    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
   void _showToc() {

@@ -62,9 +62,9 @@ class DownloadedManga {
   final String mangaUrl;
   final DateTime updatedAt;
 
-  final int totalChapterCount;
-  final int startedChapterCount;
-  final int successChapterCount;
+  final List<int> totalChapterIds;
+  final List<int> startedChapterIds;
+  final List<int> successChapterIds;
   final int failedPageCountInAll;
 
   const DownloadedManga({
@@ -73,9 +73,9 @@ class DownloadedManga {
     required this.mangaCover,
     required this.mangaUrl,
     required this.updatedAt,
-    required this.totalChapterCount,
-    required this.startedChapterCount,
-    required this.successChapterCount,
+    required this.totalChapterIds,
+    required this.startedChapterIds,
+    required this.successChapterIds,
     required this.failedPageCountInAll,
   });
 
@@ -85,9 +85,9 @@ class DownloadedManga {
     required this.mangaCover,
     required this.mangaUrl,
     required this.updatedAt,
-  })  : totalChapterCount = 0,
-        startedChapterCount = 0,
-        successChapterCount = 0,
+  })  : totalChapterIds = const [],
+        startedChapterIds = const [],
+        successChapterIds = const [],
         failedPageCountInAll = 0;
 }
 
