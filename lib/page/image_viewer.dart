@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
@@ -98,6 +99,10 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                 key: ValueKey(v),
                 url: url,
                 cacheManager: _cache,
+                headers: {
+                  'User-Agent': USER_AGENT,
+                  'Referer': REFERER,
+                },
               ),
               initialScale: PhotoViewComputedScale.contained / 2,
               minScale: PhotoViewComputedScale.contained / 2,

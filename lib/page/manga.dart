@@ -48,6 +48,7 @@ class _MangaPageState extends State<MangaPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
+  AuthData? _oldAuthData;
 
   @override
   void initState() {
@@ -55,8 +56,11 @@ class _MangaPageState extends State<MangaPage> {
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listen((_) async {
-        _history = null;
-        _refreshIndicatorKey.currentState?.show();
+        if (!AuthManager.instance.authData.equals(_oldAuthData)) {
+          _oldAuthData = AuthManager.instance.authData;
+          _history = null;
+          _refreshIndicatorKey.currentState?.show();
+        }
       }));
       await AuthManager.instance.check();
     });

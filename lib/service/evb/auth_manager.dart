@@ -7,6 +7,20 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:synchronized/synchronized.dart';
 
+class AuthData {
+  const AuthData({
+    required this.username,
+    required this.token,
+  });
+
+  final String username;
+  final String token;
+
+  bool equals(AuthData? o) {
+    return o != null && username == o.username && token == o.token;
+  }
+}
+
 class AuthManager {
   AuthManager._();
 
@@ -17,18 +31,18 @@ class AuthManager {
     return _instance!;
   }
 
-  String _username = ''; // global username
-  String _token = ''; // global token
+  var _data = AuthData(username: '', token: ''); // global auth data
 
-  String get username => _username;
+  AuthData get authData => _data;
 
-  String get token => _token;
+  String get username => _data.username;
 
-  bool get logined => _token.isNotEmpty;
+  String get token => _data.token;
+
+  bool get logined => _data.token.isNotEmpty;
 
   void record({required String username, required String token}) {
-    _username = username;
-    _token = token;
+    _data = AuthData(username: username, token: token);
   }
 
   void Function() listen(Function(AuthChangedEvent) onData) {

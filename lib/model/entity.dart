@@ -60,6 +60,7 @@ class DownloadedManga {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final bool error;
   final DateTime updatedAt;
   final List<DownloadedChapter> downloadedChapters;
 
@@ -68,6 +69,7 @@ class DownloadedManga {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    required this.error,
     required this.updatedAt,
     required this.downloadedChapters,
   });
@@ -76,10 +78,10 @@ class DownloadedManga {
       downloadedChapters.map((el) => el.chapterId).toList();
 
   List<int> get startedChapterIds => //
-      downloadedChapters.where((el) => el.startedPageCount > 0).map((el) => el.chapterId).toList();
+      downloadedChapters.where((el) => el.started).map((el) => el.chapterId).toList();
 
   List<int> get successChapterIds => //
-      downloadedChapters.where((el) => el.successPageCount == el.totalPageCount).map((el) => el.chapterId).toList();
+      downloadedChapters.where((el) => el.success).map((el) => el.chapterId).toList();
 
   int get failedPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).reduce((val, el) => val + el);
@@ -93,6 +95,8 @@ class DownloadedChapter {
   final int totalPageCount;
   final int startedPageCount;
   final int successPageCount;
+
+  bool get started => startedPageCount > 0;
 
   bool get success => successPageCount == totalPageCount;
 

@@ -27,6 +27,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
   var _historyUpdated = false;
+  AuthData? _oldAuthData;
 
   @override
   void initState() {
@@ -34,7 +35,10 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listen((_) {
-        _pdvKey.currentState?.refresh();
+        if (!AuthManager.instance.authData.equals(_oldAuthData)) {
+          _oldAuthData = AuthManager.instance.authData;
+          _pdvKey.currentState?.refresh();
+        }
       }));
       await AuthManager.instance.check();
     });

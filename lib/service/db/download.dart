@@ -9,6 +9,7 @@ class DownloadDao {
   static const _colDmMangaTitle = 'title';
   static const _colDmMangaCover = 'cover';
   static const _colDmMangaUrl = 'url';
+  static const _colDmError = 'error';
   static const _colDmUpdatedAt = 'updated_at';
 
   static const _createTblDownloadManga = '''
@@ -17,6 +18,7 @@ class DownloadDao {
       $_colDmMangaTitle VARCHAR(1023),
       $_colDmMangaCover VARCHAR(1023),
       $_colDmMangaUrl VARCHAR(1023),
+      $_colDmError TINYINT,
       $_colDmUpdatedAt DATETIME,
       PRIMARY KEY ($_colDmMangaId)
     )''';
@@ -76,7 +78,7 @@ class DownloadDao {
   static Future<List<DownloadedManga>?> getMangas() async {
     final db = await DBManager.instance.getDB();
     var mangaResults = await db.safeRawQuery(
-      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmUpdatedAt
+      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmError, $_colDmUpdatedAt
          FROM $_tblDownloadManga
          ORDER BY $_colDmUpdatedAt DESC''',
     );
@@ -117,6 +119,7 @@ class DownloadDao {
           mangaTitle: r[_colDmMangaTitle]! as String,
           mangaCover: r[_colDmMangaCover]! as String,
           mangaUrl: r[_colDmMangaUrl]! as String,
+          error: r[_colDmError]! as int > 0,
           updatedAt: DateTime.parse(r[_colDmUpdatedAt]! as String),
           downloadedChapters: chaptersMap[mid] ?? [],
         ),
@@ -128,7 +131,7 @@ class DownloadDao {
   static Future<DownloadedManga?> getManga({required int mid}) async {
     final db = await DBManager.instance.getDB();
     var mangaResults = await db.safeRawQuery(
-      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmUpdatedAt
+      '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmError, $_colDmUpdatedAt
          FROM $_tblDownloadManga
          WHERE $_colDmMangaId = ?''',
       [mid],
@@ -167,6 +170,7 @@ class DownloadDao {
       mangaTitle: r[_colDmMangaTitle]! as String,
       mangaCover: r[_colDmMangaCover]! as String,
       mangaUrl: r[_colDmMangaUrl]! as String,
+      error: r[_colDmError]! as int > 0,
       updatedAt: DateTime.parse(r[_colDmUpdatedAt]! as String),
       downloadedChapters: chapters,
     );
@@ -190,16 +194,16 @@ class DownloadDao {
     if (count == 0) {
       rows = await db.safeRawInsert(
         '''INSERT INTO $_tblDownloadManga
-           ($_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmUpdatedAt)
-           VALUES (?, ?, ?, ?, ?)''',
-        [manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.updatedAt.toIso8601String()],
+           ($_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmError, $_colDmUpdatedAt)
+           VALUES (?, ?, ?, ?, ?, ?)''',
+        [manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.error ? 1 : 0, manga.updatedAt.toIso8601String()],
       );
     } else {
       rows = await db.safeRawUpdate(
         '''UPDATE $_tblDownloadManga
-           SET $_colDmMangaTitle = ?, $_colDmMangaCover = ?, $_colDmMangaUrl = ?, $_colDmUpdatedAt = ?
+           SET $_colDmMangaTitle = ?, $_colDmMangaCover = ?, $_colDmMangaUrl = ?, $_colDmError = ?, $_colDmUpdatedAt = ?
            WHERE $_colDmMangaId = ?''',
-        [manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.updatedAt.toIso8601String(), manga.mangaId],
+        [manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.error ? 1 : 0, manga.updatedAt.toIso8601String(), manga.mangaId],
       );
     }
     return rows != null && rows >= 1;

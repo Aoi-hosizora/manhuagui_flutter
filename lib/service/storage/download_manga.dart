@@ -134,7 +134,6 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   @override
   Future<void> doDefer() {
-    // TODO error progress
     var ev = DownloadMangaProgressChangedEvent(task: this);
     EventBusManager.instance.fire(ev);
     var ev2 = DownloadedMangaEntityChangedEvent(mid: mangaId);
@@ -208,6 +207,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         mangaTitle: mangaTitle,
         mangaCover: mangaCover,
         mangaUrl: mangaUrl,
+        error: false,
         updatedAt: updatedAt,
         downloadedChapters: [] /* ignored */,
       ),
@@ -227,8 +227,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           chapterTitle: chapter.item1,
           chapterGroup: chapter.item2,
           totalPageCount: chapter.item3,
-          startedPageCount: 0 /* <<< */,
-          successPageCount: 0 /* <<< */,
+          startedPageCount: 0 /* 从零开始 */,
+          successPageCount: 0,
         ),
       );
     }
@@ -263,26 +263,45 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     _updateProgress(
       DownloadMangaProgress.gettingManga(),
     );
-    Manga manga;
+    Manga? manga;
     try {
       manga = (await client.getManga(mid: mangaId)).data;
     } catch (e, s) {
       print(wrapError(e, s).text);
-      return false;
+      manga = null;
     }
 
     // 3. 更新漫画下载表
     var oldItem = await DownloadDao.getManga(mid: mangaId);
-    await DownloadDao.addOrUpdateManga(
-      manga: DownloadedManga(
-        mangaId: manga.mid,
-        mangaTitle: manga.title,
-        mangaCover: manga.cover,
-        mangaUrl: manga.url,
-        updatedAt: oldItem?.updatedAt ?? DateTime.now(),
-        downloadedChapters: [] /* ignored */,
-      ),
-    );
+    if (manga == null) {
+      if (oldItem != null) {
+        // TODO error ???
+        await DownloadDao.addOrUpdateManga(
+          manga: DownloadedManga(
+            mangaId: oldItem.mangaId,
+            mangaTitle: oldItem.mangaTitle,
+            mangaCover: oldItem.mangaCover,
+            mangaUrl: oldItem.mangaUrl,
+            error: true,
+            updatedAt: oldItem.updatedAt,
+            downloadedChapters: [] /* ignored */,
+          ),
+        );
+      }
+      return false; // TODO error
+    } else {
+      await DownloadDao.addOrUpdateManga(
+        manga: DownloadedManga(
+          mangaId: manga.mid,
+          mangaTitle: manga.title,
+          mangaCover: manga.cover,
+          mangaUrl: manga.url,
+          error: false,
+          updatedAt: oldItem?.updatedAt ?? DateTime.now(),
+          downloadedChapters: [] /* ignored */,
+        ),
+      );
+    }
 
     // 4. 按顺序处理每一章节（包括已经成功下载完毕的章节）
     var startedChapters = <MangaChapter?>[];
@@ -291,7 +310,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       // 4.1. 判断请求是否被取消
       if (canceled) {
         // 被取消 => 直接结束
-        return false;
+        return false; // TODO canceled
       }
 
       // 4.2. 判断当前章节是否下载完
@@ -314,7 +333,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         chapter = (await client.getMangaChapter(mid: mangaId, cid: chapterId)).data;
       } catch (e, s) {
         print(wrapError(e, s).text);
-        return false;
+        return false; // TODO error
       }
       startedChapters[startedChapters.length - 1] = chapter; // 更新占位
       _updateProgress(
@@ -368,7 +387,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           // 4.5.3. 通知页面下载进度
           _updateProgress(
             DownloadMangaProgress.gotPage(
-              manga: manga,
+              manga: manga!,
               startedChapters: startedChapters,
               currentChapter: chapter,
               successPageCountInChapter: successPageCountInChapter,
@@ -385,9 +404,9 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       try {
         // 4.6. 判断请求是否被取消
         if (canceled) {
-          // 被取消 => 直接取消页面下载队列
+          // 被取消 => 直接取消页面下载队列，在返回前会更新章节下载表
           _pageQueue.cancel();
-          return false; // 在返回之前，会更新章节下载表
+          return false; // TODO canceled
         } else {
           // 不被取消 => 等待章节中所有页面处理结束
           await _pageQueue.onComplete;
