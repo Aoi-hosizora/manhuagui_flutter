@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
@@ -24,20 +23,30 @@ class DownloadPage extends StatefulWidget {
 class _DownloadPageState extends State<DownloadPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    _cancelHandler = EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) {
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) {
       _tasks[event.task.mangaId] = event.task;
       if (mounted) setState(() {});
-    });
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
+      var newItem = await DownloadDao.getManga(mid: event.mid);
+      if (newItem == null) {
+        return;
+      }
+      _data.removeWhere((el) => el.mangaId == event.mid);
+      _data.insert(0, newItem);
+      _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      if (mounted) setState(() {});
+    }));
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call);
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -66,31 +75,24 @@ class _DownloadPageState extends State<DownloadPage> {
     }
 
     // => 继续
-    // 1. 搜索章节列表
-    var chapters = await DownloadDao.getChapters(mid: item.mangaId);
-    if (chapters == null || chapters.isEmpty) {
-      Fluttertoast.showToast(msg: '无法开始下载');
-      return;
-    }
-
-    // 2. 构造下载任务
+    // 1. 构造下载任务
     var newTask = DownloadMangaQueueTask(
       mangaId: item.mangaId,
-      chapterIds: chapters.map((el) => el.chapterId).toList(),
+      chapterIds: item.downloadedChapters.map((el) => el.chapterId).toList(),
     );
 
     // !!!
     unawaited(
       Future.microtask(() async {
-        // 3. 更新数据库
+        // 2. 更新数据库
         var need = await newTask.prepare(
           mangaTitle: item.mangaTitle,
           mangaCover: item.mangaCover,
           mangaUrl: item.mangaUrl,
           getChapterTitleGroupPages: (cid) {
-            var chapter = chapters.where((el) => el.chapterId == cid).toList().firstOrNull;
+            var chapter = item.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
             if (chapter == null) {
-              return null;
+              return null; // unreachable
             }
             var chapterTitle = chapter.chapterTitle;
             var groupName = chapter.chapterGroup;
@@ -100,7 +102,7 @@ class _DownloadPageState extends State<DownloadPage> {
         );
 
         if (need) {
-          // 4. 入队等待执行结束
+          // 3. 入队并等待执行结束
           await QueueManager.instance.addTask(newTask);
         }
       }),
@@ -184,13 +186,14 @@ class _DownloadPageState extends State<DownloadPage> {
       );
     } else if (task.progress.currentChapter == null) {
       progress = DownloadLineProgress.preparing(
-        startedChapterCount: <int>{...item.startedChapterIds, ...(task.progress.startedChapters?.map((el) => el.cid) ?? <int>[])}.length,
-        totalChapterCount: <int>{...item.totalChapterIds, ...task.chapterIds}.length,
+        startedChapterCount: task.progress.startedChapters?.length ?? 0,
+        totalChapterCount: task.chapterIds.length,
+        gettingManga: task.progress.manga == null,
       );
     } else {
       progress = DownloadLineProgress.running(
-        startedChapterCount: <int>{...item.startedChapterIds, ...(task.progress.startedChapters?.map((el) => el.cid) ?? <int>[])}.length,
-        totalChapterCount: <int>{...item.totalChapterIds, ...task.chapterIds}.length,
+        startedChapterCount: task.progress.startedChapters?.length ?? 0,
+        totalChapterCount: task.chapterIds.length,
         chapterTitle: task.progress.currentChapter!.title,
         triedPageCount: (task.progress.successPageCountInChapter ?? 0) + (task.progress.failedPageCountInChapter ?? 0),
         totalPageCount: task.progress.currentChapter!.pageCount,

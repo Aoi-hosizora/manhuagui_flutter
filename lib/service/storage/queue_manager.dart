@@ -37,7 +37,9 @@ class QueueManager {
       });
       return result;
     } catch (e, s) {
-      // QueueCancelledException
+      if (e is QueueCancelledException) {
+        return Future.value(null);
+      }
       return Future.error(e, s);
     } finally {
       tasks.remove(task);

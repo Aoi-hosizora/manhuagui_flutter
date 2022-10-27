@@ -43,8 +43,6 @@ class DownloadDao {
     )''';
 
   static Future<void> createTable(Database db) async {
-    // await db.safeExecute('DROP TABLE tbl_download_manga');
-    // await db.safeExecute('DROP TABLE tbl_download_chapter');
     await db.safeExecute(_createTblDownloadManga);
     await db.safeExecute(_createTblDownloadChapter);
   }
@@ -86,27 +84,28 @@ class DownloadDao {
       return null;
     }
     var chapterResults = await db.safeRawQuery(
-      '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount
+      '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount
          FROM $_tblDownloadChapter''',
     );
     if (chapterResults == null) {
       return null;
     }
 
-    var chapterIdsMap = <int, List<List<int>>>{}; // <<<
+    var chaptersMap = <int, List<DownloadedChapter>>{};
     for (var r in chapterResults) {
-      var mid = r[_colDcMangaId]! as int;
-      var cid = r[_colDcChapterId]! as int;
-      var totalPages = r[_colDcTotalCount]! as int;
-      var startedPages = r[_colDcStartedCount]! as int;
-      var successPages = r[_colDcSuccessCount]! as int;
-
-      chapterIdsMap[mid] = [
-        (chapterIdsMap[mid]?[0] ?? [])..add(cid), // total
-        (chapterIdsMap[mid]?[1] ?? [])..addAll(startedPages > 0 ? [cid] : []), // started
-        (chapterIdsMap[mid]?[2] ?? [])..addAll((successPages == totalPages ? [cid] : [])), // success
-        (chapterIdsMap[mid]?[3] ?? [0])..[0] = totalPages - successPages, // failed pages
-      ];
+      var mangaId = r[_colDcMangaId]! as int;
+      chaptersMap[mangaId] ??= [];
+      chaptersMap[mangaId]!.add(
+        DownloadedChapter(
+          mangaId: mangaId,
+          chapterId: r[_colDcChapterId]! as int,
+          chapterTitle: r[_colDcChapterTitle]! as String,
+          chapterGroup: r[_tblDcChapterGroup]! as String,
+          totalPageCount: r[_colDcTotalCount]! as int,
+          startedPageCount: r[_colDcStartedCount]! as int,
+          successPageCount: r[_colDcSuccessCount]! as int,
+        ),
+      );
     }
 
     var out = <DownloadedManga>[];
@@ -119,10 +118,7 @@ class DownloadDao {
           mangaCover: r[_colDmMangaCover]! as String,
           mangaUrl: r[_colDmMangaUrl]! as String,
           updatedAt: DateTime.parse(r[_colDmUpdatedAt]! as String),
-          totalChapterIds: chapterIdsMap[mid]?[0] ?? [],
-          startedChapterIds: chapterIdsMap[mid]?[1] ?? [],
-          successChapterIds: chapterIdsMap[mid]?[2] ?? [],
-          failedPageCountInAll: chapterIdsMap[mid]?[3][0] ?? 0,
+          downloadedChapters: chaptersMap[mid] ?? [],
         ),
       );
     }
@@ -141,59 +137,18 @@ class DownloadDao {
       return null;
     }
     var chapterResults = await db.safeRawQuery(
-      '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount
-         FROM $_tblDownloadChapter
-         WHERE $_colDcMangaId = ?''',
-      [mid],
-    );
-    if (chapterResults == null || chapterResults.isEmpty) {
-      return null;
-    }
-
-    var totalChapterIds = <int>[]; // <<<
-    var startedChapterIds = <int>[];
-    var successChapterIds = <int>[];
-    var failedPages = 0;
-    for (var r in chapterResults) {
-      var cid = r[_colDcChapterId]! as int;
-      var totalPages = r[_colDcTotalCount]! as int;
-      var startedPages = r[_colDcStartedCount]! as int;
-      var successPages = r[_colDcSuccessCount]! as int;
-      totalChapterIds.add(cid);
-      startedChapterIds.addAll(startedPages > 0 ? [cid] : []);
-      successChapterIds.addAll(successPages == totalPages ? [cid] : []);
-      failedPages += totalPages - successPages;
-    }
-
-    var r = mangaResults.first;
-    return DownloadedManga(
-      mangaId: mid,
-      mangaTitle: r[_colDmMangaTitle]! as String,
-      mangaCover: r[_colDmMangaCover]! as String,
-      mangaUrl: r[_colDmMangaUrl]! as String,
-      updatedAt: DateTime.parse(r[_colDmUpdatedAt]! as String),
-      totalChapterIds: totalChapterIds,
-      startedChapterIds: startedChapterIds,
-      successChapterIds: successChapterIds,
-      failedPageCountInAll: failedPages,
-    );
-  }
-
-  static Future<List<DownloadedChapter>?> getChapters({required int mid}) async {
-    final db = await DBManager.instance.getDB();
-    var results = await db.safeRawQuery(
       '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount
          FROM $_tblDownloadChapter
          WHERE $_colDcMangaId = ?''',
       [mid],
     );
-    if (results == null) {
+    if (chapterResults == null) {
       return null;
     }
 
-    var out = <DownloadedChapter>[];
-    for (var r in results) {
-      out.add(
+    var chapters = <DownloadedChapter>[];
+    for (var r in chapterResults) {
+      chapters.add(
         DownloadedChapter(
           mangaId: r[_colDcMangaId]! as int,
           chapterId: r[_colDcChapterId]! as int,
@@ -205,7 +160,16 @@ class DownloadDao {
         ),
       );
     }
-    return out;
+
+    var r = mangaResults.first;
+    return DownloadedManga(
+      mangaId: mid,
+      mangaTitle: r[_colDmMangaTitle]! as String,
+      mangaCover: r[_colDmMangaCover]! as String,
+      mangaUrl: r[_colDmMangaUrl]! as String,
+      updatedAt: DateTime.parse(r[_colDmUpdatedAt]! as String),
+      downloadedChapters: chapters,
+    );
   }
 
   static Future<bool> addOrUpdateManga({required DownloadedManga manga}) async {

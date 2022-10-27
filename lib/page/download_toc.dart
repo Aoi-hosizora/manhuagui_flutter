@@ -40,7 +40,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _chapters.clear();
-      _chapters.addAll(await DownloadDao.getChapters(mid: widget.mangaId) ?? []);
+      _chapters.addAll((await DownloadDao.getManga(mid: widget.mangaId))?.downloadedChapters ?? []);
       if (mounted) setState(() {});
     });
   }
@@ -55,7 +55,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
     // 1. 获取需要下载的章节
     var chapterIds = <int>[];
     for (var cid in _selected) {
-      var oldChapter = _chapters.where((el) => el.chapterId == cid).toList().firstOrNull;
+      var oldChapter = _chapters.where((el) => el.chapterId == cid).firstOrNull;
       if (oldChapter != null && oldChapter.success) {
         continue; // 过滤掉已下载成功的章节
       }
@@ -129,7 +129,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
         );
 
         if (need) {
-          // 5. 入队等待执行结束
+          // 5. 入队并等待执行结束
           await QueueManager.instance.addTask(task);
         }
       }),
@@ -185,7 +185,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
               highlightColor: Theme.of(context).primaryColor.withOpacity(0.4),
               highlightedChapters: _selected,
               customBadgeBuilder: (cid) {
-                var oldChapter = _chapters.where((el) => el.chapterId == cid).toList().firstOrNull;
+                var oldChapter = _chapters.where((el) => el.chapterId == cid).firstOrNull;
                 if (oldChapter == null) {
                   return null;
                 }

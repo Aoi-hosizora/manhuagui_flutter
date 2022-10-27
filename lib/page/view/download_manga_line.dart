@@ -22,6 +22,7 @@ class DownloadLineProgress {
     required DateTime this.lastDownloadTime,
   })  : stopped = true,
         preparing = false,
+        gettingManga = false,
         chapterTitle = null,
         triedPageCount = null,
         totalPageCount = null;
@@ -29,6 +30,7 @@ class DownloadLineProgress {
   const DownloadLineProgress.preparing({
     required this.startedChapterCount,
     required this.totalChapterCount,
+    required this.gettingManga,
   })  : stopped = false,
         preparing = true,
         failedPageCountInAll = null,
@@ -45,6 +47,7 @@ class DownloadLineProgress {
     required int this.totalPageCount,
   })  : stopped = false,
         preparing = false,
+        gettingManga = false,
         failedPageCountInAll = null,
         lastDownloadTime = null;
 
@@ -57,6 +60,7 @@ class DownloadLineProgress {
 
   // running
   final bool preparing;
+  final bool gettingManga;
   final String? chapterTitle;
   final int? triedPageCount;
   final int? totalPageCount;
@@ -125,7 +129,9 @@ class DownloadMangaLineView extends StatelessWidget {
           text1: '正在下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount}' /* (635.76K) */,
           icon2: Icons.download,
           text2: progress.preparing
-              ? '当前正在下载 未知章节' //
+              ? progress.gettingManga
+                  ? '正在获取漫画信息'
+                  : '当前正在下载 未知章节'
               : '当前正在下载 ${progress.chapterTitle!} ${progress.triedPageCount!}/${progress.totalPageCount!}页',
           icon3: null,
           text3: '　',

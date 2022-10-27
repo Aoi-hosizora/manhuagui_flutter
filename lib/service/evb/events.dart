@@ -23,12 +23,14 @@ class SubscribeUpdatedEvent {
   final bool subscribe;
 }
 
-class DownloadMangaTaskChangedEvent {
-  const DownloadMangaTaskChangedEvent();
-}
-
 class DownloadMangaProgressChangedEvent {
   const DownloadMangaProgressChangedEvent({required this.task});
 
   final DownloadMangaQueueTask task;
+}
+
+class DownloadedMangaEntityChangedEvent {
+  const DownloadedMangaEntityChangedEvent({required this.mid});
+
+  final int mid;
 }

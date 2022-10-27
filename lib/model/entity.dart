@@ -61,11 +61,7 @@ class DownloadedManga {
   final String mangaCover;
   final String mangaUrl;
   final DateTime updatedAt;
-
-  final List<int> totalChapterIds;
-  final List<int> startedChapterIds;
-  final List<int> successChapterIds;
-  final int failedPageCountInAll;
+  final List<DownloadedChapter> downloadedChapters;
 
   const DownloadedManga({
     required this.mangaId,
@@ -73,22 +69,20 @@ class DownloadedManga {
     required this.mangaCover,
     required this.mangaUrl,
     required this.updatedAt,
-    required this.totalChapterIds,
-    required this.startedChapterIds,
-    required this.successChapterIds,
-    required this.failedPageCountInAll,
+    required this.downloadedChapters,
   });
 
-  const DownloadedManga.forDatabase({
-    required this.mangaId,
-    required this.mangaTitle,
-    required this.mangaCover,
-    required this.mangaUrl,
-    required this.updatedAt,
-  })  : totalChapterIds = const [],
-        startedChapterIds = const [],
-        successChapterIds = const [],
-        failedPageCountInAll = 0;
+  List<int> get totalChapterIds => //
+      downloadedChapters.map((el) => el.chapterId).toList();
+
+  List<int> get startedChapterIds => //
+      downloadedChapters.where((el) => el.startedPageCount > 0).map((el) => el.chapterId).toList();
+
+  List<int> get successChapterIds => //
+      downloadedChapters.where((el) => el.successPageCount == el.totalPageCount).map((el) => el.chapterId).toList();
+
+  int get failedPageCountInAll => //
+      downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).reduce((val, el) => val + el);
 }
 
 class DownloadedChapter {
