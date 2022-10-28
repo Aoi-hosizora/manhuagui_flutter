@@ -34,8 +34,8 @@ import 'package:wakelock/wakelock.dart';
 class MangaViewerPage extends StatefulWidget {
   const MangaViewerPage({
     Key? key,
-    required this.mid,
-    required this.cid,
+    required this.mangaId,
+    required this.chapterId,
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
@@ -43,8 +43,8 @@ class MangaViewerPage extends StatefulWidget {
     this.initialPage = 1, // starts from 1
   }) : super(key: key);
 
-  final int mid;
-  final int cid;
+  final int mangaId;
+  final int chapterId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
@@ -79,7 +79,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     // data related
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     _cancelHandler = EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
-      if (e.mid == widget.mid) {
+      if (e.mangaId == widget.mangaId) {
         _subscribed = e.subscribe;
         if (mounted) setState(() {});
       }
@@ -156,14 +156,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       // 1. 异步更新章节阅读记录
       Future.microtask(() async {
         try {
-          await client.recordManga(token: AuthManager.instance.token, mid: widget.mid, cid: widget.cid);
+          await client.recordManga(token: AuthManager.instance.token, mid: widget.mangaId, cid: widget.chapterId);
         } catch (_) {}
       });
 
       // 2. 异步获取漫画订阅信息
       Future.microtask(() async {
         try {
-          var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mid);
+          var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mangaId);
           _subscribed = r.data.isIn;
           if (mounted) setState(() {});
         } catch (e, s) {
@@ -176,7 +176,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     try {
       // 3. 获取章节数据
-      var result = await client.getMangaChapter(mid: widget.mid, cid: widget.cid);
+      var result = await client.getMangaChapter(mid: widget.mangaId, cid: widget.chapterId);
       _data = null;
       _error = '';
       if (mounted) setState(() {});
@@ -194,7 +194,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         for (int idx = 0; idx < _data!.pageCount; idx++)
           Future<File?>.microtask(() async {
             var filepath = await getDownloadedMangaPageFilepath(
-              mangaId: widget.mid,
+              mangaId: widget.mangaId,
               chapterId: _data!.cid,
               pageIndex: idx,
               url: _data!.pages[idx],
@@ -223,7 +223,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       await HistoryDao.addOrUpdateHistory(
         username: AuthManager.instance.username,
         history: MangaHistory(
-          mangaId: widget.mid,
+          mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
@@ -280,12 +280,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (c) => MangaViewerPage(
-          mid: widget.mid,
+          mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
           chapterGroups: widget.chapterGroups,
-          cid: gotoPrevious ? _data!.prevCid : _data!.nextCid,
+          chapterId: gotoPrevious ? _data!.prevCid : _data!.nextCid,
           initialPage: 1,
         ),
       ),
@@ -363,10 +363,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     final client = RestClient(DioManager.instance.dio);
     var toSubscribe = _subscribed != true; // 去订阅
     try {
-      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.mid);
+      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.mangaId);
       _subscribed = toSubscribe;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mid: widget.mid, subscribe: _subscribed));
+      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: widget.mangaId, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
@@ -381,7 +381,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (c) => DownloadSelectPage(
-          mangaId: widget.mid,
+          mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
@@ -404,7 +404,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
           margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           child: ViewTocSubPage(
-            mangaId: widget.mid,
+            mangaId: widget.mangaId,
             mangaTitle: widget.mangaTitle,
             mangaCover: widget.mangaCover,
             mangaUrl: widget.mangaUrl,
@@ -437,8 +437,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
           margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           child: CommentsPage(
-            mid: _data!.mid,
-            title: _data!.mangaTitle,
+            mangaId: _data!.mid,
+            mangaTitle: _data!.mangaTitle,
           ),
         ),
       ),

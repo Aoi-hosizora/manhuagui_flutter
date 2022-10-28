@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 下载列表页，查询数据库并展示 [DownloadedManga] 列表信息
+/// 下载列表页，查询数据库并展示 [DownloadedManga] 列表信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
 class DownloadPage extends StatefulWidget {
   const DownloadPage({
     Key? key,
@@ -53,7 +53,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
       // entity related
       _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-        var mangaId = event.mid;
+        var mangaId = event.mangaId;
         var newItem = await DownloadDao.getManga(mid: mangaId);
         if (newItem != null) {
           _data.removeWhere((el) => el.mangaId == mangaId);
@@ -272,10 +272,11 @@ class _DownloadPageState extends State<DownloadPage> {
       onActionPressed: () => _pauseOrContinue(item: item, task: task),
       onLinePressed: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (c) => MangaPage(
-            id: item.mangaId,
-            title: item.mangaTitle,
-            url: item.mangaUrl,
+          builder: (c) => DownloadTocPage(
+            mangaId: item.mangaId,
+            mangaTitle: item.mangaTitle,
+            mangaCover: item.mangaCover,
+            mangaUrl: item.mangaUrl,
           ),
         ),
       ),

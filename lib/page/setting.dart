@@ -52,10 +52,36 @@ class _SettingPageState extends State<SettingPage> {
       ),
       body: ListView(
         children: [
+          // *******************************************************
+          _spacer(),
+          Align(
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('lib/assets/ic_launcher_xxhdpi.png', height: 60, width: 60),
+                SizedBox(width: 15),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      APP_NAME,
+                      style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.normal),
+                    ),
+                    Text(
+                      APP_VERSION,
+                      style: Theme.of(context).textTheme.subtitle2?.copyWith(fontWeight: FontWeight.normal),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
           _spacer(),
           // *******************************************************
           _item(
-            title: '漫画柜官网',
+            title: '漫画柜/看漫画官网',
             action: () => launchInBrowser(
               context: context,
               url: WEB_HOMEPAGE_URL,
@@ -63,7 +89,7 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '客户端源码',
+            title: '本应用源代码',
             action: () => launchInBrowser(
               context: context,
               url: SOURCE_CODE_URL,
@@ -88,7 +114,7 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '关于',
+            title: '关于本应用',
             action: () => showAboutDialog(
               context: context,
               useRootNavigator: false,

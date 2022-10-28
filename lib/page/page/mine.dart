@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/login.dart';
@@ -9,6 +10,7 @@ import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -52,8 +54,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       });
       _loginChecking = true;
       await AuthManager.instance.check();
-      // _loginChecking = false;
-      // if (mounted) setState(() {});
     });
   }
 
@@ -127,229 +127,201 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     );
   }
 
+  Widget _buildInfoLines({required String title, required List<String> lines}) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 15, right: 15, top: 8),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.subtitle1,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Divider(height: 0, thickness: 1),
+          ),
+          for (var line in lines)
+            Padding(
+              padding: EdgeInsets.only(left: 15, right: 15, bottom: 8),
+              child: Text(
+                line,
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAction(String text, IconData icon, void Function() action) {
+    return InkWell(
+      onTap: () => action(),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: IconText(
+          alignment: IconTextAlignment.t2b,
+          space: 8,
+          icon: Icon(icon, color: Colors.black54),
+          text: Text(text),
+        ),
+      ),
+    );
+  }
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var positionedTransparentAppBar = Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: AppBar(
-        automaticallyImplyLeading: false,
-        actions: [
-          AppBarActionButton(
-            icon: Icon(Icons.settings, color: Colors.black54),
-            tooltip: '设置',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (c) => SettingPage(),
-              ),
+    var appBar = AppBar(
+      automaticallyImplyLeading: false,
+      actions: [
+        AppBarActionButton(
+          icon: Icon(Icons.settings, color: Colors.black54),
+          tooltip: '应用设置',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (c) => SettingPage(),
             ),
           ),
-        ],
-        foregroundColor: Colors.transparent,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+        ),
+      ],
+      foregroundColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     );
 
     if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
       _data = null;
       _error = '';
-      return Stack(
-        children: [
-          Positioned.fill(
-            child: LoginFirstView(
-              checking: _loginChecking,
-              error: _loginCheckError,
-              onErrorRetry: () async {
-                _loginChecking = true;
-                _loginCheckError = '';
-                if (mounted) setState(() {});
-                await AuthManager.instance.check();
-                // _loginChecking = false;
-                // if (mounted) setState(() {});
-              },
-            ),
-          ),
-          positionedTransparentAppBar,
-        ],
+      return Scaffold(
+        appBar: appBar,
+        extendBodyBehindAppBar: true,
+        body: LoginFirstView(
+          checking: _loginChecking,
+          error: _loginCheckError,
+          onErrorRetry: () async {
+            _loginChecking = true;
+            _loginCheckError = '';
+            if (mounted) setState(() {});
+            await AuthManager.instance.check();
+          },
+        ),
       );
     }
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: RefreshIndicator(
-            key: _refreshIndicatorKey,
-            onRefresh: () => _loadUser(),
-            child: PlaceholderText.from(
-              isLoading: _loading,
-              errorText: _error,
-              isEmpty: _data == null,
-              setting: PlaceholderSetting().copyWithChinese(),
-              onRefresh: () => _loadUser(),
-              childBuilder: (c) => ListView(
-                padding: EdgeInsets.zero,
-                physics: AlwaysScrollableScrollPhysics(),
-                children: [
-                  Container(
-                    height: MediaQuery.of(context).padding.top + 180,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        stops: const [0, 0.5, 1],
-                        colors: [
-                          Colors.blue[100]!,
-                          Colors.orange[100]!,
-                          Colors.purple[100]!,
-                        ],
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            FullRippleWidget(
-                              child: NetworkImageView(
+    return Scaffold(
+      appBar: appBar,
+      extendBodyBehindAppBar: true,
+      body: RefreshIndicator(
+        key: _refreshIndicatorKey,
+        onRefresh: () => _loadUser(),
+        child: PlaceholderText.from(
+          isLoading: _loading,
+          errorText: _error,
+          isEmpty: _data == null,
+          setting: PlaceholderSetting().copyWithChinese(),
+          onRefresh: () => _loadUser(),
+          childBuilder: (c) => ListView(
+            padding: EdgeInsets.zero,
+            physics: AlwaysScrollableScrollPhysics(),
+            children: [
+              Container(
+                height: MediaQuery.of(context).padding.top + 180,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    stops: const [0, 0.5, 1],
+                    colors: [
+                      Colors.blue[100]!,
+                      Colors.orange[100]!,
+                      Colors.purple[100]!,
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FullRippleWidget(
+                          child: NetworkImageView(
+                            url: _data!.avatar,
+                            height: 75,
+                            width: 75,
+                          ),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (c) => ImageViewerPage(
                                 url: _data!.avatar,
-                                height: 75,
-                                width: 75,
-                              ),
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (c) => ImageViewerPage(
-                                    url: _data!.avatar,
-                                    title: '我的头像',
-                                  ),
-                                ),
+                                title: '我的头像',
                               ),
                             ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 8, left: 15, right: 15),
-                              child: Text(
-                                _data!.username,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.subtitle1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                          child: Text(
-                            '个人信息',
-                            style: Theme.of(context).textTheme.subtitle1,
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Divider(height: 0, thickness: 1),
-                        ),
-                        SizedBox(height: 8),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15),
+                          padding: EdgeInsets.only(top: 8, left: 15, right: 15),
                           child: Text(
-                            '您的会员等级：${_data!.className}',
-                            style: Theme.of(context).textTheme.subtitle1,
+                            _data!.username,
+                            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.normal),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        SizedBox(height: 8),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15),
-                          child: Text(
-                            '个人成长值：${_data!.score} 点',
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ),
-                        ),
-                        SizedBox(height: 8),
                       ],
                     ),
                   ),
-                  SizedBox(height: 12),
-                  Container(
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              ),
+              Container(
+                color: Colors.white,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 35, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                          child: Text(
-                            '登录统计',
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Divider(height: 0, thickness: 1),
-                        ),
-                        SizedBox(height: 8),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15),
-                          child: Text(
-                            '本次登录IP：${_data!.loginIp}',
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15),
-                          child: Text(
-                            '上次登录IP：${_data!.lastLoginIp}',
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15),
-                          child: Text(
-                            '注册时间：${_data!.registerTime}',
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15),
-                          child: Text(
-                            '上次登录时间：${_data!.lastLoginTime}',
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ),
-                        ),
-                        SizedBox(height: 8),
+                        _buildAction('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
+                        _buildAction('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
+                        _buildAction('修改资料', Icons.edit, () => launchInBrowser(context: context, url: EDIT_PROFILE_URL)),
+                        _buildAction('退出登录', Icons.logout, () => _logout(sure: false)),
                       ],
                     ),
                   ),
-                  Align(
-                    child: Container(
-                      padding: EdgeInsets.only(top: 10),
-                      child: OutlinedButton(
-                        child: Text('退出登录'),
-                        onPressed: () => _logout(sure: false),
-                      ),
-                    ),
-                  ),
+                ),
+              ),
+              SizedBox(height: 12),
+              _buildInfoLines(
+                title: '个人信息',
+                lines: [
+                  '您的会员等级：${_data!.className}',
+                  '个人成长值/账户积分：${_data!.score} 点',
                 ],
               ),
-            ),
+              SizedBox(height: 12),
+              _buildInfoLines(
+                title: '登录统计',
+                lines: [
+                  '本次登录IP：${_data!.loginIp}',
+                  '上次登录IP：${_data!.lastLoginIp}',
+                  '注册时间：${_data!.registerTime}',
+                  '上次登录时间：${_data!.lastLoginTime}',
+                  '累计登录天数：？',
+                  '累计评论总数：？',
+                ],
+              ),
+            ],
           ),
         ),
-        positionedTransparentAppBar,
-      ],
+      ),
     );
   }
 }

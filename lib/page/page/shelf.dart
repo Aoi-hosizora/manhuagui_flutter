@@ -51,8 +51,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       });
       _loginChecking = true;
       await AuthManager.instance.check();
-      // _loginChecking = false;
-      // if (mounted) setState(() {});
     });
   }
 
@@ -94,8 +92,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           _loginCheckError = '';
           if (mounted) setState(() {});
           await AuthManager.instance.check();
-          // _loginChecking = false;
-          // if (mounted) setState(() {});
         },
       );
     }

@@ -12,12 +12,12 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 class CommentsPage extends StatefulWidget {
   const CommentsPage({
     Key? key,
-    required this.mid,
-    required this.title,
+    required this.mangaId,
+    required this.mangaTitle,
   }) : super(key: key);
 
-  final int mid;
-  final String title;
+  final int mangaId;
+  final String mangaTitle;
 
   @override
   _CommentsPageState createState() => _CommentsPageState();
@@ -39,7 +39,7 @@ class _CommentsPageState extends State<CommentsPage> {
 
   Future<PagedList<Comment>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.getMangaComments(mid: widget.mid, page: page).onError((e, s) {
+    var result = await client.getMangaComments(mid: widget.mangaId, page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -89,7 +89,7 @@ class _CommentsPageState extends State<CommentsPage> {
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textText(
-              leftText: '《${widget.title}》',
+              leftText: '《${widget.mangaTitle}》',
               rightText: '共 $_total 条评论',
             ),
           ],

@@ -12,7 +12,7 @@ import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 选择下载章节页，展示所给 [MangaChapterGroup] 列表信息，并提供章节选择
+/// 选择下载章节页，展示所给 [MangaChapterGroup] 列表信息，并提供章节选择功能
 class DownloadSelectPage extends StatefulWidget {
   const DownloadSelectPage({
     Key? key,
@@ -55,7 +55,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
     WidgetsBinding.instance?.addPostFrameCallback((_) async => await _getChapters());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-        if (event.mid == widget.mangaId) {
+        if (event.mangaId == widget.mangaId) {
           await _getChapters();
         }
       });

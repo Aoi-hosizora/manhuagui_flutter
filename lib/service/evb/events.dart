@@ -17,9 +17,9 @@ class HistoryUpdatedEvent {
 }
 
 class SubscribeUpdatedEvent {
-  const SubscribeUpdatedEvent({required this.mid, required this.subscribe});
+  const SubscribeUpdatedEvent({required this.mangaId, required this.subscribe});
 
-  final int mid;
+  final int mangaId;
   final bool subscribe;
 }
 
@@ -31,7 +31,7 @@ class DownloadMangaProgressChangedEvent {
 }
 
 class DownloadedMangaEntityChangedEvent {
-  const DownloadedMangaEntityChangedEvent({required this.mid});
+  const DownloadedMangaEntityChangedEvent({required this.mangaId});
 
-  final int mid;
+  final int mangaId;
 }

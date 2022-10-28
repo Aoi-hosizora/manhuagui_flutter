@@ -15,6 +15,10 @@ const DB_NAME = 'db_manhuagui';
 
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';
 const WEB_CATEGORY_URL = 'https://www.manhuagui.com/list/';
+const USER_CENTER_URL = 'https://www.manhuagui.com/user/center/index';
+const MESSAGE_URL = 'https://www.manhuagui.com/user/message/system';
+const EDIT_PROFILE_URL = 'https://www.manhuagui.com/user/center/proinfo';
+const REGISTER_URL = 'https://www.manhuagui.com/user/register';
 const SOURCE_CODE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter';
 const FEEDBACK_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/issues/new';
 const RELEASE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/releases';
@@ -27,7 +31,6 @@ const DOWNLOAD_TIMEOUT = 10000; // 5.0s + 5.0s
 
 // const BASE_API_URL = 'http://10.0.3.2:10018/v1/';
 const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/';
-const REGISTER_URL = 'https://www.manhuagui.com/user/register';
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';

@@ -162,12 +162,12 @@ class _MangaTocViewState extends State<MangaTocView> {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (c) => MangaViewerPage(
-                              mid: chapter.mid,
+                              mangaId: chapter.mid,
                               mangaTitle: widget.mangaTitle,
                               mangaCover: widget.mangaCover,
                               mangaUrl: widget.mangaUrl,
                               chapterGroups: widget.groups,
-                              cid: chapter.cid,
+                              chapterId: chapter.cid,
                               initialPage: widget.highlightedChapters.contains(chapter.cid)
                                   ? widget.lastChapterPage // has read
                                   : 1, // has not read

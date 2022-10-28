@@ -71,7 +71,7 @@ class _MangaPageState extends State<MangaPage> {
       } catch (_) {}
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
-      if (e.mid == widget.id) {
+      if (e.mangaId == widget.id) {
         _subscribed = e.subscribe;
         if (mounted) setState(() {});
       }
@@ -205,7 +205,7 @@ class _MangaPageState extends State<MangaPage> {
       await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.id);
       _subscribed = toSubscribe;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mid: widget.id, subscribe: _subscribed));
+      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: widget.id, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
       Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
@@ -248,12 +248,12 @@ class _MangaPageState extends State<MangaPage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (c) => MangaViewerPage(
-          mid: _data!.mid,
+          mangaId: _data!.mid,
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
           mangaUrl: _data!.url,
           chapterGroups: _data!.chapterGroups,
-          cid: cid,
+          chapterId: cid,
           initialPage: page,
         ),
       ),
@@ -765,8 +765,8 @@ class _MangaPageState extends State<MangaPage> {
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (c) => CommentsPage(
-                                mid: widget.id,
-                                title: _data!.title,
+                                mangaId: widget.id,
+                                mangaTitle: _data!.title,
                               ),
                             ),
                           ),

@@ -159,7 +159,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   Future<void> doDefer() {
     var ev = DownloadMangaProgressChangedEvent(task: this, finished: true);
     EventBusManager.instance.fire(ev);
-    var ev2 = DownloadedMangaEntityChangedEvent(mid: mangaId);
+    var ev2 = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
     EventBusManager.instance.fire(ev2);
     return Future.value(null);
   }
@@ -249,7 +249,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         ),
       );
     }
-    var ev = DownloadedMangaEntityChangedEvent(mid: mangaId);
+    var ev = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
     EventBusManager.instance.fire(ev);
 
     // 6. 判断是否入队
