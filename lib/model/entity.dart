@@ -81,10 +81,30 @@ class DownloadedManga {
       downloadedChapters.where((el) => el.started).map((el) => el.chapterId).toList();
 
   List<int> get successChapterIds => //
-      downloadedChapters.where((el) => el.success).map((el) => el.chapterId).toList();
+      downloadedChapters.where((el) => el.succeeded).map((el) => el.chapterId).toList();
 
   int get failedPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).reduce((val, el) => val + el);
+
+  DownloadedManga copyWith({
+    int? mangaId,
+    String? mangaTitle,
+    String? mangaCover,
+    String? mangaUrl,
+    bool? error,
+    DateTime? updatedAt,
+    List<DownloadedChapter>? downloadedChapters,
+  }) {
+    return DownloadedManga(
+      mangaId: mangaId ?? this.mangaId,
+      mangaTitle: mangaTitle ?? this.mangaTitle,
+      mangaCover: mangaCover ?? this.mangaCover,
+      mangaUrl: mangaUrl ?? this.mangaUrl,
+      error: error ?? this.error,
+      updatedAt: updatedAt ?? this.updatedAt,
+      downloadedChapters: downloadedChapters ?? this.downloadedChapters,
+    );
+  }
 }
 
 class DownloadedChapter {
@@ -93,12 +113,12 @@ class DownloadedChapter {
   final String chapterTitle;
   final String chapterGroup;
   final int totalPageCount;
-  final int startedPageCount;
+  final int triedPageCount;
   final int successPageCount;
 
-  bool get started => startedPageCount > 0;
+  bool get started => triedPageCount > 0;
 
-  bool get success => successPageCount == totalPageCount;
+  bool get succeeded => successPageCount == totalPageCount;
 
   const DownloadedChapter({
     required this.mangaId,
@@ -106,7 +126,27 @@ class DownloadedChapter {
     required this.chapterTitle,
     required this.chapterGroup,
     required this.totalPageCount,
-    required this.startedPageCount,
+    required this.triedPageCount,
     required this.successPageCount,
   });
+
+  DownloadedChapter copyWith({
+    int? mangaId,
+    int? chapterId,
+    String? chapterTitle,
+    String? chapterGroup,
+    int? totalPageCount,
+    int? triedPageCount,
+    int? successPageCount,
+  }) {
+    return DownloadedChapter(
+      mangaId: mangaId ?? this.mangaId,
+      chapterId: chapterId ?? this.chapterId,
+      chapterTitle: chapterTitle ?? this.chapterTitle,
+      chapterGroup: chapterGroup ?? this.chapterGroup,
+      totalPageCount: totalPageCount ?? this.totalPageCount,
+      triedPageCount: triedPageCount ?? this.triedPageCount,
+      successPageCount: successPageCount ?? this.successPageCount,
+    );
+  }
 }

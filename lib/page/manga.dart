@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
-import 'package:manhuagui_flutter/page/download_toc.dart';
+import 'package:manhuagui_flutter/page/download_select.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
@@ -487,7 +487,7 @@ class _MangaPageState extends State<MangaPage> {
                             icon: Icons.download,
                             action: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (c) => DownloadTocPage(
+                                builder: (c) => DownloadSelectPage(
                                   mangaId: _data!.mid,
                                   mangaTitle: _data!.title,
                                   mangaCover: _data!.cover,

@@ -12,7 +12,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
-import 'package:manhuagui_flutter/page/download_toc.dart';
+import 'package:manhuagui_flutter/page/download_select.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -359,7 +359,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.restoreSystemUI();
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (c) => DownloadTocPage(
+        builder: (c) => DownloadSelectPage(
           mangaId: widget.mid,
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,

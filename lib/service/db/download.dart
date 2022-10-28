@@ -29,7 +29,7 @@ class DownloadDao {
   static const _colDcChapterTitle = 'title';
   static const _tblDcChapterGroup = 'group_name';
   static const _colDcTotalCount = 'total_count';
-  static const _colDcStartedCount = 'started_count'; // <<<
+  static const _colDcTriedCount = 'tried_count';
   static const _colDcSuccessCount = 'success_count';
 
   static const _createTblDownloadChapter = '''
@@ -39,7 +39,7 @@ class DownloadDao {
       $_colDcChapterTitle VARCHAR(1023),
       $_tblDcChapterGroup VARCHAR(1023),
       $_colDcTotalCount INTEGER,
-      $_colDcStartedCount INTEGER,
+      $_colDcTriedCount INTEGER,
       $_colDcSuccessCount INTEGER,
       PRIMARY KEY ($_colDcMangaId, $_colDcChapterId)
     )''';
@@ -86,7 +86,7 @@ class DownloadDao {
       return null;
     }
     var chapterResults = await db.safeRawQuery(
-      '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount
+      '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcTriedCount, $_colDcSuccessCount
          FROM $_tblDownloadChapter''',
     );
     if (chapterResults == null) {
@@ -104,7 +104,7 @@ class DownloadDao {
           chapterTitle: r[_colDcChapterTitle]! as String,
           chapterGroup: r[_tblDcChapterGroup]! as String,
           totalPageCount: r[_colDcTotalCount]! as int,
-          startedPageCount: r[_colDcStartedCount]! as int,
+          triedPageCount: r[_colDcTriedCount]! as int,
           successPageCount: r[_colDcSuccessCount]! as int,
         ),
       );
@@ -140,7 +140,7 @@ class DownloadDao {
       return null;
     }
     var chapterResults = await db.safeRawQuery(
-      '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount
+      '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcTriedCount, $_colDcSuccessCount
          FROM $_tblDownloadChapter
          WHERE $_colDcMangaId = ?''',
       [mid],
@@ -158,7 +158,7 @@ class DownloadDao {
           chapterTitle: r[_colDcChapterTitle]! as String,
           chapterGroup: r[_tblDcChapterGroup]! as String,
           totalPageCount: r[_colDcTotalCount]! as int,
-          startedPageCount: r[_colDcStartedCount]! as int,
+          triedPageCount: r[_colDcTriedCount]! as int,
           successPageCount: r[_colDcSuccessCount]! as int,
         ),
       );
@@ -226,16 +226,16 @@ class DownloadDao {
     if (count == 0) {
       rows = await db.safeRawInsert(
         '''INSERT INTO $_tblDownloadChapter
-           ($_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcStartedCount, $_colDcSuccessCount)
+           ($_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcTriedCount, $_colDcSuccessCount)
            VALUES (?, ?, ?, ?, ?, ?, ?)''',
-        [chapter.mangaId, chapter.chapterId, chapter.chapterTitle, chapter.chapterGroup, chapter.totalPageCount, chapter.startedPageCount, chapter.successPageCount],
+        [chapter.mangaId, chapter.chapterId, chapter.chapterTitle, chapter.chapterGroup, chapter.totalPageCount, chapter.triedPageCount, chapter.successPageCount],
       );
     } else {
       rows = await db.safeRawUpdate(
         '''UPDATE $_tblDownloadChapter
-           SET $_colDcChapterTitle = ?, $_tblDcChapterGroup = ?, $_colDcTotalCount = ?, $_colDcStartedCount = ?, $_colDcSuccessCount = ?
+           SET $_colDcChapterTitle = ?, $_tblDcChapterGroup = ?, $_colDcTotalCount = ?, $_colDcTriedCount = ?, $_colDcSuccessCount = ?
            WHERE $_colDcMangaId = ? AND $_colDcChapterId = ?''',
-        [chapter.chapterTitle, chapter.chapterGroup, chapter.totalPageCount, chapter.startedPageCount, chapter.successPageCount, chapter.mangaId, chapter.chapterId],
+        [chapter.chapterTitle, chapter.chapterGroup, chapter.totalPageCount, chapter.triedPageCount, chapter.successPageCount, chapter.mangaId, chapter.chapterId],
       );
     }
     return rows != null && rows >= 1;

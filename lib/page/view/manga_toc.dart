@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 
-/// 漫画章节目录，在 [MangaPage] / [MangaTocPage] 使用
+/// 漫画章节目录，在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadSelectPage] 使用
 class MangaTocView extends StatefulWidget {
   const MangaTocView({
     Key? key,
@@ -17,6 +17,7 @@ class MangaTocView extends StatefulWidget {
     this.highlightColor,
     this.highlightedChapters = const [],
     this.lastChapterPage = 1,
+    this.showNewBadge = true,
     this.customBadgeBuilder,
     this.predicate,
   }) : super(key: key);
@@ -30,6 +31,7 @@ class MangaTocView extends StatefulWidget {
   final Color? highlightColor;
   final List<int> highlightedChapters;
   final int lastChapterPage;
+  final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final bool Function(int cid)? predicate;
 
@@ -179,7 +181,7 @@ class _MangaTocViewState extends State<MangaTocView> {
               ),
             ),
           ),
-          if (widget.customBadgeBuilder == null && chapter != null && chapter.isNew)
+          if (widget.showNewBadge && chapter != null && chapter.isNew)
             Positioned(
               top: 0,
               right: 0,
@@ -198,13 +200,13 @@ class _MangaTocViewState extends State<MangaTocView> {
                 ),
               ),
             ),
-          if (widget.customBadgeBuilder != null && chapter != null)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: widget.customBadgeBuilder!(chapter.cid) ?? //
-                  SizedBox(height: 0, width: 0),
-            ),
+          if (widget.customBadgeBuilder != null && chapter != null) //
+            widget.customBadgeBuilder!(chapter.cid) ??
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: SizedBox(height: 0, width: 0),
+                ),
         ],
       ),
     );

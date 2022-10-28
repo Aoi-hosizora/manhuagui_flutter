@@ -24,9 +24,10 @@ class SubscribeUpdatedEvent {
 }
 
 class DownloadMangaProgressChangedEvent {
-  const DownloadMangaProgressChangedEvent({required this.task});
+  const DownloadMangaProgressChangedEvent({required this.task, required this.finished});
 
   final DownloadMangaQueueTask task;
+  final bool finished;
 }
 
 class DownloadedMangaEntityChangedEvent {
