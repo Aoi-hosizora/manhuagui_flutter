@@ -32,12 +32,19 @@ class MangaTocPage extends StatefulWidget {
 
 class _MangaTocPageState extends State<MangaTocPage> {
   final _controller = ScrollController();
+  var _loading = true; // fake loading flag
   VoidCallback? _cancelHandler;
   MangaHistory? _history;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      Future.delayed(Duration(milliseconds: 300), () {
+        _loading = false;
+        if (mounted) setState(() {});
+      });
+    });
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       try {
         _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
@@ -76,23 +83,27 @@ class _MangaTocPageState extends State<MangaTocPage> {
           ),
         ],
       ),
-      body: Container(
-        color: Colors.white,
-        child: ScrollbarWithMore(
-          controller: _controller,
-          interactive: true,
-          crossAxisMargin: 2,
-          child: SingleChildScrollView(
+      body: PlaceholderText(
+        state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
+        setting: PlaceholderSetting().copyWithChinese(),
+        childBuilder: (c) => Container(
+          color: Colors.white,
+          child: ScrollbarWithMore(
             controller: _controller,
-            child: MangaTocView(
-              groups: widget.groups,
-              mangaId: widget.mangaId,
-              mangaTitle: widget.mangaTitle,
-              mangaCover: widget.mangaCover,
-              mangaUrl: widget.mangaUrl,
-              full: true,
-              highlightedChapters: [_history?.chapterId ?? 0],
-              lastChapterPage: _history?.chapterPage ?? 1,
+            interactive: true,
+            crossAxisMargin: 2,
+            child: SingleChildScrollView(
+              controller: _controller,
+              child: MangaTocView(
+                groups: widget.groups,
+                mangaId: widget.mangaId,
+                mangaTitle: widget.mangaTitle,
+                mangaCover: widget.mangaCover,
+                mangaUrl: widget.mangaUrl,
+                full: true,
+                highlightedChapters: [_history?.chapterId ?? 0],
+                lastChapterPage: _history?.chapterPage ?? 1,
+              ),
             ),
           ),
         ),

@@ -3,10 +3,12 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
@@ -33,11 +35,23 @@ class DownloadSelectPage extends StatefulWidget {
 
 class _DownloadSelectPageState extends State<DownloadSelectPage> {
   final _controller = ScrollController();
+  var _loading = true; // fake loading flag
   VoidCallback? _cancelHandler;
+
+  var _setting = DlSetting.defaultSetting();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      Future.delayed(Duration(milliseconds: 300), () {
+        _loading = false;
+        if (mounted) setState(() {});
+      });
+
+      _setting = await DlSettingPrefs.getSetting();
+      if (mounted) setState(() {});
+    });
     WidgetsBinding.instance?.addPostFrameCallback((_) async => await _getChapters());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
@@ -134,6 +148,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
     var task = DownloadMangaQueueTask(
       mangaId: widget.mangaId,
       chapterIds: chapterIds.toList(),
+      parallel: _setting.downloadPagesTogether,
     );
 
     // 4. 更新数据库，并更新界面
@@ -206,55 +221,44 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
           ),
         ],
       ),
-      body: Container(
-        color: Colors.white,
-        child: ScrollbarWithMore(
-          controller: _controller,
-          interactive: true,
-          crossAxisMargin: 2,
-          child: SingleChildScrollView(
+      body: PlaceholderText(
+        state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
+        setting: PlaceholderSetting().copyWithChinese(),
+        childBuilder: (c) => Container(
+          color: Colors.white,
+          child: ScrollbarWithMore(
             controller: _controller,
-            child: MangaTocView(
-              groups: widget.groups,
-              mangaId: widget.mangaId,
-              mangaTitle: widget.mangaTitle,
-              mangaCover: widget.mangaCover,
-              mangaUrl: widget.mangaUrl,
-              full: true,
-              highlightColor: Theme.of(context).primaryColor.withOpacity(0.4),
-              highlightedChapters: _selected,
-              showNewBadge: true,
-              customBadgeBuilder: (cid) {
-                var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                if (oldChapter == null) {
-                  return null;
-                }
-                return Positioned(
-                  bottom: 1,
-                  right: 1,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 1.2, horizontal: 1.2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: oldChapter.succeeded ? Colors.green : Colors.blue,
-                    ),
-                    child: Icon(
-                      oldChapter.succeeded ? Icons.check : Icons.arrow_downward,
-                      size: 13,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
-              predicate: (cid) {
-                if (!_selected.contains(cid)) {
-                  _selected.add(cid);
-                } else {
-                  _selected.remove(cid);
-                }
-                if (mounted) setState(() {});
-                return false;
-              },
+            interactive: true,
+            crossAxisMargin: 2,
+            child: SingleChildScrollView(
+              controller: _controller,
+              child: MangaTocView(
+                groups: widget.groups,
+                mangaId: widget.mangaId,
+                mangaTitle: widget.mangaTitle,
+                mangaCover: widget.mangaCover,
+                mangaUrl: widget.mangaUrl,
+                full: true,
+                highlightColor: Theme.of(context).primaryColor.withOpacity(0.4),
+                highlightedChapters: _selected,
+                showNewBadge: true,
+                customBadgeBuilder: (cid) {
+                  var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                  if (oldChapter == null) {
+                    return null;
+                  }
+                  return DownloadBadge(downloading: !oldChapter.succeeded);
+                },
+                predicate: (cid) {
+                  if (!_selected.contains(cid)) {
+                    _selected.add(cid);
+                  } else {
+                    _selected.remove(cid);
+                  }
+                  if (mounted) setState(() {});
+                  return false;
+                },
+              ),
             ),
           ),
         ),

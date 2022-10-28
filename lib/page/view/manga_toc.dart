@@ -181,33 +181,9 @@ class _MangaTocViewState extends State<MangaTocView> {
               ),
             ),
           ),
-          if (widget.showNewBadge && chapter != null && chapter.isNew)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.all(Radius.circular(2.0)),
-                ),
-                child: Text(
-                  'NEW',
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
+          if (widget.showNewBadge && chapter != null && chapter.isNew) NewBadge(),
           if (widget.customBadgeBuilder != null && chapter != null) //
-            widget.customBadgeBuilder!(chapter.cid) ??
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: SizedBox(height: 0, width: 0),
-                ),
+            widget.customBadgeBuilder!(chapter.cid) ?? SizedBox(height: 0, width: 0),
         ],
       ),
     );
@@ -299,6 +275,62 @@ class _MangaTocViewState extends State<MangaTocView> {
         ],
         SizedBox(height: 10),
       ],
+    );
+  }
+}
+
+class NewBadge extends StatelessWidget {
+  const NewBadge({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      right: 0,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.all(Radius.circular(2.0)),
+        ),
+        child: Text(
+          'NEW',
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DownloadBadge extends StatelessWidget {
+  const DownloadBadge({
+    Key? key,
+    required this.downloading,
+  }) : super(key: key);
+
+  final bool downloading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 1,
+      right: 1,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 1.25, horizontal: 1.25),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: downloading ? Colors.blue : Colors.green,
+        ),
+        child: Icon(
+          downloading ? Icons.download : Icons.file_download_done,
+          size: 14,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }

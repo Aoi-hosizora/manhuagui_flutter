@@ -188,9 +188,9 @@ class DownloadMangaLineView extends StatelessWidget {
       extrasInStack: [
         if (showProgressBar)
           Positioned(
-            bottom: 5 + 24 / 2 - (Theme.of(context).progressIndicatorTheme.linearMinHeight ?? 4) / 2,
+            bottom: 8 + 24 / 2 - (Theme.of(context).progressIndicatorTheme.linearMinHeight ?? 4) / 2 - 2,
             left: 75 + 14 * 2,
-            right: 24 + 5 * 2 + 14,
+            right: 24 + 8 * 2 + 14,
             child: LinearProgressIndicator(
               value: progressBarValue,
             ),
@@ -202,7 +202,7 @@ class DownloadMangaLineView extends StatelessWidget {
           bottom: 0,
           child: InkWell(
             child: Padding(
-              padding: EdgeInsets.all(5),
+              padding: EdgeInsets.all(8),
               child: Icon(
                 actionIcon,
                 size: 24,

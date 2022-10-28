@@ -33,6 +33,7 @@ class DownloadOption {
     this.ignoreHeadError = false,
     this.whenOverwrite = _defaultWhenOverwrite,
     this.suffixBuilder = _defaultSuffixBuilder,
+    this.timeoutDuration = const Duration(milliseconds: DOWNLOAD_TIMEOUT),
   });
 
   final DownloadBehavior behavior;
@@ -40,6 +41,7 @@ class DownloadOption {
   final bool ignoreHeadError;
   final Future<OverwriteBehavior> Function(String filepath) whenOverwrite;
   final String Function(int index) suffixBuilder;
+  final Duration timeoutDuration;
 }
 
 enum DownloadExceptionType {
@@ -164,7 +166,12 @@ Future<File> downloadFile({
     // 4. download and save to file
     http.Response resp;
     try {
-      resp = await http.get(uri, headers: headers);
+      resp = await http.get(uri, headers: headers).timeout(
+        option.timeoutDuration,
+        onTimeout: () {
+          throw DownloadException._download('timed out');
+        },
+      );
     } catch (e) {
       throw DownloadException._download('Failed to make http GET request to $url: $e.');
     }

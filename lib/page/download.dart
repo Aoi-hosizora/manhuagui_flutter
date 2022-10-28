@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
@@ -24,10 +26,16 @@ class _DownloadPageState extends State<DownloadPage> {
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
 
+  var _setting = DlSetting.defaultSetting();
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      // setting
+      _setting = await DlSettingPrefs.getSetting();
+      if (mounted) setState(() {});
+
       // progress related
       _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
         var mangaId = event.task.mangaId;
@@ -97,6 +105,7 @@ class _DownloadPageState extends State<DownloadPage> {
     var newTask = DownloadMangaQueueTask(
       mangaId: item.mangaId,
       chapterIds: item.downloadedChapters.map((el) => el.chapterId).toList(),
+      parallel: _setting.downloadPagesTogether,
     );
 
     // 2. 更新数据库
@@ -122,8 +131,29 @@ class _DownloadPageState extends State<DownloadPage> {
     }
   }
 
+  Future<void> _allStartOrPause({required bool allStart}) async {
+    if (allStart) {
+      // => 全部开始
+      var items = await DownloadDao.getMangas() ?? _data;
+      var tasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>();
+      for (var item in items) {
+        var task = tasks.where((el) => el.mangaId == item.mangaId).firstOrNull;
+        if (task == null || !task.canceled) {
+          _pauseOrContinue(item: item, task: null);
+        }
+      }
+    } else {
+      // => 全部暂停
+      for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
+        if (!t.canceled) {
+          t.cancel(); // TODO ???
+        }
+      }
+    }
+  }
+
   Future<void> _delete(DownloadedManga item) async {
-    var alsoDeleteFile = false;
+    var alsoDeleteFile = _setting.defaultToDeleteFiles;
 
     Future<void> realDelete(bool alsoDeleteFile) async {
       _data.remove(item);
@@ -253,6 +283,41 @@ class _DownloadPageState extends State<DownloadPage> {
     );
   }
 
+  Future<void> _onSettingPressed() {
+    var setting = _setting.copyWith();
+    return showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('下载设置'),
+        content: DlSettingSubPage(
+          setting: setting,
+          onSettingChanged: (s) => setting = s,
+        ),
+        actions: [
+          TextButton(
+            child: Text('确定'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              _setting = setting;
+              if (mounted) setState(() {});
+              await DlSettingPrefs.setSetting(_setting);
+
+              // apply settings
+              var tasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>();
+              for (var t in tasks) {
+                t.changeParallel(_setting.downloadPagesTogether);
+              }
+            },
+          ),
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -263,12 +328,17 @@ class _DownloadPageState extends State<DownloadPage> {
           AppBarActionButton(
             icon: Icon(Icons.play_arrow),
             tooltip: '全部开始',
-            onPressed: () {},
+            onPressed: () => _allStartOrPause(allStart: true),
           ),
           AppBarActionButton(
             icon: Icon(Icons.pause),
             tooltip: '全部暂停',
-            onPressed: () {},
+            onPressed: () => _allStartOrPause(allStart: false),
+          ),
+          AppBarActionButton(
+            icon: Icon(Icons.settings),
+            tooltip: '下载设置',
+            onPressed: () => _onSettingPressed(),
           ),
         ],
       ),

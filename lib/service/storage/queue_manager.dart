@@ -46,11 +46,6 @@ class QueueManager {
       await task.doDefer();
     }
   }
-
-  void cancelAllTasks() {
-    queue.cancel();
-    // tasks.clear();
-  }
 }
 
 abstract class QueueTask<T> {

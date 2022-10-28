@@ -19,10 +19,11 @@ const SOURCE_CODE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter';
 const FEEDBACK_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/issues/new';
 const RELEASE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/releases';
 
-const CONNECT_TIMEOUT = 10000; // 10s
-const SEND_TIMEOUT = 5000; // 5s
-const RECEIVE_TIMEOUT = 5000; // 5s
-const HEAD_TIMEOUT = 2500; // 2.5s
+const CONNECT_TIMEOUT = 5000; // 5.0s
+const SEND_TIMEOUT = 3000; // 3.0s
+const RECEIVE_TIMEOUT = 3000; // 3.0s
+const HEAD_TIMEOUT = 1500; // 1.5s
+const DOWNLOAD_TIMEOUT = 10000; // 5.0s + 5.0s
 
 // const BASE_API_URL = 'http://10.0.3.2:10018/v1/';
 const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/';
