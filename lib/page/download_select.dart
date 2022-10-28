@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 选择下载章节页，展示所给 [MangaChapterGroup] 列表信息
+/// 选择下载章节页，展示所给 [MangaChapterGroup] 列表信息，并提供章节选择
 class DownloadSelectPage extends StatefulWidget {
   const DownloadSelectPage({
     Key? key,
@@ -223,23 +223,20 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
               full: true,
               highlightColor: Theme.of(context).primaryColor.withOpacity(0.4),
               highlightedChapters: _selected,
-              showNewBadge: false,
+              showNewBadge: true,
               customBadgeBuilder: (cid) {
                 var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
                 if (oldChapter == null) {
                   return null;
                 }
                 return Positioned(
-                  top: 0,
-                  right: 0,
+                  bottom: 1,
+                  right: 1,
                   child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 0, horizontal: 3),
+                    padding: EdgeInsets.symmetric(vertical: 1.2, horizontal: 1.2),
                     decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(3),
-                        topRight: Radius.circular(1),
-                      ),
+                      shape: BoxShape.circle,
+                      color: oldChapter.succeeded ? Colors.green : Colors.blue,
                     ),
                     child: Icon(
                       oldChapter.succeeded ? Icons.check : Icons.arrow_downward,

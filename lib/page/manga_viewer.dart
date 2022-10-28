@@ -1,5 +1,5 @@
 import 'dart:async' show Timer;
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 import 'dart:math' as math;
 
 import 'package:battery_info/battery_info_plugin.dart';
@@ -139,6 +139,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _loading = true;
   MangaChapter? _data;
   int? _initialPage;
+  List<Future<String>>? _urlFutures;
+  List<Future<File?>>? _fileFutures;
   var _error = '';
 
   var _subscribing = false;
@@ -186,7 +188,26 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _currentPage = _initialPage!;
       _progressValue = _initialPage!;
 
-      // 5. 异步更新浏览历史
+      // 5. 提前保存 future 列表
+      _urlFutures = _data!.pages.map((el) => Future.value(el)).toList();
+      _fileFutures = [
+        for (int idx = 0; idx < _data!.pageCount; idx++)
+          Future<File?>.microtask(() async {
+            var filepath = await getDownloadedMangaPageFilepath(
+              mangaId: widget.mid,
+              chapterId: _data!.cid,
+              pageIndex: idx,
+              url: _data!.pages[idx],
+            );
+            var f = File(filepath);
+            if (!(await f.exists())) {
+              return null;
+            }
+            return f;
+          }),
+      ];
+
+      // 6. 异步更新浏览历史
       _updateHistory();
     } catch (e, s) {
       _data = null;
@@ -388,7 +409,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             mangaCover: widget.mangaCover,
             mangaUrl: widget.mangaUrl,
             groups: widget.chapterGroups,
-            highlightedChapter: widget.cid,
+            highlightedChapter: _data!.cid,
             predicate: (cid) {
               if (cid == _data!.cid) {
                 Fluttertoast.showToast(msg: '当前正在阅读 ${_data!.title}');
@@ -515,6 +536,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     key: _mangaGalleryViewKey,
                     imageCount: _data!.pages.length,
                     imageUrls: _data!.pages,
+                    imageUrlFutures: _urlFutures!,
+                    imageFileFutures: _fileFutures!,
                     preloadPagesCount: _setting.preloadCount,
                     verticalScroll: _setting.viewDirection == ViewDirection.topToBottom,
                     horizontalReverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,

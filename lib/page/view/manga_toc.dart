@@ -189,14 +189,15 @@ class _MangaTocViewState extends State<MangaTocView> {
                 padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
                 decoration: BoxDecoration(
                   color: Colors.red,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(2),
-                    topRight: Radius.circular(1),
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(2.0)),
                 ),
                 child: Text(
                   'NEW',
-                  style: TextStyle(fontSize: 9, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),

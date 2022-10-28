@@ -1,5 +1,3 @@
-import 'dart:async' show Timer;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
@@ -26,9 +24,6 @@ class _DownloadPageState extends State<DownloadPage> {
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
 
-  Timer? _timer;
-  var _currentSpeedInBytes = 0; // TODO https://blog.csdn.net/a22422931/article/details/76155241
-
   @override
   void initState() {
     super.initState();
@@ -41,7 +36,8 @@ class _DownloadPageState extends State<DownloadPage> {
         } else {
           _tasks.removeWhere((key, _) => key == mangaId);
         }
-        if (event.task.progress.currentChapter == null) {
+        if (event.task.progress.stage == DownloadMangaProgressStage.waiting || event.task.progress.stage == DownloadMangaProgressStage.gotChapter) {
+          // 只有在最开始等待、以及每次获得新章节数据时才遍历并获取文件大小
           _bytes[mangaId] = await getDownloadedMangaBytes(mangaId: mangaId);
         }
         if (mounted) setState(() {});
@@ -59,13 +55,6 @@ class _DownloadPageState extends State<DownloadPage> {
           if (mounted) setState(() {});
         }
       }));
-
-      // timer related
-      _timer = Timer.periodic(const Duration(seconds: 2), (_) async {
-        if (_timer != null && _timer!.isActive) {
-          _currentSpeedInBytes = 0;
-        }
-      });
     });
   }
 
@@ -195,7 +184,7 @@ class _DownloadPageState extends State<DownloadPage> {
     DownloadLineStatus status;
     if (task != null && !task.succeeded) {
       if (!task.canceled) {
-        if (task.progress.waitingForDownloading) {
+        if (task.progress.stage == DownloadMangaProgressStage.waiting) {
           status = DownloadLineStatus.waiting; // stopped
         } else {
           status = DownloadLineStatus.downloading; // preparing / running
@@ -205,7 +194,7 @@ class _DownloadPageState extends State<DownloadPage> {
       }
     } else {
       if (!item.error) {
-        if (item.startedChapterIds.length != item.totalChapterIds.length) {
+        if (item.startedPageCountInAll != item.totalPageCountInAll) {
           status = DownloadLineStatus.paused; // stopped
         } else if (item.successChapterIds.length == item.totalChapterIds.length) {
           status = DownloadLineStatus.succeeded; // stopped
@@ -219,12 +208,12 @@ class _DownloadPageState extends State<DownloadPage> {
 
     DownloadLineProgress progress;
     var downloadBytes = _bytes[item.mangaId] ?? 0;
-    if (task == null || task.succeeded || (!task.canceled && task.progress.waitingForDownloading)) {
+    if (task == null || task.succeeded || (!task.canceled && task.progress.stage == DownloadMangaProgressStage.waiting)) {
       progress = DownloadLineProgress.stopped(
         startedChapterCount: item.startedChapterIds.length,
         totalChapterCount: item.totalChapterIds.length,
         downloadedBytes: downloadBytes,
-        failedTotalPageCount: item.error ? -1 : item.failedPageCountInAll,
+        notFinishedPageCount: item.error ? -1 : item.totalPageCountInAll - item.successPageCountInAll,
         lastDownloadTime: item.updatedAt,
       );
     } else if (task.progress.manga == null || task.progress.currentChapter == null) {

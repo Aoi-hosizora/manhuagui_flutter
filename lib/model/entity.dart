@@ -83,6 +83,18 @@ class DownloadedManga {
   List<int> get successChapterIds => //
       downloadedChapters.where((el) => el.succeeded).map((el) => el.chapterId).toList();
 
+  int get failedChapterCount => //
+      downloadedChapters.where((el) => !el.succeeded).map((el) => 1).reduce((val, el) => val + el);
+
+  int get totalPageCountInAll => //
+      downloadedChapters.map((el) => el.totalPageCount).reduce((val, el) => val + el);
+
+  int get startedPageCountInAll => //
+      downloadedChapters.map((el) => el.triedPageCount).reduce((val, el) => val + el);
+
+  int get successPageCountInAll => //
+      downloadedChapters.map((el) => el.successPageCount).reduce((val, el) => val + el);
+
   int get failedPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).reduce((val, el) => val + el);
 

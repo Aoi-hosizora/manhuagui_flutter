@@ -20,7 +20,7 @@ class DownloadLineProgress {
     required this.startedChapterCount,
     required this.totalChapterCount,
     required this.downloadedBytes,
-    required int this.failedTotalPageCount,
+    required int this.notFinishedPageCount,
     required DateTime this.lastDownloadTime,
   })  : stopped = true,
         preparing = false,
@@ -36,7 +36,7 @@ class DownloadLineProgress {
     required this.gettingManga,
   })  : stopped = false,
         preparing = true,
-        failedTotalPageCount = null,
+        notFinishedPageCount = null,
         lastDownloadTime = null,
         chapterTitle = null,
         triedPageCount = null,
@@ -52,7 +52,7 @@ class DownloadLineProgress {
   })  : stopped = false,
         preparing = false,
         gettingManga = false,
-        failedTotalPageCount = null,
+        notFinishedPageCount = null,
         lastDownloadTime = null;
 
   // both
@@ -62,7 +62,7 @@ class DownloadLineProgress {
 
   // stopped
   final bool stopped;
-  final int? failedTotalPageCount;
+  final int? notFinishedPageCount;
   final DateTime? lastDownloadTime;
 
   // preparing / running
@@ -115,15 +115,14 @@ class DownloadMangaLineView extends StatelessWidget {
           text3: status == DownloadLineStatus.waiting
               ? '等待中'
               : status == DownloadLineStatus.paused
-                  ? '已暂停'
+                  ? '已暂停 (${progress.notFinishedPageCount!} 页未完成)'
                   : status == DownloadLineStatus.succeeded
                       ? '已完成'
-                      : progress.failedTotalPageCount! < 0
+                      : progress.notFinishedPageCount! < 0
                           ? '下载出错'
-                          : '未完成 (${progress.failedTotalPageCount!} 页)',
+                          : '下载出错 (${progress.notFinishedPageCount!} 页未完成)',
           showProgressBar: false,
           progressBarValue: null,
-          statusText: '',
           disableAction: false,
           actionIcon: status == DownloadLineStatus.waiting ? Icons.pause : Icons.play_arrow,
         );
@@ -138,18 +137,18 @@ class DownloadMangaLineView extends StatelessWidget {
           icon1: Icons.download,
           text1: '正在下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount} ($downloadedSize)',
           icon2: Icons.download,
-          text2: progress.preparing
-              ? progress.gettingManga
-                  ? '正在获取漫画信息'
-                  : '当前正在下载 未知章节'
-              : '当前正在下载 ${progress.chapterTitle!} ${progress.triedPageCount!}/${progress.totalPageCount!}页',
+          text2: (progress.preparing
+                  ? progress.gettingManga
+                      ? '正在获取漫画信息'
+                      : '当前正在下载 未知章节'
+                  : '当前正在下载 ${progress.chapterTitle!} ${progress.triedPageCount!}/${progress.totalPageCount!}页') +
+              (status == DownloadLineStatus.pausing ? ' (暂停中)' : ''),
           icon3: null,
           text3: '　',
           showProgressBar: true,
           progressBarValue: status == DownloadLineStatus.pausing || progress.preparing || progress.totalPageCount! == 0
               ? null //
               : progress.triedPageCount! / progress.totalPageCount!,
-          statusText: status == DownloadLineStatus.pausing ? '暂停中' : '',
           disableAction: status == DownloadLineStatus.pausing,
           actionIcon: Icons.pause,
         );
@@ -166,7 +165,6 @@ class DownloadMangaLineView extends StatelessWidget {
     required String? text3,
     required bool showProgressBar,
     required double? progressBarValue,
-    required String statusText,
     required bool disableAction,
     required IconData actionIcon,
   }) {
@@ -186,10 +184,6 @@ class DownloadMangaLineView extends StatelessWidget {
           icon: icon3,
           text: text3,
         ),
-        // GeneralLineIconText(
-        //   icon: Icons.subject,
-        //   text: '上次阅读至 第x话 第xxx页', // 未开始阅读
-        // ),
       ],
       extrasInStack: [
         if (showProgressBar)
@@ -201,14 +195,6 @@ class DownloadMangaLineView extends StatelessWidget {
               value: progressBarValue,
             ),
           ),
-        Positioned(
-          bottom: 24 + 5 * 2,
-          right: 6,
-          child: Text(
-            statusText,
-            style: DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
-          ),
-        ),
       ],
       topExtrasInStack: [
         Positioned(

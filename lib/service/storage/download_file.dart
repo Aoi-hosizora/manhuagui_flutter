@@ -70,6 +70,11 @@ class DownloadException implements Exception {
     }
     return DownloadException._(o.toString(), type);
   }
+
+  @override
+  String toString() {
+    return '[$type] $msg';
+  }
 }
 
 // !!!
