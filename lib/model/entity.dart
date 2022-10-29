@@ -134,6 +134,8 @@ class DownloadedChapter {
 
   bool get succeeded => successPageCount == totalPageCount;
 
+  bool get finished => triedPageCount == totalPageCount;
+
   const DownloadedChapter({
     required this.mangaId,
     required this.chapterId,

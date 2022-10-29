@@ -9,6 +9,7 @@ class MangaSimpleTocView extends StatelessWidget {
   const MangaSimpleTocView({
     Key? key,
     required this.chapters,
+    this.gridPadding,
     this.invertOrder = true,
     this.highlightColor,
     this.highlightedChapters = const [],
@@ -19,6 +20,7 @@ class MangaSimpleTocView extends StatelessWidget {
   }) : super(key: key);
 
   final List<Tuple2<String, TinyMangaChapter>> chapters;
+  final EdgeInsets? gridPadding;
   final bool invertOrder;
   final Color? highlightColor;
   final List<int> highlightedChapters;
@@ -30,7 +32,7 @@ class MangaSimpleTocView extends StatelessWidget {
   Widget _buildGrid({required int idx, required List<TinyMangaChapter> chapters}) {
     return ChapterGridView(
       chapters: chapters,
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      padding: gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
       invertOrder: invertOrder /* true means desc */,
       maxLines: -1 /* show all chapters */,
       highlightColor: highlightColor,
@@ -64,7 +66,15 @@ class MangaSimpleTocView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (chapters.isEmpty) {
-      return SizedBox(height: 0);
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+        child: Center(
+          child: Text(
+            '暂无章节',
+            style: Theme.of(context).textTheme.subtitle1,
+          ),
+        ),
+      );
     }
 
     var groupMap = <String, List<TinyMangaChapter>>{};

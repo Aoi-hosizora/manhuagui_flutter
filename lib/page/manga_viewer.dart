@@ -176,21 +176,26 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
 
     try {
-      // 3. 获取章节数据
+      // 3. 异步请求章节目录
+      Future<void> groupsFuture;
+      if (widget.chapterGroups != null) {
+        _chapterGroups = widget.chapterGroups!;
+        groupsFuture = Future.value(null);
+      } else {
+        groupsFuture = Future.microtask(() async {
+          var result = await client.getManga(mid: widget.mangaId);
+          _chapterGroups = result.data.chapterGroups;
+        });
+      }
+
+      // 4. 获取章节数据
       var result = await client.getMangaChapter(mid: widget.mangaId, cid: widget.chapterId);
       _data = null;
       _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = result.data;
-
-      // 4. 获取章节目录
-      if (widget.chapterGroups != null) {
-        _chapterGroups = widget.chapterGroups!;
-      } else {
-        var result = await client.getManga(mid: widget.mangaId);
-        _chapterGroups = result.data.chapterGroups;
-      }
+      await groupsFuture; // 等待成功获取章节目录
 
       // 4. 指定起始页
       _initialPage = widget.initialPage.clamp(1, _data!.pageCount);

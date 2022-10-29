@@ -681,6 +681,7 @@ class _MangaPageState extends State<MangaPage> {
                     mangaTitle: _data!.title,
                     groups: _data!.chapterGroups,
                     full: false,
+                    gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     onChapterPressed: (cid) => Navigator.of(context).push(
                       MaterialPageRoute(

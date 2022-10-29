@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
@@ -9,6 +10,9 @@ import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -75,7 +79,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
           _data = newEntity;
           _byte = await getDownloadedMangaBytes(mangaId: mangaId);
         } else {
-          _error = '无法获取漫画下载信息';
+          // ignore error
         }
         if (mounted) setState(() {});
       }));
@@ -124,11 +128,31 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
       _byte = await getDownloadedMangaBytes(mangaId: widget.mangaId);
       _invertOrder = true;
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+
+      // 异步请求章节目录
+      _getChapterGroupsAsync(forceRefresh: true);
     } else {
       _error = '无法获取漫画下载信息';
     }
     _loading = false;
     if (mounted) setState(() {});
+  }
+
+  List<MangaChapterGroup>? _chapterGroups;
+
+  Future<void> _getChapterGroupsAsync({bool forceRefresh = false}) async {
+    if (_chapterGroups != null && !forceRefresh) {
+      return;
+    }
+
+    final client = RestClient(DioManager.instance.dio);
+    try {
+      var result = await client.getManga(mid: widget.mangaId);
+      _chapterGroups = result.data.chapterGroups;
+    } catch (e, s) {
+      print(wrapError(e, s).text);
+      // ignore
+    }
   }
 
   Widget _buildAction(String text, IconData icon, void Function() action) {
@@ -236,47 +260,22 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
                 ),
                 Container(height: 12),
                 // ****************************************************************
-                // 正在下载的章节 // TODO Grid，分组，长按弹出选项
+                // 未完成下载（正在下载/下载失败）的章节
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  child: MangaSimpleTocView(
-                    chapters: _data!.downloadedChapters //
-                        .where((el) => el.succeeded)
-                        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
-                        .toList(),
-                    invertOrder: _invertOrder,
-                    showNewBadge: false,
-                    highlightedChapters: [_history?.chapterId ?? 0],
-                    customBadgeBuilder: (cid) {
-                      var oldChapter = _data!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                      if (oldChapter == null) {
-                        return null;
-                      }
-                      return DownloadBadge(downloading: !oldChapter.succeeded);
-                    },
-                    onChapterPressed: (cid) => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (c) => MangaViewerPage(
-                          mangaId: widget.mangaId,
-                          mangaTitle: widget.mangaTitle,
-                          mangaCover: widget.mangaCover,
-                          mangaUrl: widget.mangaUrl,
-                          chapterGroups: null,
-                          chapterId: cid,
-                          initialPage: _history?.chapterId == cid
-                              ? _history?.chapterPage ?? 1 // have read
-                              : 1, // have not read
-                        ),
-                      ),
-                    ),
-                    onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '未完成下载的章节',
+                    style: Theme.of(context).textTheme.subtitle1,
                   ),
                 ),
-                Container(height: 12),
-                // ****************************************************************
-                // 已下载的章节 // TODO Line，加进度条，长按弹出选项
-                // ****************************************************************
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  color: Colors.white,
+                  child: Divider(height: 0, thickness: 1),
+                ),
                 Container(
                   color: Colors.white,
                   child: MangaSimpleTocView(
@@ -284,6 +283,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
                         .where((el) => !el.succeeded)
                         .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
                         .toList(),
+                    gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     invertOrder: _invertOrder,
                     showNewBadge: false,
                     highlightedChapters: [_history?.chapterId ?? 0],
@@ -292,23 +292,96 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
                       if (oldChapter == null) {
                         return null;
                       }
-                      return DownloadBadge(downloading: !oldChapter.succeeded);
+                      return DownloadBadge(
+                        state: !oldChapter.finished
+                            ? DownloadBadgeState.downloading
+                            : oldChapter.succeeded
+                                ? DownloadBadgeState.succeeded
+                                : DownloadBadgeState.failed,
+                      );
                     },
-                    onChapterPressed: (cid) => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (c) => MangaViewerPage(
-                          mangaId: widget.mangaId,
-                          mangaTitle: widget.mangaTitle,
-                          mangaCover: widget.mangaCover,
-                          mangaUrl: widget.mangaUrl,
-                          chapterGroups: null,
-                          chapterId: cid,
-                          initialPage: _history?.chapterId == cid
-                              ? _history?.chapterPage ?? 1 // have read
-                              : 1, // have not read
+                    onChapterPressed: (cid) {
+                      _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => MangaViewerPage(
+                            mangaId: widget.mangaId,
+                            mangaTitle: widget.mangaTitle,
+                            mangaCover: widget.mangaCover,
+                            mangaUrl: widget.mangaUrl,
+                            chapterGroups: _chapterGroups /* nullable */,
+                            chapterId: cid,
+                            initialPage: _history?.chapterId == cid
+                                ? _history?.chapterPage ?? 1 // have read
+                                : 1, // have not read
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                    onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'), // TODO
+                  ),
+                ),
+                Container(height: 12),
+                // ****************************************************************
+                // 已下载的章节
+                // ****************************************************************
+                Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '已下载的章节',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  color: Colors.white,
+                  child: Divider(height: 0, thickness: 1),
+                ),
+                Container(
+                  color: Colors.white,
+                  // TODO Line，加进度条，长按弹出选项（目前与上面完全一样）
+                  child: MangaSimpleTocView(
+                    chapters: _data!.downloadedChapters //
+                        .where((el) => el.succeeded)
+                        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
+                        .toList(),
+                    gridPadding: EdgeInsets.symmetric(horizontal: 12),
+                    invertOrder: _invertOrder,
+                    showNewBadge: false,
+                    highlightedChapters: [_history?.chapterId ?? 0],
+                    customBadgeBuilder: (cid) {
+                      var oldChapter = _data!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                      if (oldChapter == null) {
+                        return null;
+                      }
+                      return DownloadBadge(
+                        state: !oldChapter.finished
+                            ? DownloadBadgeState.downloading
+                            : oldChapter.succeeded
+                                ? DownloadBadgeState.succeeded
+                                : DownloadBadgeState.failed,
+                      );
+                    },
+                    onChapterPressed: (cid) {
+                      _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => MangaViewerPage(
+                            mangaId: widget.mangaId,
+                            mangaTitle: widget.mangaTitle,
+                            mangaCover: widget.mangaCover,
+                            mangaUrl: widget.mangaUrl,
+                            chapterGroups: _chapterGroups /* nullable */,
+                            chapterId: cid,
+                            initialPage: _history?.chapterId == cid
+                                ? _history?.chapterPage ?? 1 // have read
+                                : 1, // have not read
+                          ),
+                        ),
+                      );
+                    },
                     onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'),
                   ),
                 ),

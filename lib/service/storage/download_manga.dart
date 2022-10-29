@@ -480,6 +480,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
             successPageCount: successChapterPageCount,
           ),
         );
+        var ev = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
+        EventBusManager.instance.fire(ev);
       }
     } // for in chapterIds
 

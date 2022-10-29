@@ -244,7 +244,13 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                   if (oldChapter == null) {
                     return null;
                   }
-                  return DownloadBadge(downloading: !oldChapter.succeeded);
+                  return DownloadBadge(
+                    state: !oldChapter.finished
+                        ? DownloadBadgeState.downloading
+                        : oldChapter.succeeded
+                            ? DownloadBadgeState.succeeded
+                            : DownloadBadgeState.failed,
+                  );
                 },
                 onChapterPressed: (cid) {
                   if (!_selected.contains(cid)) {

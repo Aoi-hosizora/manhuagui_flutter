@@ -12,6 +12,7 @@ class MangaTocView extends StatefulWidget {
     required this.mangaTitle,
     required this.groups,
     required this.full,
+    this.gridPadding,
     this.highlightColor,
     this.highlightedChapters = const [],
     this.showNewBadge = true,
@@ -24,6 +25,7 @@ class MangaTocView extends StatefulWidget {
   final String mangaTitle;
   final List<MangaChapterGroup> groups;
   final bool full;
+  final EdgeInsets? gridPadding;
   final Color? highlightColor;
   final List<int> highlightedChapters;
   final bool showNewBadge;
@@ -92,7 +94,7 @@ class _MangaTocViewState extends State<MangaTocView> {
   Widget _buildGrid({required int idx, required List<TinyMangaChapter> chapters}) {
     return ChapterGridView(
       chapters: chapters,
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      padding: widget.gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
       invertOrder: _invertOrder,
       maxLines: widget.full
           ? -1 // show all chapters
@@ -141,7 +143,15 @@ class _MangaTocViewState extends State<MangaTocView> {
   @override
   Widget build(BuildContext context) {
     if (widget.groups.isEmpty) {
-      return SizedBox(height: 0);
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+        child: Center(
+          child: Text(
+            '暂无章节',
+            style: Theme.of(context).textTheme.subtitle1,
+          ),
+        ),
+      );
     }
 
     var groups = widget.groups.makeSureRegularGroupIsFirst(); // 保证【单话】为首个章节分组
@@ -208,13 +218,19 @@ class NewBadge extends StatelessWidget {
   }
 }
 
+enum DownloadBadgeState {
+  downloading,
+  succeeded,
+  failed,
+}
+
 class DownloadBadge extends StatelessWidget {
   const DownloadBadge({
     Key? key,
-    required this.downloading,
+    required this.state,
   }) : super(key: key);
 
-  final bool downloading;
+  final DownloadBadgeState state;
 
   @override
   Widget build(BuildContext context) {
@@ -225,10 +241,18 @@ class DownloadBadge extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 1.25, horizontal: 1.25),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: downloading ? Colors.blue : Colors.green,
+          color: state == DownloadBadgeState.downloading
+              ? Colors.blue
+              : state == DownloadBadgeState.succeeded
+                  ? Colors.green
+                  : Colors.red,
         ),
         child: Icon(
-          downloading ? Icons.download : Icons.file_download_done,
+          state == DownloadBadgeState.downloading
+              ? Icons.download
+              : state == DownloadBadgeState.succeeded
+                  ? Icons.file_download_done
+                  : Icons.priority_high,
           size: 14,
           color: Colors.white,
         ),
