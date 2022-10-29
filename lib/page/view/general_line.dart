@@ -13,21 +13,21 @@ class GeneralLineView extends StatelessWidget {
     required this.text2,
     required this.icon3,
     required this.text3,
-    this.extraInRow,
+    this.extrasInRow,
     this.extraWidthInRow,
     this.extrasInStack,
     this.topExtrasInStack,
     required this.onPressed,
     this.onLongPressed,
-  })  : rowsExceptTitle = null,
+  })  : customRows = null,
         super(key: key);
 
   const GeneralLineView.custom({
     Key? key,
     required this.imageUrl,
     required this.title,
-    required List<Widget> this.rowsExceptTitle,
-    this.extraInRow,
+    required List<Widget> this.customRows,
+    this.extrasInRow,
     this.extraWidthInRow,
     this.extrasInStack,
     this.topExtrasInStack,
@@ -41,19 +41,28 @@ class GeneralLineView extends StatelessWidget {
         text3 = null,
         super(key: key);
 
+  // required
   final String imageUrl;
   final String title;
+
+  // simple rows
   final IconData? icon1;
   final String? text1;
   final IconData? icon2;
   final String? text2;
   final IconData? icon3;
   final String? text3;
-  final List<Widget>? rowsExceptTitle;
-  final Widget? extraInRow;
+
+  // custom rows
+  final List<Widget>? customRows; // 取代上面的 iconX 和 textX
+
+  // optional
+  final List<Widget>? extrasInRow;
   final double? extraWidthInRow;
   final List<Widget>? extrasInStack;
   final List<Widget>? topExtrasInStack;
+
+  // callbacks
   final void Function() onPressed;
   final void Function()? onLongPressed;
 
@@ -75,6 +84,10 @@ class GeneralLineView extends StatelessWidget {
                 width: 75,
               ),
             ),
+
+            // ****************************************************************
+            // 右边信息
+            // ****************************************************************
             Container(
               width: MediaQuery.of(context).size.width - 14 * 3 - 75 - (extraWidthInRow ?? 0), // | ▢ ▢▢ |
               margin: EdgeInsets.only(top: 5, bottom: 5, right: 14),
@@ -94,30 +107,38 @@ class GeneralLineView extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+
                   // ****************************************************************
                   // 右边预定义控件
                   // ****************************************************************
-                  if (rowsExceptTitle == null) ...[
-                    GeneralLineIconText(icon: icon1, text: text1),
-                    GeneralLineIconText(icon: icon2, text: text2),
-                    GeneralLineIconText(icon: icon3, text: text3),
+                  if (customRows == null) ...[
+                    GeneralLineIconText(icon: icon1!, text: text1!),
+                    GeneralLineIconText(icon: icon2!, text: text2!),
+                    GeneralLineIconText(icon: icon3!, text: text3!),
                   ],
+
                   // ****************************************************************
                   // 右边自定义控件
                   // ****************************************************************
-                  if (rowsExceptTitle != null) ...rowsExceptTitle!,
+                  if (customRows != null) ...customRows!,
                 ],
               ),
             ),
+
             // ****************************************************************
             // 最右边自定义控件
             // ****************************************************************
-            if (extraInRow != null) extraInRow!,
+            if (extrasInRow != null) ...extrasInRow!,
           ],
         ),
-        if (extrasInStack != null) ...extrasInStack!,
+
         // ****************************************************************
-        // 点击效果
+        // Stack 自定义控件，Ripple 效果以内
+        // ****************************************************************
+        if (extrasInStack != null) ...extrasInStack!,
+
+        // ****************************************************************
+        // Ripple 效果
         // ****************************************************************
         Positioned.fill(
           child: Material(
@@ -128,6 +149,10 @@ class GeneralLineView extends StatelessWidget {
             ),
           ),
         ),
+
+        // ****************************************************************
+        // Stack 自定义控件，Ripple 效果以外
+        // ****************************************************************
         if (topExtrasInStack != null) ...topExtrasInStack!,
       ],
     );
@@ -164,9 +189,8 @@ class GeneralLineIconText extends StatelessWidget {
         ),
         text: Text(
           text ?? '',
-          style: (textStyle ?? DefaultTextStyle.of(context).style).copyWith(
-            color: Colors.grey[600],
-          ),
+          style: textStyle ?? //
+              DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

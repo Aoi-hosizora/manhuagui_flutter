@@ -24,26 +24,28 @@ class MangaRankLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '更新于 ${manga.newestDate}',
       extraWidthInRow: 35 + 14,
-      extraInRow: Container(
-        margin: EdgeInsets.only(right: 14, top: 5, bottom: 5),
-        width: 35,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            manga.trend == 1
-                ? Icon(Icons.arrow_drop_up, color: Colors.red) // up
-                : manga.trend == 2
-                    ? Icon(Icons.arrow_drop_down, color: Colors.blue[400]) // down
-                    : Icon(Icons.remove, color: Colors.grey),
-            Text(
-              manga.score.toString(),
-              style: Theme.of(context).textTheme.subtitle1,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+      extrasInRow: [
+        Container(
+          margin: EdgeInsets.only(right: 14, top: 5, bottom: 5),
+          width: 35,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              manga.trend == 1
+                  ? Icon(Icons.arrow_drop_up, color: Colors.red) // up
+                  : manga.trend == 2
+                      ? Icon(Icons.arrow_drop_down, color: Colors.blue[400]) // down
+                      : Icon(Icons.remove, color: Colors.grey),
+              Text(
+                manga.score.toString(),
+                style: Theme.of(context).textTheme.subtitle1,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
       extrasInStack: [
         Positioned(
           top: 0,

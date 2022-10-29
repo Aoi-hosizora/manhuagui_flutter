@@ -57,7 +57,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
     required T value,
     required List<T> values,
     required Widget Function(T) builder,
-    required void Function(T?) onChanged,
+    required void Function(T) onChanged,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -74,7 +74,11 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
             items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
             underline: Container(color: Colors.white),
             isExpanded: true,
-            onChanged: onChanged,
+            onChanged: (v) {
+              if (v != null) {
+                onChanged.call(v);
+              }
+            },
           ),
         ),
       ],
@@ -129,7 +133,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (c) {
-            _downloadPagesTogether = (c ?? 4).clamp(1, 8);
+            _downloadPagesTogether = c.clamp(1, 8);
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

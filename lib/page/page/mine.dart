@@ -150,6 +150,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               child: Text(
                 line,
                 style: Theme.of(context).textTheme.subtitle1,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
         ],
@@ -303,7 +305,9 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 title: '个人信息',
                 lines: [
                   '您的会员等级：${_data!.className}',
-                  '个人成长值/账户积分：${_data!.score} 点',
+                  '个人成长值 / 账户积分：${_data!.score} 点',
+                  '累计发送 ${_data!.totalCommentCount} 条评论，当前 ${_data!.unreadMessageCount} 条消息未读',
+                  '注册时间：${_data!.registerTime}',
                 ],
               ),
               SizedBox(height: 12),
@@ -312,10 +316,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 lines: [
                   '本次登录IP：${_data!.loginIp}',
                   '上次登录IP：${_data!.lastLoginIp}',
-                  '注册时间：${_data!.registerTime}',
                   '上次登录时间：${_data!.lastLoginTime}',
-                  '累计登录天数：？',
-                  '累计评论总数：？',
+                  '累计登录天数：${_data!.cumulativeDayCount} 天',
                 ],
               ),
             ],

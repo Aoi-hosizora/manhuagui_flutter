@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/image_viewer.dart';
-import 'package:manhuagui_flutter/page/manga.dart';
-import 'package:manhuagui_flutter/page/view/full_ripple.dart';
-import 'package:manhuagui_flutter/page/view/manga_toc.dart';
-import 'package:manhuagui_flutter/page/view/network_image.dart';
-import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 漫画已下载章节目录页，查询数据库并展示 [DownloadedManga] 列表信息
+/// 已下载章节页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
 class DownloadTocPage extends StatefulWidget {
   const DownloadTocPage({
     Key? key,
@@ -27,7 +28,87 @@ class DownloadTocPage extends StatefulWidget {
 }
 
 class _DownloadTocPageState extends State<DownloadTocPage> {
+  final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
+  final _fabController = AnimatedFabController();
+  final _cancelHandlers = <VoidCallback>[];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      // progress related
+      _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
+        var mangaId = event.task.mangaId;
+        if (mangaId == widget.mangaId) {
+          return;
+        }
+
+        // <<<
+        _task = !event.finished ? event.task : null;
+        if (event.task.progress.stage == DownloadMangaProgressStage.waiting || event.task.progress.stage == DownloadMangaProgressStage.gotChapter) {
+          // 只有在最开始等待、以及每次获得新章节数据时才遍历并获取文件大小
+          _byte = await getDownloadedMangaBytes(mangaId: mangaId);
+        }
+        if (mounted) setState(() {});
+      }));
+
+      // entity related
+      _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
+        var mangaId = event.mangaId;
+        if (mangaId != widget.mangaId) {
+          return;
+        }
+
+        // <<<
+        var newEntity = await DownloadDao.getManga(mid: mangaId);
+        if (newEntity != null) {
+          _data = newEntity;
+          _byte = await getDownloadedMangaBytes(mangaId: mangaId);
+        } else {
+          _error = '无法获取漫画下载信息';
+        }
+        if (mounted) setState(() {});
+      }));
+    });
+  }
+
+  @override
+  void dispose() {
+    _cancelHandlers.forEach((c) => c.call);
+    _controller.dispose();
+    _fabController.dispose();
+    super.dispose();
+  }
+
+  var _loading = true;
+  DownloadedManga? _data;
+  DownloadMangaQueueTask? _task;
+  var _byte = 0;
+  var _error = '';
+
+  Future<void> _getData() async {
+    _loading = true;
+    _data = null;
+    _task = null;
+    _byte = 0;
+    if (mounted) setState(() {});
+
+    var data = await DownloadDao.getManga(mid: widget.mangaId);
+    if (data != null) {
+      _error = '';
+      if (mounted) setState(() {});
+      await Future.delayed(Duration(milliseconds: 20));
+      _data = data;
+      _task = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().where((el) => el.mangaId == widget.mangaId).firstOrNull;
+      _byte = await getDownloadedMangaBytes(mangaId: widget.mangaId);
+    } else {
+      _error = '无法获取漫画下载信息';
+    }
+    _loading = false;
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,132 +118,63 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
-            icon: Icon(Icons.open_in_browser),
-            tooltip: '用浏览器打开',
-            onPressed: () => launchInBrowser(
-              context: context,
-              url: widget.mangaUrl,
-            ),
+            icon: Icon(Icons.play_arrow),
+            tooltip: '全部开始',
+            onPressed: () {},
+          ),
+          AppBarActionButton(
+            icon: Icon(Icons.pause),
+            tooltip: '全部暂停',
+            onPressed: () {}, // TODO 单个漫画下载特定章节/按照特定顺序下载
           ),
         ],
       ),
-      body: ListView(
-        controller: _controller,
-        children: [
-          Container(
-            color: Colors.white,
-            child: Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ****************************************************************
-                    // 封面
-                    // ****************************************************************
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      child: FullRippleWidget(
-                        child: NetworkImageView(
-                          url: widget.mangaCover,
-                          height: 160,
-                          width: 120,
-                        ),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (c) => ImageViewerPage(
-                              url: widget.mangaCover,
-                              title: '漫画封面',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // ****************************************************************
-                    // 信息
-                    // ****************************************************************
-                    Container(
-                      width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢▢ |
-                      padding: EdgeInsets.only(top: 10, bottom: 10, right: 14),
-                      alignment: Alignment.centerLeft,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.mangaTitle,
-                              style: Theme.of(context).textTheme.headline6,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          IconText(
-                            icon: Icon(Icons.download, size: 20, color: Colors.orange),
-                            text: Text('已下载章节 1/3 (169.60KB)'),
-                            space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 3),
-                          ),
-                          IconText(
-                            icon: Icon(Icons.download, size: 20, color: Colors.orange),
-                            text: Text('下载于 2022-10-29 XX:XX:XX'),
-                            space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 3),
-                          ),
-                          // IconText(
-                          //   icon: Icon(Icons.download, size: 20, color: Colors.orange),
-                          //   text: Text('当前正在下载 未知章节'),
-                          //   space: 8,
-                          //   iconPadding: EdgeInsets.symmetric(vertical: 3),
-                          // ),
-                          ElevatedButton(
-                            child: Text('查看漫画详情'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (c) => MangaPage(
-                                  id: widget.mangaId,
-                                  title: widget.mangaTitle,
-                                  url: widget.mangaUrl,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+      body: RefreshIndicator(
+        key: _refreshIndicatorKey,
+        onRefresh: _getData,
+        child: PlaceholderText.from(
+          isLoading: _loading,
+          errorText: _error,
+          isEmpty: _data == null,
+          setting: PlaceholderSetting().copyWithChinese(),
+          onRefresh: () => _getData(),
+          onChanged: (_, __) => _fabController.hide(),
+          childBuilder: (c) => ListView(
+            controller: _controller,
+            children: [
+              // ****************************************************************
+              // 漫画下载信息头部
+              // ****************************************************************
+              Container(
+                color: Colors.white,
+                child: LargeDownloadMangaLineView(
+                  mangaEntity: _data!,
+                  downloadTask: _task,
+                  downloadedBytes: _byte,
                 ),
-              ],
-            ),
+              ),
+              Container(height: 12),
+              // ****************************************************************
+              // 正在下载的章节
+              // ****************************************************************
+              Container(
+                color: Colors.white,
+                child: SizedBox(height: 100), // TODO 采用 Toc 的风格，分组，长按弹出选项
+              ),
+              Container(height: 12),
+              // ****************************************************************
+              // 已下载的章节
+              // ****************************************************************
+              Container(
+                color: Colors.white,
+                child: SizedBox(height: 300), // TODO 采用 Line 的风格，加进度条，长按弹出选项
+              ),
+            ],
           ),
-          Container(height: 12),
-          // ****************************************************************
-          // 下载章节列表
-          // ****************************************************************
-          Container(
-            color: Colors.white,
-            child: SizedBox(height: 100), // TODO
-          ),
-          Container(height: 12),
-          // ****************************************************************
-          // 漫画章节列表
-          // ****************************************************************
-          Container(
-            color: Colors.white,
-            // child: MangaTocView(
-            //   groups: _data!.chapterGroups, // TODO
-            //   mangaId: widget.mangaId,
-            //   mangaTitle: widget.mangaTitle,
-            //   mangaCover: widget.mangaCover,
-            //   mangaUrl: widget.mangaUrl,
-            //   full: false,
-            //   highlightedChapters: [],
-            // ),
-            child: SizedBox(height: 300),
-          ),
-        ],
+        ),
       ),
       floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(

@@ -20,12 +20,16 @@ class User {
   @JsonKey(name: 'class')
   final String className;
   final int score;
+  final int accountPoint;
+  final int unreadMessageCount;
   final String loginIp;
   final String lastLoginIp;
   final String registerTime;
   final String lastLoginTime;
+  final int cumulativeDayCount;
+  final int totalCommentCount;
 
-  const User({required this.username, required this.avatar, required this.className, required this.score, required this.loginIp, required this.lastLoginIp, required this.registerTime, required this.lastLoginTime});
+  const User({required this.username, required this.avatar, required this.className, required this.score, required this.accountPoint, required this.unreadMessageCount, required this.loginIp, required this.lastLoginIp, required this.registerTime, required this.lastLoginTime, required this.cumulativeDayCount, required this.totalCommentCount});
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 

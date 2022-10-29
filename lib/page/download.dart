@@ -54,10 +54,10 @@ class _DownloadPageState extends State<DownloadPage> {
       // entity related
       _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
         var mangaId = event.mangaId;
-        var newItem = await DownloadDao.getManga(mid: mangaId);
-        if (newItem != null) {
+        var newEntity = await DownloadDao.getManga(mid: mangaId);
+        if (newEntity != null) {
           _data.removeWhere((el) => el.mangaId == mangaId);
-          _data.insert(0, newItem);
+          _data.insert(0, newEntity);
           _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           _bytes[mangaId] = await getDownloadedMangaBytes(mangaId: mangaId);
           if (mounted) setState(() {});
@@ -86,14 +86,14 @@ class _DownloadPageState extends State<DownloadPage> {
     for (var task in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
       _tasks[task.mangaId] = task;
     }
-    for (var item in data) {
-      _bytes[item.mangaId] = await getDownloadedMangaBytes(mangaId: item.mangaId);
+    for (var entity in data) {
+      _bytes[entity.mangaId] = await getDownloadedMangaBytes(mangaId: entity.mangaId);
     }
     if (mounted) setState(() {});
     return data;
   }
 
-  Future<void> _pauseOrContinue({required DownloadedManga item, required DownloadMangaQueueTask? task}) async {
+  Future<void> _pauseOrContinue({required DownloadedManga entity, required DownloadMangaQueueTask? task}) async {
     if (task != null && !task.canceled && !task.succeeded) {
       // => 暂停
       task.cancel();
@@ -103,18 +103,18 @@ class _DownloadPageState extends State<DownloadPage> {
     // => 继续
     // 1. 构造下载任务
     var newTask = DownloadMangaQueueTask(
-      mangaId: item.mangaId,
-      chapterIds: item.downloadedChapters.map((el) => el.chapterId).toList(),
+      mangaId: entity.mangaId,
+      chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
       parallel: _setting.downloadPagesTogether,
     );
 
     // 2. 更新数据库
     var need = await newTask.prepare(
-      mangaTitle: item.mangaTitle,
-      mangaCover: item.mangaCover,
-      mangaUrl: item.mangaUrl,
+      mangaTitle: entity.mangaTitle,
+      mangaCover: entity.mangaCover,
+      mangaUrl: entity.mangaUrl,
       getChapterTitleGroupPages: (cid) {
-        var chapter = item.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+        var chapter = entity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
         if (chapter == null) {
           return null; // unreachable
         }
@@ -131,41 +131,8 @@ class _DownloadPageState extends State<DownloadPage> {
     }
   }
 
-  Future<void> _allStartOrPause({required bool allStart}) async {
-    if (allStart) {
-      // => 全部开始
-      var items = await DownloadDao.getMangas() ?? _data;
-      var tasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>();
-      for (var item in items) {
-        var task = tasks.where((el) => el.mangaId == item.mangaId).firstOrNull;
-        if (task == null || !task.canceled) {
-          _pauseOrContinue(item: item, task: null);
-        }
-      }
-    } else {
-      // => 全部暂停
-      for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
-        if (!t.canceled) {
-          t.cancel(); // TODO ???
-        }
-      }
-    }
-  }
-
-  Future<void> _delete(DownloadedManga item) async {
+  Future<void> _delete(DownloadedManga entity) async {
     var alsoDeleteFile = _setting.defaultToDeleteFiles;
-
-    Future<void> realDelete(bool alsoDeleteFile) async {
-      _data.remove(item);
-      _total--;
-      await DownloadDao.deleteManga(mid: item.mangaId);
-      await DownloadDao.deleteAllChapters(mid: item.mangaId);
-      if (mounted) setState(() {});
-      if (alsoDeleteFile) {
-        await deleteDownloadedManga(item.mangaId);
-      }
-    }
-
     await showDialog(
       context: context,
       builder: (c) => StatefulBuilder(
@@ -175,7 +142,7 @@ class _DownloadPageState extends State<DownloadPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除 ${item.mangaTitle}？'),
+              Text('是否删除 ${entity.mangaTitle}？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -185,8 +152,8 @@ class _DownloadPageState extends State<DownloadPage> {
                   _setState(() {});
                 },
                 dense: false,
-                contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                 controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
               ),
             ],
           ),
@@ -195,7 +162,14 @@ class _DownloadPageState extends State<DownloadPage> {
               child: Text('删除'),
               onPressed: () async {
                 Navigator.of(c).pop();
-                await realDelete(alsoDeleteFile);
+                _data.remove(entity);
+                _total--;
+                await DownloadDao.deleteManga(mid: entity.mangaId);
+                await DownloadDao.deleteAllChapters(mid: entity.mangaId);
+                if (mounted) setState(() {});
+                if (alsoDeleteFile) {
+                  await deleteDownloadedManga(entity.mangaId);
+                }
               },
             ),
             TextButton(
@@ -208,80 +182,25 @@ class _DownloadPageState extends State<DownloadPage> {
     );
   }
 
-  Widget _buildItem(DownloadedManga item) {
-    DownloadMangaQueueTask? task = _tasks[item.mangaId];
-
-    DownloadLineStatus status;
-    if (task != null && !task.succeeded) {
-      if (!task.canceled) {
-        if (task.progress.stage == DownloadMangaProgressStage.waiting) {
-          status = DownloadLineStatus.waiting; // stopped
-        } else {
-          status = DownloadLineStatus.downloading; // preparing / running
+  Future<void> _allStartOrPause({required bool allStart}) async {
+    if (allStart) {
+      // => 全部开始
+      var entities = await DownloadDao.getMangas() ?? _data;
+      var tasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>();
+      for (var entity in entities) {
+        var task = tasks.where((el) => el.mangaId == entity.mangaId).firstOrNull;
+        if (task == null || !task.canceled) {
+          _pauseOrContinue(entity: entity, task: null);
         }
-      } else {
-        status = DownloadLineStatus.pausing; // preparing / running
       }
     } else {
-      if (!item.error) {
-        if (item.startedPageCountInAll != item.totalPageCountInAll) {
-          status = DownloadLineStatus.paused; // stopped
-        } else if (item.successChapterIds.length == item.totalChapterIds.length) {
-          status = DownloadLineStatus.succeeded; // stopped
-        } else {
-          status = DownloadLineStatus.failed; // stopped (failed to get chapter or download page)
+      // => 全部暂停
+      for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
+        if (!t.canceled) {
+          t.cancel(); // TODO ???
         }
-      } else {
-        status = DownloadLineStatus.failed; // stopped (failed to get manga)
       }
     }
-
-    DownloadLineProgress progress;
-    var downloadBytes = _bytes[item.mangaId] ?? 0;
-    if (task == null || task.succeeded || (!task.canceled && task.progress.stage == DownloadMangaProgressStage.waiting)) {
-      progress = DownloadLineProgress.stopped(
-        startedChapterCount: item.startedChapterIds.length,
-        totalChapterCount: item.totalChapterIds.length,
-        downloadedBytes: downloadBytes,
-        notFinishedPageCount: item.error ? -1 : item.totalPageCountInAll - item.successPageCountInAll,
-        lastDownloadTime: item.updatedAt,
-      );
-    } else if (task.progress.manga == null || task.progress.currentChapter == null) {
-      progress = DownloadLineProgress.preparing(
-        startedChapterCount: task.progress.startedChapters?.length ?? 0,
-        totalChapterCount: task.chapterIds.length,
-        downloadedBytes: downloadBytes,
-        gettingManga: task.progress.manga == null,
-      );
-    } else {
-      progress = DownloadLineProgress.running(
-        startedChapterCount: task.progress.startedChapters?.length ?? 0,
-        totalChapterCount: task.chapterIds.length,
-        downloadedBytes: downloadBytes,
-        chapterTitle: task.progress.currentChapter!.title,
-        triedPageCount: (task.progress.successChapterPageCount ?? 0) + (task.progress.failedChapterPageCount ?? 0),
-        totalPageCount: task.progress.currentChapter!.pageCount,
-      );
-    }
-
-    return DownloadMangaLineView(
-      mangaTitle: item.mangaTitle,
-      mangaCover: item.mangaCover,
-      status: status,
-      progress: progress,
-      onActionPressed: () => _pauseOrContinue(item: item, task: task),
-      onLinePressed: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (c) => DownloadTocPage(
-            mangaId: item.mangaId,
-            mangaTitle: item.mangaTitle,
-            mangaCover: item.mangaCover,
-            mangaUrl: item.mangaUrl,
-          ),
-        ),
-      ),
-      onLineLongPressed: () => _delete(item),
-    );
   }
 
   Future<void> _onSettingPressed() {
@@ -358,7 +277,32 @@ class _DownloadPageState extends State<DownloadPage> {
           clearWhenError: false,
         ),
         separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, item) => _buildItem(item),
+        itemBuilder: (c, _, entity) {
+          DownloadMangaQueueTask? task = _tasks[entity.mangaId];
+          // var status = downloadLineStatusFromEntityAndTask(entity: entity, task: task); // !!!
+          // var progress = downloadLineProgressFromEntityAndTask(entity: entity, task: task, bytes: _bytes[entity.mangaId] ?? 0); // !!!
+          return DownloadMangaLineView(
+            mangaEntity: entity,
+            downloadTask: task,
+            downloadedBytes: _bytes[entity.mangaId] ?? 0,
+            // mangaTitle: entity.mangaTitle,
+            // mangaCover: entity.mangaCover,
+            // status: status,
+            // progress: progress,
+            onActionPressed: () => _pauseOrContinue(entity: entity, task: task),
+            onLinePressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (c) => DownloadTocPage(
+                  mangaId: entity.mangaId,
+                  mangaTitle: entity.mangaTitle,
+                  mangaCover: entity.mangaCover,
+                  mangaUrl: entity.mangaUrl,
+                ),
+              ),
+            ),
+            onLineLongPressed: () => _delete(entity),
+          );
+        },
       ),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
