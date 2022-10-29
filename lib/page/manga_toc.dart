@@ -87,7 +87,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
                 groups: widget.groups,
                 full: true,
                 highlightedChapters: [_history?.chapterId ?? 0],
-                onPressed: widget.onChapterPressed,
+                onChapterPressed: widget.onChapterPressed,
               ),
             ),
           ),

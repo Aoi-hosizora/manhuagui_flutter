@@ -246,7 +246,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                   }
                   return DownloadBadge(downloading: !oldChapter.succeeded);
                 },
-                onPressed: (cid) {
+                onChapterPressed: (cid) {
                   if (!_selected.contains(cid)) {
                     _selected.add(cid);
                   } else {
@@ -259,15 +259,17 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
           ),
         ),
       ),
-      floatingActionButton: ScrollAnimatedFab(
-        scrollController: _controller,
-        condition: ScrollAnimatedCondition.direction,
-        fab: FloatingActionButton(
-          child: Icon(Icons.vertical_align_top),
-          heroTag: null,
-          onPressed: () => _controller.scrollToTop(),
-        ),
-      ),
+      floatingActionButton: _loading
+          ? null
+          : ScrollAnimatedFab(
+              scrollController: _controller,
+              condition: ScrollAnimatedCondition.direction,
+              fab: FloatingActionButton(
+                child: Icon(Icons.vertical_align_top),
+                heroTag: null,
+                onPressed: () => _controller.scrollToTop(),
+              ),
+            ),
     );
   }
 }

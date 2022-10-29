@@ -69,7 +69,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
                 groups: widget.groups,
                 full: true,
                 highlightedChapters: [widget.highlightedChapter],
-                onPressed: widget.onChapterPressed,
+                onChapterPressed: widget.onChapterPressed,
               ),
             ),
           ),

@@ -14,7 +14,7 @@ class ViewExtraSubPage extends StatelessWidget {
     required this.mangaCover,
     required this.subscribing,
     required this.subscribed,
-    required this.chapterGroups,
+    required this.chapterTitleGetter,
     required this.toJumpToImage,
     required this.toSubscribe,
     required this.toDownload,
@@ -30,7 +30,7 @@ class ViewExtraSubPage extends StatelessWidget {
   final String mangaCover;
   final bool subscribing;
   final bool subscribed;
-  final List<MangaChapterGroup> chapterGroups;
+  final String? Function(int cid) chapterTitleGetter;
   final void Function(int imageIndex, bool animated) toJumpToImage;
   final void Function(bool gotoPrevious) toGotoChapter;
   final void Function() toSubscribe;
@@ -87,7 +87,7 @@ class ViewExtraSubPage extends StatelessWidget {
     var prev = Expanded(
       child: _buildAction(
         text: chapter.prevCid != 0 ? '阅读上一章节' : '暂无上一章节',
-        subText: (chapterGroups.findChapter(chapter.prevCid)?.title ?? '未知话'),
+        subText: chapterTitleGetter.call(chapter.prevCid) ?? '未知话',
         left: !reverseScroll ? true : false,
         disable: chapter.prevCid == 0,
         action: () => toGotoChapter.call(true),
@@ -97,7 +97,7 @@ class ViewExtraSubPage extends StatelessWidget {
     var next = Expanded(
       child: _buildAction(
         text: chapter.nextCid != 0 ? '阅读下一章节' : '暂无下一章节',
-        subText: (chapterGroups.findChapter(chapter.nextCid)?.title ?? '未知话'),
+        subText: chapterTitleGetter.call(chapter.nextCid) ?? '未知话',
         left: !reverseScroll ? false : true,
         disable: chapter.nextCid == 0,
         action: () => toGotoChapter.call(false),

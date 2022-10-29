@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
@@ -43,7 +49,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
       // progress related
       _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
         var mangaId = event.task.mangaId;
-        if (mangaId == widget.mangaId) {
+        if (mangaId != widget.mangaId) {
           return;
         }
 
@@ -73,6 +79,14 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
         }
         if (mounted) setState(() {});
       }));
+
+      // history related
+      _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
+        try {
+          _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+          if (mounted) setState(() {});
+        } catch (_) {}
+      }));
     });
   }
 
@@ -88,6 +102,8 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
   DownloadedManga? _data;
   DownloadMangaQueueTask? _task;
   var _byte = 0;
+  var _invertOrder = true;
+  MangaHistory? _history;
   var _error = '';
 
   Future<void> _loadData() async {
@@ -95,6 +111,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
     _data = null;
     _task = null;
     _byte = 0;
+    _history = null;
     if (mounted) setState(() {});
 
     var data = await DownloadDao.getManga(mid: widget.mangaId);
@@ -105,6 +122,8 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
       _data = data;
       _task = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().where((el) => el.mangaId == widget.mangaId).firstOrNull;
       _byte = await getDownloadedMangaBytes(mangaId: widget.mangaId);
+      _invertOrder = true;
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
     } else {
       _error = '无法获取漫画下载信息';
     }
@@ -200,7 +219,14 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
                               ),
                             ),
                           ),
-                          _buildAction('ＴＯＤＯ', Icons.check, () {}),
+                          _buildAction(
+                            _invertOrder ? '倒序显示' : '正序显示',
+                            _invertOrder ? Icons.arrow_downward : Icons.arrow_upward,
+                            () {
+                              _invertOrder = !_invertOrder;
+                              if (mounted) setState(() {});
+                            },
+                          ),
                           _buildAction('全部开始', Icons.play_arrow, () {}),
                           _buildAction('全部暂停', Icons.pause, () {}), // TODO 单个漫画下载特定章节/按照特定顺序下载
                         ],
@@ -210,19 +236,81 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
                 ),
                 Container(height: 12),
                 // ****************************************************************
-                // 正在下载的章节
+                // 正在下载的章节 // TODO Grid，分组，长按弹出选项
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  child: SizedBox(height: 100), // TODO 采用 Toc 的风格，分组，长按弹出选项
+                  child: MangaSimpleTocView(
+                    chapters: _data!.downloadedChapters //
+                        .where((el) => el.succeeded)
+                        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
+                        .toList(),
+                    invertOrder: _invertOrder,
+                    showNewBadge: false,
+                    highlightedChapters: [_history?.chapterId ?? 0],
+                    customBadgeBuilder: (cid) {
+                      var oldChapter = _data!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                      if (oldChapter == null) {
+                        return null;
+                      }
+                      return DownloadBadge(downloading: !oldChapter.succeeded);
+                    },
+                    onChapterPressed: (cid) => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (c) => MangaViewerPage(
+                          mangaId: widget.mangaId,
+                          mangaTitle: widget.mangaTitle,
+                          mangaCover: widget.mangaCover,
+                          mangaUrl: widget.mangaUrl,
+                          chapterGroups: null,
+                          chapterId: cid,
+                          initialPage: _history?.chapterId == cid
+                              ? _history?.chapterPage ?? 1 // have read
+                              : 1, // have not read
+                        ),
+                      ),
+                    ),
+                    onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'),
+                  ),
                 ),
                 Container(height: 12),
                 // ****************************************************************
-                // 已下载的章节
+                // 已下载的章节 // TODO Line，加进度条，长按弹出选项
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  child: SizedBox(height: 300), // TODO 采用 Line 的风格，加进度条，长按弹出选项
+                  child: MangaSimpleTocView(
+                    chapters: _data!.downloadedChapters //
+                        .where((el) => !el.succeeded)
+                        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
+                        .toList(),
+                    invertOrder: _invertOrder,
+                    showNewBadge: false,
+                    highlightedChapters: [_history?.chapterId ?? 0],
+                    customBadgeBuilder: (cid) {
+                      var oldChapter = _data!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                      if (oldChapter == null) {
+                        return null;
+                      }
+                      return DownloadBadge(downloading: !oldChapter.succeeded);
+                    },
+                    onChapterPressed: (cid) => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (c) => MangaViewerPage(
+                          mangaId: widget.mangaId,
+                          mangaTitle: widget.mangaTitle,
+                          mangaCover: widget.mangaCover,
+                          mangaUrl: widget.mangaUrl,
+                          chapterGroups: null,
+                          chapterId: cid,
+                          initialPage: _history?.chapterId == cid
+                              ? _history?.chapterPage ?? 1 // have read
+                              : 1, // have not read
+                        ),
+                      ),
+                    ),
+                    onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'),
+                  ),
                 ),
               ],
             ),

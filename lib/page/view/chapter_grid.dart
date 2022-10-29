@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 
-/// 章节列表展示，在 [MangaTocView] 使用
+/// 章节列表展示，在 [MangaTocView] / [MangaSimpleTocView] 使用
 class ChapterGridView extends StatelessWidget {
   const ChapterGridView({
     Key? key,
     required this.chapters,
     required this.padding,
-    this.invertOrder = false,
+    this.invertOrder = true,
     this.maxLines = -1,
     this.highlightColor,
     this.highlightedChapters = const [],
     this.extrasInStack,
-    required this.onPressed,
+    required this.onChapterPressed,
+    this.onChapterLongPressed,
   }) : super(key: key);
 
-  final List<TinyMangaChapter?> chapters;
+  final List<TinyMangaChapter> chapters;
   final EdgeInsets padding;
   final bool invertOrder; // true means desc
   final int maxLines; // -1 means full
   final Color? highlightColor;
   final List<int> highlightedChapters;
   final List<Widget> Function(TinyMangaChapter? chapter)? extrasInStack;
-  final void Function(TinyMangaChapter? chapter) onPressed;
+  final void Function(TinyMangaChapter? chapter) onChapterPressed;
+  final void Function(TinyMangaChapter? chapter)? onChapterLongPressed;
 
   Widget _buildItem({required BuildContext context, required TinyMangaChapter? chapter}) {
     return Stack(
@@ -51,7 +53,8 @@ class ChapterGridView extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 ),
-                onPressed: () => onPressed(chapter),
+                onPressed: () => onChapterPressed(chapter),
+                onLongPress: onChapterLongPressed == null ? null : () => onChapterLongPressed!.call(chapter),
               ),
             ),
           ),
@@ -70,7 +73,13 @@ class ChapterGridView extends StatelessWidget {
     final width = (MediaQuery.of(context).size.width - 2 * padding.left - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
     const height = 36.0;
 
-    List<TinyMangaChapter?> shown = invertOrder ? chapters : chapters.reversed.toList();
+    List<TinyMangaChapter?> shown = chapters.toList();
+    if (!invertOrder) {
+      shown.sort((i, j) => i!.cid.compareTo(j!.cid));
+    } else {
+      shown.sort((i, j) => j!.cid.compareTo(i!.cid));
+    }
+
     if (maxLines > 0) {
       var count = maxLines * 4;
       if (shown.length > count) {

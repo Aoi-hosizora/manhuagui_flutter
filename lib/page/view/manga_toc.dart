@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 
-/// 漫画章节目录，在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadSelectPage] 使用
+/// 漫画章节目录（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadSelectPage] 使用
 class MangaTocView extends StatefulWidget {
   const MangaTocView({
     Key? key,
@@ -16,7 +16,8 @@ class MangaTocView extends StatefulWidget {
     this.highlightedChapters = const [],
     this.showNewBadge = true,
     this.customBadgeBuilder,
-    required this.onPressed,
+    required this.onChapterPressed,
+    this.onChapterLongPressed,
   }) : super(key: key);
 
   final int mangaId;
@@ -27,14 +28,15 @@ class MangaTocView extends StatefulWidget {
   final List<int> highlightedChapters;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
-  final void Function(int cid) onPressed;
+  final void Function(int cid) onChapterPressed;
+  final void Function(int cid)? onChapterLongPressed;
 
   @override
   _MangaTocViewState createState() => _MangaTocViewState();
 }
 
 class _MangaTocViewState extends State<MangaTocView> {
-  var _invertedOrder = true;
+  var _invertOrder = true;
 
   Widget _buildHeader() {
     Widget button({required IconData icon, required String text, required bool selected, required EdgeInsets padding, required void Function() onPressed}) {
@@ -68,16 +70,16 @@ class _MangaTocViewState extends State<MangaTocView> {
                 button(
                   icon: Icons.keyboard_arrow_up,
                   text: '正序',
-                  selected: !_invertedOrder,
+                  selected: !_invertOrder,
                   padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
-                  onPressed: () => mountedSetState(() => _invertedOrder = false),
+                  onPressed: () => mountedSetState(() => _invertOrder = false),
                 ),
                 button(
                   icon: Icons.keyboard_arrow_down,
                   text: '倒序',
-                  selected: _invertedOrder,
+                  selected: _invertOrder,
                   padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
-                  onPressed: () => mountedSetState(() => _invertedOrder = true),
+                  onPressed: () => mountedSetState(() => _invertOrder = true),
                 ),
               ],
             ),
@@ -91,7 +93,7 @@ class _MangaTocViewState extends State<MangaTocView> {
     return ChapterGridView(
       chapters: chapters,
       padding: EdgeInsets.symmetric(horizontal: 12),
-      invertOrder: _invertedOrder,
+      invertOrder: _invertOrder,
       maxLines: widget.full
           ? -1 // show all chapters
           : idx == 0
@@ -99,22 +101,6 @@ class _MangaTocViewState extends State<MangaTocView> {
               : 1 /* following lines => show the first line */,
       highlightColor: widget.highlightColor,
       highlightedChapters: widget.highlightedChapters,
-      onPressed: (chapter) {
-        if (chapter == null) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (c) => MangaTocPage(
-                mangaId: widget.mangaId,
-                mangaTitle: widget.mangaTitle,
-                groups: widget.groups,
-                onChapterPressed: widget.onPressed,
-              ),
-            ),
-          );
-        } else {
-          widget.onPressed.call(chapter.cid);
-        }
-      },
       extrasInStack: (chapter) {
         if (chapter == null) {
           return [];
@@ -126,6 +112,29 @@ class _MangaTocViewState extends State<MangaTocView> {
           if (customBadge != null) customBadge,
         ];
       },
+      onChapterPressed: (chapter) {
+        if (chapter == null) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (c) => MangaTocPage(
+                mangaId: widget.mangaId,
+                mangaTitle: widget.mangaTitle,
+                groups: widget.groups,
+                onChapterPressed: widget.onChapterPressed,
+              ),
+            ),
+          );
+        } else {
+          widget.onChapterPressed.call(chapter.cid);
+        }
+      },
+      onChapterLongPressed: widget.onChapterLongPressed == null
+          ? null
+          : (chapter) {
+              if (chapter != null) {
+                widget.onChapterLongPressed!.call(chapter.cid);
+              }
+            },
     );
   }
 
@@ -148,8 +157,8 @@ class _MangaTocViewState extends State<MangaTocView> {
           color: Colors.white,
           child: Divider(height: 0, thickness: 1),
         ),
+        SizedBox(height: 10),
         for (var i = 0; i < groups.length; i++) ...[
-          SizedBox(height: 10),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Text(
@@ -165,8 +174,8 @@ class _MangaTocViewState extends State<MangaTocView> {
               chapters: groups[i].chapters,
             ),
           ),
+          SizedBox(height: 10),
         ],
-        SizedBox(height: 10),
       ],
     );
   }

@@ -27,7 +27,7 @@ class TinyMangaChapter {
   final int cid;
   final String title;
   final int mid;
-  final String url;
+  final String url; // useless
   final int pageCount;
   final bool isNew;
 

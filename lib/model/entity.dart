@@ -1,3 +1,5 @@
+import 'package:manhuagui_flutter/model/chapter.dart';
+
 class MangaHistory {
   final int mangaId;
   final String mangaTitle;
@@ -159,6 +161,17 @@ class DownloadedChapter {
       totalPageCount: totalPageCount ?? this.totalPageCount,
       triedPageCount: triedPageCount ?? this.triedPageCount,
       successPageCount: successPageCount ?? this.successPageCount,
+    );
+  }
+
+  TinyMangaChapter toTiny() {
+    return TinyMangaChapter(
+      cid: chapterId,
+      title: chapterTitle,
+      mid: mangaId,
+      url: '',
+      pageCount: totalPageCount,
+      isNew: false,
     );
   }
 }

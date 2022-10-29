@@ -682,7 +682,7 @@ class _MangaPageState extends State<MangaPage> {
                     groups: _data!.chapterGroups,
                     full: false,
                     highlightedChapters: [_history?.chapterId ?? 0],
-                    onPressed: (cid) => Navigator.of(context).push(
+                    onChapterPressed: (cid) => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (c) => MangaViewerPage(
                           mangaId: _data!.mid,

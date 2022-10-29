@@ -48,7 +48,7 @@ class MangaViewerPage extends StatefulWidget {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final List<MangaChapterGroup> chapterGroups;
+  final List<MangaChapterGroup>? chapterGroups;
   final int initialPage;
 
   @override
@@ -138,6 +138,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _loading = true;
   MangaChapter? _data;
+  List<MangaChapterGroup>? _chapterGroups;
   int? _initialPage;
   List<Future<String>>? _urlFutures;
   List<Future<File?>>? _fileFutures;
@@ -182,6 +183,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _data = result.data;
+
+      // 4. 获取章节目录
+      if (widget.chapterGroups != null) {
+        _chapterGroups = widget.chapterGroups!;
+      } else {
+        var result = await client.getManga(mid: widget.mangaId);
+        _chapterGroups = result.data.chapterGroups;
+      }
 
       // 4. 指定起始页
       _initialPage = widget.initialPage.clamp(1, _data!.pageCount);
@@ -284,7 +293,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
-          chapterGroups: widget.chapterGroups,
+          chapterGroups: _chapterGroups,
           chapterId: gotoPrevious ? _data!.prevCid : _data!.nextCid,
           initialPage: 1,
         ),
@@ -385,7 +394,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
-          groups: widget.chapterGroups,
+          groups: _chapterGroups!,
         ),
       ),
     );
@@ -406,7 +415,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           child: ViewTocSubPage(
             mangaId: widget.mangaId,
             mangaTitle: widget.mangaTitle,
-            groups: widget.chapterGroups,
+            groups: _chapterGroups!,
             highlightedChapter: _data!.cid,
             onChapterPressed: (cid) {
               if (cid == _data!.cid) {
@@ -421,7 +430,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       mangaTitle: _data!.mangaTitle,
                       mangaCover: widget.mangaCover,
                       mangaUrl: widget.mangaUrl,
-                      chapterGroups: widget.chapterGroups,
+                      chapterGroups: _chapterGroups,
                       chapterId: cid,
                       initialPage: 1, // always turn to the first page
                     ),
@@ -571,7 +580,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       reverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
-                      chapterGroups: widget.chapterGroups,
+                      chapterTitleGetter: (cid) => _chapterGroups?.findChapter(cid)?.title,
                       subscribing: _subscribing,
                       subscribed: _subscribed,
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
@@ -587,7 +596,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       reverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,
                       chapter: _data!,
                       mangaCover: widget.mangaCover,
-                      chapterGroups: widget.chapterGroups,
+                      chapterTitleGetter: (cid) => _chapterGroups?.findChapter(cid)?.title,
                       subscribing: _subscribing,
                       subscribed: _subscribed,
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
