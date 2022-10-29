@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -159,21 +160,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     );
   }
 
-  Widget _buildAction(String text, IconData icon, void Function() action) {
-    return InkWell(
-      onTap: () => action(),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: IconText(
-          alignment: IconTextAlignment.t2b,
-          space: 8,
-          icon: Icon(icon, color: Colors.black54),
-          text: Text(text),
-        ),
-      ),
-    );
-  }
-
   @override
   bool get wantKeepAlive => true;
 
@@ -284,20 +270,11 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               ),
               Container(
                 color: Colors.white,
-                child: Material(
-                  color: Colors.transparent,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 35, vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildAction('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
-                        _buildAction('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
-                        _buildAction('修改资料', Icons.edit, () => launchInBrowser(context: context, url: EDIT_PROFILE_URL)),
-                        _buildAction('退出登录', Icons.logout, () => _logout(sure: false)),
-                      ],
-                    ),
-                  ),
+                child: ActionRowView.four(
+                  action1: ActionItem.simple('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
+                  action2: ActionItem.simple('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
+                  action3: ActionItem.simple('修改资料', Icons.edit, () => launchInBrowser(context: context, url: EDIT_PROFILE_URL)),
+                  action4: ActionItem.simple('退出登录', Icons.logout, () => _logout(sure: false)),
                 ),
               ),
               SizedBox(height: 12),

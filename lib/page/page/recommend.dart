@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -68,21 +69,6 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     }
   }
 
-  Widget _buildAction(String text, IconData icon, void Function() action) {
-    return InkWell(
-      onTap: () => action(),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: IconText(
-          alignment: IconTextAlignment.t2b,
-          space: 8,
-          icon: Icon(icon, color: Colors.black54),
-          text: Text(text),
-        ),
-      ),
-    );
-  }
-
   Widget _buildGroup(MangaGroup group, MangaGroupType type, MangaGroupViewStyle style) {
     return MangaGroupView(
       group: group,
@@ -127,20 +113,11 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 SizedBox(height: 12),
                 Container(
                   color: Colors.white,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35, vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildAction('我的书架', Icons.favorite, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
-                          _buildAction('下载列表', Icons.download, () => Navigator.of(context).push(MaterialPageRoute(builder: (c) => DownloadPage()))),
-                          _buildAction('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
-                          _buildAction('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
-                        ],
-                      ),
-                    ),
+                  child: ActionRowView.four(
+                    action1: ActionItem.simple('我的书架', Icons.favorite, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+                    action2: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(MaterialPageRoute(builder: (c) => DownloadPage()))),
+                    action3: ActionItem.simple('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
+                    action4: ActionItem.simple('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
                   ),
                 ),
                 _buildGroup(_data!.serial.topGroup, MangaGroupType.serial, MangaGroupViewStyle.normalTruncate), // 热门连载

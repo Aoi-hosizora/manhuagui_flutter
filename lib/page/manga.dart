@@ -13,6 +13,7 @@ import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
@@ -249,36 +250,6 @@ class _MangaPageState extends State<MangaPage> {
     );
   }
 
-  Widget _buildAction({
-    required String text,
-    required IconData icon,
-    required void Function()? action,
-    void Function()? onLongPressed,
-    bool enable = true,
-  }) {
-    return InkWell(
-      onTap: enable ? action : null,
-      onLongPress: enable ? onLongPressed : null,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: IconText(
-          alignment: IconTextAlignment.t2b,
-          space: 6,
-          icon: Icon(
-            icon,
-            color: enable ? Colors.black54 : Colors.grey,
-          ),
-          text: Text(
-            text,
-            style: TextStyle(
-              color: enable ? Colors.black : Colors.grey,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -459,64 +430,55 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildAction(
-                            text: _subscribed == true ? '取消订阅' : '订阅漫画',
-                            icon: _subscribed == true ? Icons.star : Icons.star_border,
-                            action: _subscribing ? null : () => _subscribe(),
-                            enable: !_subscribing,
+                  child: ActionRowView.five(
+                    action1: ActionItem(
+                      text: _subscribed == true ? '取消订阅' : '订阅漫画',
+                      icon: _subscribed == true ? Icons.star : Icons.star_border,
+                      action: _subscribing ? null : () => _subscribe(),
+                      enable: !_subscribing,
+                    ),
+                    action2: ActionItem(
+                      text: '下载漫画',
+                      icon: Icons.download,
+                      action: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => DownloadSelectPage(
+                            mangaId: _data!.mid,
+                            mangaTitle: _data!.title,
+                            mangaCover: _data!.cover,
+                            mangaUrl: _data!.url,
+                            groups: _data!.chapterGroups,
                           ),
-                          _buildAction(
-                            text: '下载漫画',
-                            icon: Icons.download,
-                            action: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (c) => DownloadSelectPage(
-                                  mangaId: _data!.mid,
-                                  mangaTitle: _data!.title,
-                                  mangaCover: _data!.cover,
-                                  mangaUrl: _data!.url,
-                                  groups: _data!.chapterGroups,
-                                ),
-                              ),
-                            ),
-                          ),
-                          _buildAction(
-                            text: _history?.read == true ? '继续阅读' : '开始阅读',
-                            icon: Icons.import_contacts,
-                            action: () => _read(),
-                            onLongPressed: () {
-                              if (_history == null || !_history!.read) {
-                                Fluttertoast.showToast(msg: '未开始阅读该漫画');
-                              } else if (_history != null) {
-                                Fluttertoast.showToast(msg: '上次阅读到 ${_history!.chapterTitle} 第${_history!.chapterPage}页');
-                              }
-                            },
-                          ),
-                          _buildAction(
-                            text: '漫画详情',
-                            icon: Icons.subject,
-                            action: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (c) => MangaDetailPage(data: _data!),
-                              ),
-                            ),
-                          ),
-                          _buildAction(
-                            text: '分享漫画',
-                            icon: Icons.share,
-                            action: () => shareText(
-                              title: '漫画柜分享',
-                              text: '【${_data!.title}】${_data!.url}',
-                            ),
-                          ),
-                        ],
+                        ),
+                      ),
+                    ),
+                    action3: ActionItem(
+                      text: _history?.read == true ? '继续阅读' : '开始阅读',
+                      icon: Icons.import_contacts,
+                      action: () => _read(),
+                      longPress: () {
+                        if (_history == null || !_history!.read) {
+                          Fluttertoast.showToast(msg: '未开始阅读该漫画');
+                        } else if (_history != null) {
+                          Fluttertoast.showToast(msg: '上次阅读到 ${_history!.chapterTitle} 第${_history!.chapterPage}页');
+                        }
+                      },
+                    ),
+                    action4: ActionItem(
+                      text: '漫画详情',
+                      icon: Icons.subject,
+                      action: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => MangaDetailPage(data: _data!),
+                        ),
+                      ),
+                    ),
+                    action5: ActionItem(
+                      text: '分享漫画',
+                      icon: Icons.share,
+                      action: () => shareText(
+                        title: '漫画柜分享',
+                        text: '【${_data!.title}】${_data!.url}',
                       ),
                     ),
                   ),

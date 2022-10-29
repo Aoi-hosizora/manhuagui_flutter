@@ -134,28 +134,24 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
 
   Widget _buildItem({required BuildContext context, required T value, required double width, required double height}) {
     final selected = this.value == value;
-    return Container(
+    return SizedBox(
       width: width,
       height: height,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(3),
-          color: selected ? Theme.of(context).primaryColor : Colors.white,
-        ),
-        child: OutlinedButton(
-          child: Text(
-            titleBuilder.call(context, value),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: selected ? Colors.white : Colors.black,
-            ),
-          ),
-          onPressed: () => Navigator.of(context).pop(value),
-          style: OutlinedButton.styleFrom(
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      child: OutlinedButton(
+        child: Text(
+          titleBuilder.call(context, value),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.black,
           ),
         ),
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          backgroundColor: selected ? Theme.of(context).primaryColor : Colors.white,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        onPressed: () => Navigator.of(context).pop(value),
       ),
     );
   }

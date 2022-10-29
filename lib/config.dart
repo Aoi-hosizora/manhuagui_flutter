@@ -26,11 +26,10 @@ const RELEASE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/releases'
 const CONNECT_TIMEOUT = 8000; // 8.0s
 const SEND_TIMEOUT = 5000; // 5.0s
 const RECEIVE_TIMEOUT = 5000; // 5.0s
-const HEAD_TIMEOUT = 1500; // 1.5s
+const HEAD_TIMEOUT = 3000; // 3.0s
 const DOWNLOAD_TIMEOUT = 16000; // 8.0s + 8.0s
 
 // const BASE_API_URL = 'http://10.0.3.2:10018/v1/';
 const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/';
-
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';

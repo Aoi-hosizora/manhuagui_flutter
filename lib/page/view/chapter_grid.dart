@@ -30,33 +30,22 @@ class ChapterGridView extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3),
-              color: !highlightedChapters.contains(chapter?.cid)
+          child: OutlinedButton(
+            child: Text(
+              chapter?.title ?? '...',
+              style: TextStyle(color: Colors.black),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              backgroundColor: !highlightedChapters.contains(chapter?.cid)
                   ? null //
                   : (highlightColor ?? Theme.of(context).primaryColorLight.withOpacity(0.6)),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                buttonTheme: ButtonTheme.of(context).copyWith(
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              child: OutlinedButton(
-                child: Text(
-                  chapter?.title ?? '...',
-                  style: TextStyle(color: Colors.black),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                ),
-                onPressed: () => onChapterPressed(chapter),
-                onLongPress: onChapterLongPressed == null ? null : () => onChapterLongPressed!.call(chapter),
-              ),
-            ),
+            onPressed: () => onChapterPressed(chapter),
+            onLongPress: onChapterLongPressed == null ? null : () => onChapterLongPressed!.call(chapter),
           ),
         ),
         if (extrasInStack != null) //
@@ -96,7 +85,7 @@ class ChapterGridView extends StatelessWidget {
         runSpacing: vSpace,
         children: [
           for (var chapter in shown)
-            Container(
+            SizedBox(
               width: width,
               height: height,
               child: _buildItem(

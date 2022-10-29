@@ -237,7 +237,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                 mangaTitle: widget.mangaTitle,
                 groups: widget.groups,
                 full: true,
-                highlightColor: Theme.of(context).primaryColor.withOpacity(0.4) /* TODO */,
+                highlightColor: Theme.of(context).primaryColor.withOpacity(0.5) /* TODO */,
                 highlightedChapters: _selected,
                 customBadgeBuilder: (cid) {
                   var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;

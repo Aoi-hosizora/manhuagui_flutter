@@ -279,16 +279,10 @@ class _DownloadPageState extends State<DownloadPage> {
         separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, entity) {
           DownloadMangaQueueTask? task = _tasks[entity.mangaId];
-          // var status = downloadLineStatusFromEntityAndTask(entity: entity, task: task); // !!!
-          // var progress = downloadLineProgressFromEntityAndTask(entity: entity, task: task, bytes: _bytes[entity.mangaId] ?? 0); // !!!
           return DownloadMangaLineView(
             mangaEntity: entity,
             downloadTask: task,
             downloadedBytes: _bytes[entity.mangaId] ?? 0,
-            // mangaTitle: entity.mangaTitle,
-            // mangaCover: entity.mangaCover,
-            // status: status,
-            // progress: progress,
             onActionPressed: () => _pauseOrContinue(entity: entity, task: task),
             onLinePressed: () => Navigator.of(context).push(
               MaterialPageRoute(

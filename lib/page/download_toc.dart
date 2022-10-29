@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
@@ -155,21 +156,6 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
     }
   }
 
-  Widget _buildAction(String text, IconData icon, void Function() action) {
-    return InkWell(
-      onTap: () => action(),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: IconText(
-          alignment: IconTextAlignment.t2b,
-          space: 8,
-          icon: Icon(icon, color: Colors.black54),
-          text: Text(text),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -223,39 +209,30 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35, vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildAction(
-                            '查看漫画',
-                            Icons.description,
-                            () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (c) => MangaPage(
-                                  id: widget.mangaId,
-                                  title: widget.mangaTitle,
-                                  url: widget.mangaUrl,
-                                ),
-                              ),
-                            ),
+                  child: ActionRowView.four(
+                    action1: ActionItem.simple(
+                      '查看漫画',
+                      Icons.description,
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (c) => MangaPage(
+                            id: widget.mangaId,
+                            title: widget.mangaTitle,
+                            url: widget.mangaUrl,
                           ),
-                          _buildAction(
-                            _invertOrder ? '倒序显示' : '正序显示',
-                            _invertOrder ? Icons.arrow_downward : Icons.arrow_upward,
-                            () {
-                              _invertOrder = !_invertOrder;
-                              if (mounted) setState(() {});
-                            },
-                          ),
-                          _buildAction('全部开始', Icons.play_arrow, () {}),
-                          _buildAction('全部暂停', Icons.pause, () {}), // TODO 单个漫画下载特定章节/按照特定顺序下载
-                        ],
+                        ),
                       ),
                     ),
+                    action2: ActionItem.simple(
+                      _invertOrder ? '倒序显示' : '正序显示',
+                      _invertOrder ? Icons.arrow_downward : Icons.arrow_upward,
+                      () {
+                        _invertOrder = !_invertOrder;
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                    action3: ActionItem.simple('全部开始', Icons.play_arrow, () {}),
+                    action4: ActionItem.simple('全部暂停', Icons.pause, () {}), // TODO 单个漫画下载特定章节/按照特定顺序下载
                   ),
                 ),
                 Container(height: 12),
@@ -382,7 +359,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> {
                         ),
                       );
                     },
-                    onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'),
+                    onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'), // TODO
                   ),
                 ),
               ],
