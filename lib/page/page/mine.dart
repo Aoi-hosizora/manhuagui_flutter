@@ -222,7 +222,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       extendBodyBehindAppBar: true,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
-        onRefresh: () => _loadUser(),
+        onRefresh: _loadUser,
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,

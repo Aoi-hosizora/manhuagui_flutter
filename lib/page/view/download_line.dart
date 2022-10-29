@@ -106,7 +106,6 @@ class LargeDownloadLineView extends StatelessWidget {
     required this.text2,
     required this.icon3,
     required this.text3,
-    required this.button,
   }) : super(key: key);
 
   final String imageUrl;
@@ -117,7 +116,6 @@ class LargeDownloadLineView extends StatelessWidget {
   final String text2;
   final IconData icon3;
   final String text3;
-  final Widget button;
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +148,7 @@ class LargeDownloadLineView extends StatelessWidget {
         // ****************************************************************
         Container(
           width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢▢ |
-          padding: EdgeInsets.only(top: 10, bottom: 10, right: 14),
+          padding: EdgeInsets.only(top: 10, bottom: 10, right: 0),
           alignment: Alignment.centerLeft,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -164,29 +162,28 @@ class LargeDownloadLineView extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              SizedBox(height: 10),
+              Divider(height: 20, thickness: 1.5),
               GeneralLineIconText(
                 icon: icon1,
                 text: text1,
                 iconSize: 22,
                 textStyle: Theme.of(context).textTheme.subtitle2?.copyWith(fontSize: 16, fontWeight: FontWeight.normal),
-                padding: EdgeInsets.only(bottom: 6),
+                padding: EdgeInsets.only(bottom: 4),
               ),
               GeneralLineIconText(
                 icon: icon2,
                 text: text2,
                 iconSize: 22,
                 textStyle: Theme.of(context).textTheme.subtitle2?.copyWith(fontSize: 16, fontWeight: FontWeight.normal),
-                padding: EdgeInsets.only(bottom: 6),
+                padding: EdgeInsets.only(bottom: 4),
               ),
               GeneralLineIconText(
                 icon: icon3,
                 text: text3,
                 iconSize: 22,
                 textStyle: Theme.of(context).textTheme.subtitle2?.copyWith(fontSize: 16, fontWeight: FontWeight.normal),
-                padding: EdgeInsets.only(bottom: 6),
+                padding: EdgeInsets.only(bottom: 4),
               ),
-              button,
             ],
           ),
         ),

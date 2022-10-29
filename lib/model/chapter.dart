@@ -51,6 +51,32 @@ class MangaChapterGroup {
 }
 
 extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
+  MangaChapterGroup? get regularGroup {
+    return where((g) => g.title == '单话').firstOrNull;
+  }
+
+  List<MangaChapterGroup> makeSureRegularGroupIsFirst() {
+    var rGroup = regularGroup;
+    if (rGroup == null) {
+      return this;
+    }
+    return [
+      rGroup,
+      ...where((g) => g.title != '单话'),
+    ];
+  }
+
+  MangaChapterGroup? getFirstNotEmptyGroup() {
+    if (isEmpty) {
+      return null;
+    }
+    var group = regularGroup;
+    if (group == null || group.chapters.isNotEmpty) {
+      return group;
+    }
+    return where((g) => g.chapters.isNotEmpty).firstOrNull;
+  }
+
   TinyMangaChapter? findChapter(int cid) {
     for (var group in this) {
       for (var chapter in group.chapters) {

@@ -406,18 +406,28 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           child: ViewTocSubPage(
             mangaId: widget.mangaId,
             mangaTitle: widget.mangaTitle,
-            mangaCover: widget.mangaCover,
-            mangaUrl: widget.mangaUrl,
             groups: widget.chapterGroups,
             highlightedChapter: _data!.cid,
-            predicate: (cid) {
+            onChapterPressed: (cid) {
               if (cid == _data!.cid) {
                 Fluttertoast.showToast(msg: '当前正在阅读 ${_data!.title}');
-                return false;
+              } else {
+                Navigator.of(c).pop(); // bottom sheet
+                Navigator.of(context).pop(); // this page, should not use maybePop
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (c) => MangaViewerPage(
+                      mangaId: _data!.mid,
+                      mangaTitle: _data!.mangaTitle,
+                      mangaCover: widget.mangaCover,
+                      mangaUrl: widget.mangaUrl,
+                      chapterGroups: widget.chapterGroups,
+                      chapterId: cid,
+                      initialPage: 1, // always turn to the first page
+                    ),
+                  ),
+                );
               }
-              Navigator.of(c).pop(); // bottom sheet
-              Navigator.of(context).pop(); // this page, should not use maybePop
-              return true;
             },
           ),
         ),

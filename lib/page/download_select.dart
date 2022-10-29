@@ -233,15 +233,12 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
             child: SingleChildScrollView(
               controller: _controller,
               child: MangaTocView(
-                groups: widget.groups,
                 mangaId: widget.mangaId,
                 mangaTitle: widget.mangaTitle,
-                mangaCover: widget.mangaCover,
-                mangaUrl: widget.mangaUrl,
+                groups: widget.groups,
                 full: true,
-                highlightColor: Theme.of(context).primaryColor.withOpacity(0.4), // TODO
-                highlightedChapters: _selected, // TODO
-                showNewBadge: true,
+                highlightColor: Theme.of(context).primaryColor.withOpacity(0.4) /* TODO */,
+                highlightedChapters: _selected,
                 customBadgeBuilder: (cid) {
                   var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
                   if (oldChapter == null) {
@@ -249,14 +246,13 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                   }
                   return DownloadBadge(downloading: !oldChapter.succeeded);
                 },
-                predicate: (cid) {
+                onPressed: (cid) {
                   if (!_selected.contains(cid)) {
                     _selected.add(cid);
                   } else {
                     _selected.remove(cid);
                   }
                   if (mounted) setState(() {});
-                  return false;
                 },
               ),
             ),

@@ -163,7 +163,7 @@ class _AuthorPageState extends State<AuthorPage> {
                     // ****************************************************************
                     Container(
                       width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢▢ |
-                      padding: EdgeInsets.only(top: 10, bottom: 10, right: 14),
+                      padding: EdgeInsets.only(top: 10, bottom: 10, right: 0),
                       alignment: Alignment.centerLeft,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,

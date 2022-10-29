@@ -9,20 +9,16 @@ class ViewTocSubPage extends StatefulWidget {
     Key? key,
     required this.mangaId,
     required this.mangaTitle,
-    required this.mangaCover,
-    required this.mangaUrl,
     required this.groups,
     required this.highlightedChapter,
-    required this.predicate,
+    required this.onChapterPressed,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
-  final String mangaCover;
-  final String mangaUrl;
   final List<MangaChapterGroup> groups;
   final int highlightedChapter;
-  final bool Function(int cid) predicate;
+  final void Function(int cid) onChapterPressed;
 
   @override
   State<ViewTocSubPage> createState() => _ViewTocSubPageState();
@@ -68,15 +64,12 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
             child: SingleChildScrollView(
               controller: _controller,
               child: MangaTocView(
-                groups: widget.groups,
                 mangaId: widget.mangaId,
                 mangaTitle: widget.mangaTitle,
-                mangaCover: widget.mangaCover,
-                mangaUrl: widget.mangaUrl,
+                groups: widget.groups,
                 full: true,
                 highlightedChapters: [widget.highlightedChapter],
-                lastChapterPage: 1,
-                predicate: widget.predicate,
+                onPressed: widget.onChapterPressed,
               ),
             ),
           ),

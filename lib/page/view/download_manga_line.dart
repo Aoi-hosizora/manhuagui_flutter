@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/download_line.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 
@@ -116,18 +115,6 @@ class LargeDownloadMangaLineView extends StatelessWidget {
   Widget build(BuildContext context) {
     var progress = DownloadLineProgress.fromEntityAndTask(entity: mangaEntity, task: downloadTask);
     var downloadedSize = filesize(downloadedBytes, 2, false);
-    var button = ElevatedButton(
-      child: Text('查看漫画详情'),
-      onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (c) => MangaPage(
-            id: mangaEntity.mangaId,
-            title: mangaEntity.mangaTitle,
-            url: mangaEntity.mangaUrl,
-          ),
-        ),
-      ),
-    );
 
     // !!!
     switch (progress.status) {
@@ -156,7 +143,6 @@ class LargeDownloadMangaLineView extends StatelessWidget {
                       : progress.notFinishedPageCount! < 0
                           ? '下载出错'
                           : '下载出错 (${progress.notFinishedPageCount!} 页未完成)',
-          button: button,
         );
       case DownloadLineStatus.downloading:
       case DownloadLineStatus.pausing:
@@ -178,7 +164,6 @@ class LargeDownloadMangaLineView extends StatelessWidget {
               (progress.status == DownloadLineStatus.pausing ? ' (暂停中)' : ''),
           icon3: Icons.bar_chart,
           text3: progress.status == DownloadLineStatus.pausing ? '暂停中' : '下载中',
-          button: button,
         );
     }
   }

@@ -90,7 +90,7 @@ class GeneralLineView extends StatelessWidget {
             // ****************************************************************
             Container(
               width: MediaQuery.of(context).size.width - 14 * 3 - 75 - (extraWidthInRow ?? 0), // | ▢ ▢▢ |
-              margin: EdgeInsets.only(top: 5, bottom: 5, right: 14),
+              margin: EdgeInsets.only(top: 5, bottom: 5, right: 0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,

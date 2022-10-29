@@ -7,7 +7,6 @@ import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/native/browser.dart';
 
 /// 漫画章节目录页，展示所给 [MangaChapterGroup] 信息
 class MangaTocPage extends StatefulWidget {
@@ -15,16 +14,14 @@ class MangaTocPage extends StatefulWidget {
     Key? key,
     required this.mangaId,
     required this.mangaTitle,
-    required this.mangaCover,
-    required this.mangaUrl,
     required this.groups,
+    required this.onChapterPressed,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
-  final String mangaCover;
-  final String mangaUrl;
   final List<MangaChapterGroup> groups;
+  final void Function(int cid) onChapterPressed;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
@@ -72,16 +69,6 @@ class _MangaTocPageState extends State<MangaTocPage> {
       appBar: AppBar(
         title: Text(widget.mangaTitle),
         leading: AppBarActionButton.leading(context: context),
-        actions: [
-          AppBarActionButton(
-            icon: Icon(Icons.open_in_browser),
-            tooltip: '用浏览器打开',
-            onPressed: () => launchInBrowser(
-              context: context,
-              url: widget.mangaUrl,
-            ),
-          ),
-        ],
       ),
       body: PlaceholderText(
         state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
@@ -95,28 +82,28 @@ class _MangaTocPageState extends State<MangaTocPage> {
             child: SingleChildScrollView(
               controller: _controller,
               child: MangaTocView(
-                groups: widget.groups,
                 mangaId: widget.mangaId,
                 mangaTitle: widget.mangaTitle,
-                mangaCover: widget.mangaCover,
-                mangaUrl: widget.mangaUrl,
+                groups: widget.groups,
                 full: true,
                 highlightedChapters: [_history?.chapterId ?? 0],
-                lastChapterPage: _history?.chapterPage ?? 1,
+                onPressed: widget.onChapterPressed,
               ),
             ),
           ),
         ),
       ),
-      floatingActionButton: ScrollAnimatedFab(
-        scrollController: _controller,
-        condition: ScrollAnimatedCondition.direction,
-        fab: FloatingActionButton(
-          child: Icon(Icons.vertical_align_top),
-          heroTag: null,
-          onPressed: () => _controller.scrollToTop(),
-        ),
-      ),
+      floatingActionButton: _loading
+          ? null
+          : ScrollAnimatedFab(
+              scrollController: _controller,
+              condition: ScrollAnimatedCondition.direction,
+              fab: FloatingActionButton(
+                child: Icon(Icons.vertical_align_top),
+                heroTag: null,
+                onPressed: () => _controller.scrollToTop(),
+              ),
+            ),
     );
   }
 }

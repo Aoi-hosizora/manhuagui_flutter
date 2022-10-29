@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -220,24 +221,12 @@ class _MangaPageState extends State<MangaPage> {
     int page;
     if (_history?.read != true) {
       // 未访问 or 未开始阅读 => 开始阅读
-      if (_data!.chapterGroups.isEmpty) {
+      var group = _data!.chapterGroups.getFirstNotEmptyGroup(); // 首要选【单话】分组，否则选首个拥有非空章节的分组
+      if (group == null) {
         Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
         return;
       }
-      var sGroup = _data!.chapterGroups.first;
-      var specificGroups = _data!.chapterGroups.where((g) => g.title == '单话');
-      if (specificGroups.isNotEmpty) {
-        sGroup = specificGroups.first;
-      }
-      if (sGroup.chapters.isEmpty) {
-        var specificGroups = _data!.chapterGroups.where((g) => g.chapters.isNotEmpty);
-        if (specificGroups.isEmpty) {
-          Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
-          return;
-        }
-        sGroup = specificGroups.first;
-      }
-      cid = sGroup.chapters.last.cid;
+      cid = group.chapters.last.cid;
       page = 1;
     } else {
       // 继续阅读
@@ -309,7 +298,7 @@ class _MangaPageState extends State<MangaPage> {
       ),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
-        onRefresh: () => _loadData(),
+        onRefresh: _loadData,
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
@@ -322,6 +311,7 @@ class _MangaPageState extends State<MangaPage> {
             crossAxisMargin: 2,
             child: ListView(
               controller: _controller,
+              padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
               children: [
                 // ****************************************************************
@@ -370,7 +360,7 @@ class _MangaPageState extends State<MangaPage> {
                       // ****************************************************************
                       Container(
                         width: MediaQuery.of(context).size.width - 14 * 3 - 120, // | ▢ ▢▢ |
-                        padding: EdgeInsets.only(top: 10, bottom: 10, right: 14),
+                        padding: EdgeInsets.only(top: 10, bottom: 10, right: 0),
                         alignment: Alignment.centerLeft,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -687,14 +677,26 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   color: Colors.white,
                   child: MangaTocView(
-                    groups: _data!.chapterGroups,
                     mangaId: _data!.mid,
                     mangaTitle: _data!.title,
-                    mangaCover: _data!.cover,
-                    mangaUrl: _data!.url,
+                    groups: _data!.chapterGroups,
                     full: false,
                     highlightedChapters: [_history?.chapterId ?? 0],
-                    lastChapterPage: _history?.chapterPage ?? 1,
+                    onPressed: (cid) => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (c) => MangaViewerPage(
+                          mangaId: _data!.mid,
+                          mangaTitle: _data!.title,
+                          mangaCover: _data!.cover,
+                          mangaUrl: _data!.url,
+                          chapterGroups: _data!.chapterGroups,
+                          chapterId: cid,
+                          initialPage: _history?.chapterId == cid
+                              ? _history?.chapterPage ?? 1 // have read
+                              : 1, // have not read
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 Container(height: 12),

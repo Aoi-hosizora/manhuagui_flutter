@@ -116,6 +116,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             crossAxisMargin: 2,
             child: ListView(
               controller: _controller,
+              padding: EdgeInsets.zero,
+              physics: AlwaysScrollableScrollPhysics(),
               children: [
                 MangaCarouselView(
                   mangas: _data!.carouselMangas,
