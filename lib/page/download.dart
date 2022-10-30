@@ -10,7 +10,8 @@ import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+import 'package:manhuagui_flutter/service/storage/download_image.dart';
+import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
 /// 下载列表页，查询数据库并展示 [DownloadedManga] 列表信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
@@ -106,45 +107,27 @@ class _DownloadPageState extends State<DownloadPage> {
 
   Future<DownloadMangaQueueTask?> _pauseOrContinue({required DownloadedManga entity, required DownloadMangaQueueTask? task, bool addTask = true}) async {
     if (task != null && !task.canceled && !task.succeeded) {
-      // => 暂停
+      // 暂停 => 取消任务
       task.cancel();
       return null;
     }
 
-    // => 继续
-    // 1. 构造下载任务
-    var newTask = DownloadMangaQueueTask(
+    // 继续 => 快速构造下载任务，同步更新数据库，并根据 addTask 参数按要求入队
+    DownloadMangaQueueTask? newTask = await quickBuildDownloadMangaQueueTask(
       mangaId: entity.mangaId,
-      chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
-      parallel: _setting.downloadPagesTogether,
-      invertOrder: _setting.invertDownloadOrder,
-    );
-
-    // 2. 更新数据库
-    var need = await newTask.prepare(
       mangaTitle: entity.mangaTitle,
       mangaCover: entity.mangaCover,
       mangaUrl: entity.mangaUrl,
-      getChapterTitleGroupPages: (cid) {
-        var chapter = entity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-        if (chapter == null) {
-          return null; // unreachable
-        }
-        var chapterTitle = chapter.chapterTitle;
-        var groupName = chapter.chapterGroup;
-        var chapterPageCount = chapter.totalPageCount;
-        return Tuple3(chapterTitle, groupName, chapterPageCount);
-      },
+      chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
+      parallel: _setting.downloadPagesTogether,
+      invertOrder: _setting.invertDownloadOrder,
+      addToTask: addTask,
+      throughChapterList: entity.downloadedChapters,
     );
-
-    // 3. 必要时入队等待执行，异步
-    if (need) {
-      if (addTask) {
-        QueueManager.instance.addTask(newTask);
-      }
-      return newTask;
+    if (newTask != null) {
+      QueueManager.instance.addTask(newTask);
     }
-    return null;
+    return newTask;
   }
 
   Future<void> _delete(DownloadedManga entity) async {

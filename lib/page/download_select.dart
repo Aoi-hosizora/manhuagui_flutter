@@ -9,8 +9,7 @@ import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga.dart';
-import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
+import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
 
 /// 选择下载章节页，展示所给 [MangaChapterGroup] 列表信息，并提供章节选择功能
 class DownloadSelectPage extends StatefulWidget {
@@ -144,38 +143,22 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
       return;
     }
 
-    // 3. 构造下载任务
-    var task = DownloadMangaQueueTask(
+    // 3. 快速构造下载任务，同步更新数据库，并入队异步等待执行
+    await quickBuildDownloadMangaQueueTask(
       mangaId: widget.mangaId,
-      chapterIds: chapterIds.toList(),
-      parallel: _setting.downloadPagesTogether,
-      invertOrder: _setting.invertDownloadOrder,
-    );
-
-    // 4. 更新数据库，并更新界面
-    var need = await task.prepare(
       mangaTitle: widget.mangaTitle,
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
-      getChapterTitleGroupPages: (cid) {
-        var tuple = widget.groups.findChapterAndGroupName(cid);
-        if (tuple == null) {
-          return null;
-        }
-        var chapterTitle = tuple.item1.title;
-        var groupName = tuple.item2;
-        var chapterPageCount = tuple.item1.pageCount;
-        return Tuple3(chapterTitle, groupName, chapterPageCount);
-      },
+      chapterIds: chapterIds.toList(),
+      parallel: _setting.downloadPagesTogether,
+      invertOrder: _setting.invertDownloadOrder,
+      addToTask: true,
+      throughGroupList: widget.groups,
+      throughChapterList: null,
     );
+
+    // 4. 更新界面，并显示提示
     await _getChapters();
-
-    // 5. 必要时入队等待执行，异步
-    if (need) {
-      QueueManager.instance.addTask(task);
-    }
-
-    // 6. 显示提示
     _selected.clear();
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
@@ -191,6 +174,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                 mangaTitle: widget.mangaTitle,
                 mangaCover: widget.mangaCover,
                 mangaUrl: widget.mangaUrl,
+                gotoDownloading: true,
               ),
             ),
           ),

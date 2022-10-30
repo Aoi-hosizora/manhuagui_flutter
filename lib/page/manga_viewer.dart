@@ -26,7 +26,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+import 'package:manhuagui_flutter/service/storage/download_image.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -207,7 +207,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _fileFutures = [
         for (int idx = 0; idx < _data!.pageCount; idx++)
           Future<File?>.microtask(() async {
-            var filepath = await getDownloadedMangaPageFilepath(
+            var filepath = await getDownloadedChapterPageFilePath(
               mangaId: widget.mangaId,
               chapterId: _data!.cid,
               pageIndex: idx,

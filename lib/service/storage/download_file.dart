@@ -33,7 +33,8 @@ class DownloadOption {
     this.ignoreHeadError = false,
     this.whenOverwrite = _defaultWhenOverwrite,
     this.suffixBuilder = _defaultSuffixBuilder,
-    this.timeoutDuration = const Duration(milliseconds: DOWNLOAD_TIMEOUT),
+    this.headTimeout = const Duration(milliseconds: HEAD_TIMEOUT),
+    this.downloadTimeout = const Duration(milliseconds: DOWNLOAD_TIMEOUT),
   });
 
   final DownloadBehavior behavior;
@@ -41,7 +42,8 @@ class DownloadOption {
   final bool ignoreHeadError;
   final Future<OverwriteBehavior> Function(String filepath) whenOverwrite;
   final String Function(int index) suffixBuilder;
-  final Duration timeoutDuration;
+  final Duration headTimeout;
+  final Duration downloadTimeout;
 }
 
 enum DownloadExceptionType {
@@ -91,7 +93,7 @@ Future<File> downloadFile({
   option ??= DownloadOption();
   var uri = Uri.parse(url);
 
-  // 1. http head url asynchronously
+  // 1. make http HEAD request asynchronously
   Future<String> filepathFuture;
   if (option.redecideFilepath == null) {
     filepathFuture = Future.value(filepath);
@@ -109,7 +111,7 @@ Future<File> downloadFile({
       var mime = resp.headers['content-type'] ?? '';
       var extension = getPreferredExtensionFromMime(mime);
       return option!.redecideFilepath!.call(mime, extension);
-    }).timeout(Duration(milliseconds: HEAD_TIMEOUT), onTimeout: () {
+    }).timeout(option.headTimeout, onTimeout: () {
       throw DownloadException._head('Failed to make http HEAD request to $url: timed out.');
     }).onError((e, s) {
       if (!option!.ignoreHeadError) {
@@ -140,7 +142,7 @@ Future<File> downloadFile({
           break;
         case OverwriteBehavior.notAllow:
         default:
-          throw DownloadException._existed('File $filepath has been found before saving.');
+          throw DownloadException._existed('File $filepath exists before saving.');
       }
     }
     await newFile.create(recursive: true);
@@ -167,7 +169,7 @@ Future<File> downloadFile({
     http.Response resp;
     try {
       resp = await http.get(uri, headers: headers).timeout(
-        option.timeoutDuration,
+        option.downloadTimeout,
         onTimeout: () {
           throw DownloadException._download('timed out');
         },

@@ -80,7 +80,7 @@ class DownloadedManga {
       downloadedChapters.map((el) => el.chapterId).toList();
 
   List<int> get startedChapterIds => //
-      downloadedChapters.where((el) => el.started).map((el) => el.chapterId).toList();
+      downloadedChapters.where((el) => el.started).map((el) => el.chapterId).toList(); // TODO rename to tried
 
   List<int> get successChapterIds => //
       downloadedChapters.where((el) => el.succeeded).map((el) => el.chapterId).toList();
@@ -130,7 +130,7 @@ class DownloadedChapter {
   final int triedPageCount;
   final int successPageCount;
 
-  bool get started => triedPageCount > 0;
+  bool get started => triedPageCount > 0; // TODO rename to tried
 
   bool get succeeded => successPageCount == totalPageCount;
 

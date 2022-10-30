@@ -21,7 +21,8 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+import 'package:manhuagui_flutter/service/storage/download_image.dart';
+import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
 /// 章节下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
@@ -32,12 +33,14 @@ class DownloadTocPage extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    this.gotoDownloading = false,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final bool gotoDownloading;
 
   @override
   State<DownloadTocPage> createState() => _DownloadTocPageState();
@@ -56,6 +59,11 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      // tab view
+      if (widget.gotoDownloading) {
+        _tabController.animateTo(1);
+      }
+
       // setting
       _setting = await DlSettingPrefs.getSetting();
       if (mounted) setState(() {});
@@ -89,7 +97,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
         // <<<
         var newEntity = await DownloadDao.getManga(mid: mangaId);
         if (newEntity != null) {
-          _data = newEntity;
+          _entity = newEntity;
           if (mounted) setState(() {});
           getDownloadedMangaBytes(mangaId: mangaId).then((b) {
             _byte = b;
@@ -119,7 +127,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
   }
 
   var _loading = true;
-  DownloadedManga? _data;
+  DownloadedManga? _entity;
   DownloadMangaQueueTask? _task;
   var _byte = 0;
   var _invertOrder = true;
@@ -128,7 +136,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
 
   Future<void> _loadData() async {
     _loading = true;
-    _data = null;
+    _entity = null;
     _task = null;
     _history = null;
     if (mounted) setState(() {});
@@ -142,7 +150,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _data = data;
+      _entity = data;
       _task = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().where((el) => el.mangaId == widget.mangaId).firstOrNull;
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) {
         _byte = b;
@@ -175,42 +183,24 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
 
   Future<void> _startOrPause({required bool start}) async {
     if (!start) {
-      // => 暂停
+      // 暂停 => 获取最新的任务，并取消
       _task = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().where((el) => el.mangaId == widget.mangaId).firstOrNull;
       _task?.cancel();
       return;
     }
 
-    // => 开始
-    // 1. 构造下载任务
-    var newTask = DownloadMangaQueueTask(
-      mangaId: _data!.mangaId,
-      chapterIds: _data!.downloadedChapters.map((el) => el.chapterId).toList(),
+    // 开始 => 快速构造下载任务，同步更新数据库，并入队异步等待执行
+    await quickBuildDownloadMangaQueueTask(
+      mangaId: _entity!.mangaId,
+      mangaTitle: _entity!.mangaTitle,
+      mangaCover: _entity!.mangaCover,
+      mangaUrl: _entity!.mangaUrl,
+      chapterIds: _entity!.downloadedChapters.map((el) => el.chapterId).toList(),
       parallel: _setting.downloadPagesTogether,
       invertOrder: _setting.invertDownloadOrder,
+      addToTask: true,
+      throughChapterList: _entity!.downloadedChapters,
     );
-
-    // 2. 更新数据库
-    var need = await newTask.prepare(
-      mangaTitle: _data!.mangaTitle,
-      mangaCover: _data!.mangaCover,
-      mangaUrl: _data!.mangaUrl,
-      getChapterTitleGroupPages: (cid) {
-        var chapter = _data!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-        if (chapter == null) {
-          return null; // unreachable
-        }
-        var chapterTitle = chapter.chapterTitle;
-        var groupName = chapter.chapterGroup;
-        var chapterPageCount = chapter.totalPageCount;
-        return Tuple3(chapterTitle, groupName, chapterPageCount);
-      },
-    );
-
-    // 3. 必要时入队等待执行，异步
-    if (need) {
-      QueueManager.instance.addTask(newTask);
-    }
   }
 
   Future<void> _delete(DownloadedChapter entity) async {
@@ -249,7 +239,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
               child: Text('删除'),
               onPressed: () async {
                 Navigator.of(c).pop();
-                _data!.downloadedChapters.remove(entity);
+                _entity!.downloadedChapters.remove(entity);
                 await DownloadDao.deleteChapter(mid: entity.mangaId, cid: entity.chapterId);
                 if (mounted) setState(() {});
                 if (alsoDeleteFile) {
@@ -304,7 +294,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
-          isEmpty: _data == null,
+          isEmpty: _entity == null,
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => ExtendedNestedScrollView(
@@ -319,7 +309,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                     Container(
                       color: Colors.white,
                       child: LargeDownloadMangaLineView(
-                        mangaEntity: _data!,
+                        mangaEntity: _entity!,
                         downloadTask: _task,
                         downloadedBytes: _byte,
                       ),
@@ -408,7 +398,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   innerController: controllers[0],
                   outerController: _scrollController,
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
-                  mangaEntity: _data!,
+                  mangaEntity: _entity!,
                   invertOrder: _invertOrder,
                   history: _history,
                   toReadChapter: (cid) {
@@ -430,7 +420,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                     );
                   },
                   toDeleteChapter: (cid) async {
-                    var chapterEntity = _data!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                    var chapterEntity = _entity!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
                     if (chapterEntity != null) {
                       await _delete(chapterEntity);
                     }
@@ -443,7 +433,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   innerController: controllers[1],
                   outerController: _scrollController,
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
-                  mangaEntity: _data!,
+                  mangaEntity: _entity!,
                   downloadTask: _task,
                   invertOrder: _invertOrder,
                   toControlChapter: (cid) {

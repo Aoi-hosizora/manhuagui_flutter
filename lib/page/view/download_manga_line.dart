@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/download_line.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
 
 /// 漫画下载行（小），在 [DownloadPage] 使用
 class DownloadMangaLineView extends StatelessWidget {

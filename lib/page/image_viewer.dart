@@ -5,7 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+import 'package:manhuagui_flutter/service/storage/download_image.dart';
 import 'package:photo_view/photo_view.dart';
 
 class ImageViewerPage extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga.dart';
+import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
 
 class DownloadChapterLineView extends StatelessWidget {
   const DownloadChapterLineView({
