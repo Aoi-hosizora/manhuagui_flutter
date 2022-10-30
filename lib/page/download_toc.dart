@@ -59,63 +59,56 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      // tab view
       if (widget.gotoDownloading) {
         _tabController.animateTo(1);
       }
-
-      // setting
       _setting = await DlSettingPrefs.getSetting();
       if (mounted) setState(() {});
-
-      // progress related
-      _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
-        var mangaId = event.task.mangaId;
-        if (mangaId != widget.mangaId) {
-          return;
-        }
-
-        // <<<
-        _task = !event.finished ? event.task : null;
-        if (mounted) setState(() {});
-        if (event.task.progress.stage == DownloadMangaProgressStage.waiting || event.task.progress.stage == DownloadMangaProgressStage.gotChapter) {
-          // 只有在最开始等待、以及每次获得新章节数据时才遍历并获取文件大小
-          getDownloadedMangaBytes(mangaId: mangaId).then((b) {
-            _byte = b;
-            if (mounted) setState(() {});
-          });
-        }
-      }));
-
-      // entity related
-      _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-        var mangaId = event.mangaId;
-        if (mangaId != widget.mangaId) {
-          return;
-        }
-
-        // <<<
-        var newEntity = await DownloadDao.getManga(mid: mangaId);
-        if (newEntity != null) {
-          _entity = newEntity;
-          if (mounted) setState(() {});
-          getDownloadedMangaBytes(mangaId: mangaId).then((b) {
-            _byte = b;
-            if (mounted) setState(() {});
-          });
-        } else {
-          // ignore error
-        }
-      }));
-
-      // history related
-      _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
-        try {
-          _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-          if (mounted) setState(() {});
-        } catch (_) {}
-      }));
     });
+
+    // progress related
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
+      if (event.mangaId != widget.mangaId) {
+        return;
+      }
+      if (event.finished) {
+        _task = null;
+        if (mounted) setState(() {});
+      } else {
+        _task = QueueManager.instance.getDownloadMangaQueueTask(event.mangaId);
+        if (mounted) setState(() {});
+        if (_task != null && (_task!.progress.stage == DownloadMangaProgressStage.waiting || _task!.progress.stage == DownloadMangaProgressStage.gotChapter)) {
+          getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
+            _byte = b; // 只有在最开始等待、以及每次获得新章节时才遍历统计文件大小
+            if (mounted) setState(() {});
+          });
+        }
+      }
+    }));
+
+    // entity related
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
+      if (event.mangaId != widget.mangaId) {
+        return;
+      }
+      var newEntity = await DownloadDao.getManga(mid: event.mangaId);
+      if (newEntity != null) {
+        _entity = newEntity;
+        if (mounted) setState(() {});
+        getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
+          _byte = b; // 在每次数据库发生变化时都遍历统计文件大小
+          if (mounted) setState(() {});
+        });
+      }
+    }));
+
+    // history related
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
+      try {
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+        if (mounted) setState(() {});
+      } catch (_) {}
+    }));
   }
 
   @override
@@ -151,7 +144,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
       _entity = data;
-      _task = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().where((el) => el.mangaId == widget.mangaId).firstOrNull;
+      _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) {
         _byte = b;
         if (mounted) setState(() {});
@@ -176,15 +169,15 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       var result = await client.getManga(mid: widget.mangaId);
       _chapterGroups = result.data.chapterGroups;
     } catch (e, s) {
-      print(wrapError(e, s).text);
-      // ignore
+      // ignored
+      print('===> exception when _getChapterGroupsAsync:\n${wrapError(e, s).text}');
     }
   }
 
   Future<void> _startOrPause({required bool start}) async {
     if (!start) {
       // 暂停 => 获取最新的任务，并取消
-      _task = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().where((el) => el.mangaId == widget.mangaId).firstOrNull;
+      _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       _task?.cancel();
       return;
     }
@@ -203,7 +196,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     );
   }
 
-  Future<void> _delete(DownloadedChapter entity) async {
+  Future<void> _deleteChapter(DownloadedChapter entity) async {
     if (_task != null) {
       Fluttertoast.showToast(msg: '当前仅支持在漫画暂停下载时删除章节');
       return;
@@ -214,12 +207,12 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       context: context,
       builder: (c) => StatefulBuilder(
         builder: (c, _setState) => AlertDialog(
-          title: Text('漫画删除确认'),
+          title: Text('章节删除确认'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除 ${entity.chapterTitle}？'),
+              Text('是否删除《${widget.mangaTitle}》${entity.chapterTitle}？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -422,7 +415,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   toDeleteChapter: (cid) async {
                     var chapterEntity = _entity!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
                     if (chapterEntity != null) {
-                      await _delete(chapterEntity);
+                      await _deleteChapter(chapterEntity);
                     }
                   },
                 ),

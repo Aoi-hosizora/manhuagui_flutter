@@ -42,22 +42,21 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _getDownloadedChapters(); // get in async
       Future.delayed(Duration(milliseconds: 300), () {
         _loading = false;
         if (mounted) setState(() {});
       });
-
       _setting = await DlSettingPrefs.getSetting();
       if (mounted) setState(() {});
     });
-    WidgetsBinding.instance?.addPostFrameCallback((_) async => await _getChapters());
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-        if (event.mangaId == widget.mangaId) {
-          await _getChapters();
-        }
-      });
+
+    _cancelHandler = EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
+      if (event.mangaId == widget.mangaId) {
+        await _getDownloadedChapters();
+      }
     });
   }
 
@@ -71,10 +70,10 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
   final _selected = <int>[];
   final _downloadedChapters = <DownloadedChapter>[];
 
-  Future<void> _getChapters() async {
-    var chapters = (await DownloadDao.getManga(mid: widget.mangaId))?.downloadedChapters ?? [];
+  Future<void> _getDownloadedChapters() async {
+    var entity = await DownloadDao.getManga(mid: widget.mangaId);
     _downloadedChapters.clear();
-    _downloadedChapters.addAll(chapters);
+    _downloadedChapters.addAll(entity?.downloadedChapters ?? []);
     if (mounted) setState(() {});
   }
 
@@ -158,7 +157,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
     );
 
     // 4. 更新界面，并显示提示
-    await _getChapters();
+    await _getDownloadedChapters();
     _selected.clear();
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(

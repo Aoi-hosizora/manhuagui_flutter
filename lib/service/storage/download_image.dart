@@ -51,6 +51,7 @@ Future<File?> downloadImageToGallery(String url) async {
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         whenOverwrite: (_) async => OverwriteBehavior.addSuffix,
+        downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
     );
     await addToGallery(f); // <<<
@@ -78,6 +79,7 @@ Future<bool> downloadChapterPage({required int mangaId, required int chapterId, 
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         whenOverwrite: (_) async => OverwriteBehavior.overwrite,
+        downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
     );
     return true;

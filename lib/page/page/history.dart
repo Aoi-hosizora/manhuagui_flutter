@@ -79,7 +79,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       context: context,
       builder: (c) => AlertDialog(
         title: Text('删除历史记录'),
-        content: Text('是否删除 ${history.mangaTitle}？'),
+        content: Text('是否删除《${history.mangaTitle}》？'),
         actions: [
           TextButton(
             child: Text('删除'),

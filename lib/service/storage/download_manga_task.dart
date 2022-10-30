@@ -37,7 +37,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   void cancel() {
     super.cancel();
     _canceled = true;
-    var ev = DownloadMangaProgressChangedEvent(task: this, finished: false);
+    var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
     EventBusManager.instance.fire(ev);
   }
 
@@ -52,7 +52,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   @override
   Future<void> doDefer() {
-    var ev = DownloadMangaProgressChangedEvent(task: this, finished: true); // finished means task is removed from queue
+    var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: true); // finished means task is removed from queue
     EventBusManager.instance.fire(ev);
     var ev2 = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
     EventBusManager.instance.fire(ev2);
@@ -65,7 +65,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   void _updateProgress(DownloadMangaProgress progress) {
     _progress = progress;
-    var ev = DownloadMangaProgressChangedEvent(task: this, finished: false);
+    var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
     EventBusManager.instance.fire(ev);
   }
 
@@ -89,14 +89,14 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     // 2. 合并请求下载的章节与数据库已有的章节，且保留请求下载章节的顺序
     var oldManga = await DownloadDao.getManga(mid: mangaId);
     var oldChapterIds = oldManga?.downloadedChapters.map((el) => el.chapterId).toList() ?? [];
-    oldChapterIds.removeWhere((el) => chapterIds.contains(el));
-    oldChapterIds.sort((i, j) => !invertOrder ? i.compareTo(j) : j.compareTo(i));
+    var dedupOldChapterIds = oldChapterIds.toList()..removeWhere((el) => chapterIds.contains(el));
+    dedupOldChapterIds.sort((i, j) => !invertOrder ? i.compareTo(j) : j.compareTo(i));
     chapterIds.sort((i, j) => !invertOrder ? i.compareTo(j) : j.compareTo(i));
-    chapterIds.addAll(oldChapterIds);
+    chapterIds.addAll(dedupOldChapterIds);
 
     // 3. 检查漫画下载任务是否存在
     List<int> newChapterIds;
-    var currentTasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().toList();
+    var currentTasks = QueueManager.instance.getDownloadMangaQueueTasks();
     var previousTask = currentTasks.where((el) => el.mangaId == mangaId && !el.canceled).firstOrNull;
     if (previousTask != null) {
       // 下载任务已存在 => 找到新增的章节
@@ -461,6 +461,16 @@ class DownloadMangaProgress {
   final MangaChapter? currentChapter;
   final int? triedChapterPageCount;
   final int? successChapterPageCount;
+}
+
+extension QueueManagerExtension on QueueManager {
+  List<DownloadMangaQueueTask> getDownloadMangaQueueTasks() {
+    return tasks.whereType<DownloadMangaQueueTask>().toList();
+  }
+
+  DownloadMangaQueueTask? getDownloadMangaQueueTask(int mangaId) {
+    return tasks.whereType<DownloadMangaQueueTask>().where((t) => t.mangaId == mangaId).firstOrNull;
+  }
 }
 
 // !!!

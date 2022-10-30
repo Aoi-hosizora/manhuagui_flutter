@@ -35,44 +35,44 @@ class _DownloadPageState extends State<DownloadPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      // setting
       _setting = await DlSettingPrefs.getSetting();
       if (mounted) setState(() {});
-
-      // progress related
-      _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
-        var mangaId = event.task.mangaId;
-        if (!event.finished) {
-          _tasks[mangaId] = event.task;
-        } else {
-          _tasks.removeWhere((key, _) => key == mangaId);
-        }
-        if (mounted) setState(() {});
-        if (event.task.progress.stage == DownloadMangaProgressStage.waiting || event.task.progress.stage == DownloadMangaProgressStage.gotChapter) {
-          // 只有在最开始等待、以及每次获得新章节数据时才遍历并获取文件大小
-          getDownloadedMangaBytes(mangaId: mangaId).then((b) {
-            _bytes[mangaId] = b;
-            if (mounted) setState(() {});
-          });
-        }
-      }));
-
-      // entity related
-      _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-        var mangaId = event.mangaId;
-        var newEntity = await DownloadDao.getManga(mid: mangaId);
-        if (newEntity != null) {
-          _data.removeWhere((el) => el.mangaId == mangaId);
-          _data.insert(0, newEntity);
-          _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          if (mounted) setState(() {});
-          getDownloadedMangaBytes(mangaId: mangaId).then((b) {
-            _bytes[mangaId] = b;
-            if (mounted) setState(() {});
-          });
-        }
-      }));
     });
+
+    // progress related
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
+      if (event.finished) {
+        _tasks.removeWhere((key, _) => key == event.mangaId);
+        if (mounted) setState(() {});
+      } else {
+        var task = QueueManager.instance.getDownloadMangaQueueTask(event.mangaId);
+        if (task != null) {
+          _tasks[event.mangaId] = task;
+          if (mounted) setState(() {});
+          if (task.progress.stage == DownloadMangaProgressStage.waiting || task.progress.stage == DownloadMangaProgressStage.gotChapter) {
+            getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
+              _bytes[event.mangaId] = b; // 只有在最开始等待、以及每次获得新章节时才遍历统计文件大小
+              if (mounted) setState(() {});
+            });
+          }
+        }
+      }
+    }));
+
+    // entity related
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
+      var newEntity = await DownloadDao.getManga(mid: event.mangaId);
+      if (newEntity != null) {
+        _data.removeWhere((el) => el.mangaId == event.mangaId);
+        _data.insert(0, newEntity);
+        _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        if (mounted) setState(() {});
+        getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
+          _bytes[event.mangaId] = b; // 在每次数据库发生变化时都遍历统计文件大小
+          if (mounted) setState(() {});
+        });
+      }
+    }));
   }
 
   @override
@@ -92,7 +92,7 @@ class _DownloadPageState extends State<DownloadPage> {
     var data = await DownloadDao.getMangas() ?? [];
     _total = await DownloadDao.getMangaCount() ?? 0;
     _tasks.clear();
-    for (var task in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
+    for (var task in QueueManager.instance.getDownloadMangaQueueTasks()) {
       _tasks[task.mangaId] = task;
     }
     if (mounted) setState(() {});
@@ -130,7 +130,7 @@ class _DownloadPageState extends State<DownloadPage> {
     return newTask;
   }
 
-  Future<void> _delete(DownloadedManga entity) async {
+  Future<void> _deleteManga(DownloadedManga entity) async {
     var alsoDeleteFile = _setting.defaultToDeleteFiles;
     await showDialog(
       context: context,
@@ -141,7 +141,7 @@ class _DownloadPageState extends State<DownloadPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除 ${entity.mangaTitle}？'),
+              Text('是否删除《${entity.mangaTitle}》？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -195,7 +195,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
       // 2. 逐漫画继续下载，异步，并等待所有"下载准备"结束
       var entities = await DownloadDao.getMangas() ?? _data;
-      var tasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>();
+      var tasks = QueueManager.instance.getDownloadMangaQueueTasks();
       var prepares = <Future<DownloadMangaQueueTask?>>[];
       for (var entity in entities) {
         var task = tasks.where((el) => el.mangaId == entity.mangaId).firstOrNull;
@@ -226,7 +226,7 @@ class _DownloadPageState extends State<DownloadPage> {
       // => 全部暂停
 
       // 1. 先取消目前所有的任务
-      for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
+      for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
         if (!t.canceled) {
           t.cancel();
         }
@@ -236,7 +236,7 @@ class _DownloadPageState extends State<DownloadPage> {
       await _allStartCompleter?.future;
 
       // 3. 再取消"全部开始"结束后所有的任务
-      for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
+      for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
         if (!t.canceled) {
           t.cancel();
         }
@@ -264,8 +264,7 @@ class _DownloadPageState extends State<DownloadPage> {
               await DlSettingPrefs.setSetting(_setting);
 
               // apply settings
-              var tasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>();
-              for (var t in tasks) {
+              for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
                 t.changeParallel(_setting.downloadPagesTogether);
               }
             },
@@ -335,7 +334,7 @@ class _DownloadPageState extends State<DownloadPage> {
                 ),
               ),
             ),
-            onLineLongPressed: () => _delete(entity),
+            onLineLongPressed: () => _deleteManga(entity),
           );
         },
       ),

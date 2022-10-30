@@ -34,7 +34,7 @@ class DownloadOption {
     this.whenOverwrite = _defaultWhenOverwrite,
     this.suffixBuilder = _defaultSuffixBuilder,
     this.headTimeout = const Duration(milliseconds: HEAD_TIMEOUT),
-    this.downloadTimeout = const Duration(milliseconds: DOWNLOAD_TIMEOUT),
+    this.downloadTimeout,
   });
 
   final DownloadBehavior behavior;
@@ -42,8 +42,8 @@ class DownloadOption {
   final bool ignoreHeadError;
   final Future<OverwriteBehavior> Function(String filepath) whenOverwrite;
   final String Function(int index) suffixBuilder;
-  final Duration headTimeout;
-  final Duration downloadTimeout;
+  final Duration? headTimeout;
+  final Duration? downloadTimeout;
 }
 
 enum DownloadExceptionType {
@@ -101,7 +101,11 @@ Future<File> downloadFile({
     filepathFuture = Future<String>.microtask(() async {
       http.Response resp;
       try {
-        resp = await http.head(uri, headers: headers);
+        var future = http.head(uri, headers: headers);
+        if (option!.headTimeout != null) {
+          future = future.timeout(option.headTimeout!, onTimeout: () => throw DownloadException._head('timed out'));
+        }
+        resp = await future;
       } catch (e) {
         throw DownloadException._head('Failed to make http HEAD request to $url: $e.');
       }
@@ -110,9 +114,7 @@ Future<File> downloadFile({
       }
       var mime = resp.headers['content-type'] ?? '';
       var extension = getPreferredExtensionFromMime(mime);
-      return option!.redecideFilepath!.call(mime, extension);
-    }).timeout(option.headTimeout, onTimeout: () {
-      throw DownloadException._head('Failed to make http HEAD request to $url: timed out.');
+      return option.redecideFilepath!.call(mime, extension);
     }).onError((e, s) {
       if (!option!.ignoreHeadError) {
         return Future.error(DownloadException._fromObject(e!), s);
@@ -168,12 +170,11 @@ Future<File> downloadFile({
     // 4. download and save to file
     http.Response resp;
     try {
-      resp = await http.get(uri, headers: headers).timeout(
-        option.downloadTimeout,
-        onTimeout: () {
-          throw DownloadException._download('timed out');
-        },
-      );
+      var future = http.get(uri, headers: headers);
+      if (option.downloadTimeout != null) {
+        future = future.timeout(option.downloadTimeout!, onTimeout: () => throw DownloadException._download('timed out'));
+      }
+      resp = await future;
     } catch (e) {
       throw DownloadException._download('Failed to make http GET request to $url: $e.');
     }
