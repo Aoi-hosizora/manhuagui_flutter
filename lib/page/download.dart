@@ -44,11 +44,14 @@ class _DownloadPageState extends State<DownloadPage> {
         } else {
           _tasks.removeWhere((key, _) => key == mangaId);
         }
+        if (mounted) setState(() {});
         if (event.task.progress.stage == DownloadMangaProgressStage.waiting || event.task.progress.stage == DownloadMangaProgressStage.gotChapter) {
           // 只有在最开始等待、以及每次获得新章节数据时才遍历并获取文件大小
-          _bytes[mangaId] = await getDownloadedMangaBytes(mangaId: mangaId);
+          getDownloadedMangaBytes(mangaId: mangaId).then((b) {
+            _bytes[mangaId] = b;
+            if (mounted) setState(() {});
+          });
         }
-        if (mounted) setState(() {});
       }));
 
       // entity related
@@ -59,8 +62,11 @@ class _DownloadPageState extends State<DownloadPage> {
           _data.removeWhere((el) => el.mangaId == mangaId);
           _data.insert(0, newEntity);
           _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          _bytes[mangaId] = await getDownloadedMangaBytes(mangaId: mangaId);
           if (mounted) setState(() {});
+          getDownloadedMangaBytes(mangaId: mangaId).then((b) {
+            _bytes[mangaId] = b;
+            if (mounted) setState(() {});
+          });
         }
       }));
     });
@@ -68,7 +74,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
   @override
   void dispose() {
-    _cancelHandlers.forEach((c) => c.call);
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -87,7 +93,7 @@ class _DownloadPageState extends State<DownloadPage> {
       _tasks[task.mangaId] = task;
     }
     for (var entity in data) {
-      _bytes[entity.mangaId] = await getDownloadedMangaBytes(mangaId: entity.mangaId);
+      _bytes[entity.mangaId] = await getDownloadedMangaBytes(mangaId: entity.mangaId); // TODO slow
     }
     if (mounted) setState(() {});
     return data;
@@ -204,7 +210,7 @@ class _DownloadPageState extends State<DownloadPage> {
   }
 
   Future<void> _onSettingPressed() {
-    var setting = _setting.copyWith();
+    var setting = _setting.copyWith(); // TODO 章节下载顺序
     return showDialog(
       context: context,
       builder: (c) => AlertDialog(
