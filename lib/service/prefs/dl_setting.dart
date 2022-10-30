@@ -7,6 +7,7 @@ class DlSettingPrefs {
 
   static const _defaultToDeleteFilesKey = 'DlSettingPrefs_defaultToDeleteFiles'; // bool
   static const _downloadPagesTogetherKey = 'DlSettingPrefs_downloadPagesTogether'; // int
+  static const _invertDownloadOrderKey = 'DlSettingPrefs_invertDownloadOrder'; // int
 
   static Future<DlSetting> getSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -14,6 +15,7 @@ class DlSettingPrefs {
     return DlSetting(
       defaultToDeleteFiles: prefs.safeGetBool(_defaultToDeleteFilesKey) ?? def.defaultToDeleteFiles,
       downloadPagesTogether: prefs.safeGetInt(_downloadPagesTogetherKey) ?? def.downloadPagesTogether,
+      invertDownloadOrder: prefs.safeGetBool(_invertDownloadOrderKey) ?? def.invertDownloadOrder,
     );
   }
 
@@ -21,6 +23,7 @@ class DlSettingPrefs {
     final prefs = await PrefsManager.instance.loadPrefs();
     await prefs.setBool(_defaultToDeleteFilesKey, setting.defaultToDeleteFiles);
     await prefs.setInt(_downloadPagesTogetherKey, setting.downloadPagesTogether);
+    await prefs.setBool(_invertDownloadOrderKey, setting.invertDownloadOrder);
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {

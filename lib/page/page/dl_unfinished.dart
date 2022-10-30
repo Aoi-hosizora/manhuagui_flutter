@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
-import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
-import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 
 /// 章节下载管理页-未完成
@@ -17,8 +14,7 @@ class DlUnfinishedSubPage extends StatefulWidget {
     required this.mangaEntity,
     required this.downloadTask,
     required this.invertOrder,
-    required this.history,
-    required this.onChapterPressed,
+    required this.toControlChapter,
   }) : super(key: key);
 
   final ScrollController innerController;
@@ -27,8 +23,7 @@ class DlUnfinishedSubPage extends StatefulWidget {
   final DownloadedManga mangaEntity;
   final DownloadMangaQueueTask? downloadTask;
   final bool invertOrder;
-  final MangaHistory? history;
-  final void Function(int cid) onChapterPressed;
+  final void Function(int cid) toControlChapter;
 
   @override
   State<DlUnfinishedSubPage> createState() => _DlUnfinishedSubPageState();
@@ -44,6 +39,11 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
     var unfinishedChapters = widget.mangaEntity.downloadedChapters //
         .where((el) => !el.succeeded)
         .toList();
+    if (!widget.invertOrder) {
+      unfinishedChapters.sort((i, j) => i.chapterId.compareTo(j.chapterId));
+    } else {
+      unfinishedChapters.sort((i, j) => j.chapterId.compareTo(i.chapterId));
+    }
 
     return Scaffold(
       body: ScrollbarWithMore(
@@ -56,36 +56,6 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
           slivers: [
             SliverOverlapInjector(
               handle: widget.injectorHandler,
-            ),
-            // TODO xxx
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: MangaSimpleTocView(
-                  chapters: unfinishedChapters.map((el) => Tuple2(el.chapterGroup, el.toTiny())).toList(),
-                  invertOrder: widget.invertOrder,
-                  showNewBadge: false,
-                  highlightedChapters: [widget.history?.chapterId ?? 0],
-                  customBadgeBuilder: (cid) {
-                    var oldChapter = widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                    if (oldChapter == null) {
-                      return null;
-                    }
-                    return DownloadBadge(
-                      state: !oldChapter.finished
-                          ? DownloadBadgeState.downloading
-                          : oldChapter.succeeded
-                              ? DownloadBadgeState.succeeded
-                              : DownloadBadgeState.failed,
-                    );
-                  },
-                  onChapterPressed: widget.onChapterPressed,
-                  onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'), // TODO
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(height: 100),
             ),
             if (unfinishedChapters.isEmpty)
               SliverToBoxAdapter(
@@ -110,8 +80,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                         child: DownloadChapterLineView(
                           chapterEntity: chapter,
                           downloadTask: widget.downloadTask,
-                          onPressed: () => widget.onChapterPressed.call(chapter.chapterId),
-                          onLongPressed: () => Fluttertoast.showToast(msg: 'TODO ${chapter.chapterId}'), // TODO
+                          onPressed: () => widget.toControlChapter.call(chapter.chapterId),
                         ),
                       )
                   ].separate(

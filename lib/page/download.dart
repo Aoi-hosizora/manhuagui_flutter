@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
@@ -92,18 +94,21 @@ class _DownloadPageState extends State<DownloadPage> {
     for (var task in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
       _tasks[task.mangaId] = task;
     }
-    for (var entity in data) {
-      _bytes[entity.mangaId] = await getDownloadedMangaBytes(mangaId: entity.mangaId); // TODO slow
-    }
     if (mounted) setState(() {});
+    for (var entity in data) {
+      getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) {
+        _bytes[entity.mangaId] = b;
+        if (mounted) setState(() {});
+      });
+    }
     return data;
   }
 
-  Future<void> _pauseOrContinue({required DownloadedManga entity, required DownloadMangaQueueTask? task}) async {
+  Future<DownloadMangaQueueTask?> _pauseOrContinue({required DownloadedManga entity, required DownloadMangaQueueTask? task, bool addTask = true}) async {
     if (task != null && !task.canceled && !task.succeeded) {
       // => 暂停
       task.cancel();
-      return;
+      return null;
     }
 
     // => 继续
@@ -112,6 +117,7 @@ class _DownloadPageState extends State<DownloadPage> {
       mangaId: entity.mangaId,
       chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
       parallel: _setting.downloadPagesTogether,
+      invertOrder: _setting.invertDownloadOrder,
     );
 
     // 2. 更新数据库
@@ -131,10 +137,14 @@ class _DownloadPageState extends State<DownloadPage> {
       },
     );
 
-    // 3. 入队等待执行，异步
+    // 3. 必要时入队等待执行，异步
     if (need) {
-      QueueManager.instance.addTask(newTask);
+      if (addTask) {
+        QueueManager.instance.addTask(newTask);
+      }
+      return newTask;
     }
+    return null;
   }
 
   Future<void> _delete(DownloadedManga entity) async {
@@ -174,7 +184,7 @@ class _DownloadPageState extends State<DownloadPage> {
                 await DownloadDao.deleteAllChapters(mid: entity.mangaId);
                 if (mounted) setState(() {});
                 if (alsoDeleteFile) {
-                  await deleteDownloadedManga(entity.mangaId);
+                  await deleteDownloadedManga(mangaId: entity.mangaId);
                 }
               },
             ),
@@ -188,29 +198,71 @@ class _DownloadPageState extends State<DownloadPage> {
     );
   }
 
+  Completer<void>? _allStartCompleter;
+
   Future<void> _allStartOrPause({required bool allStart}) async {
     if (allStart) {
       // => 全部开始
+
+      // 1. 先判断当前是否在"全部开始"
+      if (_allStartCompleter != null) {
+        return;
+      }
+      _allStartCompleter = Completer<void>();
+
+      // 2. 逐漫画继续下载，异步，并等待所有"下载准备"结束
       var entities = await DownloadDao.getMangas() ?? _data;
       var tasks = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>();
+      var prepares = <Future<DownloadMangaQueueTask?>>[];
       for (var entity in entities) {
         var task = tasks.where((el) => el.mangaId == entity.mangaId).firstOrNull;
         if (task == null || !task.canceled) {
-          _pauseOrContinue(entity: entity, task: null);
+          prepares.add(_pauseOrContinue(entity: entity, task: null, addTask: false));
         }
       }
+      var newTasks = await Future.wait(prepares);
+
+      // 3. 按照下载时间逆序，并将新的下载任务入队
+      var newTaskMap = <int, DownloadMangaQueueTask>{};
+      for (var task in newTasks) {
+        if (task != null) {
+          newTaskMap[task.mangaId] = task;
+        }
+      }
+      for (var entity in entities) {
+        var newTask = newTaskMap[entity.mangaId];
+        if (newTask != null) {
+          QueueManager.instance.addTask(newTask);
+        }
+      }
+
+      // 4. 记录"全部开始"已完成
+      _allStartCompleter?.complete();
+      _allStartCompleter = null;
     } else {
       // => 全部暂停
+
+      // 1. 先取消目前所有的任务
       for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
         if (!t.canceled) {
-          t.cancel(); // TODO ???
+          t.cancel();
+        }
+      }
+
+      // 2. 等待"全部开始"结束
+      await _allStartCompleter?.future;
+
+      // 3. 再取消"全部开始"结束后所有的任务
+      for (var t in QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>()) {
+        if (!t.canceled) {
+          t.cancel();
         }
       }
     }
   }
 
   Future<void> _onSettingPressed() {
-    var setting = _setting.copyWith(); // TODO 章节下载顺序
+    var setting = _setting.copyWith();
     return showDialog(
       context: context,
       builder: (c) => AlertDialog(

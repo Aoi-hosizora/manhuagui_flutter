@@ -50,12 +50,12 @@ class DownloadMangaLineView extends StatelessWidget {
           text3: progress.status == DownloadMangaLineStatus.waiting
               ? '等待中'
               : progress.status == DownloadMangaLineStatus.paused
-                  ? '已暂停 (${progress.notFinishedPageCount!} 页未完成)'
+                  ? '已暂停 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)'
                   : progress.status == DownloadMangaLineStatus.succeeded
                       ? '已完成'
                       : progress.notFinishedPageCount! < 0
                           ? '下载出错'
-                          : '下载出错 (${progress.notFinishedPageCount!} 页未完成)',
+                          : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
           showProgressBar: false,
           progressBarValue: null,
           disableAction: false,
@@ -137,12 +137,12 @@ class LargeDownloadMangaLineView extends StatelessWidget {
           text3: progress.status == DownloadMangaLineStatus.waiting
               ? '等待中'
               : progress.status == DownloadMangaLineStatus.paused
-                  ? '已暂停 (${progress.notFinishedPageCount!} 页未完成)'
+                  ? '已暂停 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)'
                   : progress.status == DownloadMangaLineStatus.succeeded
                       ? '已完成'
                       : progress.notFinishedPageCount! < 0
                           ? '下载出错'
-                          : '下载出错 (${progress.notFinishedPageCount!} 页未完成)',
+                          : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
         );
       case DownloadMangaLineStatus.downloading:
       case DownloadMangaLineStatus.pausing:
@@ -187,6 +187,7 @@ class DownloadMangaLineProgress {
     required this.startedChapterCount,
     required this.totalChapterCount,
     required int this.notFinishedPageCount,
+    required int this.notFinishedChapterCount,
     required DateTime this.lastDownloadTime,
   })  : stopped = true,
         preparing = false,
@@ -203,6 +204,7 @@ class DownloadMangaLineProgress {
   })  : stopped = false,
         preparing = true,
         notFinishedPageCount = null,
+        notFinishedChapterCount = null,
         lastDownloadTime = null,
         chapterTitle = null,
         triedPageCount = null,
@@ -219,6 +221,7 @@ class DownloadMangaLineProgress {
         preparing = false,
         gettingManga = false,
         notFinishedPageCount = null,
+        notFinishedChapterCount = null,
         lastDownloadTime = null;
 
   // both
@@ -229,6 +232,7 @@ class DownloadMangaLineProgress {
   // stopped
   final bool stopped;
   final int? notFinishedPageCount;
+  final int? notFinishedChapterCount;
   final DateTime? lastDownloadTime;
 
   // preparing / running
@@ -276,6 +280,7 @@ class DownloadMangaLineProgress {
         startedChapterCount: entity.startedChapterIds.length,
         totalChapterCount: entity.totalChapterIds.length,
         notFinishedPageCount: entity.error ? -1 : entity.totalPageCountInAll - entity.successPageCountInAll,
+        notFinishedChapterCount: entity.error ? -1 : entity.failedChapterCount,
         lastDownloadTime: entity.updatedAt,
       );
     } else {

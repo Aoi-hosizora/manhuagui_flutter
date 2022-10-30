@@ -76,7 +76,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.download),
-            tooltip: '下载列表',
+            tooltip: '查看下载列表',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (c) => DownloadPage(),

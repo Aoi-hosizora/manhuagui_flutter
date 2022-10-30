@@ -86,7 +86,7 @@ class DownloadedManga {
       downloadedChapters.where((el) => el.succeeded).map((el) => el.chapterId).toList();
 
   int get failedChapterCount => //
-      downloadedChapters.where((el) => !el.succeeded).map((el) => 1).reduce((val, el) => val + el);
+      downloadedChapters.where((el) => !el.succeeded).length;
 
   int get totalPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount).reduce((val, el) => val + el);

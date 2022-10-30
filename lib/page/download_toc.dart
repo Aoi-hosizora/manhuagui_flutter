@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/page/dl_finished.dart';
@@ -128,7 +130,6 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     _loading = true;
     _data = null;
     _task = null;
-    _byte = 0;
     _history = null;
     if (mounted) setState(() {});
 
@@ -143,8 +144,10 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       await Future.delayed(Duration(milliseconds: 20));
       _data = data;
       _task = QueueManager.instance.tasks.whereType<DownloadMangaQueueTask>().where((el) => el.mangaId == widget.mangaId).firstOrNull;
-      _byte = await getDownloadedMangaBytes(mangaId: widget.mangaId); // TODO slow
-      _invertOrder = true;
+      getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) {
+        _byte = b;
+        if (mounted) setState(() {});
+      });
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
     } else {
       _error = '无法获取漫画下载记录';
@@ -184,6 +187,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       mangaId: _data!.mangaId,
       chapterIds: _data!.downloadedChapters.map((el) => el.chapterId).toList(),
       parallel: _setting.downloadPagesTogether,
+      invertOrder: _setting.invertDownloadOrder,
     );
 
     // 2. 更新数据库
@@ -203,10 +207,68 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       },
     );
 
-    // 3. 入队等待执行，异步
+    // 3. 必要时入队等待执行，异步
     if (need) {
       QueueManager.instance.addTask(newTask);
     }
+  }
+
+  Future<void> _delete(DownloadedChapter entity) async {
+    if (_task != null) {
+      Fluttertoast.showToast(msg: '当前仅支持在漫画暂停下载时删除章节');
+      return;
+    }
+
+    var alsoDeleteFile = _setting.defaultToDeleteFiles;
+    await showDialog(
+      context: context,
+      builder: (c) => StatefulBuilder(
+        builder: (c, _setState) => AlertDialog(
+          title: Text('漫画删除确认'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('是否删除 ${entity.chapterTitle}？'),
+              SizedBox(height: 5),
+              CheckboxListTile(
+                title: Text('同时删除已下载的文件'),
+                value: alsoDeleteFile,
+                onChanged: (v) {
+                  alsoDeleteFile = v ?? false;
+                  _setState(() {});
+                },
+                dense: false,
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text('删除'),
+              onPressed: () async {
+                Navigator.of(c).pop();
+                _data!.downloadedChapters.remove(entity);
+                await DownloadDao.deleteChapter(mid: entity.mangaId, cid: entity.chapterId);
+                if (mounted) setState(() {});
+                if (alsoDeleteFile) {
+                  await deleteDownloadedChapter(mangaId: entity.mangaId, chapterId: entity.chapterId);
+                  getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) {
+                    _byte = b;
+                    if (mounted) setState(() {});
+                  });
+                }
+              },
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).pop(),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -216,6 +278,15 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
         title: Text('章节下载管理'),
         leading: AppBarActionButton.leading(context: context),
         actions: [
+          AppBarActionButton(
+            icon: Icon(Icons.download),
+            tooltip: '查看下载列表',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (c) => DownloadPage(),
+              ),
+            ),
+          ),
           AppBarActionButton(
             icon: Icon(Icons.open_in_browser),
             tooltip: '用浏览器打开',
@@ -338,10 +409,9 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   outerController: _scrollController,
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
                   mangaEntity: _data!,
-                  downloadTask: _task,
                   invertOrder: _invertOrder,
                   history: _history,
-                  onChapterPressed: (cid) {
+                  toReadChapter: (cid) {
                     _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -359,6 +429,12 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                       ),
                     );
                   },
+                  toDeleteChapter: (cid) async {
+                    var chapterEntity = _data!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                    if (chapterEntity != null) {
+                      await _delete(chapterEntity);
+                    }
+                  },
                 ),
                 // ****************************************************************
                 // 未完成下载（正在下载/下载失败）的章节
@@ -370,8 +446,9 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   mangaEntity: _data!,
                   downloadTask: _task,
                   invertOrder: _invertOrder,
-                  history: _history,
-                  onChapterPressed: (cid) {}, // TODO 单个漫画下载特定章节/按照特定顺序下载
+                  toControlChapter: (cid) {
+                    Fluttertoast.showToast(msg: '目前暂不支持单独下载或暂停某一章节'); // TODO 单个漫画下载特定章节/按照特定顺序下载
+                  },
                 ),
               ],
             ),

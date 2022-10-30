@@ -8,7 +8,7 @@ class DownloadChapterLineView extends StatelessWidget {
     required this.chapterEntity,
     required this.downloadTask,
     required this.onPressed,
-    required this.onLongPressed,
+    this.onLongPressed,
   }) : super(key: key);
 
   final DownloadedChapter chapterEntity;
@@ -64,7 +64,7 @@ class DownloadChapterLineView extends StatelessWidget {
           ],
         ),
       ),
-      onTap: !disabled ? onPressed : null,
+      onTap: !disabled ? onPressed : () {},
       onLongPress: !disabled ? onLongPressed : null,
     );
   }
@@ -74,40 +74,49 @@ class DownloadChapterLineView extends StatelessWidget {
     var progress = DownloadChapterLineProgress.fromEntityAndTask(entity: chapterEntity, task: downloadTask);
 
     // !!!
+    final triedProgressText = '${progress.triedPageCount}/${progress.totalPageCount}';
+    final successProgressText = '${progress.successPageCount}/${progress.totalPageCount}';
+    final triedProgressValue = progress.totalPageCount == 0 ? 0.0 : progress.triedPageCount / progress.totalPageCount;
+    final successProgressValue = progress.totalPageCount == 0 ? 0.0 : progress.successPageCount / progress.totalPageCount;
+
     final title = '【${chapterEntity.chapterGroup}】${chapterEntity.chapterTitle}';
     String subTitle;
-    final progressText = '${progress.triedPageCount}/${progress.totalPageCount}';
-    double? progressValue = progress.totalPageCount == 0 ? 0.0 : progress.triedPageCount / progress.totalPageCount;
+    double? progressValue;
     IconData icon;
     switch (progress.status) {
-      case DownloadChapterLineStatus.waiting:
-        subTitle = '$progressText (等待下载中)';
+      case DownloadChapterLineStatus.waiting: // use success
+        subTitle = '$successProgressText (等待下载中)';
+        progressValue = successProgressValue;
         icon = Icons.pause;
         break;
-      case DownloadChapterLineStatus.preparing:
-        subTitle = '$progressText (正在获取章节信息)';
+      case DownloadChapterLineStatus.preparing: // use success
+        subTitle = '$successProgressText (正在获取章节信息)';
         progressValue = null;
         icon = Icons.pause;
         break;
-      case DownloadChapterLineStatus.downloading:
-        subTitle = '下载中，$progressText';
+      case DownloadChapterLineStatus.downloading: // use tried
+        subTitle = '下载中，$triedProgressText';
+        progressValue = triedProgressValue;
         icon = Icons.pause;
         break;
-      case DownloadChapterLineStatus.pausing:
-        subTitle = '$progressText (暂停中)';
+      case DownloadChapterLineStatus.pausing: // use tried
+        subTitle = '$triedProgressText (暂停中)';
         progressValue = null;
         icon = Icons.block;
         break;
-      case DownloadChapterLineStatus.paused:
-        subTitle = '$progressText (已暂停)';
+      case DownloadChapterLineStatus.paused: // use success
+        subTitle = '$successProgressText (${progress.unfinishedPageCount} 页未完成)';
+        progressValue = successProgressValue;
         icon = Icons.play_arrow;
         break;
-      case DownloadChapterLineStatus.succeeded:
-        subTitle = '已完成，$progressText';
+      case DownloadChapterLineStatus.succeeded: // use success
+        subTitle = '已完成，$successProgressText';
+        progressValue = successProgressValue;
         icon = Icons.file_download_done;
         break;
-      case DownloadChapterLineStatus.failed:
-        subTitle = '$progressText (${progress.failedPageCount} 页未完成)';
+      case DownloadChapterLineStatus.failed: // use success
+        subTitle = '$successProgressText (${progress.unfinishedPageCount} 页未完成)';
+        progressValue = successProgressValue;
         icon = Icons.priority_high;
         break;
     }
@@ -117,7 +126,7 @@ class DownloadChapterLineView extends StatelessWidget {
       title: title,
       subTitle: subTitle,
       progress: progressValue,
-      icon: !progress.isMangaDownloading ? Icons.block : icon,
+      icon: icon,
       disabled: !progress.isMangaDownloading || progress.status == DownloadChapterLineStatus.pausing,
     );
   }
@@ -142,14 +151,16 @@ class DownloadChapterLineProgress {
     required this.isMangaDownloading,
     required this.totalPageCount,
     required this.triedPageCount,
-    required this.failedPageCount,
+    required this.successPageCount,
   });
 
   final DownloadChapterLineStatus status;
   final bool isMangaDownloading;
   final int totalPageCount;
   final int triedPageCount;
-  final int failedPageCount;
+  final int successPageCount;
+
+  int get unfinishedPageCount => totalPageCount - successPageCount;
 
   // !!!
   static DownloadChapterLineProgress fromEntityAndTask({required DownloadedChapter entity, required DownloadMangaQueueTask? task}) {
@@ -157,13 +168,15 @@ class DownloadChapterLineProgress {
     DownloadChapterLineStatus status;
 
     var isMangaDownloading = task != null && !task.succeeded && task.mangaId == entity.mangaId && !task.canceled;
-    if (task != null && !task.succeeded && task.mangaId == entity.mangaId && task.progress.startedChapters != null) {
+    if (task != null && !task.succeeded && task.mangaId == entity.mangaId) {
       if (task.canceled) {
         if (task.progress.currentChapterId == entity.chapterId) {
           status = DownloadChapterLineStatus.pausing; // pause when preparing or downloading
         } else {
           status = DownloadChapterLineStatus.paused; // >>>
         }
+      } else if (task.progress.startedChapters == null) {
+        status = DownloadChapterLineStatus.waiting;
       } else {
         if (task.progress.currentChapterId == entity.chapterId) {
           if (task.progress.currentChapter == null) {
@@ -171,7 +184,7 @@ class DownloadChapterLineProgress {
           } else {
             status = DownloadChapterLineStatus.downloading;
           }
-        } else if (task.progress.startedChapters!.any((el) => el?.cid == entity.chapterId)) {
+        } else if (!task.progress.startedChapters!.any((el) => el?.cid == entity.chapterId)) {
           status = DownloadChapterLineStatus.waiting;
         } else {
           status = DownloadChapterLineStatus.paused; // >>>
@@ -202,7 +215,7 @@ class DownloadChapterLineProgress {
         isMangaDownloading: isMangaDownloading,
         totalPageCount: task!.progress.currentChapter!.pageCount,
         triedPageCount: task.progress.triedChapterPageCount ?? 0,
-        failedPageCount: (task.progress.triedChapterPageCount ?? 0) - (task.progress.successChapterPageCount ?? 0),
+        successPageCount: task.progress.successChapterPageCount ?? 0,
       );
     }
     return DownloadChapterLineProgress(
@@ -210,7 +223,7 @@ class DownloadChapterLineProgress {
       isMangaDownloading: isMangaDownloading,
       totalPageCount: entity.totalPageCount,
       triedPageCount: entity.triedPageCount,
-      failedPageCount: entity.triedPageCount - entity.successPageCount,
+      successPageCount: entity.successPageCount,
     );
   }
 }

@@ -110,8 +110,18 @@ Future<int> getDownloadedMangaBytes({required int mangaId}) async {
   return totalBytes;
 }
 
-Future<void> deleteDownloadedManga(int mangaId) async {
+Future<void> deleteDownloadedManga({required int mangaId}) async {
   var mangaPath = await _getDownloadMangaDirectory(mangaId, null);
+  var directory = Directory(mangaPath);
+  try {
+    await directory.delete(recursive: true);
+  } catch (e) {
+    print(e);
+  }
+}
+
+Future<void> deleteDownloadedChapter({required int mangaId, required int chapterId}) async {
+  var mangaPath = await _getDownloadMangaDirectory(mangaId, chapterId);
   var directory = Directory(mangaPath);
   try {
     await directory.delete(recursive: true);
@@ -124,6 +134,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   DownloadMangaQueueTask({
     required this.mangaId,
     required this.chapterIds,
+    required this.invertOrder,
     int parallel = 5,
   })  : _canceled = false,
         _succeeded = false,
@@ -132,6 +143,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   final int mangaId;
   final List<int> chapterIds;
+  final bool invertOrder;
 
   bool _canceled;
 
@@ -194,7 +206,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     // 2. 合并请求下载的章节与数据库已有的章节
     var oldManga = await DownloadDao.getManga(mid: mangaId);
     var oldChapterIds = oldManga?.downloadedChapters.map((el) => el.chapterId) ?? [];
-    var mergedChapterIds = {...oldChapterIds, ...chapterIds}.toList()..sort();
+    var mergedChapterIds = {...oldChapterIds, ...chapterIds}.toList();
+    mergedChapterIds.sort((i, j) => !invertOrder ? i.compareTo(j) : j.compareTo(i));
     chapterIds.clear();
     chapterIds.addAll(mergedChapterIds);
 
@@ -244,7 +257,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           chapterTitle: chapterTuple.item1,
           chapterGroup: chapterTuple.item2,
           totalPageCount: chapterTuple.item3,
-          triedPageCount: oldChapter?.triedPageCount ?? 0,
+          triedPageCount: oldChapter?.successPageCount ?? 0 /* use success as tried */,
           successPageCount: oldChapter?.successPageCount ?? 0,
         ),
       );
@@ -307,7 +320,6 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     );
 
     // 4. 先处理所有已下载完的章节
-    var alreadyDownloadedChapterIds = <int>[];
     var startedChapters = <MangaChapter?>[];
     for (var chapterId in chapterIds) {
       // 4.1. 判断请求是否被取消
@@ -339,7 +351,6 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       }
 
       // 4.4. 记录该章节已下载完
-      alreadyDownloadedChapterIds.add(chapterId);
       startedChapters.add(null); // 添加占位
       _updateProgress(
         DownloadMangaProgress.gettingChapter(
@@ -361,7 +372,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
       // 5.2. 判断当前章节是否下载完
       var chapterId = chapterIds[i];
-      if (alreadyDownloadedChapterIds.contains(chapterId)) {
+      var oldChapter = oldManga?.downloadedChapters.where((el) => el.chapterId == chapterId).firstOrNull;
+      if (oldChapter != null && oldChapter.succeeded) {
         continue; // 跳过已下载完的章节
       }
       startedChapters.add(null); // 占位
@@ -378,8 +390,23 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       try {
         chapter = (await client.getMangaChapter(mid: mangaId, cid: chapterId)).data;
       } catch (e, s) {
-        // 请求错误 => 无需更新章节下载表，直接返回
+        // 请求错误 => 更新章节下载表的错误标志，再返回
         print(wrapError(e, s).text);
+        if (oldChapter != null) {
+          await DownloadDao.addOrUpdateChapter(
+            chapter: DownloadedChapter(
+              mangaId: oldChapter.mangaId,
+              chapterId: oldChapter.chapterId,
+              chapterTitle: oldChapter.chapterTitle,
+              chapterGroup: oldChapter.chapterGroup,
+              totalPageCount: oldChapter.totalPageCount,
+              triedPageCount: oldChapter.totalPageCount /* <<< force to represent error */,
+              successPageCount: oldChapter.successPageCount,
+            ),
+          );
+          var ev = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
+          EventBusManager.instance.fire(ev);
+        }
         continue;
       }
       startedChapters[startedChapters.length - 1] = chapter; // 更新占位

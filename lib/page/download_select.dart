@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -149,6 +149,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
       mangaId: widget.mangaId,
       chapterIds: chapterIds.toList(),
       parallel: _setting.downloadPagesTogether,
+      invertOrder: _setting.invertDownloadOrder,
     );
 
     // 4. 更新数据库，并更新界面
@@ -169,7 +170,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
     );
     await _getChapters();
 
-    // 5. 入队等待执行，异步
+    // 5. 必要时入队等待执行，异步
     if (need) {
       QueueManager.instance.addTask(task);
     }
@@ -179,13 +180,18 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('已添加 ${chapterIds.length} 个章节至下载任务'),
+        content: Text('已添加 ${chapterIds.length} 个章节至漫画下载任务'),
         duration: Duration(seconds: 2),
         action: SnackBarAction(
-          label: '查看下载列表',
+          label: '查看',
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (c) => DownloadPage(),
+              builder: (c) => DownloadTocPage(
+                mangaId: widget.mangaId,
+                mangaTitle: widget.mangaTitle,
+                mangaCover: widget.mangaCover,
+                mangaUrl: widget.mangaUrl,
+              ),
             ),
           ),
         ),
@@ -237,7 +243,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                 mangaTitle: widget.mangaTitle,
                 groups: widget.groups,
                 full: true,
-                highlightColor: Theme.of(context).primaryColor.withOpacity(0.5) /* TODO */,
+                highlightColor: Theme.of(context).primaryColor.withOpacity(0.5),
                 highlightedChapters: _selected,
                 customBadgeBuilder: (cid) {
                   var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;

@@ -6,24 +6,29 @@ class DlSetting {
   DlSetting({
     required this.defaultToDeleteFiles,
     required this.downloadPagesTogether,
+    required this.invertDownloadOrder,
   });
 
   final bool defaultToDeleteFiles; // 默认删除已下载的文件
   final int downloadPagesTogether; // 同时下载的页面数量
+  final bool invertDownloadOrder; // 漫画章节下载顺序
 
   DlSetting.defaultSetting()
       : this(
           defaultToDeleteFiles: false,
           downloadPagesTogether: 4,
+          invertDownloadOrder: false,
         );
 
   DlSetting copyWith({
     bool? defaultToDeleteFiles,
     int? downloadPagesTogether,
+    bool? invertDownloadOrder,
   }) {
     return DlSetting(
       defaultToDeleteFiles: defaultToDeleteFiles ?? this.defaultToDeleteFiles,
       downloadPagesTogether: downloadPagesTogether ?? this.downloadPagesTogether,
+      invertDownloadOrder: invertDownloadOrder ?? this.invertDownloadOrder,
     );
   }
 }
@@ -45,15 +50,17 @@ class DlSettingSubPage extends StatefulWidget {
 class _DlSettingSubPageState extends State<DlSettingSubPage> {
   late var _defaultToDeleteFiles = widget.setting.defaultToDeleteFiles;
   late var _downloadPagesTogether = widget.setting.downloadPagesTogether;
+  late var _invertDownloadOrder = widget.setting.invertDownloadOrder;
 
   DlSetting get _newestSetting => DlSetting(
         defaultToDeleteFiles: _defaultToDeleteFiles,
         downloadPagesTogether: _downloadPagesTogether,
+        invertDownloadOrder: _invertDownloadOrder,
       );
 
   Widget _buildComboBox<T>({
     required String title,
-    double width = 75,
+    double width = 120,
     required T value,
     required List<T> values,
     required Widget Function(T) builder,
@@ -126,6 +133,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
         ),
         _buildComboBox<int>(
           title: '同时下载的页面数量',
+          width: 75,
           value: _downloadPagesTogether.clamp(1, 8),
           values: List.generate(8, (i) => i + 1),
           builder: (s) => Text(
@@ -134,6 +142,20 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           ),
           onChanged: (c) {
             _downloadPagesTogether = c.clamp(1, 8);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildComboBox<bool>(
+          title: '漫画章节下载顺序',
+          value: _invertDownloadOrder,
+          values: [false, true],
+          builder: (s) => Text(
+            !s ? '正序 (旧到新)' : '逆序 (新到旧)',
+            style: Theme.of(context).textTheme.bodyText2,
+          ),
+          onChanged: (c) {
+            _invertDownloadOrder = c;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
