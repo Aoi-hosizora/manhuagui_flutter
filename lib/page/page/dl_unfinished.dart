@@ -3,10 +3,11 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
+import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 
 /// 章节下载管理页-未完成
-
 class DlUnfinishedSubPage extends StatefulWidget {
   const DlUnfinishedSubPage({
     Key? key,
@@ -40,8 +41,10 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var unfinished = widget.mangaEntity.downloadedChapters.where((el) => !el.succeeded);
-    // TODO Line，加进度条，长按弹出选项（目前与上面完全一样）
+    var unfinishedChapters = widget.mangaEntity.downloadedChapters //
+        .where((el) => !el.succeeded)
+        .toList();
+
     return Scaffold(
       body: ScrollbarWithMore(
         controller: widget.innerController,
@@ -54,7 +57,37 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
             SliverOverlapInjector(
               handle: widget.injectorHandler,
             ),
-            if (unfinished.isEmpty)
+            // TODO xxx
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: MangaSimpleTocView(
+                  chapters: unfinishedChapters.map((el) => Tuple2(el.chapterGroup, el.toTiny())).toList(),
+                  invertOrder: widget.invertOrder,
+                  showNewBadge: false,
+                  highlightedChapters: [widget.history?.chapterId ?? 0],
+                  customBadgeBuilder: (cid) {
+                    var oldChapter = widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                    if (oldChapter == null) {
+                      return null;
+                    }
+                    return DownloadBadge(
+                      state: !oldChapter.finished
+                          ? DownloadBadgeState.downloading
+                          : oldChapter.succeeded
+                              ? DownloadBadgeState.succeeded
+                              : DownloadBadgeState.failed,
+                    );
+                  },
+                  onChapterPressed: widget.onChapterPressed,
+                  onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'), // TODO
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: 100),
+            ),
+            if (unfinishedChapters.isEmpty)
               SliverToBoxAdapter(
                 child: Container(
                   color: Colors.white,
@@ -67,12 +100,12 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                   ),
                 ),
               ),
-            if (unfinished.isNotEmpty)
+            if (unfinishedChapters.isNotEmpty)
               SliverList(
                 delegate: SliverChildListDelegate(
                   <Widget>[
-                    for (var chapter in unfinished)
-                      Container(
+                    for (var chapter in unfinishedChapters)
+                      Material(
                         color: Colors.white,
                         child: DownloadChapterLineView(
                           chapterEntity: chapter,
@@ -82,7 +115,10 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                         ),
                       )
                   ].separate(
-                    Divider(height: 0, thickness: 1),
+                    Container(
+                      color: Colors.white,
+                      child: Divider(height: 0, thickness: 1),
+                    ),
                   ),
                 ),
               ),

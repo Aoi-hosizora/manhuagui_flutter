@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga.dart';
 
 /// 章节下载管理页-已完成
-
 class DlFinishedSubPage extends StatefulWidget {
   const DlFinishedSubPage({
     Key? key,
@@ -43,7 +43,6 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
     super.build(context);
     var succeededChapters = widget.mangaEntity.downloadedChapters //
         .where((el) => el.succeeded)
-        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
         .toList();
 
     return Scaffold(
@@ -62,7 +61,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
               child: Container(
                 color: Colors.white,
                 child: MangaSimpleTocView(
-                  chapters: succeededChapters,
+                  chapters: succeededChapters.map((el) => Tuple2(el.chapterGroup, el.toTiny())).toList(),
                   invertOrder: widget.invertOrder,
                   showNewBadge: false,
                   highlightedChapters: [widget.history?.chapterId ?? 0],
@@ -85,83 +84,44 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
               ),
             ),
             SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: MangaSimpleTocView(
-                  chapters: succeededChapters,
-                  invertOrder: widget.invertOrder,
-                  showNewBadge: false,
-                  highlightedChapters: [widget.history?.chapterId ?? 0],
-                  customBadgeBuilder: (cid) {
-                    var oldChapter = widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                    if (oldChapter == null) {
-                      return null;
-                    }
-                    return DownloadBadge(
-                      state: !oldChapter.finished
-                          ? DownloadBadgeState.downloading
-                          : oldChapter.succeeded
-                              ? DownloadBadgeState.succeeded
-                              : DownloadBadgeState.failed,
-                    );
-                  },
-                  onChapterPressed: widget.onChapterPressed,
-                  onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'), // TODO
+              child: SizedBox(height: 100),
+            ),
+            // TODO xxx
+            if (succeededChapters.isEmpty)
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                  child: Center(
+                    child: Text(
+                      '暂无章节',
+                      style: Theme.of(context).textTheme.subtitle1,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: MangaSimpleTocView(
-                  chapters: succeededChapters,
-                  invertOrder: widget.invertOrder,
-                  showNewBadge: false,
-                  highlightedChapters: [widget.history?.chapterId ?? 0],
-                  customBadgeBuilder: (cid) {
-                    var oldChapter = widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                    if (oldChapter == null) {
-                      return null;
-                    }
-                    return DownloadBadge(
-                      state: !oldChapter.finished
-                          ? DownloadBadgeState.downloading
-                          : oldChapter.succeeded
-                              ? DownloadBadgeState.succeeded
-                              : DownloadBadgeState.failed,
-                    );
-                  },
-                  onChapterPressed: widget.onChapterPressed,
-                  onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'), // TODO
+            if (succeededChapters.isNotEmpty)
+              SliverList(
+                delegate: SliverChildListDelegate(
+                  <Widget>[
+                    for (var chapter in succeededChapters)
+                      Material(
+                        color: Colors.white,
+                        child: DownloadChapterLineView(
+                          chapterEntity: chapter,
+                          downloadTask: widget.downloadTask,
+                          onPressed: () => widget.onChapterPressed.call(chapter.chapterId),
+                          onLongPressed: () => Fluttertoast.showToast(msg: 'TODO ${chapter.chapterId}'), // TODO
+                        ),
+                      )
+                  ].separate(
+                    Container(
+                      color: Colors.white,
+                      child: Divider(height: 0, thickness: 1),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: MangaSimpleTocView(
-                  chapters: succeededChapters,
-                  invertOrder: widget.invertOrder,
-                  showNewBadge: false,
-                  highlightedChapters: [widget.history?.chapterId ?? 0],
-                  customBadgeBuilder: (cid) {
-                    var oldChapter = widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                    if (oldChapter == null) {
-                      return null;
-                    }
-                    return DownloadBadge(
-                      state: !oldChapter.finished
-                          ? DownloadBadgeState.downloading
-                          : oldChapter.succeeded
-                              ? DownloadBadgeState.succeeded
-                              : DownloadBadgeState.failed,
-                    );
-                  },
-                  onChapterPressed: widget.onChapterPressed,
-                  onChapterLongPressed: (cid) => Fluttertoast.showToast(msg: 'TODO $cid'), // TODO
-                ),
-              ),
-            ),
           ],
         ),
       ),

@@ -26,15 +26,15 @@ class DownloadMangaLineView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var progress = DownloadLineProgress.fromEntityAndTask(entity: mangaEntity, task: downloadTask);
+    var progress = DownloadMangaLineProgress.fromEntityAndTask(entity: mangaEntity, task: downloadTask);
     var downloadedSize = filesize(downloadedBytes, 2, false);
 
     // !!!
     switch (progress.status) {
-      case DownloadLineStatus.waiting:
-      case DownloadLineStatus.paused:
-      case DownloadLineStatus.succeeded:
-      case DownloadLineStatus.failed:
+      case DownloadMangaLineStatus.waiting:
+      case DownloadMangaLineStatus.paused:
+      case DownloadMangaLineStatus.succeeded:
+      case DownloadMangaLineStatus.failed:
         assert(
           progress.stopped,
           'progress.stopped must be true when status is not downloading and pausing',
@@ -47,11 +47,11 @@ class DownloadMangaLineView extends StatelessWidget {
           icon2: Icons.access_time,
           text2: '下载于 ${DateFormat('yyyy-MM-dd HH:mm:ss').format(progress.lastDownloadTime!)}',
           icon3: Icons.bar_chart,
-          text3: progress.status == DownloadLineStatus.waiting
+          text3: progress.status == DownloadMangaLineStatus.waiting
               ? '等待中'
-              : progress.status == DownloadLineStatus.paused
+              : progress.status == DownloadMangaLineStatus.paused
                   ? '已暂停 (${progress.notFinishedPageCount!} 页未完成)'
-                  : progress.status == DownloadLineStatus.succeeded
+                  : progress.status == DownloadMangaLineStatus.succeeded
                       ? '已完成'
                       : progress.notFinishedPageCount! < 0
                           ? '下载出错'
@@ -59,13 +59,13 @@ class DownloadMangaLineView extends StatelessWidget {
           showProgressBar: false,
           progressBarValue: null,
           disableAction: false,
-          actionIcon: progress.status == DownloadLineStatus.waiting ? Icons.pause : Icons.play_arrow,
+          actionIcon: progress.status == DownloadMangaLineStatus.waiting ? Icons.pause : Icons.play_arrow,
           onActionPressed: onActionPressed,
           onLinePressed: onLinePressed,
           onLineLongPressed: onLineLongPressed,
         );
-      case DownloadLineStatus.downloading:
-      case DownloadLineStatus.pausing:
+      case DownloadMangaLineStatus.downloading:
+      case DownloadMangaLineStatus.pausing:
         assert(
           !progress.stopped,
           'progress.stopped must be false when status is downloading or pausing',
@@ -81,14 +81,14 @@ class DownloadMangaLineView extends StatelessWidget {
                       ? '正在获取漫画信息'
                       : '当前正在下载 未知章节'
                   : '当前正在下载 ${progress.chapterTitle!} ${progress.triedPageCount!}/${progress.totalPageCount!}页') +
-              (progress.status == DownloadLineStatus.pausing ? ' (暂停中)' : ''),
+              (progress.status == DownloadMangaLineStatus.pausing ? ' (暂停中)' : ''),
           icon3: null,
           text3: '　',
           showProgressBar: true,
-          progressBarValue: progress.status == DownloadLineStatus.pausing || progress.preparing || progress.totalPageCount! == 0
+          progressBarValue: progress.status == DownloadMangaLineStatus.pausing || progress.preparing
               ? null //
-              : progress.triedPageCount! / progress.totalPageCount!,
-          disableAction: progress.status == DownloadLineStatus.pausing,
+              : (progress.totalPageCount! == 0 ? 0.0 : progress.triedPageCount! / progress.totalPageCount!),
+          disableAction: progress.status == DownloadMangaLineStatus.pausing,
           actionIcon: Icons.pause,
           onActionPressed: onActionPressed,
           onLinePressed: onLinePressed,
@@ -113,15 +113,15 @@ class LargeDownloadMangaLineView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var progress = DownloadLineProgress.fromEntityAndTask(entity: mangaEntity, task: downloadTask);
+    var progress = DownloadMangaLineProgress.fromEntityAndTask(entity: mangaEntity, task: downloadTask);
     var downloadedSize = filesize(downloadedBytes, 2, false);
 
     // !!!
     switch (progress.status) {
-      case DownloadLineStatus.waiting:
-      case DownloadLineStatus.paused:
-      case DownloadLineStatus.succeeded:
-      case DownloadLineStatus.failed:
+      case DownloadMangaLineStatus.waiting:
+      case DownloadMangaLineStatus.paused:
+      case DownloadMangaLineStatus.succeeded:
+      case DownloadMangaLineStatus.failed:
         assert(
           progress.stopped,
           'progress.stopped must be true when status is not downloading and pausing',
@@ -134,18 +134,18 @@ class LargeDownloadMangaLineView extends StatelessWidget {
           icon2: Icons.access_time,
           text2: '下载于 ${DateFormat('yyyy-MM-dd HH:mm:ss').format(progress.lastDownloadTime!)}',
           icon3: Icons.bar_chart,
-          text3: progress.status == DownloadLineStatus.waiting
+          text3: progress.status == DownloadMangaLineStatus.waiting
               ? '等待中'
-              : progress.status == DownloadLineStatus.paused
+              : progress.status == DownloadMangaLineStatus.paused
                   ? '已暂停 (${progress.notFinishedPageCount!} 页未完成)'
-                  : progress.status == DownloadLineStatus.succeeded
+                  : progress.status == DownloadMangaLineStatus.succeeded
                       ? '已完成'
                       : progress.notFinishedPageCount! < 0
                           ? '下载出错'
                           : '下载出错 (${progress.notFinishedPageCount!} 页未完成)',
         );
-      case DownloadLineStatus.downloading:
-      case DownloadLineStatus.pausing:
+      case DownloadMangaLineStatus.downloading:
+      case DownloadMangaLineStatus.pausing:
         assert(
           !progress.stopped,
           'progress.stopped must be false when status is downloading or pausing',
@@ -161,28 +161,28 @@ class LargeDownloadMangaLineView extends StatelessWidget {
                       ? '正在获取漫画信息'
                       : '当前正在下载 未知章节'
                   : '当前正在下载 ${progress.chapterTitle!} ${progress.triedPageCount!}/${progress.totalPageCount!}页') +
-              (progress.status == DownloadLineStatus.pausing ? ' (暂停中)' : ''),
+              (progress.status == DownloadMangaLineStatus.pausing ? ' (暂停中)' : ''),
           icon3: Icons.bar_chart,
-          text3: progress.status == DownloadLineStatus.pausing ? '暂停中' : '下载中',
+          text3: progress.status == DownloadMangaLineStatus.pausing ? '暂停中' : '下载中',
         );
     }
   }
 }
 
-enum DownloadLineStatus {
-  // 在队列中
+enum DownloadMangaLineStatus {
+  // 队列中
   waiting, // stopped
   downloading, // preparing / running
   pausing, // preparing / running
 
-  // 任务已结束
+  // 已结束
   paused, // stopped
   succeeded, // stopped
   failed, // stopped
 }
 
-class DownloadLineProgress {
-  const DownloadLineProgress.stopped({
+class DownloadMangaLineProgress {
+  const DownloadMangaLineProgress.stopped({
     required this.status,
     required this.startedChapterCount,
     required this.totalChapterCount,
@@ -195,7 +195,7 @@ class DownloadLineProgress {
         triedPageCount = null,
         totalPageCount = null;
 
-  const DownloadLineProgress.preparing({
+  const DownloadMangaLineProgress.preparing({
     required this.status,
     required this.startedChapterCount,
     required this.totalChapterCount,
@@ -208,7 +208,7 @@ class DownloadLineProgress {
         triedPageCount = null,
         totalPageCount = null;
 
-  const DownloadLineProgress.running({
+  const DownloadMangaLineProgress.running({
     required this.status,
     required this.startedChapterCount,
     required this.totalChapterCount,
@@ -222,7 +222,7 @@ class DownloadLineProgress {
         lastDownloadTime = null;
 
   // both
-  final DownloadLineStatus status;
+  final DownloadMangaLineStatus status;
   final int startedChapterCount;
   final int totalChapterCount;
 
@@ -239,39 +239,39 @@ class DownloadLineProgress {
   final int? totalPageCount;
 
   // !!!
-  static DownloadLineProgress fromEntityAndTask({required DownloadedManga entity, required DownloadMangaQueueTask? task}) {
-    DownloadLineStatus status;
+  static DownloadMangaLineProgress fromEntityAndTask({required DownloadedManga entity, required DownloadMangaQueueTask? task}) {
+    DownloadMangaLineStatus status;
     if (task != null && !task.succeeded) {
       if (!task.canceled) {
         if (task.progress.stage == DownloadMangaProgressStage.waiting) {
-          status = DownloadLineStatus.waiting; // stopped
+          status = DownloadMangaLineStatus.waiting; // stopped
         } else {
-          status = DownloadLineStatus.downloading; // preparing / running
+          status = DownloadMangaLineStatus.downloading; // preparing / running
         }
       } else {
-        status = DownloadLineStatus.pausing; // preparing / running
+        status = DownloadMangaLineStatus.pausing; // preparing / running
       }
     } else {
       if (!entity.error) {
         if (entity.startedPageCountInAll != entity.totalPageCountInAll) {
-          status = DownloadLineStatus.paused; // stopped
+          status = DownloadMangaLineStatus.paused; // stopped
         } else if (entity.successChapterIds.length == entity.totalChapterIds.length) {
-          status = DownloadLineStatus.succeeded; // stopped
+          status = DownloadMangaLineStatus.succeeded; // stopped
         } else {
-          status = DownloadLineStatus.failed; // stopped (failed to get chapter or download page)
+          status = DownloadMangaLineStatus.failed; // stopped (failed to get chapter or download page)
         }
       } else {
-        status = DownloadLineStatus.failed; // stopped (failed to get manga)
+        status = DownloadMangaLineStatus.failed; // stopped (failed to get manga)
       }
     }
 
     if (task == null || task.succeeded || (!task.canceled && task.progress.stage == DownloadMangaProgressStage.waiting)) {
       // waiting / paused / succeeded / failed / failed
       assert(
-        status != DownloadLineStatus.downloading && status != DownloadLineStatus.pausing,
+        status != DownloadMangaLineStatus.downloading && status != DownloadMangaLineStatus.pausing,
         'status must not be downloading and pausing and current progress is stopped',
       );
-      return DownloadLineProgress.stopped(
+      return DownloadMangaLineProgress.stopped(
         status: status,
         startedChapterCount: entity.startedChapterIds.length,
         totalChapterCount: entity.totalChapterIds.length,
@@ -281,23 +281,23 @@ class DownloadLineProgress {
     } else {
       // downloading / pausing
       assert(
-        status == DownloadLineStatus.downloading || status == DownloadLineStatus.pausing,
+        status == DownloadMangaLineStatus.downloading || status == DownloadMangaLineStatus.pausing,
         'status must be downloading or pausing and current progress is preparing or running',
       );
       if (task.progress.manga == null || task.progress.currentChapter == null) {
-        return DownloadLineProgress.preparing(
+        return DownloadMangaLineProgress.preparing(
           status: status,
           startedChapterCount: task.progress.startedChapters?.length ?? 0,
           totalChapterCount: task.chapterIds.length,
           gettingManga: task.progress.manga == null,
         );
       } else {
-        return DownloadLineProgress.running(
+        return DownloadMangaLineProgress.running(
           status: status,
           startedChapterCount: task.progress.startedChapters?.length ?? 0,
           totalChapterCount: task.chapterIds.length,
           chapterTitle: task.progress.currentChapter!.title,
-          triedPageCount: (task.progress.successChapterPageCount ?? 0) + (task.progress.failedChapterPageCount ?? 0),
+          triedPageCount: task.progress.triedChapterPageCount ?? 0,
           totalPageCount: task.progress.currentChapter!.pageCount,
         );
       }

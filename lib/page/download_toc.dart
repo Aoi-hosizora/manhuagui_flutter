@@ -238,7 +238,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
           onRefresh: () => _loadData(),
           childBuilder: (c) => ExtendedNestedScrollView(
             controller: _scrollController,
-            headerSliverBuilder: (c, o) => [
+            headerSliverBuilder: (context, _) => [
               SliverToBoxAdapter(
                 child: Column(
                   children: [
@@ -295,35 +295,28 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                 ),
               ),
               SliverOverlapAbsorber(
-                handle: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
+                handle: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(context),
                 sliver: SliverPersistentHeader(
                   pinned: true,
                   floating: true,
                   delegate: SliverHeaderDelegate(
                     child: PreferredSize(
-                      preferredSize: Size.fromHeight(Theme.of(context).appBarTheme.toolbarHeight!),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border(
-                            bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-                          ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: Center(
-                            child: TabBar(
-                              controller: _tabController,
-                              labelColor: Theme.of(context).primaryColor,
-                              unselectedLabelColor: Colors.grey[600],
-                              indicatorColor: Theme.of(context).primaryColor,
-                              isScrollable: true,
-                              indicatorSize: TabBarIndicatorSize.label,
-                              tabs: const [
-                                Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Text('已完成')),
-                                Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Text('未完成')),
-                              ],
-                            ),
+                      preferredSize: Size.fromHeight(36.0),
+                      child: Material(
+                        color: Colors.white,
+                        elevation: 2,
+                        child: Center(
+                          child: TabBar(
+                            controller: _tabController,
+                            labelColor: Theme.of(context).primaryColor,
+                            unselectedLabelColor: Colors.grey[600],
+                            indicatorColor: Theme.of(context).primaryColor,
+                            isScrollable: true,
+                            indicatorSize: TabBarIndicatorSize.label,
+                            tabs: const [
+                              SizedBox(height: 36.0, child: Center(child: Text('已完成'))),
+                              SizedBox(height: 36.0, child: Center(child: Text('未完成'))),
+                            ],
                           ),
                         ),
                       ),
@@ -334,55 +327,53 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
             ],
             innerControllerCount: _tabController.length,
             activeControllerIndex: _tabController.index,
-            bodyBuilder: (c, controllers) => Builder(
-              builder: (c) => TabBarView(
-                controller: _tabController,
-                children: [
-                  // ****************************************************************
-                  // 已下载的章节
-                  // ****************************************************************
-                  DlFinishedSubPage(
-                    innerController: controllers[0],
-                    outerController: _scrollController,
-                    injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
-                    mangaEntity: _data!,
-                    downloadTask: _task,
-                    invertOrder: _invertOrder,
-                    history: _history,
-                    onChapterPressed: (cid) {
-                      _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (c) => MangaViewerPage(
-                            mangaId: widget.mangaId,
-                            mangaTitle: widget.mangaTitle,
-                            mangaCover: widget.mangaCover,
-                            mangaUrl: widget.mangaUrl,
-                            chapterGroups: _chapterGroups /* nullable */,
-                            chapterId: cid,
-                            initialPage: _history?.chapterId == cid
-                                ? _history?.chapterPage ?? 1 // have read
-                                : 1, // have not read
-                          ),
+            bodyBuilder: (c, controllers) => TabBarView(
+              controller: _tabController,
+              children: [
+                // ****************************************************************
+                // 已下载的章节
+                // ****************************************************************
+                DlFinishedSubPage(
+                  innerController: controllers[0],
+                  outerController: _scrollController,
+                  injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
+                  mangaEntity: _data!,
+                  downloadTask: _task,
+                  invertOrder: _invertOrder,
+                  history: _history,
+                  onChapterPressed: (cid) {
+                    _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (c) => MangaViewerPage(
+                          mangaId: widget.mangaId,
+                          mangaTitle: widget.mangaTitle,
+                          mangaCover: widget.mangaCover,
+                          mangaUrl: widget.mangaUrl,
+                          chapterGroups: _chapterGroups /* nullable */,
+                          chapterId: cid,
+                          initialPage: _history?.chapterId == cid
+                              ? _history?.chapterPage ?? 1 // have read
+                              : 1, // have not read
                         ),
-                      );
-                    },
-                  ),
-                  // ****************************************************************
-                  // 未完成下载（正在下载/下载失败）的章节
-                  // ****************************************************************
-                  DlUnfinishedSubPage(
-                    innerController: controllers[1],
-                    outerController: _scrollController,
-                    injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
-                    mangaEntity: _data!,
-                    downloadTask: _task,
-                    invertOrder: _invertOrder,
-                    history: _history,
-                    onChapterPressed: (cid) {}, // TODO 单个漫画下载特定章节/按照特定顺序下载
-                  ),
-                ],
-              ),
+                      ),
+                    );
+                  },
+                ),
+                // ****************************************************************
+                // 未完成下载（正在下载/下载失败）的章节
+                // ****************************************************************
+                DlUnfinishedSubPage(
+                  innerController: controllers[1],
+                  outerController: _scrollController,
+                  injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
+                  mangaEntity: _data!,
+                  downloadTask: _task,
+                  invertOrder: _invertOrder,
+                  history: _history,
+                  onChapterPressed: (cid) {}, // TODO 单个漫画下载特定章节/按照特定顺序下载
+                ),
+              ],
             ),
           ),
         ),

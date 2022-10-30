@@ -153,6 +153,11 @@ class ViewExtraSubPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildAction(
+          text: '结束阅读',
+          icon: Icons.arrow_back,
+          action: () => toPop.call(),
+        ),
+        _buildAction(
           text: !subscribed ? '订阅漫画' : '取消订阅',
           icon: !subscribed ? Icons.star_border : Icons.star,
           action: () => toSubscribe.call(),
@@ -172,11 +177,6 @@ class ViewExtraSubPage extends StatelessWidget {
           text: '查看评论',
           icon: Icons.forum,
           action: () => toShowComments.call(),
-        ),
-        _buildAction(
-          text: '结束阅读',
-          icon: Icons.arrow_back,
-          action: () => toPop.call(),
         ),
       ],
     );

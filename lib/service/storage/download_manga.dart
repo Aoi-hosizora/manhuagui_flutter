@@ -345,6 +345,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         DownloadMangaProgress.gettingChapter(
           manga: manga,
           startedChapters: startedChapters,
+          currentChapterId: chapterId,
         ),
       );
     }
@@ -368,6 +369,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         DownloadMangaProgress.gettingChapter(
           manga: manga,
           startedChapters: startedChapters,
+          currentChapterId: chapterId,
         ),
       );
 
@@ -385,6 +387,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         DownloadMangaProgress.gotChapter(
           manga: manga,
           startedChapters: startedChapters,
+          currentChapterId: chapterId,
           currentChapter: chapter,
         ),
       );
@@ -441,9 +444,10 @@ class DownloadMangaQueueTask extends QueueTask<void> {
             DownloadMangaProgress.gotPage(
               manga: manga,
               startedChapters: startedChapters,
+              currentChapterId: chapterId,
               currentChapter: chapter,
+              triedChapterPageCount: successChapterPageCount + failedChapterPageCount,
               successChapterPageCount: successChapterPageCount,
-              failedChapterPageCount: failedChapterPageCount,
             ),
           );
         }).onError((e, _) {
@@ -506,40 +510,45 @@ class DownloadMangaProgress {
       : stage = DownloadMangaProgressStage.waiting,
         manga = null,
         startedChapters = null,
+        currentChapterId = null,
         currentChapter = null,
-        successChapterPageCount = null,
-        failedChapterPageCount = null;
+        triedChapterPageCount = null,
+        successChapterPageCount = null;
 
   const DownloadMangaProgress.gettingManga()
       : stage = DownloadMangaProgressStage.gettingManga,
         manga = null,
+        currentChapterId = null,
         startedChapters = null,
         currentChapter = null,
-        successChapterPageCount = null,
-        failedChapterPageCount = null;
+        triedChapterPageCount = null,
+        successChapterPageCount = null;
 
   const DownloadMangaProgress.gettingChapter({
     required Manga this.manga,
     required List<MangaChapter?> this.startedChapters,
+    required int this.currentChapterId,
   })  : stage = DownloadMangaProgressStage.gettingChapter,
         currentChapter = null,
-        successChapterPageCount = null,
-        failedChapterPageCount = null;
+        triedChapterPageCount = null,
+        successChapterPageCount = null;
 
   const DownloadMangaProgress.gotChapter({
     required Manga this.manga,
     required List<MangaChapter?> this.startedChapters,
+    required int this.currentChapterId,
     required MangaChapter this.currentChapter,
   })  : stage = DownloadMangaProgressStage.gotChapter,
-        successChapterPageCount = null,
-        failedChapterPageCount = null;
+        triedChapterPageCount = null,
+        successChapterPageCount = null;
 
   const DownloadMangaProgress.gotPage({
     required Manga this.manga,
     required List<MangaChapter?> this.startedChapters,
+    required int this.currentChapterId,
     required MangaChapter this.currentChapter,
+    required int this.triedChapterPageCount,
     required int this.successChapterPageCount,
-    required int this.failedChapterPageCount,
   }) : stage = DownloadMangaProgressStage.gotPage;
 
   // 当前阶段
@@ -550,7 +559,8 @@ class DownloadMangaProgress {
   final List<MangaChapter?>? startedChapters;
 
   // 当前下载的章节
+  final int? currentChapterId;
   final MangaChapter? currentChapter;
+  final int? triedChapterPageCount;
   final int? successChapterPageCount;
-  final int? failedChapterPageCount;
 }
