@@ -25,6 +25,7 @@ class ActionItem {
   final bool enable;
 }
 
+/// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [DownloadTocPage] 使用
 class ActionRowView extends StatelessWidget {
   const ActionRowView.four({
     Key? key,

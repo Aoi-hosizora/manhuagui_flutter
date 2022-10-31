@@ -136,7 +136,7 @@ class _SettingPageState extends State<SettingPage> {
               useRootNavigator: false,
               applicationName: APP_NAME,
               applicationVersion: APP_VERSION,
-              applicationLegalese: LEGALESE,
+              applicationLegalese: APP_LEGALESE,
               applicationIcon: Image.asset('lib/assets/ic_launcher_xxhdpi.png', height: 60, width: 60),
               children: [
                 SizedBox(height: 20),
@@ -153,7 +153,7 @@ class _SettingPageState extends State<SettingPage> {
           Align(
             alignment: Alignment.center,
             child: Text(
-              LEGALESE,
+              APP_LEGALESE,
               style: TextStyle(color: Colors.grey),
             ),
           ),

@@ -187,12 +187,14 @@ class GeneralLineIconText extends StatelessWidget {
           size: iconSize ?? 20,
           color: Colors.orange,
         ),
-        text: Text(
-          text ?? '',
-          style: textStyle ?? //
-              DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        text: Flexible(
+          child: Text(
+            text ?? '',
+            style: textStyle ?? //
+                DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         space: space ?? 8,
       ),

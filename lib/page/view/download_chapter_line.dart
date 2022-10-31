@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
 
+/// 章节下载行，在 [DownloadTocPage] 使用（功能上实现了包括下载完和未下载完的所有状态）
 class DownloadChapterLineView extends StatelessWidget {
   const DownloadChapterLineView({
     Key? key,
@@ -36,7 +37,13 @@ class DownloadChapterLineView extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(title),
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       Text(subTitle),
                     ],
                   ),
@@ -65,7 +72,7 @@ class DownloadChapterLineView extends StatelessWidget {
         ),
       ),
       onTap: !disabled ? onPressed : () {},
-      onLongPress: !disabled ? onLongPressed : null,
+      onLongPress: onLongPressed,
     );
   }
 
@@ -102,7 +109,7 @@ class DownloadChapterLineView extends StatelessWidget {
       case DownloadChapterLineStatus.pausing: // use tried
         subTitle = '$triedProgressText (暂停中)';
         progressValue = null;
-        icon = Icons.block;
+        icon = Icons.pause;
         break;
       case DownloadChapterLineStatus.paused: // use success
         subTitle = '$successProgressText (${progress.unfinishedPageCount} 页未完成)';

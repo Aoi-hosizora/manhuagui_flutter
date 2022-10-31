@@ -60,7 +60,7 @@ const _kSlideHeightRatio = 0.2; // 点击跳转页面的区域比例
 const _kViewportFraction = 1.08; // 页面间隔
 const _kViewportPageSpace = 25.0; // 页面间隔
 const _kAnimationDuration = Duration(milliseconds: 150); // 动画时长
-const _kOverlayAnimationDuration = Duration(milliseconds: 300); // SystemUI 动画时长
+const _kOverlayAnimationDuration = Duration(milliseconds: 100); // SystemUI 动画时长
 
 class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   final _mangaGalleryViewKey = GlobalKey<MangaGalleryViewState>();
@@ -575,7 +575,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     onSaveImage: (imageIndex) => _download(imageIndex, _data!.pages[imageIndex - 1]),
                     onShareImage: (imageIndex) => shareText(
                       title: '漫画柜分享',
-                      text: '【${_data!.title}】第$imageIndex页 ${_data!.pages[imageIndex - 1]}',
+                      text: '【${_data!.mangaTitle} ${_data!.title}】第$imageIndex页 ${_data!.pages[imageIndex - 1]}',
                     ),
                     onCenterAreaTapped: () {
                       _ScreenHelper.toggleAppBarVisibility(show: !_ScreenHelper.showAppBar, fullscreen: _setting.fullscreen);
@@ -647,14 +647,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: _ScreenHelper.bottomPanelDistance,
+                  bottom: 0,
                   child: AnimatedSwitcher(
                     duration: _kAnimationDuration,
                     child: !(_data != null && _ScreenHelper.showAppBar)
                         ? SizedBox(height: 0)
                         : Container(
                             color: Colors.black.withOpacity(0.75),
-                            padding: EdgeInsets.only(left: 12, right: 12, top: 0, bottom: 6),
+                            padding: EdgeInsets.only(left: 12, right: 12, top: 0, bottom: _ScreenHelper.bottomPanelDistance + 6),
                             width: MediaQuery.of(context).size.width,
                             child: Column(
                               children: [
@@ -826,7 +826,7 @@ class _ScreenHelper {
 
   static Future<void> toggleAppBarVisibility({required bool show, required bool fullscreen}) async {
     if (_showAppBar == true && show == false) {
-      _showAppBar = show;
+      _showAppBar = false;
       _setState();
       if (fullscreen) {
         await Future.delayed(_kAnimationDuration + Duration(milliseconds: 50));
@@ -837,7 +837,7 @@ class _ScreenHelper {
         await _ScreenHelper.setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: true);
         await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));
       }
-      _showAppBar = show;
+      _showAppBar = true;
       _setState();
     }
     await WidgetsBinding.instance?.endOfFrame;
@@ -859,42 +859,40 @@ class _ScreenHelper {
   static double get bottomPanelDistance => _bottomPanelDistance;
 
   static Future<void> setSystemUIWhenEnter({required bool fullscreen}) async {
-    var color = !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.black.withOpacity(0.75);
+    var color = !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.transparent;
     setSystemUIOverlayStyle(
       navigationBarIconBrightness: Brightness.light,
       navigationBarColor: color,
       navigationBarDividerColor: color,
     );
-    await setSystemUIWhenAppbarChanged(fullscreen: fullscreen);
+    await setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: _showAppBar);
   }
 
   static Future<void> setSystemUIWhenSettingChanged({required bool fullscreen}) async {
     await setSystemUIWhenEnter(fullscreen: fullscreen);
   }
 
-  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, bool? isAppbarShown}) async {
+  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool isAppbarShown}) async {
     // https://hiyoko-programming.com/953/
     if (!fullscreen) {
       // 不全屏 => 全部显示，不透明 (manual)
       await setManualSystemUIMode(SystemUiOverlay.values);
       _safeAreaTop = true;
       _bottomPanelDistance = 0;
+    } else if (!isAppbarShown) {
+      // 全屏，且不显示 AppBar => 全部隐藏 (manual)
+      await setManualSystemUIMode([]);
+      _safeAreaTop = false;
+      _bottomPanelDistance = 0;
     } else {
-      if (isAppbarShown ?? _showAppBar) {
-        // 全屏，且显示 AppBar => 全部显示，尽量透明 (edgeToEdge / manual)
-        if (!(await _lowerThanAndroidQ())) {
-          await setEdgeToEdgeSystemUIMode();
-          _safeAreaTop = false; // TODO wrong display effect when notch, color and padding
-          await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));
-          _bottomPanelDistance = MediaQuery.of(_context).padding.bottom;
-        } else {
-          await setManualSystemUIMode(SystemUiOverlay.values);
-          _safeAreaTop = false;
-          _bottomPanelDistance = 0;
-        }
+      // 全屏，且显示 AppBar => 全部显示，尽量透明 (edgeToEdge / manual)
+      if (!(await _lowerThanAndroidQ())) {
+        await setEdgeToEdgeSystemUIMode();
+        _safeAreaTop = false;
+        await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));
+        _bottomPanelDistance = MediaQuery.of(_context).padding.bottom;
       } else {
-        // 全屏，且不显示 AppBar => 全部隐藏 (manual)
-        await setManualSystemUIMode([]);
+        await setManualSystemUIMode(SystemUiOverlay.values);
         _safeAreaTop = false;
         _bottomPanelDistance = 0;
       }

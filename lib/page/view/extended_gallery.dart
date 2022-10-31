@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:photo_view/photo_view.dart';
@@ -325,11 +327,16 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
               for (var i = 0; i < widget.imageCount; i++)
                 GestureDetector(
                   key: _itemKeys[i + 1],
-                  onTapDown: widget.onImageTapDown == null ? null : (d) => widget.onImageTapDown!(d) /* <<< */,
-                  onTapUp: widget.onImageTapUp == null ? null : (d) => widget.onImageTapUp!(d) /* <<< */,
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: widget.onImageTapDown /* <<< */,
+                  onTapUp: widget.onImageTapUp /* <<< */,
                   onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(i) /* <<< */,
                   child: Padding(
-                    padding: EdgeInsets.only(top: widget.viewportPageSpace),
+                    padding: EdgeInsets.only(
+                      top: i == 0
+                          ? math.max(widget.viewportPageSpace, 10) // for first page, space must be larger than 10
+                          : widget.viewportPageSpace /* for remaining pages */,
+                    ),
                     child: _buildPhotoItem(context, i),
                   ),
                 ),
@@ -337,7 +344,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
               // 3
               Padding(
                 key: _itemKeys[widget.imageCount + 1],
-                padding: EdgeInsets.only(top: widget.viewportPageSpace),
+                padding: EdgeInsets.only(
+                  top: math.max(widget.viewportPageSpace, 10), // for last page, space must be larger than 10
+                ),
                 child: widget.lastPageBuilder(context),
               ),
             ],

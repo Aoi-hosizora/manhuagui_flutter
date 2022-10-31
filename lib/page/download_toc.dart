@@ -193,6 +193,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
   }
 
   Future<void> _deleteChapter(DownloadedChapter entity) async {
+    _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
     if (_task != null) {
       Fluttertoast.showToast(msg: '当前仅支持在漫画暂停下载时删除章节');
       return;
@@ -432,6 +433,12 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   invertOrder: _invertOrder,
                   toControlChapter: (cid) {
                     Fluttertoast.showToast(msg: '目前暂不支持单独下载或暂停某一章节'); // TODO 单个漫画下载特定章节/按照特定顺序下载
+                  },
+                  toDeleteChapter: (cid) async {
+                    var chapterEntity = _entity!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
+                    if (chapterEntity != null) {
+                      await _deleteChapter(chapterEntity);
+                    }
                   },
                 ),
               ],

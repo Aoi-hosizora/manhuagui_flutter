@@ -77,6 +77,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   void _updateProgress(DownloadMangaProgress progress) {
     _progress = progress;
+    // TODO system notifier
     var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
     EventBusManager.instance.fire(ev);
   }

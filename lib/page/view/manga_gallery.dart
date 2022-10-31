@@ -155,7 +155,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         key: _horizontalGalleryKey,
         imageCount: widget.imageCount,
         preloadPagesCount: widget.preloadPagesCount,
-        initialPage: widget.initialImageIndex - 1 + 1,
+        initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
         viewportFraction: widget.horizontalViewportFraction,
         reverse: widget.horizontalReverseScroll,
         backgroundDecoration: BoxDecoration(color: Colors.black),
@@ -173,7 +173,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           maxScale: PhotoViewComputedScale.covered * 2,
           filterQuality: FilterQuality.high,
           onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
-          onTapUp: (c, d, v) => _onPointerUp(d.globalPosition), // TODO slow
+          onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
           imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
             key: key,
             urlFuture: widget.imageUrlFutures[idx],
@@ -231,7 +231,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       key: _verticalGalleryKey,
       imageCount: widget.imageCount,
       preloadPagesCount: widget.preloadPagesCount,
-      initialPage: widget.initialImageIndex - 1 + 1,
+      initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
       viewportPageSpace: widget.verticalViewportPageSpace,
       backgroundDecoration: BoxDecoration(color: Colors.black),
       scrollPhysics: AlwaysScrollableScrollPhysics(),

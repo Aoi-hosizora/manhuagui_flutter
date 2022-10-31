@@ -27,7 +27,7 @@ Future<String> getPrivateStorageDirectoryPath() async {
   return await PathUtils.joinPathAndCheck(
     [storageDirectory!.path],
     isDirectoryPath: true,
-  ); // /storage/emulated/0/android/com.aoihosizora.manhuagui_flutter
+  ); // /storage/emulated/0/android/com.aoihosizora.manhuagui
 }
 
 String getTimestampTokenForFilename([DateTime? time, String? pattern]) {
@@ -66,7 +66,7 @@ class PathUtils {
 // gallery
 // =======
 
-const _channelName = 'com.example.manhuagui_flutter';
+const _channelName = 'com.aoihosizora.manhuagui';
 const _channel = MethodChannel(_channelName);
 const _insertMediaMethodName = 'insertMedia';
 

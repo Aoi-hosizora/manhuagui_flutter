@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:manhuagui_flutter/config.dart';
 
 class NetworkImageView extends StatelessWidget {
   const NetworkImageView({
@@ -37,6 +38,10 @@ class NetworkImageView extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
+          httpHeaders: const {
+            'User-Agent': USER_AGENT,
+            'Referer': REFERER,
+          },
           placeholder: (context, url) => Container(
             width: width,
             height: height,
