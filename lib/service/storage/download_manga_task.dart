@@ -1,4 +1,5 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -9,6 +10,7 @@ import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/storage/download_image.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 import 'package:queue/queue.dart';

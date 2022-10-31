@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/native/notification.dart';
 
 /// 首页
 class HomeSubPage extends StatefulWidget {
@@ -93,11 +94,21 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
-            onPressed: () => Navigator.of(context).push(
-              CustomMaterialPageRoute(
-                builder: (c) => SearchPage(),
-              ),
-            ),
+            onPressed: () {
+              NotificationManager.instance.showDownloadNotification(
+                id: 1,
+                title: 'title',
+                body: 'body',
+                subText: 'subText',
+                payload: 'payload',
+                // actions: null,
+                ongoing: false,
+                showProgress: false,
+                maxProgress: 0,
+                progress: 0,
+                indeterminate: false
+              );
+            },
           ),
         ],
       ),

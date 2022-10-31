@@ -25,15 +25,16 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
-def keystorePropertiesFile = rootProject.file("key.properties")
 def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    // compileSdkVersion flutter.compileSdkVersion
     compileSdkVersion 33
+    // compileSdkVersion flutter.compileSdkVersion
 
     compileOptions {
+        // coreLibraryDesugaringEnabled true // <<< for flutter_local_notifications
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -49,14 +50,16 @@ android {
     defaultConfig {
         applicationId "com.aoihosizora.manhuagui"
         // applicationId "com.aoihosizora.manhuagui_test"
-        // minSdkVersion flutter.minSdkVersion
+
         minSdkVersion 19
         targetSdkVersion flutter.targetSdkVersion
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-
         versionCode 3
         versionName "1.1.0"
+        // minSdkVersion flutter.minSdkVersion
+        // versionCode flutterVersionCode.toInteger()
+        // versionName flutterVersionName
+
+        // multiDexEnabled true // <<< for flutter_local_notifications
     }
 
     signingConfigs {
@@ -85,4 +88,5 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    // coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5' // <<< for flutter_local_notifications
 }
