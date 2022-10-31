@@ -322,7 +322,7 @@ class _DownloadPageState extends State<DownloadPage> {
             downloadedBytes: _bytes[entity.mangaId] ?? 0,
             onActionPressed: () => _pauseOrContinue(entity: entity, task: task),
             onLinePressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              CustomMaterialPageRoute(
                 builder: (c) => DownloadTocPage(
                   mangaId: entity.mangaId,
                   mangaTitle: entity.mangaTitle,

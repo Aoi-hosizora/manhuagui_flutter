@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -24,7 +25,7 @@ class TinyMangaLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '更新于 ${manga.newestDate}',
       onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute(
+        CustomMaterialPageRoute(
           builder: (c) => MangaPage(
             id: manga.mid,
             title: manga.title,

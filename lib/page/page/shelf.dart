@@ -38,15 +38,13 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen((ev) {
-        if (!AuthManager.instance.authData.equals(_oldAuthData)) {
-          _oldAuthData = AuthManager.instance.authData;
-          _loginChecking = false;
-          _loginCheckError = ev.error?.text ?? '';
-          if (mounted) setState(() {});
-          if (AuthManager.instance.logined) {
-            WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
-          }
+      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+        _oldAuthData = AuthManager.instance.authData;
+        _loginChecking = false;
+        _loginCheckError = ev.error?.text ?? '';
+        if (mounted) setState(() {});
+        if (AuthManager.instance.logined) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
         }
       });
       _loginChecking = true;

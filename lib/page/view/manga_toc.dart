@@ -117,7 +117,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       onChapterPressed: (chapter) {
         if (chapter == null) {
           Navigator.of(context).push(
-            MaterialPageRoute(
+            CustomMaterialPageRoute(
               builder: (c) => MangaTocPage(
                 mangaId: widget.mangaId,
                 mangaTitle: widget.mangaTitle,

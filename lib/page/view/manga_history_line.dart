@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
@@ -20,7 +21,7 @@ class MangaHistoryLineView extends StatelessWidget {
     var lastTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(history.lastTime);
     void onPressed() {
       Navigator.of(context).push(
-        MaterialPageRoute(
+        CustomMaterialPageRoute(
           builder: (c) => MangaPage(
             id: history.mangaId,
             title: history.mangaTitle,

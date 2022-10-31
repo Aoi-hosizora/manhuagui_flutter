@@ -45,10 +45,11 @@ class AuthManager {
     _data = AuthData(username: username, token: token);
   }
 
-  void Function() listen(Function(AuthChangedEvent) onData) {
-    // TODO add `AuthData Function() authDataGetter` parameter
+  void Function() listen(AuthData? Function()? authDataGetter, void Function(AuthChangedEvent) onData) {
     return EventBusManager.instance.listen<AuthChangedEvent>((ev) {
-      onData.call(ev);
+      if (authDataGetter?.call()?.equals(authData) != true) {
+        onData.call(ev);
+      }
     });
   }
 

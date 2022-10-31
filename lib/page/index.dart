@@ -49,6 +49,8 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     });
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(2);
+      _selectedIndex = 2;
+      if (mounted) setState(() {});
     }));
   }
 
@@ -109,11 +111,12 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
             currentIndex: _selectedIndex,
             items: _tabs
                 .map(
-                  (t) => BottomNavigationBarItem(
+                  (t) =>
+                  BottomNavigationBarItem(
                     label: t.item1,
                     icon: Icon(t.item2),
                   ),
-                )
+            )
                 .toList(),
             onTap: (index) async {
               if (_selectedIndex == index) {

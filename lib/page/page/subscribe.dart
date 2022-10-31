@@ -78,7 +78,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             icon: Icon(Icons.download),
             tooltip: '查看下载列表',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              CustomMaterialPageRoute(
                 builder: (c) => DownloadPage(),
               ),
             ),
@@ -87,7 +87,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             icon: Icon(Icons.search),
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              CustomMaterialPageRoute(
                 builder: (c) => SearchPage(),
               ),
             ),

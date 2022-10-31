@@ -10,7 +10,7 @@ part of 'retrofit.dart';
 
 class _RestClient implements RestClient {
   _RestClient(this._dio, {this.baseUrl}) {
-    baseUrl ??= 'http://api.manhuagui.aoihosizora.top/v1/';
+    baseUrl ??= 'https://api-manhuagui.aoihosizora.top/v1/';
   }
 
   final Dio _dio;

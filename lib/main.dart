@@ -5,8 +5,6 @@ import 'package:manhuagui_flutter/page/index.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  setDefaultSystemUIOverlayStyle();
   runApp(const MyApp());
 }
 
@@ -15,6 +13,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    setDefaultSystemUIOverlayStyle();
     return MaterialApp(
       title: 'Manhuagui',
       theme: ThemeData(
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Color.fromRGBO(245, 245, 245, 1.0),
         pageTransitionsTheme: PageTransitionsTheme(
           builders: const {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(), // TODO too fast
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           },
         ),
         splashFactory: CustomInkRipple.preferredSplashFactory,

@@ -42,15 +42,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen((ev) {
-        if (!AuthManager.instance.authData.equals(_oldAuthData)) {
-          _oldAuthData = AuthManager.instance.authData;
-          _loginChecking = false;
-          _loginCheckError = ev.error?.text ?? '';
-          if (mounted) setState(() {});
-          if (AuthManager.instance.logined) {
-            WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
-          }
+      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+        _oldAuthData = AuthManager.instance.authData;
+        _loginChecking = false;
+        _loginCheckError = ev.error?.text ?? '';
+        if (mounted) setState(() {});
+        if (AuthManager.instance.logined) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
         }
       });
       _loginChecking = true;
@@ -87,7 +85,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       if (we.response?.statusCode == 401) {
         Fluttertoast.showToast(msg: '登录失效，请重新登录');
         Navigator.of(context).push(
-          MaterialPageRoute(
+          CustomMaterialPageRoute(
             builder: (c) => LoginPage(),
           ),
         );
@@ -173,7 +171,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
           icon: Icon(Icons.settings, color: Colors.black54),
           tooltip: '应用设置',
           onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
+            CustomMaterialPageRoute(
               builder: (c) => SettingPage(),
             ),
           ),
@@ -246,7 +244,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                             width: 75,
                           ),
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            CustomMaterialPageRoute(
                               builder: (c) => ImageViewerPage(
                                 url: _data!.avatar,
                                 title: '我的头像',

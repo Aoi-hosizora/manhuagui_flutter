@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -86,7 +87,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        CustomMaterialPageRoute(
                           builder: (c) => MangaPage(
                             id: widget.mangas[i].mid,
                             title: widget.mangas[i].title,

@@ -19,33 +19,15 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     required this.chapterIds,
     required this.invertOrder,
     int? parallel,
-  })  : _canceled = false,
-        _doingTask = false,
+  })  : _doingTask = false,
         _succeeded = false,
+        _canceled = false,
         _progress = DownloadMangaProgress.waiting(),
         _pageQueue = Queue(parallel: parallel ?? DlSetting.defaultSetting().downloadPagesTogether);
 
   final int mangaId;
   final List<int> chapterIds;
   final bool invertOrder;
-
-  bool _canceled;
-
-  @override
-  bool get canceled => _canceled;
-
-  @override
-  void cancel() {
-    super.cancel();
-    _canceled = true;
-    if (!_doingTask) {
-      QueueManager.instance.tasks.remove(this);
-      doDefer();
-    } else {
-      var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
-      EventBusManager.instance.fire(ev);
-    }
-  }
 
   bool _doingTask;
 
@@ -60,6 +42,24 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     _doingTask = true;
     _succeeded = await _coreDoTask();
     _doingTask = false;
+  }
+
+  bool _canceled;
+
+  @override
+  bool get canceled => _canceled;
+
+  @override
+  void cancel() {
+    super.cancel();
+    _canceled = true;
+    if (!_doingTask) {
+      QueueManager.instance.tasks.remove(this);
+      doDefer(); // finished: true
+    } else {
+      var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
+      EventBusManager.instance.fire(ev);
+    }
   }
 
   @override

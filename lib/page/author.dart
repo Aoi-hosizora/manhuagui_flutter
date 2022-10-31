@@ -149,7 +149,7 @@ class _AuthorPageState extends State<AuthorPage> {
                           width: 100,
                         ),
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
+                          CustomMaterialPageRoute(
                             builder: (c) => ImageViewerPage(
                               url: _data!.cover,
                               title: '作者头像',

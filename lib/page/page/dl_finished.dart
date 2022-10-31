@@ -69,7 +69,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                       return null;
                     }
                     return DownloadBadge(
-                      state: !oldChapter.finished
+                      state: !oldChapter.allTried
                           ? DownloadBadgeState.downloading
                           : oldChapter.succeeded
                               ? DownloadBadgeState.succeeded

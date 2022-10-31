@@ -167,7 +167,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
         action: SnackBarAction(
           label: '查看',
           onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
+            CustomMaterialPageRoute(
               builder: (c) => DownloadTocPage(
                 mangaId: widget.mangaId,
                 mangaTitle: widget.mangaTitle,
@@ -234,7 +234,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                     return null;
                   }
                   return DownloadBadge(
-                    state: !oldChapter.finished
+                    state: !oldChapter.allTried
                         ? DownloadBadgeState.downloading
                         : oldChapter.succeeded
                             ? DownloadBadgeState.succeeded

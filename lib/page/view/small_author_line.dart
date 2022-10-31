@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -24,7 +25,7 @@ class SmallAuthorLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '更新于 ${author.newestDate}',
       onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute(
+        CustomMaterialPageRoute(
           builder: (c) => AuthorPage(
             id: author.aid,
             name: author.name,

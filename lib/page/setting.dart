@@ -106,10 +106,26 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '检查更新', // TODO !!!
-            action: () => launchInBrowser(
+            title: '检查更新',
+            action: () => showDialog(
               context: context,
-              url: RELEASE_URL,
+              builder: (c) => AlertDialog(
+                title: Text('检查更新'),
+                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。是否打开 GitHub Release 页面手动检查更新？'),
+                actions: [
+                  TextButton(
+                    child: Text('打开'),
+                    onPressed: () => launchInBrowser(
+                      context: context,
+                      url: RELEASE_URL,
+                    ),
+                  ),
+                  TextButton(
+                    child: Text('取消'),
+                    onPressed: () => Navigator.of(c).pop(),
+                  ),
+                ],
+              ),
             ),
           ),
           _divider(),

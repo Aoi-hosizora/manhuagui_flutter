@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -134,7 +135,7 @@ class LargeDownloadLineView extends StatelessWidget {
               width: 120,
             ),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              CustomMaterialPageRoute(
                 builder: (c) => ImageViewerPage(
                   url: imageUrl,
                   title: '漫画封面',

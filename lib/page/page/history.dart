@@ -34,11 +34,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen((_) {
-        if (!AuthManager.instance.authData.equals(_oldAuthData)) {
-          _oldAuthData = AuthManager.instance.authData;
-          _pdvKey.currentState?.refresh();
-        }
+      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) {
+        _oldAuthData = AuthManager.instance.authData;
+        _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
     });
@@ -136,7 +134,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textWidget(
-              leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史')  + (_historyUpdated ? ' (有更新)' : ''),
+              leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史') + (_historyUpdated ? ' (有更新)' : ''),
               rightWidget: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

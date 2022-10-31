@@ -359,7 +359,7 @@ class _SearchPageState extends State<SearchPage> {
                                   ),
                                 ),
                                 onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
+                                  CustomMaterialPageRoute(
                                     builder: (c) => MangaPage(
                                       id: int.tryParse(_text)!,
                                       title: '漫画 mid: $_text',

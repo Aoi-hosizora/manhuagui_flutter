@@ -257,7 +257,7 @@ class DownloadMangaLineProgress {
       }
     } else {
       if (!entity.error) {
-        if (entity.startedPageCountInAll != entity.totalPageCountInAll) {
+        if (entity.triedPageCountInAll != entity.totalPageCountInAll) {
           status = DownloadMangaLineStatus.paused; // stopped
         } else if (entity.successChapterIds.length == entity.totalChapterIds.length) {
           status = DownloadMangaLineStatus.succeeded; // stopped
@@ -277,7 +277,7 @@ class DownloadMangaLineProgress {
       );
       return DownloadMangaLineProgress.stopped(
         status: status,
-        startedChapterCount: entity.startedChapterIds.length,
+        startedChapterCount: entity.triedChapterIds.length,
         totalChapterCount: entity.totalChapterIds.length,
         notFinishedPageCount: entity.error ? -1 : entity.totalPageCountInAll - entity.successPageCountInAll,
         notFinishedChapterCount: entity.error ? -1 : entity.failedChapterCount,

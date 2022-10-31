@@ -79,8 +79,8 @@ class DownloadedManga {
   List<int> get totalChapterIds => //
       downloadedChapters.map((el) => el.chapterId).toList();
 
-  List<int> get startedChapterIds => //
-      downloadedChapters.where((el) => el.started).map((el) => el.chapterId).toList(); // TODO rename to tried
+  List<int> get triedChapterIds => //
+      downloadedChapters.where((el) => el.tried).map((el) => el.chapterId).toList();
 
   List<int> get successChapterIds => //
       downloadedChapters.where((el) => el.succeeded).map((el) => el.chapterId).toList();
@@ -91,7 +91,7 @@ class DownloadedManga {
   int get totalPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount).reduce((val, el) => val + el);
 
-  int get startedPageCountInAll => //
+  int get triedPageCountInAll => //
       downloadedChapters.map((el) => el.triedPageCount).reduce((val, el) => val + el);
 
   int get successPageCountInAll => //
@@ -130,11 +130,11 @@ class DownloadedChapter {
   final int triedPageCount;
   final int successPageCount;
 
-  bool get started => triedPageCount > 0; // TODO rename to tried
+  bool get tried => triedPageCount > 0;
 
   bool get succeeded => successPageCount == totalPageCount;
 
-  bool get finished => triedPageCount == totalPageCount;
+  bool get allTried => triedPageCount == totalPageCount;
 
   const DownloadedChapter({
     required this.mangaId,

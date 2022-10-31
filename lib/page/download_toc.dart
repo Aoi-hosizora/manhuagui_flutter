@@ -266,7 +266,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
             icon: Icon(Icons.download),
             tooltip: '查看下载列表',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              CustomMaterialPageRoute(
                 builder: (c) => DownloadPage(),
               ),
             ),
@@ -319,7 +319,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                           '查看漫画',
                           Icons.description,
                           () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            CustomMaterialPageRoute(
                               builder: (c) => MangaPage(
                                 id: widget.mangaId,
                                 title: widget.mangaTitle,
@@ -398,7 +398,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   toReadChapter: (cid) {
                     _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
                     Navigator.of(context).push(
-                      MaterialPageRoute(
+                      CustomMaterialPageRoute(
                         builder: (c) => MangaViewerPage(
                           mangaId: widget.mangaId,
                           mangaTitle: widget.mangaTitle,

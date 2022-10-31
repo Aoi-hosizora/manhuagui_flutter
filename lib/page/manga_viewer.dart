@@ -292,7 +292,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     Navigator.of(context).pop(); // pop this page, should not use maybePop
     Navigator.of(context).push(
-      MaterialPageRoute(
+      CustomMaterialPageRoute(
         builder: (c) => MangaViewerPage(
           mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
@@ -394,7 +394,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   Future<void> _downloadManga() async {
     await _ScreenHelper.restoreSystemUI();
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      CustomMaterialPageRoute(
         builder: (c) => DownloadSelectPage(
           mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
@@ -430,7 +430,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Navigator.of(c).pop(); // bottom sheet
                 Navigator.of(context).pop(); // this page, should not use maybePop
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  CustomMaterialPageRoute(
                     builder: (c) => MangaViewerPage(
                       mangaId: _data!.mid,
                       mangaTitle: _data!.mangaTitle,
@@ -884,7 +884,7 @@ class _ScreenHelper {
         // 全屏，且显示 AppBar => 全部显示，尽量透明 (edgeToEdge / manual)
         if (!(await _lowerThanAndroidQ())) {
           await setEdgeToEdgeSystemUIMode();
-          _safeAreaTop = false;
+          _safeAreaTop = false; // TODO wrong display effect when notch, color and padding
           await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));
           _bottomPanelDistance = MediaQuery.of(_context).padding.bottom;
         } else {

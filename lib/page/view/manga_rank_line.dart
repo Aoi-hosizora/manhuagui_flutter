@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -74,7 +75,7 @@ class MangaRankLineView extends StatelessWidget {
         ),
       ],
       onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute(
+        CustomMaterialPageRoute(
           builder: (c) => MangaPage(
             id: manga.mid,
             title: manga.title,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -242,7 +243,7 @@ class CommentLineView extends StatelessWidget {
             child: InkWell(
               onTap: !large
                   ? () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        CustomMaterialPageRoute(
                           builder: (c) => CommentPage(
                             comment: comment,
                           ),

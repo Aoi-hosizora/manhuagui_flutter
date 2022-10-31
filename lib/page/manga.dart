@@ -57,12 +57,10 @@ class _MangaPageState extends State<MangaPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen((_) async {
-        if (!AuthManager.instance.authData.equals(_oldAuthData)) {
-          _oldAuthData = AuthManager.instance.authData;
-          _history = null;
-          _refreshIndicatorKey.currentState?.show();
-        }
+      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) async {
+        _oldAuthData = AuthManager.instance.authData;
+        _history = null;
+        _refreshIndicatorKey.currentState?.show();
       }));
       await AuthManager.instance.check();
     });
@@ -236,7 +234,7 @@ class _MangaPageState extends State<MangaPage> {
     }
 
     Navigator.of(context).push(
-      MaterialPageRoute(
+      CustomMaterialPageRoute(
         builder: (c) => MangaViewerPage(
           mangaId: _data!.mid,
           mangaTitle: _data!.title,
@@ -317,7 +315,7 @@ class _MangaPageState extends State<MangaPage> {
                             width: 120,
                           ),
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            CustomMaterialPageRoute(
                               builder: (c) => ImageViewerPage(
                                 url: _data!.cover,
                                 title: '漫画封面',
@@ -348,7 +346,7 @@ class _MangaPageState extends State<MangaPage> {
                                       pressedColor: Theme.of(context).primaryColor,
                                       showUnderline: true,
                                       onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
+                                        CustomMaterialPageRoute(
                                           builder: (c) => AuthorPage(
                                             id: _data!.authors[i].aid,
                                             name: _data!.authors[i].name,
@@ -375,7 +373,7 @@ class _MangaPageState extends State<MangaPage> {
                                       pressedColor: Theme.of(context).primaryColor,
                                       showUnderline: true,
                                       onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
+                                        CustomMaterialPageRoute(
                                           builder: (c) => GenrePage(
                                             genre: _data!.genres[i].toTiny(),
                                           ),
@@ -441,7 +439,7 @@ class _MangaPageState extends State<MangaPage> {
                       text: '下载漫画',
                       icon: Icons.download,
                       action: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        CustomMaterialPageRoute(
                           builder: (c) => DownloadSelectPage(
                             mangaId: _data!.mid,
                             mangaTitle: _data!.title,
@@ -468,7 +466,7 @@ class _MangaPageState extends State<MangaPage> {
                       text: '漫画详情',
                       icon: Icons.subject,
                       action: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        CustomMaterialPageRoute(
                           builder: (c) => MangaDetailPage(data: _data!),
                         ),
                       ),
@@ -646,7 +644,7 @@ class _MangaPageState extends State<MangaPage> {
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     onChapterPressed: (cid) => Navigator.of(context).push(
-                      MaterialPageRoute(
+                      CustomMaterialPageRoute(
                         builder: (c) => MangaViewerPage(
                           mangaId: _data!.mid,
                           mangaTitle: _data!.title,
@@ -728,7 +726,7 @@ class _MangaPageState extends State<MangaPage> {
                         color: Colors.white,
                         child: InkWell(
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            CustomMaterialPageRoute(
                               builder: (c) => CommentsPage(
                                 mangaId: widget.id,
                                 mangaTitle: _data!.title,
