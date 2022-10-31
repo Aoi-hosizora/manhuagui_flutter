@@ -112,9 +112,9 @@ class GeneralLineView extends StatelessWidget {
                   // 右边预定义控件
                   // ****************************************************************
                   if (customRows == null) ...[
-                    GeneralLineIconText(icon: icon1!, text: text1!),
-                    GeneralLineIconText(icon: icon2!, text: text2!),
-                    GeneralLineIconText(icon: icon3!, text: text3!),
+                    GeneralLineIconText(icon: icon1, text: text1),
+                    GeneralLineIconText(icon: icon2, text: text2),
+                    GeneralLineIconText(icon: icon3, text: text3),
                   ],
 
                   // ****************************************************************

@@ -29,15 +29,9 @@ class _DownloadPageState extends State<DownloadPage> {
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
 
-  var _setting = DlSetting.defaultSetting();
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _setting = await DlSettingPrefs.getSetting();
-      if (mounted) setState(() {});
-    });
 
     // progress related
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
@@ -113,25 +107,27 @@ class _DownloadPageState extends State<DownloadPage> {
     }
 
     // 继续 => 快速构造下载任务，同步更新数据库，并根据 addTask 参数按要求入队
+    var setting = await DlSettingPrefs.getSetting();
     DownloadMangaQueueTask? newTask = await quickBuildDownloadMangaQueueTask(
       mangaId: entity.mangaId,
       mangaTitle: entity.mangaTitle,
       mangaCover: entity.mangaCover,
       mangaUrl: entity.mangaUrl,
       chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
-      parallel: _setting.downloadPagesTogether,
-      invertOrder: _setting.invertDownloadOrder,
-      addToTask: addTask,
+      parallel: setting.downloadPagesTogether,
+      invertOrder: setting.invertDownloadOrder,
+      addToTask: false,
       throughChapterList: entity.downloadedChapters,
     );
-    if (newTask != null) {
+    if (addTask && newTask != null) {
       QueueManager.instance.addTask(newTask);
     }
     return newTask;
   }
 
   Future<void> _deleteManga(DownloadedManga entity) async {
-    var alsoDeleteFile = _setting.defaultToDeleteFiles;
+    var setting = await DlSettingPrefs.getSetting();
+    var alsoDeleteFile = setting.defaultToDeleteFiles;
     await showDialog(
       context: context,
       builder: (c) => StatefulBuilder(
@@ -141,7 +137,7 @@ class _DownloadPageState extends State<DownloadPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除《${entity.mangaTitle}》？'),
+              Text('是否删除漫画《${entity.mangaTitle}》？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -166,6 +162,10 @@ class _DownloadPageState extends State<DownloadPage> {
                 await DownloadDao.deleteManga(mid: entity.mangaId);
                 await DownloadDao.deleteAllChapters(mid: entity.mangaId);
                 if (mounted) setState(() {});
+
+                var setting = await DlSettingPrefs.getSetting();
+                setting = setting.copyWith(defaultToDeleteFiles: alsoDeleteFile);
+                await DlSettingPrefs.setSetting(setting);
                 if (alsoDeleteFile) {
                   await deleteDownloadedManga(mangaId: entity.mangaId);
                 }
@@ -227,6 +227,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
       // 1. 先取消目前所有的任务
       for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
+        print(t.mangaId);
         if (!t.canceled) {
           t.cancel();
         }
@@ -244,9 +245,9 @@ class _DownloadPageState extends State<DownloadPage> {
     }
   }
 
-  Future<void> _onSettingPressed() {
-    var setting = _setting.copyWith();
-    return showDialog(
+  Future<void> _onSettingPressed() async {
+    var setting = await DlSettingPrefs.getSetting();
+    await showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('下载设置'),
@@ -259,13 +260,9 @@ class _DownloadPageState extends State<DownloadPage> {
             child: Text('确定'),
             onPressed: () async {
               Navigator.of(c).pop();
-              _setting = setting;
-              if (mounted) setState(() {});
-              await DlSettingPrefs.setSetting(_setting);
-
-              // apply settings
+              await DlSettingPrefs.setSetting(setting);
               for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
-                t.changeParallel(_setting.downloadPagesTogether);
+                t.changeParallel(setting.downloadPagesTogether);
               }
             },
           ),

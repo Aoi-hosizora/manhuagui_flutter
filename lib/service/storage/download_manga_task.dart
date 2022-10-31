@@ -20,6 +20,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     required this.invertOrder,
     int? parallel,
   })  : _canceled = false,
+        _doingTask = false,
         _succeeded = false,
         _progress = DownloadMangaProgress.waiting(),
         _pageQueue = Queue(parallel: parallel ?? DlSetting.defaultSetting().downloadPagesTogether);
@@ -37,9 +38,18 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   void cancel() {
     super.cancel();
     _canceled = true;
-    var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
-    EventBusManager.instance.fire(ev);
+    if (!_doingTask) {
+      QueueManager.instance.tasks.remove(this);
+      doDefer();
+    } else {
+      var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
+      EventBusManager.instance.fire(ev);
+    }
   }
+
+  bool _doingTask;
+
+  bool get doingTask => _doingTask;
 
   bool _succeeded;
 
@@ -47,7 +57,9 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   @override
   Future<void> doTask() async {
+    _doingTask = true;
     _succeeded = await _coreDoTask();
+    _doingTask = false;
   }
 
   @override
@@ -96,7 +108,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
     // 3. 检查漫画下载任务是否存在
     List<int> newChapterIds;
-    var currentTasks = QueueManager.instance.getDownloadMangaQueueTasks();
+    var currentTasks = QueueManager.instance.getDownloadMangaQueueTasks(includingPreparing: false);
     var previousTask = currentTasks.where((el) => el.mangaId == mangaId && !el.canceled).firstOrNull;
     if (previousTask != null) {
       // 下载任务已存在 => 找到新增的章节
@@ -154,7 +166,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       previousTask.chapterIds.addAll(newChapterIds);
       return false;
     }
-    // 新的漫画下载任务 => 整体更新漫画章节，标记为需要入队
+    // 新的漫画下载任务 => 整体更新漫画章节，标记为需要入队 (由 doTask 处理准备列表)
     chapterIds.clear();
     chapterIds.addAll(newChapterIds);
     return true;
@@ -163,13 +175,13 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   Future<bool> _coreDoTask() async {
     final client = RestClient(DioManager.instance.dio);
 
-    // 1. 创建必要文件
+    // 1. 创建必要文件，并更新状态
     await createNomediaFile();
-
-    // 2. 获取漫画数据
     _updateProgress(
       DownloadMangaProgress.gettingManga(),
     );
+
+    // 2. 获取漫画数据
     var oldManga = await DownloadDao.getManga(mid: mangaId);
     Manga manga;
     try {
@@ -464,12 +476,22 @@ class DownloadMangaProgress {
 }
 
 extension QueueManagerExtension on QueueManager {
-  List<DownloadMangaQueueTask> getDownloadMangaQueueTasks() {
-    return tasks.whereType<DownloadMangaQueueTask>().toList();
+  static final preparingTasks = <DownloadMangaQueueTask>[];
+
+  List<DownloadMangaQueueTask> getDownloadMangaQueueTasks({bool includingPreparing = true}) {
+    var prepared = tasks.whereType<DownloadMangaQueueTask>().toList();
+    if (!includingPreparing) {
+      return prepared;
+    }
+
+    var preparing = preparingTasks.toList();
+    prepared.addAll(preparing.where((t1) => !prepared.any((t) => t.mangaId == t1.mangaId)));
+    return prepared;
   }
 
   DownloadMangaQueueTask? getDownloadMangaQueueTask(int mangaId) {
-    return tasks.whereType<DownloadMangaQueueTask>().where((t) => t.mangaId == mangaId).firstOrNull;
+    return tasks.whereType<DownloadMangaQueueTask>().where((t) => t.mangaId == mangaId).firstOrNull ?? // prepared
+        preparingTasks.where((t) => t.mangaId == mangaId).firstOrNull; // preparing
   }
 }
 
@@ -496,6 +518,7 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
   );
 
   // 2. 更新数据库
+  QueueManagerExtension.preparingTasks.add(newTask); // 此时还未入队，先添加至"准备列表"中
   var need = await newTask.prepare(
     mangaTitle: mangaTitle,
     mangaCover: mangaCover,
@@ -534,13 +557,14 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
       return null;
     },
   );
+  QueueManagerExtension.preparingTasks.removeWhere((el) => el.mangaId == mangaId); // 完成准备，直接从"准备列表"中移除
 
   // 3. 必要时入队，异步等待执行
-  if (need) {
-    if (addToTask) {
-      QueueManager.instance.addTask(newTask);
-    }
-    return newTask;
+  if (!need) {
+    return null;
   }
-  return null;
+  if (addToTask) {
+    QueueManager.instance.addTask(newTask);
+  }
+  return newTask;
 }

@@ -30,6 +30,6 @@ const HEAD_TIMEOUT = 3000; // 3.0s
 const DOWNLOAD_IMAGE_TIMEOUT = 16000; // 8.0s + 8.0s
 
 // const BASE_API_URL = 'http://10.0.3.2:10018/v1/';
-const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/';
+const BASE_API_URL = 'http://api.manhuagui.aoihosizora.top/v1/'; // TODO https
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';

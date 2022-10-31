@@ -8,7 +8,7 @@ class OptionPopupView<T extends Object> extends StatefulWidget {
     required this.value,
     required this.titleBuilder,
     required this.onSelect,
-    this.height = 26.0, // <<<
+    this.height = 26.0,
     this.width,
     this.enable = true,
   }) : super(key: key);
@@ -43,8 +43,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
       pageBuilder: (c, _, __) => Stack(
         children: [
           Positioned(
-            top: itemRect.bottom + 5 - 1,
-            // keep the same as ListHint vertical padding
+            top: itemRect.bottom + 5 + 10 /* keep the same as ListHint vertical padding + some spaces */,
             bottom: 0,
             left: 0,
             right: 0,
@@ -56,7 +55,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
             ),
           ),
           Positioned(
-            top: itemRect.bottom + 5 - 1,
+            top: itemRect.bottom + 5 + 1 /* keep the same as ListHint vertical padding + divider height */,
             left: 0,
             right: 0,
             child: Container(
@@ -96,7 +95,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
       child: InkWell(
         onTap: widget.enable ? _onTap : null,
         child: Container(
-          height: widget.height, // 26
+          height: widget.height, // 26 (keep the same as ListHint height)
           width: widget.width,
           child: IconText(
             alignment: IconTextAlignment.r2l,
@@ -105,7 +104,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
             textPadding: EdgeInsets.only(left: 10),
             icon: Icon(
               Icons.arrow_drop_down,
-              color: !widget.enable ? Colors.grey[300] : Colors.grey[700],
+              color: !widget.enable ? Colors.grey[300] : (_selected ? Colors.orange : Colors.grey[700]),
             ),
             text: Text(
               widget.titleBuilder(context, widget.value),

@@ -46,6 +46,7 @@ class AuthManager {
   }
 
   void Function() listen(Function(AuthChangedEvent) onData) {
+    // TODO add `AuthData Function() authDataGetter` parameter
     return EventBusManager.instance.listen<AuthChangedEvent>((ev) {
       onData.call(ev);
     });

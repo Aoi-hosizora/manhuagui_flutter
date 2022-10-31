@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Color.fromRGBO(245, 245, 245, 1.0),
         pageTransitionsTheme: PageTransitionsTheme(
           builders: const {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(), // TODO too fast
           },
         ),
         splashFactory: CustomInkRipple.preferredSplashFactory,

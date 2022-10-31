@@ -94,8 +94,6 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
             text = '网络连接异常 (HTTPS error)'; // Bad server (HTTPS error)
           } else if (DEBUG) {
             text = '网络连接异常 ([DEBUG] DioError: ${e.error.toString()})'; // [DEBUG] DioError: ${e.error.toString()}
-          } else {
-            text = '网络连接异常 (未知错误)'; // Unknown network error
           }
           break;
         case DioErrorType.connectTimeout:
@@ -171,8 +169,6 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     } else if (DEBUG) {
       // type: HandshakeException / CertificateException
       text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // [DEBUG] ${e.type}: ${e.message}
-    } else {
-      text = '网络连接异常 (未知错误)'; // Unknown network error
     }
 
     print('===> uri: ?');
@@ -180,6 +176,27 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     print('===> type: ${ErrorType.networkError}');
     print('===> text: $text');
     print('===> error: TlsException [${e.type}]: ${e.message}${e.osError == null ? '' : ' ${e.osError}'}');
+    print('===> trace:\n$s');
+    print('└─────────────────── WrapError ───────────────────┘');
+    return ErrorMessage.network(e, s, text);
+  }
+
+  // ======================================================================================================================
+  // ErrorType.networkError (_ClientSocketException)
+  if (e.runtimeType.toString() == '_ClientSocketException') {
+    var text = '网络连接异常 (未知错误)'; // Unknown network error
+    var msg = e.message.toLowerCase();
+    if (msg.contains('unreachable') || msg.contains('failed host lookup')) {
+      text = '网络不可用'; // Network is unavailable
+    } else if (DEBUG) {
+      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // [DEBUG] ${e.type}: ${e.message}
+    }
+
+    print('===> uri: ?');
+    print('===> method: ?');
+    print('===> type: ${ErrorType.networkError}');
+    print('===> text: $text');
+    print('===> error: ${e.runtimeType}: $e');
     print('===> trace:\n$s');
     print('└─────────────────── WrapError ───────────────────┘');
     return ErrorMessage.network(e, s, text);

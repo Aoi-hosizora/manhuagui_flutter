@@ -48,6 +48,7 @@ android {
 
     defaultConfig {
         applicationId "com.aoihosizora.manhuagui"
+        // applicationId "com.aoihosizora.manhuagui_test"
         // minSdkVersion flutter.minSdkVersion
         minSdkVersion 19
         targetSdkVersion flutter.targetSdkVersion

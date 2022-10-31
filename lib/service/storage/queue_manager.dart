@@ -42,8 +42,10 @@ class QueueManager {
       }
       return Future.error(e, s);
     } finally {
-      tasks.remove(task);
-      await task.doDefer();
+      if (tasks.contains(task)) {
+        tasks.remove(task);
+        await task.doDefer();
+      }
     }
   }
 }

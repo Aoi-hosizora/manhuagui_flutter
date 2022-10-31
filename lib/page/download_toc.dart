@@ -7,7 +7,6 @@ import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/page/dl_finished.dart';
-import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_unfinished.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
@@ -52,8 +51,6 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
   final _scrollController = ScrollController();
   final _cancelHandlers = <VoidCallback>[];
 
-  var _setting = DlSetting.defaultSetting();
-
   @override
   void initState() {
     super.initState();
@@ -62,8 +59,6 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       if (widget.gotoDownloading) {
         _tabController.animateTo(1);
       }
-      _setting = await DlSettingPrefs.getSetting();
-      if (mounted) setState(() {});
     });
 
     // progress related
@@ -183,14 +178,15 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     }
 
     // 开始 => 快速构造下载任务，同步更新数据库，并入队异步等待执行
+    var setting = await DlSettingPrefs.getSetting();
     await quickBuildDownloadMangaQueueTask(
       mangaId: _entity!.mangaId,
       mangaTitle: _entity!.mangaTitle,
       mangaCover: _entity!.mangaCover,
       mangaUrl: _entity!.mangaUrl,
       chapterIds: _entity!.downloadedChapters.map((el) => el.chapterId).toList(),
-      parallel: _setting.downloadPagesTogether,
-      invertOrder: _setting.invertDownloadOrder,
+      parallel: setting.downloadPagesTogether,
+      invertOrder: setting.invertDownloadOrder,
       addToTask: true,
       throughChapterList: _entity!.downloadedChapters,
     );
@@ -202,7 +198,8 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       return;
     }
 
-    var alsoDeleteFile = _setting.defaultToDeleteFiles;
+    var setting = await DlSettingPrefs.getSetting();
+    var alsoDeleteFile = setting.defaultToDeleteFiles;
     await showDialog(
       context: context,
       builder: (c) => StatefulBuilder(
@@ -212,7 +209,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除《${widget.mangaTitle}》${entity.chapterTitle}？'),
+              Text('是否删除漫画章节《${widget.mangaTitle}》${entity.chapterTitle}？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -235,6 +232,10 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                 _entity!.downloadedChapters.remove(entity);
                 await DownloadDao.deleteChapter(mid: entity.mangaId, cid: entity.chapterId);
                 if (mounted) setState(() {});
+
+                var setting = await DlSettingPrefs.getSetting();
+                setting = setting.copyWith(defaultToDeleteFiles: alsoDeleteFile);
+                await DlSettingPrefs.setSetting(setting);
                 if (alsoDeleteFile) {
                   await deleteDownloadedChapter(mangaId: entity.mangaId, chapterId: entity.chapterId);
                   getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) {
@@ -333,12 +334,12 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                           () => mountedSetState(() => _invertOrder = !_invertOrder),
                         ),
                         action3: ActionItem.simple(
-                          '全部开始',
+                          '开始下载',
                           Icons.play_arrow,
                           () => _startOrPause(start: true),
                         ),
                         action4: ActionItem.simple(
-                          '全部暂停',
+                          '暂停下载',
                           Icons.pause,
                           () => _startOrPause(start: false),
                         ),

@@ -173,7 +173,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           maxScale: PhotoViewComputedScale.covered * 2,
           filterQuality: FilterQuality.high,
           onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
-          onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
+          onTapUp: (c, d, v) => _onPointerUp(d.globalPosition), // TODO slow
           imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
             key: key,
             urlFuture: widget.imageUrlFutures[idx],

@@ -308,7 +308,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _showHelpRegion = false; // 显示区域提示
 
-  Future<void> _onSettingPressed() {
+  Future<void> _onSettingPressed() async {
+    _setting = await ViewSettingPrefs.getSetting();
     var setting = _setting.copyWith();
     return showDialog(
       context: context,
@@ -819,7 +820,6 @@ class _ScreenHelper {
     return Wakelock.toggle(enable: false);
   }
 
-  @protected
   static bool _showAppBar = false; // default to hide
 
   static bool get showAppBar => _showAppBar;
@@ -885,7 +885,8 @@ class _ScreenHelper {
         if (!(await _lowerThanAndroidQ())) {
           await setEdgeToEdgeSystemUIMode();
           _safeAreaTop = false;
-          await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50), () => _bottomPanelDistance = MediaQuery.of(_context).padding.bottom);
+          await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));
+          _bottomPanelDistance = MediaQuery.of(_context).padding.bottom;
         } else {
           await setManualSystemUIMode(SystemUiOverlay.values);
           _safeAreaTop = false;
