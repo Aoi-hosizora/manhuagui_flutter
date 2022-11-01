@@ -42,7 +42,6 @@ class DownloadMangaLineView extends StatelessWidget {
         return DownloadLineView(
           imageUrl: mangaEntity.mangaCover,
           title: mangaEntity.mangaTitle,
-          hero: mangaEntity.mangaId, // TODO hero
           icon1: Icons.download,
           text1: '已下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount} ($downloadedSize)',
           icon2: Icons.access_time,
@@ -74,7 +73,6 @@ class DownloadMangaLineView extends StatelessWidget {
         return DownloadLineView(
           imageUrl: mangaEntity.mangaCover,
           title: mangaEntity.mangaTitle,
-          hero: mangaEntity.mangaId, // TODO hero
           icon1: Icons.download,
           text1: '正在下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount} ($downloadedSize)',
           icon2: Icons.download,
@@ -131,7 +129,6 @@ class LargeDownloadMangaLineView extends StatelessWidget {
         return LargeDownloadLineView(
           imageUrl: mangaEntity.mangaCover,
           title: mangaEntity.mangaTitle,
-          hero: mangaEntity.mangaId, // TODO hero
           icon1: Icons.download,
           text1: '已下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount} ($downloadedSize)',
           icon2: Icons.access_time,
@@ -156,7 +153,6 @@ class LargeDownloadMangaLineView extends StatelessWidget {
         return LargeDownloadLineView(
           imageUrl: mangaEntity.mangaCover,
           title: mangaEntity.mangaTitle,
-          hero: mangaEntity.mangaId, // TODO hero
           icon1: Icons.download,
           text1: '正在下载章节 ${progress.startedChapterCount}/${progress.totalChapterCount} ($downloadedSize)',
           icon2: Icons.download,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-class WarningBarView extends StatefulWidget {
-  const WarningBarView({
+/// 警告提醒文字，在 [RecommendSubPage] / [DownloadSelectPage] 使用
+class WarningTextView extends StatefulWidget {
+  const WarningTextView({
     Key? key,
     required this.text,
     required this.isWarning,
@@ -11,10 +12,10 @@ class WarningBarView extends StatefulWidget {
   final bool isWarning;
 
   @override
-  State<WarningBarView> createState() => _WarningBarViewState();
+  State<WarningTextView> createState() => _WarningTextViewState();
 }
 
-class _WarningBarViewState extends State<WarningBarView> {
+class _WarningTextViewState extends State<WarningTextView> {
   @override
   Widget build(BuildContext context) {
     return Container(

@@ -25,17 +25,21 @@ class MangaCarouselView extends StatefulWidget {
   _MangaCarouselViewState createState() => _MangaCarouselViewState();
 }
 
-class _MangaCarouselViewState extends State<MangaCarouselView> {
+class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKeepAliveClientMixin {
   var _currentIndex = 0;
   final _key = PageStorageKey(0);
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Stack(
       children: [
         CarouselSlider.builder(
           options: CarouselOptions(
-            pageViewKey: _key, // TODO test
+            pageViewKey: _key,
             height: widget.height,
             autoPlay: true,
             autoPlayInterval: Duration(seconds: 4),

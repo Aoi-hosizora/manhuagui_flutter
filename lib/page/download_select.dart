@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
-import 'package:manhuagui_flutter/page/view/warning_bar.dart';
+import 'package:manhuagui_flutter/page/view/warning_text.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -221,30 +221,18 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
             child: ListView(
               controller: _controller,
               children: [
-                WarningBarView(
-                  text: '由于本应用为漫画柜第三方客户端，所以请不要连续下载过多章节，避免因短时间内访问频繁而被封禁当前IP。',
+                WarningTextView(
+                  text: '由于本应用为漫画柜第三方客户端，所以请不要连续下载过多章节，避免因短时间内访问频繁而当前IP被封禁。',
                   isWarning: true,
-                ), // TODO test
+                ),
                 MangaTocView(
-                  mangaId: widget.mangaId,
-                  mangaTitle: widget.mangaTitle,
                   groups: widget.groups,
                   full: true,
                   highlightColor: Theme.of(context).primaryColor.withOpacity(0.5),
                   highlightedChapters: _selected,
-                  customBadgeBuilder: (cid) {
-                    var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                    if (oldChapter == null) {
-                      return null;
-                    }
-                    return DownloadBadge(
-                      state: !oldChapter.allTried
-                          ? DownloadBadgeState.downloading
-                          : oldChapter.succeeded
-                              ? DownloadBadgeState.succeeded
-                              : DownloadBadgeState.failed,
-                    );
-                  },
+                  customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                    entity: _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                  ),
                   onChapterPressed: (cid) {
                     if (!_selected.contains(cid)) {
                       _selected.add(cid);

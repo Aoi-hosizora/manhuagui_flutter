@@ -12,7 +12,6 @@ class NetworkImageView extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.border,
     this.radius,
-    this.hero,
   }) : super(key: key);
 
   final String url;
@@ -21,7 +20,6 @@ class NetworkImageView extends StatelessWidget {
   final BoxFit fit;
   final BoxBorder? border;
   final BorderRadius? radius;
-  final Object? hero;
 
   @override
   Widget build(BuildContext context) {
@@ -30,56 +28,49 @@ class NetworkImageView extends StatelessWidget {
       url = 'https:$url';
     }
 
-    var view = CachedNetworkImage(
-      imageUrl: url,
-      width: width,
-      height: height,
-      fit: fit,
-      httpHeaders: const {
-        'User-Agent': USER_AGENT,
-        'Referer': REFERER,
-      },
-      placeholder: (context, url) => Container(
-        width: width,
-        height: height,
-        color: Colors.orange[50],
-        child: Center(
-          child: Icon(
-            Icons.more_horiz,
-            color: Colors.grey,
-          ),
-        ),
-      ),
-      errorWidget: (_, url, __) => Container(
-        width: width,
-        height: height,
-        color: Colors.orange[50],
-        child: Center(
-          child: Icon(
-            Icons.broken_image,
-            color: Colors.grey,
-          ),
-        ),
-      ),
-      cacheManager: DefaultCacheManager(),
-      fadeOutDuration: Duration(milliseconds: 1000),
-      fadeOutCurve: Curves.easeOut,
-      fadeInDuration: Duration(milliseconds: 500),
-      fadeInCurve: Curves.easeIn,
-    );
-
     return ClipRRect(
       borderRadius: radius ?? BorderRadius.zero,
       child: Container(
         decoration: border == null ? null : BoxDecoration(border: border),
         width: width,
         height: height,
-        child: hero == null
-            ? view
-            : Hero(
-                tag: hero!,
-                child: view,
+        child: CachedNetworkImage(
+          imageUrl: url,
+          width: width,
+          height: height,
+          fit: fit,
+          httpHeaders: const {
+            'User-Agent': USER_AGENT,
+            'Referer': REFERER,
+          },
+          placeholder: (context, url) => Container(
+            width: width,
+            height: height,
+            color: Colors.orange[50],
+            child: Center(
+              child: Icon(
+                Icons.more_horiz,
+                color: Colors.grey,
               ),
+            ),
+          ),
+          errorWidget: (_, url, __) => Container(
+            width: width,
+            height: height,
+            color: Colors.orange[50],
+            child: Center(
+              child: Icon(
+                Icons.broken_image,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          cacheManager: DefaultCacheManager(),
+          fadeOutDuration: Duration(milliseconds: 1000),
+          fadeOutCurve: Curves.easeOut,
+          fadeInDuration: Duration(milliseconds: 500),
+          fadeInCurve: Curves.easeIn,
+        ),
       ),
     );
   }

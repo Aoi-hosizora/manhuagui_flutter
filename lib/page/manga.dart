@@ -12,12 +12,14 @@ import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
+import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -64,12 +66,8 @@ class _MangaPageState extends State<MangaPage> {
       }));
       await AuthManager.instance.check();
     });
-    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
-      try {
-        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
-        if (mounted) setState(() {});
-      } catch (_) {}
-    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) => _loadHistory()));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
     _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
       if (e.mangaId == widget.id) {
         _subscribed = e.subscribe;
@@ -90,6 +88,7 @@ class _MangaPageState extends State<MangaPage> {
   Manga? _data;
   var _error = '';
   MangaHistory? _history;
+  DownloadedManga? _downloadEntity;
 
   int? _subscribeCount;
   var _subscribing = false;
@@ -122,8 +121,11 @@ class _MangaPageState extends State<MangaPage> {
       });
     }
 
+    // 3. 异步获取下载信息
+    _loadDownload();
+
     try {
-      // 3. 获取漫画信息
+      // 4. 获取漫画信息
       var result = await client.getManga(mid: widget.id);
       _data = null;
       _error = '';
@@ -131,8 +133,8 @@ class _MangaPageState extends State<MangaPage> {
       await Future.delayed(Duration(milliseconds: 20));
       _data = result.data;
 
-      // 4. 获取并更新漫画阅读历史
-      _history ??= await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
+      // 5. 更新漫画阅读历史
+      await _loadHistory();
       var newHistory = _history?.copyWith(
             mangaId: _data!.mid,
             mangaTitle: _data!.title,
@@ -162,6 +164,16 @@ class _MangaPageState extends State<MangaPage> {
       _loading = false;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _loadHistory() async {
+    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadDownload() async {
+    _downloadEntity = await DownloadDao.getManga(mid: widget.id);
+    if (mounted) setState(() {});
   }
 
   var _commentLoading = true;
@@ -248,7 +260,29 @@ class _MangaPageState extends State<MangaPage> {
     }
   }
 
-  void _read() async {
+  void _read({required int? chapterId}) async {
+    if (chapterId != null) {
+      // 选择章节阅读
+      Navigator.of(context).push(
+        CustomMaterialPageRoute(
+          context: context,
+          builder: (c) => MangaViewerPage(
+            mangaId: _data!.mid,
+            mangaTitle: _data!.title,
+            mangaCover: _data!.cover,
+            mangaUrl: _data!.url,
+            chapterGroups: _data!.chapterGroups,
+            chapterId: chapterId,
+            initialPage: _history?.chapterId == chapterId
+                ? _history?.chapterPage ?? 1 // have read
+                : 1, // have not read
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 开始阅读 / 继续阅读
     int cid;
     int page;
     if (_history?.read != true) {
@@ -347,7 +381,6 @@ class _MangaPageState extends State<MangaPage> {
                             url: _data!.cover,
                             height: 160,
                             width: 120,
-                            hero: _data!.mid, // TODO hero
                           ),
                           onTap: () => Navigator.of(context).push(
                             CustomMaterialPageRoute(
@@ -492,7 +525,7 @@ class _MangaPageState extends State<MangaPage> {
                     action3: ActionItem(
                       text: _history?.read == true ? '继续阅读' : '开始阅读',
                       icon: Icons.import_contacts,
-                      action: () => _read(),
+                      action: () => _read(chapterId: null),
                       longPress: () {
                         if (_history == null || !_history!.read) {
                           Fluttertoast.showToast(msg: '未开始阅读该漫画');
@@ -677,25 +710,22 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   color: Colors.white,
                   child: MangaTocView(
-                    mangaId: _data!.mid,
-                    mangaTitle: _data!.title,
                     groups: _data!.chapterGroups,
                     full: false,
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
-                    onChapterPressed: (cid) => Navigator.of(context).push(
+                    customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                      entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                    ),
+                    onChapterPressed: (cid) => _read(chapterId: cid),
+                    onMoreChaptersPressed: () => Navigator.of(context).push(
                       CustomMaterialPageRoute(
                         context: context,
-                        builder: (c) => MangaViewerPage(
+                        builder: (c) => MangaTocPage(
                           mangaId: _data!.mid,
                           mangaTitle: _data!.title,
-                          mangaCover: _data!.cover,
-                          mangaUrl: _data!.url,
-                          chapterGroups: _data!.chapterGroups,
-                          chapterId: cid,
-                          initialPage: _history?.chapterId == cid
-                              ? _history?.chapterPage ?? 1 // have read
-                              : 1, // have not read
+                          groups: _data!.chapterGroups,
+                          onChapterPressed: (cid) => _read(chapterId: cid),
                         ),
                       ),
                     ),

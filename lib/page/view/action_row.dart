@@ -38,6 +38,10 @@ class ActionRowView extends StatelessWidget {
     required this.action4,
     this.compact = false,
     this.shrink = true,
+    this.textColor,
+    this.iconColor,
+    this.disabledTextColor,
+    this.disabledIconColor,
   })  : action5 = null,
         super(key: key);
 
@@ -50,6 +54,10 @@ class ActionRowView extends StatelessWidget {
     required ActionItem this.action5,
     this.compact = false,
     this.shrink = true,
+    this.textColor,
+    this.iconColor,
+    this.disabledTextColor,
+    this.disabledIconColor,
   }) : super(key: key);
 
   final ActionItem action1;
@@ -59,6 +67,10 @@ class ActionRowView extends StatelessWidget {
   final ActionItem? action5;
   final bool compact;
   final bool shrink;
+  final Color? textColor;
+  final Color? iconColor;
+  final Color? disabledTextColor;
+  final Color? disabledIconColor;
 
   Widget _buildAction(ActionItem action) {
     return InkWell(
@@ -79,13 +91,17 @@ class ActionRowView extends StatelessWidget {
             angle: action.rotateAngle,
             child: Icon(
               action.icon,
-              color: action.enable ? Colors.black54 : Colors.grey,
+              color: action.enable
+                  ? (textColor ?? Colors.black54) // enabled
+                  : (disabledTextColor ?? Colors.grey) /* disabled */,
             ),
           ),
           text: Text(
             action.text,
             style: TextStyle(
-              color: action.enable ? Colors.black : Colors.grey,
+              color: action.enable
+                  ? (iconColor ?? Colors.black) // enabled
+                  : (disabledIconColor ?? Colors.grey) /* disabled */,
             ),
           ),
         ),

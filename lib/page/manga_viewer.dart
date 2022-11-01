@@ -13,11 +13,13 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_select.dart';
+import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -65,7 +67,7 @@ const _kOverlayAnimationDuration = Duration(milliseconds: 100); // SystemUI 动�
 
 class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   final _mangaGalleryViewKey = GlobalKey<MangaGalleryViewState>();
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
 
   var _setting = ViewSetting.defaultSetting();
   Timer? _timer;
@@ -79,12 +81,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     // data related
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
-    _cancelHandler = EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
+    _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
       if (e.mangaId == widget.mangaId) {
         _subscribed = e.subscribe;
         if (mounted) setState(() {});
       }
-    });
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
 
     // setting and screen related
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
@@ -132,13 +135,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _timer?.cancel();
     super.dispose();
   }
 
   var _loading = true;
   MangaChapter? _data;
+  DownloadedManga? _downloadEntity;
   List<MangaChapterGroup>? _chapterGroups;
   int? _initialPage;
   List<Future<String>>? _urlFutures;
@@ -176,8 +180,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       });
     }
 
+    // 3. 异步获取下载信息
+    _loadDownload();
+
     try {
-      // 3. 异步请求章节目录
+      // 4. 异步请求章节目录
       Future<void> groupsFuture;
       if (widget.chapterGroups != null) {
         _chapterGroups = widget.chapterGroups!;
@@ -189,7 +196,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         });
       }
 
-      // 4. 获取章节数据
+      // 5. 获取章节数据
       var result = await client.getMangaChapter(mid: widget.mangaId, cid: widget.chapterId);
       _data = null;
       _error = '';
@@ -198,12 +205,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _data = result.data;
       await groupsFuture; // 等待成功获取章节目录
 
-      // 4. 指定起始页
+      // 6. 指定起始页
       _initialPage = widget.initialPage.clamp(1, _data!.pageCount);
       _currentPage = _initialPage!;
       _progressValue = _initialPage!;
 
-      // 5. 提前保存 future 列表
+      // 7. 提前保存 future 列表
       _urlFutures = _data!.pages.map((el) => Future.value(el)).toList();
       _fileFutures = [
         for (int idx = 0; idx < _data!.pageCount; idx++)
@@ -222,7 +229,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           }),
       ];
 
-      // 6. 异步更新浏览历史
+      // 8. 异步更新浏览历史
       _updateHistory();
     } catch (e, s) {
       _data = null;
@@ -250,6 +257,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       );
       EventBusManager.instance.fire(HistoryUpdatedEvent());
     }
+  }
+
+  Future<void> _loadDownload() async {
+    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    if (mounted) setState(() {});
   }
 
   var _currentPage = 1; // image page only, starts from 1
@@ -459,6 +471,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             mangaTitle: widget.mangaTitle,
             groups: _chapterGroups!,
             highlightedChapter: _data!.cid,
+            downloadedChapters: _downloadEntity?.downloadedChapters ?? [],
             onChapterPressed: (cid) {
               if (cid == _data!.cid) {
                 Fluttertoast.showToast(msg: '当前正在阅读 ${_data!.title}');
@@ -545,6 +558,53 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         context: context,
                         highlightColor: Colors.transparent,
                       ),
+                      actions: [
+                        if (_downloadEntity?.downloadedChapters.any((el) => el.chapterId == widget.chapterId) == true)
+                          AppBarActionButton(
+                            icon: Icon(Icons.download_done),
+                            tooltip: '该章节已下载',
+                            highlightColor: Colors.transparent,
+                            onPressed: () {
+                              var chapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
+                              if (chapter == null) {
+                                return;
+                              }
+                              showDialog(
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                  title: Text('下载'),
+                                  content: Text(
+                                    !chapter.tried
+                                        ? '该章节正在等待下载。'
+                                        : chapter.succeeded
+                                            ? '该章节已下载完成。'
+                                            : '该章节已部分下载完成。',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      child: Text('查看'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                        Navigator.of(context).push(
+                                          CustomMaterialPageRoute(
+                                            context: context,
+                                            builder: (c) => DownloadTocPage(
+                                              mangaId: widget.mangaId,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text('确定'),
+                                      onPressed: () => Navigator.of(c).pop(),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          )
+                      ],
                     ),
             ),
           ),
@@ -706,7 +766,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                 ),
                                 ActionRowView.four(
                                   compact: true,
-                                  shrink: false, // TODO test
+                                  shrink: false,
+                                  textColor: Colors.white,
+                                  iconColor: Colors.white,
                                   action1: ActionItem(
                                     text: _setting.viewDirection == ViewDirection.leftToRight ? '上一章节' : '下一章节',
                                     icon: Icons.arrow_right_alt,

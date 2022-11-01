@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/page/manga_toc.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 
 /// 漫画章节目录（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadSelectPage] 使用
 class MangaTocView extends StatefulWidget {
   const MangaTocView({
     Key? key,
-    required this.mangaId,
-    required this.mangaTitle,
     required this.groups,
     required this.full,
     this.gridPadding,
@@ -18,11 +16,10 @@ class MangaTocView extends StatefulWidget {
     this.showNewBadge = true,
     this.customBadgeBuilder,
     required this.onChapterPressed,
+    this.onMoreChaptersPressed,
     this.onChapterLongPressed,
   }) : super(key: key);
 
-  final int mangaId;
-  final String mangaTitle;
   final List<MangaChapterGroup> groups;
   final bool full;
   final EdgeInsets? gridPadding;
@@ -31,6 +28,7 @@ class MangaTocView extends StatefulWidget {
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final void Function(int cid) onChapterPressed;
+  final void Function()? onMoreChaptersPressed;
   final void Function(int cid)? onChapterLongPressed;
 
   @override
@@ -116,17 +114,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       },
       onChapterPressed: (chapter) {
         if (chapter == null) {
-          Navigator.of(context).push(
-            CustomMaterialPageRoute(
-              context: context,
-              builder: (c) => MangaTocPage(
-                mangaId: widget.mangaId,
-                mangaTitle: widget.mangaTitle,
-                groups: widget.groups,
-                onChapterPressed: widget.onChapterPressed,
-              ),
-            ),
-          );
+          widget.onMoreChaptersPressed?.call();
         } else {
           widget.onChapterPressed.call(chapter.cid);
         }
@@ -221,7 +209,7 @@ class NewBadge extends StatelessWidget {
 
 enum DownloadBadgeState {
   downloading,
-  succeeded,
+  done,
   failed,
 }
 
@@ -244,20 +232,33 @@ class DownloadBadge extends StatelessWidget {
           shape: BoxShape.circle,
           color: state == DownloadBadgeState.downloading
               ? Colors.blue
-              : state == DownloadBadgeState.succeeded
+              : state == DownloadBadgeState.done
                   ? Colors.green
                   : Colors.red,
         ),
         child: Icon(
           state == DownloadBadgeState.downloading
               ? Icons.download
-              : state == DownloadBadgeState.succeeded
+              : state == DownloadBadgeState.done
                   ? Icons.file_download_done
                   : Icons.priority_high,
           size: 14,
           color: Colors.white,
         ),
       ),
+    );
+  }
+
+  static DownloadBadge? fromEntity({required DownloadedChapter? entity}) {
+    if (entity == null) {
+      return null;
+    }
+    return DownloadBadge(
+      state: !entity.allTried
+          ? DownloadBadgeState.downloading
+          : entity.succeeded
+              ? DownloadBadgeState.done
+              : DownloadBadgeState.failed,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 
 /// 漫画章节阅读页-章节目录
@@ -11,6 +12,7 @@ class ViewTocSubPage extends StatefulWidget {
     required this.mangaTitle,
     required this.groups,
     required this.highlightedChapter,
+    required this.downloadedChapters,
     required this.onChapterPressed,
   }) : super(key: key);
 
@@ -18,6 +20,7 @@ class ViewTocSubPage extends StatefulWidget {
   final String mangaTitle;
   final List<MangaChapterGroup> groups;
   final int highlightedChapter;
+  final List<DownloadedChapter> downloadedChapters;
   final void Function(int cid) onChapterPressed;
 
   @override
@@ -64,11 +67,12 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
             child: SingleChildScrollView(
               controller: _controller,
               child: MangaTocView(
-                mangaId: widget.mangaId,
-                mangaTitle: widget.mangaTitle,
                 groups: widget.groups,
                 full: true,
                 highlightedChapters: [widget.highlightedChapter],
+                customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                  entity: widget.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                ),
                 onChapterPressed: widget.onChapterPressed,
               ),
             ),

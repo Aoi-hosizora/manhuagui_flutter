@@ -63,19 +63,9 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                   invertOrder: widget.invertOrder,
                   showNewBadge: false,
                   highlightedChapters: [widget.history?.chapterId ?? 0],
-                  customBadgeBuilder: (cid) {
-                    var oldChapter = widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-                    if (oldChapter == null) {
-                      return null;
-                    }
-                    return DownloadBadge(
-                      state: !oldChapter.allTried
-                          ? DownloadBadgeState.downloading
-                          : oldChapter.succeeded
-                              ? DownloadBadgeState.succeeded
-                              : DownloadBadgeState.failed,
-                    );
-                  },
+                  customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                    entity: widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                  ),
                   onChapterPressed: widget.toReadChapter,
                   onChapterLongPressed: widget.toDeleteChapter,
                 ),

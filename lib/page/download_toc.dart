@@ -278,7 +278,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
-            icon: Icon(Icons.download),
+            icon: Icon(Icons.list),
             tooltip: '查看下载列表',
             onPressed: () => Navigator.of(context).push(
               CustomMaterialPageRoute(
@@ -426,7 +426,6 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                     Fluttertoast.showToast(msg: '目前暂不支持单独下载或暂停某一章节'); // TODO 单个漫画下载特定章节/按照特定顺序下载
                   },
                   toReadChapter: _readChapter,
-                  // TODO test
                   toDeleteChapter: (cid) async {
                     var chapterEntity = _entity!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
                     if (chapterEntity != null) {

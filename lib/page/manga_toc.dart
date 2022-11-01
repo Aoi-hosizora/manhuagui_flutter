@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -30,8 +31,7 @@ class MangaTocPage extends StatefulWidget {
 class _MangaTocPageState extends State<MangaTocPage> {
   final _controller = ScrollController();
   var _loading = true; // fake loading flag
-  VoidCallback? _cancelHandler;
-  MangaHistory? _history;
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
@@ -42,25 +42,36 @@ class _MangaTocPageState extends State<MangaTocPage> {
         if (mounted) setState(() {});
       });
     });
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      try {
-        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-        if (mounted) setState(() {});
-      } catch (_) {}
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _loadHistory();
+      _loadDownload();
     });
-    _cancelHandler = EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
-      try {
-        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-        if (mounted) setState(() {});
-      } catch (_) {}
-    });
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) => _loadHistory()));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     super.dispose();
+  }
+
+  MangaHistory? _history;
+  DownloadedManga? _downloadEntity;
+
+  Future<void> _loadHistory() async {
+    try {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    } catch (_) {}
+  }
+
+  Future<void> _loadDownload() async {
+    try {
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      if (mounted) setState(() {});
+    } catch (_) {}
   }
 
   @override
@@ -82,11 +93,12 @@ class _MangaTocPageState extends State<MangaTocPage> {
             child: SingleChildScrollView(
               controller: _controller,
               child: MangaTocView(
-                mangaId: widget.mangaId,
-                mangaTitle: widget.mangaTitle,
                 groups: widget.groups,
                 full: true,
                 highlightedChapters: [_history?.chapterId ?? 0],
+                customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                  entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                ),
                 onChapterPressed: widget.onChapterPressed,
               ),
             ),

@@ -7,7 +7,6 @@ class GeneralLineView extends StatelessWidget {
     Key? key,
     required this.imageUrl,
     required this.title,
-    required this.hero,
     required this.icon1,
     required this.text1,
     required this.icon2,
@@ -27,7 +26,6 @@ class GeneralLineView extends StatelessWidget {
     Key? key,
     required this.imageUrl,
     required this.title,
-    required this.hero,
     required List<Widget> this.customRows,
     this.extrasInRow,
     this.extraWidthInRow,
@@ -46,7 +44,6 @@ class GeneralLineView extends StatelessWidget {
   // required
   final String imageUrl;
   final String title;
-  final Object? hero;
 
   // simple rows
   final IconData? icon1;
@@ -85,7 +82,6 @@ class GeneralLineView extends StatelessWidget {
                 url: imageUrl,
                 height: 100,
                 width: 75,
-                hero: hero,
               ),
             ),
 

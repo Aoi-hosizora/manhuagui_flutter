@@ -123,7 +123,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildSwitcher(
-          title: '默认删除已下载的文件　　　　　　　　',
+          title: '默认删除已下载的文件　　　　　　',
           value: _defaultToDeleteFiles,
           onChanged: (b) {
             _defaultToDeleteFiles = b;
