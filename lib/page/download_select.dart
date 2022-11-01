@@ -160,10 +160,10 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
     await _getDownloadedChapters();
     _selected.clear();
     if (mounted) setState(() {});
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('已添加 ${chapterIds.length} 个章节至漫画下载任务'),
-        duration: Duration(seconds: 2),
         action: SnackBarAction(
           label: '查看',
           onPressed: () => Navigator.of(context).push(

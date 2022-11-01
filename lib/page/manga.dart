@@ -201,14 +201,47 @@ class _MangaPageState extends State<MangaPage> {
 
     final client = RestClient(DioManager.instance.dio);
     var toSubscribe = _subscribed != true; // 去订阅
+    if (!toSubscribe) {
+      var ok = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text('取消订阅确认'),
+          content: Text('是否取消订阅《${_data!.title}》？'),
+          actions: [
+            TextButton(
+              child: Text('确定'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) {
+        return;
+      }
+    }
+
     try {
-      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.id);
+      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: _data!.mid);
       _subscribed = toSubscribe;
-      Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: widget.id, subscribe: _subscribed));
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(toSubscribe ? '订阅漫画成功' : '取消订阅漫画成功'),
+        ),
+      );
+      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: _data!.mid, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
-      Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err'),
+        ),
+      );
     } finally {
       _subscribing = false;
       if (mounted) setState(() {});
@@ -736,7 +769,7 @@ class _MangaPageState extends State<MangaPage> {
                             CustomMaterialPageRoute(
                               context: context,
                               builder: (c) => CommentsPage(
-                                mangaId: widget.id,
+                                mangaId: _data!.mid,
                                 mangaTitle: _data!.title,
                               ),
                             ),
@@ -756,7 +789,6 @@ class _MangaPageState extends State<MangaPage> {
                     ],
                   ),
                 ),
-                Container(height: 12),
               ],
             ),
           ),

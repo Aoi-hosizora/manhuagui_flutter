@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/page/overall.dart';
 import 'package:manhuagui_flutter/page/page/ranking.dart';
 import 'package:manhuagui_flutter/page/page/recent.dart';
@@ -9,8 +7,6 @@ import 'package:manhuagui_flutter/page/page/recommend.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/native/notification.dart';
 
 /// 首页
 class HomeSubPage extends StatefulWidget {
@@ -84,14 +80,6 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
         ),
         leading: AppBarActionButton.leading(context: context),
         actions: [
-          AppBarActionButton(
-            icon: Icon(Icons.open_in_browser),
-            tooltip: '用浏览器打开',
-            onPressed: () => launchInBrowser(
-              context: context,
-              url: WEB_HOMEPAGE_URL,
-            ),
-          ),
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',

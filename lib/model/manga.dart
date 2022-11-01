@@ -82,6 +82,18 @@ class TinyManga {
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
+class RandomMangaInfo {
+  final int mid;
+  final String url;
+
+  RandomMangaInfo({required this.mid, required this.url});
+
+  factory RandomMangaInfo.fromJson(Map<String, dynamic> json) => _$RandomMangaInfoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RandomMangaInfoToJson(this);
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class TinyBlockManga {
   final int mid;
   final String title;

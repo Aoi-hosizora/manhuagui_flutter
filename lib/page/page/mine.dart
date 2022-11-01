@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/user.dart';
+import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
@@ -11,6 +12,8 @@ import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -127,6 +130,33 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     );
   }
 
+  Widget _buildActionLine({required IconData icon, required String text, required void Function() action}) {
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        child: Padding(
+          padding: EdgeInsets.only(left: 15, right: 8, top: 8, bottom: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconText(
+                icon: Icon(icon, color: Colors.black54),
+                text: Text(text, style: Theme.of(context).textTheme.subtitle1),
+                space: 15,
+              ),
+              Icon(Icons.chevron_right, color: Colors.black54),
+            ],
+          ),
+        ),
+        onTap: action,
+      ),
+    );
+  }
+
+  Widget _buildDivider({double thickness = 0.8, double indent = 10}) {
+    return Divider(height: 0, thickness: thickness, indent: indent, endIndent: indent);
+  }
+
   Widget _buildInfoLines({required String title, required List<String> lines}) {
     return Container(
       color: Colors.white,
@@ -142,7 +172,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
           ),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Divider(height: 0, thickness: 1),
+            child: _buildDivider(thickness: 1, indent: 0),
           ),
           for (var line in lines)
             Padding(
@@ -278,6 +308,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   action4: ActionItem.simple('退出登录', Icons.logout, () => _logout(sure: false)),
                 ),
               ),
+              SizedBox(height: 12),
+              _buildActionLine(text: '我的书架', icon: Icons.star_outlined, action: () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+              _buildDivider(),
+              _buildActionLine(text: '浏览历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
+              _buildDivider(),
+              _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomMaterialPageRoute.simple(context, (c) => DownloadPage()))),
               SizedBox(height: 12),
               _buildInfoLines(
                 title: '个人信息',

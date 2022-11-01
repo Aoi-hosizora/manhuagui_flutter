@@ -2,6 +2,14 @@ class ToShelfRequestedEvent {
   const ToShelfRequestedEvent();
 }
 
+class ToHistoryRequestedEvent {
+  const ToHistoryRequestedEvent();
+}
+
+class ToGenreRequestedEvent {
+  const ToGenreRequestedEvent();
+}
+
 class ToRecentRequestedEvent {
   const ToRecentRequestedEvent();
 }

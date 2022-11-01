@@ -27,7 +27,6 @@ const HEAD_TIMEOUT = 3000; // 3.0s
 const DOWNLOAD_IMAGE_TIMEOUT = 16000; // 8.0s + 8.0s
 
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';
-const WEB_CATEGORY_URL = 'https://www.manhuagui.com/list/';
 const USER_CENTER_URL = 'https://www.manhuagui.com/user/center/index';
 const MESSAGE_URL = 'https://www.manhuagui.com/user/message/system';
 const EDIT_PROFILE_URL = 'https://www.manhuagui.com/user/center/proinfo';

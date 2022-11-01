@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/page/page/dl_setting.dart';
+import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 
 /// 设置页
 class SettingPage extends StatefulWidget {
@@ -13,20 +17,14 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   Widget _item({required String title, required void Function() action}) {
-    return Container(
+    return Material(
       color: Colors.white,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.subtitle1,
-            ),
-          ),
-          onTap: action,
+      child: InkWell(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+          child: Text(title, style: Theme.of(context).textTheme.subtitle1),
         ),
+        onTap: action,
       ),
     );
   }
@@ -81,28 +79,80 @@ class _SettingPageState extends State<SettingPage> {
           _spacer(),
           // *******************************************************
           _item(
+            title: '漫画阅读设置',
+            action: () async {
+              var setting = await ViewSettingPrefs.getSetting();
+              showDialog(
+                context: context,
+                builder: (c) => AlertDialog(
+                  title: Text('漫画阅读设置'),
+                  content: ViewSettingSubPage(
+                    setting: setting,
+                    onSettingChanged: (s) => setting = s,
+                  ),
+                  actions: [
+                    TextButton(
+                      child: Text('确定'),
+                      onPressed: () async {
+                        Navigator.of(c).pop();
+                        await ViewSettingPrefs.setSetting(setting);
+                      },
+                    ),
+                    TextButton(
+                      child: Text('取消'),
+                      onPressed: () => Navigator.of(c).pop(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          _divider(),
+          _item(
+            title: '漫画下载设置',
+            action: () async {
+              var setting = await DlSettingPrefs.getSetting();
+              showDialog(
+                context: context,
+                builder: (c) => AlertDialog(
+                  title: Text('漫画下载设置'),
+                  content: DlSettingSubPage(
+                    setting: setting,
+                    onSettingChanged: (s) => setting = s,
+                  ),
+                  actions: [
+                    TextButton(
+                      child: Text('确定'),
+                      onPressed: () async {
+                        Navigator.of(c).pop();
+                        await DlSettingPrefs.setSetting(setting);
+                      },
+                    ),
+                    TextButton(
+                      child: Text('取消'),
+                      onPressed: () => Navigator.of(c).pop(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          _spacer(),
+          // *******************************************************
+          _item(
             title: '漫画柜/看漫画官网',
-            action: () => launchInBrowser(
-              context: context,
-              url: WEB_HOMEPAGE_URL,
-            ),
+            action: () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL),
           ),
           _divider(),
           _item(
             title: '本应用源代码',
-            action: () => launchInBrowser(
-              context: context,
-              url: SOURCE_CODE_URL,
-            ),
+            action: () => launchInBrowser(context: context, url: SOURCE_CODE_URL),
           ),
           _spacer(),
           // *******************************************************
           _item(
             title: '反馈及联系作者',
-            action: () => launchInBrowser(
-              context: context,
-              url: FEEDBACK_URL,
-            ),
+            action: () => launchInBrowser(context: context, url: FEEDBACK_URL),
           ),
           _divider(),
           _item(

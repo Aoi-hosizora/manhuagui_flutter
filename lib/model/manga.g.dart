@@ -119,6 +119,18 @@ Map<String, dynamic> _$TinyMangaToJson(TinyManga instance) => <String, dynamic>{
       'newest_date': instance.newestDate,
     };
 
+RandomMangaInfo _$RandomMangaInfoFromJson(Map<String, dynamic> json) =>
+    RandomMangaInfo(
+      mid: json['mid'] as int,
+      url: json['url'] as String,
+    );
+
+Map<String, dynamic> _$RandomMangaInfoToJson(RandomMangaInfo instance) =>
+    <String, dynamic>{
+      'mid': instance.mid,
+      'url': instance.url,
+    };
+
 TinyBlockManga _$TinyBlockMangaFromJson(Map<String, dynamic> json) =>
     TinyBlockManga(
       mid: json['mid'] as int,

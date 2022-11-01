@@ -378,14 +378,47 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     final client = RestClient(DioManager.instance.dio);
     var toSubscribe = _subscribed != true; // 去订阅
+    if (!toSubscribe) {
+      var ok = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text('取消订阅确认'),
+          content: Text('是否取消订阅《${_data!.mangaTitle}》？'),
+          actions: [
+            TextButton(
+              child: Text('确定'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) {
+        return;
+      }
+    }
+
     try {
       await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.mangaId);
       _subscribed = toSubscribe;
-      Fluttertoast.showToast(msg: toSubscribe ? '订阅成功' : '取消订阅成功');
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(toSubscribe ? '订阅漫画成功' : '取消订漫画阅成功'),
+        ),
+      );
       EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: widget.mangaId, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
-      Fluttertoast.showToast(msg: toSubscribe ? '订阅失败，$err' : '取消订阅失败，$err');
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err'),
+        ),
+      );
     } finally {
       _subscribing = false;
       if (mounted) setState(() {});

@@ -257,6 +257,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _masking = masked;
     if (mounted) setState(() {});
     await Future.delayed(_kMaskDuration);
+    // TODO not accurate !!!
     var ok = await _ScrollHelper.scrollToTargetIndex(_itemKeys, scrollRect, _controller, page, widget.viewportPageSpace);
     _jumping = false;
     _masking = false;

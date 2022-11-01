@@ -37,6 +37,9 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
     _cancelHandler = EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(0);
     });
+    _cancelHandler = EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
+      _controller.animateTo(1);
+    });
   }
 
   @override
