@@ -1,5 +1,4 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
@@ -47,7 +46,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     _doingTask = true;
     _succeeded = await _coreDoTask();
     _doingTask = false;
-    _progress.showFinishedNotification(mangaId: mangaId, mangaTitle: mangaTitle, canceled: canceled, success: _succeeded);
+    _progress.showNotification(mangaId: mangaId, mangaTitle: mangaTitle, canceled: canceled, success: _succeeded);
   }
 
   bool _canceled;
@@ -59,7 +58,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   void cancel() {
     super.cancel();
     _canceled = true;
-    DownloadMangaProgress.cancelDownloadNotification(mangaId: mangaId);
+    DownloadMangaProgress.cancelNotification(mangaId: mangaId);
     if (!_doingTask) {
       QueueManager.instance.tasks.remove(this);
       doDefer(); // finished: true
@@ -200,7 +199,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       // 请求错误 => 更新漫画下载表为下载错误，然后直接返回
       var err = wrapError(e, s).text;
       print('===> exception when DownloadMangaQueueTask (manga):\n$err');
-      // await Fluttertoast.cancel();
+      await Fluttertoast.cancel();
       Fluttertoast.showToast(msg: '获取《$mangaTitle》信息出错：$err');
       if (oldManga != null) {
         await DownloadDao.addOrUpdateManga(
@@ -498,125 +497,63 @@ class DownloadMangaProgress {
   final int? triedChapterPageCount;
   final int? successChapterPageCount;
 
-  void showNotification({required int mangaId, required String mangaTitle, required bool canceled}) {
-    switch (stage) {
-      case DownloadMangaProgressStage.gettingManga:
-        DownloadMangaProgress.showDownloadingNotification(
-          mangaId: mangaId,
-          mangaTitle: mangaTitle,
-          preparing: true,
-          bodyText: '获取漫画信息中',
-          canShow: !canceled,
-        );
-        break;
-      case DownloadMangaProgressStage.gettingChapter:
-        DownloadMangaProgress.showDownloadingNotification(
-          mangaId: mangaId,
-          mangaTitle: mangaTitle,
-          preparing: true,
-          bodyText: '获取章节信息中',
-          canShow: !canceled,
-        );
-        break;
-      case DownloadMangaProgressStage.gotChapter:
-        DownloadMangaProgress.showDownloadingNotification(
-          mangaId: mangaId,
-          mangaTitle: mangaTitle,
-          preparing: false,
-          bodyText: '${currentChapter!.title} 0/${currentChapter!.pageCount}',
-          canShow: !canceled,
-        );
-        break;
-      case DownloadMangaProgressStage.gotPage:
-        DownloadMangaProgress.showDownloadingNotification(
-          mangaId: mangaId,
-          mangaTitle: mangaTitle,
-          preparing: false,
-          bodyText: '${currentChapter!.title} ${triedChapterPageCount!}/${currentChapter!.pageCount}',
-          triedPageCount: triedChapterPageCount!,
-          totalPageCount: currentChapter!.pageCount,
-          canShow: !canceled,
-        );
-        break;
-      default:
-      // skip
+  Future<void> showNotification({required int mangaId, required String mangaTitle, required bool canceled, bool? success}) async {
+    if (canceled) {
+      return;
     }
-  }
 
-  void showFinishedNotification({required int mangaId, required String mangaTitle, required bool canceled, required bool success}) {
-    DownloadMangaProgress.showDownloadedNotification(
-      mangaId: mangaId,
-      mangaTitle: mangaTitle,
-      success: success,
-      bodyText: success ? '下载已完成' : '下载失败',
-      canShow: !canceled,
-    );
-  }
-
-  static Future<void> showDownloadingNotification({
-    required int mangaId,
-    required String mangaTitle,
-    required bool preparing,
-    required String bodyText,
-    int triedPageCount = 0,
-    int totalPageCount = 0,
-    required bool canShow,
-  }) async {
-    if (canShow) {
+    if (success != null) {
       await NotificationManager.instance.showDownloadChannelNotification(
         id: mangaId,
         title: mangaTitle,
-        body: bodyText,
-        payload: NotificationManager.downloadChannelPayload,
-        icon: NotificationManager.drawableStatDownload,
-        largeIcon: NotificationManager.mipMapIcLaunch,
-        autoCancel: false,
-        ongoing: true,
-        showProgress: true,
-        indeterminate: preparing,
-        progress: preparing ? 0 : triedPageCount,
-        maxProgress: preparing ? 0 : totalPageCount,
-        category: AndroidNotificationCategory.progress,
-        actions: [
-          AndroidNotificationAction(
-            NotificationManager.downloadChannelAction1Id,
-            '暂停',
-            cancelNotification: false,
-          ),
-          AndroidNotificationAction(
-            NotificationManager.downloadChannelAction2Id,
-            '全部暂停',
-            cancelNotification: false,
-          ),
-        ],
-      );
-    }
-  }
-
-  static Future<void> showDownloadedNotification({
-    required int mangaId,
-    required String mangaTitle,
-    required bool success,
-    required String bodyText,
-    required bool canShow,
-  }) async {
-    if (canShow) {
-      await NotificationManager.instance.showDownloadChannelNotification(
-        id: mangaId,
-        title: mangaTitle,
-        body: bodyText,
-        payload: NotificationManager.downloadChannelPayload,
+        body: success ? '下载已完成' : '下载失败',
         icon: NotificationManager.drawableStatDownloadDone,
         largeIcon: NotificationManager.mipMapIcLaunch,
         autoCancel: true,
         ongoing: false,
         showProgress: false,
-        category: success ? AndroidNotificationCategory.progress : AndroidNotificationCategory.error,
+        category: success ? NotificationManager.statusCategory : NotificationManager.errCategory,
       );
+    } else {
+      Future<void> show(int mangaId, String mangaTitle, String bodyText, int? triedPageCount, int? totalPageCount) async {
+        await NotificationManager.instance.showDownloadChannelNotification(
+          id: mangaId,
+          title: mangaTitle,
+          body: bodyText,
+          icon: NotificationManager.drawableStatDownload,
+          largeIcon: NotificationManager.mipMapIcLaunch,
+          autoCancel: false,
+          ongoing: true,
+          showProgress: true,
+          indeterminate: triedPageCount == null,
+          progress: triedPageCount ?? 0,
+          maxProgress: totalPageCount ?? 1,
+          category: NotificationManager.progressCategory,
+        );
+      }
+
+      switch (stage) {
+        case DownloadMangaProgressStage.gettingManga:
+          show(mangaId, mangaTitle, '获取漫画信息中', null, null);
+          break;
+        case DownloadMangaProgressStage.gettingChapter:
+          show(mangaId, mangaTitle, '获取章节信息中', null, null);
+          break;
+        case DownloadMangaProgressStage.gotChapter:
+          var body = '${currentChapter!.title} 0/${currentChapter!.pageCount}';
+          show(mangaId, mangaTitle, body, 0, 1);
+          break;
+        case DownloadMangaProgressStage.gotPage:
+          var body = '${currentChapter!.title} ${triedChapterPageCount!}/${currentChapter!.pageCount}';
+          show(mangaId, mangaTitle, body, triedChapterPageCount!, currentChapter!.pageCount);
+          break;
+        default:
+        // skip
+      }
     }
   }
 
-  static Future<void> cancelDownloadNotification({required int mangaId}) async {
+  static Future<void> cancelNotification({required int mangaId}) async {
     await NotificationManager.instance.cancelNotification(id: mangaId);
   }
 }
