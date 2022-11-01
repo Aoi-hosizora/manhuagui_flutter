@@ -1,5 +1,6 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -197,7 +198,10 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       manga = (await client.getManga(mid: mangaId)).data;
     } catch (e, s) {
       // 请求错误 => 更新漫画下载表为下载错误，然后直接返回
-      print('===> exception when DownloadMangaQueueTask (manga):\n${wrapError(e, s).text}');
+      var err = wrapError(e, s).text;
+      print('===> exception when DownloadMangaQueueTask (manga):\n$err');
+      await Fluttertoast.cancel();
+      Fluttertoast.showToast(msg: '获取《$mangaTitle》信息出错：$err');
       if (oldManga != null) {
         await DownloadDao.addOrUpdateManga(
           manga: oldManga.copyWith(error: true),

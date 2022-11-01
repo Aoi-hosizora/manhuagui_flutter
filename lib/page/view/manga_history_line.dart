@@ -36,6 +36,7 @@ class MangaHistoryLineView extends StatelessWidget {
       return GeneralLineView(
         imageUrl: history.mangaCover,
         title: history.mangaTitle,
+        hero: history.mangaId, // TODO hero
         icon1: null,
         text1: null,
         icon2: Icons.subject,
@@ -49,6 +50,7 @@ class MangaHistoryLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: history.mangaCover,
       title: history.mangaTitle,
+      hero: history.mangaId, // TODO hero
       icon1: Icons.subject,
       text1: '阅读至 ${history.chapterTitle}',
       icon2: Icons.import_contacts,

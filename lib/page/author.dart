@@ -147,6 +147,7 @@ class _AuthorPageState extends State<AuthorPage> {
                           url: _data!.cover,
                           height: 130,
                           width: 100,
+                          hero: _data!.aid, // TODO hero
                         ),
                         onTap: () => Navigator.of(context).push(
                           CustomMaterialPageRoute(

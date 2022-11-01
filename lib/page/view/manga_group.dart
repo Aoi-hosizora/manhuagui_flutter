@@ -132,7 +132,7 @@ class MangaGroupView extends StatelessWidget {
 
   Widget _buildGroupItems({required BuildContext context}) {
     const hSpace = 10.0;
-    const vSpace = 8.0;
+    const vSpace = 12.0; // TODO test
 
     List<TinyBlockManga?> mangas = group.mangas;
     switch (style) {

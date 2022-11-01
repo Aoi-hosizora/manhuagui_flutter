@@ -32,7 +32,7 @@ class _MangaRandomPageState extends State<MangaRandomPage> {
           context: context,
           builder: (c) => MangaPage(
             id: mid,
-            title: '随机漫画',
+            title: '漫画 mid: $mid',
             url: url,
           ),
         ),

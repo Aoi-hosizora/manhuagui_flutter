@@ -100,8 +100,10 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
           text = '连接超时'; // Connection timed out
           break;
         case DioErrorType.sendTimeout:
+          text = '发送请求超时'; // Timed out
+          break;
         case DioErrorType.receiveTimeout:
-          text = '请求超时'; // Timed out
+          text = '获取响应超时'; // Timed out
           break;
         case DioErrorType.cancel:
           text = '请求被取消'; // Request is cancelled

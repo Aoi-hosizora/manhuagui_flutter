@@ -18,6 +18,7 @@ class SmallAuthorLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: author.cover,
       title: author.name,
+      hero: author.aid, // TODO hero
       icon1: Icons.place,
       text1: author.zone,
       icon2: Icons.edit,

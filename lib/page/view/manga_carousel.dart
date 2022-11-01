@@ -27,6 +27,7 @@ class MangaCarouselView extends StatefulWidget {
 
 class _MangaCarouselViewState extends State<MangaCarouselView> {
   var _currentIndex = 0;
+  final _key = PageStorageKey(0);
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +35,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
       children: [
         CarouselSlider.builder(
           options: CarouselOptions(
+            pageViewKey: _key, // TODO test
             height: widget.height,
             autoPlay: true,
             autoPlayInterval: Duration(seconds: 4),

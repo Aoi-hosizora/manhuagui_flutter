@@ -15,6 +15,7 @@ class DlUnfinishedSubPage extends StatefulWidget {
     required this.downloadTask,
     required this.invertOrder,
     required this.toControlChapter,
+    required this.toReadChapter,
     required this.toDeleteChapter,
   }) : super(key: key);
 
@@ -25,6 +26,7 @@ class DlUnfinishedSubPage extends StatefulWidget {
   final DownloadMangaQueueTask? downloadTask;
   final bool invertOrder;
   final void Function(int cid) toControlChapter;
+  final void Function(int cid) toReadChapter;
   final void Function(int cid) toDeleteChapter;
 
   @override
@@ -82,7 +84,8 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                         child: DownloadChapterLineView(
                           chapterEntity: chapter,
                           downloadTask: widget.downloadTask,
-                          onPressed: () => widget.toControlChapter.call(chapter.chapterId),
+                          onPressedWhenEnabled: () => widget.toControlChapter.call(chapter.chapterId),
+                          onPressedWhenDisabled: () => widget.toReadChapter.call(chapter.chapterId),
                           onLongPressed: () => widget.toDeleteChapter.call(chapter.chapterId),
                         ),
                       )

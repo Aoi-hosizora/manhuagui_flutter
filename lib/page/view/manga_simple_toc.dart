@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 
-/// 漫画章节目录（给定章节列表），在 [DownloadTocPage] 使用
+/// 漫画章节目录（给定章节列表），在 [DlFinishedSubPage] 使用
 class MangaSimpleTocView extends StatelessWidget {
   const MangaSimpleTocView({
     Key? key,

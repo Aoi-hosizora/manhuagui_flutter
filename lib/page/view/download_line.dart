@@ -11,6 +11,7 @@ class DownloadLineView extends StatelessWidget {
     Key? key,
     required this.imageUrl,
     required this.title,
+    required this.hero,
     required this.icon1,
     required this.text1,
     required this.icon2,
@@ -28,6 +29,7 @@ class DownloadLineView extends StatelessWidget {
 
   final String imageUrl;
   final String title;
+  final Object hero;
   final IconData icon1;
   final String text1;
   final IconData icon2;
@@ -47,6 +49,7 @@ class DownloadLineView extends StatelessWidget {
     return GeneralLineView.custom(
       imageUrl: imageUrl,
       title: title,
+      hero: hero,
       customRows: [
         GeneralLineIconText(
           icon: icon1,
@@ -101,6 +104,7 @@ class LargeDownloadLineView extends StatelessWidget {
     Key? key,
     required this.imageUrl,
     required this.title,
+    required this.hero,
     required this.icon1,
     required this.text1,
     required this.icon2,
@@ -111,6 +115,7 @@ class LargeDownloadLineView extends StatelessWidget {
 
   final String imageUrl;
   final String title;
+  final Object hero;
   final IconData icon1;
   final String text1;
   final IconData icon2;
@@ -133,6 +138,7 @@ class LargeDownloadLineView extends StatelessWidget {
               url: imageUrl,
               height: 160,
               width: 120,
+              hero: hero,
             ),
             onTap: () => Navigator.of(context).push(
               CustomMaterialPageRoute(

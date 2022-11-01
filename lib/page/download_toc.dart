@@ -185,6 +185,27 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     );
   }
 
+  void _readChapter(int chapterId) {
+    // TODO 离线阅读功能，跳过请求章节信息
+    _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
+    Navigator.of(context).push(
+      CustomMaterialPageRoute(
+        context: context,
+        builder: (c) => MangaViewerPage(
+          mangaId: widget.mangaId,
+          mangaTitle: _entity!.mangaTitle,
+          mangaCover: _entity!.mangaCover,
+          mangaUrl: _entity!.mangaUrl,
+          chapterGroups: _chapterGroups /* nullable */,
+          chapterId: chapterId,
+          initialPage: _history?.chapterId == chapterId
+              ? _history?.chapterPage ?? 1 // have read
+              : 1, // have not read
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteChapter(DownloadedChapter entity) async {
     _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
     if (_task != null) {
@@ -383,25 +404,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   mangaEntity: _entity!,
                   invertOrder: _invertOrder,
                   history: _history,
-                  toReadChapter: (cid) {
-                    _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
-                    Navigator.of(context).push(
-                      CustomMaterialPageRoute(
-                        context: context,
-                        builder: (c) => MangaViewerPage(
-                          mangaId: widget.mangaId,
-                          mangaTitle: _entity!.mangaTitle,
-                          mangaCover: _entity!.mangaCover,
-                          mangaUrl: _entity!.mangaUrl,
-                          chapterGroups: _chapterGroups /* nullable */,
-                          chapterId: cid,
-                          initialPage: _history?.chapterId == cid
-                              ? _history?.chapterPage ?? 1 // have read
-                              : 1, // have not read
-                        ),
-                      ),
-                    );
-                  },
+                  toReadChapter: _readChapter,
                   toDeleteChapter: (cid) async {
                     var chapterEntity = _entity!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
                     if (chapterEntity != null) {
@@ -422,6 +425,8 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                   toControlChapter: (cid) {
                     Fluttertoast.showToast(msg: '目前暂不支持单独下载或暂停某一章节'); // TODO 单个漫画下载特定章节/按照特定顺序下载
                   },
+                  toReadChapter: _readChapter,
+                  // TODO test
                   toDeleteChapter: (cid) async {
                     var chapterEntity = _entity!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
                     if (chapterEntity != null) {

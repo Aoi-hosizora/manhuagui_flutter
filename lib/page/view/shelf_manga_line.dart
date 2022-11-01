@@ -18,6 +18,7 @@ class ShelfMangaLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.cover,
       title: manga.title,
+      hero: manga.mid, // TODO hero
       icon1: Icons.subject,
       text1: '最新章节 ' + manga.newestChapter,
       icon2: Icons.access_time,

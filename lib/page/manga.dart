@@ -347,6 +347,7 @@ class _MangaPageState extends State<MangaPage> {
                             url: _data!.cover,
                             height: 160,
                             width: 120,
+                            hero: _data!.mid, // TODO hero
                           ),
                           onTap: () => Navigator.of(context).push(
                             CustomMaterialPageRoute(

@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/manga_random.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
+import 'package:manhuagui_flutter/page/view/warning_bar.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -134,11 +135,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   ),
                 ),
                 SizedBox(height: 12),
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-                  decoration: BoxDecoration(color: Colors.yellow),
-                  alignment: Alignment.center,
-                  child: Text('提醒：由于漫画柜主页推荐的漫画已有一段时间没有更新，因此本页的推荐列表也没有更新。'),
+                WarningBarView(
+                  text: '由于漫画柜主页推荐的漫画已有一段时间没有更新，因此本页的推荐列表也没有更新。',
+                  isWarning: false,
                 ),
                 _buildGroup(_data!.serial.topGroup, MangaGroupType.serial, MangaGroupViewStyle.normalTruncate), // 热门连载
                 _buildGroup(_data!.finish.topGroup, MangaGroupType.finish, MangaGroupViewStyle.normalTruncate), // 经典完结

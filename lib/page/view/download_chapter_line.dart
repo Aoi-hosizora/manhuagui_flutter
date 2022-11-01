@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
 
-/// 章节下载行，在 [DownloadTocPage] 使用（功能上实现了包括下载完和未下载完的所有状态）
+/// 章节下载行，在 [DlUnfinishedSubPage] 使用（功能上实现了包括下载完和未下载完的所有状态）
 class DownloadChapterLineView extends StatelessWidget {
   const DownloadChapterLineView({
     Key? key,
     required this.chapterEntity,
     required this.downloadTask,
-    required this.onPressed,
+    required this.onPressedWhenEnabled,
+    required this.onPressedWhenDisabled,
     this.onLongPressed,
   }) : super(key: key);
 
   final DownloadedChapter chapterEntity;
   final DownloadMangaQueueTask? downloadTask;
-  final void Function() onPressed;
+  final void Function() onPressedWhenEnabled;
+  final void Function() onPressedWhenDisabled;
   final void Function()? onLongPressed;
 
   Widget _buildGeneral({
@@ -71,7 +73,7 @@ class DownloadChapterLineView extends StatelessWidget {
           ],
         ),
       ),
-      onTap: !disabled ? onPressed : () {},
+      onTap: !disabled ? onPressedWhenEnabled : onPressedWhenDisabled,
       onLongPress: onLongPressed,
     );
   }

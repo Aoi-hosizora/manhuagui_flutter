@@ -16,6 +16,7 @@ import 'package:manhuagui_flutter/page/download_select.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -506,29 +507,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
   }
 
-  Widget _buildAction({required String text, required IconData icon, required void Function() action, double? rotateAngle}) {
-    return InkWell(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-        child: IconText(
-          icon: rotateAngle == null
-              ? Icon(icon, color: Colors.white)
-              : Transform.rotate(
-                  angle: rotateAngle,
-                  child: Icon(icon, color: Colors.white),
-                ),
-          text: Text(
-            text,
-            style: TextStyle(color: Colors.white),
-          ),
-          alignment: IconTextAlignment.t2b,
-          space: 2,
-        ),
-      ),
-      onTap: action,
-    );
-  }
-
   @override
   bool get wantKeepAlive => true;
 
@@ -726,33 +704,29 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                     ),
                                   ],
                                 ),
-                                Material(
-                                  color: Colors.transparent,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      _buildAction(
-                                        text: _setting.viewDirection == ViewDirection.leftToRight ? '上一章节' : '下一章节',
-                                        icon: Icons.arrow_right_alt,
-                                        rotateAngle: math.pi,
-                                        action: () => _gotoChapter(gotoPrevious: _setting.viewDirection == ViewDirection.leftToRight),
-                                      ),
-                                      _buildAction(
-                                        text: _setting.viewDirection == ViewDirection.leftToRight ? '下一章节' : '上一章节',
-                                        icon: Icons.arrow_right_alt,
-                                        action: () => _gotoChapter(gotoPrevious: _setting.viewDirection == ViewDirection.rightToLeft),
-                                      ),
-                                      _buildAction(
-                                        text: '阅读设置',
-                                        icon: Icons.settings,
-                                        action: () => _onSettingPressed(),
-                                      ),
-                                      _buildAction(
-                                        text: '漫画目录',
-                                        icon: Icons.menu,
-                                        action: () => _showToc(),
-                                      ),
-                                    ],
+                                ActionRowView.four(
+                                  compact: true,
+                                  shrink: false, // TODO test
+                                  action1: ActionItem(
+                                    text: _setting.viewDirection == ViewDirection.leftToRight ? '上一章节' : '下一章节',
+                                    icon: Icons.arrow_right_alt,
+                                    rotateAngle: math.pi,
+                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection == ViewDirection.leftToRight),
+                                  ),
+                                  action2: ActionItem(
+                                    text: _setting.viewDirection == ViewDirection.leftToRight ? '下一章节' : '上一章节',
+                                    icon: Icons.arrow_right_alt,
+                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection == ViewDirection.rightToLeft),
+                                  ),
+                                  action3: ActionItem(
+                                    text: '阅读设置',
+                                    icon: Icons.settings,
+                                    action: () => _onSettingPressed(),
+                                  ),
+                                  action4: ActionItem(
+                                    text: '漫画目录',
+                                    icon: Icons.menu,
+                                    action: () => _showToc(),
                                   ),
                                 ),
                               ],

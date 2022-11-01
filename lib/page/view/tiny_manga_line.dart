@@ -18,6 +18,7 @@ class TinyMangaLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.cover,
       title: manga.title,
+      hero: manga.mid, // TODO hero
       icon1: Icons.edit,
       text1: manga.finished ? '已完结' : '连载中',
       icon2: Icons.subject,

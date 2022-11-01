@@ -8,6 +8,7 @@ class ActionItem {
     required this.action,
     this.longPress,
     this.enable = true,
+    this.rotateAngle = 0,
   });
 
   const ActionItem.simple(
@@ -16,6 +17,7 @@ class ActionItem {
     this.action, [
     this.longPress,
     this.enable = true,
+    this.rotateAngle = 0,
   ]);
 
   final String text;
@@ -23,9 +25,10 @@ class ActionItem {
   final void Function()? action;
   final void Function()? longPress;
   final bool enable;
+  final double rotateAngle;
 }
 
-/// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [DownloadTocPage] 使用
+/// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [MangaViewerPage] / [DownloadTocPage] 使用
 class ActionRowView extends StatelessWidget {
   const ActionRowView.four({
     Key? key,
@@ -33,6 +36,8 @@ class ActionRowView extends StatelessWidget {
     required this.action2,
     required this.action3,
     required this.action4,
+    this.compact = false,
+    this.shrink = true,
   })  : action5 = null,
         super(key: key);
 
@@ -43,6 +48,8 @@ class ActionRowView extends StatelessWidget {
     required this.action3,
     required this.action4,
     required ActionItem this.action5,
+    this.compact = false,
+    this.shrink = true,
   }) : super(key: key);
 
   final ActionItem action1;
@@ -50,21 +57,30 @@ class ActionRowView extends StatelessWidget {
   final ActionItem action3;
   final ActionItem action4;
   final ActionItem? action5;
+  final bool compact;
+  final bool shrink;
 
   Widget _buildAction(ActionItem action) {
     return InkWell(
       onTap: action.enable ? action.action : null,
       onLongPress: action.enable ? action.longPress : null,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: compact
+            ? EdgeInsets.symmetric(horizontal: 10, vertical: 2) // compact
+            : EdgeInsets.symmetric(horizontal: 10, vertical: 6) /* normal */,
         child: IconText(
           alignment: IconTextAlignment.t2b,
-          space: action5 == null
-              ? 8 // four
-              : 5 /* five */,
-          icon: Icon(
-            action.icon,
-            color: action.enable ? Colors.black54 : Colors.grey,
+          space: compact
+              ? 2 // compact
+              : action5 == null
+                  ? 8 // four
+                  : 5 /* five */,
+          icon: Transform.rotate(
+            angle: action.rotateAngle,
+            child: Icon(
+              action.icon,
+              color: action.enable ? Colors.black54 : Colors.grey,
+            ),
           ),
           text: Text(
             action.text,
@@ -82,11 +98,15 @@ class ActionRowView extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: Padding(
-        padding: action5 == null
-            ? EdgeInsets.symmetric(horizontal: 35, vertical: 8) // four
-            : EdgeInsets.symmetric(horizontal: 20, vertical: 5) /* five */,
+        padding: compact
+            ? EdgeInsets.zero // compact
+            : action5 == null // normal
+                ? EdgeInsets.symmetric(horizontal: 35, vertical: 8) // four
+                : EdgeInsets.symmetric(horizontal: 20, vertical: 5) /* five */,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: shrink
+              ? MainAxisAlignment.spaceBetween // shrink
+              : MainAxisAlignment.spaceAround /* normal */,
           children: [
             _buildAction(action1),
             _buildAction(action2),

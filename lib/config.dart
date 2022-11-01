@@ -20,11 +20,11 @@ const BASE_API_URL = 'https://api-manhuagui.aoihosizora.top/v1/';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';
 
-const CONNECT_TIMEOUT = 8000; // 8.0s
-const SEND_TIMEOUT = 5000; // 5.0s
-const RECEIVE_TIMEOUT = 5000; // 5.0s
-const HEAD_TIMEOUT = 3000; // 3.0s
-const DOWNLOAD_IMAGE_TIMEOUT = 16000; // 8.0s + 8.0s
+const CONNECT_TIMEOUT = 5000; // 5.0s (local -> my server)
+const SEND_TIMEOUT = 5000; // 5.0s (local -> my server)
+const RECEIVE_TIMEOUT = 8000; // 8.0s (my server -> manhuagui server -> my server -> local)
+const HEAD_TIMEOUT = 4000; // 4.0s (local -> manhuagui server -> local)
+const DOWNLOAD_IMAGE_TIMEOUT = 15000; // 15.0s (local -> manhuagui server -> local)
 
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';
 const USER_CENTER_URL = 'https://www.manhuagui.com/user/center/index';
