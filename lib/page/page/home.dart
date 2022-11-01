@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/page/overall.dart';
 import 'package:manhuagui_flutter/page/page/ranking.dart';
@@ -94,21 +95,11 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
-            onPressed: () {
-              NotificationManager.instance.showDownloadNotification(
-                id: 1,
-                title: 'title',
-                body: 'body',
-                subText: 'subText',
-                payload: 'payload',
-                // actions: null,
-                ongoing: false,
-                showProgress: false,
-                maxProgress: 0,
-                progress: 0,
-                indeterminate: false
-              );
-            },
+            onPressed: () => Navigator.of(context).push(
+              CustomMaterialPageRoute(
+                builder: (c) => SearchPage(),
+              ),
+            ),
           ),
         ],
       ),

@@ -86,8 +86,8 @@ class _DownloadPageState extends State<DownloadPage> {
     var data = await DownloadDao.getMangas() ?? [];
     _total = await DownloadDao.getMangaCount() ?? 0;
     _tasks.clear();
-    for (var task in QueueManager.instance.getDownloadMangaQueueTasks()) {
-      _tasks[task.mangaId] = task;
+    for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
+      _tasks[t.mangaId] = t;
     }
     if (mounted) setState(() {});
     for (var entity in data) {
@@ -227,7 +227,6 @@ class _DownloadPageState extends State<DownloadPage> {
 
       // 1. 先取消目前所有的任务
       for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
-        print(t.mangaId);
         if (!t.canceled) {
           t.cancel();
         }

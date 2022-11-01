@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/evb/ntf_events.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -52,6 +53,10 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
       _selectedIndex = 2;
       if (mounted) setState(() {});
     }));
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      listenNotificationSelectedEvent(context);
+      listenNotificationActionSelectedEvent(context);
+    });
   }
 
   @override
@@ -111,12 +116,11 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
             currentIndex: _selectedIndex,
             items: _tabs
                 .map(
-                  (t) =>
-                  BottomNavigationBarItem(
+                  (t) => BottomNavigationBarItem(
                     label: t.item1,
                     icon: Icon(t.item2),
                   ),
-            )
+                )
                 .toList(),
             onTap: (index) async {
               if (_selectedIndex == index) {

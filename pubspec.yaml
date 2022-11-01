@@ -30,7 +30,7 @@ dependencies:
   device_info_plus: 4.0.0
   battery_info: ^1.1.1
   connectivity_plus: 2.3.6+1
-  flutter_local_notifications: 9.9.0
+  flutter_local_notifications: 11.0.1
 
   # widgets
   flutter_ahlib:

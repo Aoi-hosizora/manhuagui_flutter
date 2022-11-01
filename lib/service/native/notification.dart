@@ -1,11 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:synchronized/synchronized.dart';
-
-// @pragma('vm:entry-point')
-// void onNotificationReceivedBackground(NotificationResponse nr) {
-//   print('Receive Background ${nr.id} ${nr.actionId} ${nr.input} ${nr.notificationResponseType} ${nr.payload}');
-// }
+import 'package:manhuagui_flutter/service/evb/ntf_events.dart';
 
 class NotificationManager {
   NotificationManager._();
@@ -25,88 +20,153 @@ class NotificationManager {
       await _plugin!.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestPermission();
       await _plugin!.initialize(
         InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          android: AndroidInitializationSettings('flutter_icon'),
         ),
-        // onDidReceiveNotificationResponse: (NotificationResponse nr) async {
-        //   print('Receive ${nr.id} ${nr.actionId} ${nr.input} ${nr.notificationResponseType} ${nr.payload}');
-        // },
-        // onDidReceiveBackgroundNotificationResponse: onNotificationReceivedBackground,
-          onSelectNotification: (payload) {
-            print('Receive $payload');
-          },
+        onDidReceiveNotificationResponse: _onNotificationReceived,
+        onDidReceiveBackgroundNotificationResponse: _onNotificationReceived,
       );
     }
     return _plugin!;
   }
 
-  final _lock = Lock();
-  var _latestId = 0;
-
-  Future<int> generateId() {
-    return _lock.synchronized<int>(() async {
-      _latestId++;
-      return _latestId;
-    });
+  @pragma('vm:entry-point')
+  static void _onNotificationReceived(NotificationResponse nr) {
+    if (nr.notificationResponseType == NotificationResponseType.selectedNotification) {
+      print('notify ${nr.id} ${nr.payload}');
+      fireNotificationSelectedEvent(nr);
+    } else {
+      print('action ${nr.id} ${nr.actionId} ${nr.input} ${nr.payload}');
+      fireNotificationActionSelectedEvent(nr);
+    }
   }
 
-  Future<bool> showDownloadNotification({
-    /* data */
+  AndroidNotificationDetails buildSilentNotificationDetails({
+    required String channelId,
+    required String channelName,
+    required String channelDescription,
+    String? icon,
+    String? largeIcon,
+    String? subText,
+    String? ticker,
+    String? tag,
+    bool autoCancel = true,
+    bool ongoing = false,
+    bool showProgress = false,
+    bool indeterminate = false,
+    int maxProgress = 0,
+    int progress = 0,
+    AndroidNotificationCategory? category,
+    List<AndroidNotificationAction>? actions,
+  }) {
+    // https://pub.dev/packages/flutter_local_notifications#-usage
+    // https://developer.android.com/reference/android/R.drawable#stat_sys_download
+    // https://github.com/xiaojieonly/Ehviewer_CN_SXJ/blob/1.9.2/app/src/main/java/com/hippo/ehviewer/download/DownloadService.java#L218
+    return AndroidNotificationDetails(
+      /* channel */
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
+      /* data */
+      icon: icon,
+      largeIcon: largeIcon == null ? null : DrawableResourceAndroidBitmap(largeIcon),
+      subText: subText,
+      ticker: ticker,
+      tag: tag,
+      autoCancel: autoCancel,
+      ongoing: ongoing,
+      showProgress: showProgress,
+      indeterminate: indeterminate,
+      maxProgress: maxProgress,
+      progress: progress,
+      category: category /* progress or error */,
+      actions: actions,
+      /* silent setting */
+      importance: Importance.low,
+      priority: Priority.low,
+      playSound: false,
+      enableVibration: false,
+      onlyAlertOnce: false,
+      showWhen: true,
+      usesChronometer: false,
+      channelShowBadge: false,
+      enableLights: false,
+      timeoutAfter: null,
+      fullScreenIntent: false,
+      colorized: false,
+      channelAction: AndroidNotificationChannelAction.createIfNotExists,
+      visibility: NotificationVisibility.secret,
+    );
+  }
+
+  Future<bool> cancelNotification({required int id, String? tag}) async {
+    var plugin = await getPlugin();
+    try {
+      await plugin.cancel(id, tag: tag);
+      return true;
+    } catch (e, s) {
+      print('===> exception when cancelNotification:\n$e\n$s');
+      return false;
+    }
+  }
+
+  static const mipMapIcLaunch = '@mipmap/ic_launcher';
+  static const drawableStatDownload = '@android:drawable/stat_sys_download';
+  static const drawableStatDownloadDone = '@android:drawable/stat_sys_download_done';
+
+  static const downloadChannelPayload = DL_NTFC_ID;
+  static const downloadChannelAction1Id = DL_NTFC_ID + ':action1';
+  static const downloadChannelAction2Id = DL_NTFC_ID + ':action2';
+
+  Future<bool> showDownloadChannelNotification({
     required int id,
     required String title,
     String? body,
     String? subText,
+    String? ticker,
+    String? tag,
     String? payload,
-    // List<AndroidNotificationAction>? actions,
-    /* progress */
+    String? icon,
+    String? largeIcon,
+    bool autoCancel = true,
     bool ongoing = false,
     bool showProgress = false,
+    bool indeterminate = false,
     int maxProgress = 0,
     int progress = 0,
-    bool indeterminate = false,
+    AndroidNotificationCategory? category,
+    List<AndroidNotificationAction>? actions,
   }) async {
     var plugin = await getPlugin();
-    var details = AndroidNotificationDetails(
-      NTF_CHANNEL_ID,
-      NTF_CHANNEL_NAME,
-      channelDescription: NTF_CHANNEL_DESCRIPTION,
-      /* data */
-      subText: subText,
-      ticker: null,
-      // actions: actions,
-      /* progress */
-      ongoing: ongoing,
-      showProgress: showProgress,
-      maxProgress: maxProgress,
-      progress: progress,
-      indeterminate: indeterminate,
-      /* setting */
-      icon: null /* <<< */,
-      largeIcon: null /* <<< */,
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
-      playSound: false,
-      enableVibration: false,
-      autoCancel: true,
-      onlyAlertOnce: true,
-      showWhen: true,
-      enableLights: false,
-      channelShowBadge: false,
-      channelAction: AndroidNotificationChannelAction.update,
-      visibility: NotificationVisibility.secret,
-      // category: AndroidNotificationCategory.progress,
-    );
-
     try {
       await plugin.show(
         id,
         title,
         body,
-        NotificationDetails(android: details),
+        NotificationDetails(
+          android: buildSilentNotificationDetails(
+            channelId: DL_NTFC_ID,
+            channelName: DL_NTFC_NAME,
+            channelDescription: DL_NTFC_DESCRIPTION,
+            subText: subText,
+            ticker: ticker,
+            tag: tag,
+            icon: icon,
+            largeIcon: largeIcon,
+            autoCancel: autoCancel,
+            ongoing: ongoing,
+            showProgress: showProgress,
+            indeterminate: indeterminate,
+            maxProgress: maxProgress,
+            progress: progress,
+            category: category,
+            actions: actions,
+          ),
+        ),
         payload: payload,
       );
       return true;
     } catch (e, s) {
-      print('===> exception when sendNotification:\n$e\n$s');
+      print('===> exception when showDownloadChannelNotification:\n$e\n$s');
       return false;
     }
   }

@@ -18,6 +18,7 @@ import 'package:queue/queue.dart';
 class DownloadMangaQueueTask extends QueueTask<void> {
   DownloadMangaQueueTask({
     required this.mangaId,
+    required this.mangaTitle,
     required this.chapterIds,
     required this.invertOrder,
     int? parallel,
@@ -28,6 +29,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         _pageQueue = Queue(parallel: parallel ?? DlSetting.defaultSetting().downloadPagesTogether);
 
   final int mangaId;
+  final String mangaTitle;
   final List<int> chapterIds;
   final bool invertOrder;
 
@@ -44,6 +46,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     _doingTask = true;
     _succeeded = await _coreDoTask();
     _doingTask = false;
+    _progress.showFinishedNotification(mangaId: mangaId, mangaTitle: mangaTitle, canceled: canceled, success: _succeeded);
   }
 
   bool _canceled;
@@ -55,6 +58,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   void cancel() {
     super.cancel();
     _canceled = true;
+    DownloadMangaProgress.cancelDownloadNotification(mangaId: mangaId);
     if (!_doingTask) {
       QueueManager.instance.tasks.remove(this);
       doDefer(); // finished: true
@@ -77,9 +81,11 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   DownloadMangaProgress get progress => _progress;
 
-  void _updateProgress(DownloadMangaProgress progress) {
+  void _updateProgress(DownloadMangaProgress progress, {bool sendNotification = false}) {
     _progress = progress;
-    // TODO system notifier
+    if (sendNotification) {
+      _progress.showNotification(mangaId: mangaId, mangaTitle: mangaTitle, canceled: canceled);
+    }
     var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
     EventBusManager.instance.fire(ev);
   }
@@ -91,7 +97,6 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   }
 
   Future<bool> prepare({
-    required String mangaTitle,
     required String mangaCover,
     required String mangaUrl,
     required Tuple3<String, String, int>? Function(int cid) getChapterTitleGroupPages,
@@ -182,6 +187,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     await createNomediaFile();
     _updateProgress(
       DownloadMangaProgress.gettingManga(),
+      sendNotification: true,
     );
 
     // 2. 获取漫画数据
@@ -214,6 +220,14 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     );
 
     // 4. 先处理所有已下载完的章节
+    _updateProgress(
+      DownloadMangaProgress.gettingChapter(
+        manga: manga,
+        startedChapters: [],
+        currentChapterId: chapterIds.first,
+      ),
+      sendNotification: true,
+    );
     var startedChapters = <MangaChapter?>[];
     for (var chapterId in chapterIds) {
       // 4.1. 判断请求是否被取消
@@ -278,6 +292,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           startedChapters: startedChapters,
           currentChapterId: chapterId,
         ),
+        sendNotification: true,
       );
       MangaChapter chapter;
       try {
@@ -305,6 +320,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           currentChapterId: chapterId,
           currentChapter: chapter,
         ),
+        sendNotification: true,
       );
 
       // 5.4. 更新章节信息表
@@ -362,6 +378,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
               triedChapterPageCount: successChapterPageCount + failedChapterPageCount,
               successChapterPageCount: successChapterPageCount,
             ),
+            sendNotification: true,
           );
         }).onError((e, s) {
           if (e is! QueueCancelledException) {
@@ -476,6 +493,128 @@ class DownloadMangaProgress {
   final MangaChapter? currentChapter;
   final int? triedChapterPageCount;
   final int? successChapterPageCount;
+
+  void showNotification({required int mangaId, required String mangaTitle, required bool canceled}) {
+    switch (stage) {
+      case DownloadMangaProgressStage.gettingManga:
+        DownloadMangaProgress.showDownloadingNotification(
+          mangaId: mangaId,
+          mangaTitle: mangaTitle,
+          preparing: true,
+          bodyText: '获取漫画信息中',
+          canShow: !canceled,
+        );
+        break;
+      case DownloadMangaProgressStage.gettingChapter:
+        DownloadMangaProgress.showDownloadingNotification(
+          mangaId: mangaId,
+          mangaTitle: mangaTitle,
+          preparing: true,
+          bodyText: '获取章节信息中',
+          canShow: !canceled,
+        );
+        break;
+      case DownloadMangaProgressStage.gotChapter:
+        DownloadMangaProgress.showDownloadingNotification(
+          mangaId: mangaId,
+          mangaTitle: mangaTitle,
+          preparing: false,
+          bodyText: '${currentChapter!.title} 0/${currentChapter!.pageCount}',
+          canShow: !canceled,
+        );
+        break;
+      case DownloadMangaProgressStage.gotPage:
+        DownloadMangaProgress.showDownloadingNotification(
+          mangaId: mangaId,
+          mangaTitle: mangaTitle,
+          preparing: false,
+          bodyText: '${currentChapter!.title} ${triedChapterPageCount!}/${currentChapter!.pageCount}',
+          triedPageCount: triedChapterPageCount!,
+          totalPageCount: currentChapter!.pageCount,
+          canShow: !canceled,
+        );
+        break;
+      default:
+      // skip
+    }
+  }
+
+  void showFinishedNotification({required int mangaId, required String mangaTitle, required bool canceled, required bool success}) {
+    DownloadMangaProgress.showDownloadedNotification(
+      mangaId: mangaId,
+      mangaTitle: mangaTitle,
+      success: success,
+      bodyText: success ? '下载已完成' : '下载失败',
+      canShow: !canceled,
+    );
+  }
+
+  static Future<void> showDownloadingNotification({
+    required int mangaId,
+    required String mangaTitle,
+    required bool preparing,
+    required String bodyText,
+    int triedPageCount = 0,
+    int totalPageCount = 0,
+    required bool canShow,
+  }) async {
+    if (canShow) {
+      await NotificationManager.instance.showDownloadChannelNotification(
+        id: mangaId,
+        title: mangaTitle,
+        body: bodyText,
+        payload: NotificationManager.downloadChannelPayload,
+        icon: NotificationManager.drawableStatDownload,
+        largeIcon: NotificationManager.mipMapIcLaunch,
+        autoCancel: false,
+        ongoing: true,
+        showProgress: true,
+        indeterminate: preparing,
+        progress: preparing ? 0 : triedPageCount,
+        maxProgress: preparing ? 0 : totalPageCount,
+        category: AndroidNotificationCategory.progress,
+        actions: [
+          AndroidNotificationAction(
+            NotificationManager.downloadChannelAction1Id,
+            '暂停',
+            cancelNotification: false,
+          ),
+          AndroidNotificationAction(
+            NotificationManager.downloadChannelAction2Id,
+            '全部暂停',
+            cancelNotification: false,
+          ),
+        ],
+      );
+    }
+  }
+
+  static Future<void> showDownloadedNotification({
+    required int mangaId,
+    required String mangaTitle,
+    required bool success,
+    required String bodyText,
+    required bool canShow,
+  }) async {
+    if (canShow) {
+      await NotificationManager.instance.showDownloadChannelNotification(
+        id: mangaId,
+        title: mangaTitle,
+        body: bodyText,
+        payload: NotificationManager.downloadChannelPayload,
+        icon: NotificationManager.drawableStatDownloadDone,
+        largeIcon: NotificationManager.mipMapIcLaunch,
+        autoCancel: true,
+        ongoing: false,
+        showProgress: false,
+        category: success ? AndroidNotificationCategory.progress : AndroidNotificationCategory.error,
+      );
+    }
+  }
+
+  static Future<void> cancelDownloadNotification({required int mangaId}) async {
+    await NotificationManager.instance.cancelNotification(id: mangaId);
+  }
 }
 
 extension QueueManagerExtension on QueueManager {
@@ -515,6 +654,7 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
   // 1. 构造漫画下载任务
   var newTask = DownloadMangaQueueTask(
     mangaId: mangaId,
+    mangaTitle: mangaTitle,
     chapterIds: chapterIds,
     parallel: parallel,
     invertOrder: invertOrder,
@@ -523,7 +663,6 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
   // 2. 更新数据库
   QueueManagerExtension.preparingTasks.add(newTask); // 此时还未入队，先添加至"准备列表"中
   var need = await newTask.prepare(
-    mangaTitle: mangaTitle,
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
     getChapterTitleGroupPages: (cid) {

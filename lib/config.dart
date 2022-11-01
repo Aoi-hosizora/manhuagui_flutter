@@ -13,9 +13,9 @@ const APP_DESCRIPTIONS = [
 ];
 
 const DB_NAME = 'db_manhuagui';
-const NTF_CHANNEL_ID = 'com_aoihosizora_manhuagui_xxx'; // 'com.aoihosizora.manhuagui:download';
-const NTF_CHANNEL_NAME = 'yyy'; // '漫画下载通知';
-const NTF_CHANNEL_DESCRIPTION = 'zzz'; // '显示当前的漫画下载进度';
+const DL_NTFC_ID = 'com.aoihosizora.manhuagui:download';
+const DL_NTFC_NAME = '漫画下载通知';
+const DL_NTFC_DESCRIPTION = '显示当前的漫画下载进度';
 const BASE_API_URL = 'https://api-manhuagui.aoihosizora.top/v1/';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';
