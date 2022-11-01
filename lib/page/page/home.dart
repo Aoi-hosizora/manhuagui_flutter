@@ -97,6 +97,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
               CustomMaterialPageRoute(
+                context: context,
                 builder: (c) => SearchPage(),
               ),
             ),

@@ -244,6 +244,7 @@ class CommentLineView extends StatelessWidget {
               onTap: !large
                   ? () => Navigator.of(context).push(
                         CustomMaterialPageRoute(
+                          context: context,
                           builder: (c) => CommentPage(
                             comment: comment,
                           ),

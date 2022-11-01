@@ -26,6 +26,7 @@ class ShelfMangaLineView extends StatelessWidget {
       text3: '最近阅读至 ${manga.lastChapter.isEmpty ? '未知话' : manga.lastChapter} (${manga.lastDuration})',
       onPressed: () => Navigator.of(context).push(
         CustomMaterialPageRoute(
+          context: context,
           builder: (c) => MangaPage(
             id: manga.mid,
             title: manga.title,

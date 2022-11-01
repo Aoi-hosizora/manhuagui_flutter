@@ -18,7 +18,6 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download_image.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
@@ -29,16 +28,10 @@ class DownloadTocPage extends StatefulWidget {
   const DownloadTocPage({
     Key? key,
     required this.mangaId,
-    required this.mangaTitle,
-    required this.mangaCover,
-    required this.mangaUrl,
     this.gotoDownloading = false,
   }) : super(key: key);
 
   final int mangaId;
-  final String mangaTitle;
-  final String mangaCover;
-  final String mangaUrl;
   final bool gotoDownloading;
 
   @override
@@ -210,7 +203,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除漫画章节《${widget.mangaTitle}》${entity.chapterTitle}？'),
+              Text('是否删除漫画章节《${_entity!.mangaTitle}》${entity.chapterTitle}？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -268,16 +261,9 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
             tooltip: '查看下载列表',
             onPressed: () => Navigator.of(context).push(
               CustomMaterialPageRoute(
+                context: context,
                 builder: (c) => DownloadPage(),
               ),
-            ),
-          ),
-          AppBarActionButton(
-            icon: Icon(Icons.open_in_browser),
-            tooltip: '用浏览器打开',
-            onPressed: () => launchInBrowser(
-              context: context,
-              url: widget.mangaUrl,
             ),
           ),
         ],
@@ -321,10 +307,11 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                           Icons.description,
                           () => Navigator.of(context).push(
                             CustomMaterialPageRoute(
+                              context: context,
                               builder: (c) => MangaPage(
                                 id: widget.mangaId,
-                                title: widget.mangaTitle,
-                                url: widget.mangaUrl,
+                                title: _entity!.mangaTitle,
+                                url: _entity!.mangaUrl,
                               ),
                             ),
                           ),
@@ -400,11 +387,12 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                     _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
                     Navigator.of(context).push(
                       CustomMaterialPageRoute(
+                        context: context,
                         builder: (c) => MangaViewerPage(
                           mangaId: widget.mangaId,
-                          mangaTitle: widget.mangaTitle,
-                          mangaCover: widget.mangaCover,
-                          mangaUrl: widget.mangaUrl,
+                          mangaTitle: _entity!.mangaTitle,
+                          mangaCover: _entity!.mangaCover,
+                          mangaUrl: _entity!.mangaUrl,
                           chapterGroups: _chapterGroups /* nullable */,
                           chapterId: cid,
                           initialPage: _history?.chapterId == cid

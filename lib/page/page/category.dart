@@ -81,6 +81,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
               CustomMaterialPageRoute(
+                context: context,
                 builder: (c) => SearchPage(),
               ),
             ),

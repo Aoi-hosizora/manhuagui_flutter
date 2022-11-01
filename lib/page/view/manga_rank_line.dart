@@ -76,6 +76,7 @@ class MangaRankLineView extends StatelessWidget {
       ],
       onPressed: () => Navigator.of(context).push(
         CustomMaterialPageRoute(
+          context: context,
           builder: (c) => MangaPage(
             id: manga.mid,
             title: manga.title,

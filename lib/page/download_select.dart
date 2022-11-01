@@ -168,11 +168,9 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
           label: '查看',
           onPressed: () => Navigator.of(context).push(
             CustomMaterialPageRoute(
+              context: context,
               builder: (c) => DownloadTocPage(
                 mangaId: widget.mangaId,
-                mangaTitle: widget.mangaTitle,
-                mangaCover: widget.mangaCover,
-                mangaUrl: widget.mangaUrl,
                 gotoDownloading: true,
               ),
             ),

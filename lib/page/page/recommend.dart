@@ -115,7 +115,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   color: Colors.white,
                   child: ActionRowView.four(
                     action1: ActionItem.simple('我的书架', Icons.favorite, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
-                    action2: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomMaterialPageRoute(builder: (c) => DownloadPage()))),
+                    action2: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomMaterialPageRoute(context: context, builder: (c) => DownloadPage()))),
                     action3: ActionItem.simple('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
                     action4: ActionItem.simple('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
                   ),

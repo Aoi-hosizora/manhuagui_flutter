@@ -79,6 +79,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             tooltip: '查看下载列表',
             onPressed: () => Navigator.of(context).push(
               CustomMaterialPageRoute(
+                context: context,
                 builder: (c) => DownloadPage(),
               ),
             ),
@@ -88,6 +89,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
               CustomMaterialPageRoute(
+                context: context,
                 builder: (c) => SearchPage(),
               ),
             ),

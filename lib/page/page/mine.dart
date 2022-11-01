@@ -86,6 +86,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         Fluttertoast.showToast(msg: '登录失效，请重新登录');
         Navigator.of(context).push(
           CustomMaterialPageRoute(
+            context: context,
             builder: (c) => LoginPage(),
           ),
         );
@@ -172,6 +173,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
           tooltip: '应用设置',
           onPressed: () => Navigator.of(context).push(
             CustomMaterialPageRoute(
+              context: context,
               builder: (c) => SettingPage(),
             ),
           ),
@@ -245,6 +247,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                           ),
                           onTap: () => Navigator.of(context).push(
                             CustomMaterialPageRoute(
+                              context: context,
                               builder: (c) => ImageViewerPage(
                                 url: _data!.avatar,
                                 title: '我的头像',

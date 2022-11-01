@@ -293,6 +293,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     Navigator.of(context).pop(); // pop this page, should not use maybePop
     Navigator.of(context).push(
       CustomMaterialPageRoute(
+        context: context,
         builder: (c) => MangaViewerPage(
           mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
@@ -395,6 +396,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.restoreSystemUI();
     await Navigator.of(context).push(
       CustomMaterialPageRoute(
+        context: context,
         builder: (c) => DownloadSelectPage(
           mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
@@ -431,6 +433,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Navigator.of(context).pop(); // this page, should not use maybePop
                 Navigator.of(context).push(
                   CustomMaterialPageRoute(
+                    context: context,
                     builder: (c) => MangaViewerPage(
                       mangaId: _data!.mid,
                       mangaTitle: _data!.mangaTitle,

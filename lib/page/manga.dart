@@ -235,6 +235,7 @@ class _MangaPageState extends State<MangaPage> {
 
     Navigator.of(context).push(
       CustomMaterialPageRoute(
+        context: context,
         builder: (c) => MangaViewerPage(
           mangaId: _data!.mid,
           mangaTitle: _data!.title,
@@ -316,6 +317,7 @@ class _MangaPageState extends State<MangaPage> {
                           ),
                           onTap: () => Navigator.of(context).push(
                             CustomMaterialPageRoute(
+                              context: context,
                               builder: (c) => ImageViewerPage(
                                 url: _data!.cover,
                                 title: '漫画封面',
@@ -347,6 +349,7 @@ class _MangaPageState extends State<MangaPage> {
                                       showUnderline: true,
                                       onTap: () => Navigator.of(context).push(
                                         CustomMaterialPageRoute(
+                                          context: context,
                                           builder: (c) => AuthorPage(
                                             id: _data!.authors[i].aid,
                                             name: _data!.authors[i].name,
@@ -374,6 +377,7 @@ class _MangaPageState extends State<MangaPage> {
                                       showUnderline: true,
                                       onTap: () => Navigator.of(context).push(
                                         CustomMaterialPageRoute(
+                                          context: context,
                                           builder: (c) => GenrePage(
                                             genre: _data!.genres[i].toTiny(),
                                           ),
@@ -440,6 +444,7 @@ class _MangaPageState extends State<MangaPage> {
                       icon: Icons.download,
                       action: () => Navigator.of(context).push(
                         CustomMaterialPageRoute(
+                          context: context,
                           builder: (c) => DownloadSelectPage(
                             mangaId: _data!.mid,
                             mangaTitle: _data!.title,
@@ -467,6 +472,7 @@ class _MangaPageState extends State<MangaPage> {
                       icon: Icons.subject,
                       action: () => Navigator.of(context).push(
                         CustomMaterialPageRoute(
+                          context: context,
                           builder: (c) => MangaDetailPage(data: _data!),
                         ),
                       ),
@@ -645,6 +651,7 @@ class _MangaPageState extends State<MangaPage> {
                     highlightedChapters: [_history?.chapterId ?? 0],
                     onChapterPressed: (cid) => Navigator.of(context).push(
                       CustomMaterialPageRoute(
+                        context: context,
                         builder: (c) => MangaViewerPage(
                           mangaId: _data!.mid,
                           mangaTitle: _data!.title,
@@ -727,6 +734,7 @@ class _MangaPageState extends State<MangaPage> {
                         child: InkWell(
                           onTap: () => Navigator.of(context).push(
                             CustomMaterialPageRoute(
+                              context: context,
                               builder: (c) => CommentsPage(
                                 mangaId: widget.id,
                                 mangaTitle: _data!.title,

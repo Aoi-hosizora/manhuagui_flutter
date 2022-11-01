@@ -88,6 +88,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                     child: InkWell(
                       onTap: () => Navigator.of(context).push(
                         CustomMaterialPageRoute(
+                          context: context,
                           builder: (c) => MangaPage(
                             id: widget.mangas[i].mid,
                             title: widget.mangas[i].title,

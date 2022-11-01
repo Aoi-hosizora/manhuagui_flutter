@@ -22,6 +22,7 @@ class MangaHistoryLineView extends StatelessWidget {
     void onPressed() {
       Navigator.of(context).push(
         CustomMaterialPageRoute(
+          context: context,
           builder: (c) => MangaPage(
             id: history.mangaId,
             title: history.mangaTitle,

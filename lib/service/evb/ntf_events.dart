@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
@@ -45,7 +46,11 @@ void listenNotificationSelectedEvent(BuildContext context) {
     if (ev.payload == NotificationManager.downloadChannelPayload) {
       Navigator.of(context).push(
         CustomMaterialPageRoute(
-          builder: (c) => DownloadPage(),
+          context: context,
+          builder: (c) => DownloadTocPage(
+            mangaId: ev.id,
+            gotoDownloading: true,
+          ),
         ),
       );
     }
@@ -54,11 +59,17 @@ void listenNotificationSelectedEvent(BuildContext context) {
 
 void listenNotificationActionSelectedEvent(BuildContext context) {
   // TODO ???
-  EventBusManager.instance.listen<NotificationActionSelectedEvent>((ev) {
+  EventBusManager.instance.listen<NotificationActionSelectedEvent>((ev) async {
     print('>>> action ${ev.id} ${ev.payload} ${ev.actionId}');
     if (ev.payload == NotificationManager.downloadChannelPayload) {
       if (ev.actionId == NotificationManager.downloadChannelAction1Id) {
         print('>>> downloadChannelAction1Id');
+        await Navigator.of(context).push(
+          CustomMaterialPageRoute(
+            context: context,
+            builder: (c) => DownloadPage(),
+          ),
+        );
         for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
           print('1 ${t.mangaId}');
           if (!t.canceled) {
@@ -67,9 +78,18 @@ void listenNotificationActionSelectedEvent(BuildContext context) {
         }
       } else if (ev.actionId == NotificationManager.downloadChannelAction2Id) {
         print('>>> downloadChannelAction2Id');
-        print('2 ${ev.id}');
+        await Navigator.of(context).push(
+          CustomMaterialPageRoute(
+            context: context,
+            builder: (c) => DownloadTocPage(
+              mangaId: ev.id,
+              gotoDownloading: false,
+            ),
+          ),
+        );
         var task = QueueManager.instance.getDownloadMangaQueueTask(ev.id);
         if (task != null && !task.canceled) {
+          print('2 ${task.mangaId}');
           task.cancel();
         }
       }

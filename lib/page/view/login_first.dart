@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -39,6 +39,7 @@ class LoginFirstView extends StatelessWidget {
         }
         Navigator.of(context).push(
           CustomMaterialPageRoute(
+            context: context,
             builder: (c) => LoginPage(),
           ),
         );

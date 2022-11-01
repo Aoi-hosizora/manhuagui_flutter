@@ -41,11 +41,16 @@ class MyApp extends StatelessWidget {
         Locale('zh', 'CN'),
       ],
       home: IndexPage(),
-      builder: (context, child) => AppBarActionButtonTheme(
-        data: AppBarActionButtonThemeData(
-          splashRadius: 19,
+      builder: (context, child) => CustomMaterialPageRouteTheme(
+        data: CustomMaterialPageRouteThemeData(
+          transitionDuration: Duration(milliseconds: 450),
         ),
-        child: child!,
+        child: AppBarActionButtonTheme(
+          data: AppBarActionButtonThemeData(
+            splashRadius: 19,
+          ),
+          child: child!,
+        ),
       ),
     );
   }
