@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/evb/ntf_events.dart';
+import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -48,9 +48,8 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
         Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');
       }
     });
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      listenNotificationSelectedEvent(context);
-      listenNotificationActionSelectedEvent(context);
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      NotificationManager.instance.registerContext(context);
     });
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));

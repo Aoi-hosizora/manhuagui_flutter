@@ -326,6 +326,9 @@ class _DownloadPageState extends State<DownloadPage> {
                 builder: (c) => DownloadTocPage(
                   mangaId: entity.mangaId,
                 ),
+                settings: DownloadTocPage.buildRouteSetting(
+                  mangaId: entity.mangaId,
+                ),
               ),
             ),
             onLineLongPressed: () => _deleteManga(entity),

@@ -36,6 +36,26 @@ class DownloadTocPage extends StatefulWidget {
 
   @override
   State<DownloadTocPage> createState() => _DownloadTocPageState();
+
+  static RouteSettings buildRouteSetting({required int mangaId}) {
+    return RouteSettings(
+      name: '/DownloadTocPage',
+      arguments: <String, Object>{'mangaId': mangaId},
+    );
+  }
+
+  static bool isCurrentRoute(BuildContext context, int mangaId) {
+    var setting = RouteSettings();
+    Navigator.popUntil(context, (route) {
+      setting = route.settings;
+      return true;
+    });
+
+    if (setting.name != '/DownloadTocPage' || setting.arguments is! Map<String, Object>) {
+      return false;
+    }
+    return (setting.arguments! as Map<String, Object>)['mangaId'] == mangaId;
+  }
 }
 
 class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProviderStateMixin {

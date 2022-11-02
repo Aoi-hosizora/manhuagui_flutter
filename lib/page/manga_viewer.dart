@@ -591,6 +591,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                             builder: (c) => DownloadTocPage(
                                               mangaId: widget.mangaId,
                                             ),
+                                            settings: DownloadTocPage.buildRouteSetting(
+                                              mangaId: widget.mangaId,
+                                            ),
                                           ),
                                         );
                                       },

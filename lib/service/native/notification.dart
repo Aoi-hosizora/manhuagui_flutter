@@ -1,8 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/service/evb/ntf_events.dart';
+import 'package:manhuagui_flutter/service/native/notification_handler.dart';
 
-class NotificationManager {
+class NotificationManager with NotificationHandlerMixin {
   NotificationManager._();
 
   static NotificationManager? _instance;
@@ -32,15 +32,17 @@ class NotificationManager {
   @pragma('vm:entry-point')
   static void _onNotificationReceived(NotificationResponse nr) {
     if (nr.notificationResponseType == NotificationResponseType.selectedNotification) {
-      print('notify ${nr.id} ${nr.payload}');
-      fireNotificationSelectedEvent(nr);
+      if (nr.id != null) {
+        NotificationHandlerMixin.handleSelectedEvent(nr.id!, nr.payload);
+      }
     } else {
-      print('action ${nr.id} ${nr.actionId} ${nr.input} ${nr.payload}');
-      fireNotificationActionSelectedEvent(nr);
+      if (nr.id != null && nr.actionId != null) {
+        NotificationHandlerMixin.handleActionSelectedEvent(nr.id!, nr.actionId!, nr.payload);
+      }
     }
   }
 
-  AndroidNotificationDetails buildSilentNotificationDetails({
+  AndroidNotificationDetails _buildSilentNotificationDetails({
     required String channelId,
     required String channelName,
     required String channelDescription,
@@ -109,13 +111,10 @@ class NotificationManager {
     }
   }
 
+  static const downloadChannelPayload = DL_NTFC_ID;
   static const mipMapIcLaunch = '@mipmap/ic_launcher';
   static const drawableStatDownload = '@android:drawable/stat_sys_download';
   static const drawableStatDownloadDone = '@android:drawable/stat_sys_download_done';
-
-  static const downloadChannelPayload = DL_NTFC_ID;
-  static const downloadChannelAction1Id = DL_NTFC_ID + ':action1';
-  static const downloadChannelAction2Id = DL_NTFC_ID + ':action2';
 
   Future<bool> showDownloadChannelNotification({
     required int id,
@@ -143,7 +142,7 @@ class NotificationManager {
         title,
         body,
         NotificationDetails(
-          android: buildSilentNotificationDetails(
+          android: _buildSilentNotificationDetails(
             channelId: DL_NTFC_ID,
             channelName: DL_NTFC_NAME,
             channelDescription: DL_NTFC_DESCRIPTION,

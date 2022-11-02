@@ -200,7 +200,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       // 请求错误 => 更新漫画下载表为下载错误，然后直接返回
       var err = wrapError(e, s).text;
       print('===> exception when DownloadMangaQueueTask (manga):\n$err');
-      await Fluttertoast.cancel();
+      // await Fluttertoast.cancel();
       Fluttertoast.showToast(msg: '获取《$mangaTitle》信息出错：$err');
       if (oldManga != null) {
         await DownloadDao.addOrUpdateManga(

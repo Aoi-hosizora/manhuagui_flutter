@@ -174,6 +174,9 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
                 mangaId: widget.mangaId,
                 gotoDownloading: true,
               ),
+              settings: DownloadTocPage.buildRouteSetting(
+                mangaId: widget.mangaId,
+              ),
             ),
           ),
         ),
