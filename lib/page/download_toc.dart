@@ -209,7 +209,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     // TODO 离线阅读功能，跳过请求章节信息
     _getChapterGroupsAsync(); // 异步请求章节目录，尽量避免 MangaViewer 做多次请求
     Navigator.of(context).push(
-      CustomMaterialPageRoute(
+      CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
           mangaId: widget.mangaId,
@@ -301,7 +301,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
             icon: Icon(Icons.list),
             tooltip: '查看下载列表',
             onPressed: () => Navigator.of(context).push(
-              CustomMaterialPageRoute(
+              CustomPageRoute(
                 context: context,
                 builder: (c) => DownloadPage(),
               ),
@@ -347,7 +347,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                           '查看漫画',
                           Icons.description,
                           () => Navigator.of(context).push(
-                            CustomMaterialPageRoute(
+                            CustomPageRoute(
                               context: context,
                               builder: (c) => MangaPage(
                                 id: widget.mangaId,

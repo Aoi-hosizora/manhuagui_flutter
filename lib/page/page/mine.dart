@@ -88,7 +88,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       if (we.response?.statusCode == 401) {
         Fluttertoast.showToast(msg: '登录失效，请重新登录');
         Navigator.of(context).push(
-          CustomMaterialPageRoute(
+          CustomPageRoute(
             context: context,
             builder: (c) => LoginPage(),
           ),
@@ -202,7 +202,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
           icon: Icon(Icons.settings, color: Colors.black54),
           tooltip: '应用设置',
           onPressed: () => Navigator.of(context).push(
-            CustomMaterialPageRoute(
+            CustomPageRoute(
               context: context,
               builder: (c) => SettingPage(),
             ),
@@ -276,7 +276,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                             width: 75,
                           ),
                           onTap: () => Navigator.of(context).push(
-                            CustomMaterialPageRoute(
+                            CustomPageRoute(
                               context: context,
                               builder: (c) => ImageViewerPage(
                                 url: _data!.avatar,
@@ -313,7 +313,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildDivider(),
               _buildActionLine(text: '浏览历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
               _buildDivider(),
-              _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomMaterialPageRoute.simple(context, (c) => DownloadPage()))),
+              _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => DownloadPage()))),
               SizedBox(height: 12),
               _buildInfoLines(
                 title: '个人信息',

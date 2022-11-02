@@ -305,7 +305,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     Navigator.of(context).pop(); // pop this page, should not use maybePop
     Navigator.of(context).push(
-      CustomMaterialPageRoute(
+      CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
           mangaId: widget.mangaId,
@@ -386,9 +386,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       return;
     }
 
-    _subscribing = true;
-    if (mounted) setState(() {});
-
     final client = RestClient(DioManager.instance.dio);
     var toSubscribe = _subscribed != true; // 去订阅
     if (!toSubscribe) {
@@ -413,6 +410,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         return;
       }
     }
+
+    _subscribing = true;
+    if (mounted) setState(() {});
 
     try {
       await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.mangaId);
@@ -441,7 +441,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   Future<void> _downloadManga() async {
     await _ScreenHelper.restoreSystemUI();
     await Navigator.of(context).push(
-      CustomMaterialPageRoute(
+      CustomPageRoute(
         context: context,
         builder: (c) => DownloadSelectPage(
           mangaId: widget.mangaId,
@@ -449,6 +449,22 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           mangaCover: widget.mangaCover,
           mangaUrl: widget.mangaUrl,
           groups: _chapterGroups!,
+        ),
+      ),
+    );
+    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+  }
+
+  Future<void> _showDownloadedManga() async {
+    await _ScreenHelper.restoreSystemUI();
+    await Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => DownloadTocPage(
+          mangaId: widget.mangaId,
+        ),
+        settings: DownloadTocPage.buildRouteSetting(
+          mangaId: widget.mangaId,
         ),
       ),
     );
@@ -479,7 +495,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Navigator.of(c).pop(); // bottom sheet
                 Navigator.of(context).pop(); // this page, should not use maybePop
                 Navigator.of(context).push(
-                  CustomMaterialPageRoute(
+                  CustomPageRoute(
                     context: context,
                     builder: (c) => MangaViewerPage(
                       mangaId: _data!.mid,
@@ -562,7 +578,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         if (_downloadEntity?.downloadedChapters.any((el) => el.chapterId == widget.chapterId) == true)
                           AppBarActionButton(
                             icon: Icon(Icons.download_done),
-                            tooltip: '该章节已下载',
+                            tooltip: '下载情况',
                             highlightColor: Colors.transparent,
                             onPressed: () {
                               var chapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
@@ -572,30 +588,20 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                               showDialog(
                                 context: context,
                                 builder: (c) => AlertDialog(
-                                  title: Text('下载'),
+                                  title: Text('下载情况'),
                                   content: Text(
                                     !chapter.tried
                                         ? '该章节正在等待下载。'
                                         : chapter.succeeded
                                             ? '该章节已下载完成。'
-                                            : '该章节已部分下载完成。',
+                                            : '该章节部分页已下载完成。',
                                   ),
                                   actions: [
                                     TextButton(
                                       child: Text('查看'),
                                       onPressed: () {
                                         Navigator.of(context).pop();
-                                        Navigator.of(context).push(
-                                          CustomMaterialPageRoute(
-                                            context: context,
-                                            builder: (c) => DownloadTocPage(
-                                              mangaId: widget.mangaId,
-                                            ),
-                                            settings: DownloadTocPage.buildRouteSetting(
-                                              mangaId: widget.mangaId,
-                                            ),
-                                          ),
-                                        );
+                                        _showDownloadedManga();
                                       },
                                     ),
                                     TextButton(
@@ -773,15 +779,15 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   textColor: Colors.white,
                                   iconColor: Colors.white,
                                   action1: ActionItem(
-                                    text: _setting.viewDirection == ViewDirection.leftToRight ? '上一章节' : '下一章节',
+                                    text: _setting.viewDirection != ViewDirection.rightToLeft ? '上一章节' : '下一章节',
                                     icon: Icons.arrow_right_alt,
                                     rotateAngle: math.pi,
-                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection == ViewDirection.leftToRight),
+                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection != ViewDirection.rightToLeft),
                                   ),
                                   action2: ActionItem(
-                                    text: _setting.viewDirection == ViewDirection.leftToRight ? '下一章节' : '上一章节',
+                                    text: _setting.viewDirection != ViewDirection.rightToLeft ? '下一章节' : '上一章节',
                                     icon: Icons.arrow_right_alt,
-                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection == ViewDirection.rightToLeft),
+                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection != ViewDirection.rightToLeft),
                                   ),
                                   action3: ActionItem(
                                     text: '阅读设置',

@@ -25,7 +25,7 @@ class TinyMangaLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '更新于 ${manga.newestDate}',
       onPressed: () => Navigator.of(context).push(
-        CustomMaterialPageRoute(
+        CustomPageRoute(
           context: context,
           builder: (c) => MangaPage(
             id: manga.mid,

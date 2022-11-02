@@ -243,7 +243,7 @@ class CommentLineView extends StatelessWidget {
             child: InkWell(
               onTap: !large
                   ? () => Navigator.of(context).push(
-                        CustomMaterialPageRoute(
+                        CustomPageRoute(
                           context: context,
                           builder: (c) => CommentPage(
                             comment: comment,

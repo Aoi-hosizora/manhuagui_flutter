@@ -93,7 +93,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => Navigator.of(context).push(
-                        CustomMaterialPageRoute(
+                        CustomPageRoute(
                           context: context,
                           builder: (c) => MangaPage(
                             id: widget.mangas[i].mid,

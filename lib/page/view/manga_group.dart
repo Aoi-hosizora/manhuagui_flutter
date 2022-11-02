@@ -103,7 +103,7 @@ class MangaGroupView extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => Navigator.of(context).push(
-                    CustomMaterialPageRoute(
+                    CustomPageRoute(
                       context: context,
                       builder: (c) => MangaPage(
                         id: manga.mid,
@@ -167,7 +167,7 @@ class MangaGroupView extends StatelessWidget {
           width: width,
           height: width / 3 * 4,
           onMorePressed: () => Navigator.of(context).push(
-            CustomMaterialPageRoute(
+            CustomPageRoute(
               context: context,
               builder: (c) => MangaGroupPage(
                 group: group,

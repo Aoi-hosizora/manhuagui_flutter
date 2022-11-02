@@ -25,7 +25,7 @@ class SmallAuthorLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '更新于 ${author.newestDate}',
       onPressed: () => Navigator.of(context).push(
-        CustomMaterialPageRoute(
+        CustomPageRoute(
           context: context,
           builder: (c) => AuthorPage(
             id: author.aid,

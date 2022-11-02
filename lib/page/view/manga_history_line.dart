@@ -21,7 +21,7 @@ class MangaHistoryLineView extends StatelessWidget {
     var lastTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(history.lastTime);
     void onPressed() {
       Navigator.of(context).push(
-        CustomMaterialPageRoute(
+        CustomPageRoute(
           context: context,
           builder: (c) => MangaPage(
             id: history.mangaId,

@@ -41,9 +41,10 @@ class MyApp extends StatelessWidget {
         Locale('zh', 'CN'),
       ],
       home: IndexPage(),
-      builder: (context, child) => CustomMaterialPageRouteTheme(
-        data: CustomMaterialPageRouteThemeData(
-          transitionDuration: Duration(milliseconds: 450),
+      builder: (context, child) => CustomPageRouteTheme(
+        data: CustomPageRouteThemeData(
+          transitionDuration: Duration(milliseconds: 400),
+          transitionsBuilder: CupertinoPageTransitionsBuilder(),
         ),
         child: AppBarActionButtonTheme(
           data: AppBarActionButtonThemeData(

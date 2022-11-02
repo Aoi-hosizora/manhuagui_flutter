@@ -49,6 +49,8 @@ class _SettingPageState extends State<SettingPage> {
         leading: AppBarActionButton.leading(context: context),
       ),
       body: ListView(
+        padding: EdgeInsets.zero,
+        physics: AlwaysScrollableScrollPhysics(),
         children: [
           // *******************************************************
           _spacer(),

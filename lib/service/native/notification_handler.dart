@@ -22,7 +22,7 @@ mixin NotificationHandlerMixin {
         var mangaId = messageId;
         if (_hackedContext != null && !DownloadTocPage.isCurrentRoute(_hackedContext!, mangaId)) {
           Navigator.of(_hackedContext!).push(
-            CustomMaterialPageRoute(
+            CustomPageRoute(
               context: _hackedContext!,
               builder: (c) => DownloadTocPage(
                 mangaId: mangaId,

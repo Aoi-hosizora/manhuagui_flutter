@@ -77,7 +77,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
             icon: Icon(Icons.search),
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
-              CustomMaterialPageRoute(
+              CustomPageRoute(
                 context: context,
                 builder: (c) => SearchPage(),
               ),

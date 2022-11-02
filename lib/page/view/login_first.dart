@@ -38,7 +38,7 @@ class LoginFirstView extends StatelessWidget {
           return;
         }
         Navigator.of(context).push(
-          CustomMaterialPageRoute(
+          CustomPageRoute(
             context: context,
             builder: (c) => LoginPage(),
           ),

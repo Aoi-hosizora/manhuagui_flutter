@@ -168,7 +168,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
         action: SnackBarAction(
           label: '查看',
           onPressed: () => Navigator.of(context).push(
-            CustomMaterialPageRoute(
+            CustomPageRoute(
               context: context,
               builder: (c) => DownloadTocPage(
                 mangaId: widget.mangaId,
@@ -223,6 +223,8 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
             crossAxisMargin: 2,
             child: ListView(
               controller: _controller,
+              padding: EdgeInsets.zero,
+              physics: AlwaysScrollableScrollPhysics(),
               children: [
                 WarningTextView(
                   text: '由于本应用为漫画柜第三方客户端，所以请不要连续下载过多章节，避免因短时间内访问频繁而当前IP被封禁。',

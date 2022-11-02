@@ -135,7 +135,7 @@ class LargeDownloadLineView extends StatelessWidget {
               width: 120,
             ),
             onTap: () => Navigator.of(context).push(
-              CustomMaterialPageRoute(
+              CustomPageRoute(
                 context: context,
                 builder: (c) => ImageViewerPage(
                   url: imageUrl,

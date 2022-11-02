@@ -28,7 +28,7 @@ class _MangaRandomPageState extends State<MangaRandomPage> {
       var url = random.data.url;
       Navigator.of(context).pop();
       Navigator.of(context).push(
-        CustomMaterialPageRoute(
+        CustomPageRoute(
           context: context,
           builder: (c) => MangaPage(
             id: mid,

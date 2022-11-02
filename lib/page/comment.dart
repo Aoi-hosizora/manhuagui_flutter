@@ -33,6 +33,8 @@ class _CommentPageState extends State<CommentPage> {
         crossAxisMargin: 2,
         child: ListView(
           controller: _controller,
+          padding: EdgeInsets.zero,
+          physics: AlwaysScrollableScrollPhysics(),
           children: [
             CommentLineView(
               comment: widget.comment,
