@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/page/history.dart';
 import 'package:manhuagui_flutter/page/page/shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
@@ -35,6 +36,9 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
     widget.action?.addAction(() => _actions[_controller.index].invoke());
     _cancelHandler = EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(0);
+    });
+    _cancelHandler = EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
+      _controller.animateTo(1);
     });
   }
 
@@ -74,10 +78,21 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
+            icon: Icon(Icons.download),
+            tooltip: '查看下载列表',
+            onPressed: () => Navigator.of(context).push(
+              CustomMaterialPageRoute(
+                context: context,
+                builder: (c) => DownloadPage(),
+              ),
+            ),
+          ),
+          AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              CustomMaterialPageRoute(
+                context: context,
                 builder: (c) => SearchPage(),
               ),
             ),

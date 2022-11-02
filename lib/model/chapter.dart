@@ -1,3 +1,4 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'chapter.g.dart';
@@ -26,7 +27,7 @@ class TinyMangaChapter {
   final int cid;
   final String title;
   final int mid;
-  final String url;
+  final String url; // useless
   final int pageCount;
   final bool isNew;
 
@@ -50,11 +51,48 @@ class MangaChapterGroup {
 }
 
 extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
-  String? findTitle(int cid) {
+  MangaChapterGroup? get regularGroup {
+    return where((g) => g.title == '单话').firstOrNull;
+  }
+
+  List<MangaChapterGroup> makeSureRegularGroupIsFirst() {
+    var rGroup = regularGroup;
+    if (rGroup == null) {
+      return this;
+    }
+    return [
+      rGroup,
+      ...where((g) => g.title != '单话'),
+    ];
+  }
+
+  MangaChapterGroup? getFirstNotEmptyGroup() {
+    if (isEmpty) {
+      return null;
+    }
+    var group = regularGroup;
+    if (group == null || group.chapters.isNotEmpty) {
+      return group;
+    }
+    return where((g) => g.chapters.isNotEmpty).firstOrNull;
+  }
+
+  TinyMangaChapter? findChapter(int cid) {
     for (var group in this) {
       for (var chapter in group.chapters) {
         if (chapter.cid == cid) {
-          return chapter.title;
+          return chapter;
+        }
+      }
+    }
+    return null;
+  }
+
+  Tuple2<TinyMangaChapter, String>? findChapterAndGroupName(int cid) {
+    for (var group in this) {
+      for (var chapter in group.chapters) {
+        if (chapter.cid == cid) {
+          return Tuple2(chapter, group.title);
         }
       }
     }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -27,13 +27,15 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
   var _historyUpdated = false;
+  AuthData? _oldAuthData;
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen((_) {
+      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) {
+        _oldAuthData = AuthManager.instance.authData;
         _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
@@ -74,8 +76,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('删除历史记录'),
-        content: Text('是否删除 ${history.mangaTitle}？'),
+        title: Text('历史记录刪除确认'),
+        content: Text('是否删除阅读历史《${history.mangaTitle}》？'),
         actions: [
           TextButton(
             child: Text('删除'),
@@ -132,7 +134,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textWidget(
-              leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史')  + (_historyUpdated ? ' (有更新)' : ''),
+              leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史') + (_historyUpdated ? ' (有更新)' : ''),
               rightWidget: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

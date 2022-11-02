@@ -40,8 +40,8 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
 
   @override
   void dispose() {
-    widget.action?.removeAction();
     _cancelHandler?.call();
+    widget.action?.removeAction();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();
@@ -77,7 +77,8 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
             icon: Icon(Icons.search),
             tooltip: '搜索',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
+              CustomMaterialPageRoute(
+                context: context,
                 builder: (c) => SearchPage(),
               ),
             ),

@@ -1,5 +1,6 @@
-import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
 class HistoryDao {
@@ -14,7 +15,7 @@ class HistoryDao {
   static const _colChapterPage = 'chapter_page';
   static const _colLastTime = 'last_time';
 
-  static const createTblHistory = '''
+  static const _createTblHistory = '''
     CREATE TABLE $_tblHistory(
       $_colUsername VARCHAR(1023),
       $_colMangaId INTEGER,
@@ -27,6 +28,10 @@ class HistoryDao {
       $_colLastTime DATETIME,
       PRIMARY KEY ($_colUsername, $_colMangaId)
     )''';
+
+  static Future<void> createTable(Database db) async {
+    await db.safeExecute(_createTblHistory);
+  }
 
   static Future<int?> getHistoryCount({required String username}) async {
     final db = await DBManager.instance.getDB();
@@ -55,16 +60,16 @@ class HistoryDao {
     if (results == null || results.isEmpty) {
       return null;
     }
-    var m = results.first;
+    var r = results.first;
     return MangaHistory(
       mangaId: mid,
-      mangaTitle: m[_colMangaTitle]! as String,
-      mangaCover: m[_colMangaCover]! as String,
-      mangaUrl: m[_colMangaUrl]! as String,
-      chapterId: m[_colChapterId]! as int,
-      chapterTitle: m[_colChapterTitle]! as String,
-      chapterPage: m[_colChapterPage]! as int,
-      lastTime: DateTime.parse(m[_colLastTime]! as String),
+      mangaTitle: r[_colMangaTitle]! as String,
+      mangaCover: r[_colMangaCover]! as String,
+      mangaUrl: r[_colMangaUrl]! as String,
+      chapterId: r[_colChapterId]! as int,
+      chapterTitle: r[_colChapterTitle]! as String,
+      chapterPage: r[_colChapterPage]! as int,
+      lastTime: DateTime.parse(r[_colLastTime]! as String),
     );
   }
 
@@ -86,16 +91,16 @@ class HistoryDao {
       return null;
     }
     var out = <MangaHistory>[];
-    for (var m in results) {
+    for (var r in results) {
       out.add(MangaHistory(
-        mangaId: m[_colMangaId]! as int,
-        mangaTitle: m[_colMangaTitle]! as String,
-        mangaCover: m[_colMangaCover]! as String,
-        mangaUrl: m[_colMangaUrl]! as String,
-        chapterId: m[_colChapterId]! as int,
-        chapterTitle: m[_colChapterTitle]! as String,
-        chapterPage: m[_colChapterPage]! as int,
-        lastTime: DateTime.parse(m[_colLastTime]! as String),
+        mangaId: r[_colMangaId]! as int,
+        mangaTitle: r[_colMangaTitle]! as String,
+        mangaCover: r[_colMangaCover]! as String,
+        mangaUrl: r[_colMangaUrl]! as String,
+        chapterId: r[_colChapterId]! as int,
+        chapterTitle: r[_colChapterTitle]! as String,
+        chapterPage: r[_colChapterPage]! as int,
+        lastTime: DateTime.parse(r[_colLastTime]! as String),
       ));
     }
     return out;
@@ -122,7 +127,7 @@ class HistoryDao {
         [username, history.mangaId, history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String()],
       );
     } else {
-      rows = await db.safeRawInsert(
+      rows = await db.safeRawUpdate(
         '''UPDATE $_tblHistory
            SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colChapterId = ?, $_colChapterTitle = ?, $_colChapterPage = ?, $_colLastTime = ?
            WHERE $_colUsername = ? AND $_colMangaId = ?''',
@@ -134,11 +139,15 @@ class HistoryDao {
 
   static Future<bool> deleteHistory({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
-    var rows = await db.safeRawUpdate(
+    var rows = await db.safeRawDelete(
       '''DELETE FROM $_tblHistory
          WHERE $_colUsername = ? AND $_colMangaId = ?''',
       [username, mid],
     );
     return rows != null && rows >= 1;
+  }
+
+  static Future<void> upgradeFromVer1To2(Database db) async {
+    // skip
   }
 }

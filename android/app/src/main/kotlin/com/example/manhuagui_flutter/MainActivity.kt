@@ -12,7 +12,7 @@ import java.io.File
 
 class MainActivity: FlutterActivity(), MethodCallHandler {
     companion object {
-        private const val CHANNEL = "com.example.manhuagui_flutter"
+        private const val CHANNEL = "com.aoihosizora.manhuagui"
         private const val INSERT_MEDIA_METHOD = "insertMedia"
     }
 

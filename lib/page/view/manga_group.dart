@@ -103,7 +103,8 @@ class MangaGroupView extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
+                    CustomMaterialPageRoute(
+                      context: context,
                       builder: (c) => MangaPage(
                         id: manga.mid,
                         title: manga.title,
@@ -130,8 +131,8 @@ class MangaGroupView extends StatelessWidget {
   }
 
   Widget _buildGroupItems({required BuildContext context}) {
-    const hSpace = 8.0;
-    const vSpace = 8.0;
+    const hSpace = 10.0;
+    const vSpace = 12.0;
 
     List<TinyBlockManga?> mangas = group.mangas;
     switch (style) {
@@ -166,7 +167,8 @@ class MangaGroupView extends StatelessWidget {
           width: width,
           height: width / 3 * 4,
           onMorePressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
+            CustomMaterialPageRoute(
+              context: context,
               builder: (c) => MangaGroupPage(
                 group: group,
                 type: type,

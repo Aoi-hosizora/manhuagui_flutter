@@ -82,6 +82,18 @@ class TinyManga {
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
+class RandomMangaInfo {
+  final int mid;
+  final String url;
+
+  RandomMangaInfo({required this.mid, required this.url});
+
+  factory RandomMangaInfo.fromJson(Map<String, dynamic> json) => _$RandomMangaInfoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RandomMangaInfoToJson(this);
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class TinyBlockManga {
   final int mid;
   final String title;
@@ -231,45 +243,4 @@ class ShelfStatus {
   factory ShelfStatus.fromJson(Map<String, dynamic> json) => _$ShelfStatusFromJson(json);
 
   Map<String, dynamic> toJson() => _$ShelfStatusToJson(this);
-}
-
-class MangaHistory {
-  final int mangaId;
-  final String mangaTitle;
-  final String mangaCover;
-  final String mangaUrl;
-  final int chapterId; // 0 表示还没开始阅读（点进漫画页），非0 表示开始阅读（点进章节页）
-  final String chapterTitle;
-  final int chapterPage;
-  final DateTime lastTime;
-
-  bool get read => chapterId != 0;
-
-  const MangaHistory({required this.mangaId, required this.mangaTitle, required this.mangaCover, required this.mangaUrl, required this.chapterId, required this.chapterTitle, required this.chapterPage, required this.lastTime});
-
-  MangaHistory copyWith({
-    int? mangaId,
-    String? mangaTitle,
-    String? mangaCover,
-    String? mangaUrl,
-    int? chapterId,
-    String? chapterTitle,
-    int? chapterPage,
-    DateTime? lastTime,
-  }) {
-    return MangaHistory(
-      mangaId: mangaId ?? this.mangaId,
-      mangaTitle: mangaTitle ?? this.mangaTitle,
-      mangaCover: mangaCover ?? this.mangaCover,
-      mangaUrl: mangaUrl ?? this.mangaUrl,
-      chapterId: chapterId ?? this.chapterId,
-      chapterTitle: chapterTitle ?? this.chapterTitle,
-      chapterPage: chapterPage ?? this.chapterPage,
-      lastTime: lastTime ?? this.lastTime,
-    );
-  }
-
-  bool equals(MangaHistory o) {
-    return mangaId == o.mangaId && mangaTitle == o.mangaTitle && mangaCover == o.mangaCover && mangaUrl == o.mangaUrl && chapterId == o.chapterId && chapterTitle == o.chapterTitle && chapterPage == o.chapterPage && lastTime == o.lastTime;
-  }
 }

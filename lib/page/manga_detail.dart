@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/service/natives/clipboard.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 /// 漫画详情页，展示所给 [Manga] 信息
 class MangaDetailPage extends StatefulWidget {
@@ -127,6 +127,15 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
               ],
             ),
           ),
+        ),
+      ),
+      floatingActionButton: ScrollAnimatedFab(
+        scrollController: _controller,
+        condition: ScrollAnimatedCondition.direction,
+        fab: FloatingActionButton(
+          child: Icon(Icons.vertical_align_top),
+          heroTag: null,
+          onPressed: () => _controller.scrollToTop(),
         ),
       ),
     );

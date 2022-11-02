@@ -20,6 +20,8 @@ dependencies:
   retrofit: ^3.0.1+1
   intl: ^0.17.0
   basic_utils: ^5.2.2
+  synchronized: ^3.0.0+3
+  queue: ^3.1.0+1
 
   # assists
   flutter_web_browser: ^0.17.1
@@ -28,6 +30,7 @@ dependencies:
   device_info_plus: 4.0.0
   battery_info: ^1.1.1
   connectivity_plus: 2.3.6+1
+  flutter_local_notifications: 9.9.1
 
   # widgets
   flutter_ahlib:

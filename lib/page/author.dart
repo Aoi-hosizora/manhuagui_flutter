@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -149,7 +149,8 @@ class _AuthorPageState extends State<AuthorPage> {
                           width: 100,
                         ),
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
+                          CustomMaterialPageRoute(
+                            context: context,
                             builder: (c) => ImageViewerPage(
                               url: _data!.cover,
                               title: '作者头像',
@@ -163,7 +164,7 @@ class _AuthorPageState extends State<AuthorPage> {
                     // ****************************************************************
                     Container(
                       width: MediaQuery.of(context).size.width - 14 * 3 - 100, // | ▢ ▢▢ |
-                      padding: EdgeInsets.only(top: 10, bottom: 10, right: 14),
+                      padding: EdgeInsets.only(top: 10, bottom: 10, right: 0),
                       alignment: Alignment.centerLeft,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,

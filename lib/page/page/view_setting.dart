@@ -140,7 +140,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     required T value,
     required List<T> values,
     required Widget Function(T) builder,
-    required void Function(T?) onChanged,
+    required void Function(T) onChanged,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -157,7 +157,11 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
             underline: Container(color: Colors.white),
             isExpanded: true,
-            onChanged: onChanged,
+            onChanged: (v) {
+              if (v != null) {
+                onChanged.call(v);
+              }
+            },
           ),
         ),
       ],
@@ -203,7 +207,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (s) {
-            _viewDirection = s ?? ViewDirection.leftToRight;
+            _viewDirection = s;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -283,7 +287,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (c) {
-            _preloadCount = (c ?? 2).clamp(0, 5);
+            _preloadCount = c.clamp(0, 5);
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

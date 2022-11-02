@@ -25,6 +25,9 @@ abstract class RestClient {
   @GET('/manga/{mid}/{cid}')
   Future<Result<MangaChapter>> getMangaChapter({@Path() required int mid, @Path() required int cid});
 
+  @GET('/manga/random')
+  Future<Result<RandomMangaInfo>> getRandomManga();
+
   @GET('/list/serial')
   Future<Result<MangaGroupList>> getHotSerialMangas();
 
@@ -82,7 +85,7 @@ abstract class RestClient {
   @POST('/user/login')
   Future<Result<Token>> login({@Query('username') required String username, @Query('password') required String password});
 
-  @GET('/user/manga/{mid}/{cid}')
+  @POST('/user/manga/{mid}/{cid}')
   Future<Result> recordManga({@Header('Authorization') required String token, @Path() required int mid, @Path() required int cid});
 
   @GET('/shelf')

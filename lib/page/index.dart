@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -47,12 +48,14 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
         Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');
       }
     });
-    _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
-      _controller.animateTo(2);
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateTo(1);
-    }));
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      NotificationManager.instance.registerContext(context);
+    });
+    _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((ev) => _jumpToPageByEvent(1, ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((ev) => _jumpToPageByEvent(0, ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((ev) => _jumpToPageByEvent(0, ev)));
   }
 
   @override
@@ -69,6 +72,17 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
       return r.isGranted;
     }
     return true;
+  }
+
+  Future<void> _jumpToPageByEvent<T>(int index, T event) async {
+    _controller.animateTo(index);
+    if (_selectedIndex != index) {
+      // need to wait for animating, and then re-fire event (only fire twice in total)
+      await Future.delayed(_controller.animationDuration);
+      EventBusManager.instance.fire(event);
+    }
+    _selectedIndex = index;
+    if (mounted) setState(() {});
   }
 
   DateTime? _lastBackPressedTime;

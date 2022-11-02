@@ -1,28 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 
 /// 漫画章节阅读页-章节目录
 class ViewTocSubPage extends StatefulWidget {
   const ViewTocSubPage({
     Key? key,
-    required this.mid,
+    required this.mangaId,
     required this.mangaTitle,
-    required this.mangaCover,
-    required this.mangaUrl,
     required this.groups,
     required this.highlightedChapter,
-    required this.predicate,
+    required this.downloadedChapters,
+    required this.onChapterPressed,
   }) : super(key: key);
 
-  final int mid;
+  final int mangaId;
   final String mangaTitle;
-  final String mangaCover;
-  final String mangaUrl;
   final List<MangaChapterGroup> groups;
   final int highlightedChapter;
-  final bool Function(int cid) predicate;
+  final List<DownloadedChapter> downloadedChapters;
+  final void Function(int cid) onChapterPressed;
 
   @override
   State<ViewTocSubPage> createState() => _ViewTocSubPageState();
@@ -69,14 +68,12 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
               controller: _controller,
               child: MangaTocView(
                 groups: widget.groups,
-                mangaId: widget.mid,
-                mangaTitle: widget.mangaTitle,
-                mangaCover: widget.mangaCover,
-                mangaUrl: widget.mangaUrl,
                 full: true,
-                highlightedChapter: widget.highlightedChapter,
-                lastChapterPage: 1,
-                predicate: widget.predicate,
+                highlightedChapters: [widget.highlightedChapter],
+                customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                  entity: widget.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                ),
+                onChapterPressed: widget.onChapterPressed,
               ),
             ),
           ),

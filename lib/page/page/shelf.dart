@@ -28,6 +28,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   VoidCallback? _cancelHandler;
+  AuthData? _oldAuthData;
 
   var _loginChecking = true;
   var _loginCheckError = '';
@@ -37,7 +38,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen((ev) {
+      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+        _oldAuthData = AuthManager.instance.authData;
         _loginChecking = false;
         _loginCheckError = ev.error?.text ?? '';
         if (mounted) setState(() {});
@@ -47,8 +49,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       });
       _loginChecking = true;
       await AuthManager.instance.check();
-      // _loginChecking = false;
-      // if (mounted) setState(() {});
     });
   }
 
@@ -90,8 +90,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           _loginCheckError = '';
           if (mounted) setState(() {});
           await AuthManager.instance.check();
-          // _loginChecking = false;
-          // if (mounted) setState(() {});
         },
       );
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -24,7 +25,8 @@ class ShelfMangaLineView extends StatelessWidget {
       icon3: Icons.import_contacts,
       text3: '最近阅读至 ${manga.lastChapter.isEmpty ? '未知话' : manga.lastChapter} (${manga.lastDuration})',
       onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute(
+        CustomMaterialPageRoute(
+          context: context,
           builder: (c) => MangaPage(
             id: manga.mid,
             title: manga.title,

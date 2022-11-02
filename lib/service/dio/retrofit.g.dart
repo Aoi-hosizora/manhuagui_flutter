@@ -10,7 +10,7 @@ part of 'retrofit.dart';
 
 class _RestClient implements RestClient {
   _RestClient(this._dio, {this.baseUrl}) {
-    baseUrl ??= 'http://api.manhuagui.aoihosizora.top/v1/';
+    baseUrl ??= 'https://api-manhuagui.aoihosizora.top/v1/';
   }
 
   final Dio _dio;
@@ -78,6 +78,25 @@ class _RestClient implements RestClient {
     final value = Result<MangaChapter>.fromJson(
       _result.data!,
       (json) => MangaChapter.fromJson(json as Map<String, dynamic>),
+    );
+    return value;
+  }
+
+  @override
+  Future<Result<RandomMangaInfo>> getRandomManga() async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<RandomMangaInfo>>(
+            Options(method: 'GET', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/manga/random',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<RandomMangaInfo>.fromJson(
+      _result.data!,
+      (json) => RandomMangaInfo.fromJson(json as Map<String, dynamic>),
     );
     return value;
   }
@@ -524,7 +543,7 @@ class _RestClient implements RestClient {
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
         _setStreamType<Result<dynamic>>(
-            Options(method: 'GET', headers: _headers, extra: _extra)
+            Options(method: 'POST', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/user/manga/${mid}/${cid}',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));

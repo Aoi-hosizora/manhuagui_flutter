@@ -1,3 +1,5 @@
+import 'dart:io' show File;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -12,6 +14,8 @@ class MangaGalleryView extends StatefulWidget {
     Key? key,
     required this.imageCount,
     required this.imageUrls,
+    required this.imageUrlFutures,
+    required this.imageFileFutures,
     required this.preloadPagesCount,
     required this.verticalScroll,
     required this.horizontalReverseScroll,
@@ -30,6 +34,8 @@ class MangaGalleryView extends StatefulWidget {
 
   final int imageCount;
   final List<String> imageUrls;
+  final List<Future<String>> imageUrlFutures;
+  final List<Future<File?>> imageFileFutures;
   final int preloadPagesCount;
   final bool verticalScroll;
   final bool horizontalReverseScroll;
@@ -149,7 +155,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         key: _horizontalGalleryKey,
         imageCount: widget.imageCount,
         preloadPagesCount: widget.preloadPagesCount,
-        initialPage: widget.initialImageIndex - 1 + 1,
+        initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
         viewportFraction: widget.horizontalViewportFraction,
         reverse: widget.horizontalReverseScroll,
         backgroundDecoration: BoxDecoration(color: Colors.black),
@@ -168,14 +174,16 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           filterQuality: FilterQuality.high,
           onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
           onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
-          imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
+          imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
             key: key,
-            url: widget.imageUrls[idx],
+            urlFuture: widget.imageUrlFutures[idx],
             cacheManager: _cache,
             headers: {
               'User-Agent': USER_AGENT,
               'Referer': REFERER,
             },
+            fileFuture: widget.imageFileFutures[idx],
+            fileMustExist: true,
           ),
           loadingBuilder: (_, ev) => GestureDetector(
             onTapDown: (d) => _onPointerDown(d.globalPosition),
@@ -223,7 +231,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       key: _verticalGalleryKey,
       imageCount: widget.imageCount,
       preloadPagesCount: widget.preloadPagesCount,
-      initialPage: widget.initialImageIndex - 1 + 1,
+      initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
       viewportPageSpace: widget.verticalViewportPageSpace,
       backgroundDecoration: BoxDecoration(color: Colors.black),
       scrollPhysics: AlwaysScrollableScrollPhysics(),
@@ -241,14 +249,16 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         filterQuality: FilterQuality.high,
         onTapDown: null,
         onTapUp: null,
-        imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
+        imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
           key: key,
-          url: widget.imageUrls[idx],
+          urlFuture: widget.imageUrlFutures[idx],
           cacheManager: _cache,
           headers: {
             'User-Agent': USER_AGENT,
             'Referer': REFERER,
           },
+          fileFuture: widget.imageFileFutures[idx],
+          fileMustExist: true,
         ),
         loadingBuilder: (_, ev) => GestureDetector(
           onTapDown: (d) => _onPointerDown(d.globalPosition),

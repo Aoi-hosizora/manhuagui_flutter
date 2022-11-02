@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -24,15 +25,21 @@ class MangaCarouselView extends StatefulWidget {
   _MangaCarouselViewState createState() => _MangaCarouselViewState();
 }
 
-class _MangaCarouselViewState extends State<MangaCarouselView> {
+class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKeepAliveClientMixin {
   var _currentIndex = 0;
+  final _key = PageStorageKey(0);
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Stack(
       children: [
         CarouselSlider.builder(
           options: CarouselOptions(
+            pageViewKey: _key,
             height: widget.height,
             autoPlay: true,
             autoPlayInterval: Duration(seconds: 4),
@@ -86,7 +93,8 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        CustomMaterialPageRoute(
+                          context: context,
                           builder: (c) => MangaPage(
                             id: widget.mangas[i].mid,
                             title: widget.mangas[i].title,

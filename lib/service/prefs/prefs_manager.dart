@@ -1,4 +1,5 @@
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
+import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,12 +37,17 @@ class PrefsManager {
       return;
     }
 
-    if (version == 1) {
+    if (version <= 1) {
       version = 2; // 1 -> 2 upgrade
       await AuthPrefs.upgradeFromVer1To2(prefs);
+      await DlSettingPrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
       await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }
+    if (version == 2) {
+      // ...
+    }
+
     prefs.setInt('VERSION', newestVersion);
   }
 }

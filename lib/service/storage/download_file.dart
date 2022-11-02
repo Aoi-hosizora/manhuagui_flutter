@@ -1,54 +1,10 @@
-import 'dart:io' show File, Directory, Platform;
+import 'dart:io' show File;
 
-import 'package:external_path/external_path.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:path/path.dart' as path_;
-import 'package:path_provider/path_provider.dart';
-
-Future<String> getExternalStorageDirectoryPath() async {
-  final storageDirectories = await ExternalPath.getExternalStorageDirectories();
-  if (storageDirectories.isEmpty) {
-    throw Exception('Cannot get external storage directory.');
-  }
-  return await joinPath(
-    [storageDirectories.first, APP_NAME],
-    checkDirectory: true,
-    directoryPath: true,
-  ); // /storage/emulated/0/Manhuagui
-}
-
-Future<String> getPrivateStorageDirectoryPath() async {
-  final storageDirectory = await getExternalStorageDirectory(); // sandbox
-  return await joinPath(
-    [storageDirectory!.path],
-    checkDirectory: true,
-    directoryPath: true,
-  ); // /storage/emulated/0/android/com.aoihosizora.manhuagui_flutter
-}
-
-Future<String> joinPath(List<String> paths, {bool checkDirectory = false, bool directoryPath = false}) async {
-  var newPath = path_.joinAll(paths);
-  if (checkDirectory) {
-    var directory = Directory(directoryPath ? newPath : path_.dirname(newPath));
-    if (!(await directory.exists())) {
-      await directory.create(recursive: true);
-    }
-  }
-  return newPath;
-}
-
-String getTimestampTokenForFilename([String? pattern]) {
-  return DateFormat(pattern ?? 'yyyyMMdd_HHmmss_SSS').format(DateTime.now());
-}
-
-// ========
-// download
-// ========
+import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 enum DownloadBehavior {
   preferUsingCache,
@@ -77,6 +33,8 @@ class DownloadOption {
     this.ignoreHeadError = false,
     this.whenOverwrite = _defaultWhenOverwrite,
     this.suffixBuilder = _defaultSuffixBuilder,
+    this.headTimeout = const Duration(milliseconds: HEAD_TIMEOUT),
+    this.downloadTimeout,
   });
 
   final DownloadBehavior behavior;
@@ -84,6 +42,8 @@ class DownloadOption {
   final bool ignoreHeadError;
   final Future<OverwriteBehavior> Function(String filepath) whenOverwrite;
   final String Function(int index) suffixBuilder;
+  final Duration? headTimeout;
+  final Duration? downloadTimeout;
 }
 
 enum DownloadExceptionType {
@@ -114,6 +74,11 @@ class DownloadException implements Exception {
     }
     return DownloadException._(o.toString(), type);
   }
+
+  @override
+  String toString() {
+    return '[$type] $msg';
+  }
 }
 
 // !!!
@@ -128,7 +93,7 @@ Future<File> downloadFile({
   option ??= DownloadOption();
   var uri = Uri.parse(url);
 
-  // 1. http head url asynchronously
+  // 1. make http HEAD request asynchronously
   Future<String> filepathFuture;
   if (option.redecideFilepath == null) {
     filepathFuture = Future.value(filepath);
@@ -136,7 +101,11 @@ Future<File> downloadFile({
     filepathFuture = Future<String>.microtask(() async {
       http.Response resp;
       try {
-        resp = await http.head(uri, headers: headers);
+        var future = http.head(uri, headers: headers);
+        if (option!.headTimeout != null) {
+          future = future.timeout(option.headTimeout!, onTimeout: () => throw DownloadException._head('timed out'));
+        }
+        resp = await future;
       } catch (e) {
         throw DownloadException._head('Failed to make http HEAD request to $url: $e.');
       }
@@ -145,9 +114,7 @@ Future<File> downloadFile({
       }
       var mime = resp.headers['content-type'] ?? '';
       var extension = getPreferredExtensionFromMime(mime);
-      return option!.redecideFilepath!.call(mime, extension);
-    }).timeout(Duration(milliseconds: HEAD_TIMEOUT), onTimeout: () {
-      throw DownloadException._head('Failed to make http HEAD request to $url: timed out.');
+      return option.redecideFilepath!.call(mime, extension);
     }).onError((e, s) {
       if (!option!.ignoreHeadError) {
         return Future.error(DownloadException._fromObject(e!), s);
@@ -166,7 +133,9 @@ Future<File> downloadFile({
           break;
         case OverwriteBehavior.addSuffix:
           for (var i = 1;; i++) {
-            var fallbackFile = File('${path_.withoutExtension(filepath)}${option.suffixBuilder(i)}${path_.extension(filepath)}');
+            var basename = PathUtils.getWithoutExtension(filepath);
+            var extension = PathUtils.getExtension(filepath);
+            var fallbackFile = File('$basename${option.suffixBuilder(i)}$extension');
             if (!(await fallbackFile.exists())) {
               newFile = fallbackFile;
               break;
@@ -175,7 +144,7 @@ Future<File> downloadFile({
           break;
         case OverwriteBehavior.notAllow:
         default:
-          throw DownloadException._existed('File $filepath has been found before saving.');
+          throw DownloadException._existed('File $filepath exists before saving.');
       }
     }
     await newFile.create(recursive: true);
@@ -201,7 +170,11 @@ Future<File> downloadFile({
     // 4. download and save to file
     http.Response resp;
     try {
-      resp = await http.get(uri, headers: headers);
+      var future = http.get(uri, headers: headers);
+      if (option.downloadTimeout != null) {
+        future = future.timeout(option.downloadTimeout!, onTimeout: () => throw DownloadException._download('timed out'));
+      }
+      resp = await future;
     } catch (e) {
       throw DownloadException._download('Failed to make http GET request to $url: $e.');
     }
@@ -216,21 +189,5 @@ Future<File> downloadFile({
       await destination.delete();
     } catch (_) {}
     throw DownloadException._fromObject(e);
-  }
-}
-
-// =======
-// gallery
-// =======
-
-const _channelName = 'com.example.manhuagui_flutter';
-const _methodInsertMedia = 'insertMedia';
-const _channel = MethodChannel(_channelName);
-
-Future<void> addToGallery(File file) async {
-  if (Platform.isAndroid) {
-    await _channel.invokeMethod(_methodInsertMedia, <String, dynamic>{
-      'filepath': file.path,
-    });
   }
 }

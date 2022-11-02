@@ -1,42 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/page/manga_toc.dart';
-import 'package:manhuagui_flutter/page/manga_viewer.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 
-/// 漫画章节目录，在 [MangaPage] / [MangaTocPage] 使用
+/// 漫画章节目录（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadSelectPage] 使用
 class MangaTocView extends StatefulWidget {
   const MangaTocView({
     Key? key,
     required this.groups,
     required this.full,
-    required this.mangaId,
-    required this.mangaTitle,
-    required this.mangaCover,
-    required this.mangaUrl,
-    this.highlightedChapter = 0,
-    this.lastChapterPage = 1,
-    this.predicate,
+    this.gridPadding,
+    this.highlightColor,
+    this.highlightedChapters = const [],
+    this.showNewBadge = true,
+    this.customBadgeBuilder,
+    required this.onChapterPressed,
+    this.onMoreChaptersPressed,
+    this.onChapterLongPressed,
   }) : super(key: key);
 
   final List<MangaChapterGroup> groups;
   final bool full;
-  final int mangaId;
-  final String mangaTitle;
-  final String mangaCover;
-  final String mangaUrl;
-  final int highlightedChapter;
-  final int lastChapterPage;
-  final bool Function(int cid)? predicate;
+  final EdgeInsets? gridPadding;
+  final Color? highlightColor;
+  final List<int> highlightedChapters;
+  final bool showNewBadge;
+  final Widget? Function(int cid)? customBadgeBuilder;
+  final void Function(int cid) onChapterPressed;
+  final void Function()? onMoreChaptersPressed;
+  final void Function(int cid)? onChapterLongPressed;
 
   @override
   _MangaTocViewState createState() => _MangaTocViewState();
 }
 
 class _MangaTocViewState extends State<MangaTocView> {
-  var _invertedOrder = true;
+  var _invertOrder = true;
 
   Widget _buildHeader() {
+    Widget button({required IconData icon, required String text, required bool selected, required EdgeInsets padding, required void Function() onPressed}) {
+      Color color = selected ? Theme.of(context).primaryColor : Colors.black;
+      return InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: padding,
+          child: IconText(
+            icon: Icon(icon, size: 18, color: color),
+            text: Text(text, style: Theme.of(context).textTheme.bodyText1?.copyWith(color: color)),
+            space: 0,
+          ),
+        ),
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -46,210 +63,87 @@ class _MangaTocViewState extends State<MangaTocView> {
         ),
         Padding(
           padding: EdgeInsets.symmetric(vertical: 3),
-          child: Row(
-            children: [
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    _invertedOrder = false;
-                    if (mounted) setState(() {});
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
-                    child: IconText(
-                      icon: Icon(
-                        Icons.keyboard_arrow_up,
-                        size: 18,
-                        color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                      ),
-                      text: Text(
-                        '正序',
-                        style: TextStyle(
-                          color: !_invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                        ),
-                      ),
-                      space: 0,
-                    ),
-                  ),
+          child: Material(
+            color: Colors.transparent,
+            child: Row(
+              children: [
+                button(
+                  icon: Icons.keyboard_arrow_up,
+                  text: '正序',
+                  selected: !_invertOrder,
+                  padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
+                  onPressed: () => mountedSetState(() => _invertOrder = false),
                 ),
-              ),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    _invertedOrder = true;
-                    if (mounted) setState(() {});
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
-                    child: IconText(
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                      ),
-                      text: Text(
-                        '倒序',
-                        style: TextStyle(
-                          color: _invertedOrder ? Theme.of(context).primaryColor : Colors.black,
-                        ),
-                      ),
-                      space: 0,
-                    ),
-                  ),
+                button(
+                  icon: Icons.keyboard_arrow_down,
+                  text: '倒序',
+                  selected: _invertOrder,
+                  padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
+                  onPressed: () => mountedSetState(() => _invertOrder = true),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildItem({required TinyMangaChapter? chapter, required double width, required double height}) {
-    return Container(
-      width: width,
-      height: height,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                color: widget.highlightedChapter == chapter?.cid ? Theme.of(context).primaryColorLight.withOpacity(0.6) : null,
-              ),
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  buttonTheme: ButtonTheme.of(context).copyWith(
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-                child: OutlinedButton(
-                  child: Text(
-                    chapter?.title ?? '...',
-                    style: TextStyle(color: Colors.black),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  ),
-                  onPressed: () {
-                    if (chapter == null) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (c) => MangaTocPage(
-                            mid: widget.mangaId,
-                            mangaTitle: widget.mangaTitle,
-                            mangaCover: widget.mangaCover,
-                            mangaUrl: widget.mangaUrl,
-                            groups: widget.groups,
-                          ),
-                        ),
-                      );
-                    } else {
-                      var ok = widget.predicate?.call(chapter.cid) ?? true;
-                      if (ok) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (c) => MangaViewerPage(
-                              mid: chapter.mid,
-                              mangaTitle: widget.mangaTitle,
-                              mangaCover: widget.mangaCover,
-                              mangaUrl: widget.mangaUrl,
-                              chapterGroups: widget.groups,
-                              cid: chapter.cid,
-                              initialPage: widget.highlightedChapter == chapter.cid
-                                  ? widget.lastChapterPage // has read
-                                  : 1, // has not read
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
-            ),
-          ),
-          if (chapter?.isNew == true)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(2),
-                    topRight: Radius.circular(1),
-                  ),
-                ),
-                child: Text(
-                  'NEW',
-                  style: TextStyle(fontSize: 9, color: Colors.white),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGroupItems({required MangaChapterGroup group, required EdgeInsets padding, bool firstGroup = false}) {
-    const hSpace = 8.0;
-    const vSpace = 8.0;
-    final width = (MediaQuery.of(context).size.width - 2 * padding.left - 3 * hSpace) / 4; // |   ▢ ▢ ▢ ▢   |
-
-    List<TinyMangaChapter?> chapters = _invertedOrder ? group.chapters : group.chapters.reversed.toList();
-    if (!widget.full) {
-      if (firstGroup) {
-        if (chapters.length > 12) {
-          chapters = [...chapters.sublist(0, 11), null]; // X X X X | X X X X | X X X O
+  Widget _buildGrid({required int idx, required List<TinyMangaChapter> chapters}) {
+    return ChapterGridView(
+      chapters: chapters,
+      padding: widget.gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
+      invertOrder: _invertOrder,
+      maxLines: widget.full
+          ? -1 // show all chapters
+          : idx == 0
+              ? 3 // first line => show the first three lines
+              : 1 /* following lines => show the first line */,
+      highlightColor: widget.highlightColor,
+      highlightedChapters: widget.highlightedChapters,
+      extrasInStack: (chapter) {
+        if (chapter == null) {
+          return [];
         }
-      } else {
-        if (chapters.length > 4) {
-          chapters = [...chapters.sublist(0, 3), null]; // X X X O
+        var newBadge = widget.showNewBadge && chapter.isNew ? NewBadge() : null;
+        var customBadge = widget.customBadgeBuilder?.call(chapter.cid);
+        return [
+          if (newBadge != null) newBadge,
+          if (customBadge != null) customBadge,
+        ];
+      },
+      onChapterPressed: (chapter) {
+        if (chapter == null) {
+          widget.onMoreChaptersPressed?.call();
+        } else {
+          widget.onChapterPressed.call(chapter.cid);
         }
-      }
-    }
-
-    return Padding(
-      padding: padding,
-      child: Wrap(
-        spacing: hSpace,
-        runSpacing: vSpace,
-        children: [
-          for (var chapter in chapters)
-            _buildItem(
-              chapter: chapter,
-              width: width,
-              height: 36,
-            ),
-        ],
-      ),
+      },
+      onChapterLongPressed: widget.onChapterLongPressed == null
+          ? null
+          : (chapter) {
+              if (chapter != null) {
+                widget.onChapterLongPressed!.call(chapter.cid);
+              }
+            },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.groups.isEmpty) {
-      return SizedBox(height: 0);
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+        child: Center(
+          child: Text(
+            '暂无章节',
+            style: Theme.of(context).textTheme.subtitle1,
+          ),
+        ),
+      );
     }
 
-    var groups = widget.groups;
-    var specificGroups = widget.groups.where((g) => g.title == '单话');
-    if (specificGroups.isNotEmpty) {
-      var sGroup = specificGroups.first;
-      groups = [sGroup];
-      for (var group in widget.groups) {
-        if (group.title != '单话' && group.chapters.length != sGroup.chapters.length) {
-          groups.add(group);
-        }
-      }
-    }
-
+    var groups = widget.groups.makeSureRegularGroupIsFirst(); // 保证【单话】为首个章节分组
     return Column(
       children: [
         Container(
@@ -262,8 +156,8 @@ class _MangaTocViewState extends State<MangaTocView> {
           color: Colors.white,
           child: Divider(height: 0, thickness: 1),
         ),
+        SizedBox(height: 10),
         for (var i = 0; i < groups.length; i++) ...[
-          SizedBox(height: 10),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Text(
@@ -274,15 +168,97 @@ class _MangaTocViewState extends State<MangaTocView> {
           SizedBox(height: 10),
           SizedBox(
             width: MediaQuery.of(context).size.width,
-            child: _buildGroupItems(
-              group: groups[i],
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              firstGroup: i == 0,
+            child: _buildGrid(
+              idx: i,
+              chapters: groups[i].chapters,
             ),
           ),
+          SizedBox(height: 10),
         ],
-        SizedBox(height: 10),
       ],
+    );
+  }
+}
+
+class NewBadge extends StatelessWidget {
+  const NewBadge({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      right: 0,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.all(Radius.circular(2.0)),
+        ),
+        child: Text(
+          'NEW',
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum DownloadBadgeState {
+  downloading,
+  done,
+  failed,
+}
+
+class DownloadBadge extends StatelessWidget {
+  const DownloadBadge({
+    Key? key,
+    required this.state,
+  }) : super(key: key);
+
+  final DownloadBadgeState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 1,
+      right: 1,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 1.25, horizontal: 1.25),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: state == DownloadBadgeState.downloading
+              ? Colors.blue
+              : state == DownloadBadgeState.done
+                  ? Colors.green
+                  : Colors.red,
+        ),
+        child: Icon(
+          state == DownloadBadgeState.downloading
+              ? Icons.download
+              : state == DownloadBadgeState.done
+                  ? Icons.file_download_done
+                  : Icons.priority_high,
+          size: 14,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  static DownloadBadge? fromEntity({required DownloadedChapter? entity}) {
+    if (entity == null) {
+      return null;
+    }
+    return DownloadBadge(
+      state: !entity.allTried
+          ? DownloadBadgeState.downloading
+          : entity.succeeded
+              ? DownloadBadgeState.done
+              : DownloadBadgeState.failed,
     );
   }
 }

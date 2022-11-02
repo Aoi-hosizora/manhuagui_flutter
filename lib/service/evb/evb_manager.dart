@@ -17,7 +17,7 @@ class EventBusManager {
     return _eventBus!;
   }
 
-  void Function() listen<T>(void Function(T event)? onData) {
+  void Function() listen<T>(void Function(T event) onData) {
     var stream = eventBus.on<T>().listen(onData);
     return () => stream.cancel();
   }
