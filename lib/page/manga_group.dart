@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
+import 'package:manhuagui_flutter/page/view/my_drawer.dart';
 
 /// 漫画分组页，展示所给 [MangaGroup] 信息
 class MangaGroupPage extends StatefulWidget {
@@ -34,6 +35,10 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         title: Text('漫画分组'),
         leading: AppBarActionButton.leading(context: context),
       ),
+      drawer: MyDrawer(
+        currentDrawerSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: ScrollbarWithMore(
         controller: _controller,
         interactive: true,

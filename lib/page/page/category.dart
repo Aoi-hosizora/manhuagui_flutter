@@ -58,8 +58,14 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
           tabs: _tabs
               .map(
                 (t) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6),
-                  child: Text(t.item1),
+                  padding: EdgeInsets.symmetric(vertical: 5),
+                  child: Text(
+                    t.item1,
+                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                  ),
                 ),
               )
               .toList(),

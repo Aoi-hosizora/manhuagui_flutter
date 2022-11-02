@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
+import 'package:manhuagui_flutter/page/view/my_drawer.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -111,6 +112,10 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        drawer: MyDrawer(
+          currentDrawerSelection: DrawerSelection.home,
+        ),
+        drawerEdgeDragWidth: MediaQuery.of(context).size.width,
         body: TabBarView(
           physics: NeverScrollableScrollPhysics(),
           controller: _controller,

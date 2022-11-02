@@ -18,6 +18,7 @@ import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
+import 'package:manhuagui_flutter/page/view/my_drawer.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -333,6 +334,10 @@ class _MangaPageState extends State<MangaPage> {
           ),
         ],
       ),
+      drawer: MyDrawer(
+        currentDrawerSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _loadData,

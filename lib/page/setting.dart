@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
+import 'package:manhuagui_flutter/page/view/my_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
@@ -48,6 +49,10 @@ class _SettingPageState extends State<SettingPage> {
         title: Text('设置'),
         leading: AppBarActionButton.leading(context: context),
       ),
+      drawer: MyDrawer(
+        currentDrawerSelection: DrawerSelection.setting,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: ListView(
         padding: EdgeInsets.zero,
         physics: AlwaysScrollableScrollPhysics(),

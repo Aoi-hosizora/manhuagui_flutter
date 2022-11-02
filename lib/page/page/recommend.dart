@@ -126,9 +126,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                         action4: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => MangaRandomPage()))),
                       ),
                       ActionRowView.four(
-                        action1: ActionItem.simple('漫画类别', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())),
-                        action2: ActionItem.simple('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
-                        action3: ActionItem.simple('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
+                        action1: ActionItem.simple('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
+                        action2: ActionItem.simple('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
+                        action3: ActionItem.simple('漫画类别', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())),
                         action4: ActionItem.simple('外部打开', Icons.open_in_browser, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
                       )
                     ],
