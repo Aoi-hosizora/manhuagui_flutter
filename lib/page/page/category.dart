@@ -77,7 +77,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
             }
           },
         ),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.search),

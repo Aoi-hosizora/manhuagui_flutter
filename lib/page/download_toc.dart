@@ -296,7 +296,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     return Scaffold(
       appBar: AppBar(
         title: Text('章节下载管理'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.list),
@@ -313,7 +313,6 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       drawer: MyDrawer(
         currentDrawerSelection: DrawerSelection.none,
       ),
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         notificationPredicate: (n) => n.depth <= 2,

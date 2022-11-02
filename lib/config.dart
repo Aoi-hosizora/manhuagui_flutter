@@ -1,14 +1,15 @@
 // ignore_for_file: constant_identifier_names
 
 const APP_NAME = 'Manhuagui';
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const APP_LEGALESE = 'Copyright © 2020-2022 AoiHosizora';
 const APP_DESCRIPTIONS = [
-  '第三方漫画柜 (manhuagui) 安卓客户端，使用 Flutter 开发。',
-  '作者: GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>',
+  '第三方漫画柜 ($WEB_HOMEPAGE_URL) 安卓客户端，使用 Flutter 开发。',
+  '作者：GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>',
   ' ',
   '该客户端仅供学习使用，仅供非商业用途。',
-  '本应用与内容提供方无任何关系，若有问题，请发邮件或 Issue 联系。',
+  ' ',
+  '本应用与漫画柜内容提供方无任何关系，若有问题，请发邮件或 Issue 联系。',
 ];
 
 const ASSETS_PREFIX = 'lib/assets/';

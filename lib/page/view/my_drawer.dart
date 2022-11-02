@@ -4,6 +4,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/index.dart';
 import 'package:manhuagui_flutter/page/login.dart';
+import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -11,11 +12,11 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 
 enum DrawerSelection {
-  none,
-  home,
-  login,
-  download,
-  setting,
+  none, // MangaPage / AuthorPage / DownloadTocPage
+  home, // IndexPage
+  search, // SearchPage
+  download, // DownloadPage
+  setting, // SettingPage
 }
 
 class MyDrawer extends StatefulWidget {
@@ -33,28 +34,34 @@ class MyDrawer extends StatefulWidget {
 class _MyDrawerState extends State<MyDrawer> {
   late final _items = <DrawerItem>[
     DrawerPageItem.simple('主页', Icons.home, IndexPage(), DrawerSelection.home, autoCloseWhenTapped: false),
-    if (!AuthManager.instance.logined) DrawerPageItem.simple('登录', Icons.login, LoginPage(), DrawerSelection.login),
+    if (!AuthManager.instance.logined) //
+      DrawerActionItem.simple('登录', Icons.login, () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => LoginPage()))),
+    DrawerPageItem.simple('搜索漫画', Icons.search, SearchPage(), DrawerSelection.search),
     DrawerPageItem.simple('下载列表', Icons.download, DownloadPage(), DrawerSelection.download),
     DrawerWidgetItem.simple(Divider(thickness: 1)),
-    DrawerActionItem.simple('我的书架', Icons.star_outlined, () => _turnToHomePageTab(ToShelfRequestedEvent()), autoCloseWhenTapped: false),
-    DrawerActionItem.simple('浏览历史', Icons.history, () => _turnToHomePageTab(ToHistoryRequestedEvent()), autoCloseWhenTapped: false),
-    DrawerActionItem.simple('最近更新', Icons.cached, () => _turnToHomePageTab(ToRecentRequestedEvent()), autoCloseWhenTapped: false),
-    DrawerActionItem.simple('漫画排行', Icons.trending_up, () => _turnToHomePageTab(ToRankingRequestedEvent()), autoCloseWhenTapped: false),
+    //
+
+    DrawerActionItem.simple('我的书架', Icons.star_outlined, () => _gotoHomePageTab(ToShelfRequestedEvent()), autoCloseWhenTapped: false),
+    DrawerActionItem.simple('浏览历史', Icons.history, () => _gotoHomePageTab(ToHistoryRequestedEvent()), autoCloseWhenTapped: false),
+    DrawerActionItem.simple('最近更新', Icons.cached, () => _gotoHomePageTab(ToRecentRequestedEvent()), autoCloseWhenTapped: false),
+    DrawerActionItem.simple('漫画排行', Icons.trending_up, () => _gotoHomePageTab(ToRankingRequestedEvent()), autoCloseWhenTapped: false),
     DrawerWidgetItem.simple(Divider(thickness: 1)),
+    //
+
     DrawerActionItem.simple('漫画柜官网', Icons.open_in_browser, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
     DrawerPageItem.simple('设置', Icons.settings, SettingPage(), DrawerSelection.setting),
   ];
 
   Future<void> _popUntilFirst() async {
-    Navigator.of(context).pop();
-    await Future.delayed(Duration(milliseconds: 246));
+    if (Scaffold.of(context).isDrawerOpen) {
+      Navigator.of(context).pop();
+      await Future.delayed(Duration(milliseconds: 246)); // <<<
+    }
     Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
-  Future<void> _turnToHomePageTab(dynamic event) async {
-    Navigator.of(context).pop();
-    await Future.delayed(Duration(milliseconds: 246));
-    Navigator.of(context).popUntil((r) => r.isFirst);
+  Future<void> _gotoHomePageTab(dynamic event) async {
+    await _popUntilFirst();
     EventBusManager.instance.fire(event);
   }
 

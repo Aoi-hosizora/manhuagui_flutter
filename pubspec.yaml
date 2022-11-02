@@ -2,7 +2,7 @@ name: manhuagui_flutter
 description: An unofficial android application for manhuagui, built in flutter.
 
 publish_to: 'none'
-version: 1.1.0
+version: 1.2.0
 environment:
   sdk: ">=2.16.2 <3.0.0"
 

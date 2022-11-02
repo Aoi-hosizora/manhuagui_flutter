@@ -115,7 +115,6 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
         drawer: MyDrawer(
           currentDrawerSelection: DrawerSelection.home,
         ),
-        drawerEdgeDragWidth: MediaQuery.of(context).size.width,
         body: TabBarView(
           physics: NeverScrollableScrollPhysics(),
           controller: _controller,

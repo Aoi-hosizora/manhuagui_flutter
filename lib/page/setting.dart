@@ -47,12 +47,11 @@ class _SettingPageState extends State<SettingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('设置'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
       ),
       drawer: MyDrawer(
         currentDrawerSelection: DrawerSelection.setting,
       ),
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: ListView(
         padding: EdgeInsets.zero,
         physics: AlwaysScrollableScrollPhysics(),

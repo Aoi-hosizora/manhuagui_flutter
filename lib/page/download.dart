@@ -280,7 +280,7 @@ class _DownloadPageState extends State<DownloadPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('下载列表 (共 $_total 部)'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.play_arrow),
@@ -302,7 +302,6 @@ class _DownloadPageState extends State<DownloadPage> {
       drawer: MyDrawer(
         currentDrawerSelection: DrawerSelection.download,
       ),
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshableListView<DownloadedManga>(
         data: _data,
         getData: () => _getData(),

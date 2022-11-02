@@ -97,7 +97,7 @@ class _AuthorPageState extends State<AuthorPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_data?.name ?? widget.name),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.open_in_browser),
@@ -112,7 +112,6 @@ class _AuthorPageState extends State<AuthorPage> {
       drawer: MyDrawer(
         currentDrawerSelection: DrawerSelection.none,
       ),
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PlaceholderText.from(
         isLoading: _loading,
         errorText: _error,

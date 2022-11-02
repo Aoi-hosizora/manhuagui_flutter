@@ -23,12 +23,12 @@ class MyApp extends StatelessWidget {
           toolbarHeight: 45,
         ),
         scaffoldBackgroundColor: Color.fromRGBO(245, 245, 245, 1.0),
+        splashFactory: CustomInkRipple.preferredSplashFactory,
         pageTransitionsTheme: PageTransitionsTheme(
           builders: const {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: NoPopGestureCupertinoPageTransitionsBuilder(),
           },
         ),
-        splashFactory: CustomInkRipple.preferredSplashFactory,
       ).withPreferredButtonStyles(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) => CustomPageRouteTheme(
         data: CustomPageRouteThemeData(
           transitionDuration: Duration(milliseconds: 400),
-          transitionsBuilder: CupertinoPageTransitionsBuilder(),
+          transitionsBuilder: NoPopGestureCupertinoPageTransitionsBuilder(),
         ),
         child: AppBarActionButtonTheme(
           data: AppBarActionButtonThemeData(

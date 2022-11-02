@@ -81,7 +81,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             }
           },
         ),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.download),

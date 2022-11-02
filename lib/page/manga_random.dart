@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
-import 'package:manhuagui_flutter/page/view/my_drawer.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -66,10 +65,6 @@ class _MangaRandomPageState extends State<MangaRandomPage> {
         title: Text('随机漫画'),
         leading: AppBarActionButton.leading(context: context),
       ),
-      drawer: MyDrawer(
-        currentDrawerSelection: DrawerSelection.none,
-      ),
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: Center(
         child: SizedBox(
           height: 50,

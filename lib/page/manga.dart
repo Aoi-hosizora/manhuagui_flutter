@@ -322,7 +322,7 @@ class _MangaPageState extends State<MangaPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_data?.title ?? widget.title),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.open_in_browser),
@@ -337,7 +337,6 @@ class _MangaPageState extends State<MangaPage> {
       drawer: MyDrawer(
         currentDrawerSelection: DrawerSelection.none,
       ),
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _loadData,

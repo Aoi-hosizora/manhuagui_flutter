@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
+import 'package:manhuagui_flutter/page/view/my_drawer.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -144,6 +145,9 @@ class _SearchPageState extends State<SearchPage> {
     return WillPopScope(
       onWillPop: _pop,
       child: Scaffold(
+        drawer: MyDrawer(
+          currentDrawerSelection: DrawerSelection.search,
+        ),
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [

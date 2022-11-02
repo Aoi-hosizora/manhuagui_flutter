@@ -54,7 +54,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   print('┌─────────────────── WrapError ───────────────────┐');
   print('===> date: ${DateTime.now().toIso8601String()}');
 
-  // DioError [DioErrorType.other]: SocketException: Connection failed (OS Error: Network is unreachable, errno = 101)
+  // DioError [DioErrorType.other]: SocketException: Network error (OS Error: Network is unreachable, errno = 101)
   // DioError [DioErrorType.other]: SocketException: Failed host lookup: '...' (OS Error: No address associated with hostname, errno = 7)
   // DioError [DioErrorType.other]: SocketException: Connection refused (OS Error: Connection refused, errno = 111)
   // DioError [DioErrorType.other]: SocketException: Write failed (OS Error: Broken pipe, errno = 32), address = ...
@@ -83,7 +83,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
           if (msg.contains('unreachable') || msg.contains('failed host lookup')) {
             text = '网络不可用'; // Network is unavailable
           } else if (msg.contains('connection refused')) {
-            text = '网络连接异常 (Connection refused)'; // Connection failed
+            text = '网络连接异常 (Connection refused)'; // Network error
           } else if (msg.contains('broken pipe')) {
             text = '网络连接异常 (Broken pipe)';
           } else if (msg.contains('connection reset')) {
@@ -167,7 +167,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     var text = '网络连接异常 (未知错误)'; // Unknown network error
     var msg = e.message.toLowerCase();
     if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
-      text = '网络连接异常 (HTTPS error)'; // Connection failed
+      text = '网络连接异常 (HTTPS error)'; // Network error
     } else if (DEBUG_ERROR) {
       // type: HandshakeException / CertificateException
       text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})';
@@ -191,7 +191,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     if (msg.contains('unreachable') || msg.contains('failed host lookup')) {
       text = '网络不可用'; // Network is unavailable
     } else if (DEBUG_ERROR) {
-      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // Connection failed
+      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // Network error
     }
 
     print('===> uri: ?');

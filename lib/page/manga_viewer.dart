@@ -471,8 +471,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
-  void _showToc() {
-    showModalBottomSheet(
+  Future<void> _showToc() async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (c) => MediaQuery.removePadding(
@@ -514,10 +514,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         ),
       ),
     );
+    await Future.delayed(Duration(milliseconds: 200 + 10)); // bottomSheetExitDuration
+    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
-  void _showComments() {
-    showModalBottomSheet(
+  Future<void> _showComments() async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (c) => MediaQuery.removePadding(
@@ -534,6 +536,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         ),
       ),
     );
+    await Future.delayed(Duration(milliseconds: 200 + 10)); // bottomSheetExitDuration
+    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
   @override
@@ -570,9 +574,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         _data!.title,
                         style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),
                       ),
-                      leading: AppBarActionButton.leading(
-                        context: context,
+                      leading: AppBarActionButton(
+                        icon: Icon(Icons.arrow_back),
+                        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                         highlightColor: Colors.transparent,
+                        onPressed: () => Navigator.of(context).maybePop(),
                       ),
                       actions: [
                         if (_downloadEntity?.downloadedChapters.any((el) => el.chapterId == widget.chapterId) == true)
