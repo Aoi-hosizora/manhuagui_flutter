@@ -1,7 +1,7 @@
 # manhuagui_flutter
 
-+ An unofficial application for manhuagui (https://www.manhuagui.com/) written in flutter.
-+ Backend see [Aoi-hosizora/manhuagui-backend](https://github.com/Aoi-hosizora/manhuagui-backend) (private).
++ An unofficial application for manhuagui (https://www.manhuagui.com/), built in flutter.
++ You can visit [Aoi-hosizora/manhuagui-backend](https://github.com/Aoi-hosizora/manhuagui-backend) for backend part, currently this repository is private.
 
 ### Dependencies
 

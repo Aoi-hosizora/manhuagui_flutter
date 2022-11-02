@@ -107,7 +107,7 @@ class _MyDrawerState extends State<MyDrawer> {
                       ],
                     ),
                     child: Image.asset(
-                      'lib/assets/ic_launcher_xxhdpi.png',
+                      '${ASSETS_PREFIX}ic_launcher_xxhdpi.png',
                       height: 80,
                       width: 80,
                     ),

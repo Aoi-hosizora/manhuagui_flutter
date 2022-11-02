@@ -83,27 +83,27 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
           if (msg.contains('unreachable') || msg.contains('failed host lookup')) {
             text = '网络不可用'; // Network is unavailable
           } else if (msg.contains('connection refused')) {
-            text = '网络连接异常 (Connection refused)'; // Bad server (Connection refused)
+            text = '网络连接异常 (Connection refused)'; // Connection failed
           } else if (msg.contains('broken pipe')) {
-            text = '网络连接异常 (Broken pipe)'; // Bad server (Broken pipe)
+            text = '网络连接异常 (Broken pipe)';
           } else if (msg.contains('connection reset')) {
-            text = '网络连接异常 (Connection reset)'; // Bad server (Connection reset)
+            text = '网络连接异常 (Connection reset)';
           } else if (msg.contains('connection closed')) {
-            text = '网络连接异常 (Connection closed)'; // Bad server (Connection closed)
+            text = '网络连接异常 (Connection closed)';
           } else if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
-            text = '网络连接异常 (HTTPS error)'; // Bad server (HTTPS error)
-          } else if (DEBUG) {
-            text = '网络连接异常 ([DEBUG] DioError: ${e.error.toString()})'; // [DEBUG] DioError: ${e.error.toString()}
+            text = '网络连接异常 (HTTPS error)';
+          } else if (DEBUG_ERROR) {
+            text = '网络连接异常 ([DEBUG] DioError: ${e.error.toString()})';
           }
           break;
         case DioErrorType.connectTimeout:
           text = '连接超时'; // Connection timed out
           break;
         case DioErrorType.sendTimeout:
-          text = '发送请求超时'; // Timed out
+          text = '发送请求超时'; // Sending request timed out
           break;
         case DioErrorType.receiveTimeout:
-          text = '获取响应超时'; // Timed out
+          text = '获取响应超时'; // Receiving response timed out
           break;
         case DioErrorType.cancel:
           text = '请求被取消'; // Request is cancelled
@@ -125,9 +125,9 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       var err = '${response.statusCode!} ${StringUtils.capitalize(response.statusMessage!, allWords: true)}'.trim();
       String text;
       if (response.statusCode! < 500) {
-        text = '请求有误 ($err)'; // Bad request ($err)
+        text = '请求有误 ($err)'; // Bad request
       } else {
-        text = '服务器出错 ($err)'; // Bad server ($err)
+        text = '服务器出错 ($err)'; // Bad server
       }
       print('===> type: ${ErrorType.statusError}');
       print('===> text: $text');
@@ -146,7 +146,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       if (r.code < 50000) {
         text = msg;
       } else {
-        text = '服务器出错 (${r.code} $msg)'; // ${r.code} $msg
+        text = '服务器出错 (${r.code} $msg)'; // Bad server
       }
       var detail = response.data['error'] is Map<String, dynamic> ? response.data['error']['detail'] : null;
       print('===> type: ${ErrorType.resultError}');
@@ -167,10 +167,10 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     var text = '网络连接异常 (未知错误)'; // Unknown network error
     var msg = e.message.toLowerCase();
     if (msg.contains('handshake') && (msg.contains('error') || msg.contains('terminated'))) {
-      text = '网络连接异常 (HTTPS error)'; // Bad server (HTTPS error)
-    } else if (DEBUG) {
+      text = '网络连接异常 (HTTPS error)'; // Connection failed
+    } else if (DEBUG_ERROR) {
       // type: HandshakeException / CertificateException
-      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // [DEBUG] ${e.type}: ${e.message}
+      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})';
     }
 
     print('===> uri: ?');
@@ -190,8 +190,8 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     var msg = e.message.toLowerCase();
     if (msg.contains('unreachable') || msg.contains('failed host lookup')) {
       text = '网络不可用'; // Network is unavailable
-    } else if (DEBUG) {
-      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // [DEBUG] ${e.type}: ${e.message}
+    } else if (DEBUG_ERROR) {
+      text = '网络连接异常 ([DEBUG] ${e.type}: ${e.message})'; // Connection failed
     }
 
     print('===> uri: ?');
@@ -207,12 +207,11 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ======================================================================================================================
   // ErrorType.otherError
   String text;
-  if (!DEBUG) {
+  if (!DEBUG_ERROR) {
     text = '程序发生错误 (${e.runtimeType})\n如果该错误反复出现，请向开发者反馈';
-    // text = 'Something went wrong (${e.runtimeType})\nIf this error occurs frequently, please send feedback to the developer';
   } else {
     // [DEBUG] _CastError: type 'xxx' is not a subtype of type 'yyy' in type cast
-    text = '程序发生错误 ([DEBUG] ${e.runtimeType}: $e)'; // [DEBUG] ${e.runtimeType}: $e
+    text = '程序发生错误 ([DEBUG] ${e.runtimeType}: $e)'; // Something went wrong
   }
   var cast = e.runtimeType.toString() == '_CastError';
   if (cast) {
@@ -234,7 +233,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
         newText = '$newText, in $top';
       }
     }
-    text = '程序发生错误 ($newText)'; // $newText
+    text = '程序发生错误 ($newText)'; // Something went wrong
   }
   print('===> type: ${ErrorType.otherError}');
   print('===> text: $text');
