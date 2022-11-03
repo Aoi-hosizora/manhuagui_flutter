@@ -13,7 +13,7 @@
 
 ### Screenshots
 
-| ![screenshot1](./assets/screenshot1.png) | ![screenshot2](./assets/screenshot2.png) | ![screenshot3](./assets/screenshot3.png) |
-|------------------------------------------|------------------------------------------|------------------------------------------|
-| ![screenshot4](./assets/screenshot4.png) | ![screenshot5](./assets/screenshot5.png) | ![screenshot6](./assets/screenshot6.png) |
-| ![screenshot7](./assets/screenshot7.png) | ![screenshot8](./assets/screenshot8.png) | ![screenshot9](./assets/screenshot9.png) |
+| ![screenshot1](./assets/screenshot1.jpg) | ![screenshot2](./assets/screenshot2.jpg) | ![screenshot3](./assets/screenshot3.jpg) | ![screenshot4](./assets/screenshot4.jpg) | ![screenshot5](./assets/screenshot5.jpg) |
+|------------------------------------------|------------------------------------------|------------------------------------------|------------------------------------------|------------------------------------------|
+| ![screenshot6](./assets/screenshot6.jpg) | ![screenshot7](./assets/screenshot7.jpg) | ![screenshot8](./assets/screenshot8.jpg) | ![screenshot9](./assets/screenshot9.jpg) | ![screenshot10](./assets/screenshot10.jpg) |
+| ![screenshot11](./assets/screenshot11.jpg) | ![screenshot12](./assets/screenshot12.jpg) | ![screenshot13](./assets/screenshot13.jpg) | ![screenshot14](./assets/screenshot14.jpg) | ![screenshot15](./assets/screenshot15.jpg) |
