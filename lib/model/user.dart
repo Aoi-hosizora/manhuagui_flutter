@@ -4,47 +4,45 @@ part 'user.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class Token {
-  String token;
+  final String token;
 
-  Token({this.token});
+  const Token({required this.token});
 
   factory Token.fromJson(Map<String, dynamic> json) => _$TokenFromJson(json);
 
   Map<String, dynamic> toJson() => _$TokenToJson(this);
-
-  static const fields = <String>['token'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class User {
-  String username;
-  String avatar;
+  final String username;
+  final String avatar;
   @JsonKey(name: 'class')
-  String className;
-  int score;
-  String loginIp;
-  String lastLoginIp;
-  String registerTime;
-  String lastLoginTime;
+  final String className;
+  final int score;
+  final int accountPoint;
+  final int unreadMessageCount;
+  final String loginIp;
+  final String lastLoginIp;
+  final String registerTime;
+  final String lastLoginTime;
+  final int cumulativeDayCount;
+  final int totalCommentCount;
 
-  User({this.username, this.avatar, this.className, this.score, this.loginIp, this.lastLoginIp, this.registerTime, this.lastLoginTime});
+  const User({required this.username, required this.avatar, required this.className, required this.score, required this.accountPoint, required this.unreadMessageCount, required this.loginIp, required this.lastLoginIp, required this.registerTime, required this.lastLoginTime, required this.cumulativeDayCount, required this.totalCommentCount});
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
-
-  static const fields = <String>['username', 'avatar', 'class', 'score', 'login_ip', 'last_login_ip', 'register_time', 'last_login_time'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class LoginCheckResult {
-  String username;
+  final String username;
 
-  LoginCheckResult({this.username});
+  const LoginCheckResult({required this.username});
 
   factory LoginCheckResult.fromJson(Map<String, dynamic> json) => _$LoginCheckResultFromJson(json);
 
   Map<String, dynamic> toJson() => _$LoginCheckResultToJson(this);
-
-  static const fields = <String>['username'];
 }

@@ -1,35 +1,30 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:manhuagui_flutter/model/converter.dart';
 
 part 'result.g.dart';
 
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable(fieldRename: FieldRename.snake, genericArgumentFactories: true)
 class Result<T> {
-  int code;
-  String message;
-  @GenericConverter()
-  T data;
+ final int code;
+ final String message;
+ final T data;
 
-  Result({this.code, this.message, this.data});
+ const Result({required this.code, required this.message, required this.data});
 
-  factory Result.fromJson(Map<String, dynamic> json) => _$ResultFromJson<T>(json);
+ factory Result.fromJson(Map<String, dynamic> json, T Function(Object? json) fromJsonT) => _$ResultFromJson<T>(json, fromJsonT);
 
-  Map<String, dynamic> toJson() => _$ResultToJson(this);
+ Map<String, dynamic> toJson(Object? Function(T value) toJsonT) => _$ResultToJson(this, toJsonT);
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable(fieldRename: FieldRename.snake, genericArgumentFactories: true)
 class ResultPage<T> {
-  int page;
-  int limit;
-  int total;
-  @GenericConverter()
-  List<T> data;
+  final int page;
+  final int limit;
+  final int total;
+  final List<T> data;
 
-  ResultPage({this.page, this.limit, this.total, this.data});
+ const ResultPage({required this.page, required this.limit, required this.total, required this.data});
 
-  factory ResultPage.fromJson(Map<String, dynamic> json, T t) => _$ResultPageFromJson<T>(json);
+  factory ResultPage.fromJson(Map<String, dynamic> json, T Function(Object? json) fromJsonT) => _$ResultPageFromJson<T>(json, fromJsonT);
 
-  Map<String, dynamic> toJson() => _$ResultPageToJson(this);
-
-  static const fields = <String>['page', 'limit', 'total', 'data'];
+  Map<String, dynamic> toJson(Object? Function(T value) toJsonT) => _$ResultPageToJson(this, toJsonT);
 }

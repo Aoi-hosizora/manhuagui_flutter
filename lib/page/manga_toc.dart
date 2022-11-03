@@ -1,100 +1,121 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/chapter_group.dart';
-import 'package:manhuagui_flutter/service/database/history.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
-/// 漫画章节目录
-/// Page for [MangaChapterGroup].
+/// 漫画章节目录页，展示所给 [MangaChapterGroup] 信息
 class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
-    Key key,
-    this.action,
-    @required this.mid,
-    @required this.title,
-    @required this.cover,
-    @required this.url,
-    @required this.groups,
-    this.highlightChapter,
-  })  : assert(mid != null),
-        assert(title != null),
-        assert(cover != null),
-        assert(url != null),
-        assert(groups != null),
-        super(key: key);
+    Key? key,
+    required this.mangaId,
+    required this.mangaTitle,
+    required this.groups,
+    required this.onChapterPressed,
+  }) : super(key: key);
 
-  final ActionController action;
-  final int mid;
-  final String title;
-  final String cover;
-  final String url;
+  final int mangaId;
+  final String mangaTitle;
   final List<MangaChapterGroup> groups;
-  final int highlightChapter;
+  final void Function(int cid) onChapterPressed;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
 }
 
 class _MangaTocPageState extends State<MangaTocPage> {
-  MangaHistory _history;
+  final _controller = ScrollController();
+  var _loading = true; // fake loading flag
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    getHistory(username: AuthState.instance.username, mid: widget.mid).then((r) => _history = r).catchError((_) {});
-
-    widget?.action?.addAction('history_toc', () async {
-      _history = await getHistory(username: AuthState.instance.username, mid: widget.mid).catchError((_) {});
-      if (mounted) setState(() {});
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      Future.delayed(Duration(milliseconds: 300), () {
+        _loading = false;
+        if (mounted) setState(() {});
+      });
     });
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _loadHistory();
+      _loadDownload();
+    });
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) => _loadHistory()));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
   }
 
   @override
   void dispose() {
-    widget?.action?.removeAction('history_toc');
+    _cancelHandlers.forEach((c) => c.call());
+    _controller.dispose();
     super.dispose();
+  }
+
+  MangaHistory? _history;
+  DownloadedManga? _downloadEntity;
+
+  Future<void> _loadHistory() async {
+    try {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    } catch (_) {}
+  }
+
+  Future<void> _loadDownload() async {
+    try {
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      if (mounted) setState(() {});
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.open_in_browser),
-            tooltip: '打开浏览器',
-            onPressed: () => launchInBrowser(
-              context: context,
-              url: widget.url,
-            ),
-          ),
-        ],
+        title: Text(widget.mangaTitle),
+        leading: AppBarActionButton.leading(context: context),
       ),
-      body: Container(
-        color: Colors.white,
-        child: Scrollbar(
-          child: ListView(
-            children: [
-              ChapterGroupView(
-                action: widget.action,
+      body: PlaceholderText(
+        state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
+        setting: PlaceholderSetting().copyWithChinese(),
+        childBuilder: (c) => Container(
+          color: Colors.white,
+          child: ScrollbarWithMore(
+            controller: _controller,
+            interactive: true,
+            crossAxisMargin: 2,
+            child: SingleChildScrollView(
+              controller: _controller,
+              child: MangaTocView(
                 groups: widget.groups,
-                complete: true,
-                highlightChapter: _history?.chapterId ?? widget.highlightChapter,
-                mangaId: widget.mid,
-                mangaTitle: widget.title,
-                mangaCover: widget.cover,
-                mangaUrl: widget.url,
+                full: true,
+                highlightedChapters: [_history?.chapterId ?? 0],
+                customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                  entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                ),
+                onChapterPressed: widget.onChapterPressed,
               ),
-            ],
+            ),
           ),
         ),
       ),
+      floatingActionButton: _loading
+          ? null
+          : ScrollAnimatedFab(
+              scrollController: _controller,
+              condition: ScrollAnimatedCondition.direction,
+              fab: FloatingActionButton(
+                child: Icon(Icons.vertical_align_top),
+                heroTag: null,
+                onPressed: () => _controller.scrollToTop(),
+              ),
+            ),
     );
   }
 }

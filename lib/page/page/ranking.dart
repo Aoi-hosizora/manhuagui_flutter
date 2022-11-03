@@ -1,96 +1,93 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/list.dart';
-import 'package:flutter_ahlib/widget.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/manga_rank.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
+import 'package:manhuagui_flutter/page/view/manga_rank_line.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 首页排行
+/// 首页-排行
 class RankingSubPage extends StatefulWidget {
   const RankingSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
 
   @override
   _RankingSubPageState createState() => _RankingSubPageState();
 }
 
 class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin {
+  final _rdvKey = GlobalKey<RefreshableDataViewState>();
   final _controller = ScrollController();
-  final _udvController = UpdatableDataViewController();
   final _fabController = AnimatedFabController();
-  var _genreLoading = true;
-  var _genres = <Category>[];
-  var _genreError = '';
-  var _data = <MangaRank>[];
-  var _duration = allRankDurations[0];
-  var _lastDuration = allRankDurations[0];
-  var _selectedType = allRankTypes[0];
-  var _lastType = allRankTypes[0];
-  var _disableOption = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadGenres());
-    widget.action?.addAction('', () => _controller.scrollToTop());
+    widget.action?.addAction(() => _controller.scrollToTop());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
   }
 
   @override
   void dispose() {
-    widget.action?.removeAction('');
+    widget.action?.removeAction();
     _controller.dispose();
-    _udvController.dispose();
     _fabController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadGenres() {
+  var _genreLoading = true;
+  final _genres = <TinyCategory>[];
+  var _genreError = '';
+
+  Future<void> _loadGenres() async {
     _genreLoading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    return client.getGenres().then((r) async {
-      _genreError = '';
+    final client = RestClient(DioManager.instance.dio);
+    try {
+      var result = await client.getGenres();
       _genres.clear();
+      _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _genres = r.data.data;
-    }).catchError((e) {
+      _genres.addAll(allRankTypes);
+      _genres.addAll(result.data.data.map((c) => c.toTiny()));
+    } catch (e, s) {
       _genres.clear();
-      _genreError = wrapError(e).text;
-    }).whenComplete(() {
+      _genreError = wrapError(e, s).text;
+    } finally {
       _genreLoading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
+  final _data = <MangaRank>[];
+  var _currType = allRankTypes[0];
+  var _lastType = allRankTypes[0];
+  var _currDuration = allRankDurations[0];
+  var _lastDuration = allRankDurations[0];
+  var _getting = false;
+
   Future<List<MangaRank>> _getData() async {
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    ErrorMessage err;
-    var f = _duration.name == 'day'
+    final client = RestClient(DioManager.instance.dio);
+    var f = _currDuration.name == 'day'
         ? client.getDayRanking
-        : _duration.name == 'week'
+        : _currDuration.name == 'week'
             ? client.getWeekRanking
-            : _duration.name == 'month'
+            : _currDuration.name == 'month'
                 ? client.getMonthRanking
                 : client.getTotalRanking;
-    var result = await f(type: _selectedType.name).catchError((e) {
-      err = wrapError(e);
+    var result = await f(type: _currType.name).onError((e, s) {
+      return Future.error(wrapError(e, s).text);
     });
-    if (err != null) {
-      return Future.error(err.text);
-    }
     return result.data.data;
   }
 
@@ -101,91 +98,80 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      // ****************************************************************
-      // 加载 Genre
-      // ****************************************************************
       body: PlaceholderText.from(
         isLoading: _genreLoading,
         errorText: _genreError,
-        isEmpty: _genres?.isNotEmpty != true,
-        setting: PlaceholderSetting().toChinese(),
+        isEmpty: _genres.isEmpty,
+        setting: PlaceholderSetting().copyWithChinese(),
         onRefresh: () => _loadGenres(),
+        onChanged: (_, __) => _fabController.hide(),
         childBuilder: (c) => RefreshableListView<MangaRank>(
+          key: _rdvKey,
           data: _data,
           getData: () => _getData(),
-          controller: _udvController,
           scrollController: _controller,
           setting: UpdatableDataViewSetting(
-            padding: EdgeInsets.zero,
-            placeholderSetting: PlaceholderSetting().toChinese(),
+            padding: EdgeInsets.symmetric(vertical: 0),
+            interactiveScrollbar: true,
+            scrollbarCrossAxisMargin: 2,
+            placeholderSetting: PlaceholderSetting().copyWithChinese(),
+            onPlaceholderStateChanged: (_, __) => _fabController.hide(),
             refreshFirst: true,
-            clearWhenError: false,
             clearWhenRefresh: false,
-            onStateChanged: (_, __) => _fabController.hide(),
-            onStartLoading: () => mountedSetState(() => _disableOption = true),
-            onStopLoading: () => mountedSetState(() => _disableOption = false),
-            onAppend: (l) {
-              if (l.length > 0) {
-                Fluttertoast.showToast(msg: '新添了 ${l.length} 部漫画');
-              }
-              _lastDuration = _duration;
-              _lastType = _selectedType;
-              if (mounted) setState(() {});
+            clearWhenError: false,
+            onStartGettingData: () => mountedSetState(() => _getting = true),
+            onStopGettingData: () => mountedSetState(() => _getting = false),
+            onAppend: (_, l) {
+              _lastDuration = _currDuration;
+              _lastType = _currType;
             },
             onError: (e) {
-              Fluttertoast.showToast(msg: e.toString());
-              _duration = _lastDuration;
-              _selectedType = _lastType;
+              if (_data.isNotEmpty) {
+                Fluttertoast.showToast(msg: e.toString());
+              }
+              _currDuration = _lastDuration;
+              _currType = _lastType;
               if (mounted) setState(() {});
             },
           ),
-          separator: Divider(height: 1),
-          itemBuilder: (c, item) => MangaRankView(manga: item),
+          separator: Divider(height: 0, thickness: 1),
+          itemBuilder: (c, _, item) => MangaRankLineView(manga: item),
           extra: UpdatableDataViewExtraWidgets(
-            outerTopWidget: Container(
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+            outerTopWidgets: [
+              ListHintView.widgets(
+                widgets: [
                   OptionPopupView<TinyCategory>(
-                    title: _selectedType.isAll() ? '分类' : _selectedType.title,
-                    top: 4,
-                    doHighlight: true,
-                    value: _selectedType,
-                    items: _genres.map((g) => g.toTiny()).toList()..insertAll(0, allRankTypes),
+                    items: _genres,
+                    value: _currType,
+                    titleBuilder: (c, v) => v.isAll() ? '分类' : v.title,
+                    enable: !_getting,
                     onSelect: (t) {
-                      if (_selectedType != t) {
-                        _lastType = _selectedType;
-                        _selectedType = t;
+                      if (_currType != t) {
+                        _lastType = _currType;
+                        _currType = t;
                         if (mounted) setState(() {});
-                        _udvController.refresh();
+                        _rdvKey.currentState?.refresh();
                       }
                     },
-                    optionBuilder: (c, v) => v.title,
-                    enable: !_disableOption,
                   ),
+                  Expanded(child: SizedBox(width: 0)),
                   OptionPopupView<TinyCategory>(
-                    title: _duration.title,
-                    top: 4,
-                    doHighlight: true,
-                    value: _duration,
                     items: allRankDurations,
+                    value: _currDuration,
+                    titleBuilder: (c, v) => v.title,
+                    enable: !_getting,
                     onSelect: (d) {
-                      if (_duration != d) {
-                        _lastDuration = _duration;
-                        _duration = d;
+                      if (_currDuration != d) {
+                        _lastDuration = _currDuration;
+                        _currDuration = d;
                         if (mounted) setState(() {});
-                        _udvController.refresh();
+                        _rdvKey.currentState?.refresh();
                       }
                     },
-                    optionBuilder: (c, v) => v.title,
-                    enable: !_disableOption,
                   ),
                 ],
               ),
-            ),
-            outerTopDivider: Divider(height: 1, thickness: 1),
+            ],
           ),
         ),
       ),
@@ -195,7 +181,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'RankingSubPage',
+          heroTag: null,
           onPressed: () => _controller.scrollToTop(),
         ),
       ),

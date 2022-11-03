@@ -1,48 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/login.dart';
-import 'package:manhuagui_flutter/service/auth/auth.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-class LoginFirstView extends StatefulWidget {
-  const LoginFirstView({Key key}) : super(key: key);
+/// 登录提示，在 [ShelfSubPage] / [MineSubPage] 使用
+class LoginFirstView extends StatelessWidget {
+  const LoginFirstView({
+    Key? key,
+    required this.checking,
+    this.error = '',
+    this.onErrorRetry,
+  }) : super(key: key);
 
-  @override
-  _LoginFirstViewState createState() => _LoginFirstViewState();
-}
-
-class _LoginFirstViewState extends State<LoginFirstView> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
-  }
+  final bool checking;
+  final String error;
+  final void Function()? onErrorRetry;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.lock_open,
-            size: 50,
-            color: Colors.grey,
-          ),
-          SizedBox(height: 10),
-          Text(
-            '未登录，请先登录',
-            style: TextStyle(fontSize: 20),
-          ),
-          SizedBox(height: 10),
-          OutlineButton(
-            child: Text('登录'),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (c) => LoginPage(),
-              ),
-            ),
-          ),
-        ],
+    return PlaceholderText(
+      state: checking ? PlaceholderState.loading : (error.isEmpty ? PlaceholderState.nothing : PlaceholderState.error),
+      errorText: error.isEmpty ? '' : '无法检查登录状态\n$error',
+      childBuilder: (c) => SizedBox(height: 0),
+      setting: PlaceholderSetting(
+        nothingIcon: Icons.lock_open,
+      ).copyWithChinese(
+        loadingText: '检查登录状态中...',
+        nothingText: '当前未登录，请先登录 Manhuagui',
+        nothingRetryText: '登录',
+        errorRetryText: '重试',
       ),
+      onRetryForNothing: () {
+        if (AuthManager.instance.logined) {
+          Fluttertoast.showToast(msg: '${AuthManager.instance.username} 登录成功');
+          AuthManager.instance.notify(logined: true);
+          return;
+        }
+        Navigator.of(context).push(
+          CustomPageRoute(
+            context: context,
+            builder: (c) => LoginPage(),
+          ),
+        );
+      },
+      onRetryForError: onErrorRetry,
     );
   }
 }

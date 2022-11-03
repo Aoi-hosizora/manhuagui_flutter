@@ -5,17 +5,15 @@ part 'category.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class Category {
-  String name;
-  String title;
-  String url;
+  final String name;
+  final String title;
+  final String url;
 
-  Category({this.name, this.title, this.url});
+  const Category({required this.name, required this.title, required this.url});
 
   factory Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
   Map<String, dynamic> toJson() => _$CategoryToJson(this);
-
-  static const fields = <String>['name', 'title', 'url'];
 
   TinyCategory toTiny() {
     return TinyCategory(name: name, title: title);
@@ -26,18 +24,18 @@ class TinyCategory {
   final String name;
   final String title;
 
-  const TinyCategory({this.name, this.title});
+  const TinyCategory({required this.name, required this.title});
 
   @override
   bool operator ==(Object other) {
-    return other is TinyCategory && other.name == this.name;
+    return other is TinyCategory && other.name == name;
   }
 
   @override
-  int get hashCode => hash2(this.name, this.title);
+  int get hashCode => hash2(name, title);
 
   bool isAll() {
-    return this.name == 'all';
+    return name == 'all';
   }
 }
 

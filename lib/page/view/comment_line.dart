@@ -1,31 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
-/// View for [Comment].
-/// Used in [MangaPage] and [CommentPage].
-class CommentLineView extends StatefulWidget {
-  const CommentLineView({
-    Key key,
-    @required this.comment,
-  })  : assert(comment != null),
-        super(key: key);
-
-  final Comment comment;
-
-  @override
-  _CommentLineViewState createState() => _CommentLineViewState();
+enum CommentLineViewStyle {
+  normal, // used in list view, will also show reply lines of given comment
+  large, // used in detail view, will also be used to display replied comment
 }
 
-class _CommentLineViewState extends State<CommentLineView> {
+/// 漫画评论行，在 [MangaPage] / [MangaCommentsPage] / [CommentPage] 使用
+class CommentLineView extends StatelessWidget {
+  const CommentLineView({
+    Key? key,
+    required this.comment,
+    this.replies,
+    this.index,
+    required this.style,
+  }) : super(key: key);
+
+  final Comment comment;
+  final List<RepliedComment>? replies; // only for normal
+  final int? index; // only for large replied comment
+  final CommentLineViewStyle style;
+
+  bool get large => style == CommentLineViewStyle.large;
+
+  Widget _buildReplyLines({required BuildContext context}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.all(Radius.circular(1.5)),
+      ),
+      padding: EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ****************************************************************
+          // 每一楼评论
+          // ****************************************************************
+          for (var line in comment.replyTimeline.sublist(0, comment.replyTimeline.length.clamp(0, 3)))
+            Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Text(
+                    "${line.username == '-' ? '匿名用户' : line.username}: ",
+                    style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).primaryColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Expanded(
+                    child: Text(
+                      line.content,
+                      style: Theme.of(context).textTheme.bodyText2,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(left: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.all(Radius.circular(3)),
+                    ),
+                    height: 15,
+                    width: 15,
+                    child: Center(
+                      child: Text(
+                        (comment.replyTimeline.indexOf(line) + 1).toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (comment.replyTimeline.length > 3)
+            Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Text(
+                '共 ${comment.replyTimeline.length} 条评论，点击查看该楼层...',
+                style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).primaryColor),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Container(
+          color: Colors.white,
           width: MediaQuery.of(context).size.width,
-          padding: EdgeInsets.only(top: 10, bottom: 10, left: 12, right: 12),
+          padding: EdgeInsets.symmetric(horizontal: !large ? 12 : 15, vertical: !large ? 8 : 15),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -34,22 +109,20 @@ class _CommentLineViewState extends State<CommentLineView> {
               // ****************************************************************
               ClipOval(
                 child: NetworkImageView(
-                  url: widget.comment.avatar,
-                  height: 32,
-                  width: 32,
-                  fit: BoxFit.cover,
+                  url: comment.avatar,
+                  height: !large ? 32 : 40,
+                  width: !large ? 32 : 40,
                 ),
               ),
-              SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ****************************************************************
-                  // 第一行
-                  // ****************************************************************
-                  Container(
-                    width: MediaQuery.of(context).size.width - 3 * 12 - 32, // | ▢▢ ▢▢▢▢▢ |
-                    child: Row(
+              SizedBox(width: !large ? 12 : 15),
+              SizedBox(
+                width: !large
+                    ? MediaQuery.of(context).size.width - 3 * 12 - 32 // | ▢ ▢▢ |
+                    : MediaQuery.of(context).size.width - 3 * 15 - 40, // | ▢ ▢▢ |
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // ****************************************************************
@@ -60,23 +133,23 @@ class _CommentLineViewState extends State<CommentLineView> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  widget.comment.username == '-' ? '匿名用户' : widget.comment.username,
+                                  comment.username == '-' ? '匿名用户' : comment.username,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.subtitle1,
+                                  style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
                                 ),
                               ),
                               SizedBox(width: 8),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: widget.comment.gender == 1 ? Colors.blue[300] : Colors.red[400],
+                                  color: comment.gender == 1 ? Colors.blue[300] : Colors.red[400],
                                   borderRadius: BorderRadius.all(Radius.circular(3)),
                                 ),
                                 height: 18,
                                 width: 18,
                                 child: Center(
                                   child: Text(
-                                    widget.comment.gender == 1 ? '♂' : '♀',
+                                    comment.gender == 1 ? '♂' : '♀',
                                     style: TextStyle(fontSize: 14, color: Colors.white),
                                   ),
                                 ),
@@ -85,128 +158,56 @@ class _CommentLineViewState extends State<CommentLineView> {
                           ),
                         ),
                         // ****************************************************************
-                        // 楼层
+                        // 楼层数
                         // ****************************************************************
-                        if (widget.comment.replyTimeline.length > 0)
+                        if (comment.replyTimeline.isNotEmpty)
                           Container(
-                            margin: EdgeInsets.only(right: 8),
+                            margin: EdgeInsets.only(right: !large ? 8 : 0),
                             decoration: BoxDecoration(
                               color: Theme.of(context).primaryColor,
                               borderRadius: BorderRadius.all(Radius.circular(3)),
                             ),
-                            height: 15,
-                            width: 15,
+                            height: !large ? 15 : 18,
+                            width: !large ? 15 : 26,
                             child: Center(
                               child: Text(
-                                (widget.comment.replyTimeline.length + 1).toString(),
+                                !large
+                                    ? '${index ?? comment.replyTimeline.length + 1}' //
+                                    : '#${index ?? comment.replyTimeline.length + 1}',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 11,
+                                  fontSize: !large ? 11 : 14,
                                 ),
                               ),
                             ),
                           ),
                       ],
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  // ****************************************************************
-                  // 评论内容
-                  // ****************************************************************
-                  Container(
-                    width: MediaQuery.of(context).size.width - 3 * 12 - 32,
-                    child: Text(
-                      widget.comment.content,
-                      style: TextStyle(
-                        fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
-                      ),
+                    SizedBox(height: !large ? 8 : 15),
+                    // ****************************************************************
+                    // 评论内容
+                    // ****************************************************************
+                    Text(
+                      comment.content,
+                      style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
                     ),
-                  ),
-                  if (widget.comment.replyTimeline.length > 0) SizedBox(height: 10),
-                  // ****************************************************************
-                  // 楼层
-                  // ****************************************************************
-                  if (widget.comment.replyTimeline.length > 0)
-                    Container(
-                      width: MediaQuery.of(context).size.width - 3 * 12 - 32,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.all(Radius.circular(1.5)),
+                    SizedBox(height: !large ? 8 : 15),
+                    // ****************************************************************
+                    // 回复评论
+                    // ****************************************************************
+                    if (!large && comment.replyTimeline.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: _buildReplyLines(context: context),
                       ),
-                      padding: EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 2),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ****************************************************************
-                          // 每一楼
-                          // ****************************************************************
-                          for (var line in widget.comment.replyTimeline.sublist(0, widget.comment.replyTimeline.length <= 3 ? widget.comment.replyTimeline.length : 3))
-                            Padding(
-                              padding: EdgeInsets.only(bottom: 4),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    "${line.username == '-' ? '匿名用户' : line.username}: ",
-                                    style: TextStyle(
-                                      fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      line.content,
-                                      style: TextStyle(
-                                        fontSize: Theme.of(context).textTheme.bodyText1.fontSize,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: EdgeInsets.only(left: 6),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor,
-                                      borderRadius: BorderRadius.all(Radius.circular(3)),
-                                    ),
-                                    height: 15,
-                                    width: 15,
-                                    child: Center(
-                                      child: Text(
-                                        (widget.comment.replyTimeline.indexOf(line) + 1).toString(),
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          if (widget.comment.replyTimeline.length > 3)
-                            Padding(
-                              padding: EdgeInsets.only(bottom: 4),
-                              child: Text(
-                                '点击查看该楼层... (共 ${widget.comment.replyTimeline.length} 条评论)',
-                                style: TextStyle(fontSize: Theme.of(context).textTheme.bodyText1.fontSize, color: Theme.of(context).primaryColor),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  SizedBox(height: 10),
-                  // ****************************************************************
-                  // 评论信息
-                  // ****************************************************************
-                  Container(
-                    width: MediaQuery.of(context).size.width - 3 * 12 - 32,
-                    child: Row(
+                    // ****************************************************************
+                    // 评论数据
+                    // ****************************************************************
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          widget.comment.commentTime,
+                          comment.commentTime,
                           style: TextStyle(color: Colors.grey),
                         ),
                         Row(
@@ -217,7 +218,7 @@ class _CommentLineViewState extends State<CommentLineView> {
                               size: 16,
                             ),
                             SizedBox(width: 4),
-                            Text(widget.comment.likeCount.toString()),
+                            Text(comment.likeCount.toString()),
                             SizedBox(width: 10),
                             Icon(
                               Icons.chat_bubble,
@@ -225,31 +226,31 @@ class _CommentLineViewState extends State<CommentLineView> {
                               size: 16,
                             ),
                             SizedBox(width: 4),
-                            Text(widget.comment.replyCount.toString()),
+                            Text(comment.replyCount.toString()),
                           ],
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        // ****************************************************************
-        // 点击效果
-        // ****************************************************************
         Positioned.fill(
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (c) => CommentPage(
-                    comment: widget.comment,
-                  ),
-                ),
-              ),
+              onTap: !large
+                  ? () => Navigator.of(context).push(
+                        CustomPageRoute(
+                          context: context,
+                          builder: (c) => CommentPage(
+                            comment: comment,
+                          ),
+                        ),
+                      )
+                  : () => copyText(comment.content),
             ),
           ),
         ),

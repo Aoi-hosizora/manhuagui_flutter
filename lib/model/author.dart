@@ -4,58 +4,52 @@ part 'author.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class Author {
-  int aid;
-  String name;
-  String alias;
-  String zone;
-  String cover;
-  String url;
-  int mangaCount;
-  int newestMangaId;
-  String newestMangaTitle;
-  String newestDate;
-  double averageScore;
-  String introduction;
+  final int aid;
+  final String name;
+  final String alias;
+  final String zone;
+  final String cover;
+  final String url;
+  final int mangaCount;
+  final int newestMangaId;
+  final String newestMangaTitle;
+  final String newestDate;
+  final double averageScore;
+  final String introduction;
 
-  Author({this.aid, this.name, this.alias, this.zone, this.cover, this.url, this.mangaCount, this.newestMangaId, this.newestMangaTitle, this.newestDate, this.averageScore, this.introduction});
+  const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestDate, required this.averageScore, required this.introduction});
 
   factory Author.fromJson(Map<String, dynamic> json) => _$AuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuthorToJson(this);
-
-  static const fields = <String>['aid', 'name', 'alias', 'zone', 'cover', 'url', 'manga_count', 'newest_manga_id', 'newest_manga_title', 'newest_date', 'average_score', 'introduction'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class SmallAuthor {
-  int aid;
-  String name;
-  String zone;
-  String cover;
-  String url;
-  int mangaCount;
-  String newestDate;
+  final int aid;
+  final String name;
+  final String zone;
+  final String cover;
+  final String url;
+  final int mangaCount;
+  final String newestDate;
 
-  SmallAuthor({this.aid, this.name, this.zone, this.cover, this.url, this.mangaCount, this.newestDate});
+  const SmallAuthor({required this.aid, required this.name, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestDate});
 
   factory SmallAuthor.fromJson(Map<String, dynamic> json) => _$SmallAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$SmallAuthorToJson(this);
-
-  static const fields = <String>['aid', 'name', 'zone', 'cover', 'url', 'manga_count', 'newest_date'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class TinyAuthor {
-  int aid;
-  String name;
-  String url;
+  final int aid;
+  final String name;
+  final String url;
 
-  TinyAuthor({this.aid, this.name, this.url});
+  const TinyAuthor({required this.aid, required this.name, required this.url});
 
   factory TinyAuthor.fromJson(Map<String, dynamic> json) => _$TinyAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyAuthorToJson(this);
-
-  static const fields = <String>['aid', 'name', 'url'];
 }

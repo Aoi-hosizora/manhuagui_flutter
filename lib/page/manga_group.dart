@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/widget.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/manga_column.dart';
+import 'package:manhuagui_flutter/page/view/manga_group.dart';
 
-/// 漫画分组
-/// Page for [MangaGroup].
+/// 漫画分组页，展示所给 [MangaGroup] 信息
 class MangaGroupPage extends StatefulWidget {
   const MangaGroupPage({
-    Key key,
-    @required this.group,
-    @required this.type,
-  })  : assert(group != null),
-        assert(type != null),
-        super(key: key);
+    Key? key,
+    required this.group,
+    required this.type,
+  }) : super(key: key);
 
   final MangaGroup group;
   final MangaGroupType type;
@@ -35,18 +31,21 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 45,
-        title: Text('漫画分组详细'),
+        title: Text('漫画分组'),
+        leading: AppBarActionButton.leading(context: context),
       ),
-      body: Padding(
-        padding: EdgeInsets.only(bottom: 4, top: 2),
-        child: MangaColumnView(
-          group: widget.group,
-          type: widget.type,
+      body: ScrollbarWithMore(
+        controller: _controller,
+        interactive: true,
+        crossAxisMargin: 2,
+        child: SingleChildScrollView(
           controller: _controller,
-          complete: true,
-          showTopMargin: false,
+          child: MangaGroupView(
+            group: widget.group,
+            type: widget.type,
+            controller: _controller,
+            style: MangaGroupViewStyle.normalFull,
+          ),
         ),
       ),
       floatingActionButton: ScrollAnimatedFab(
@@ -54,7 +53,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(
           child: Icon(Icons.vertical_align_top),
-          heroTag: 'MangaGroupPage',
+          heroTag: null,
           onPressed: () => _controller.scrollToTop(),
         ),
       ),

@@ -1,56 +1,101 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'chapter.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class MangaChapter {
-  int cid;
-  String title;
-  int mid;
-  String mangaTitle;
-  String url;
-  List<String> pages;
-  int pageCount;
-  int nextCid;
-  int prevCid;
+  final int cid;
+  final String title;
+  final int mid;
+  final String mangaTitle;
+  final String url;
+  final List<String> pages;
+  final int pageCount;
+  final int nextCid;
+  final int prevCid;
 
-  MangaChapter({this.cid, this.title, this.mid, this.mangaTitle, this.url, this.pages, this.pageCount, this.nextCid, this.prevCid});
+  const MangaChapter({required this.cid, required this.title, required this.mid, required this.mangaTitle, required this.url, required this.pages, required this.pageCount, required this.nextCid, required this.prevCid});
 
   factory MangaChapter.fromJson(Map<String, dynamic> json) => _$MangaChapterFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaChapterToJson(this);
-
-  static const fields = <String>['cid', 'title', 'mid', 'manga_title', 'url', 'pages', 'page_count', 'next_cid', 'prev_cid'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class TinyMangaChapter {
-  int cid;
-  String title;
-  int mid;
-  String url;
-  int pageCount;
-  bool isNew;
+  final int cid;
+  final String title;
+  final int mid;
+  final String url; // useless
+  final int pageCount;
+  final bool isNew;
 
-  TinyMangaChapter({this.cid, this.title, this.mid, this.url, this.pageCount});
+  const TinyMangaChapter({required this.cid, required this.title, required this.mid, required this.url, required this.pageCount, required this.isNew});
 
   factory TinyMangaChapter.fromJson(Map<String, dynamic> json) => _$TinyMangaChapterFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyMangaChapterToJson(this);
-
-  static const fields = <String>['cid', 'title', 'mid', 'url', 'page_count', 'is_new'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class MangaChapterGroup {
-  String title;
-  List<TinyMangaChapter> chapters;
+  final String title;
+  final List<TinyMangaChapter> chapters;
 
-  MangaChapterGroup({this.title, this.chapters});
+  const MangaChapterGroup({required this.title, required this.chapters});
 
   factory MangaChapterGroup.fromJson(Map<String, dynamic> json) => _$MangaChapterGroupFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaChapterGroupToJson(this);
+}
 
-  static const fields = <String>['title', 'chapters'];
+extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
+  MangaChapterGroup? get regularGroup {
+    return where((g) => g.title == '单话').firstOrNull;
+  }
+
+  List<MangaChapterGroup> makeSureRegularGroupIsFirst() {
+    var rGroup = regularGroup;
+    if (rGroup == null) {
+      return this;
+    }
+    return [
+      rGroup,
+      ...where((g) => g.title != '单话'),
+    ];
+  }
+
+  MangaChapterGroup? getFirstNotEmptyGroup() {
+    if (isEmpty) {
+      return null;
+    }
+    var group = regularGroup;
+    if (group == null || group.chapters.isNotEmpty) {
+      return group;
+    }
+    return where((g) => g.chapters.isNotEmpty).firstOrNull;
+  }
+
+  TinyMangaChapter? findChapter(int cid) {
+    for (var group in this) {
+      for (var chapter in group.chapters) {
+        if (chapter.cid == cid) {
+          return chapter;
+        }
+      }
+    }
+    return null;
+  }
+
+  Tuple2<TinyMangaChapter, String>? findChapterAndGroupName(int cid) {
+    for (var group in this) {
+      for (var chapter in group.chapters) {
+        if (chapter.cid == cid) {
+          return Tuple2(chapter, group.title);
+        }
+      }
+    }
+    return null;
+  }
 }

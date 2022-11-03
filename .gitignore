@@ -17,8 +17,9 @@
 
 # VS Code related
 .vscode/
-.history/
 .ionide/
+.history/
+*.rdb
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -30,7 +31,6 @@
 .pub-cache/
 .pub/
 /build/
-bug/
 
 # Web related
 lib/generated_plugin_registrant.dart
@@ -41,13 +41,10 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android related
-key.properties
-.project
-.classpath
-.settings/
-settings_aar.gradle
-_*.png
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
 
-# Exceptions to above rules.
-!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+### Project ###
+_*.png

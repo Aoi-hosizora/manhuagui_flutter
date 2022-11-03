@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/service/natives/browser.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
-/// 登录
+/// 登录页
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key key}) : super(key: key);
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -24,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   final _suggestionController = SuggestionsBoxController();
   var _passwordVisible = false;
   var _logining = false;
+
   var _rememberUsername = true;
   var _rememberPassword = false;
   var _usernamePasswordPairs = <Tuple2<String, String>>[];
@@ -31,11 +33,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      var remTuple = await getRememberOptions();
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      var remTuple = await AuthPrefs.getRememberOption();
       _rememberUsername = remTuple.item1;
       _rememberPassword = remTuple.item2;
-      _usernamePasswordPairs = await getUsernamePasswordPairs();
+      _usernamePasswordPairs = await AuthPrefs.getUsernamePasswordPairs();
       if (_usernamePasswordPairs.isNotEmpty) {
         var currentUser = _usernamePasswordPairs.first;
         _usernameController.text = currentUser.item1;
@@ -52,8 +54,8 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() async {
-    if (!_formKey.currentState.validate()) {
+  Future<void> _login() async {
+    if (_formKey.currentState?.validate() != true) {
       return;
     }
 
@@ -62,38 +64,33 @@ class _LoginPageState extends State<LoginPage> {
     var username = _usernameController.text.trim();
     var password = _passwordController.text.trim();
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    ErrorMessage err;
-    var result = await client.login(username: username, password: password).catchError((e) {
-      err = wrapError(e);
-    }).whenComplete(() {
+    final client = RestClient(DioManager.instance.dio);
+    String token;
+    try {
+      var result = await client.login(username: username, password: password);
+      token = result.data.token;
+    } catch (e, s) {
+      Fluttertoast.showToast(msg: wrapError(e, s).text);
+      return;
+    } finally {
       _logining = false;
       if (mounted) setState(() {});
-    });
-    if (err != null) {
-      Fluttertoast.showToast(msg: err.text);
-      return;
     }
 
     // state
-    var token = result.data.token;
     Fluttertoast.showToast(msg: '$username 登录成功');
-    AuthState.instance.token = token;
-    AuthState.instance.username = username;
-    AuthState.instance.notifyAll();
+    AuthManager.instance.record(username: username, token: token);
+    AuthManager.instance.notify(logined: true);
 
     // prefs
-    setToken(token);
-    await setRememberOptions(_rememberUsername, _rememberPassword);
+    await AuthPrefs.setToken(token);
+    await AuthPrefs.setRememberOption(_rememberUsername, _rememberPassword);
     if (!_rememberUsername) {
-      await removeUsernamePasswordPair(username);
+      await AuthPrefs.removeUsernamePasswordPair(username);
+    } else if (_rememberPassword) {
+      await AuthPrefs.addUsernamePasswordPair(username, password);
     } else {
-      if (_rememberPassword) {
-        await addUsernamePasswordPair(username, password);
-      } else {
-        await addUsernamePasswordPair(username, '');
-      }
+      await AuthPrefs.addUsernamePasswordPair(username, '');
     }
 
     // pop
@@ -105,12 +102,30 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('账号登录'),
-        centerTitle: true,
-        toolbarHeight: 48,
+        leading: AppBarActionButton.leading(context: context),
         actions: [
-          IconButton(
+          AppBarActionButton(
             icon: Text('注册'),
-            onPressed: () => launchInBrowser(context: context, url: REGISTER_URL),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (c) => AlertDialog(
+                title: Text('用户注册'),
+                content: Text('是否跳转到 Manhuagui 官网来注册？'),
+                actions: [
+                  TextButton(
+                    child: Text('跳转'),
+                    onPressed: () => launchInBrowser(
+                      context: context,
+                      url: REGISTER_URL,
+                    ),
+                  ),
+                  TextButton(
+                    child: Text('取消'),
+                    onPressed: () => Navigator.of(c).pop(),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -123,29 +138,6 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: EdgeInsets.only(left: 15, right: 15, top: 10),
                 child: TypeAheadFormField(
-                  textFieldConfiguration: TextFieldConfiguration(
-                    autofocus: true,
-                    controller: _usernameController,
-                    enabled: !_logining,
-                    decoration: InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(vertical: 5),
-                      labelText: '用户名',
-                      hintText: '请输入用户名',
-                      icon: Icon(Icons.person),
-                    ),
-                  ),
-                  validator: (value) => value.trim().isEmpty ? '用户名不能为空' : null,
-                  hideOnLoading: true,
-                  hideOnEmpty: true,
-                  hideOnError: true,
-                  hideSuggestionsOnKeyboardHide: true,
-                  suggestionsBoxVerticalOffset: 5,
-                  suggestionsBoxDecoration: SuggestionsBoxDecoration(
-                    offsetX: 40,
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width - 70,
-                    ),
-                  ),
                   suggestionsBoxController: _suggestionController,
                   suggestionsCallback: (pattern) => _usernamePasswordPairs.map((e) => e.item1).where((t) => t.contains(pattern)),
                   onSuggestionSelected: (_) {},
@@ -171,21 +163,44 @@ class _LoginPageState extends State<LoginPage> {
                         title: Text('删除登录记录'),
                         content: Text('确定要删除 $username 吗？'),
                         actions: [
-                          FlatButton(
+                          TextButton(
                             child: Text('删除'),
                             onPressed: () async {
                               Navigator.of(c).pop();
                               _usernamePasswordPairs.removeWhere((t) => t.item1 == username);
-                              await removeUsernamePasswordPair(username);
+                              await AuthPrefs.removeUsernamePasswordPair(username);
                               if (mounted) setState(() {});
                             },
                           ),
-                          FlatButton(
+                          TextButton(
                             child: Text('取消'),
                             onPressed: () => Navigator.of(c).pop(),
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  validator: (value) => value?.trim().isNotEmpty != true ? '用户名不能为空' : null,
+                  textFieldConfiguration: TextFieldConfiguration(
+                    controller: _usernameController,
+                    autofocus: true,
+                    enabled: !_logining,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(vertical: 5),
+                      labelText: '用户名',
+                      hintText: '请输入用户名',
+                      icon: Icon(Icons.person),
+                    ),
+                  ),
+                  hideOnLoading: true,
+                  hideOnEmpty: true,
+                  hideOnError: true,
+                  hideSuggestionsOnKeyboardHide: true,
+                  suggestionsBoxVerticalOffset: 5,
+                  suggestionsBoxDecoration: SuggestionsBoxDecoration(
+                    offsetX: 40,
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width - 70,
                     ),
                   ),
                 ),
@@ -212,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                   ),
-                  validator: (value) => value.trim().isEmpty ? '密码不能为空' : null,
+                  validator: (value) => value?.trim().isNotEmpty != true ? '密码不能为空' : null,
                 ),
               ),
               Padding(
@@ -224,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Checkbox(
                         value: _rememberUsername,
-                        onChanged: _logining ? null : (b) => mountedSetState(() => _rememberUsername = b),
+                        onChanged: _logining ? null : (b) => mountedSetState(() => _rememberUsername = b ?? true),
                       ),
                       Text(
                         '记住账号',
@@ -243,7 +258,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Checkbox(
                         value: _rememberUsername && _rememberPassword,
-                        onChanged: (_logining ?? !_rememberUsername) ? null : (b) => mountedSetState(() => _rememberPassword = b),
+                        onChanged: (_logining) ? null : (b) => mountedSetState(() => _rememberPassword = b ?? false),
                       ),
                       Text(
                         '记住密码',
@@ -254,7 +269,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(top: 2),
+                padding: EdgeInsets.only(top: 12),
                 child: !_logining
                     ? SizedBox(
                         height: 42,

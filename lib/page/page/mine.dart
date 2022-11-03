@@ -1,107 +1,189 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/util.dart';
-import 'package:flutter_ahlib/widget.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/user.dart';
+import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/retrofit/dio_manager.dart';
-import 'package:manhuagui_flutter/service/retrofit/retrofit.dart';
-import 'package:manhuagui_flutter/service/state/auth.dart';
+import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
+import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
 /// 我的
 class MineSubPage extends StatefulWidget {
   const MineSubPage({
-    Key key,
+    Key? key,
     this.action,
   }) : super(key: key);
 
-  final ActionController action;
+  final ActionController? action;
 
   @override
   _MineSubPageState createState() => _MineSubPageState();
 }
 
-class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin, NotifyReceiverMixin {
-  bool _loading = false;
-  User _data;
-  String _error;
+class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
+  final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  VoidCallback? _cancelHandler;
+  AuthData? _oldAuthData;
 
-  @override
-  String get receiverKey => 'MineSubPage';
+  var _loginChecking = true;
+  var _loginCheckError = '';
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (AuthState.instance.logined) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+        _oldAuthData = AuthManager.instance.authData;
+        _loginChecking = false;
+        _loginCheckError = ev.error?.text ?? '';
         if (mounted) setState(() {});
-        _loadUser();
-      }
+        if (AuthManager.instance.logined) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+        }
+      });
+      _loginChecking = true;
+      await AuthManager.instance.check();
     });
-    AuthState.instance.registerDefault(this, () {
-      if (mounted) setState(() {});
-      if (AuthState.instance.logined) {
-        _loadUser();
-      }
-    });
-    widget.action?.addAction('', () {});
   }
 
   @override
   void dispose() {
-    AuthState.instance.unregisterDefault(this);
-    widget.action?.removeAction('');
+    _cancelHandler?.call();
     super.dispose();
   }
 
-  Future<bool> _loadUser() {
+  bool _loading = false;
+  User? _data;
+  var _error = '';
+
+  Future<void> _loadUser() async {
     _loading = true;
     if (mounted) setState(() {});
 
-    var dio = DioManager.instance.dio;
-    var client = RestClient(dio);
-    return client.getUserInfo(token: AuthState.instance.token).then((r) async {
-      _error = '';
+    final client = RestClient(DioManager.instance.dio);
+    try {
+      var result = await client.getUserInfo(token: AuthManager.instance.token);
       _data = null;
+      _error = '';
       if (mounted) setState(() {});
       await Future.delayed(Duration(milliseconds: 20));
-      _data = r.data;
-    }).catchError((e) {
+      _data = result.data;
+    } catch (e, s) {
       _data = null;
-      var we = wrapError(e);
+      var we = wrapError(e, s);
       _error = we.text;
-      if (we.httpCode == 401) {
-        _logout();
+      if (we.response?.statusCode == 401) {
+        Fluttertoast.showToast(msg: '登录失效，请重新登录');
+        Navigator.of(context).push(
+          CustomPageRoute(
+            context: context,
+            builder: (c) => LoginPage(),
+          ),
+        );
       }
-    }).whenComplete(() {
+    } finally {
       _loading = false;
       if (mounted) setState(() {});
-    });
+    }
   }
 
-  void _logout() {
-    showDialog(
+  Future<void> _logout({bool sure = false}) async {
+    if (sure) {
+      await AuthPrefs.setToken('');
+      AuthManager.instance.record(username: '', token: '');
+      AuthManager.instance.notify(logined: false);
+      return;
+    }
+
+    return showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('退出登录'),
         content: Text('确定要退出登录吗？'),
         actions: [
-          FlatButton(
+          TextButton(
             child: Text('确定'),
             onPressed: () async {
               Navigator.of(c).pop();
-              await removeToken();
-              AuthState.instance.token = null;
-              AuthState.instance.username = null;
-              AuthState.instance.notifyAll();
+              await _logout(sure: true);
             },
           ),
-          FlatButton(
+          TextButton(
             child: Text('取消'),
             onPressed: () => Navigator.of(c).pop(),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionLine({required IconData icon, required String text, required void Function() action}) {
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        child: Padding(
+          padding: EdgeInsets.only(left: 15, right: 8, top: 8, bottom: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconText(
+                icon: Icon(icon, color: Colors.black54),
+                text: Text(text, style: Theme.of(context).textTheme.subtitle1),
+                space: 15,
+              ),
+              Icon(Icons.chevron_right, color: Colors.black54),
+            ],
+          ),
+        ),
+        onTap: action,
+      ),
+    );
+  }
+
+  Widget _buildDivider({double thickness = 0.8, double indent = 10}) {
+    return Divider(height: 0, thickness: thickness, indent: indent, endIndent: indent);
+  }
+
+  Widget _buildInfoLines({required String title, required List<String> lines}) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 15, right: 15, top: 8),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.subtitle1,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: _buildDivider(thickness: 1, indent: 0),
+          ),
+          for (var line in lines)
+            Padding(
+              padding: EdgeInsets.only(left: 15, right: 15, bottom: 8),
+              child: Text(
+                line,
+                style: Theme.of(context).textTheme.subtitle1,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
         ],
       ),
     );
@@ -113,179 +195,147 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (!AuthState.instance.logined) {
+    var appBar = AppBar(
+      automaticallyImplyLeading: false,
+      actions: [
+        AppBarActionButton(
+          icon: Icon(Icons.settings, color: Colors.black54),
+          tooltip: '应用设置',
+          onPressed: () => Navigator.of(context).push(
+            CustomPageRoute(
+              context: context,
+              builder: (c) => SettingPage(),
+            ),
+          ),
+        ),
+      ],
+      foregroundColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    );
+
+    if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
       _data = null;
-      return LoginFirstView();
+      _error = '';
+      return Scaffold(
+        appBar: appBar,
+        extendBodyBehindAppBar: true,
+        body: LoginFirstView(
+          checking: _loginChecking,
+          error: _loginCheckError,
+          onErrorRetry: () async {
+            _loginChecking = true;
+            _loginCheckError = '';
+            if (mounted) setState(() {});
+            await AuthManager.instance.check();
+          },
+        ),
+      );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadUser,
-      child: PlaceholderText.from(
-        isLoading: _loading,
-        errorText: _error,
-        isEmpty: _data == null,
-        setting: PlaceholderSetting().toChinese(),
-        onRefresh: () => _loadUser(),
-        childBuilder: (c) => ListView(
-          padding: EdgeInsets.zero,
-          physics: AlwaysScrollableScrollPhysics(),
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      stops: [0, 0.5, 1],
-                      colors: [
-                        Colors.blue[100],
-                        Colors.orange[100],
-                        Colors.purple[100],
+    return Scaffold(
+      appBar: appBar,
+      extendBodyBehindAppBar: true,
+      body: RefreshIndicator(
+        key: _refreshIndicatorKey,
+        onRefresh: _loadUser,
+        child: PlaceholderText.from(
+          isLoading: _loading,
+          errorText: _error,
+          isEmpty: _data == null,
+          setting: PlaceholderSetting().copyWithChinese(),
+          onRefresh: () => _loadUser(),
+          childBuilder: (c) => ListView(
+            padding: EdgeInsets.zero,
+            physics: AlwaysScrollableScrollPhysics(),
+            children: [
+              Container(
+                height: MediaQuery.of(context).padding.top + 180,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    stops: const [0, 0.5, 1],
+                    colors: [
+                      Colors.blue[100]!,
+                      Colors.orange[100]!,
+                      Colors.purple[100]!,
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FullRippleWidget(
+                          child: NetworkImageView(
+                            url: _data!.avatar,
+                            height: 75,
+                            width: 75,
+                          ),
+                          onTap: () => Navigator.of(context).push(
+                            CustomPageRoute(
+                              context: context,
+                              builder: (c) => ImageViewerPage(
+                                url: _data!.avatar,
+                                title: '我的头像',
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 8, left: 15, right: 15),
+                          child: Text(
+                            _data!.username,
+                            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.normal),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          NetworkImageView(
-                            url: _data.avatar,
-                            height: 75,
-                            width: 75,
-                            fit: BoxFit.cover,
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 8, left: 15, right: 15),
-                            child: Text(
-                              _data.username,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.subtitle1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top - 10,
-                  right: 2.0 - 10,
-                  child: ClipOval(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: IconButton(
-                        icon: Icon(Icons.settings, color: Colors.black54),
-                        tooltip: '设置',
-                        padding: EdgeInsets.all(25),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (c) => SettingPage(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+              ),
+              Container(
+                color: Colors.white,
+                child: ActionRowView.four(
+                  action1: ActionItem.simple('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
+                  action2: ActionItem.simple('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
+                  action3: ActionItem.simple('修改资料', Icons.edit, () => launchInBrowser(context: context, url: EDIT_PROFILE_URL)),
+                  action4: ActionItem.simple('退出登录', Icons.logout, () => _logout(sure: false)),
                 ),
-              ],
-            ),
-            Container(
-              color: Colors.white,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6),
-                    child: Text(
-                      '个人信息',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 10, right: 10, bottom: 4),
-                    child: Divider(height: 1, thickness: 1),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
-                    child: Text(
-                      '您的会员等级：${_data.className}',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
-                    child: Text(
-                      '个人成长值：${_data.score} 点',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  SizedBox(height: 6),
+              ),
+              SizedBox(height: 12),
+              _buildActionLine(text: '我的书架', icon: Icons.star_outlined, action: () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+              _buildDivider(),
+              _buildActionLine(text: '浏览历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
+              _buildDivider(),
+              _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => DownloadPage()))),
+              SizedBox(height: 12),
+              _buildInfoLines(
+                title: '个人信息',
+                lines: [
+                  '您的会员等级：${_data!.className}',
+                  '个人成长值 / 账户积分：${_data!.score} 点',
+                  '累计发送 ${_data!.totalCommentCount} 条评论，当前 ${_data!.unreadMessageCount} 条消息未读',
+                  '注册时间：${_data!.registerTime}',
                 ],
               ),
-            ),
-            SizedBox(height: 12),
-            Container(
-              color: Colors.white,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6),
-                    child: Text(
-                      '登录统计',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 10, right: 10, bottom: 4),
-                    child: Divider(height: 1, thickness: 1),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
-                    child: Text(
-                      '本次登录IP：${_data.loginIp}',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
-                    child: Text(
-                      '上次登录IP：${_data.lastLoginIp}',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
-                    child: Text(
-                      '注册时间：${_data.registerTime}',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 2),
-                    child: Text(
-                      '上次登录时间：${_data.lastLoginTime}',
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  SizedBox(height: 6),
+              SizedBox(height: 12),
+              _buildInfoLines(
+                title: '登录统计',
+                lines: [
+                  '本次登录IP：${_data!.loginIp}',
+                  '上次登录IP：${_data!.lastLoginIp}',
+                  '上次登录时间：${_data!.lastLoginTime}',
+                  '累计登录天数：${_data!.cumulativeDayCount} 天',
                 ],
               ),
-            ),
-            Align(
-              child: Container(
-                padding: EdgeInsets.only(top: 10),
-                child: OutlineButton(
-                  child: Text('退出登录'),
-                  onPressed: _logout,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

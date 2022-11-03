@@ -8,105 +8,109 @@ part 'manga.g.dart';
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class Manga {
-  int mid;
-  String title;
-  String cover;
-  String url;
-  String publishYear;
-  String mangaZone;
-  List<Category> genres;
-  List<TinyAuthor> authors;
-  String alias;
-  String aliasTitle;
-  bool finished;
-  String newestChapter;
-  String newestDate;
-  String briefIntroduction;
-  String introduction;
-  String mangaRank;
-  double averageScore;
-  int scoreCount;
-  List<String> perScores;
-  bool banned;
-  bool copyright;
-  List<MangaChapterGroup> chapterGroups;
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
+  final String publishYear;
+  final String mangaZone;
+  final List<Category> genres;
+  final List<TinyAuthor> authors;
+  final String alias;
+  final String aliasTitle;
+  final bool finished;
+  final String newestChapter;
+  final String newestDate;
+  final String briefIntroduction;
+  final String introduction;
+  final String mangaRank;
+  final double averageScore;
+  final int scoreCount;
+  final List<String> perScores;
+  final bool banned;
+  final bool copyright;
+  final List<MangaChapterGroup> chapterGroups;
 
-  Manga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.alias, this.aliasTitle, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction, this.introduction, this.mangaRank, this.averageScore, this.scoreCount, this.perScores, this.banned, this.copyright, this.chapterGroups});
+  const Manga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.alias, required this.aliasTitle, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction, required this.introduction, required this.mangaRank, required this.averageScore, required this.scoreCount, required this.perScores, required this.banned, required this.copyright, required this.chapterGroups});
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaToJson(this);
-
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'alias', 'alias_title', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction', 'introduction', 'manga_rank', 'average_score', 'score_count', 'per_scores', 'banned', 'copyright', 'chapter_groups'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class SmallManga {
-  int mid;
-  String title;
-  String cover;
-  String url;
-  String publishYear;
-  String mangaZone;
-  List<Category> genres;
-  List<TinyAuthor> authors;
-  bool finished;
-  String newestChapter;
-  String newestDate;
-  String briefIntroduction;
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
+  final String publishYear;
+  final String mangaZone;
+  final List<Category> genres;
+  final List<TinyAuthor> authors;
+  final bool finished;
+  final String newestChapter;
+  final String newestDate;
+  final String briefIntroduction;
 
-  SmallManga({this.mid, this.title, this.cover, this.url, this.publishYear, this.mangaZone, this.genres, this.authors, this.finished, this.newestChapter, this.newestDate, this.briefIntroduction});
+  const SmallManga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction});
 
   factory SmallManga.fromJson(Map<String, dynamic> json) => _$SmallMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$SmallMangaToJson(this);
 
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'publish_year', 'manga_zone', 'genres', 'authors', 'finished', 'newest_chapter', 'newest_date', 'brief_introduction'];
-
   TinyManga toTiny() {
-    return TinyManga(mid: this.mid, title: this.title, cover: this.cover, url: this.url, finished: this.finished, newestChapter: this.newestChapter, newestDate: this.newestDate);
+    return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
   }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class TinyManga {
-  int mid;
-  String title;
-  String cover;
-  String url;
-  bool finished;
-  String newestChapter;
-  String newestDate;
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
+  final bool finished;
+  final String newestChapter;
+  final String newestDate;
 
-  TinyManga({this.mid, this.title, this.cover, this.url, this.finished, this.newestChapter, this.newestDate});
+  TinyManga({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.newestChapter, required this.newestDate});
 
   factory TinyManga.fromJson(Map<String, dynamic> json) => _$TinyMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyMangaToJson(this);
+}
 
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'finished', 'newest_chapter', 'newest_date'];
+@JsonSerializable(fieldRename: FieldRename.snake)
+class RandomMangaInfo {
+  final int mid;
+  final String url;
+
+  RandomMangaInfo({required this.mid, required this.url});
+
+  factory RandomMangaInfo.fromJson(Map<String, dynamic> json) => _$RandomMangaInfoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RandomMangaInfoToJson(this);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class TinyBlockManga {
-  int mid;
-  String title;
-  String cover;
-  String url;
-  bool finished;
-  String newestChapter;
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
+  final bool finished;
+  final String newestChapter;
 
-  TinyBlockManga({this.mid, this.title, this.cover, this.url, this.finished, this.newestChapter});
+  const TinyBlockManga({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.newestChapter});
 
   factory TinyBlockManga.fromJson(Map<String, dynamic> json) => _$TinyBlockMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyBlockMangaToJson(this);
 
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'finished', 'newest_chapter'];
-
   @override
   bool operator ==(Object other) {
-    return other is TinyBlockManga && other.mid == this.mid;
+    return other is TinyBlockManga && other.mid == mid;
   }
 
   @override
@@ -120,16 +124,14 @@ class MangaGroup {
   // 1. X (#12)
   // 2. 少女/爱情; 少年/热血; 竞技/体育; 武侠/格斗 (#10)
   // 3. 推理/恐怖/悬疑; 百合/后宫/治愈; 社会/历史/战争; 校园/励志/冒险 (#15)
-  String title;
-  List<TinyBlockManga> mangas;
+  final String title;
+  final List<TinyBlockManga> mangas;
 
-  MangaGroup({this.title, this.mangas});
+  const MangaGroup({required this.title, required this.mangas});
 
   factory MangaGroup.fromJson(Map<String, dynamic> json) => _$MangaGroupFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaGroupToJson(this);
-
-  static const fields = <String>['title', 'mangas'];
 }
 
 /// [MangaGroupList.title]
@@ -149,7 +151,6 @@ extension MangaGroupTitleExtension on MangaGroupType {
       case MangaGroupType.latest:
         return '最新上架';
     }
-    return '?';
   }
 }
 
@@ -158,106 +159,88 @@ class MangaGroupList {
   // 1. 热门连载: top_group, groups (#4), other_groups (#4)
   // 2. 经典完结: top_group, groups (#4), other_groups (#4)
   // 3. 最新上架: top_group, groups (#4)
-  String title;
-  MangaGroup topGroup;
-  List<MangaGroup> groups;
-  List<MangaGroup> otherGroups;
+  final String title;
+  final MangaGroup topGroup;
+  final List<MangaGroup> groups;
+  final List<MangaGroup> otherGroups;
 
-  MangaGroupList({this.title, this.topGroup, this.groups, this.otherGroups});
+  const MangaGroupList({required this.title, required this.topGroup, required this.groups, required this.otherGroups});
 
   factory MangaGroupList.fromJson(Map<String, dynamic> json) => _$MangaGroupListFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaGroupListToJson(this);
-
-  static const fields = <String>['title', 'top_group', 'groups', 'other_groups'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class HomepageMangaGroupList {
-  MangaGroupList serial; // 热门连载
-  MangaGroupList finish; // 经典完结
-  MangaGroupList latest; // 最新上架
+  final MangaGroupList serial; // 热门连载
+  final MangaGroupList finish; // 经典完结
+  final MangaGroupList latest; // 最新上架
 
-  HomepageMangaGroupList({this.serial, this.finish, this.latest});
+  const HomepageMangaGroupList({required this.serial, required this.finish, required this.latest});
 
   factory HomepageMangaGroupList.fromJson(Map<String, dynamic> json) => _$HomepageMangaGroupListFromJson(json);
 
   Map<String, dynamic> toJson() => _$HomepageMangaGroupListToJson(this);
 
-  static const fields = <String>['serial', 'finish', 'latest'];
+  List<TinyBlockManga> get carouselMangas {
+    var p1 = serial.topGroup.mangas.sublist(0, 4);
+    var p2 = serial.groups.map((e) => e.mangas.first);
+    var p3 = serial.otherGroups.map((e) => e.mangas.first);
+    return [
+      ...{...p1, ...p2, ...p3}
+    ];
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class MangaRank {
-  int mid;
-  String title;
-  String cover;
-  String url;
-  bool finished;
-  List<TinyAuthor> authors;
-  String newestChapter;
-  String newestDate;
-  int order;
-  double score;
-  int trend;
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
+  final bool finished;
+  final List<TinyAuthor> authors;
+  final String newestChapter;
+  final String newestDate;
+  final int order;
+  final double score;
+  final int trend;
 
-  MangaRank({this.mid, this.title, this.cover, this.url, this.finished, this.authors, this.newestChapter, this.newestDate, this.order, this.score, this.trend});
+  const MangaRank({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.authors, required this.newestChapter, required this.newestDate, required this.order, required this.score, required this.trend});
 
   factory MangaRank.fromJson(Map<String, dynamic> json) => _$MangaRankFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaRankToJson(this);
-
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'finished', 'authors', 'newest_chapter', 'newest_date', 'order', 'score', 'trend'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ShelfManga {
-  int mid;
-  String title;
-  String cover;
-  String url;
-  String newestChapter;
-  String newestDuration;
-  String lastChapter;
-  String lastDuration;
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
+  final String newestChapter;
+  final String newestDuration;
+  final String lastChapter;
+  final String lastDuration;
 
-  ShelfManga({this.mid, this.title, this.cover, this.url, this.newestChapter, this.newestDuration, this.lastChapter, this.lastDuration});
+  const ShelfManga({required this.mid, required this.title, required this.cover, required this.url, required this.newestChapter, required this.newestDuration, required this.lastChapter, required this.lastDuration});
 
   factory ShelfManga.fromJson(Map<String, dynamic> json) => _$ShelfMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
-
-  static const fields = <String>['mid', 'title', 'cover', 'url', 'newest_chapter', 'newest_duration', 'last_chapter', 'last_duration'];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ShelfStatus {
   @JsonKey(name: 'in')
-  bool isIn;
-  int count;
+  final bool isIn;
+  final int count;
 
-  ShelfStatus({this.isIn, this.count});
+  const ShelfStatus({required this.isIn, required this.count});
 
   factory ShelfStatus.fromJson(Map<String, dynamic> json) => _$ShelfStatusFromJson(json);
 
   Map<String, dynamic> toJson() => _$ShelfStatusToJson(this);
-
-  static const fields = <String>['in', 'count'];
-}
-
-class MangaHistory {
-  int mangaId;
-  String mangaTitle;
-  String mangaCover;
-  String mangaUrl;
-
-  int chapterId; // 0 表示还没开始阅读（点进漫画页），非0 表示开始阅读（点进章节页）
-  String chapterTitle;
-  int chapterPage;
-
-  DateTime lastTime;
-
-  bool get read => chapterId != 0;
-
-  MangaHistory({this.mangaId, this.mangaTitle, this.mangaCover, this.mangaUrl, this.chapterId, this.chapterTitle, this.chapterPage, this.lastTime});
 }

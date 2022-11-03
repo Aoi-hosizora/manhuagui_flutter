@@ -1,53 +1,76 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:manhuagui_flutter/config.dart';
 
 class NetworkImageView extends StatelessWidget {
   const NetworkImageView({
-    Key key,
-    @required this.url,
-    @required this.width,
-    @required this.height,
+    Key? key,
+    required this.url,
+    required this.width,
+    required this.height,
     this.fit = BoxFit.cover,
-  })  : assert(url != null && url != ''),
-        super(key: key);
+    this.border,
+    this.radius,
+  }) : super(key: key);
 
   final String url;
   final double width;
   final double height;
   final BoxFit fit;
+  final BoxBorder? border;
+  final BorderRadius? radius;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: this.width,
-      height: this.height,
-      child: CachedNetworkImage(
-        imageUrl: this.url,
-        width: this.width,
-        height: this.height,
-        fit: this.fit,
-        placeholder: (context, url) => Container(
-          child: Icon(
-            Icons.more_horiz,
-            color: Colors.grey,
+    var url = this.url;
+    if (url.startsWith('//')) {
+      url = 'https:$url';
+    }
+
+    return ClipRRect(
+      borderRadius: radius ?? BorderRadius.zero,
+      child: Container(
+        decoration: border == null ? null : BoxDecoration(border: border),
+        width: width,
+        height: height,
+        child: CachedNetworkImage(
+          imageUrl: url,
+          width: width,
+          height: height,
+          fit: fit,
+          httpHeaders: const {
+            'User-Agent': USER_AGENT,
+            'Referer': REFERER,
+          },
+          placeholder: (context, url) => Container(
+            width: width,
+            height: height,
+            color: Colors.orange[50],
+            child: Center(
+              child: Icon(
+                Icons.more_horiz,
+                color: Colors.grey,
+              ),
+            ),
           ),
-          width: this.width,
-          height: this.height,
-          color: Colors.orange[50],
-        ),
-        errorWidget: (context, url, error) => Container(
-          child: Icon(
-            Icons.broken_image,
-            color: Colors.grey,
+          errorWidget: (_, url, __) => Container(
+            width: width,
+            height: height,
+            color: Colors.orange[50],
+            child: Center(
+              child: Icon(
+                Icons.broken_image,
+                color: Colors.grey,
+              ),
+            ),
           ),
-          width: this.width,
-          height: this.height,
-          color: Colors.orange[50],
+          cacheManager: DefaultCacheManager(),
+          fadeOutDuration: Duration(milliseconds: 1000),
+          fadeOutCurve: Curves.easeOut,
+          fadeInDuration: Duration(milliseconds: 500),
+          fadeInCurve: Curves.easeIn,
         ),
-        fadeOutDuration: Duration(milliseconds: 1000),
-        fadeOutCurve: Curves.easeOut,
-        fadeInDuration: Duration(milliseconds: 500),
-        fadeInCurve: Curves.easeIn,
       ),
     );
   }

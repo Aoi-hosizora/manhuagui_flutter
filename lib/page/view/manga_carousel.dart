@@ -3,39 +3,44 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
+/// 漫画推荐展示，在 [RecommendSubPage] 使用
 class MangaCarouselView extends StatefulWidget {
-  const MangaCarouselView({Key key, @required this.mangas})
-      : assert(mangas != null && mangas.length != 0),
-        super(key: key);
+  const MangaCarouselView({
+    Key? key,
+    required this.mangas,
+    required this.height,
+    required this.imageWidth,
+  }) : super(key: key);
 
   final List<TinyBlockManga> mangas;
+  final double height;
+  final double imageWidth;
 
   @override
   _MangaCarouselViewState createState() => _MangaCarouselViewState();
 }
 
-class _MangaCarouselViewState extends State<MangaCarouselView> {
-  CarouselController _carouselController;
+class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKeepAliveClientMixin {
   var _currentIndex = 0;
+  final _key = PageStorageKey(0);
 
   @override
-  void initState() {
-    super.initState();
-    _carouselController = CarouselController();
-  }
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Stack(
       children: [
         CarouselSlider.builder(
-          carouselController: _carouselController,
           options: CarouselOptions(
-            height: 220,
+            pageViewKey: _key,
+            height: widget.height,
             autoPlay: true,
             autoPlayInterval: Duration(seconds: 4),
             autoPlayCurve: Curves.fastOutSlowIn,
@@ -44,17 +49,17 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
               if (mounted) setState(() {});
             },
             enableInfiniteScroll: true,
-            viewportFraction: 1, // 0.8,
+            viewportFraction: 1,
           ),
           itemCount: widget.mangas.length,
-          itemBuilder: (c, i) => Container(
+          itemBuilder: (c, i, _) => Container(
             color: Colors.white, // Colors.accents[i],
             child: Stack(
               children: [
                 ClipRect(
                   child: Container(
-                    width: MediaQuery.of(context).size.width, // * 0.8,
-                    height: 220,
+                    width: MediaQuery.of(context).size.width,
+                    height: widget.height,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: CachedNetworkImageProvider(
@@ -77,10 +82,9 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                 Positioned.fill(
                   child: Center(
                     child: NetworkImageView(
-                      url: widget.mangas[i].cover, // 3x4
-                      height: 220,
-                      width: 165,
-                      fit: BoxFit.cover,
+                      url: widget.mangas[i].cover, // 3:4
+                      height: widget.height,
+                      width: widget.imageWidth,
                     ),
                   ),
                 ),
@@ -88,21 +92,16 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () {
-                        if (_currentIndex != i) {
-                          _carouselController.animateToPage(i);
-                        } else {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (c) => MangaPage(
-                                id: widget.mangas[i].mid,
-                                title: widget.mangas[i].title,
-                                url: widget.mangas[i].url,
-                              ),
-                            ),
-                          );
-                        }
-                      },
+                      onTap: () => Navigator.of(context).push(
+                        CustomPageRoute(
+                          context: context,
+                          builder: (c) => MangaPage(
+                            id: widget.mangas[i].mid,
+                            title: widget.mangas[i].title,
+                            url: widget.mangas[i].url,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -135,7 +134,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> {
                         return Container(
                           width: chose ? 10 : 8,
                           height: chose ? 10 : 8,
-                          margin: EdgeInsets.symmetric(horizontal: 2),
+                          margin: EdgeInsets.symmetric(horizontal: 2.5),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: chose ? Colors.black87 : Colors.black26,
