@@ -64,17 +64,21 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
             controller: _controller,
             interactive: true,
             crossAxisMargin: 2,
-            child: SingleChildScrollView(
+            child: ListView(
               controller: _controller,
-              child: MangaTocView(
-                groups: widget.groups,
-                full: true,
-                highlightedChapters: [widget.highlightedChapter],
-                customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
-                  entity: widget.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+              padding: EdgeInsets.zero,
+              physics: AlwaysScrollableScrollPhysics(),
+              children: [
+                MangaTocView(
+                  groups: widget.groups,
+                  full: true,
+                  highlightedChapters: [widget.highlightedChapter],
+                  customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                    entity: widget.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                  ),
+                  onChapterPressed: widget.onChapterPressed,
                 ),
-                onChapterPressed: widget.onChapterPressed,
-              ),
+              ],
             ),
           ),
         ),

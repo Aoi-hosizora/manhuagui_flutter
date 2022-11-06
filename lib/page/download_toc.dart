@@ -213,6 +213,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
+          parentContext: context,
           mangaId: widget.mangaId,
           mangaTitle: _entity!.mangaTitle,
           mangaCover: _entity!.mangaCover,

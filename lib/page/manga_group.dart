@@ -38,14 +38,18 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         controller: _controller,
         interactive: true,
         crossAxisMargin: 2,
-        child: SingleChildScrollView(
+        child: ListView(
           controller: _controller,
-          child: MangaGroupView(
-            group: widget.group,
-            type: widget.type,
-            controller: _controller,
-            style: MangaGroupViewStyle.normalFull,
-          ),
+          padding: EdgeInsets.zero,
+          physics: AlwaysScrollableScrollPhysics(),
+          children: [
+            MangaGroupView(
+              group: widget.group,
+              type: widget.type,
+              controller: _controller,
+              style: MangaGroupViewStyle.normalFull,
+            ),
+          ],
         ),
       ),
       floatingActionButton: ScrollAnimatedFab(

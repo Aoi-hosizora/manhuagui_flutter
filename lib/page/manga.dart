@@ -268,6 +268,7 @@ class _MangaPageState extends State<MangaPage> {
         CustomPageRoute(
           context: context,
           builder: (c) => MangaViewerPage(
+            parentContext: context,
             mangaId: _data!.mid,
             mangaTitle: _data!.title,
             mangaCover: _data!.cover,
@@ -305,6 +306,7 @@ class _MangaPageState extends State<MangaPage> {
       CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
+          parentContext: context,
           mangaId: _data!.mid,
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
@@ -739,15 +741,11 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 // 评论
                 // ****************************************************************
-                PlaceholderText(
-                  state: _commentLoading
-                      ? PlaceholderState.loading
-                      : _commentError.isNotEmpty
-                          ? PlaceholderState.error
-                          : _comments.isEmpty
-                              ? PlaceholderState.nothing
-                              : PlaceholderState.normal,
+                PlaceholderText.from(
+                  isEmpty: _comments.isEmpty,
+                  isLoading: _commentLoading,
                   errorText: _commentError.isEmpty ? '' : '加载漫画评论失败\n$_commentError',
+                  displayRule: PlaceholderDisplayRule.errorFirst,
                   setting: PlaceholderSetting().copyWithChinese(
                     loadingText: '评论加载中...',
                     nothingText: '暂无评论',

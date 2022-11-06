@@ -55,7 +55,7 @@ class MyDrawer extends StatelessWidget {
       title: Text(text),
       leading: Icon(icon),
       selected: selection == null ? false : currentSelection == selection,
-      selectedTileColor: Color(0xFFE0E0E0),
+      selectedTileColor: Colors.grey[300],
       onTap: () {
         if (Scaffold.of(context).isDrawerOpen) {
           Navigator.of(context).pop();

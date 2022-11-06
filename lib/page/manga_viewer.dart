@@ -37,6 +37,7 @@ import 'package:wakelock/wakelock.dart';
 class MangaViewerPage extends StatefulWidget {
   const MangaViewerPage({
     Key? key,
+    required this.parentContext,
     required this.mangaId,
     required this.chapterId,
     required this.mangaTitle,
@@ -46,6 +47,7 @@ class MangaViewerPage extends StatefulWidget {
     this.initialPage = 1, // starts from 1
   }) : super(key: key);
 
+  final BuildContext parentContext;
   final int mangaId;
   final int chapterId;
   final String mangaTitle;
@@ -272,7 +274,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _currentPage = imageIndex;
     _progressValue = imageIndex;
     var inExtraPage = inFirstExtraPage || inLastExtraPage;
-    if (inExtraPage != _inExtraPage) {
+    if (inExtraPage && inExtraPage != _inExtraPage) {
       _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
       _inExtraPage = inExtraPage;
     }
@@ -306,8 +308,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     Navigator.of(context).pop(); // pop this page, should not use maybePop
     Navigator.of(context).push(
       CustomPageRoute(
-        context: context,
+        context: widget.parentContext,
         builder: (c) => MangaViewerPage(
+          parentContext: widget.parentContext,
           mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
@@ -496,8 +499,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Navigator.of(context).pop(); // this page, should not use maybePop
                 Navigator.of(context).push(
                   CustomPageRoute(
-                    context: context,
+                    context: widget.parentContext,
                     builder: (c) => MangaViewerPage(
+                      parentContext: widget.parentContext,
                       mangaId: _data!.mid,
                       mangaTitle: _data!.mangaTitle,
                       mangaCover: widget.mangaCover,
@@ -568,7 +572,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
               child: !(!_loading && _data != null && _ScreenHelper.showAppBar)
                   ? SizedBox(height: 0)
                   : AppBar(
-                      backgroundColor: Colors.black.withOpacity(0.65),
+                      backgroundColor: Colors.black.withOpacity(0.7),
                       elevation: 0,
                       title: Text(
                         _data!.title,
@@ -624,13 +628,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             ),
           ),
           body: PlaceholderText(
-            onRefresh: () => _loadData(),
             state: _loading
                 ? PlaceholderState.loading
                 : _data == null
                     ? PlaceholderState.error
                     : PlaceholderState.normal,
             errorText: _error,
+            onRefresh: () => _loadData(),
             setting: PlaceholderSetting(
               iconColor: Colors.grey[400]!,
               showLoadingText: false,
@@ -715,7 +719,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     child: !(_data != null && !_ScreenHelper.showAppBar && !_inExtraPage && _setting.showPageHint)
                         ? SizedBox(height: 0)
                         : Container(
-                            color: Colors.black.withOpacity(0.65),
+                            color: Colors.black.withOpacity(0.7),
                             padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
                             child: Text(
                               [
@@ -742,7 +746,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     child: !(_data != null && _ScreenHelper.showAppBar)
                         ? SizedBox(height: 0)
                         : Container(
-                            color: Colors.black.withOpacity(0.75),
+                            color: Colors.black.withOpacity(0.7),
                             padding: EdgeInsets.only(left: 12, right: 12, top: 0, bottom: _ScreenHelper.bottomPanelDistance + 6),
                             width: MediaQuery.of(context).size.width,
                             child: Column(
@@ -793,7 +797,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   action2: ActionItem(
                                     text: _setting.viewDirection != ViewDirection.rightToLeft ? '下一章节' : '上一章节',
                                     icon: Icons.arrow_right_alt,
-                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection != ViewDirection.rightToLeft),
+                                    action: () => _gotoChapter(gotoPrevious: _setting.viewDirection == ViewDirection.rightToLeft),
                                   ),
                                   action3: ActionItem(
                                     text: '阅读设置',

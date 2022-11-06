@@ -160,7 +160,7 @@ class CommentLineView extends StatelessWidget {
                         // ****************************************************************
                         // 楼层数
                         // ****************************************************************
-                        if (comment.replyTimeline.isNotEmpty)
+                        if (index != null || comment.replyTimeline.isNotEmpty)
                           Container(
                             margin: EdgeInsets.only(right: !large ? 8 : 0),
                             decoration: BoxDecoration(

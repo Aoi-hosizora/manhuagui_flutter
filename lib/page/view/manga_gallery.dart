@@ -201,7 +201,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             onLongPress: () => _onLongPressed(idx),
             child: ImageLoadingView(
               title: (idx + 1).toString(),
-              event: ev,
+              event: ev, // TODO error ???
             ),
           ),
           errorBuilder: (_, err, __) => GestureDetector(
@@ -210,7 +210,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             onLongPress: () => _onLongPressed(idx),
             child: ImageLoadFailedView(
               title: (idx + 1).toString(),
-              error: err,
+              error: err, // TODO error ???
             ),
           ),
         ),
@@ -275,7 +275,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onLongPress: () => _onLongPressed(idx),
           child: ImageLoadingView(
             title: (idx + 1).toString(),
-            event: ev,
+            event: ev, // TODO error ???
           ),
         ),
         errorBuilder: (_, err, ___) => GestureDetector(
@@ -284,7 +284,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onLongPress: () => _onLongPressed(idx),
           child: ImageLoadFailedView(
             title: (idx + 1).toString(),
-            error: err,
+            error: err, // TODO error ???
           ),
         ),
       ),

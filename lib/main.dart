@@ -24,6 +24,11 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Color.fromRGBO(245, 245, 245, 1.0),
         splashFactory: CustomInkRipple.preferredSplashFactory,
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: const {
+            TargetPlatform.android: NoPopGestureCupertinoPageTransitionsBuilder(),
+          },
+        ),
       ).withPreferredButtonStyles(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [

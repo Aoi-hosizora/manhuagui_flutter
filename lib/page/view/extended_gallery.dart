@@ -222,6 +222,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _masking = masked;
     if (mounted) setState(() {});
     await Future.delayed(_kMaskDuration);
+
     // TODO not accurate !!!
     var ok = await _ScrollHelper.scrollToTargetIndex(_itemKeys, scrollRect, _controller, page, widget.viewportPageSpace);
     _jumping = false;
@@ -244,14 +245,14 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         maxScale: options.maxScale,
         backgroundDecoration: options.backgroundDecoration,
         filterQuality: options.filterQuality,
-        onTapDown: options.onTapDown,
-        onTapUp: options.onTapUp,
+        onTapDown: null,
+        onTapUp: null,
         loadingBuilder: options.loadingBuilder,
         errorBuilder: options.errorBuilder,
         basePosition: options.basePosition,
         controller: options.controller,
         customSize: options.customSize,
-        disableGestures: options.disableGestures,
+        disableGestures: true,
         enablePanAlways: options.enablePanAlways,
         enableRotation: options.enableRotation,
         gaplessPlayback: options.gaplessPlayback,
@@ -261,7 +262,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         scaleStateController: options.scaleStateController,
         scaleStateChangedCallback: options.scaleStateChangedCallback,
         scaleStateCycle: options.scaleStateCycle,
-        tightMode: options.tightMode,
+        tightMode: true,
         wantKeepAlive: options.wantKeepAlive,
       ),
     );
@@ -324,7 +325,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
             duration: _kMaskDuration,
             child: !_masking
                 ? SizedBox(height: 0)
-                : Center(
+                : Container(
+                    color: Colors.black,
+                    alignment: Alignment.center,
                     child: SizedBox(
                       height: 50,
                       width: 50,
@@ -391,7 +394,7 @@ class _ScrollHelper {
       // automatically scroll (almost the real height of scroll view)
       var direction = currIndex > targetIndex ? -1 : 1;
       controller.jumpTo(controller.offset + direction * scrollRect.height * 0.95); // jump and wait for widget building
-      await WidgetsBinding.instance?.endOfFrame;
+      await WidgetsBinding.instance?.endOfFrame; // TODO not accurate, add duration ???
       if (controller.offset < 0 || controller.offset > 500000) {
         return false; // almost unreachable, only for exception
       }

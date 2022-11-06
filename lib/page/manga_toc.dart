@@ -90,17 +90,21 @@ class _MangaTocPageState extends State<MangaTocPage> {
             controller: _controller,
             interactive: true,
             crossAxisMargin: 2,
-            child: SingleChildScrollView(
+            child: ListView(
               controller: _controller,
-              child: MangaTocView(
-                groups: widget.groups,
-                full: true,
-                highlightedChapters: [_history?.chapterId ?? 0],
-                customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
-                  entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+              padding: EdgeInsets.zero,
+              physics: AlwaysScrollableScrollPhysics(),
+              children: [
+                MangaTocView(
+                  groups: widget.groups,
+                  full: true,
+                  highlightedChapters: [_history?.chapterId ?? 0],
+                  customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                    entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                  ),
+                  onChapterPressed: widget.onChapterPressed,
                 ),
-                onChapterPressed: widget.onChapterPressed,
-              ),
+              ],
             ),
           ),
         ),

@@ -65,68 +65,70 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
         controller: _controller,
         interactive: true,
         crossAxisMargin: 2,
-        child: SingleChildScrollView(
+        child: ListView(
           controller: _controller,
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           physics: AlwaysScrollableScrollPhysics(),
-          child: StatefulWidgetWithCallback(
-            postFrameCallbackForBuild: _helper.hasSearched()
-                ? null
-                : (_) {
-                    if (_helper.searchForHighestCells()) {
-                      if (mounted) setState(() {});
-                    }
-                  },
-            child: Table(
-              columnWidths: const {
-                0: FractionColumnWidth(0.3),
-              },
-              border: TableBorder(
-                horizontalInside: BorderSide(width: 1, color: Colors.grey),
-              ),
-              children: [
-                TableRow(
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      child: Text('键', style: TextStyle(color: Colors.grey)),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      child: Text('值', style: TextStyle(color: Colors.grey)),
-                    ),
-                  ],
+          children: [
+            StatefulWidgetWithCallback(
+              postFrameCallbackForBuild: _helper.hasSearched()
+                  ? null
+                  : (_) {
+                      if (_helper.searchForHighestCells()) {
+                        if (mounted) setState(() {});
+                      }
+                    },
+              child: Table(
+                columnWidths: const {
+                  0: FractionColumnWidth(0.3),
+                },
+                border: TableBorder(
+                  horizontalInside: BorderSide(width: 1, color: Colors.grey),
                 ),
-                for (var i = 0; i < _details.length; i++)
+                children: [
                   TableRow(
-                    children: [
-                      TableCell(
-                        key: _helper.getCellKey(i, 0),
-                        verticalAlignment: _helper.determineCellAlignment(i, 0, TableCellVerticalAlignment.top),
-                        child: TableWholeRowInkWell.preferred(
-                          child: Text('${_details[i].item1}　'),
-                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          onTap: () => copyText(_details[i].item2),
-                          tableWidth: tableWidth,
-                          accumulativeWidthRatio: 0,
-                        ),
+                    children: const [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        child: Text('键', style: TextStyle(color: Colors.grey)),
                       ),
-                      TableCell(
-                        key: _helper.getCellKey(i, 1),
-                        verticalAlignment: _helper.determineCellAlignment(i, 1, TableCellVerticalAlignment.top),
-                        child: TableWholeRowInkWell.preferred(
-                          child: Text('${_details[i].item2}　'),
-                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          onTap: () => copyText(_details[i].item2),
-                          tableWidth: tableWidth,
-                          accumulativeWidthRatio: 0.3,
-                        ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        child: Text('值', style: TextStyle(color: Colors.grey)),
                       ),
                     ],
                   ),
-              ],
+                  for (var i = 0; i < _details.length; i++)
+                    TableRow(
+                      children: [
+                        TableCell(
+                          key: _helper.getCellKey(i, 0),
+                          verticalAlignment: _helper.determineCellAlignment(i, 0, TableCellVerticalAlignment.top),
+                          child: TableWholeRowInkWell.preferred(
+                            child: Text('${_details[i].item1}　'),
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            onTap: () => copyText(_details[i].item2),
+                            tableWidth: tableWidth,
+                            accumulativeWidthRatio: 0,
+                          ),
+                        ),
+                        TableCell(
+                          key: _helper.getCellKey(i, 1),
+                          verticalAlignment: _helper.determineCellAlignment(i, 1, TableCellVerticalAlignment.top),
+                          child: TableWholeRowInkWell.preferred(
+                            child: Text('${_details[i].item2}　'),
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            onTap: () => copyText(_details[i].item2),
+                            tableWidth: tableWidth,
+                            accumulativeWidthRatio: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
       floatingActionButton: ScrollAnimatedFab(
