@@ -100,7 +100,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           onChanged: (_, __) => _fabController.hide(),
-          childBuilder: (c) => ScrollbarWithMore(
+          childBuilder: (c) => ExtendedScrollbar(
             controller: _controller,
             interactive: true,
             crossAxisMargin: 2,

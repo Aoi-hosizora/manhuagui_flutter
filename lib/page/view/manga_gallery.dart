@@ -120,31 +120,42 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   }
 
   Future<void> _onLongPressed(int index) async {
-    await showPopupListMenu(
+    await showDialog(
       context: context,
-      title: Text('第${index + 1}页'),
-      barrierDismissible: true,
-      items: [
-        IconTextMenuItem(
-          iconText: IconText.simple(Icons.refresh, '重新加载'),
-          action: () async {
-            await _cache.removeFile(widget.imageUrls[index]);
-            if (!widget.verticalScroll) {
-              _horizontalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
-            } else {
-              _verticalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
-            }
-          },
-        ),
-        IconTextMenuItem(
-          iconText: IconText.simple(Icons.download, '保存该页'),
-          action: () => widget.onSaveImage.call(index + 1),
-        ),
-        IconTextMenuItem(
-          iconText: IconText.simple(Icons.share, '分享该页'),
-          action: () => widget.onShareImage.call(index + 1),
-        ),
-      ],
+      builder: (c) => SimpleDialog(
+        title: Text('第${index + 1}页'),
+        children: [
+          IconTextDialogOption(
+            icon: Icon(Icons.refresh),
+            text: Text('重新加载'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              await _cache.removeFile(widget.imageUrls[index]);
+              if (!widget.verticalScroll) {
+                _horizontalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
+              } else {
+                _verticalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
+              }
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.download),
+            text: Text('保存该页'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              widget.onSaveImage.call(index + 1);
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.share),
+            text: Text('分享该页'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              widget.onShareImage.call(index + 1);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -158,8 +169,6 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
         viewportFraction: widget.horizontalViewportFraction,
         reverse: widget.horizontalReverseScroll,
-        backgroundDecoration: BoxDecoration(color: Colors.black),
-        scrollPhysics: AlwaysScrollableScrollPhysics(),
         onPageChanged: (idx) {
           _currentPageIndex = idx;
           widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
@@ -171,6 +180,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           initialScale: PhotoViewComputedScale.contained,
           minScale: PhotoViewComputedScale.contained / 2,
           maxScale: PhotoViewComputedScale.covered * 2,
+          backgroundDecoration: BoxDecoration(color: Colors.black),
           filterQuality: FilterQuality.high,
           onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
           onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
@@ -233,8 +243,6 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       preloadPagesCount: widget.preloadPagesCount,
       initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
       viewportPageSpace: widget.verticalViewportPageSpace,
-      backgroundDecoration: BoxDecoration(color: Colors.black),
-      scrollPhysics: AlwaysScrollableScrollPhysics(),
       onPageChanged: (idx) {
         _currentPageIndex = idx;
         widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
@@ -246,6 +254,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained / 2,
         maxScale: PhotoViewComputedScale.covered * 2,
+        backgroundDecoration: BoxDecoration(color: Colors.black),
         filterQuality: FilterQuality.high,
         onTapDown: null,
         onTapUp: null,

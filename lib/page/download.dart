@@ -300,7 +300,7 @@ class _DownloadPageState extends State<DownloadPage> {
         ],
       ),
       drawer: MyDrawer(
-        currentDrawerSelection: DrawerSelection.download,
+        currentSelection: DrawerSelection.download,
       ),
       body: RefreshableListView<DownloadedManga>(
         data: _data,

@@ -86,7 +86,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
         setting: PlaceholderSetting().copyWithChinese(),
         childBuilder: (c) => Container(
           color: Colors.white,
-          child: ScrollbarWithMore(
+          child: ExtendedScrollbar(
             controller: _controller,
             interactive: true,
             crossAxisMargin: 2,

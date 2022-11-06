@@ -34,7 +34,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         title: Text('漫画分组'),
         leading: AppBarActionButton.leading(context: context),
       ),
-      body: ScrollbarWithMore(
+      body: ExtendedScrollbar(
         controller: _controller,
         interactive: true,
         crossAxisMargin: 2,

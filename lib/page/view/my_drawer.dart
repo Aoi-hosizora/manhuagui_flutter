@@ -19,55 +19,22 @@ enum DrawerSelection {
   setting, // SettingPage
 }
 
-class MyDrawer extends StatefulWidget {
+class MyDrawer extends StatelessWidget {
   const MyDrawer({
     Key? key,
-    required this.currentDrawerSelection,
+    required this.currentSelection,
   }) : super(key: key);
 
-  final DrawerSelection currentDrawerSelection;
+  final DrawerSelection currentSelection;
 
-  @override
-  _MyDrawerState createState() => _MyDrawerState();
-}
-
-class _MyDrawerState extends State<MyDrawer> {
-  late final _items = <DrawerItem>[
-    DrawerPageItem.simple('主页', Icons.home, IndexPage(), DrawerSelection.home, autoCloseWhenTapped: false),
-    if (!AuthManager.instance.logined) //
-      DrawerActionItem.simple('登录', Icons.login, () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => LoginPage()))),
-    DrawerPageItem.simple('搜索漫画', Icons.search, SearchPage(), DrawerSelection.search),
-    DrawerPageItem.simple('下载列表', Icons.download, DownloadPage(), DrawerSelection.download),
-    DrawerWidgetItem.simple(Divider(thickness: 1)),
-    //
-
-    DrawerActionItem.simple('我的书架', Icons.star_outlined, () => _gotoHomePageTab(ToShelfRequestedEvent()), autoCloseWhenTapped: false),
-    DrawerActionItem.simple('浏览历史', Icons.history, () => _gotoHomePageTab(ToHistoryRequestedEvent()), autoCloseWhenTapped: false),
-    DrawerActionItem.simple('最近更新', Icons.cached, () => _gotoHomePageTab(ToRecentRequestedEvent()), autoCloseWhenTapped: false),
-    DrawerActionItem.simple('漫画排行', Icons.trending_up, () => _gotoHomePageTab(ToRankingRequestedEvent()), autoCloseWhenTapped: false),
-    DrawerWidgetItem.simple(Divider(thickness: 1)),
-    //
-
-    DrawerActionItem.simple('漫画柜官网', Icons.open_in_browser, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
-    DrawerPageItem.simple('设置', Icons.settings, SettingPage(), DrawerSelection.setting),
-  ];
-
-  Future<void> _popUntilFirst() async {
-    if (Scaffold.of(context).isDrawerOpen) {
-      Navigator.of(context).pop();
-      await Future.delayed(Duration(milliseconds: 246)); // <<<
-    }
+  Future<void> _popUntilFirst(BuildContext context) async {
+    await Future.delayed(Duration(milliseconds: 246)); // _kBaseSettleDuration
     Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
-  Future<void> _gotoHomePageTab(dynamic event) async {
-    await _popUntilFirst();
-    EventBusManager.instance.fire(event);
-  }
-
-  void _navigatorTo(DrawerSelection? t, Widget page) async {
-    if (t == DrawerSelection.home) {
-      await _popUntilFirst();
+  void _gotoPage(BuildContext context, Widget page, [bool popUntilFirst = false]) async {
+    if (popUntilFirst) {
+      await _popUntilFirst(context);
     } else {
       Navigator.of(context).push(
         CustomPageRoute(
@@ -78,8 +45,29 @@ class _MyDrawerState extends State<MyDrawer> {
     }
   }
 
+  Future<void> _gotoHomePageTab(BuildContext context, dynamic event) async {
+    await _popUntilFirst(context);
+    EventBusManager.instance.fire(event);
+  }
+
+  Widget _buildItem(BuildContext context, String text, IconData icon, DrawerSelection? selection, void Function() action) {
+    return ListTile(
+      title: Text(text),
+      leading: Icon(icon),
+      selected: selection == null ? false : currentSelection == selection,
+      selectedTileColor: Color(0xFFE0E0E0),
+      onTap: () {
+        if (Scaffold.of(context).isDrawerOpen) {
+          Navigator.of(context).pop();
+        }
+        action.call();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final BuildContext c = context;
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -125,17 +113,24 @@ class _MyDrawerState extends State<MyDrawer> {
                   bottom: 0,
                   child: Text(
                     !AuthManager.instance.logined ? '未登录用户' : AuthManager.instance.username,
-                    style: Theme.of(context).textTheme.subtitle1,
+                    style: Theme.of(c).textTheme.subtitle1,
                   ),
                 ),
               ],
             ),
           ),
-          DrawerListView<DrawerSelection>(
-            items: _items,
-            currentSelection: widget.currentDrawerSelection,
-            onNavigatorTo: _navigatorTo,
-          ),
+          _buildItem(c, '主页', Icons.home, DrawerSelection.home, () => _gotoPage(c, IndexPage(), true)),
+          if (!AuthManager.instance.logined) _buildItem(c, '登录', Icons.login, null, () => _gotoPage(c, LoginPage())),
+          _buildItem(c, '搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(c, SearchPage())),
+          _buildItem(c, '下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(c, DownloadPage())),
+          Divider(),
+          _buildItem(c, '我的书架', Icons.star_outlined, null, () => _gotoHomePageTab(c, ToShelfRequestedEvent())),
+          _buildItem(c, '浏览历史', Icons.history, null, () => _gotoHomePageTab(c, ToHistoryRequestedEvent())),
+          _buildItem(c, '最近更新', Icons.cached, null, () => _gotoHomePageTab(c, ToRecentRequestedEvent())),
+          _buildItem(c, '漫画排行', Icons.trending_up, null, () => _gotoHomePageTab(c, ToRankingRequestedEvent())),
+          Divider(),
+          _buildItem(c, '漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: c, url: WEB_HOMEPAGE_URL)),
+          _buildItem(c, '设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(c, SettingPage())),
         ],
       ),
     );

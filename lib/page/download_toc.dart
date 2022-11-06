@@ -311,7 +311,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
         ],
       ),
       drawer: MyDrawer(
-        currentDrawerSelection: DrawerSelection.none,
+        currentSelection: DrawerSelection.none,
       ),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,

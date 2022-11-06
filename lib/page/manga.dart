@@ -335,7 +335,7 @@ class _MangaPageState extends State<MangaPage> {
         ],
       ),
       drawer: MyDrawer(
-        currentDrawerSelection: DrawerSelection.none,
+        currentSelection: DrawerSelection.none,
       ),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
@@ -346,7 +346,7 @@ class _MangaPageState extends State<MangaPage> {
           isEmpty: _data == null,
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
-          childBuilder: (c) => ScrollbarWithMore(
+          childBuilder: (c) => ExtendedScrollbar(
             controller: _controller,
             interactive: true,
             crossAxisMargin: 2,

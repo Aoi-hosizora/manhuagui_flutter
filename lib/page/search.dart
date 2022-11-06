@@ -146,7 +146,7 @@ class _SearchPageState extends State<SearchPage> {
       onWillPop: _pop,
       child: Scaffold(
         drawer: MyDrawer(
-          currentDrawerSelection: DrawerSelection.search,
+          currentSelection: DrawerSelection.search,
         ),
         resizeToAvoidBottomInset: false,
         body: Stack(
@@ -247,7 +247,7 @@ class _SearchPageState extends State<SearchPage> {
                 data: MediaQuery.of(context).copyWith(
                   padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 5 + 35 + 46) /* padding_top_5 + height_35 + magic_46 */,
                 ),
-                child: ScrollbarWithMore(
+                child: ExtendedScrollbar(
                   controller: _searchScrollController,
                   interactive: true,
                   crossAxisMargin: 8 + 2 /* padding_right_8 + crossAxisMargin_2 */,

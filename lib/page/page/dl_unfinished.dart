@@ -50,7 +50,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
     }
 
     return Scaffold(
-      body: ScrollbarWithMore(
+      body: ExtendedScrollbar(
         controller: widget.innerController,
         interactive: true,
         crossAxisMargin: 2,

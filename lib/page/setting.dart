@@ -50,7 +50,7 @@ class _SettingPageState extends State<SettingPage> {
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
       ),
       drawer: MyDrawer(
-        currentDrawerSelection: DrawerSelection.setting,
+        currentSelection: DrawerSelection.setting,
       ),
       body: ListView(
         padding: EdgeInsets.zero,

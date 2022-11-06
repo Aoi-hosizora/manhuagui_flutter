@@ -113,7 +113,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
       onWillPop: _onWillPop,
       child: Scaffold(
         drawer: MyDrawer(
-          currentDrawerSelection: DrawerSelection.home,
+          currentSelection: DrawerSelection.home,
         ),
         body: TabBarView(
           physics: NeverScrollableScrollPhysics(),

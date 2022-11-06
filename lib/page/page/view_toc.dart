@@ -60,7 +60,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
         setting: PlaceholderSetting().copyWithChinese(),
         childBuilder: (c) => Container(
           color: Colors.white,
-          child: ScrollbarWithMore(
+          child: ExtendedScrollbar(
             controller: _controller,
             interactive: true,
             crossAxisMargin: 2,

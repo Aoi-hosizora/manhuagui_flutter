@@ -110,7 +110,7 @@ class _AuthorPageState extends State<AuthorPage> {
         ],
       ),
       drawer: MyDrawer(
-        currentDrawerSelection: DrawerSelection.none,
+        currentSelection: DrawerSelection.none,
       ),
       body: PlaceholderText.from(
         isLoading: _loading,

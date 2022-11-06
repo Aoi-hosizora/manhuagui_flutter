@@ -27,7 +27,7 @@ class _CommentPageState extends State<CommentPage> {
         title: Text('评论详情'),
         leading: AppBarActionButton.leading(context: context),
       ),
-      body: ScrollbarWithMore(
+      body: ExtendedScrollbar(
         controller: _controller,
         interactive: true,
         crossAxisMargin: 2,

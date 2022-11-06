@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:photo_view/photo_view.dart';
 
 class HorizontalGalleryView extends StatefulWidget {
   const HorizontalGalleryView({
@@ -12,21 +11,12 @@ class HorizontalGalleryView extends StatefulWidget {
     required this.firstPageBuilder /* <<< */,
     required this.lastPageBuilder /* <<< */,
     this.onImageLongPressed /* <<< */,
-    this.backgroundDecoration,
-    this.wantKeepAlive = false,
-    this.gaplessPlayback = false,
-    this.reverse = false,
-    this.initialPage = 0 /* <<< */,
+    this.fallbackOptions,
     this.onPageChanged,
-    this.viewportFraction = 1.0 /* <<< */,
-    this.scaleStateChangedCallback,
-    this.enableRotation = false,
-    this.scrollPhysics,
-    this.customSize,
-    this.loadingBuilder,
-    this.errorBuilder,
-    this.pageMainAxisHintSize,
+    this.reverse = false,
     this.preloadPagesCount = 0,
+    this.initialPage = 0 /* <<< */,
+    this.viewportFraction = 1.0 /* <<< */,
   }) : super(key: key);
 
   final int imageCount;
@@ -34,21 +24,14 @@ class HorizontalGalleryView extends StatefulWidget {
   final Widget Function(BuildContext context) firstPageBuilder;
   final Widget Function(BuildContext context) lastPageBuilder;
   final void Function(int index)? onImageLongPressed;
-  final ScrollPhysics? scrollPhysics;
-  final BoxDecoration? backgroundDecoration;
-  final bool wantKeepAlive;
-  final bool gaplessPlayback;
-  final bool reverse;
-  final int initialPage;
+
+  final PhotoViewOptions? fallbackOptions;
   final void Function(int index)? onPageChanged;
-  final double viewportFraction;
-  final ValueChanged<PhotoViewScaleState>? scaleStateChangedCallback;
-  final bool enableRotation;
-  final Size? customSize;
-  final LoadingPlaceholderBuilder? loadingBuilder;
-  final ErrorPlaceholderBuilder? errorBuilder;
-  final double? pageMainAxisHintSize;
+  final bool reverse;
   final int preloadPagesCount;
+
+  final int initialPage;
+  final double viewportFraction;
 
   @override
   State<HorizontalGalleryView> createState() => HorizontalGalleryViewState();
@@ -76,7 +59,7 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
   }
 
   void reload(int page) {
-    _key.currentState?.reload(page);
+    _key.currentState?.reloadPhoto(page);
   }
 
   void jumpToPage(int page, {bool animated = false}) {
@@ -94,6 +77,9 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
       pageCount: widget.imageCount + 2,
       builder: widget.imagePageBuilder,
       advancedBuilder: (c, index, builder) {
+        // 0 => first
+        // 1 ~ l => images
+        // l+1 => last
         if (index == 0) {
           return widget.firstPageBuilder(c);
         }
@@ -105,27 +91,20 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
           child: builder(c, index - 1),
         );
       },
-      backgroundDecoration: widget.backgroundDecoration,
-      wantKeepAlive: widget.wantKeepAlive,
-      gaplessPlayback: widget.gaplessPlayback,
-      reverse: widget.reverse,
-      pageController: _controller,
+      fallbackOptions: widget.fallbackOptions,
       onPageChanged: (i) {
         _currentPageIndex = i;
         widget.onPageChanged?.call(i);
       },
+      pageController: _controller,
+      reverse: widget.reverse,
+      scrollDirection: Axis.horizontal,
+      scrollPhysics: AlwaysScrollableScrollPhysics(),
       changePageWhenFinished: true,
       keepViewportMainAxisSize: true,
       fractionWidthFactor: null,
       fractionHeightFactor: null,
-      scaleStateChangedCallback: widget.scaleStateChangedCallback,
-      enableRotation: widget.enableRotation,
-      scrollPhysics: widget.scrollPhysics,
-      scrollDirection: Axis.horizontal,
-      customSize: widget.customSize,
-      loadingBuilder: widget.loadingBuilder,
-      errorBuilder: widget.errorBuilder,
-      pageMainAxisHintSize: widget.pageMainAxisHintSize,
+      pageMainAxisHintSize: null,
       preloadPagesCount: widget.preloadPagesCount,
     );
   }
@@ -141,20 +120,11 @@ class VerticalGalleryView extends StatefulWidget {
     this.onImageTapDown /* <<< */,
     this.onImageTapUp /* <<< */,
     this.onImageLongPressed /* <<< */,
-    this.backgroundDecoration,
-    this.wantKeepAlive = false,
-    this.gaplessPlayback = false,
-    this.initialPage = 0 /* <<< */,
+    this.fallbackOptions,
     this.onPageChanged,
-    this.viewportPageSpace = 0.0 /* <<< */,
-    this.scaleStateChangedCallback,
-    this.enableRotation = false,
-    this.scrollPhysics,
-    this.customSize,
-    this.loadingBuilder,
-    this.errorBuilder,
-    this.pageMainAxisHintSize,
     this.preloadPagesCount = 0,
+    this.initialPage = 0 /* <<< */,
+    this.viewportPageSpace = 0.0 /* <<< */,
   }) : super(key: key);
 
   final int imageCount;
@@ -164,20 +134,13 @@ class VerticalGalleryView extends StatefulWidget {
   final void Function(TapDownDetails details)? onImageTapDown;
   final void Function(TapUpDetails details)? onImageTapUp;
   final void Function(int index)? onImageLongPressed;
-  final BoxDecoration? backgroundDecoration;
-  final bool wantKeepAlive;
-  final bool gaplessPlayback;
-  final int initialPage;
+
+  final PhotoViewOptions? fallbackOptions;
   final void Function(int)? onPageChanged;
-  final double viewportPageSpace;
-  final void Function(PhotoViewScaleState)? scaleStateChangedCallback;
-  final bool enableRotation;
-  final ScrollPhysics? scrollPhysics;
-  final Size? customSize;
-  final Widget Function(BuildContext, ImageChunkEvent?)? loadingBuilder;
-  final Widget Function(BuildContext, Object, StackTrace?)? errorBuilder;
-  final double? pageMainAxisHintSize;
   final int preloadPagesCount;
+
+  final int initialPage;
+  final double viewportPageSpace;
 
   @override
   State<VerticalGalleryView> createState() => VerticalGalleryViewState();
@@ -186,9 +149,10 @@ class VerticalGalleryView extends StatefulWidget {
 const _kMaskDuration = Duration(milliseconds: 150);
 
 class VerticalGalleryViewState extends State<VerticalGalleryView> {
-  final _listKey = GlobalKey<State<StatefulWidget>>();
   late final _controller = ScrollController()..addListener(_onScrollChanged);
-  late List<ValueNotifier<String>> _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
+  late var _photoViewKeys = List.generate(widget.imageCount, (index) => GlobalKey<ReloadablePhotoViewState>());
+
+  final _listKey = GlobalKey<State<StatefulWidget>>();
   late List<GlobalKey<State<StatefulWidget>>> _itemKeys = List.generate(widget.imageCount + 2, (index) => GlobalKey<State<StatefulWidget>>());
 
   @override
@@ -215,14 +179,15 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   void didUpdateWidget(covariant VerticalGalleryView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.imageCount != oldWidget.imageCount) {
-      _notifiers = List.generate(widget.imageCount, (index) => ValueNotifier(''));
+      _photoViewKeys = List.generate(widget.imageCount, (index) => GlobalKey<ReloadablePhotoViewState>());
       _itemKeys = List.generate(widget.imageCount + 2, (index) => GlobalKey<State<StatefulWidget>>());
     }
   }
 
   void reload(int index) {
-    _notifiers[index].value = DateTime.now().microsecondsSinceEpoch.toString();
-    // no need to setState
+    if (index >= 0 && index < widget.imageCount) {
+      _photoViewKeys[index].currentState?.reload();
+    }
   }
 
   void _onScrollChanged() {
@@ -268,45 +233,42 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   }
 
   Widget _buildPhotoItem(BuildContext context, int index) {
-    final pageOption = widget.imagePageBuilder(context, index); // index excludes non-PhotoView pages
+    final pageOptions = widget.imagePageBuilder(context, index); // index excludes non-PhotoView pages
+    final options = PhotoViewOptions.merge(pageOptions, widget.fallbackOptions);
     return ClipRect(
-      child: ValueListenableBuilder<String>(
-        valueListenable: _notifiers[index], // <<<
-        builder: (_, v, __) => PhotoView(
-          key: ValueKey('$index-$v'),
-          imageProvider: pageOption.imageProviderBuilder(ValueKey('$index-$v')),
-          backgroundDecoration: widget.backgroundDecoration,
-          wantKeepAlive: widget.wantKeepAlive,
-          controller: pageOption.controller,
-          scaleStateController: pageOption.scaleStateController,
-          customSize: widget.customSize,
-          gaplessPlayback: widget.gaplessPlayback,
-          heroAttributes: pageOption.heroAttributes,
-          scaleStateChangedCallback: (state) => widget.scaleStateChangedCallback?.call(state),
-          enableRotation: widget.enableRotation,
-          initialScale: pageOption.initialScale,
-          minScale: pageOption.minScale,
-          maxScale: pageOption.maxScale,
-          scaleStateCycle: pageOption.scaleStateCycle,
-          onTapUp: null /* pageOption.onTapUp */,
-          onTapDown: null /* pageOption.onTapDown */,
-          onScaleEnd: pageOption.onScaleEnd,
-          gestureDetectorBehavior: pageOption.gestureDetectorBehavior,
-          tightMode: true /* pageOption.tightMode */,
-          filterQuality: pageOption.filterQuality,
-          basePosition: pageOption.basePosition,
-          disableGestures: true /* pageOption.disableGestures */,
-          enablePanAlways: pageOption.enablePanAlways,
-          loadingBuilder: pageOption.loadingBuilder ?? widget.loadingBuilder,
-          errorBuilder: pageOption.errorBuilder ?? widget.errorBuilder,
-        ),
+      child: ReloadablePhotoView(
+        key: _photoViewKeys[index],
+        imageProviderBuilder: pageOptions.imageProviderBuilder,
+        initialScale: options.initialScale,
+        minScale: options.minScale,
+        maxScale: options.maxScale,
+        backgroundDecoration: options.backgroundDecoration,
+        filterQuality: options.filterQuality,
+        onTapDown: options.onTapDown,
+        onTapUp: options.onTapUp,
+        loadingBuilder: options.loadingBuilder,
+        errorBuilder: options.errorBuilder,
+        basePosition: options.basePosition,
+        controller: options.controller,
+        customSize: options.customSize,
+        disableGestures: options.disableGestures,
+        enablePanAlways: options.enablePanAlways,
+        enableRotation: options.enableRotation,
+        gaplessPlayback: options.gaplessPlayback,
+        gestureDetectorBehavior: options.gestureDetectorBehavior,
+        heroAttributes: options.heroAttributes,
+        onScaleEnd: options.onScaleEnd,
+        scaleStateController: options.scaleStateController,
+        scaleStateChangedCallback: options.scaleStateChangedCallback,
+        scaleStateCycle: options.scaleStateCycle,
+        tightMode: options.tightMode,
+        wantKeepAlive: options.wantKeepAlive,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final pageMainAxisHintSize = widget.pageMainAxisHintSize ?? MediaQuery.of(context).size.height; // using this height is inaccuracy
     return Stack(
       children: [
         Positioned.fill(
@@ -314,8 +276,10 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
             key: _listKey,
             controller: _controller,
             padding: EdgeInsets.zero,
-            physics: widget.scrollPhysics,
-            cacheExtent: widget.preloadPagesCount < 1 ? 0 : pageMainAxisHintSize * widget.preloadPagesCount - 1,
+            physics: AlwaysScrollableScrollPhysics(),
+            cacheExtent: widget.preloadPagesCount < 1
+                ? 0 //
+                : MediaQuery.of(context).size.height * widget.preloadPagesCount - 1 /* using this height is inaccuracy */,
             children: [
               // 1
               Padding(
@@ -360,14 +324,11 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
             duration: _kMaskDuration,
             child: !_masking
                 ? SizedBox(height: 0)
-                : Container(
-                    decoration: widget.backgroundDecoration,
-                    child: Center(
-                      child: SizedBox(
-                        height: 50,
-                        width: 50,
-                        child: CircularProgressIndicator(),
-                      ),
+                : Center(
+                    child: SizedBox(
+                      height: 50,
+                      width: 50,
+                      child: CircularProgressIndicator(),
                     ),
                   ),
           ),
@@ -429,7 +390,8 @@ class _ScrollHelper {
 
       // automatically scroll (almost the real height of scroll view)
       var direction = currIndex > targetIndex ? -1 : 1;
-      await controller.jumpToAndWait(controller.offset + direction * scrollRect.height * 0.95); // jump and wait for widget building
+      controller.jumpTo(controller.offset + direction * scrollRect.height * 0.95); // jump and wait for widget building
+      await WidgetsBinding.instance?.endOfFrame;
       if (controller.offset < 0 || controller.offset > 500000) {
         return false; // almost unreachable, only for exception
       }
@@ -440,7 +402,8 @@ class _ScrollHelper {
     }
 
     // scroll to target index in new data view style
-    await controller.jumpToAndWait(controller.offset + targetItemRect.top - scrollRect.top + additionalOffset + 1);
+    controller.jumpTo(controller.offset + targetItemRect.top - scrollRect.top + additionalOffset + 1);
+    await WidgetsBinding.instance?.endOfFrame;
     return true;
   }
 }

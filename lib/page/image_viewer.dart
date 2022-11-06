@@ -23,8 +23,8 @@ class ImageViewerPage extends StatefulWidget {
 }
 
 class _ImageViewerPageState extends State<ImageViewerPage> {
+  final _photoViewKey = GlobalKey<ReloadablePhotoViewState>();
   final _cache = DefaultCacheManager();
-  final _notifier = ValueNotifier<String>('');
 
   @override
   void initState() {
@@ -44,10 +44,6 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
       url = 'https:$url';
     }
     return url;
-  }
-
-  void _reload() {
-    _notifier.value = DateTime.now().microsecondsSinceEpoch.toString();
   }
 
   Future<void> _download(String url) async {
@@ -74,7 +70,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
             AppBarActionButton(
               icon: Icon(Icons.refresh),
               tooltip: '重新加载',
-              onPressed: () => _reload(),
+              onPressed: () => _photoViewKey.currentState?.reload(),
             ),
             AppBarActionButton(
               icon: Icon(Icons.file_download),
@@ -83,39 +79,33 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
             ),
           ],
         ),
+        backgroundColor: Colors.black,
         body: Container(
-          decoration: BoxDecoration(
-            color: Colors.black,
-            border: Border.all(color: Colors.black),
-          ),
+          decoration: BoxDecoration(color: Colors.black),
           constraints: BoxConstraints.expand(
             height: MediaQuery.of(context).size.height,
           ),
-          child: ValueListenableBuilder<String>(
-            valueListenable: _notifier,
-            builder: (_, v, __) => PhotoView(
-              key: ValueKey(v),
-              imageProvider: LocalOrCachedNetworkImageProvider.fromNetwork(
-                key: ValueKey(v),
-                url: url,
-                cacheManager: _cache,
-                headers: {
-                  'User-Agent': USER_AGENT,
-                  'Referer': REFERER,
-                },
-              ),
-              initialScale: PhotoViewComputedScale.contained / 2,
-              minScale: PhotoViewComputedScale.contained / 2,
-              maxScale: PhotoViewComputedScale.covered * 2,
-              filterQuality: FilterQuality.high,
-              loadingBuilder: (_, ev) => ImageLoadingView(
-                title: '',
-                event: ev,
-              ),
-              errorBuilder: (_, err, __) => ImageLoadFailedView(
-                title: '',
-                error: err,
-              ),
+          child: ReloadablePhotoView(
+            imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
+              key: key,
+              url: url,
+              cacheManager: _cache,
+              headers: {
+                'User-Agent': USER_AGENT,
+                'Referer': REFERER,
+              },
+            ),
+            initialScale: PhotoViewComputedScale.contained / 2,
+            minScale: PhotoViewComputedScale.contained / 2,
+            maxScale: PhotoViewComputedScale.covered * 2,
+            filterQuality: FilterQuality.high,
+            loadingBuilder: (_, ev) => ImageLoadingView(
+              title: '',
+              event: ev,
+            ),
+            errorBuilder: (_, err, __) => ImageLoadFailedView(
+              title: '',
+              error: err,
             ),
           ),
         ),

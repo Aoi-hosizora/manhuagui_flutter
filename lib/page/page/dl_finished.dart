@@ -44,7 +44,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
         .toList();
 
     return Scaffold(
-      body: ScrollbarWithMore(
+      body: ExtendedScrollbar(
         controller: widget.innerController,
         interactive: true,
         crossAxisMargin: 2,
