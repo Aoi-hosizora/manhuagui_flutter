@@ -32,6 +32,7 @@ class AuthManager {
   }
 
   var _data = AuthData(username: '', token: ''); // global auth data
+  bool _loading = false; // global loading flag
 
   AuthData get authData => _data;
 
@@ -40,6 +41,8 @@ class AuthManager {
   String get token => _data.token;
 
   bool get logined => _data.token.isNotEmpty;
+
+  bool get loading => _loading;
 
   void record({required String username, required String token}) {
     _data = AuthData(username: username, token: token);
@@ -63,7 +66,9 @@ class AuthManager {
 
   Future<AuthChangedEvent> check() async {
     return _lock.synchronized<AuthChangedEvent>(() async {
-      // logined
+      _loading = true;
+
+      // check if is logined
       if (AuthManager.instance.logined) {
         return AuthManager.instance.notify(logined: true);
       }
@@ -87,6 +92,8 @@ class AuthManager {
         }
         return AuthManager.instance.notify(logined: false, error: we);
       }
+    }).whenComplete(() {
+      _loading = false;
     });
   }
 }

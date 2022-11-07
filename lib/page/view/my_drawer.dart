@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
-import 'package:manhuagui_flutter/page/index.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
@@ -19,7 +18,7 @@ enum DrawerSelection {
   setting, // SettingPage
 }
 
-class MyDrawer extends StatelessWidget {
+class MyDrawer extends StatefulWidget {
   const MyDrawer({
     Key? key,
     required this.currentSelection,
@@ -27,36 +26,67 @@ class MyDrawer extends StatelessWidget {
 
   final DrawerSelection currentSelection;
 
-  Future<void> _popUntilFirst(BuildContext context) async {
-    await Future.delayed(Duration(milliseconds: 246)); // _kBaseSettleDuration
+  @override
+  State<MyDrawer> createState() => _MyDrawerState();
+}
+
+class _MyDrawerState extends State<MyDrawer> {
+  VoidCallback? _cancelHandler;
+  late CustomPageRouteThemeData? _routeTheme = CustomPageRouteTheme.of(context);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _cancelHandler = AuthManager.instance.listen(null, (_) {
+        if (mounted) setState(() {});
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _cancelHandler?.call();
+    super.dispose();
+  }
+
+  void _gotoPage(Widget page) async {
+    Navigator.of(context).push(
+      CustomPageRoute(
+        context: null,
+        builder: (_) => page,
+        transitionDuration: _routeTheme?.transitionDuration,
+        reverseTransitionDuration: _routeTheme?.reverseTransitionDuration,
+        barrierColor: _routeTheme?.barrierColor,
+        barrierCurve: _routeTheme?.barrierCurve,
+        disableCanTransitionTo: _routeTheme?.disableCanTransitionTo,
+        disableCanTransitionFrom: _routeTheme?.disableCanTransitionFrom,
+        transitionsBuilder: _routeTheme?.transitionsBuilder,
+      ),
+    );
+  }
+
+  Future<void> _popUntilFirst() async {
+    await Future.delayed(kDrawerBaseSettleDuration);
     Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
-  void _gotoPage(BuildContext context, Widget page, [bool popUntilFirst = false]) async {
-    if (popUntilFirst) {
-      await _popUntilFirst(context);
-    } else {
-      Navigator.of(context).push(
-        CustomPageRoute(
-          context: context,
-          builder: (_) => page,
-        ),
-      );
-    }
-  }
-
-  Future<void> _gotoHomePageTab(BuildContext context, dynamic event) async {
-    await _popUntilFirst(context);
+  Future<void> _gotoHomePageTab(dynamic event) async {
+    await _popUntilFirst();
     EventBusManager.instance.fire(event);
   }
 
-  Widget _buildItem(BuildContext context, String text, IconData icon, DrawerSelection? selection, void Function() action) {
+  Widget _buildItem(String text, IconData icon, DrawerSelection? selection, void Function() action) {
     return ListTile(
       title: Text(text),
       leading: Icon(icon),
-      selected: selection == null ? false : currentSelection == selection,
+      selected: selection == null ? false : widget.currentSelection == selection,
       selectedTileColor: Colors.grey[300],
       onTap: () {
+        if (widget.currentSelection == selection) {
+          return;
+        }
+        _routeTheme = CustomPageRouteTheme.of(context); // get theme data before pop
         if (Scaffold.of(context).isDrawerOpen) {
           Navigator.of(context).pop();
         }
@@ -67,7 +97,6 @@ class MyDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final BuildContext c = context;
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -112,25 +141,29 @@ class MyDrawer extends StatelessWidget {
                   left: 0,
                   bottom: 0,
                   child: Text(
-                    !AuthManager.instance.logined ? '未登录用户' : AuthManager.instance.username,
-                    style: Theme.of(c).textTheme.subtitle1,
+                    AuthManager.instance.loading
+                        ? '获取登录状态中...'
+                        : !AuthManager.instance.logined
+                            ? '未登录用户'
+                            : AuthManager.instance.username,
+                    style: Theme.of(context).textTheme.subtitle1,
                   ),
                 ),
               ],
             ),
           ),
-          _buildItem(c, '主页', Icons.home, DrawerSelection.home, () => _gotoPage(c, IndexPage(), true)),
-          if (!AuthManager.instance.logined) _buildItem(c, '登录', Icons.login, null, () => _gotoPage(c, LoginPage())),
-          _buildItem(c, '搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(c, SearchPage())),
-          _buildItem(c, '下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(c, DownloadPage())),
-          Divider(),
-          _buildItem(c, '我的书架', Icons.star_outlined, null, () => _gotoHomePageTab(c, ToShelfRequestedEvent())),
-          _buildItem(c, '浏览历史', Icons.history, null, () => _gotoHomePageTab(c, ToHistoryRequestedEvent())),
-          _buildItem(c, '最近更新', Icons.cached, null, () => _gotoHomePageTab(c, ToRecentRequestedEvent())),
-          _buildItem(c, '漫画排行', Icons.trending_up, null, () => _gotoHomePageTab(c, ToRankingRequestedEvent())),
-          Divider(),
-          _buildItem(c, '漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: c, url: WEB_HOMEPAGE_URL)),
-          _buildItem(c, '设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(c, SettingPage())),
+          _buildItem('主页', Icons.home, DrawerSelection.home, () => _popUntilFirst()),
+          if (!AuthManager.instance.loading && !AuthManager.instance.logined) _buildItem('登录', Icons.login, null, () => _gotoPage(LoginPage())),
+          _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
+          _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage())),
+          Divider(thickness: 1),
+          _buildItem('我的书架', Icons.star_outlined, null, () => _gotoHomePageTab(ToShelfRequestedEvent())),
+          _buildItem('浏览历史', Icons.history, null, () => _gotoHomePageTab(ToHistoryRequestedEvent())),
+          _buildItem('最近更新', Icons.cached, null, () => _gotoHomePageTab(ToRecentRequestedEvent())),
+          _buildItem('漫画排行', Icons.trending_up, null, () => _gotoHomePageTab(ToRankingRequestedEvent())),
+          Divider(thickness: 1),
+          _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
+          _buildItem('设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(SettingPage())),
         ],
       ),
     );

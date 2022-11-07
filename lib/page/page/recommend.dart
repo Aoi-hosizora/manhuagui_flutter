@@ -122,8 +122,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       ActionRowView.four(
                         action1: ActionItem.simple('我的书架', Icons.star_outlined, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
                         action2: ActionItem.simple('浏览历史', Icons.history, () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
-                        action3: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => DownloadPage()))),
-                        action4: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => MangaRandomPage()))),
+                        action3: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
+                        action4: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaRandomPage()))),
                       ),
                       ActionRowView.four(
                         action1: ActionItem.simple('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),

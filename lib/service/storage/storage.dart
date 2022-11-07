@@ -7,9 +7,9 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:path/path.dart' as path_;
 import 'package:path_provider/path_provider.dart';
 
-// =============
-// path and name
-// =============
+// ============
+// storage path
+// ============
 
 Future<String> getPublicStorageDirectoryPath() async {
   final storageDirectories = await ExternalPath.getExternalStorageDirectories();

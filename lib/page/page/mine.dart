@@ -313,7 +313,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildDivider(),
               _buildActionLine(text: '浏览历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
               _buildDivider(),
-              _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomPageRoute.simple(context, (c) => DownloadPage()))),
+              _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
               SizedBox(height: 12),
               _buildInfoLines(
                 title: '个人信息',

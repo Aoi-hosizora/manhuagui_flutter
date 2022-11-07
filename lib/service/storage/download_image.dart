@@ -1,8 +1,8 @@
 import 'dart:io' show File, Directory;
 
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/service/storage/download_file.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 // ====
@@ -51,6 +51,7 @@ Future<File?> downloadImageToGallery(String url) async {
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         whenOverwrite: (_) async => OverwriteBehavior.addSuffix,
+        headTimeout: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
         downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
     );

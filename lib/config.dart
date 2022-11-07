@@ -22,7 +22,7 @@ const DEBUG_ERROR = true;
 const CONNECT_TIMEOUT = 5000; // 5.0s (local -> my server)
 const SEND_TIMEOUT = 5000; // 5.0s (local -> my server)
 const RECEIVE_TIMEOUT = 8000; // 8.0s (my server -> manhuagui server -> my server -> local)
-const HEAD_TIMEOUT = 4000; // 4.0s (local -> manhuagui server -> local)
+const DOWNLOAD_HEAD_TIMEOUT = 4000; // 4.0s (local -> manhuagui server -> local)
 const DOWNLOAD_IMAGE_TIMEOUT = 15000; // 15.0s (local -> manhuagui server -> local)
 
 const BASE_API_URL = 'https://api-manhuagui.aoihosizora.top/v1/';
