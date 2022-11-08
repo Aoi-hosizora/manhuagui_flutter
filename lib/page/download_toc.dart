@@ -20,8 +20,8 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/storage/download_image.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
+import 'package:manhuagui_flutter/service/storage/download.dart';
+import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
 /// 章节下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
@@ -113,10 +113,8 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
 
     // history related
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
-      try {
-        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-        if (mounted) setState(() {});
-      } catch (_) {}
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
     }));
   }
 

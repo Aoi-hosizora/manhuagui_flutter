@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
+import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
 /// 章节下载管理页-未完成
 class DlUnfinishedSubPage extends StatefulWidget {

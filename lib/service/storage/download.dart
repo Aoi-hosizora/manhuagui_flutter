@@ -50,7 +50,7 @@ Future<File?> downloadImageToGallery(String url) async {
       cacheManager: DefaultCacheManager(),
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
-        whenOverwrite: (_) async => OverwriteBehavior.addSuffix,
+        conflictHandler: (_) async => DownloadConflictBehavior.addSuffix,
         headTimeout: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
         downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
@@ -79,7 +79,7 @@ Future<bool> downloadChapterPage({required int mangaId, required int chapterId, 
       cacheManager: DefaultCacheManager(),
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
-        whenOverwrite: (_) async => OverwriteBehavior.overwrite,
+        conflictHandler: (_) async => DownloadConflictBehavior.overwrite,
         downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
     );

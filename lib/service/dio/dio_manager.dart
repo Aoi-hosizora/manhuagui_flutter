@@ -24,12 +24,7 @@ class DioManager {
     return _dio!;
   }
 
-  Dio get silentDio {
-    return Dio()
-      ..options.connectTimeout = dio.options.connectTimeout
-      ..options.sendTimeout = dio.options.sendTimeout
-      ..options.receiveTimeout = dio.options.receiveTimeout;
-  }
+  // TODO add long dio and setting
 }
 
 class LogInterceptor extends Interceptor {

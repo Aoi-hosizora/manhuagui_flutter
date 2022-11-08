@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
+import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
 /// 选择下载章节页，展示所给 [MangaChapterGroup] 列表信息，并提供章节选择功能
 class DownloadSelectPage extends StatefulWidget {

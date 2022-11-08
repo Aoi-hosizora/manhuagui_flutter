@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
-import 'package:manhuagui_flutter/service/storage/download_image.dart';
+import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 import 'package:queue/queue.dart';
 

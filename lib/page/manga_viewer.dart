@@ -29,7 +29,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
-import 'package:manhuagui_flutter/service/storage/download_image.dart';
+import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -268,14 +268,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _currentPage = 1; // image page only, starts from 1
   var _progressValue = 1; // image page only, starts from 1
-  var _inExtraPage = true;
+  var _inExtraPage = false;
 
   void _onPageChanged(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) {
     _currentPage = imageIndex;
     _progressValue = imageIndex;
     var inExtraPage = inFirstExtraPage || inLastExtraPage;
-    if (inExtraPage && inExtraPage != _inExtraPage) {
-      _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
+    if (inExtraPage != _inExtraPage) {
+      if (inExtraPage) {
+        _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
+      }
       _inExtraPage = inExtraPage;
     }
     if (mounted) setState(() {});

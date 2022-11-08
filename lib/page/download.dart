@@ -11,8 +11,8 @@ import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/storage/download_image.dart';
-import 'package:manhuagui_flutter/service/storage/download_manga_task.dart';
+import 'package:manhuagui_flutter/service/storage/download.dart';
+import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
 /// 下载列表页，查询数据库并展示 [DownloadedManga] 列表信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
