@@ -51,13 +51,15 @@ Future<File?> downloadImageToGallery(String url) async {
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         conflictHandler: (_) async => DownloadConflictBehavior.addSuffix,
-        headTimeout: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
-        downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+        // headTimeout: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
+        // downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
     );
     await addToGallery(f); // <<<
+    globalLogger.i('downloadImageToGallery !!!');
     return f;
   } catch (e, s) {
+    globalLogger.e('downloadImageToGallery', e, s);
     print('===> exception when downloadImageToGallery:\n$e\n$s');
     return null;
   }
@@ -80,11 +82,13 @@ Future<bool> downloadChapterPage({required int mangaId, required int chapterId, 
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         conflictHandler: (_) async => DownloadConflictBehavior.overwrite,
-        downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+        // downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
     );
+    globalLogger.i('downloadImageToGallery !!!');
     return true;
   } catch (e, s) {
+    globalLogger.e('downloadChapterPage', e, s);
     print('===> exception when downloadChapterPage:\n$e\n$s');
     return false;
   }

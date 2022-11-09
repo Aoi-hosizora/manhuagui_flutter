@@ -1,10 +1,17 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:manhuagui_flutter/page/index.dart';
+import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 void main() {
+  globalLogger = ExtendedLogger(
+    filter: ProductionFilter(),
+  );
+  LogConsolePage.initialize();
+
   runApp(const MyApp());
 }
 
