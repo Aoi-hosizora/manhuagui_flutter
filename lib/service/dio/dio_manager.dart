@@ -14,7 +14,7 @@ class DioManager {
 
   // global Dio instances
   Dio? _dio;
-  Dio? _longTimeoutDio;
+  Dio? _longDio;
   Dio? _noTimeoutDio;
 
   Dio get dio {
@@ -25,23 +25,23 @@ class DioManager {
       _dio!.options.receiveTimeout = RECEIVE_TIMEOUT;
       _dio!.interceptors.add(LogInterceptor());
     }
-    if (_longTimeoutDio == null) {
-      _longTimeoutDio = Dio();
-      _longTimeoutDio!.options.connectTimeout = CONNECT_LTIMEOUT;
-      _longTimeoutDio!.options.sendTimeout = SEND_LTIMEOUT;
-      _longTimeoutDio!.options.receiveTimeout = RECEIVE_LTIMEOUT;
-      _longTimeoutDio!.interceptors.add(LogInterceptor());
+    if (_longDio == null) {
+      _longDio = Dio();
+      _longDio!.options.connectTimeout = CONNECT_LTIMEOUT;
+      _longDio!.options.sendTimeout = SEND_LTIMEOUT;
+      _longDio!.options.receiveTimeout = RECEIVE_LTIMEOUT;
+      _longDio!.interceptors.add(LogInterceptor());
     }
     if (_noTimeoutDio == null) {
       _noTimeoutDio = Dio();
       _noTimeoutDio!.interceptors.add(LogInterceptor());
     }
 
-    switch (GlbSetting.globalTimeoutBehavior) {
+    switch (GlbSetting.global.timeoutBehavior) {
       case TimeoutBehavior.normal:
         return _dio!;
       case TimeoutBehavior.long:
-        return _longTimeoutDio!;
+        return _longDio!;
       case TimeoutBehavior.disable:
         return _noTimeoutDio!;
     }

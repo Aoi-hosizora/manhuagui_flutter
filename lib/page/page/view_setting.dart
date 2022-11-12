@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// 漫画章节阅读页-阅读设置
 
 class ViewSetting {
-  ViewSetting({
+  const ViewSetting({
     required this.viewDirection,
     required this.showPageHint,
     this.showClock = true,

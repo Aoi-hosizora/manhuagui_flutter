@@ -59,8 +59,6 @@ class _LogConsolePageState extends State<LogConsolePage> {
 
   final _filteredBuffer = <_PlainOutputEvent>[];
   var _filterLevel = Level.verbose;
-  var _logFontSize = 14.0;
-
   var _enableScrollListener = true;
   var _followBottom = false;
 
@@ -129,16 +127,6 @@ class _LogConsolePageState extends State<LogConsolePage> {
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
-            icon: const Icon(Icons.add),
-            tooltip: '放大日志',
-            onPressed: () => mountedSetState(() => _logFontSize++),
-          ),
-          AppBarActionButton(
-            icon: const Icon(Icons.remove),
-            tooltip: '缩小日志',
-            onPressed: () => mountedSetState(() => _logFontSize--),
-          ),
-          AppBarActionButton(
             icon: const Icon(Icons.delete),
             tooltip: '清空日志',
             onPressed: () {
@@ -179,73 +167,82 @@ class _LogConsolePageState extends State<LogConsolePage> {
           ),
         ],
       ),
-      body: Scrollbar(
-        controller: _scrollController,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          scrollDirection: Axis.vertical,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: 2000,
-              child: SelectableText(
-                _filteredBuffer.map((el) => el.plainText).join('\n'),
-                style: TextStyle(fontFamily: 'monospace', fontSize: _logFontSize),
+      body: Column(
+        children: [
+          Expanded(
+            child: Scrollbar(
+              controller: _scrollController,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                scrollDirection: Axis.vertical,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: 2000,
+                    child: SelectableText(
+                      _filteredBuffer.map((el) => el.plainText).join('\n'),
+                      style: Theme.of(context).textTheme.bodyText2?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        child: Container(
-          height: kToolbarHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _filterController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '过滤日志...',
+          BottomAppBar(
+            color: Colors.white,
+            child: Container(
+              height: kToolbarHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _filterController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '过滤日志...',
+                      ),
+                      style: const TextStyle(fontSize: 20),
+                      onChanged: (s) => _updateFilteredBuffer(),
+                    ),
                   ),
-                  style: const TextStyle(fontSize: 20),
-                  onChanged: (s) => _updateFilteredBuffer(),
-                ),
-              ),
-              const SizedBox(width: 10),
-              DropdownButton<Level>(
-                value: _filterLevel,
-                items: const [
-                  DropdownMenuItem(child: Text('verbose'), value: Level.verbose),
-                  DropdownMenuItem(child: Text('debug'), value: Level.debug),
-                  DropdownMenuItem(child: Text('info'), value: Level.info),
-                  DropdownMenuItem(child: Text('warning'), value: Level.warning),
-                  DropdownMenuItem(child: Text('error'), value: Level.error),
-                  DropdownMenuItem(child: Text('wtf'), value: Level.wtf),
+                  const SizedBox(width: 10),
+                  DropdownButton<Level>(
+                    value: _filterLevel,
+                    items: const [
+                      DropdownMenuItem(child: Text('verbose'), value: Level.verbose),
+                      DropdownMenuItem(child: Text('debug'), value: Level.debug),
+                      DropdownMenuItem(child: Text('info'), value: Level.info),
+                      DropdownMenuItem(child: Text('warning'), value: Level.warning),
+                      DropdownMenuItem(child: Text('error'), value: Level.error),
+                      DropdownMenuItem(child: Text('wtf'), value: Level.wtf),
+                    ],
+                    underline: Container(color: Colors.transparent),
+                    onChanged: (value) {
+                      if (value != null) {
+                        _filterLevel = value;
+                        _updateFilteredBuffer();
+                      }
+                    },
+                  ),
                 ],
-                underline: Container(color: Colors.transparent),
-                onChanged: (value) {
-                  if (value != null) {
-                    _filterLevel = value;
-                    _updateFilteredBuffer();
-                  }
-                },
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
       floatingActionButton: AnimatedOpacity(
         opacity: _followBottom ? 0 : 1,
         duration: const Duration(milliseconds: 150),
-        child: FloatingActionButton(
-          child: const Icon(Icons.arrow_downward),
-          heroTag: null,
-          mini: true,
-          onPressed: _scrollToBottom,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: kToolbarHeight),
+          child: FloatingActionButton(
+            child: const Icon(Icons.arrow_downward),
+            heroTag: null,
+            mini: true,
+            onPressed: _scrollToBottom,
+          ),
         ),
       ),
     );

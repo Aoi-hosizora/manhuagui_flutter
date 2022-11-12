@@ -176,8 +176,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       var result = await client.getManga(mid: widget.mangaId);
       _chapterGroups = result.data.chapterGroups;
     } catch (e, s) {
-      // ignored
-      print('===> exception when _getChapterGroupsAsync:\n${wrapError(e, s).text}');
+      wrapError(e, s); // ignored
     }
   }
 

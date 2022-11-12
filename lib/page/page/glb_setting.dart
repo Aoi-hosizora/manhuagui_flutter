@@ -9,38 +9,40 @@ class GlbSetting {
     required this.timeoutBehavior,
     required this.dlTimeoutBehavior,
     required this.enableLogger,
+    required this.usingDownloadedPage,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
   final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
   final bool enableLogger; // 记录调试日志
+  final bool usingDownloadedPage; // 阅读时载入已下载的页面
 
   GlbSetting.defaultSetting()
       : this(
           timeoutBehavior: TimeoutBehavior.normal,
           dlTimeoutBehavior: TimeoutBehavior.normal,
           enableLogger: false,
+          usingDownloadedPage: true,
         );
 
   GlbSetting copyWith({
     TimeoutBehavior? timeoutBehavior,
     TimeoutBehavior? dlTimeoutBehavior,
     bool? enableLogger,
+    bool? usingDownloadedPage,
   }) {
     return GlbSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
       dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
       enableLogger: enableLogger ?? this.enableLogger,
+      usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
     );
   }
 
-  static TimeoutBehavior globalTimeoutBehavior = TimeoutBehavior.normal;
-  static TimeoutBehavior globalDlTimeoutBehavior = TimeoutBehavior.normal;
+  static GlbSetting global = GlbSetting.defaultSetting();
 
   static updateGlobalSetting(GlbSetting s) {
-    globalTimeoutBehavior = s.timeoutBehavior;
-    globalDlTimeoutBehavior = s.dlTimeoutBehavior;
-
+    global = s;
     if (!s.enableLogger) {
       LogConsolePage.finalize();
     } else if (!LogConsolePage.initialized) {
@@ -115,11 +117,13 @@ class _GlbSettingSubPageState extends State<GlbSettingSubPage> {
   late var _timeoutBehavior = widget.setting.timeoutBehavior;
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
+  late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
 
   GlbSetting get _newestSetting => GlbSetting(
         timeoutBehavior: _timeoutBehavior,
         dlTimeoutBehavior: _dlTimeoutBehavior,
         enableLogger: _enableLogger,
+        usingDownloadedPage: _usingDownloadedPage,
       );
 
   Widget _buildComboBox<T>({
@@ -219,6 +223,15 @@ class _GlbSettingSubPageState extends State<GlbSettingSubPage> {
           value: _enableLogger,
           onChanged: (b) {
             _enableLogger = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        _buildSwitcher(
+          title: '阅读时载入已下载的页面',
+          value: _usingDownloadedPage,
+          onChanged: (b) {
+            _usingDownloadedPage = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

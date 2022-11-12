@@ -15,26 +15,26 @@ enum ErrorType {
 }
 
 class ErrorMessage {
-  const ErrorMessage({required this.type, required this.error, required this.stack, required this.text, this.response, this.serviceCode, this.detail, this.castError});
+  const ErrorMessage({required this.type, required this.error, required this.stack, required this.text, this.response, this.serviceCode, this.detail, this.casting});
 
   const ErrorMessage.network(this.error, this.stack, this.text)
       : type = ErrorType.networkError,
         response = null,
         serviceCode = null,
         detail = null,
-        castError = null;
+        casting = null;
 
   const ErrorMessage.status(this.error, this.stack, this.text, {this.response})
       : type = ErrorType.statusError,
         serviceCode = null,
         detail = null,
-        castError = null;
+        casting = null;
 
   const ErrorMessage.result(this.error, this.stack, this.text, {this.response, this.serviceCode, this.detail})
       : type = ErrorType.resultError,
-        castError = null;
+        casting = null;
 
-  const ErrorMessage.other(this.error, this.stack, this.text, {this.castError})
+  const ErrorMessage.other(this.error, this.stack, this.text, {this.casting})
       : type = ErrorType.otherError,
         response = null,
         serviceCode = null,
@@ -48,16 +48,11 @@ class ErrorMessage {
   final Response? response;
   final int? serviceCode;
   final dynamic detail;
-  final bool? castError;
+  final bool? casting;
 }
 
 /// Wraps given error to [ErrorMessage].
 ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
-  globalLogger.e('wrapError (${e.runtimeType})', e, s);
-
-  print('┌─────────────────── WrapError ───────────────────┐');
-  print('===> date: ${DateTime.now().toIso8601String()}');
-
   // DioError [DioErrorType.other]: SocketException: Network error (OS Error: Network is unreachable, errno = 101)
   // DioError [DioErrorType.other]: SocketException: Failed host lookup: '...' (OS Error: No address associated with hostname, errno = 7)
   // DioError [DioErrorType.other]: SocketException: Connection refused (OS Error: Connection refused, errno = 111)
@@ -122,6 +117,13 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     }
     return text;
   }
+
+  var stackTrace = StackTrace.current.toString();
+  var secondLine = RegExp('#1\\s*(.+)').firstMatch(stackTrace)?.group(1);
+  globalLogger.e('wrapError (${e.runtimeType})\n===> $secondLine', e, s, true /* ignoreOutput */);
+
+  print('┌─────────────────── WrapError ───────────────────┐');
+  print('===> date: ${DateTime.now().toIso8601String()}');
 
   if (e is DioError) {
     var response = e.response;
@@ -205,8 +207,6 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ErrorType.networkError (TimeoutException)
   if (e is TimeoutException) {
     var text = '网络请求超时'; // Network timed out
-    print('===> uri: ?');
-    print('===> method: ?');
     print('===> type: ${ErrorType.networkError}');
     print('===> text: $text');
     print('===> error: TimeoutException: after ${e.duration}: ${e.message}');
@@ -219,8 +219,6 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ErrorType.networkError (TlsException => HandshakeException / CertificateException)
   if (e is TlsException) {
     var text = _translate(e.message, 'TlsException (${e.type})'); // ...
-    print('===> uri: ?');
-    print('===> method: ?');
     print('===> type: ${ErrorType.networkError}');
     print('===> text: $text');
     print('===> error: TlsException: ${e.type}: ${e.message}${e.osError == null ? '' : ' ${e.osError}'}');
@@ -233,8 +231,6 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ErrorType.networkError (ClientException / _ClientSocketException)
   if (e.runtimeType.toString() == 'ClientException' || e.runtimeType.toString() == '_ClientSocketException') {
     var text = _translate(e.message, e.runtimeType.toString()); // ...
-    print('===> uri: ?');
-    print('===> method: ?');
     print('===> type: ${ErrorType.networkError}');
     print('===> text: $text');
     print('===> error: ${e.runtimeType}: $e');
@@ -251,8 +247,8 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   } else {
     text = '程序发生错误 ([DEBUG] ${e.runtimeType}: $e)';
   }
-  var cast = e.runtimeType.toString() == '_CastError';
-  if (cast) {
+  var casting = e.runtimeType.toString() == '_CastError';
+  if (casting) {
     var msg = e.toString();
     var newText = '';
     if (msg.contains('Null check operator used on a null value')) {
@@ -278,5 +274,5 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   print('===> error: ${e.runtimeType}: $e');
   print('===> trace:\n$s');
   print('└─────────────────── WrapError ───────────────────┘');
-  return ErrorMessage.other(e, s, text, castError: cast);
+  return ErrorMessage.other(e, s, text, casting: casting);
 }

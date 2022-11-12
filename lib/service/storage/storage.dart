@@ -2,6 +2,7 @@ import 'dart:io' show File, Directory, Platform;
 
 import 'package:external_path/external_path.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:path/path.dart' as path_;
@@ -79,4 +80,29 @@ Future<void> addToGallery(File file) async {
   await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
     'filepath': file.path,
   });
+}
+
+// =====
+// cache
+// =====
+
+Future<String> getDefaultCacheManagerDirectoryPath() async {
+  var baseDir = await getTemporaryDirectory();
+  return PathUtils.joinPath([baseDir.path, DefaultCacheManager.key]);
+}
+
+Future<int> getDefaultCacheManagerDirectoryBytes() async {
+  var cachePath = await getDefaultCacheManagerDirectoryPath();
+  var directory = Directory(cachePath);
+  if (!(await directory.exists())) {
+    return 0;
+  }
+
+  var totalBytes = 0;
+  await for (var entity in directory.list(recursive: true, followLinks: false)) {
+    if (entity is File) {
+      totalBytes += await entity.length();
+    }
+  }
+  return totalBytes;
 }

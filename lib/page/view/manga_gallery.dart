@@ -190,7 +190,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             urlFuture: widget.imageUrlFutures[idx],
             headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
             cacheManager: _cache,
-            networkTimeout: GlbSetting.globalTimeoutBehavior.determineDuration(
+            networkTimeout: GlbSetting.global.timeoutBehavior.determineDuration(
               normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
               long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
             ),
@@ -265,7 +265,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           urlFuture: widget.imageUrlFutures[idx],
           headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
           cacheManager: _cache,
-          networkTimeout: GlbSetting.globalTimeoutBehavior.determineDuration(
+          networkTimeout: GlbSetting.global.timeoutBehavior.determineDuration(
             normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
             long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
           ),

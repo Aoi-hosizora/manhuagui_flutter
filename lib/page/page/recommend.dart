@@ -130,7 +130,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                         action2: ActionItem.simple('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
                         action3: ActionItem.simple('漫画类别', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())),
                         action4: ActionItem.simple('外部打开', Icons.open_in_browser, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -148,6 +148,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 for (var group in _data!.serial.otherGroups) _buildGroup(group, MangaGroupType.serial, MangaGroupViewStyle.smallOneLine), // 热门连载...
                 for (var group in _data!.finish.otherGroups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallOneLine), // 经典完结...
                 for (var group in _data!.latest.otherGroups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallOneLine), // 最新上架...
+                SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    '已经划到底了~',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
                 SizedBox(height: 12),
               ],
             ),

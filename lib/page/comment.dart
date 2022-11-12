@@ -51,7 +51,7 @@ class _CommentPageState extends State<CommentPage> {
                 Container(
                   color: Colors.white,
                   child: Divider(height: 0, thickness: 1, indent: 40 + 2.0 * 15),
-                )
+                ),
               ],
               CommentLineView(
                 comment: widget.comment.replyTimeline.last.toComment(),

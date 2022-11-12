@@ -43,7 +43,7 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await Future.delayed(Duration(milliseconds: 450));
+      await Future.delayed(Duration(milliseconds: 400));
       _searchController.open();
     });
   }
@@ -264,7 +264,7 @@ class _SearchPageState extends State<SearchPage> {
                     borderRadius: _searchController.isClosed
                         ? BorderRadius.all(Radius.circular(4)) // all border sides have radius
                         : BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)) /* only top borders have radius */,
-                    transitionDuration: Duration(milliseconds: 450),
+                    transitionDuration: Duration(milliseconds: 400),
                     transitionCurve: Curves.easeInOut,
                     transition: CircularFloatingSearchBarTransition(),
                     hint: '输入标题名称、拼音或者 mid 搜索漫画',

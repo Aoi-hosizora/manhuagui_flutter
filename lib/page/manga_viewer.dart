@@ -14,6 +14,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_select.dart';
 import 'package:manhuagui_flutter/page/download_toc.dart';
+import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -219,22 +220,26 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
         return Future.value(url);
       }).toList();
-      _fileFutures = [
-        for (int idx = 0; idx < _data!.pageCount; idx++)
-          Future<File?>.microtask(() async {
-            var filepath = await getDownloadedChapterPageFilePath(
-              mangaId: widget.mangaId,
-              chapterId: _data!.cid,
-              pageIndex: idx,
-              url: _data!.pages[idx],
-            );
-            var f = File(filepath);
-            if (!(await f.exists())) {
-              return null;
-            }
-            return f;
-          }),
-      ];
+      if (!GlbSetting.global.usingDownloadedPage) {
+        _fileFutures = List.generate(_data!.pageCount, (_) => Future<File?>.value(null));
+      } else {
+        _fileFutures = [
+          for (int idx = 0; idx < _data!.pageCount; idx++)
+            Future<File?>.microtask(() async {
+              var filepath = await getDownloadedChapterPageFilePath(
+                mangaId: widget.mangaId,
+                chapterId: _data!.cid,
+                pageIndex: idx,
+                url: _data!.pages[idx],
+              );
+              var f = File(filepath);
+              if (!(await f.exists())) {
+                return null;
+              }
+              return f;
+            }),
+        ];
+      }
 
       // 8. 异步更新浏览历史
       _updateHistory();
@@ -629,7 +634,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                 ),
                               );
                             },
-                          )
+                          ),
                       ],
                     ),
             ),

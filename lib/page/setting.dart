@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/page/glb_setting.dart';
@@ -10,6 +12,7 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
+import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 /// 设置页
 class SettingPage extends StatefulWidget {
@@ -85,13 +88,13 @@ class _SettingPageState extends State<SettingPage> {
               ],
             ),
           ),
-          _spacer(),
           // *******************************************************
+          _spacer(),
           _item(
             title: '漫画阅读设置',
             action: () async {
               var setting = await ViewSettingPrefs.getSetting();
-              showDialog(
+              await showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('漫画阅读设置'),
@@ -121,7 +124,7 @@ class _SettingPageState extends State<SettingPage> {
             title: '漫画下载设置',
             action: () async {
               var setting = await DlSettingPrefs.getSetting();
-              showDialog(
+              await showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('漫画下载设置'),
@@ -151,7 +154,7 @@ class _SettingPageState extends State<SettingPage> {
             title: '高级设置',
             action: () async {
               var setting = await GlbSettingPrefs.getSetting();
-              showDialog(
+              await showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('高级设置'),
@@ -178,8 +181,9 @@ class _SettingPageState extends State<SettingPage> {
               );
             },
           ),
+          // *******************************************************
+          _spacer(),
           if (LogConsolePage.initialized) ...[
-            _divider(),
             _item(
               title: '查看调试日志',
               action: () => Navigator.of(context).push(
@@ -189,9 +193,52 @@ class _SettingPageState extends State<SettingPage> {
                 ),
               ),
             ),
+            _divider(),
           ],
-          _spacer(),
+          _item(
+            title: '清除图像缓存',
+            action: () async {
+              var cachedBytes = await getDefaultCacheManagerDirectoryBytes();
+              await showDialog(
+                context: context,
+                builder: (c) => AlertDialog(
+                  title: Text('清除图像缓存'),
+                  content: Text('当前图像缓存共占用 ${filesize(cachedBytes)} 空间，是否清除？\n\n注意：该操作仅清除图像缓存，并不影响阅读历史、搜索历史等数据。'),
+                  actions: [
+                    TextButton(
+                      child: Text('清除'),
+                      onPressed: () async {
+                        Navigator.of(c).pop();
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (c) => const AlertDialog(
+                            contentPadding: EdgeInsets.zero,
+                            content: CircularProgressDialogOption(
+                              progress: CircularProgressIndicator(),
+                              child: Text('清除图像缓存...'),
+                            ),
+                          ),
+                        );
+                        await Future.delayed(Duration(milliseconds: 500));
+                        await DefaultCacheManager().store.emptyCache();
+                        Navigator.of(context).pop();
+                        Fluttertoast.showToast(msg: '已清除所有图像缓存');
+                      },
+                    ),
+                    TextButton(
+                      child: Text('取消'),
+                      onPressed: () {
+                        Navigator.of(c).pop();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           // *******************************************************
+          _spacer(),
           _item(
             title: '漫画柜/看漫画官网',
             action: () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL),
@@ -201,8 +248,8 @@ class _SettingPageState extends State<SettingPage> {
             title: '本应用源代码',
             action: () => launchInBrowser(context: context, url: SOURCE_CODE_URL),
           ),
-          _spacer(),
           // *******************************************************
+          _spacer(),
           _item(
             title: '反馈及联系作者',
             action: () => launchInBrowser(context: context, url: FEEDBACK_URL),
@@ -251,8 +298,8 @@ class _SettingPageState extends State<SettingPage> {
               ],
             ),
           ),
-          _spacer(),
           // *******************************************************
+          _spacer(),
           Align(
             alignment: Alignment.center,
             child: Text(

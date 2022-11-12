@@ -52,11 +52,11 @@ Future<File?> downloadImageToGallery(String url) async {
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         conflictHandler: (_) async => DownloadConflictBehavior.addSuffix,
-        headTimeout: GlbSetting.globalDlTimeoutBehavior.determineDuration(
+        headTimeout: GlbSetting.global.dlTimeoutBehavior.determineDuration(
           normal: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
           long: Duration(milliseconds: DOWNLOAD_HEAD_LTIMEOUT),
         ),
-        downloadTimeout: GlbSetting.globalDlTimeoutBehavior.determineDuration(
+        downloadTimeout: GlbSetting.global.dlTimeoutBehavior.determineDuration(
           normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
           long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
         ),

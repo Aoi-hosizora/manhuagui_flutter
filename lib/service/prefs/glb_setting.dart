@@ -8,6 +8,7 @@ class GlbSettingPrefs {
   static const _timeoutBehaviorKey = 'GlbSetting_timeoutBehavior'; // int
   static const _dlTimeoutBehaviorKey = 'GlbSetting_dlTimeoutBehavior'; // int
   static const _enableLoggerKey = 'GlbSetting_enableLogger'; // bool
+  static const _usingDownloadedPageKey = 'GlbSetting_usingDownloadedPage'; // bool
 
   static Future<GlbSetting> getSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -16,6 +17,7 @@ class GlbSettingPrefs {
       timeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGetInt(_timeoutBehaviorKey) ?? def.timeoutBehavior.toInt()),
       dlTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGetInt(_dlTimeoutBehaviorKey) ?? def.dlTimeoutBehavior.toInt()),
       enableLogger: prefs.safeGetBool(_enableLoggerKey) ?? def.enableLogger,
+      usingDownloadedPage: prefs.safeGetBool(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
     );
   }
 
@@ -24,6 +26,7 @@ class GlbSettingPrefs {
     await prefs.setInt(_timeoutBehaviorKey, setting.timeoutBehavior.toInt());
     await prefs.setInt(_dlTimeoutBehaviorKey, setting.dlTimeoutBehavior.toInt());
     await prefs.setBool(_enableLoggerKey, setting.enableLogger);
+    await prefs.setBool(_usingDownloadedPageKey, setting.usingDownloadedPage);
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {

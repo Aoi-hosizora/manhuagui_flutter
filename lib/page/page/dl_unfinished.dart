@@ -88,7 +88,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                           onPressedWhenDisabled: () => widget.toReadChapter.call(chapter.chapterId),
                           onLongPressed: () => widget.toDeleteChapter.call(chapter.chapterId),
                         ),
-                      )
+                      ),
                   ].separate(
                     Container(
                       color: Colors.white,

@@ -818,7 +818,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),

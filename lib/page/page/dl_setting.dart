@@ -3,32 +3,32 @@ import 'package:flutter/material.dart';
 /// 下载列表页-下载设置
 
 class DlSetting {
-  DlSetting({
+  const DlSetting({
+    required this.invertDownloadOrder,
     required this.defaultToDeleteFiles,
     required this.downloadPagesTogether,
-    required this.invertDownloadOrder,
   });
 
+  final bool invertDownloadOrder; // 漫画章节下载顺序
   final bool defaultToDeleteFiles; // 默认删除已下载的文件
   final int downloadPagesTogether; // 同时下载的页面数量
-  final bool invertDownloadOrder; // 漫画章节下载顺序
 
   DlSetting.defaultSetting()
       : this(
+          invertDownloadOrder: false,
           defaultToDeleteFiles: false,
           downloadPagesTogether: 4,
-          invertDownloadOrder: false,
         );
 
   DlSetting copyWith({
+    bool? invertDownloadOrder,
     bool? defaultToDeleteFiles,
     int? downloadPagesTogether,
-    bool? invertDownloadOrder,
   }) {
     return DlSetting(
+      invertDownloadOrder: invertDownloadOrder ?? this.invertDownloadOrder,
       defaultToDeleteFiles: defaultToDeleteFiles ?? this.defaultToDeleteFiles,
       downloadPagesTogether: downloadPagesTogether ?? this.downloadPagesTogether,
-      invertDownloadOrder: invertDownloadOrder ?? this.invertDownloadOrder,
     );
   }
 }
@@ -48,14 +48,14 @@ class DlSettingSubPage extends StatefulWidget {
 }
 
 class _DlSettingSubPageState extends State<DlSettingSubPage> {
+  late var _invertDownloadOrder = widget.setting.invertDownloadOrder;
   late var _defaultToDeleteFiles = widget.setting.defaultToDeleteFiles;
   late var _downloadPagesTogether = widget.setting.downloadPagesTogether;
-  late var _invertDownloadOrder = widget.setting.invertDownloadOrder;
 
   DlSetting get _newestSetting => DlSetting(
+        invertDownloadOrder: _invertDownloadOrder,
         defaultToDeleteFiles: _defaultToDeleteFiles,
         downloadPagesTogether: _downloadPagesTogether,
-        invertDownloadOrder: _invertDownloadOrder,
       );
 
   Widget _buildComboBox<T>({
@@ -122,8 +122,22 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        _buildComboBox<bool>(
+          title: '漫画章节下载顺序　　　　',
+          value: _invertDownloadOrder,
+          values: [false, true],
+          builder: (s) => Text(
+            !s ? '正序 (旧到新)' : '逆序 (新到旧)',
+            style: Theme.of(context).textTheme.bodyText2,
+          ),
+          onChanged: (c) {
+            _invertDownloadOrder = c;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
         _buildSwitcher(
-          title: '默认删除已下载的文件　　　　　　',
+          title: '默认删除已下载的文件',
           value: _defaultToDeleteFiles,
           onChanged: (b) {
             _defaultToDeleteFiles = b;
@@ -142,20 +156,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           ),
           onChanged: (c) {
             _downloadPagesTogether = c.clamp(1, 8);
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        _buildComboBox<bool>(
-          title: '漫画章节下载顺序',
-          value: _invertDownloadOrder,
-          values: [false, true],
-          builder: (s) => Text(
-            !s ? '正序 (旧到新)' : '逆序 (新到旧)',
-            style: Theme.of(context).textTheme.bodyText2,
-          ),
-          onChanged: (c) {
-            _invertDownloadOrder = c;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
