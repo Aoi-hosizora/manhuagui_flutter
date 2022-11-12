@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:photo_view/photo_view.dart';
@@ -187,11 +188,12 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
             key: key,
             urlFuture: widget.imageUrlFutures[idx],
+            headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
             cacheManager: _cache,
-            headers: {
-              'User-Agent': USER_AGENT,
-              'Referer': REFERER,
-            },
+            networkTimeout: GlbSetting.globalTimeoutBehavior.determineDuration(
+              normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+              long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
+            ),
             fileFuture: widget.imageFileFutures[idx],
             fileMustExist: true,
           ),
@@ -201,7 +203,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             onLongPress: () => _onLongPressed(idx),
             child: ImageLoadingView(
               title: (idx + 1).toString(),
-              event: ev, // TODO error ???
+              event: ev,
             ),
           ),
           errorBuilder: (_, err, __) => GestureDetector(
@@ -210,7 +212,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             onLongPress: () => _onLongPressed(idx),
             child: ImageLoadFailedView(
               title: (idx + 1).toString(),
-              error: err, // TODO error ???
+              error: err,
             ),
           ),
         ),
@@ -261,11 +263,12 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
           key: key,
           urlFuture: widget.imageUrlFutures[idx],
+          headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
           cacheManager: _cache,
-          headers: {
-            'User-Agent': USER_AGENT,
-            'Referer': REFERER,
-          },
+          networkTimeout: GlbSetting.globalTimeoutBehavior.determineDuration(
+            normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+            long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
+          ),
           fileFuture: widget.imageFileFutures[idx],
           fileMustExist: true,
         ),
@@ -275,7 +278,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onLongPress: () => _onLongPressed(idx),
           child: ImageLoadingView(
             title: (idx + 1).toString(),
-            event: ev, // TODO error ???
+            event: ev,
           ),
         ),
         errorBuilder: (_, err, ___) => GestureDetector(
@@ -284,7 +287,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onLongPress: () => _onLongPressed(idx),
           child: ImageLoadFailedView(
             title: (idx + 1).toString(),
-            error: err, // TODO error ???
+            error: err,
           ),
         ),
       ),

@@ -213,7 +213,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _progressValue = _initialPage!;
 
       // 7. 提前保存 future 列表
-      _urlFutures = _data!.pages.map((el) => Future.value(el)).toList();
+      _urlFutures = _data!.pages.map((url) {
+        if (url.startsWith('//')) {
+          url = 'https:$url';
+        }
+        return Future.value(url);
+      }).toList();
       _fileFutures = [
         for (int idx = 0; idx < _data!.pageCount; idx++)
           Future<File?>.microtask(() async {

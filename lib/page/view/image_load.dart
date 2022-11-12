@@ -14,6 +14,7 @@ class ImageLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var event = this.event;
     return Container(
       color: Colors.black,
       padding: EdgeInsets.symmetric(vertical: 30),
@@ -35,7 +36,9 @@ class ImageLoadingView extends StatelessWidget {
               width: 50,
               height: 50,
               child: CircularProgressIndicator(
-                value: (event == null || (event!.expectedTotalBytes ?? 0) == 0) ? null : event!.cumulativeBytesLoaded / event!.expectedTotalBytes!,
+                value: (event == null || (event.expectedTotalBytes ?? 0) == 0)
+                    ? null //
+                    : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
               ),
             ),
           ),
@@ -44,9 +47,9 @@ class ImageLoadingView extends StatelessWidget {
             child: Text(
               event == null
                   ? ''
-                  : (event!.expectedTotalBytes ?? 0) == 0
-                      ? filesize(event!.cumulativeBytesLoaded)
-                      : '${filesize(event!.cumulativeBytesLoaded)} / ${filesize(event!.expectedTotalBytes!)}',
+                  : (event.expectedTotalBytes ?? 0) == 0
+                      ? filesize(event.cumulativeBytesLoaded)
+                      : '${filesize(event.cumulativeBytesLoaded)} / ${filesize(event.expectedTotalBytes!)}',
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),

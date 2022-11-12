@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
@@ -11,6 +12,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
+import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
@@ -44,6 +46,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
       }
     });
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      GlbSetting.updateGlobalSetting(await GlbSettingPrefs.getSetting());
       var r = await AuthManager.instance.check();
       if (!r.logined && r.error != null) {
         Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');

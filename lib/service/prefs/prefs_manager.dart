@@ -1,3 +1,5 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
@@ -41,6 +43,7 @@ class PrefsManager {
       version = 2; // 1 -> 2 upgrade
       await AuthPrefs.upgradeFromVer1To2(prefs);
       await DlSettingPrefs.upgradeFromVer1To2(prefs);
+      await GlbSettingPrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
       await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }
@@ -67,7 +70,7 @@ extension SharedPreferencesExtension on SharedPreferences {
     try {
       return getter();
     } catch (e, s) {
-      print('===> exception when _safeGet:\n$e\n$s');
+      globalLogger.e('_safeGet<$T>', e, s);
       return null;
     }
   }
@@ -99,7 +102,7 @@ extension SharedPreferencesExtension on SharedPreferences {
         return result;
       }
     } catch (e, s) {
-      print('===> exception when migrate:\n$e\n$s');
+      globalLogger.e('_migrate<$T>', e, s);
     }
     return false;
   }

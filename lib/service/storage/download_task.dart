@@ -197,10 +197,10 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       manga = (await client.getManga(mid: mangaId)).data;
     } catch (e, s) {
       // 请求错误 => 更新漫画下载表为下载错误，然后直接返回
-      var err = wrapError(e, s).text;
-      print('===> exception when DownloadMangaQueueTask (manga):\n$err');
+      var we = wrapError(e, s);
+      globalLogger.e('DownloadMangaQueueTask_manga: ${we.text}', e, s);
       await Fluttertoast.cancel();
-      Fluttertoast.showToast(msg: '获取《$mangaTitle》信息出错：$err');
+      Fluttertoast.showToast(msg: '获取《$mangaTitle》信息出错：${we.text}');
       if (oldManga != null) {
         await DownloadDao.addOrUpdateManga(
           manga: oldManga.copyWith(error: true),
@@ -302,7 +302,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         chapter = (await client.getMangaChapter(mid: mangaId, cid: chapterId)).data;
       } catch (e, s) {
         // 请求错误 => 更新章节下载表，并跳过当前章节
-        print('===> exception when DownloadMangaQueueTask (chapter):\n${wrapError(e, s).text}');
+        var we = wrapError(e, s);
+        globalLogger.e('DownloadMangaQueueTask_chapter: ${we.text}', e, s);
         if (oldChapter != null) {
           await DownloadDao.addOrUpdateChapter(
             chapter: oldChapter.copyWith(
@@ -385,7 +386,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           );
         }).onError((e, s) {
           if (e is! QueueCancelledException) {
-            print('===> exception when DownloadMangaQueueTask (queue):\n$e\n$s');
+            var we = wrapError(e, s);
+            globalLogger.e('DownloadMangaQueueTask_queue: ${we.text}', e, s);
           } // 出错 => 跳到 5.7
         });
       } // for in chapter.pages
@@ -402,7 +404,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         }
       } catch (e, s) {
         if (e is! QueueCancelledException) {
-          print('===> exception when DownloadMangaQueueTask (queue):\n$e\n$s');
+          var we = wrapError(e, s);
+          globalLogger.e('DownloadMangaQueueTask_queue: ${we.text}', e, s);
         }
       } finally {
         // 5.7. 无论是否被取消，都需要更新章节下载表

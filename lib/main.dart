@@ -3,15 +3,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:manhuagui_flutter/page/index.dart';
-import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 void main() {
   globalLogger = ExtendedLogger(
     filter: ProductionFilter(),
+    printer: PreferredPrinter(),
   );
-  LogConsolePage.initialize();
-
   runApp(const MyApp());
 }
 
@@ -48,6 +46,7 @@ class MyApp extends StatelessWidget {
           transitionDuration: Duration(milliseconds: 400),
           transitionsBuilder: NoPopGestureCupertinoPageTransitionsBuilder(),
           barrierColor: Colors.black38,
+          barrierCurve: Curves.easeIn,
           disableCanTransitionTo: true,
         ),
         child: AppBarActionButtonTheme(

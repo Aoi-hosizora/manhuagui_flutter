@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 
 class DioManager {
   DioManager._();
@@ -11,7 +12,10 @@ class DioManager {
     return _instance!;
   }
 
-  Dio? _dio; // global Dio instance
+  // global Dio instances
+  Dio? _dio;
+  Dio? _longTimeoutDio;
+  Dio? _noTimeoutDio;
 
   Dio get dio {
     if (_dio == null) {
@@ -21,10 +25,27 @@ class DioManager {
       _dio!.options.receiveTimeout = RECEIVE_TIMEOUT;
       _dio!.interceptors.add(LogInterceptor());
     }
-    return _dio!;
-  }
+    if (_longTimeoutDio == null) {
+      _longTimeoutDio = Dio();
+      _longTimeoutDio!.options.connectTimeout = CONNECT_LTIMEOUT;
+      _longTimeoutDio!.options.sendTimeout = SEND_LTIMEOUT;
+      _longTimeoutDio!.options.receiveTimeout = RECEIVE_LTIMEOUT;
+      _longTimeoutDio!.interceptors.add(LogInterceptor());
+    }
+    if (_noTimeoutDio == null) {
+      _noTimeoutDio = Dio();
+      _noTimeoutDio!.interceptors.add(LogInterceptor());
+    }
 
-  // TODO add long dio and setting
+    switch (GlbSetting.globalTimeoutBehavior) {
+      case TimeoutBehavior.normal:
+        return _dio!;
+      case TimeoutBehavior.long:
+        return _longTimeoutDio!;
+      case TimeoutBehavior.disable:
+        return _noTimeoutDio!;
+    }
+  }
 }
 
 class LogInterceptor extends Interceptor {

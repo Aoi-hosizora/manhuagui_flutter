@@ -3,6 +3,7 @@ import 'dart:io' show File, Directory;
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 // ====
@@ -51,16 +52,20 @@ Future<File?> downloadImageToGallery(String url) async {
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         conflictHandler: (_) async => DownloadConflictBehavior.addSuffix,
-        // headTimeout: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
-        // downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+        headTimeout: GlbSetting.globalDlTimeoutBehavior.determineDuration(
+          normal: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
+          long: Duration(milliseconds: DOWNLOAD_HEAD_LTIMEOUT),
+        ),
+        downloadTimeout: GlbSetting.globalDlTimeoutBehavior.determineDuration(
+          normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+          long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
+        ),
       ),
     );
     await addToGallery(f); // <<<
-    globalLogger.i('downloadImageToGallery !!!');
     return f;
   } catch (e, s) {
     globalLogger.e('downloadImageToGallery', e, s);
-    print('===> exception when downloadImageToGallery:\n$e\n$s');
     return null;
   }
 }
@@ -82,14 +87,12 @@ Future<bool> downloadChapterPage({required int mangaId, required int chapterId, 
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         conflictHandler: (_) async => DownloadConflictBehavior.overwrite,
-        // downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+        downloadTimeout: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
       ),
     );
-    globalLogger.i('downloadImageToGallery !!!');
     return true;
   } catch (e, s) {
     globalLogger.e('downloadChapterPage', e, s);
-    print('===> exception when downloadChapterPage:\n$e\n$s');
     return false;
   }
 }
@@ -129,7 +132,7 @@ Future<bool> deleteDownloadedManga({required int mangaId}) async {
     await directory.delete(recursive: true);
     return true;
   } catch (e, s) {
-    print('===> exception when deleteDownloadedManga:\n$e\n$s');
+    globalLogger.e('deleteDownloadedManga', e, s);
     return false;
   }
 }
@@ -141,7 +144,7 @@ Future<bool> deleteDownloadedChapter({required int mangaId, required int chapter
     await directory.delete(recursive: true);
     return true;
   } catch (e, s) {
-    print('===> exception when deleteDownloadedChapter:\n$e\n$s');
+    globalLogger.e('deleteDownloadedChapter', e, s);
     return false;
   }
 }

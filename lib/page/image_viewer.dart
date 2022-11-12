@@ -38,14 +38,6 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
     });
   }
 
-  String get url {
-    var url = widget.url;
-    if (url.startsWith('//')) {
-      url = 'https:$url';
-    }
-    return url;
-  }
-
   Future<void> _download(String url) async {
     var f = await downloadImageToGallery(url);
     if (f != null) {
@@ -57,6 +49,11 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
 
   @override
   Widget build(BuildContext context) {
+    var url = widget.url;
+    if (url.startsWith('//')) {
+      url = 'https:$url';
+    }
+
     return WillPopScope(
       onWillPop: () async {
         setDefaultSystemUIOverlayStyle();
@@ -89,11 +86,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
             imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromNetwork(
               key: key,
               url: url,
+              headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
               cacheManager: _cache,
-              headers: {
-                'User-Agent': USER_AGENT,
-                'Referer': REFERER,
-              },
             ),
             initialScale: PhotoViewComputedScale.contained / 2,
             minScale: PhotoViewComputedScale.contained / 2,

@@ -1,3 +1,4 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -52,7 +53,7 @@ extension DatabaseExtension on Database {
     try {
       return await rawQuery(sql, arguments);
     } catch (e, s) {
-      print('===> exception when rawQuery:\n$e\n$s');
+      globalLogger.e('safeRawQuery', e, s);
       return null;
     }
   }
@@ -61,7 +62,7 @@ extension DatabaseExtension on Database {
     try {
       return await rawInsert(sql, arguments);
     } catch (e, s) {
-      print('===> exception when rawInsert:\n$e\n$s');
+      globalLogger.e('safeRawInsert', e, s);
       return null;
     }
   }
@@ -70,7 +71,7 @@ extension DatabaseExtension on Database {
     try {
       return await rawUpdate(sql, arguments);
     } catch (e, s) {
-      print('===> exception when rawUpdate:\n$e\n$s');
+      globalLogger.e('safeRawUpdate', e, s);
       return null;
     }
   }
@@ -79,7 +80,7 @@ extension DatabaseExtension on Database {
     try {
       return await rawDelete(sql, arguments);
     } catch (e, s) {
-      print('===> exception when rawDelete:\n$e\n$s');
+      globalLogger.e('safeRawDelete', e, s);
       return null;
     }
   }
@@ -88,7 +89,7 @@ extension DatabaseExtension on Database {
     try {
       return await execute(sql, arguments);
     } catch (e, s) {
-      print('===> exception when execute:\n$e\n$s');
+      globalLogger.e('safeExecute', e, s);
     }
   }
 }

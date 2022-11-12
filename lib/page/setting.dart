@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/page/log_console.dart';
+import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/my_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 
 /// 设置页
@@ -76,7 +79,7 @@ class _SettingPageState extends State<SettingPage> {
                     Text(
                       APP_VERSION,
                       style: Theme.of(context).textTheme.subtitle2?.copyWith(fontWeight: FontWeight.normal),
-                    )
+                    ),
                   ],
                 ),
               ],
@@ -143,6 +146,50 @@ class _SettingPageState extends State<SettingPage> {
               );
             },
           ),
+          _divider(),
+          _item(
+            title: '高级设置',
+            action: () async {
+              var setting = await GlbSettingPrefs.getSetting();
+              showDialog(
+                context: context,
+                builder: (c) => AlertDialog(
+                  title: Text('高级设置'),
+                  content: GlbSettingSubPage(
+                    setting: setting,
+                    onSettingChanged: (s) => setting = s,
+                  ),
+                  actions: [
+                    TextButton(
+                      child: Text('确定'),
+                      onPressed: () async {
+                        Navigator.of(c).pop();
+                        await GlbSettingPrefs.setSetting(setting);
+                        GlbSetting.updateGlobalSetting(setting);
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                    TextButton(
+                      child: Text('取消'),
+                      onPressed: () => Navigator.of(c).pop(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          if (LogConsolePage.initialized) ...[
+            _divider(),
+            _item(
+              title: '查看调试日志',
+              action: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => LogConsolePage(),
+                ),
+              ),
+            ),
+          ],
           _spacer(),
           // *******************************************************
           _item(

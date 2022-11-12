@@ -23,7 +23,12 @@ const CONNECT_TIMEOUT = 5000; // 5.0s (local -> my server)
 const SEND_TIMEOUT = 5000; // 5.0s (local -> my server)
 const RECEIVE_TIMEOUT = 8000; // 8.0s (my server -> manhuagui server -> my server -> local)
 const DOWNLOAD_HEAD_TIMEOUT = 4000; // 4.0s (local -> manhuagui server -> local)
-const DOWNLOAD_IMAGE_TIMEOUT = 15000; // 15.0s (local -> manhuagui server -> local)
+const DOWNLOAD_IMAGE_TIMEOUT = 12000; // 12.0s (local -> manhuagui server -> local)
+const CONNECT_LTIMEOUT = CONNECT_TIMEOUT * 2;
+const SEND_LTIMEOUT = SEND_TIMEOUT * 2;
+const RECEIVE_LTIMEOUT = RECEIVE_TIMEOUT * 2;
+const DOWNLOAD_HEAD_LTIMEOUT = DOWNLOAD_HEAD_TIMEOUT * 2;
+const DOWNLOAD_IMAGE_LTIMEOUT = DOWNLOAD_IMAGE_TIMEOUT * 2;
 
 const BASE_API_URL = 'https://api-manhuagui.aoihosizora.top/v1/';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';

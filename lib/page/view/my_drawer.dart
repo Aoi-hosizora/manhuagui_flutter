@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
-import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
@@ -164,7 +163,6 @@ class _MyDrawerState extends State<MyDrawer> {
           _buildItem('漫画排行', Icons.trending_up, null, () => _gotoHomePageTab(ToRankingRequestedEvent())),
           Divider(thickness: 1),
           _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
-          _buildItem('调试日志', Icons.bug_report, null, () => _gotoPage(LogConsolePage())),
           _buildItem('设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(SettingPage())),
         ],
       ),

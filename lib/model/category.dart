@@ -1,4 +1,5 @@
-import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'dart:ui';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'category.g.dart';
@@ -32,7 +33,7 @@ class TinyCategory {
   }
 
   @override
-  int get hashCode => hash2(name, title);
+  int get hashCode => hashValues(name, title);
 
   bool isAll() {
     return name == 'all';

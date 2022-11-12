@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/native/notification_handler.dart';
@@ -160,7 +161,7 @@ class NotificationManager with NotificationHandlerMixin {
       );
       return true;
     } catch (e, s) {
-      print('===> exception when showDownloadChannelNotification:\n$e\n$s');
+      globalLogger.e('showDownloadChannelNotification', e, s);
       return false;
     }
   }
@@ -171,7 +172,7 @@ class NotificationManager with NotificationHandlerMixin {
       await plugin.cancel(id, tag: tag);
       return true;
     } catch (e, s) {
-      print('===> exception when cancelNotification:\n$e\n$s');
+      globalLogger.e('cancelNotification', e, s);
       return false;
     }
   }

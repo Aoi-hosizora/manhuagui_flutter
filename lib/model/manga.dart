@@ -1,4 +1,5 @@
-import 'package:flutter_ahlib/flutter_ahlib_util.dart';
+import 'dart:ui';
+
 import 'package:json_annotation/json_annotation.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
@@ -115,7 +116,7 @@ class TinyBlockManga {
 
   @override
   int get hashCode {
-    return hash2(mid, title);
+    return hashValues(mid, title);
   }
 }
 
