@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
-import 'package:manhuagui_flutter/page/view/my_drawer.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
@@ -55,7 +55,7 @@ class _SettingPageState extends State<SettingPage> {
         title: Text('设置'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
       ),
-      drawer: MyDrawer(
+      drawer: AppDrawer(
         currentSelection: DrawerSelection.setting,
       ),
       body: ListView(
@@ -98,6 +98,7 @@ class _SettingPageState extends State<SettingPage> {
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('漫画阅读设置'),
+                  scrollable: true,
                   content: ViewSettingSubPage(
                     setting: setting,
                     onSettingChanged: (s) => setting = s,
@@ -128,6 +129,7 @@ class _SettingPageState extends State<SettingPage> {
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('漫画下载设置'),
+                  scrollable: true,
                   content: DlSettingSubPage(
                     setting: setting,
                     onSettingChanged: (s) => setting = s,
@@ -158,6 +160,7 @@ class _SettingPageState extends State<SettingPage> {
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('高级设置'),
+                  scrollable: true,
                   content: GlbSettingSubPage(
                     setting: setting,
                     onSettingChanged: (s) => setting = s,

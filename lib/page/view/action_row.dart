@@ -14,11 +14,11 @@ class ActionItem {
   const ActionItem.simple(
     this.text,
     this.icon,
-    this.action, [
+    this.action, {
     this.longPress,
     this.enable = true,
     this.rotateAngle = 0,
-  ]);
+  });
 
   final String text;
   final IconData icon;

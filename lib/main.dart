@@ -2,6 +2,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/index.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     setDefaultSystemUIOverlayStyle();
     return MaterialApp(
-      title: 'Manhuagui',
+      title: APP_NAME,
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
         appBarTheme: AppBarTheme(

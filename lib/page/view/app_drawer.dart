@@ -18,8 +18,8 @@ enum DrawerSelection {
   setting, // SettingPage
 }
 
-class MyDrawer extends StatefulWidget {
-  const MyDrawer({
+class AppDrawer extends StatefulWidget {
+  const AppDrawer({
     Key? key,
     required this.currentSelection,
   }) : super(key: key);
@@ -27,10 +27,10 @@ class MyDrawer extends StatefulWidget {
   final DrawerSelection currentSelection;
 
   @override
-  State<MyDrawer> createState() => _MyDrawerState();
+  State<AppDrawer> createState() => _AppDrawerState();
 }
 
-class _MyDrawerState extends State<MyDrawer> {
+class _AppDrawerState extends State<AppDrawer> {
   VoidCallback? _cancelHandler;
   late CustomPageRouteThemeData? _routeTheme = CustomPageRouteTheme.of(context);
 

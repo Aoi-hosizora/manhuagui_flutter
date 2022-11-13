@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/page/page/dl_finished.dart';
 import 'package:manhuagui_flutter/page/page/dl_unfinished.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
-import 'package:manhuagui_flutter/page/view/my_drawer.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -308,7 +308,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
           ),
         ],
       ),
-      drawer: MyDrawer(
+      drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
       body: RefreshIndicator(

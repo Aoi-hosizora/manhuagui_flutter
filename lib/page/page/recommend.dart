@@ -111,8 +111,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
               children: [
                 MangaCarouselView(
                   mangas: _data!.carouselMangas,
-                  height: 220,
-                  imageWidth: 165,
+                  height: 240,
+                  imageWidth: 180,
                 ),
                 SizedBox(height: 12),
                 Container(
@@ -136,7 +136,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 ),
                 SizedBox(height: 12),
                 WarningTextView(
-                  text: '由于漫画柜主页推荐的漫画已有一段时间没有更新，因此本页的推荐列表也没有更新。',
+                  text: '由于漫画柜官方主页推荐的漫画已有一段时间没有更新，因此本页的推荐列表也没有更新。',
                   isWarning: false,
                 ),
                 _buildGroup(_data!.serial.topGroup, MangaGroupType.serial, MangaGroupViewStyle.normalTruncate), // 热门连载

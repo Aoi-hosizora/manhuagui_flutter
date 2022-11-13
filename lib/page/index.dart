@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
-import 'package:manhuagui_flutter/page/view/my_drawer.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -24,6 +24,7 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMixin {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   late final _controller = TabController(length: 4, vsync: this);
   var _selectedIndex = 0;
   late final _actions = List.generate(4, (_) => ActionController());
@@ -91,8 +92,11 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
 
   DateTime? _lastBackPressedTime;
 
-  Future<bool> _onWillPop() {
-    DateTime now = DateTime.now();
+  Future<bool> _onWillPop() async {
+    if (_scaffoldKey.currentState?.isDrawerOpen == true) {
+      return true; // close drawer
+    }
+    var now = DateTime.now();
     if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime!) > Duration(seconds: 2)) {
       _lastBackPressedTime = now;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,9 +109,9 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
           ),
         ),
       );
-      return Future.value(false);
+      return false;
     }
-    return Future.value(true);
+    return true;
   }
 
   @override
@@ -115,7 +119,8 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        drawer: MyDrawer(
+        key: _scaffoldKey,
+        drawer: AppDrawer(
           currentSelection: DrawerSelection.home,
         ),
         body: TabBarView(

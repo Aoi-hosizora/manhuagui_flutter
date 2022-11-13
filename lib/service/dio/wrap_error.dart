@@ -1,44 +1,29 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:basic_utils/basic_utils.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/result.dart';
-import 'package:basic_utils/basic_utils.dart';
-import 'package:dio/dio.dart';
+import 'package:stack_trace/stack_trace.dart';
 
-enum ErrorType {
-  networkError,
-  statusError,
-  resultError,
-  otherError,
-}
+enum ErrorType { networkError, statusError, resultError, otherError }
 
 class ErrorMessage {
-  const ErrorMessage({required this.type, required this.error, required this.stack, required this.text, this.response, this.serviceCode, this.detail, this.casting});
+  const ErrorMessage(this.type, this.error, this.stack, this.text, [this.response, this.serviceCode, this.detail, this.casting, this.function]);
 
-  const ErrorMessage.network(this.error, this.stack, this.text)
-      : type = ErrorType.networkError,
-        response = null,
-        serviceCode = null,
-        detail = null,
-        casting = null;
+  const ErrorMessage.network(dynamic error, StackTrace stack, String text) //
+      : this(ErrorType.networkError, error, stack, text);
 
-  const ErrorMessage.status(this.error, this.stack, this.text, {this.response})
-      : type = ErrorType.statusError,
-        serviceCode = null,
-        detail = null,
-        casting = null;
+  const ErrorMessage.status(dynamic error, StackTrace stack, String text, {Response? response}) //
+      : this(ErrorType.statusError, error, stack, text, response);
 
-  const ErrorMessage.result(this.error, this.stack, this.text, {this.response, this.serviceCode, this.detail})
-      : type = ErrorType.resultError,
-        casting = null;
+  const ErrorMessage.result(dynamic error, StackTrace stack, String text, {Response? response, int? serviceCode, dynamic detail}) //
+      : this(ErrorType.resultError, error, stack, text, response, serviceCode, detail);
 
-  const ErrorMessage.other(this.error, this.stack, this.text, {this.casting})
-      : type = ErrorType.otherError,
-        response = null,
-        serviceCode = null,
-        detail = null;
+  const ErrorMessage.other(dynamic error, StackTrace stack, String text, {bool? casting, String? function}) //
+      : this(ErrorType.otherError, error, stack, text, null, null, null, casting, function);
 
   final ErrorType type;
   final dynamic error;
@@ -49,6 +34,10 @@ class ErrorMessage {
   final int? serviceCode;
   final dynamic detail;
   final bool? casting;
+  final String? function;
+
+  @override
+  String toString() => 'ErrorMessage [$type]: $text\n    Error: $error\n    Trace: $stack';
 }
 
 /// Wraps given error to [ErrorMessage].
@@ -68,7 +57,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // DioError [DioErrorType.connectTimeout]: Connecting timed out [1ms]
   // DioError [DioErrorType.response]: Http status error [502]
   //
-  // TimeoutException: TimeoutException after 0:00:12.000000: No stream event
+  // TimeoutException: after 0:00:12.000000: No stream event
   //
   // TlsException: HandshakeException: Connection terminated during handshake
   // TlsException: HandshakeException: Handshake error in client (OS Error: SSLV3_ALERT_HANDSHAKE_FAILURE)
@@ -87,44 +76,59 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // _CastError: type 'Null' is not a subtype of type 'Map<String, dynamic>' in type cast
   // _CastError: Null check operator used on a null value
 
-  String _translate(String s, String runtimeType) {
-    String text;
-    var msg = s.toLowerCase();
-    if (msg.contains('unreachable') || msg.contains('failed host lookup')) {
-      text = '网络不可用'; // Network is unavailable
-    } else if (msg.contains('connection refused')) {
-      text = '网络连接异常 (Connection refused)'; // Network error
-    } else if (msg.contains('connection abort')) {
-      text = '网络连接异常 (Connection abort)';
-    } else if (msg.contains('connection reset')) {
-      text = '网络连接异常 (Connection reset)';
-    } else if (msg.contains('broken pipe')) {
-      text = '网络连接异常 (Broken pipe)';
-    } else if (msg.contains('connection closed')) {
-      text = '网络连接异常 (Connection closed)';
-    } else if (msg.contains('connection terminated')) {
-      text = '网络连接异常 (Connection terminated)';
-    } else if (msg.contains('connection failed')) {
-      text = '网络连接异常 (Connection failed)';
-    } else if (msg.contains('handshake error')) {
-      text = '网络连接异常 (HTTPS error)';
-    } else if (msg.contains('invalid argument')) {
-      text = '网络连接异常 (Invalid argument)';
-    } else if (DEBUG_ERROR) {
-      text = '网络连接异常 ([DEBUG] $runtimeType: $s)';
-    } else {
-      text = '网络连接异常 (未知错误)'; // Unknown network error
+  bool _networkRelated(dynamic e, [Tuple1<String?>? message]) {
+    if (e is SocketException || e is HttpException) {
+      message?.item = e.toString();
+      return true;
     }
-    return text;
+    if (e is TlsException /* CertificateException / HandshakeException */) {
+      message?.item = 'TlsException: ${e.toString()}';
+      return true;
+    }
+    if (e.runtimeType.toString() == 'ClientException' || e.runtimeType.toString() == '_ClientSocketException') {
+      message?.item = '${e.runtimeType}: $e';
+      return true;
+    }
+    return false;
   }
 
-  var stackTrace = StackTrace.current.toString();
-  var secondLine = RegExp('#1\\s*(.+)').firstMatch(stackTrace)?.group(1);
-  globalLogger.e('wrapError (${e.runtimeType})\n===> $secondLine', e, s, true /* ignoreOutput */);
+  String _translate(String s, String runtimeType) {
+    const map = <String, String>{
+      'unreachable': '网络不可用', // Network is unavailable
+      'failed host lookup': '网络不可用',
+      'connection refused': '网络连接异常 (Connection refused)', // Network error
+      'connection abort': '网络连接异常 (Connection abort)',
+      'connection reset': '网络连接异常 (Connection reset)',
+      'connection closed': '网络连接异常 (Connection closed)',
+      'connection terminated': '网络连接异常 (Connection terminated)',
+      'connection failed': '网络连接异常 (Connection failed)',
+      'broken pipe': '网络连接异常 (Broken pipe)',
+      'handshake error': '网络连接异常 (HTTPS error)',
+      'invalid argument': '网络连接异常 (Invalid argument)',
+    };
+
+    final msg = s.toLowerCase();
+    for (var kv in map.entries) {
+      if (msg.contains(kv.key)) {
+        return kv.value;
+      }
+    }
+    if (DEBUG_ERROR) {
+      return '网络连接异常: [DEBUG] $runtimeType: $s';
+    }
+    return '未知网络错误 ($runtimeType)\n如果该错误反复出现，请向开发者反馈'; // Unknown network error
+  }
+
+  var secondFrame = Trace.from(StackTrace.current).frames.firstOrNull;
+  globalLogger.e('wrapError (${e.runtimeType})\n===> ${secondFrame?.member} ${secondFrame?.location}', e, s, true /* ignoreOutput */);
 
   print('┌─────────────────── WrapError ───────────────────┐');
   print('===> date: ${DateTime.now().toIso8601String()}');
 
+  if (e is DioError && e.type == DioErrorType.other && !_networkRelated(e.error)) {
+    s = e.stackTrace ?? StackTrace.empty;
+    e = e.error;
+  }
   if (e is DioError) {
     var response = e.response;
     print('===> uri: ${e.requestOptions.uri}');
@@ -133,24 +137,25 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     // ======================================================================================================================
     // ErrorType.networkError (DioError)
     if (response == null) {
-      var text = '网络连接异常 (未知错误)'; // Unknown network error
+      String text;
       switch (e.type) {
         case DioErrorType.other:
-          text = _translate(e.error.toString(), 'DioError (${e.error.runtimeType})'); // ...
+          text = _translate(e.error.toString(), 'DioError_${e.error.runtimeType}'); // ...
           break;
         case DioErrorType.connectTimeout:
-          text = '连接超时'; // Connection timed out
+          text = '连接超时 [${e.requestOptions.connectTimeout / 1000}s]'; // Connection timed out
           break;
         case DioErrorType.sendTimeout:
-          text = '发送请求超时'; // Request timed out
+          text = '发送请求超时 [${e.requestOptions.sendTimeout / 1000}s]'; // Request timed out
           break;
         case DioErrorType.receiveTimeout:
-          text = '获取响应超时'; // Response timed out
+          text = '获取响应超时 [${e.requestOptions.receiveTimeout / 1000}s]'; // Response timed out
           break;
         case DioErrorType.cancel:
           text = '请求被取消'; // Request is cancelled
           break;
         case DioErrorType.response:
+          text = '响应错误'; // Response error // x
           break;
       }
       print('===> type: ${ErrorType.networkError}');
@@ -169,7 +174,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       if (response.statusCode! < 500) {
         text = '请求有误 ($err)'; // Bad request
       } else {
-        text = '服务器出错 ($err)'; // Bad server
+        text = '服务器出错 ($err)'; // Server error
       }
       print('===> type: ${ErrorType.statusError}');
       print('===> text: $text');
@@ -188,7 +193,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       if (r.code < 50000) {
         text = msg;
       } else {
-        text = '服务器出错 (${r.code} $msg)'; // Bad server
+        text = '服务器出错 (${r.code} $msg)'; // Server error
       }
       var detail = response.data['error'] is Map<String, dynamic> ? response.data['error']['detail'] : null;
       print('===> type: ${ErrorType.resultError}');
@@ -206,7 +211,9 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ======================================================================================================================
   // ErrorType.networkError (TimeoutException)
   if (e is TimeoutException) {
-    var text = '网络请求超时'; // Network timed out
+    var text = '访问网络超时 [${(e.duration?.inMilliseconds ?? 0) / 1000}s]'; // Network timed out
+    print('===> uri: ?');
+    print('===> method: ?');
     print('===> type: ${ErrorType.networkError}');
     print('===> text: $text');
     print('===> error: TimeoutException: after ${e.duration}: ${e.message}');
@@ -216,63 +223,55 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   }
 
   // ======================================================================================================================
-  // ErrorType.networkError (TlsException => HandshakeException / CertificateException)
-  if (e is TlsException) {
-    var text = _translate(e.message, 'TlsException (${e.type})'); // ...
-    print('===> type: ${ErrorType.networkError}');
-    print('===> text: $text');
-    print('===> error: TlsException: ${e.type}: ${e.message}${e.osError == null ? '' : ' ${e.osError}'}');
-    print('===> trace:\n$s');
-    print('└─────────────────── WrapError ───────────────────┘');
-    return ErrorMessage.network(e, s, text);
-  }
-
-  // ======================================================================================================================
-  // ErrorType.networkError (ClientException / _ClientSocketException)
-  if (e.runtimeType.toString() == 'ClientException' || e.runtimeType.toString() == '_ClientSocketException') {
+  // ErrorType.networkError (network related exception)
+  var message = Tuple1<String?>(null);
+  if (_networkRelated(e, message)) {
     var text = _translate(e.message, e.runtimeType.toString()); // ...
+    print('===> uri: ?');
+    print('===> method: ?');
     print('===> type: ${ErrorType.networkError}');
     print('===> text: $text');
-    print('===> error: ${e.runtimeType}: $e');
+    print('===> error: ${message.item ?? "${e.runtimeType}: $e"}');
     print('===> trace:\n$s');
     print('└─────────────────── WrapError ───────────────────┘');
     return ErrorMessage.network(e, s, text);
   }
 
   // ======================================================================================================================
-  // ErrorType.otherError
-  String text;
-  if (!DEBUG_ERROR) {
-    text = '程序发生错误 (${e.runtimeType})\n如果该错误反复出现，请向开发者反馈'; // Something went wrong
-  } else {
-    text = '程序发生错误 ([DEBUG] ${e.runtimeType}: $e)';
-  }
+  // ErrorType.otherError (_CastError, ...)
+  String? readable;
   var casting = e.runtimeType.toString() == '_CastError';
   if (casting) {
-    var msg = e.toString();
-    var newText = '';
-    if (msg.contains('Null check operator used on a null value')) {
-      newText = '[DEBUG] Got unexpected null value';
+    if (e.toString().contains('Null check operator used on a null value')) {
+      readable = 'Got unexpected null value';
     } else {
       // type 'String' is not a subtype of type 'Map<String, dynamic>?' in type cast
-      var match = RegExp("type '(.+)' is not a subtype of type '(.+)' in type cast").firstMatch(msg);
+      var match = RegExp("type '(.+)' is not a subtype of type '(.+)' in type cast").firstMatch(e.toString());
       if (match != null) {
-        newText = '[DEBUG] Want "${match.group(2)}" type but got "${match.group(1)}" type';
+        readable = 'Want "${match.group(2)}" but got "${match.group(1)}"';
       }
     }
-    if (newText.isNotEmpty) {
-      // #0      _$LoginCheckResultFromJson (package:manhuagui_flutter/model/user.g.dart:41:35)
-      var top = RegExp('#0\\s*(.+) \\(package:.+').firstMatch(s.toString())?.group(1);
-      if (top != null) {
-        newText = '$newText, in $top';
-      }
+  }
+  String? function;
+  var frames = Trace.from(s).frames;
+  if (frames.isNotEmpty) {
+    var line = frames[0].member?.contains('DioMixin.fetch') == false ? 0 : 1;
+    if (frames.length > line && frames[line].member?.isNotEmpty == true) {
+      function = '${frames[line].member}:${frames[line].line ?? 0}:${frames[line].column ?? 0}';
     }
-    text = '程序发生错误 ($newText)'; // Something went wrong
+  }
+  String text;
+  if (DEBUG_ERROR) {
+    readable ??= '${e.runtimeType}: $e';
+    text = '应用发生错误: [DEBUG] $readable, ${function ?? '<?>'}'; // Application error
+  } else {
+    readable ??= e.runtimeType.toString();
+    text = '应用发生错误 ($readable)\n如果该错误反复出现，请向开发者反馈';
   }
   print('===> type: ${ErrorType.otherError}');
   print('===> text: $text');
   print('===> error: ${e.runtimeType}: $e');
   print('===> trace:\n$s');
   print('└─────────────────── WrapError ───────────────────┘');
-  return ErrorMessage.other(e, s, text, casting: casting);
+  return ErrorMessage.other(e, s, text, casting: casting, function: function);
 }

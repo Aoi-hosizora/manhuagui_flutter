@@ -41,6 +41,11 @@ class AuthPrefs {
     return _usernamePasswordStringsToTuples(data);
   }
 
+  static Future<String?> getUserPassword(String username) async {
+    var data = await getUsernamePasswordPairs();
+    return data.where((el) => el.item1 == username).firstOrNull?.item2;
+  }
+
   static Future<List<Tuple2<String, String>>> addUsernamePasswordPair(String username, String password) async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var data = await getUsernamePasswordPairs();

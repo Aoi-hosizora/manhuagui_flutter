@@ -65,9 +65,10 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     super.dispose();
   }
 
-  bool _loading = false;
+  var _loading = false;
   User? _data;
   var _error = '';
+  var _checkining = false;
 
   Future<void> _loadUser() async {
     _loading = true;
@@ -97,6 +98,45 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     } finally {
       _loading = false;
       if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _checkin() async {
+    var password = await AuthPrefs.getUserPassword(AuthManager.instance.username);
+    if (password == null) {
+      await showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text('登录签到'),
+          content: Text('只有在登录漫画柜时保存密码才能一键登录签到。'),
+          actions: [
+            TextButton(
+              child: Text('确定'),
+              onPressed: () => Navigator.of(c).pop(),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final client = RestClient(DioManager.instance.dio);
+    _checkining = true;
+    if (mounted) setState(() {});
+    try {
+      await client.login(username: AuthManager.instance.username, password: password); // ignore token
+    } catch (e, s) {
+      Fluttertoast.showToast(msg: '登录签到失败，${wrapError(e, s).text}');
+      return;
+    } finally {
+      _data = null;
+      _checkining = false;
+      if (mounted) setState(() {});
+    }
+
+    await _loadUser();
+    if (_data != null) {
+      Fluttertoast.showToast(msg: '登录签到成功，已累计登录${_data!.cumulativeDayCount}天');
     }
   }
 
@@ -304,7 +344,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 child: ActionRowView.four(
                   action1: ActionItem.simple('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
                   action2: ActionItem.simple('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
-                  action3: ActionItem.simple('修改资料', Icons.edit, () => launchInBrowser(context: context, url: EDIT_PROFILE_URL)),
+                  action3: ActionItem.simple('登录签到', Icons.event_available, () => _checkin(), enable: !_checkining),
                   action4: ActionItem.simple('退出登录', Icons.logout, () => _logout(sure: false)),
                 ),
               ),

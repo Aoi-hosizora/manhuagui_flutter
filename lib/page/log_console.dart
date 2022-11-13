@@ -232,12 +232,11 @@ class _LogConsolePageState extends State<LogConsolePage> {
           ),
         ],
       ),
-      floatingActionButton: AnimatedOpacity(
-        opacity: _followBottom ? 0 : 1,
-        duration: const Duration(milliseconds: 150),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: kToolbarHeight),
-          child: FloatingActionButton(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: kToolbarHeight),
+        child: AnimatedFab(
+          show: !_followBottom,
+          fab: FloatingActionButton(
             child: const Icon(Icons.arrow_downward),
             heroTag: null,
             mini: true,

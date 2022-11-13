@@ -81,7 +81,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.search),
-            tooltip: '搜索',
+            tooltip: '搜索漫画',
             onPressed: () => Navigator.of(context).push(
               CustomPageRoute(
                 context: context,

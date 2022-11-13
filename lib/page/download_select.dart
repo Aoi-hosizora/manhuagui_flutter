@@ -227,7 +227,7 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
               physics: AlwaysScrollableScrollPhysics(),
               children: [
                 WarningTextView(
-                  text: '由于本应用为漫画柜第三方客户端，所以请不要连续下载过多章节，避免因短时间内访问频繁而当前IP被封禁。',
+                  text: '本应用为第三方漫画柜客户端，请不要连续下载过多章节，避免因短时间内的频繁访问而导致您的IP被漫画柜封禁。',
                   isWarning: true,
                 ),
                 MangaTocView(

@@ -344,6 +344,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       context: context,
       builder: (c) => AlertDialog(
         title: Text('阅读设置'),
+        scrollable: true,
         content: ViewSettingSubPage(
           setting: setting,
           onSettingChanged: (s) => setting = s,

@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download_toc.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
-import 'package:manhuagui_flutter/page/view/my_drawer.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -251,6 +251,7 @@ class _DownloadPageState extends State<DownloadPage> {
       context: context,
       builder: (c) => AlertDialog(
         title: Text('下载设置'),
+        scrollable: true,
         content: DlSettingSubPage(
           setting: setting,
           onSettingChanged: (s) => setting = s,
@@ -299,7 +300,7 @@ class _DownloadPageState extends State<DownloadPage> {
           ),
         ],
       ),
-      drawer: MyDrawer(
+      drawer: AppDrawer(
         currentSelection: DrawerSelection.download,
       ),
       body: RefreshableListView<DownloadedManga>(
