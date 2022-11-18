@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
+import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 
 /// 设置页-高级设置
 
@@ -113,130 +115,82 @@ class GlbSettingSubPage extends StatefulWidget {
   State<GlbSettingSubPage> createState() => _GlbSettingSubPageState();
 }
 
-class _GlbSettingSubPageState extends State<GlbSettingSubPage> {
+class _GlbSettingSubPageState extends State<GlbSettingSubPage> with SettingSubPageStateMixin<GlbSetting, GlbSettingSubPage> {
   late var _timeoutBehavior = widget.setting.timeoutBehavior;
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
   late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
 
-  GlbSetting get _newestSetting => GlbSetting(
+  @override
+  GlbSetting get newestSetting => GlbSetting(
         timeoutBehavior: _timeoutBehavior,
         dlTimeoutBehavior: _dlTimeoutBehavior,
         enableLogger: _enableLogger,
         usingDownloadedPage: _usingDownloadedPage,
       );
 
-  Widget _buildComboBox<T>({
-    required String title,
-    double width = 120,
-    required T value,
-    required List<T> values,
-    required Widget Function(T) builder,
-    required void Function(T) onChanged,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodyText1,
-        ),
-        SizedBox(
-          height: 38,
-          width: width,
-          child: DropdownButton<T>(
-            value: value,
-            items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
-            underline: Container(color: Colors.white),
-            isExpanded: true,
-            onChanged: (v) {
-              if (v != null) {
-                onChanged.call(v);
-              }
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSwitcher({
-    required String title,
-    required bool value,
-    required void Function(bool) onChanged,
-    bool enable = true,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodyText1,
-        ),
-        SizedBox(
-          height: 38,
-          child: Switch(
-            value: value,
-            onChanged: enable ? onChanged : null,
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildComboBox<TimeoutBehavior>(
-          title: '网络请求超时时间　　　　',
+  List<Widget> get settingLines => [
+        SettingComboBoxView<TimeoutBehavior>(
+          title: '网络请求超时时间',
+          hint: '当前设置对应的网络连接、发送请求、获取响应的超时时间为：' +
+              (_timeoutBehavior == TimeoutBehavior.normal
+                  ? '${CONNECT_TIMEOUT / 1000}s + ${SEND_TIMEOUT / 1000}s + ${RECEIVE_TIMEOUT / 1000}s'
+                  : _timeoutBehavior == TimeoutBehavior.long
+                      ? '${CONNECT_LTIMEOUT / 1000}s + ${SEND_LTIMEOUT / 1000}s + ${RECEIVE_LTIMEOUT / 1000}s'
+                      : '无超时时间设置'),
+          width: 75,
           value: _timeoutBehavior,
-          values: [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
+          values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
           builder: (s) => Text(
             s == TimeoutBehavior.normal ? '正常' : (s == TimeoutBehavior.long ? '较长' : '禁用'),
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (s) {
             _timeoutBehavior = s;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildComboBox<TimeoutBehavior>(
+        SettingComboBoxView<TimeoutBehavior>(
           title: '漫画下载超时时间',
+          hint: '当前设置对应的漫画下载超时时间为：' +
+              (_dlTimeoutBehavior == TimeoutBehavior.normal
+                  ? '${DOWNLOAD_HEAD_TIMEOUT / 1000}s + ${DOWNLOAD_IMAGE_TIMEOUT / 1000}s'
+                  : _timeoutBehavior == TimeoutBehavior.long
+                      ? '${DOWNLOAD_HEAD_LTIMEOUT / 1000}s + ${DOWNLOAD_IMAGE_LTIMEOUT / 1000}s'
+                      : '无超时时间设置'),
+          width: 75,
           value: _dlTimeoutBehavior,
-          values: [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
+          values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
           builder: (s) => Text(
             s == TimeoutBehavior.normal ? '正常' : (s == TimeoutBehavior.long ? '较长' : '禁用'),
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (s) {
             _dlTimeoutBehavior = s;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '记录调试日志',
           value: _enableLogger,
           onChanged: (b) {
             _enableLogger = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '阅读时载入已下载的页面',
+          hint: '部分安卓系统可能会因为文件访问权限的问题而出现无法阅读漫画的情况。\n\n若存在上述问题，请将此选项关闭，从而在阅读漫画时禁用文件访问。',
           value: _usingDownloadedPage,
           onChanged: (b) {
             _usingDownloadedPage = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-      ],
-    );
-  }
+      ];
 }

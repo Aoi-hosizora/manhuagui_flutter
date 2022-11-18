@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
+import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -140,27 +141,11 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                 children: [
                   Text('共 $_total 部'),
                   SizedBox(width: 5),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkResponse(
-                      child: Padding(
-                        padding: EdgeInsets.all(3),
-                        child: Icon(Icons.help_outline, size: 20),
-                      ),
-                      onTap: () => showDialog(
-                        context: context,
-                        builder: (c) => AlertDialog(
-                          title: Text('浏览历史'),
-                          content: Text('注意：由于漫画柜官方并未提供漫画浏览历史记录的功能，所以本应用的浏览历史仅被记录在移动端本地，且不同账号的浏览历史互不影响。'),
-                          actions: [
-                            TextButton(
-                              child: Text('确定'),
-                              onPressed: () => Navigator.of(c).pop(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  HelpIconView(
+                    title: '浏览历史',
+                    hint: '注意：由于漫画柜官方并未提供漫画浏览历史记录的功能，所以本应用的浏览历史仅被记录在移动端本地，且不同账号的浏览历史互不影响。',
+                    useRectangle: true,
+                    padding: EdgeInsets.all(3),
                   ),
                 ],
               ),

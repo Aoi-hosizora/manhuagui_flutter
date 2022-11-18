@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 
 /// 漫画章节阅读页-阅读设置
 
@@ -111,7 +112,7 @@ class ViewSettingSubPage extends StatefulWidget {
   State<ViewSettingSubPage> createState() => _ViewSettingSubPageState();
 }
 
-class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
+class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSubPageStateMixin<ViewSetting, ViewSettingSubPage> {
   late var _viewDirection = widget.setting.viewDirection;
   late var _showPageHint = widget.setting.showPageHint;
   late var _showClock = widget.setting.showClock;
@@ -122,7 +123,8 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _fullscreen = widget.setting.fullscreen;
   late var _preloadCount = widget.setting.preloadCount;
 
-  ViewSetting get _newestSetting => ViewSetting(
+  @override
+  ViewSetting get newestSetting => ViewSetting(
         viewDirection: _viewDirection,
         showPageHint: _showPageHint,
         showClock: _showClock,
@@ -134,165 +136,101 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         preloadCount: _preloadCount,
       );
 
-  Widget _buildComboBox<T>({
-    required String title,
-    double width = 120,
-    required T value,
-    required List<T> values,
-    required Widget Function(T) builder,
-    required void Function(T) onChanged,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodyText1,
-        ),
-        SizedBox(
-          height: 38,
-          width: width,
-          child: DropdownButton<T>(
-            value: value,
-            items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
-            underline: Container(color: Colors.white),
-            isExpanded: true,
-            onChanged: (v) {
-              if (v != null) {
-                onChanged.call(v);
-              }
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSwitcher({
-    required String title,
-    required bool value,
-    required void Function(bool) onChanged,
-    bool enable = true,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodyText1,
-        ),
-        SizedBox(
-          height: 38,
-          child: Switch(
-            value: value,
-            onChanged: enable ? onChanged : null,
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildComboBox<ViewDirection>(
-          title: '阅读方向　　　　　　　　',
+  List<Widget> get settingLines => [
+        SettingComboBoxView<ViewDirection>(
+          title: '阅读方向',
           value: _viewDirection,
-          values: [ViewDirection.leftToRight, ViewDirection.rightToLeft, ViewDirection.topToBottom],
+          values: const [ViewDirection.leftToRight, ViewDirection.rightToLeft, ViewDirection.topToBottom],
           builder: (s) => Text(
             s == ViewDirection.leftToRight ? '从左往右' : (s == ViewDirection.rightToLeft ? '从右往左' : '从上往下'),
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (s) {
             _viewDirection = s;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '显示页面提示文字',
           value: _showPageHint,
           onChanged: (b) {
             _showPageHint = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '显示当前时间',
           value: _showClock,
           enable: _showPageHint,
           onChanged: (b) {
             _showClock = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '显示网络状态',
           value: _showNetwork,
           enable: _showPageHint,
           onChanged: (b) {
             _showNetwork = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '显示电源余量',
           value: _showBattery,
           enable: _showPageHint,
           onChanged: (b) {
             _showBattery = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '显示页面间空白',
           value: _enablePageSpace,
           onChanged: (b) {
             _enablePageSpace = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '屏幕常亮',
           value: _keepScreenOn,
           onChanged: (b) {
             _keepScreenOn = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildSwitcher(
+        SettingSwitcherView(
           title: '全屏阅读',
           value: _fullscreen,
           onChanged: (b) {
             _fullscreen = b;
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        _buildComboBox<int>(
+        SettingComboBoxView<int>(
           title: '预加载页数',
           value: _preloadCount.clamp(0, 5),
-          values: [0, 1, 2, 3, 4, 5],
+          values: const [0, 1, 2, 3, 4, 5],
           builder: (s) => Text(
             s == 0 ? '禁用预加载' : '前后$s页',
             style: Theme.of(context).textTheme.bodyText2,
           ),
           onChanged: (c) {
             _preloadCount = c.clamp(0, 5);
-            widget.onSettingChanged.call(_newestSetting);
+            widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },
         ),
-      ],
-    );
-  }
+      ];
 }

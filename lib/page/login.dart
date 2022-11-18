@@ -133,7 +133,9 @@ class _LoginPageState extends State<LoginPage> {
         padding: EdgeInsets.only(top: 10, bottom: 10),
         child: Form(
           key: _formKey,
-          child: Column(
+          child: ListView(
+            physics: AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
             children: [
               Padding(
                 padding: EdgeInsets.only(left: 15, right: 15, top: 10),
@@ -268,22 +270,24 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: !_logining
-                    ? SizedBox(
-                        height: 42,
-                        width: 120,
-                        child: ElevatedButton(
-                          child: Text('登录'),
-                          onPressed: _login,
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: !_logining
+                      ? SizedBox(
+                          height: 42,
+                          width: 120,
+                          child: ElevatedButton(
+                            child: Text('登录'),
+                            onPressed: _login,
+                          ),
+                        )
+                      : SizedBox(
+                          height: 42,
+                          width: 42,
+                          child: CircularProgressIndicator(),
                         ),
-                      )
-                    : SizedBox(
-                        height: 42,
-                        width: 42,
-                        child: CircularProgressIndicator(),
-                      ),
+                ),
               ),
             ],
           ),

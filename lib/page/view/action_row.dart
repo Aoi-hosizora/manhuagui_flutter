@@ -78,8 +78,8 @@ class ActionRowView extends StatelessWidget {
       onLongPress: action.enable ? action.longPress : null,
       child: Padding(
         padding: compact
-            ? EdgeInsets.symmetric(horizontal: 10, vertical: 2) // compact
-            : EdgeInsets.symmetric(horizontal: 10, vertical: 6) /* normal */,
+            ? EdgeInsets.symmetric(horizontal: 8, vertical: 2) // compact
+            : EdgeInsets.symmetric(horizontal: 8, vertical: 6) /* normal */,
         child: IconText(
           alignment: IconTextAlignment.t2b,
           space: compact
@@ -117,8 +117,8 @@ class ActionRowView extends StatelessWidget {
         padding: compact
             ? EdgeInsets.zero // compact
             : action5 == null // normal
-                ? EdgeInsets.symmetric(horizontal: 35, vertical: 8) // four
-                : EdgeInsets.symmetric(horizontal: 20, vertical: 5) /* five */,
+                ? EdgeInsets.symmetric(horizontal: 25, vertical: 8) // four
+                : EdgeInsets.symmetric(horizontal: 15, vertical: 5) /* five */,
         child: Row(
           mainAxisAlignment: shrink
               ? MainAxisAlignment.spaceBetween // shrink

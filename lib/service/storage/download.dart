@@ -41,6 +41,15 @@ Future<String> _getDownloadedChapterPageFilePath({required int mangaId, required
   return PathUtils.joinPath([await _getDownloadMangaDirectoryPath(mangaId, chapterId), filename]);
 }
 
+Future<String?> getDownloadedMangaDirectoryPath() async {
+  try {
+    return await _getDownloadMangaDirectoryPath();
+  } catch (e, s) {
+    globalLogger.e('getDownloadedMangaDirectoryPath', e, s);
+    return null;
+  }
+}
+
 Future<File?> getDownloadedChapterPageFile({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
   try {
     var filepath = await _getDownloadedChapterPageFilePath(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url);

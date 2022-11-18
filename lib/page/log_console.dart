@@ -59,32 +59,32 @@ class _LogConsolePageState extends State<LogConsolePage> {
 
   final _filteredBuffer = <_PlainOutputEvent>[];
   var _filterLevel = Level.verbose;
-  var _enableScrollListener = true;
-  var _followBottom = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _scrollController.addListener(_onScrolled);
       _updateFilteredBuffer();
-      LogConsolePage._logger.addOutputListener(_callback);
+      LogConsolePage._logger.addOutputListener(_updateFilteredBuffer);
+    });
+
+    Future.microtask(() async {
+      for (var i = 0; i < 20; i++) {
+        await Future.delayed(Duration(milliseconds: 2000));
+        globalLogger.e('message_$i\n' * 5);
+      }
     });
   }
 
   @override
   void dispose() {
-    LogConsolePage._logger.removeOutputListener(_callback);
+    LogConsolePage._logger.removeOutputListener(_updateFilteredBuffer);
     _scrollController.dispose();
     _filterController.dispose();
     super.dispose();
   }
 
-  void _callback(OutputEvent ev) {
-    _updateFilteredBuffer();
-  }
-
-  void _updateFilteredBuffer() {
+  void _updateFilteredBuffer([dynamic _]) {
     var filtered = LogConsolePage._eventBuffer.where((ev) {
       if (ev.origin.level.index < _filterLevel.index) {
         return false; // match level
@@ -98,25 +98,11 @@ class _LogConsolePageState extends State<LogConsolePage> {
     _filteredBuffer.addAll(filtered);
     if (mounted) setState(() {});
 
-    if (_followBottom) {
-      _scrollToBottom();
+    if (_scrollController.hasClients && _scrollController.position.atBottomEdge()) {
+      WidgetsBinding.instance?.addPostFrameCallback((_) {
+        _scrollController.scrollToBottom();
+      });
     }
-  }
-
-  void _onScrolled() {
-    if (_enableScrollListener) {
-      _followBottom = _scrollController.offset >= _scrollController.position.maxScrollExtent;
-      if (mounted) setState(() {});
-    }
-  }
-
-  void _scrollToBottom() async {
-    _enableScrollListener = false;
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await _scrollController.scrollToBottom();
-      _enableScrollListener = true;
-      _onScrolled();
-    });
   }
 
   @override
@@ -137,11 +123,11 @@ class _LogConsolePageState extends State<LogConsolePage> {
           ),
           AppBarActionButton(
             icon: const Icon(Icons.ios_share),
-            tooltip: '复制日志',
+            tooltip: '导出日志',
             onPressed: () => showDialog(
               context: context,
               builder: (c) => SimpleDialog(
-                title: const Text('复制日志'),
+                title: const Text('导出日志'),
                 children: [
                   TextDialogOption(
                     text: const Text('复制所有日志'),
@@ -170,24 +156,31 @@ class _LogConsolePageState extends State<LogConsolePage> {
       body: Column(
         children: [
           Expanded(
-            child: Scrollbar(
-              controller: _scrollController,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                scrollDirection: Axis.vertical,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: 2000,
-                    child: SelectableText(
-                      _filteredBuffer.map((el) => el.plainText).join('\n'),
-                      style: Theme.of(context).textTheme.bodyText2?.copyWith(fontFamily: 'monospace'),
+            child: _filteredBuffer.isEmpty
+                ? Center(
+                    child: Text('当前日志为空'),
+                  )
+                : ExtendedScrollbar(
+                    controller: _scrollController,
+                    interactive: true,
+                    isAlwaysShown: true,
+                    crossAxisMargin: 2,
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      scrollDirection: Axis.vertical,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: 2000,
+                          child: SelectableText(
+                            _filteredBuffer.map((el) => el.plainText).join('\n'),
+                            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontFamily: 'monospace'),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
           ),
           BottomAppBar(
             color: Colors.white,
@@ -232,18 +225,20 @@ class _LogConsolePageState extends State<LogConsolePage> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: kToolbarHeight),
-        child: AnimatedFab(
-          show: !_followBottom,
-          fab: FloatingActionButton(
-            child: const Icon(Icons.arrow_downward),
-            heroTag: null,
-            mini: true,
-            onPressed: _scrollToBottom,
-          ),
-        ),
-      ),
+      floatingActionButton: _filteredBuffer.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: kToolbarHeight),
+              child: ScrollAnimatedFab(
+                scrollController: _scrollController,
+                condition: ScrollAnimatedCondition.reverseDirection,
+                fab: FloatingActionButton(
+                  child: const Icon(Icons.vertical_align_bottom),
+                  heroTag: null,
+                  onPressed: () => _scrollController.scrollToBottom(),
+                ),
+              ),
+            ),
     );
   }
 }

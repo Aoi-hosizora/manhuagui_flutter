@@ -202,6 +202,10 @@ class _SettingPageState extends State<SettingPage> {
             title: '清除图像缓存',
             action: () async {
               var cachedBytes = await getDefaultCacheManagerDirectoryBytes();
+              if (cachedBytes < 1024) {
+                Fluttertoast.showToast(msg: '当前不存在图像缓存。'); // <1MB
+                return;
+              }
               await showDialog(
                 context: context,
                 builder: (c) => AlertDialog(

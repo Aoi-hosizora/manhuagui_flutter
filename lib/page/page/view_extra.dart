@@ -122,7 +122,7 @@ class ViewExtraSubPage extends StatelessWidget {
       return InkWell(
         onTap: enable ? action : null,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Column(
             children: [
               Container(
@@ -327,7 +327,7 @@ class ViewExtraSubPage extends StatelessWidget {
             SizedBox(height: 18),
             Container(
               color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18 - 6),
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6),
               child: Material(
                 color: Colors.transparent,
                 child: _buildChapters(context), // InkWell vertical padding: 6
@@ -336,7 +336,7 @@ class ViewExtraSubPage extends StatelessWidget {
             SizedBox(height: 18),
             Container(
               color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18 - 6),
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6),
               child: Material(
                 color: Colors.transparent,
                 child: _buildActions(context), // InkWell vertical padding: 6

@@ -358,7 +358,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildInfoLines(
                 title: '个人信息',
                 lines: [
-                  '您的会员等级：${_data!.className}',
+                  '会员等级：${_data!.className}',
                   '个人成长值 / 账户积分：${_data!.score} 点',
                   '累计发送 ${_data!.totalCommentCount} 条评论，当前 ${_data!.unreadMessageCount} 条消息未读',
                   '注册时间：${_data!.registerTime}',
