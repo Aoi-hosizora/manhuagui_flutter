@@ -1,9 +1,10 @@
-import 'dart:io' show File, Directory;
+import 'dart:io' show Directory, File;
 
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/page/glb_setting.dart';
+import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 // ====
@@ -14,17 +15,23 @@ Future<String> _getDownloadImageDirectoryPath(String url) async {
   var basename = getTimestampTokenForFilename();
   var extension = PathUtils.getExtension(url.split('?')[0]);
   var filename = '$basename$extension';
-  return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_image', 'IMG_$filename']); // IMG_20220917_131013_206.jpg
+  var directoryPath = await lowerThanAndroidR()
+      ? await getPublicStorageDirectoryPath() // /storage/emulated/0/Manhuagui/manhuagui_image/IMG_20220917_131013_206.jpg
+      : await getSharedPicturesDirectoryPath(); // /storage/emulated/0/Pictures/manhuagui_image/IMG_20220917_131013_206.jpg
+  return PathUtils.joinPath([directoryPath, 'manhuagui_image', 'IMG_$filename']);
 }
 
 Future<String> _getDownloadMangaDirectoryPath([int? mangaId, int? chapterId]) async {
+  var directoryPath = await lowerThanAndroidR()
+      ? await getPublicStorageDirectoryPath() // /storage/emulated/0/Manhuagui/manhuagui_download/...
+      : await getPrivateStorageDirectoryPath(); // /storage/emulated/0/android/com.aoihosizora.manhuagui/files/manhuagui_download/...
   if (mangaId == null) {
-    return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download']);
+    return PathUtils.joinPath([directoryPath, 'manhuagui_download']);
   }
   if (chapterId == null) {
-    return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download', mangaId.toString()]);
+    return PathUtils.joinPath([directoryPath, 'manhuagui_download', mangaId.toString()]);
   }
-  return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download', mangaId.toString(), chapterId.toString()]);
+  return PathUtils.joinPath([directoryPath, 'manhuagui_download', mangaId.toString(), chapterId.toString()]);
 }
 
 Future<String> _getDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {

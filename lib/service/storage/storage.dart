@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 // ============
 
 Future<String> getPublicStorageDirectoryPath() async {
-  final storageDirectories = await ExternalPath.getExternalStorageDirectories();
+  final storageDirectories = await ExternalPath.getExternalStorageDirectories(); // external public
   if (storageDirectories.isEmpty) {
     throw Exception('Cannot get public storage directory.');
   }
@@ -24,14 +24,25 @@ Future<String> getPublicStorageDirectoryPath() async {
 }
 
 Future<String> getPrivateStorageDirectoryPath() async {
-  final storageDirectory = await getExternalStorageDirectory(); // sandbox
+  final storageDirectory = await getExternalStorageDirectory(); // external private (sandbox)
   if (storageDirectory == null) {
     throw Exception('Cannot get private storage directory.');
   }
   return await PathUtils.joinPathAndCheck(
     [storageDirectory.path],
     isDirectoryPath: true,
-  ); // /storage/emulated/0/android/com.aoihosizora.manhuagui
+  ); // /storage/emulated/0/android/com.aoihosizora.manhuagui/files
+}
+
+Future<String> getSharedPicturesDirectoryPath() async {
+  final sharedDirectoryPath = await ExternalPath.getExternalStoragePublicDirectory(ExternalPath.DIRECTORY_PICTURES); // external shared
+  if (sharedDirectoryPath.isEmpty) {
+    throw Exception('Cannot get shared pictures directory.');
+  }
+  return await PathUtils.joinPathAndCheck(
+    [sharedDirectoryPath],
+    isDirectoryPath: true,
+  ); // /storage/emulated/0/Pictures
 }
 
 String getTimestampTokenForFilename([DateTime? time, String? pattern]) {

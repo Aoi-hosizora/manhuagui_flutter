@@ -1,10 +1,9 @@
 import 'dart:async' show Timer;
-import 'dart:io' show File, Platform;
+import 'dart:io' show File;
 import 'dart:math' as math;
 
 import 'package:battery_info/battery_info_plugin.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
@@ -28,6 +27,7 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
@@ -188,14 +188,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     try {
       // 4. 异步请求章节目录
-      Future<void> groupsFuture;
+      Future<TaskResult<List<MangaChapterGroup>, Object>> groupsFuture;
       if (widget.chapterGroups != null) {
-        _chapterGroups = widget.chapterGroups!;
-        groupsFuture = Future.value(null);
+        groupsFuture = Future.value(Ok(widget.chapterGroups!));
       } else {
         groupsFuture = Future.microtask(() async {
-          var result = await client.getManga(mid: widget.mangaId); // TODO may throw exception
-          _chapterGroups = result.data.chapterGroups;
+          try {
+            var result = await client.getManga(mid: widget.mangaId);
+            return Ok(result.data.chapterGroups);
+          } catch (e) {
+            return Err(e); // ignore stack trace
+          }
         });
       }
 
@@ -203,7 +206,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       var result = await client.getMangaChapter(mid: widget.mangaId, cid: widget.chapterId);
       _data = result.data;
       _error = '';
-      await groupsFuture; // 等待成功获取章节目录
+      _chapterGroups = (await groupsFuture).unwrap(); // 等待成功获取章节目录
 
       // 6. 指定起始页
       _initialPage = widget.initialPage.clamp(1, _data!.pageCount);
@@ -897,13 +900,6 @@ class _ScreenHelper {
     _setState = setState;
   }
 
-  static bool? __lowerThanAndroidQ;
-
-  static Future<bool> _lowerThanAndroidQ() async {
-    __lowerThanAndroidQ ??= Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt! < 29; // SDK 29 => Android 10
-    return __lowerThanAndroidQ!;
-  }
-
   static Future<void> toggleWakelock({required bool enable}) {
     return Wakelock.toggle(enable: enable);
   }
@@ -951,7 +947,7 @@ class _ScreenHelper {
   static double get bottomPanelDistance => _bottomPanelDistance;
 
   static Future<void> setSystemUIWhenEnter({required bool fullscreen}) async {
-    var color = !fullscreen || await _lowerThanAndroidQ() ? Colors.black : Colors.transparent;
+    var color = !fullscreen || await lowerThanAndroidQ() ? Colors.black : Colors.transparent;
     setSystemUIOverlayStyle(
       navigationBarIconBrightness: Brightness.light,
       navigationBarColor: color,
@@ -978,7 +974,7 @@ class _ScreenHelper {
       _bottomPanelDistance = 0;
     } else {
       // 全屏，且显示 AppBar => 全部显示，尽量透明 (edgeToEdge / manual)
-      if (!(await _lowerThanAndroidQ())) {
+      if (!(await lowerThanAndroidQ())) {
         await setEdgeToEdgeSystemUIMode();
         _safeAreaTop = false;
         await Future.delayed(_kOverlayAnimationDuration + Duration(milliseconds: 50));

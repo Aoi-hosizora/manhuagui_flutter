@@ -1,3 +1,4 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 
 class MangaHistory {
@@ -89,16 +90,16 @@ class DownloadedManga {
       downloadedChapters.where((el) => !el.succeeded).length;
 
   int get totalPageCountInAll => //
-      downloadedChapters.map((el) => el.totalPageCount).reduce((val, el) => val + el);
+      downloadedChapters.map((el) => el.totalPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
 
   int get triedPageCountInAll => //
-      downloadedChapters.map((el) => el.triedPageCount).reduce((val, el) => val + el);
+      downloadedChapters.map((el) => el.triedPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
 
   int get successPageCountInAll => //
-      downloadedChapters.map((el) => el.successPageCount).reduce((val, el) => val + el);
+      downloadedChapters.map((el) => el.successPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
 
   int get failedPageCountInAll => //
-      downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).reduce((val, el) => val + el);
+      downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
 
   DownloadedManga copyWith({
     int? mangaId,

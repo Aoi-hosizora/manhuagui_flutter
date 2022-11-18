@@ -10,6 +10,7 @@
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
+        android:hasFragileUserData="true"
         android:preserveLegacyExternalStorage="true"
         android:requestLegacyExternalStorage="true">
 
