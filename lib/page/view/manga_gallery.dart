@@ -57,7 +57,7 @@ class MangaGalleryView extends StatefulWidget {
 }
 
 class MangaGalleryViewState extends State<MangaGalleryView> {
-  final CacheManager _cache = DefaultCacheManager();
+  final _cache = DefaultCacheManager();
   final _horizontalGalleryKey = GlobalKey<HorizontalGalleryViewState>();
   final _verticalGalleryKey = GlobalKey<VerticalGalleryViewState>();
 
@@ -195,7 +195,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
               long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
             ),
             fileFuture: widget.imageFileFutures[idx],
-            fileMustExist: true,
+            fileMustExist: false, // <<<
           ),
           loadingBuilder: (_, ev) => GestureDetector(
             onTapDown: (d) => _onPointerDown(d.globalPosition),
@@ -270,7 +270,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
           ),
           fileFuture: widget.imageFileFutures[idx],
-          fileMustExist: true,
+          fileMustExist: false,
         ),
         loadingBuilder: (_, ev) => GestureDetector(
           onTapDown: (d) => _onPointerDown(d.globalPosition),

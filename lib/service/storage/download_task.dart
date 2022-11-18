@@ -184,7 +184,14 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     final client = RestClient(DioManager.instance.dio);
 
     // 1. 创建必要文件，并更新状态
-    await createNomediaFile();
+    try {
+      await createNomediaFile();
+    } catch (e, s) {
+      // 唯一可能的原因，getPublicStorageDirectoryPath 出错
+      globalLogger.e('DownloadMangaQueueTask_createNomediaFile', e, s);
+      Fluttertoast.showToast(msg: '无法执行下载操作：$e');
+      return false;
+    }
     _updateProgress(
       DownloadMangaProgress.gettingManga(),
       sendNotification: true,

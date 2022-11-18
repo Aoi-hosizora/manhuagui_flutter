@@ -27,11 +27,21 @@ Future<String> _getDownloadMangaDirectoryPath([int? mangaId, int? chapterId]) as
   return PathUtils.joinPath([await getPublicStorageDirectoryPath(), 'manhuagui_download', mangaId.toString(), chapterId.toString()]);
 }
 
-Future<String> getDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
+Future<String> _getDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
   var basename = (pageIndex + 1).toString().padLeft(4, '0');
   var extension = PathUtils.getExtension(url.split('?')[0]);
   var filename = '$basename$extension';
   return PathUtils.joinPath([await _getDownloadMangaDirectoryPath(mangaId, chapterId), filename]);
+}
+
+Future<File?> getDownloadedChapterPageFile({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
+  try {
+    var filepath = await _getDownloadedChapterPageFilePath(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url);
+    return File(filepath);
+  } catch (e, s) {
+    globalLogger.e('getDownloadedChapterPageFile', e, s);
+    return null;
+  }
 }
 
 // ========
@@ -39,8 +49,8 @@ Future<String> getDownloadedChapterPageFilePath({required int mangaId, required 
 // ========
 
 Future<File?> downloadImageToGallery(String url) async {
-  var filepath = await _getDownloadImageDirectoryPath(url);
   try {
+    var filepath = await _getDownloadImageDirectoryPath(url);
     var f = await downloadFile(
       url: url,
       filepath: filepath,
@@ -71,11 +81,11 @@ Future<File?> downloadImageToGallery(String url) async {
 }
 
 Future<bool> downloadChapterPage({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
-  var filepath = await getDownloadedChapterPageFilePath(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url);
-  if (await File(filepath).exists()) {
-    return true;
-  }
   try {
+    var filepath = await _getDownloadedChapterPageFilePath(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url);
+    if (await File(filepath).exists()) {
+      return true;
+    }
     await downloadFile(
       url: url,
       filepath: filepath,
@@ -98,6 +108,7 @@ Future<bool> downloadChapterPage({required int mangaId, required int chapterId, 
 }
 
 Future<void> createNomediaFile() async {
+  // 留到 DownloadMangaQueueTask 再捕获异常
   var nomediaPath = PathUtils.joinPath([await _getDownloadMangaDirectoryPath(), '.nomedia']);
   var nomediaFile = File(nomediaPath);
   if (!(await nomediaFile.exists())) {
@@ -106,19 +117,24 @@ Future<void> createNomediaFile() async {
 }
 
 Future<int> getDownloadedMangaBytes({required int mangaId}) async {
-  var mangaPath = await _getDownloadMangaDirectoryPath(mangaId);
-  var directory = Directory(mangaPath);
-  if (!(await directory.exists())) {
+  try {
+    String mangaPath = await _getDownloadMangaDirectoryPath(mangaId);
+    var directory = Directory(mangaPath);
+    if (!(await directory.exists())) {
+      return 0;
+    }
+
+    var totalBytes = 0;
+    await for (var entity in directory.list(recursive: true, followLinks: false)) {
+      if (entity is File) {
+        totalBytes += await entity.length();
+      }
+    }
+    return totalBytes;
+  } catch (e, s) {
+    globalLogger.e('getDownloadedMangaBytes', e, s);
     return 0;
   }
-
-  var totalBytes = 0;
-  await for (var entity in directory.list(recursive: true, followLinks: false)) {
-    if (entity is File) {
-      totalBytes += await entity.length();
-    }
-  }
-  return totalBytes;
 }
 
 // ======
@@ -126,9 +142,9 @@ Future<int> getDownloadedMangaBytes({required int mangaId}) async {
 // ======
 
 Future<bool> deleteDownloadedManga({required int mangaId}) async {
-  var mangaPath = await _getDownloadMangaDirectoryPath(mangaId);
-  var directory = Directory(mangaPath);
   try {
+    var mangaPath = await _getDownloadMangaDirectoryPath(mangaId);
+    var directory = Directory(mangaPath);
     await directory.delete(recursive: true);
     return true;
   } catch (e, s) {
@@ -138,9 +154,9 @@ Future<bool> deleteDownloadedManga({required int mangaId}) async {
 }
 
 Future<bool> deleteDownloadedChapter({required int mangaId, required int chapterId}) async {
-  var mangaPath = await _getDownloadMangaDirectoryPath(mangaId, chapterId);
-  var directory = Directory(mangaPath);
   try {
+    var mangaPath = await _getDownloadMangaDirectoryPath(mangaId, chapterId);
+    var directory = Directory(mangaPath);
     await directory.delete(recursive: true);
     return true;
   } catch (e, s) {

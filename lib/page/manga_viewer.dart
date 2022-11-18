@@ -194,18 +194,15 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         groupsFuture = Future.value(null);
       } else {
         groupsFuture = Future.microtask(() async {
-          var result = await client.getManga(mid: widget.mangaId);
+          var result = await client.getManga(mid: widget.mangaId); // TODO may throw exception
           _chapterGroups = result.data.chapterGroups;
         });
       }
 
       // 5. 获取章节数据
       var result = await client.getMangaChapter(mid: widget.mangaId, cid: widget.chapterId);
-      _data = null;
-      _error = '';
-      if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
       _data = result.data;
+      _error = '';
       await groupsFuture; // 等待成功获取章节目录
 
       // 6. 指定起始页
@@ -220,26 +217,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
         return Future.value(url);
       }).toList();
-      if (!GlbSetting.global.usingDownloadedPage) {
-        _fileFutures = List.generate(_data!.pageCount, (_) => Future<File?>.value(null));
-      } else {
-        _fileFutures = [
-          for (int idx = 0; idx < _data!.pageCount; idx++)
-            Future<File?>.microtask(() async {
-              var filepath = await getDownloadedChapterPageFilePath(
-                mangaId: widget.mangaId,
-                chapterId: _data!.cid,
-                pageIndex: idx,
-                url: _data!.pages[idx],
-              );
-              var f = File(filepath);
-              if (!(await f.exists())) {
-                return null;
-              }
-              return f;
-            }),
-        ];
-      }
+      _fileFutures = [
+        for (int idx = 0; idx < _data!.pageCount; idx++)
+          !GlbSetting.global.usingDownloadedPage
+              ? Future<File?>.value(null) // 阅读时不载入已下载的页面
+              : getDownloadedChapterPageFile(
+                  mangaId: widget.mangaId,
+                  chapterId: _data!.cid,
+                  pageIndex: idx,
+                  url: _data!.pages[idx],
+                ), // Future<File?>
+      ];
 
       // 8. 异步更新浏览历史
       _updateHistory();

@@ -15,7 +15,7 @@ import 'package:path_provider/path_provider.dart';
 Future<String> getPublicStorageDirectoryPath() async {
   final storageDirectories = await ExternalPath.getExternalStorageDirectories();
   if (storageDirectories.isEmpty) {
-    throw Exception('Cannot get external storage directory.');
+    throw Exception('Cannot get public storage directory.');
   }
   return await PathUtils.joinPathAndCheck(
     [storageDirectories.first, APP_NAME],
@@ -25,8 +25,11 @@ Future<String> getPublicStorageDirectoryPath() async {
 
 Future<String> getPrivateStorageDirectoryPath() async {
   final storageDirectory = await getExternalStorageDirectory(); // sandbox
+  if (storageDirectory == null) {
+    throw Exception('Cannot get private storage directory.');
+  }
   return await PathUtils.joinPathAndCheck(
-    [storageDirectory!.path],
+    [storageDirectory.path],
     isDirectoryPath: true,
   ); // /storage/emulated/0/android/com.aoihosizora.manhuagui
 }
