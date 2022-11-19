@@ -69,7 +69,7 @@ class _SettingPageState extends State<SettingPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('${ASSETS_PREFIX}ic_launcher_xxhdpi.png', height: 60, width: 60),
+                Image.asset('${ASSETS_PREFIX}logo_xxhdpi.png', height: 60, width: 60),
                 SizedBox(width: 15),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -294,7 +294,7 @@ class _SettingPageState extends State<SettingPage> {
               applicationName: APP_NAME,
               applicationVersion: APP_VERSION,
               applicationLegalese: APP_LEGALESE,
-              applicationIcon: Image.asset('${ASSETS_PREFIX}ic_launcher_xxhdpi.png', height: 60, width: 60),
+              applicationIcon: Image.asset('${ASSETS_PREFIX}logo_xxhdpi.png', height: 60, width: 60),
               children: [
                 SizedBox(height: 20),
                 for (var description in APP_DESCRIPTIONS)

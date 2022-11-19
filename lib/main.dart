@@ -4,13 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/index.dart';
+import 'package:manhuagui_flutter/page/splash.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
-void main() {
+Future<void> main() async {
   globalLogger = ExtendedLogger(
     filter: ProductionFilter(),
     printer: PreferredPrinter(),
   );
+
+  var widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  SplashPage.preserve(widgetsBinding);
+  await SplashPage.prepare();
+
   runApp(const MyApp());
 }
 
@@ -20,6 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     setDefaultSystemUIOverlayStyle();
+    SplashPage.remove();
     return MaterialApp(
       title: APP_NAME,
       theme: ThemeData(

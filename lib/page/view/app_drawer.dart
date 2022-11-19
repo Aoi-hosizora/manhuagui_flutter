@@ -131,7 +131,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       ],
                     ),
                     child: Image.asset(
-                      '${ASSETS_PREFIX}ic_launcher_xxhdpi.png',
+                      '${ASSETS_PREFIX}logo_xxhdpi.png',
                       height: 80,
                       width: 80,
                     ),

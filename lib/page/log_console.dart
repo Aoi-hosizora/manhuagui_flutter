@@ -67,13 +67,6 @@ class _LogConsolePageState extends State<LogConsolePage> {
       _updateFilteredBuffer();
       LogConsolePage._logger.addOutputListener(_updateFilteredBuffer);
     });
-
-    Future.microtask(() async {
-      for (var i = 0; i < 20; i++) {
-        await Future.delayed(Duration(milliseconds: 2000));
-        globalLogger.e('message_$i\n' * 5);
-      }
-    });
   }
 
   @override
