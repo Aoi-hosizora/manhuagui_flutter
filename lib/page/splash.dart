@@ -42,7 +42,11 @@ class SplashPage extends StatefulWidget {
       SystemNavigator.pop();
     }
 
-    // 2. update global setting
+    // 2. upgrade db and prefs
+    await DBManager.instance.getDB();
+    await PrefsManager.instance.loadPrefs();
+
+    // 3. update global setting
     var setting = await GlbSettingPrefs.getSetting();
     GlbSetting.updateGlobalSetting(setting);
   }
@@ -56,10 +60,13 @@ class SplashPage extends StatefulWidget {
   }
 
   static void prepareWithContext(BuildContext context) async {
-    // 1. check message asynchronously
-    _checkMessage(context);
+    // 1. register context for notification
+    NotificationManager.instance.registerContext(context);
 
-    // 2. check auth asynchronously
+    // 2. check message asynchronously
+    _checkLatestMessage(context);
+
+    // 3. check auth asynchronously
     Future.microtask(() async {
       var r = await AuthManager.instance.check();
       if (!r.logined && r.error != null) {
@@ -68,22 +75,30 @@ class SplashPage extends StatefulWidget {
     });
   }
 
-  static Future<void> _checkMessage(BuildContext context) async {
-    // TODO
-    await showDialog(
-      context: context, 
-      barrierDismissible: false,
-      builder: (c) => AlertDialog(
-        title: Text('TODO'),
-        content: Text('TODO'),
-        actions: [
-          TextButton(
-            child: Text('TODO'),
-            onPressed: () => Navigator.of(c).pop(),
-          ),
-        ],
-      ),
-    );
+  static Future<void> _checkLatestMessage(BuildContext context) async {
+    var readMessages = await MessagePrefs.getReadMessages();
+    final client = RestClient(DioManager.instance.dio);
+    LatestMessage lm;
+    try {
+      var result = await client.getLatestMessage();
+      lm = result.data;
+    } catch (e, s) {
+      wrapError(e, s); // ignored
+      return;
+    }
+
+    if (lm.mustUpgradeNewVersion != null && false && isVersionNewer(lm.mustUpgradeNewVersion!.newVersion!.version, APP_VERSION) == true) {
+      await showNewVersionDialog(context: context, newVersion: lm.mustUpgradeNewVersion!);
+    }
+    if (lm.notDismissibleNotification != null && !readMessages.contains(lm.notDismissibleNotification!.mid)) {
+      await showNotificationDialog(context: context, notification: lm.notDismissibleNotification!);
+    }
+    if (lm.newVersion != null && !readMessages.contains(lm.newVersion!.mid) && isVersionNewer(lm.newVersion!.newVersion!.version, APP_VERSION) == true) {
+      await showNewVersionDialog(context: context, newVersion: lm.newVersion!);
+    }
+    if (lm.notification != null && !readMessages.contains(lm.notification!.mid)) {
+      await showNotificationDialog(context: context, notification: lm.notification!);
+    }
   }
 }
 

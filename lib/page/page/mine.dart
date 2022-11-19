@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/login.dart';
+import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -175,7 +176,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       color: Colors.white,
       child: InkWell(
         child: Padding(
-          padding: EdgeInsets.only(left: 15, right: 8, top: 8, bottom: 8),
+          padding: EdgeInsets.only(left: 16, right: 10, top: 10, bottom: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -238,6 +239,16 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     var appBar = AppBar(
       automaticallyImplyLeading: false,
       actions: [
+        AppBarActionButton(
+          icon: Icon(Icons.notifications, color: Colors.black54),
+          tooltip: '历史消息',
+          onPressed: () => Navigator.of(context).push(
+            CustomPageRoute(
+              context: context,
+              builder: (c) => MessagePage(),
+            ),
+          ),
+        ),
         AppBarActionButton(
           icon: Icon(Icons.settings, color: Colors.black54),
           tooltip: '应用设置',

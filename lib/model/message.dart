@@ -45,3 +45,17 @@ class NewVersionContent {
 
   Map<String, dynamic> toJson() => _$NewVersionContentToJson(this);
 }
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class LatestMessage {
+  final Message? notification;
+  final Message? newVersion;
+  final Message? notDismissibleNotification;
+  final Message? mustUpgradeNewVersion;
+
+  const LatestMessage({required this.notification, required this.newVersion, required this.notDismissibleNotification, required this.mustUpgradeNewVersion});
+
+  factory LatestMessage.fromJson(Map<String, dynamic> json) => _$LatestMessageFromJson(json);
+
+  Map<String, dynamic> toJson() => _$LatestMessageToJson(this);
+}

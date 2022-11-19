@@ -72,7 +72,7 @@ class ActionRowView extends StatelessWidget {
   final Color? disabledTextColor;
   final Color? disabledIconColor;
 
-  Widget _buildAction(ActionItem action) {
+  Widget _buildAction(BuildContext context, ActionItem action) {
     return InkWell(
       onTap: action.enable ? action.action : null,
       onLongPress: action.enable ? action.longPress : null,
@@ -98,11 +98,11 @@ class ActionRowView extends StatelessWidget {
           ),
           text: Text(
             action.text,
-            style: TextStyle(
-              color: action.enable
-                  ? (iconColor ?? Colors.black) // enabled
-                  : (disabledIconColor ?? Colors.grey) /* disabled */,
-            ),
+            style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                  color: action.enable
+                      ? (iconColor ?? Colors.black) // enabled
+                      : (disabledIconColor ?? Colors.grey) /* disabled */,
+                ),
           ),
         ),
       ),
@@ -124,12 +124,12 @@ class ActionRowView extends StatelessWidget {
               ? MainAxisAlignment.spaceBetween // shrink
               : MainAxisAlignment.spaceAround /* normal */,
           children: [
-            _buildAction(action1),
-            _buildAction(action2),
-            _buildAction(action3),
-            _buildAction(action4),
+            _buildAction(context, action1),
+            _buildAction(context, action2),
+            _buildAction(context, action3),
+            _buildAction(context, action4),
             if (action5 != null) // five
-              _buildAction(action5!),
+              _buildAction(context, action5!),
           ],
         ),
       ),

@@ -60,3 +60,29 @@ Map<String, dynamic> _$NewVersionContentToJson(NewVersionContent instance) =>
       'change_logs': instance.changeLogs,
       'release_page': instance.releasePage,
     };
+
+LatestMessage _$LatestMessageFromJson(Map<String, dynamic> json) =>
+    LatestMessage(
+      notification: json['notification'] == null
+          ? null
+          : Message.fromJson(json['notification'] as Map<String, dynamic>),
+      newVersion: json['new_version'] == null
+          ? null
+          : Message.fromJson(json['new_version'] as Map<String, dynamic>),
+      notDismissibleNotification: json['not_dismissible_notification'] == null
+          ? null
+          : Message.fromJson(
+              json['not_dismissible_notification'] as Map<String, dynamic>),
+      mustUpgradeNewVersion: json['must_upgrade_new_version'] == null
+          ? null
+          : Message.fromJson(
+              json['must_upgrade_new_version'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$LatestMessageToJson(LatestMessage instance) =>
+    <String, dynamic>{
+      'notification': instance.notification,
+      'new_version': instance.newVersion,
+      'not_dismissible_notification': instance.notDismissibleNotification,
+      'must_upgrade_new_version': instance.mustUpgradeNewVersion,
+    };

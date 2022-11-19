@@ -103,4 +103,7 @@ abstract class RestClient {
 
   @GET('/message')
   Future<Result<ResultPage<Message>>> getMessages();
+
+  @GET('/message/latest')
+  Future<Result<LatestMessage>> getLatestMessage();
 }

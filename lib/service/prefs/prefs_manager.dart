@@ -2,6 +2,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/message.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,6 +45,7 @@ class PrefsManager {
       await AuthPrefs.upgradeFromVer1To2(prefs);
       await DlSettingPrefs.upgradeFromVer1To2(prefs);
       await GlbSettingPrefs.upgradeFromVer1To2(prefs);
+      await MessagePrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
       await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }

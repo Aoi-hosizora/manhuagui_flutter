@@ -8,7 +8,6 @@ import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/native/notification.dart';
 
 /// 主页
 class IndexPage extends StatefulWidget {
@@ -26,7 +25,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   late final _tabs = [
     Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
     Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1])),
-    Tuple3('订阅', Icons.notifications, SubscribeSubPage(action: _actions[2])),
+    Tuple3('订阅', Icons.loyalty, SubscribeSubPage(action: _actions[2])),
     Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
   ];
   final _cancelHandlers = <VoidCallback>[];
@@ -34,9 +33,6 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      NotificationManager.instance.registerContext(context);
-    });
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((ev) => _jumpToPageByEvent(1, ev)));
