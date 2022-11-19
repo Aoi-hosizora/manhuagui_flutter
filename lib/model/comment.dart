@@ -15,7 +15,7 @@ class Comment {
   final String commentTime;
   final List<RepliedComment> replyTimeline;
 
-  Comment({required this.cid, required this.uid, required this.username, required this.avatar, required this.gender, required this.content, required this.likeCount, required this.replyCount, required this.commentTime, required this.replyTimeline});
+  const Comment({required this.cid, required this.uid, required this.username, required this.avatar, required this.gender, required this.content, required this.likeCount, required this.replyCount, required this.commentTime, required this.replyTimeline});
 
   factory Comment.fromJson(Map<String, dynamic> json) => _$CommentFromJson(json);
 

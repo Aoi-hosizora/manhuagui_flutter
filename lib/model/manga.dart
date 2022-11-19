@@ -75,7 +75,7 @@ class TinyManga {
   final String newestChapter;
   final String newestDate;
 
-  TinyManga({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.newestChapter, required this.newestDate});
+  const TinyManga({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.newestChapter, required this.newestDate});
 
   factory TinyManga.fromJson(Map<String, dynamic> json) => _$TinyMangaFromJson(json);
 
@@ -87,7 +87,7 @@ class RandomMangaInfo {
   final int mid;
   final String url;
 
-  RandomMangaInfo({required this.mid, required this.url});
+  const RandomMangaInfo({required this.mid, required this.url});
 
   factory RandomMangaInfo.fromJson(Map<String, dynamic> json) => _$RandomMangaInfoFromJson(json);
 

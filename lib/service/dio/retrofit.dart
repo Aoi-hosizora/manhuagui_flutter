@@ -4,6 +4,7 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
+import 'package:manhuagui_flutter/model/message.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/result.dart';
@@ -99,4 +100,7 @@ abstract class RestClient {
 
   @DELETE('/shelf/{mid}')
   Future<Result> removeFromShelf({@Header('Authorization') required String token, @Path() required int mid});
+
+  @GET('/message')
+  Future<Result<ResultPage<Message>>> getMessages();
 }

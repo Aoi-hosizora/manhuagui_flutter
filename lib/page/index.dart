@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/page/category.dart';
 import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
-import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
-import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 /// 主页
 class IndexPage extends StatefulWidget {
@@ -39,21 +34,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      var ok = await _checkPermission();
-      if (!ok) {
-        Fluttertoast.showToast(msg: '权限授予失败，Manhuagui 即将退出');
-        SystemNavigator.pop();
-      }
-    });
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      GlbSetting.updateGlobalSetting(await GlbSettingPrefs.getSetting());
-      var r = await AuthManager.instance.check();
-      if (!r.logined && r.error != null) {
-        Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');
-      }
-    });
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
       NotificationManager.instance.registerContext(context);
     });
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
@@ -69,14 +50,6 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();
-  }
-
-  Future<bool> _checkPermission() async {
-    if (!(await Permission.storage.status).isGranted) {
-      var r = await Permission.storage.request();
-      return r.isGranted;
-    }
-    return true;
   }
 
   Future<void> _jumpToPageByEvent<T>(int index, T event) async {

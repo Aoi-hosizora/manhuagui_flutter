@@ -8,13 +8,8 @@ import 'package:manhuagui_flutter/page/splash.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 Future<void> main() async {
-  globalLogger = ExtendedLogger(
-    filter: ProductionFilter(),
-    printer: PreferredPrinter(),
-  );
-
-  var widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  SplashPage.preserve(widgetsBinding);
+  globalLogger = ExtendedLogger(filter: ProductionFilter(), printer: PreferredPrinter());
+  SplashPage.preserve(WidgetsFlutterBinding.ensureInitialized());
   await SplashPage.prepare();
 
   runApp(const MyApp());
@@ -26,7 +21,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     setDefaultSystemUIOverlayStyle();
-    SplashPage.remove();
     return MaterialApp(
       title: APP_NAME,
       theme: ThemeData(
@@ -48,7 +42,7 @@ class MyApp extends StatelessWidget {
         Locale('ja', 'JP'),
         Locale('zh', 'CN'),
       ],
-      home: IndexPage(),
+      home: SplashPage(home: IndexPage()),
       builder: (context, child) => CustomPageRouteTheme(
         data: CustomPageRouteThemeData(
           transitionDuration: Duration(milliseconds: 400),
