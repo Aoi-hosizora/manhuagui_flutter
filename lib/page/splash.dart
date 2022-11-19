@@ -87,7 +87,7 @@ class SplashPage extends StatefulWidget {
       return;
     }
 
-    if (lm.mustUpgradeNewVersion != null && false && isVersionNewer(lm.mustUpgradeNewVersion!.newVersion!.version, APP_VERSION) == true) {
+    if (lm.mustUpgradeNewVersion != null && isVersionNewer(lm.mustUpgradeNewVersion!.newVersion!.version, APP_VERSION) == true) {
       await showNewVersionDialog(context: context, newVersion: lm.mustUpgradeNewVersion!);
     }
     if (lm.notDismissibleNotification != null && !readMessages.contains(lm.notDismissibleNotification!.mid)) {

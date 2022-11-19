@@ -98,7 +98,7 @@ class ActionRowView extends StatelessWidget {
           ),
           text: Text(
             action.text,
-            style: Theme.of(context).textTheme.subtitle1!.copyWith(
+            style: Theme.of(context).textTheme.bodyText1!.copyWith(
                   color: action.enable
                       ? (iconColor ?? Colors.black) // enabled
                       : (disabledIconColor ?? Colors.grey) /* disabled */,

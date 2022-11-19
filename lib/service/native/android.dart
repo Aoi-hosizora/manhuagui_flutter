@@ -17,7 +17,7 @@ Future<bool> lowerThanAndroidR() async {
 }
 
 bool? isVersionNewer(String ver1, String ver2) {
-  var re = RegExp('v?(\\d+)\\.(\\d+)\\.(\\d+)(?:[\\.|\\+](\\d+))?'); // 0.0.0 / 0.0.0.0 / 0.0.0+0
+  var re = RegExp('[vV]?(\\d+)\\.(\\d+)\\.(\\d+)(?:[\\.|\\+](\\d+))?'); // 0.0.0 / 0.0.0.0 / 0.0.0+0
   var match1 = re.firstMatch(ver1);
   var match2 = re.firstMatch(ver2);
   if (match1 == null || match2 == null) {

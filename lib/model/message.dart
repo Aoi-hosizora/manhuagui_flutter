@@ -17,6 +17,10 @@ class Message {
   factory Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(json);
 
   Map<String, dynamic> toJson() => _$MessageToJson(this);
+
+  String get createdAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
+
+  String get updatedAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(updatedAt);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
