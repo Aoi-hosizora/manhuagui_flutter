@@ -37,11 +37,11 @@ class ActionRowView extends StatelessWidget {
     required this.action3,
     required this.action4,
     this.compact = false,
-    this.shrink = true,
     this.textColor,
     this.iconColor,
     this.disabledTextColor,
     this.disabledIconColor,
+    this.iconBuilder,
   })  : action5 = null,
         super(key: key);
 
@@ -53,11 +53,11 @@ class ActionRowView extends StatelessWidget {
     required this.action4,
     required ActionItem this.action5,
     this.compact = false,
-    this.shrink = true,
     this.textColor,
     this.iconColor,
     this.disabledTextColor,
     this.disabledIconColor,
+    this.iconBuilder,
   }) : super(key: key);
 
   final ActionItem action1;
@@ -66,11 +66,11 @@ class ActionRowView extends StatelessWidget {
   final ActionItem action4;
   final ActionItem? action5;
   final bool compact;
-  final bool shrink;
   final Color? textColor;
   final Color? iconColor;
   final Color? disabledTextColor;
   final Color? disabledIconColor;
+  final Widget Function(ActionItem action)? iconBuilder;
 
   Widget _buildAction(BuildContext context, ActionItem action) {
     return InkWell(
@@ -84,18 +84,17 @@ class ActionRowView extends StatelessWidget {
           alignment: IconTextAlignment.t2b,
           space: compact
               ? 2 // compact
-              : action5 == null
-                  ? 8 // four
-                  : 5 /* five */,
-          icon: Transform.rotate(
-            angle: action.rotateAngle,
-            child: Icon(
-              action.icon,
-              color: action.enable
-                  ? (textColor ?? Colors.black54) // enabled
-                  : (disabledTextColor ?? Colors.grey) /* disabled */,
-            ),
-          ),
+              : 8 /* normal */,
+          icon: iconBuilder?.call(action) ??
+              Transform.rotate(
+                angle: action.rotateAngle,
+                child: Icon(
+                  action.icon,
+                  color: action.enable
+                      ? (textColor ?? Colors.black54) // enabled
+                      : (disabledTextColor ?? Colors.grey) /* disabled */,
+                ),
+              ),
           text: Text(
             action.text,
             style: Theme.of(context).textTheme.bodyText1!.copyWith(
@@ -115,14 +114,12 @@ class ActionRowView extends StatelessWidget {
       color: Colors.transparent,
       child: Padding(
         padding: compact
-            ? EdgeInsets.zero // compact
-            : action5 == null // normal
-                ? EdgeInsets.symmetric(horizontal: 25, vertical: 8) // four
-                : EdgeInsets.symmetric(horizontal: 15, vertical: 5) /* five */,
+            ? EdgeInsets.symmetric(horizontal: 0, vertical: 0) // compact
+            : EdgeInsets.symmetric(horizontal: 0, vertical: 8) /* normal */,
         child: Row(
-          mainAxisAlignment: shrink
-              ? MainAxisAlignment.spaceBetween // shrink
-              : MainAxisAlignment.spaceAround /* normal */,
+          mainAxisAlignment: compact
+              ? MainAxisAlignment.spaceAround // compact
+              : MainAxisAlignment.spaceEvenly /* normal */,
           children: [
             _buildAction(context, action1),
             _buildAction(context, action2),

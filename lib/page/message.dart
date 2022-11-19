@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/prefs/message.dart';
 
-/// 历史消息页
+/// 历史消息页，网络请求并展示 [Message] 信息
 class MessagePage extends StatefulWidget {
   const MessagePage({Key? key}) : super(key: key);
 
@@ -42,16 +42,18 @@ class _MessagePageState extends State<MessagePage> {
 
     _total = result.data.data.length;
     if (mounted) setState(() {});
-    await _loadReadMangas();
+    await _loadReadMangas(data: result.data.data);
 
     return result.data.data;
   }
 
-  Future<void> _loadReadMangas() async {
+  Future<void> _loadReadMangas({List<Message>? data}) async {
     var messages = await MessagePrefs.getReadMessages();
     _readMessages.clear();
     _readMessages.addAll(messages);
-    _unreadCount = _data.length - _data.where((el) => _readMessages.contains(el.mid)).length;
+
+    data ??= _data;
+    _unreadCount = data.length - data.where((msg) => _readMessages.contains(msg.mid)).length;
     if (mounted) setState(() {});
   }
 
@@ -69,6 +71,7 @@ class _MessagePageState extends State<MessagePage> {
               var r = await MessagePrefs.addReadMessages(_data.map((m) => m.mid).toList());
               _readMessages.clear();
               _readMessages.addAll(r);
+              _unreadCount = 0;
               if (mounted) setState(() {});
             },
           ),
@@ -94,6 +97,7 @@ class _MessagePageState extends State<MessagePage> {
               Navigator.of(c).pop();
               await MessagePrefs.clearReadMessages();
               _readMessages.clear();
+              _unreadCount = _data.length;
               if (mounted) setState(() {});
             },
           ),

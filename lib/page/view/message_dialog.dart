@@ -32,9 +32,15 @@ Future<void> showNewVersionDialog({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '发布于：${msg.createdAtString}\n',
-                style: Theme.of(context).textTheme.bodyText2,
+                '发布于：${msg.createdAtString}',
+                style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 13, color: Colors.grey),
               ),
+              if (msg.createdAt != msg.updatedAt)
+                Text(
+                  '更新于：${msg.updatedAtString}',
+                  style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 13, color: Colors.grey),
+                ),
+              SizedBox(height: kDividerDefaultHeight),
               Text(
                 cnt.changeLogs.isEmpty ? '无版本更新日志' : cnt.changeLogs,
               ),
@@ -112,9 +118,15 @@ Future<void> showNotificationDialog({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '发布于：${msg.createdAtString}\n',
-                style: Theme.of(context).textTheme.bodyText2,
+                '发布于：${msg.createdAtString}',
+                style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 13, color: Colors.grey),
               ),
+              if (msg.createdAt != msg.updatedAt)
+                Text(
+                  '更新于：${msg.updatedAtString}',
+                  style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 13, color: Colors.grey),
+                ),
+              SizedBox(height: kDividerDefaultHeight),
               Text(cnt.content),
             ],
           ),

@@ -17,6 +17,7 @@ const DB_NAME = 'db_manhuagui';
 const DL_NTFC_ID = 'com.aoihosizora.manhuagui:download';
 const DL_NTFC_NAME = '漫画下载通知';
 const DL_NTFC_DESCRIPTION = '显示当前的漫画下载进度';
+const LOG_CONSOLE_BUFFER = 200;
 
 const DEBUG_ERROR = true;
 const CONNECT_TIMEOUT = 5000; // 5.0s (local -> my server)

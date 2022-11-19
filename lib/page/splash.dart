@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/model/message.dart';
 import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/view/message_dialog.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
@@ -35,6 +34,9 @@ class SplashPage extends StatefulWidget {
   static void remove() => FlutterNativeSplash.remove();
 
   static Future<void> prepare() async {
+    // 0. fake delay
+    await Future.delayed(Duration(milliseconds: 500));
+
     // 1. check permission
     var ok = await _checkPermission();
     if (!ok) {
@@ -63,8 +65,14 @@ class SplashPage extends StatefulWidget {
     // 1. register context for notification
     NotificationManager.instance.registerContext(context);
 
-    // 2. check message asynchronously
-    _checkLatestMessage(context);
+    // 2. check latest message asynchronously
+    Future.microtask(() async {
+      try {
+        await _checkLatestMessage(context);
+      } catch (e, s) {
+        wrapError(e, s); // ignored
+      }
+    });
 
     // 3. check auth asynchronously
     Future.microtask(() async {
@@ -78,26 +86,19 @@ class SplashPage extends StatefulWidget {
   static Future<void> _checkLatestMessage(BuildContext context) async {
     var readMessages = await MessagePrefs.getReadMessages();
     final client = RestClient(DioManager.instance.dio);
-    LatestMessage lm;
-    try {
-      var result = await client.getLatestMessage();
-      lm = result.data;
-    } catch (e, s) {
-      wrapError(e, s); // ignored
-      return;
-    }
+    var m = (await client.getLatestMessage()).data;
 
-    if (lm.mustUpgradeNewVersion != null && isVersionNewer(lm.mustUpgradeNewVersion!.newVersion!.version, APP_VERSION) == true) {
-      await showNewVersionDialog(context: context, newVersion: lm.mustUpgradeNewVersion!);
+    if (m.mustUpgradeNewVersion != null && isVersionNewer(m.mustUpgradeNewVersion!.newVersion!.version, APP_VERSION) == true) {
+      await showNewVersionDialog(context: context, newVersion: m.mustUpgradeNewVersion!);
     }
-    if (lm.notDismissibleNotification != null && !readMessages.contains(lm.notDismissibleNotification!.mid)) {
-      await showNotificationDialog(context: context, notification: lm.notDismissibleNotification!);
+    if (m.notDismissibleNotification != null && !readMessages.contains(m.notDismissibleNotification!.mid)) {
+      await showNotificationDialog(context: context, notification: m.notDismissibleNotification!);
     }
-    if (lm.newVersion != null && !readMessages.contains(lm.newVersion!.mid) && isVersionNewer(lm.newVersion!.newVersion!.version, APP_VERSION) == true) {
-      await showNewVersionDialog(context: context, newVersion: lm.newVersion!);
+    if (m.newVersion != null && !readMessages.contains(m.newVersion!.mid) && isVersionNewer(m.newVersion!.newVersion!.version, APP_VERSION) == true) {
+      await showNewVersionDialog(context: context, newVersion: m.newVersion!);
     }
-    if (lm.notification != null && !readMessages.contains(lm.notification!.mid)) {
-      await showNotificationDialog(context: context, notification: lm.notification!);
+    if (m.notification != null && !readMessages.contains(m.notification!.mid)) {
+      await showNotificationDialog(context: context, notification: m.notification!);
     }
   }
 }

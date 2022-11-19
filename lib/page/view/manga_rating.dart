@@ -49,75 +49,71 @@ class MangaRatingDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width - //
-        (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal;
+    final width = MediaQuery.of(context).size.width - (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal;
     final barWidth = width * 0.6;
-    return SizedBox(
-      width: width,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RatingBar.builder(
-                itemCount: 5,
-                itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
-                initialRating: averageScore / 2.0,
-                itemSize: 32,
-                itemPadding: EdgeInsets.symmetric(horizontal: 2),
-                allowHalfRating: true,
-                ignoreGestures: true,
-                onRatingUpdate: (_) {},
-              ),
-              SizedBox(width: 10),
-              Text(
-                averageScore.toString(),
-                style: Theme.of(context).textTheme.bodyText1?.copyWith(
-                      fontSize: 28,
-                      color: Colors.orangeAccent,
-                    ),
-              ),
-            ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RatingBar.builder(
+              itemCount: 5,
+              itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+              initialRating: averageScore / 2.0,
+              itemSize: 32,
+              itemPadding: EdgeInsets.symmetric(horizontal: 2),
+              allowHalfRating: true,
+              ignoreGestures: true,
+              onRatingUpdate: (_) {},
+            ),
+            SizedBox(width: 10),
+            Text(
+              averageScore.toString(),
+              style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                    fontSize: 28,
+                    color: Colors.orangeAccent,
+                  ),
+            ),
+          ],
+        ),
+        SizedBox(height: 2),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            '共 $scoreCount 人评分',
+            style: Theme.of(context).textTheme.bodyText2,
           ),
-          SizedBox(height: 2),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '共 $scoreCount 人评分',
-              style: Theme.of(context).textTheme.bodyText2,
+        ),
+        Divider(height: 16, thickness: 1),
+        for (var i = 4; i >= 0; i--)
+          Padding(
+            padding: EdgeInsets.only(bottom: i == 0 ? 0 : 5),
+            child: Row(
+              children: [
+                RatingBar.builder(
+                  itemCount: 5,
+                  itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+                  initialRating: (i + 1).toDouble(),
+                  itemSize: 16,
+                  allowHalfRating: false,
+                  ignoreGestures: true,
+                  onRatingUpdate: (_) {},
+                ),
+                Container(
+                  width: barWidth * (double.tryParse(perScores[i + 1].replaceAll('%', '')) ?? 0) / 100,
+                  height: 16,
+                  color: Colors.amber,
+                  margin: EdgeInsets.only(left: 4, right: 6),
+                ),
+                Text(
+                  perScores[i + 1],
+                  style: Theme.of(context).textTheme.bodyText2,
+                ),
+              ],
             ),
           ),
-          Divider(height: 16, thickness: 1),
-          for (var i = 4; i >= 0; i--)
-            Padding(
-              padding: EdgeInsets.only(bottom: i == 0 ? 0 : 5),
-              child: Row(
-                children: [
-                  RatingBar.builder(
-                    itemCount: 5,
-                    itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
-                    initialRating: (i + 1).toDouble(),
-                    itemSize: 16,
-                    allowHalfRating: false,
-                    ignoreGestures: true,
-                    onRatingUpdate: (_) {},
-                  ),
-                  Container(
-                    width: barWidth * (double.tryParse(perScores[i + 1].replaceAll('%', '')) ?? 0) / 100,
-                    height: 16,
-                    color: Colors.amber,
-                    margin: EdgeInsets.only(left: 4, right: 6),
-                  ),
-                  Text(
-                    perScores[i + 1],
-                    style: Theme.of(context).textTheme.bodyText2,
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }

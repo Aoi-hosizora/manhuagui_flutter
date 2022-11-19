@@ -48,7 +48,7 @@ class GlbSetting {
     if (!s.enableLogger) {
       LogConsolePage.finalize();
     } else if (!LogConsolePage.initialized) {
-      LogConsolePage.initialize(globalLogger, bufferSize: 100);
+      LogConsolePage.initialize(globalLogger, bufferSize: LOG_CONSOLE_BUFFER);
       globalLogger.i('initialize LogConsolePage');
     }
   }
@@ -157,7 +157,7 @@ class _GlbSettingSubPageState extends State<GlbSettingSubPage> with SettingSubPa
           hint: '当前设置对应的漫画下载超时时间为：' +
               (_dlTimeoutBehavior == TimeoutBehavior.normal
                   ? '${DOWNLOAD_HEAD_TIMEOUT / 1000}s + ${DOWNLOAD_IMAGE_TIMEOUT / 1000}s'
-                  : _timeoutBehavior == TimeoutBehavior.long
+                  : _dlTimeoutBehavior == TimeoutBehavior.long
                       ? '${DOWNLOAD_HEAD_LTIMEOUT / 1000}s + ${DOWNLOAD_IMAGE_LTIMEOUT / 1000}s'
                       : '无超时时间设置'),
           width: 75,

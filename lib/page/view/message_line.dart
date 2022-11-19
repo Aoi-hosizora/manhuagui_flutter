@@ -116,11 +116,12 @@ class MessageLineView extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: 6),
                   Text(
                     '发布于：${message.createdAtString}',
                     style: Theme.of(context).textTheme.bodyText2?.copyWith(
-                          color: Theme.of(context).primaryColor,
+                          fontSize: 13,
+                          color: Colors.grey,
                         ),
                   ),
                 ],

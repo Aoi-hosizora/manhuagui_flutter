@@ -789,7 +789,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                 ),
                                 ActionRowView.four(
                                   compact: true,
-                                  shrink: false,
                                   textColor: Colors.white,
                                   iconColor: Colors.white,
                                   action1: ActionItem(

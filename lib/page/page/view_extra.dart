@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 /// 漫画章节阅读页-额外页
@@ -118,67 +119,47 @@ class ViewExtraSubPage extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
-    Widget _buildAction({required String text, required IconData icon, required void Function() action, bool enable = true}) {
-      return InkWell(
-        onTap: enable ? action : null,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Column(
-            children: [
-              Container(
-                height: 48,
-                width: 48,
-                decoration: BoxDecoration(
-                  border: Border.all(width: 0.8, color: Colors.grey[400]!),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 22,
-                  color: enable ? Colors.grey[800] : Colors.grey,
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                text,
-                style: TextStyle(color: enable ? Colors.black : Colors.grey),
-              ),
-            ],
-          ),
+    return ActionRowView.five(
+      iconBuilder: (action) => Container(
+        height: 45,
+        width: 45,
+        margin: EdgeInsets.only(bottom: 3),
+        decoration: BoxDecoration(
+          border: Border.all(width: 0.8, color: Colors.grey[400]!),
+          shape: BoxShape.circle,
         ),
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _buildAction(
-          text: '结束阅读',
-          icon: Icons.arrow_back,
-          action: () => toPop.call(),
+        child: Icon(
+          action.icon,
+          size: 22,
+          color: action.enable ? Colors.grey[800] : Colors.grey,
         ),
-        _buildAction(
-          text: !subscribed ? '订阅漫画' : '取消订阅',
-          icon: !subscribed ? Icons.star_border : Icons.star,
-          action: () => toSubscribe.call(),
-          enable: !subscribing,
-        ),
-        _buildAction(
-          text: '下载漫画',
-          icon: Icons.download,
-          action: () => toDownload.call(),
-        ),
-        _buildAction(
-          text: '漫画目录',
-          icon: Icons.menu,
-          action: () => toShowToc.call(),
-        ),
-        _buildAction(
-          text: '查看评论',
-          icon: Icons.forum,
-          action: () => toShowComments.call(),
-        ),
-      ],
+      ),
+      action1: ActionItem(
+        text: '结束阅读',
+        icon: Icons.arrow_back,
+        action: () => toPop.call(),
+      ),
+      action2: ActionItem(
+        text: !subscribed ? '订阅漫画' : '取消订阅',
+        icon: !subscribed ? Icons.star_border : Icons.star,
+        action: () => toSubscribe.call(),
+        enable: !subscribing,
+      ),
+      action3: ActionItem(
+        text: '下载漫画',
+        icon: Icons.download,
+        action: () => toDownload.call(),
+      ),
+      action4: ActionItem(
+        text: '漫画目录',
+        icon: Icons.menu,
+        action: () => toShowToc.call(),
+      ),
+      action5: ActionItem(
+        text: '查看评论',
+        icon: Icons.forum,
+        action: () => toShowComments.call(),
+      ),
     );
   }
 
@@ -336,10 +317,10 @@ class ViewExtraSubPage extends StatelessWidget {
             SizedBox(height: 18),
             Container(
               color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6),
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6 - 8),
               child: Material(
                 color: Colors.transparent,
-                child: _buildActions(context), // InkWell vertical padding: 6
+                child: _buildActions(context), // InkWell vertical padding: 6, ActionRowView vertical padding: 8
               ),
             ),
           ],
