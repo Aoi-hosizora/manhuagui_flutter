@@ -37,8 +37,8 @@ android {
 
     defaultConfig {
         applicationId 'com.aoihosizora.manhuagui'
-        versionCode 4
-        versionName '1.2.0'
+        versionCode 5
+        versionName '1.2.1'
 
         minSdkVersion 19 // flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
