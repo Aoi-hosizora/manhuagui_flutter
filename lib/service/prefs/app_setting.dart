@@ -1,3 +1,4 @@
+import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,8 @@ class AppSettingPrefs {
   static const _dlTimeoutBehaviorKey = 'AppSetting_dlTimeoutBehavior'; // int
   static const _enableLoggerKey = 'AppSetting_enableLogger'; // bool
   static const _usingDownloadedPageKey = 'AppSetting_usingDownloadedPage'; // bool
+  static const _defaultMangaOrderKey = 'AppSettingPrefs_defaultMangaOrder'; // int
+  static const _defaultAuthorOrderKey = 'AppSettingPrefs_defaultAuthorOrder'; // int
 
   // TODO merge all settings to here
 
@@ -20,6 +23,8 @@ class AppSettingPrefs {
       dlTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGetInt(_dlTimeoutBehaviorKey) ?? def.dlTimeoutBehavior.toInt()),
       enableLogger: prefs.safeGetBool(_enableLoggerKey) ?? def.enableLogger,
       usingDownloadedPage: prefs.safeGetBool(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
+      defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGetInt(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
+      defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGetInt(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
     );
   }
 
@@ -29,6 +34,8 @@ class AppSettingPrefs {
     await prefs.setInt(_dlTimeoutBehaviorKey, setting.dlTimeoutBehavior.toInt());
     await prefs.setBool(_enableLoggerKey, setting.enableLogger);
     await prefs.setBool(_usingDownloadedPageKey, setting.usingDownloadedPage);
+    await prefs.setInt(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
+    await prefs.setInt(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {

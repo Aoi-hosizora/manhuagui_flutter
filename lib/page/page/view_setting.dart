@@ -222,10 +222,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSub
           title: '预加载页数',
           value: _preloadCount.clamp(0, 5),
           values: const [0, 1, 2, 3, 4, 5],
-          builder: (s) => Text(
-            s == 0 ? '禁用预加载' : '前后$s页',
-            style: Theme.of(context).textTheme.bodyText2,
-          ),
+          builder: (s) => Text(s == 0 ? '禁用预加载' : '前后$s页'),
           onChanged: (c) {
             _preloadCount = c.clamp(0, 5);
             widget.onSettingChanged.call(newestSetting);

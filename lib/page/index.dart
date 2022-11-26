@@ -18,16 +18,16 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMixin {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _scaffoldKey = GlobalKey<DrawerScaffoldState>();
   late final _controller = TabController(length: 4, vsync: this);
   final _physicsController = CustomScrollPhysicsController();
   var _selectedIndex = 0;
   late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
-    Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0], physicsController: _physicsController)),
-    Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1], physicsController: _physicsController)),
-    Tuple3('订阅', Icons.loyalty, SubscribeSubPage(action: _actions[2], physicsController: _physicsController)),
-    Tuple3('我的', Icons.person, MineSubPage(action: _actions[3], physicsController: _physicsController)),
+    Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
+    Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1])),
+    Tuple3('订阅', Icons.loyalty, SubscribeSubPage(action: _actions[2])),
+    Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
   ];
   final _cancelHandlers = <VoidCallback>[];
 
@@ -63,7 +63,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   DateTime? _lastBackPressedTime;
 
   Future<bool> _onWillPop() async {
-    if (_scaffoldKey.currentState?.isDrawerOpen == true) {
+    if (_scaffoldKey.currentState?.isDrawerOpen == true || _scaffoldKey.currentState?.scaffoldState?.isDrawerOpen == true) {
       return true; // close drawer
     }
     var now = DateTime.now();
@@ -107,10 +107,13 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
           ),
         ],
         physicsController: _physicsController,
-        body: TabBarView(
-          physics: NeverScrollableScrollPhysics(),
-          controller: _controller,
-          children: _tabs.map((t) => t.item3).toList(),
+        body: DefaultCustomScrollPhysics(
+          physics: CustomScrollPhysics(controller: _physicsController),
+          child: TabBarView(
+            physics: NeverScrollableScrollPhysics(),
+            controller: _controller,
+            children: _tabs.map((t) => t.item3).toList(),
+          ),
         ),
         bottomNavigationBar: Theme(
           data: Theme.of(context).copyWith(

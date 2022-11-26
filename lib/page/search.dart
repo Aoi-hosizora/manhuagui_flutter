@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -43,7 +44,7 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await Future.delayed(CustomPageRouteTheme.of(context)?.transitionDuration ?? kMaterialTransitionDuration);
+      await Future.delayed(Duration(milliseconds: 300)); // faster than transitionDuration 400ms
       _searchController.open();
     });
   }
@@ -59,8 +60,8 @@ class _SearchPageState extends State<SearchPage> {
 
   final _data = <SmallManga>[];
   var _total = 0;
-  var _currOrder = MangaOrder.byPopular;
-  var _lastOrder = MangaOrder.byPopular;
+  var _currOrder = AppSetting.global.defaultMangaOrder;
+  var _lastOrder = AppSetting.global.defaultMangaOrder;
   var _getting = false;
   final _histories = <String>[];
 

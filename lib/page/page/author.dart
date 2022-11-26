@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/small_author_line.dart';
@@ -72,8 +73,8 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
 
   final _data = <SmallAuthor>[];
   var _total = 0;
-  var _currOrder = AuthorOrder.byPopular;
-  var _lastOrder = AuthorOrder.byPopular;
+  var _currOrder = AppSetting.global.defaultAuthorOrder;
+  var _lastOrder = AppSetting.global.defaultAuthorOrder;
   var _currGenre = allGenres[0];
   var _lastGenre = allGenres[0];
   var _currAge = allAges[0];
@@ -206,7 +207,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
               ListHintView.textWidget(
                 leftText: '搜索结果 (共 $_total 位)',
                 rightWidget: OptionPopupView<AuthorOrder>(
-                  items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byUpdate],
+                  items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byNew],
                   value: _currOrder,
                   titleBuilder: (c, v) => v.toTitle(),
                   enable: !_getting,

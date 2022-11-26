@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 
@@ -12,12 +13,16 @@ class AppSetting {
     required this.dlTimeoutBehavior,
     required this.enableLogger,
     required this.usingDownloadedPage,
+    required this.defaultMangaOrder,
+    required this.defaultAuthorOrder,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
   final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
   final bool enableLogger; // 记录调试日志
   final bool usingDownloadedPage; // 阅读时载入已下载的页面
+  final MangaOrder defaultMangaOrder; // 漫画默认排序方式
+  final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
 
   AppSetting.defaultSetting()
       : this(
@@ -25,6 +30,8 @@ class AppSetting {
           dlTimeoutBehavior: TimeoutBehavior.normal,
           enableLogger: false,
           usingDownloadedPage: true,
+          defaultMangaOrder: MangaOrder.byPopular,
+          defaultAuthorOrder: AuthorOrder.byPopular,
         );
 
   AppSetting copyWith({
@@ -32,12 +39,16 @@ class AppSetting {
     TimeoutBehavior? dlTimeoutBehavior,
     bool? enableLogger,
     bool? usingDownloadedPage,
+    MangaOrder? defaultMangaOrder,
+    AuthorOrder? defaultAuthorOrder,
   }) {
     return AppSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
       dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
       enableLogger: enableLogger ?? this.enableLogger,
       usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
+      defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
+      defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
     );
   }
 
@@ -120,6 +131,8 @@ class _AppSettingSubPageState extends State<AppSettingSubPage> with SettingSubPa
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
   late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
+  late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
+  late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
 
   @override
   AppSetting get newestSetting => AppSetting(
@@ -127,6 +140,8 @@ class _AppSettingSubPageState extends State<AppSettingSubPage> with SettingSubPa
         dlTimeoutBehavior: _dlTimeoutBehavior,
         enableLogger: _enableLogger,
         usingDownloadedPage: _usingDownloadedPage,
+        defaultMangaOrder: _defaultMangaOrder,
+        defaultAuthorOrder: _defaultAuthorOrder,
       );
 
   @override
@@ -188,6 +203,28 @@ class _AppSettingSubPageState extends State<AppSettingSubPage> with SettingSubPa
           value: _usingDownloadedPage,
           onChanged: (b) {
             _usingDownloadedPage = b;
+            widget.onSettingChanged.call(newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingComboBoxView<MangaOrder>(
+          title: '漫画默认排序方式',
+          value: _defaultMangaOrder,
+          values: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+          builder: (s) => Text(s.toTitle()),
+          onChanged: (s) {
+            _defaultMangaOrder = s;
+            widget.onSettingChanged.call(newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingComboBoxView<AuthorOrder>(
+          title: '漫画作者默认排序方式',
+          value: _defaultAuthorOrder,
+          values: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byNew],
+          builder: (s) => Text(s.toTitle()),
+          onChanged: (s) {
+            _defaultAuthorOrder = s;
             widget.onSettingChanged.call(newestSetting);
             if (mounted) setState(() {});
           },

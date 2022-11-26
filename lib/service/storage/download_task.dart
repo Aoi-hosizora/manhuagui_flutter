@@ -10,8 +10,8 @@ import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
+import 'package:manhuagui_flutter/service/storage/download_notification.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 import 'package:queue/queue.dart';
 
@@ -46,7 +46,11 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     _doingTask = true;
     _succeeded = await _coreDoTask();
     _doingTask = false;
-    _progress.showNotification(mangaId: mangaId, mangaTitle: mangaTitle, canceled: canceled, success: _succeeded);
+    if (!_canceled) {
+      DownloadNotificationHelper.showDoneNotification(mangaId, mangaTitle, _succeeded);
+    } else {
+      DownloadNotificationHelper.cancelNotification(mangaId: mangaId);
+    }
   }
 
   bool _canceled;
@@ -58,7 +62,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   void cancel() {
     super.cancel();
     _canceled = true;
-    DownloadMangaProgress.cancelNotification(mangaId: mangaId);
+    DownloadNotificationHelper.cancelNotification(mangaId: mangaId);
     if (!_doingTask) {
       QueueManager.instance.tasks.remove(this);
       doDefer(); // finished: true
@@ -81,10 +85,10 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   DownloadMangaProgress get progress => _progress;
 
-  void _updateProgress(DownloadMangaProgress progress, {bool sendNotification = false}) {
+  void _updateProgress(DownloadMangaProgress progress, {bool alsoNotify = false}) {
     _progress = progress;
-    if (sendNotification) {
-      _progress.showNotification(mangaId: mangaId, mangaTitle: mangaTitle, canceled: canceled);
+    if (alsoNotify && !_canceled) {
+      DownloadNotificationHelper.showProgressNotification(mangaId, mangaTitle, _progress);
     }
     var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
     EventBusManager.instance.fire(ev);
@@ -194,7 +198,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     }
     _updateProgress(
       DownloadMangaProgress.gettingManga(),
-      sendNotification: true,
+      alsoNotify: true,
     );
 
     // 2. 获取漫画数据
@@ -236,7 +240,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         startedChapters: [],
         currentChapterId: chapterIds.first,
       ),
-      sendNotification: true,
+      alsoNotify: true,
     );
     var startedChapters = <MangaChapter?>[];
     for (var chapterId in chapterIds) {
@@ -302,7 +306,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           startedChapters: startedChapters,
           currentChapterId: chapterId,
         ),
-        sendNotification: true,
+        alsoNotify: true,
       );
       MangaChapter chapter;
       try {
@@ -331,7 +335,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           currentChapterId: chapterId,
           currentChapter: chapter,
         ),
-        sendNotification: true,
+        alsoNotify: true,
       );
 
       // 5.4. 更新章节信息表
@@ -389,7 +393,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
               triedChapterPageCount: successChapterPageCount + failedChapterPageCount,
               successChapterPageCount: successChapterPageCount,
             ),
-            sendNotification: true,
+            alsoNotify: true,
           );
         }).onError((e, s) {
           if (e is! QueueCancelledException) {
@@ -506,66 +510,6 @@ class DownloadMangaProgress {
   final MangaChapter? currentChapter;
   final int? triedChapterPageCount;
   final int? successChapterPageCount;
-
-  Future<void> showNotification({required int mangaId, required String mangaTitle, required bool canceled, bool? success}) async {
-    if (canceled) {
-      return;
-    }
-
-    if (success != null) {
-      await NotificationManager.instance.showDownloadChannelNotification(
-        id: mangaId,
-        title: mangaTitle,
-        body: success ? '下载已完成' : '下载失败',
-        icon: NotificationManager.drawableStatDownloadDone,
-        largeIcon: NotificationManager.mipMapIcLaunch,
-        autoCancel: true,
-        ongoing: false,
-        showProgress: false,
-        category: success ? NotificationManager.statusCategory : NotificationManager.errCategory,
-      );
-    } else {
-      Future<void> show(int mangaId, String mangaTitle, String bodyText, int? triedPageCount, int? totalPageCount) async {
-        await NotificationManager.instance.showDownloadChannelNotification(
-          id: mangaId,
-          title: mangaTitle,
-          body: bodyText,
-          icon: NotificationManager.drawableStatDownload,
-          largeIcon: NotificationManager.mipMapIcLaunch,
-          autoCancel: false,
-          ongoing: true,
-          showProgress: true,
-          indeterminate: triedPageCount == null,
-          progress: triedPageCount ?? 0,
-          maxProgress: totalPageCount ?? 1,
-          category: NotificationManager.progressCategory,
-        );
-      }
-
-      switch (stage) {
-        case DownloadMangaProgressStage.gettingManga:
-          show(mangaId, mangaTitle, '获取漫画信息中', null, null);
-          break;
-        case DownloadMangaProgressStage.gettingChapter:
-          show(mangaId, mangaTitle, '获取章节信息中', null, null);
-          break;
-        case DownloadMangaProgressStage.gotChapter:
-          var body = '${currentChapter!.title} 0/${currentChapter!.pageCount}';
-          show(mangaId, mangaTitle, body, 0, 1);
-          break;
-        case DownloadMangaProgressStage.gotPage:
-          var body = '${currentChapter!.title} ${triedChapterPageCount!}/${currentChapter!.pageCount}';
-          show(mangaId, mangaTitle, body, triedChapterPageCount!, currentChapter!.pageCount);
-          break;
-        default:
-        // skip
-      }
-    }
-  }
-
-  static Future<void> cancelNotification({required int mangaId}) async {
-    await NotificationManager.instance.cancelNotification(id: mangaId);
-  }
 }
 
 extension QueueManagerExtension on QueueManager {

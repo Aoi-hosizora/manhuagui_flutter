@@ -166,7 +166,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       Future.microtask(() async {
         try {
           await client.recordManga(token: AuthManager.instance.token, mid: widget.mangaId, cid: widget.chapterId);
-        } catch (_) {}
+        } catch (e, s) {
+          globalLogger.e('MangaViewerPage._loadData recordManga', e, s);
+        }
       });
 
       // 2. 异步获取漫画订阅信息

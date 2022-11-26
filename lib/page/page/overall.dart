@@ -44,7 +44,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
 
   final _data = <TinyManga>[];
   var _total = 0;
-  var _currOrder = MangaOrder.byNew;
+  var _currOrder = MangaOrder.byNew; // 最新发布优先
   var _lastOrder = MangaOrder.byNew;
   var _getting = false;
 

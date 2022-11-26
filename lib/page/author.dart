@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
@@ -78,8 +79,8 @@ class _AuthorPageState extends State<AuthorPage> {
 
   final _mangas = <SmallManga>[];
   var _total = 0;
-  var _currOrder = MangaOrder.byPopular;
-  late var _lastOrder = _currOrder;
+  var _currOrder = AppSetting.global.defaultMangaOrder;
+  var _lastOrder = AppSetting.global.defaultMangaOrder;
   var _getting = false;
 
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {

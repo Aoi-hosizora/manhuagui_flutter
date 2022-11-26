@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/service/native/notification_handler.dart';
 
-class NotificationManager with NotificationHandlerMixin {
+class NotificationManager {
   NotificationManager._();
 
   static NotificationManager? _instance;
@@ -22,36 +22,85 @@ class NotificationManager with NotificationHandlerMixin {
       _plugin = FlutterLocalNotificationsPlugin();
       await _plugin!.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestPermission();
       await _plugin!.initialize(
-        InitializationSettings(
-          android: AndroidInitializationSettings('flutter_icon'),
-        ),
+        InitializationSettings(android: AndroidInitializationSettings('flutter_icon')),
         onSelectNotification: _onNotificationSelected,
       );
     }
     return _plugin!;
   }
 
+  // ===============
+  // handler related
+  // ===============
+
+  static BuildContext? _hackedContext; // global BuildContext instance
+
+  void registerContext(BuildContext context) {
+    _hackedContext = context;
+  }
+
+  static final _registeredHandlers = <NotificationHandler>[]; // global handlers list instance
+
+  void registerHandler(NotificationHandler handler) {
+    _registeredHandlers.add(handler);
+  }
+
   @pragma('vm:entry-point')
   static void _onNotificationSelected(String? payloadString) {
-    var payload = NotificationPayload.fromString(payloadString ?? '{}');
+    var payload = _NotificationPayload.fromJson(payloadString);
     if (payload != null) {
-      NotificationHandlerMixin.handleSelectedEvent(
-        channelId: payload.channelId,
-        messageId: payload.messageId,
-        messageTag: payload.messageTag,
-        arguments: payload.arguments,
-      );
+      for (var handler in _registeredHandlers) {
+        if (handler.check(_hackedContext, payload.channelId, payload.messageId, payload.messageTag, payload.arguments)) {
+          handler.select(_hackedContext, payload.channelId, payload.messageId, payload.messageTag, payload.arguments);
+          break;
+        }
+      }
     }
   }
+
+  // =======================
+  // show and cancel related
+  // =======================
+
+  Future<bool> showNotification({required int id, String? title, String? body, required AndroidNotificationDetails details, Object? arguments}) async {
+    try {
+      var plugin = await getPlugin();
+      var payload = _NotificationPayload(details.channelId, id, details.tag, arguments).toJson();
+      await plugin.show(id, title, body, NotificationDetails(android: details), payload: payload);
+      return true;
+    } catch (e, s) {
+      globalLogger.e('showNotification', e, s);
+      return false;
+    }
+  }
+
+  Future<bool> cancelNotification({required int id, String? tag}) async {
+    try {
+      var plugin = await getPlugin();
+      await plugin.cancel(id, tag: tag);
+      return true;
+    } catch (e, s) {
+      globalLogger.e('cancelNotification', e, s);
+      return false;
+    }
+  }
+
+  // =======
+  // helpers
+  // =======
+
+  static const downloadChannel = NotificationChannel._(DL_NTFC_ID, DL_NTFC_NAME, DL_NTFC_DESCRIPTION);
 
   static const progressCategory = 'progress';
   static const statusCategory = 'status';
   static const errCategory = 'err';
 
-  static AndroidNotificationDetails _buildSilentNotificationDetails({
-    required String channelId,
-    required String channelName,
-    required String channelDescription,
+  static const mipMapIcLaunch = '@mipmap/ic_launcher';
+  static const drawableStatSysDownload = '@android:drawable/stat_sys_download';
+  static const drawableStatSysDownloadDone = '@android:drawable/stat_sys_download_done';
+
+  static AndroidNotificationDetails buildSilentDetails({
+    required NotificationChannel channel,
     String? icon,
     String? largeIcon,
     String? subText,
@@ -71,9 +120,9 @@ class NotificationManager with NotificationHandlerMixin {
     // https://github.com/MaikuB/flutter_local_notifications/blob/flutter_local_notifications-v12.0.3/flutter_local_notifications/lib/src/platform_specifics/android/categories.dart
     return AndroidNotificationDetails(
       /* channel */
-      channelId,
-      channelName,
-      channelDescription: channelDescription,
+      channel.id,
+      channel.name,
+      channelDescription: channel.description,
       /* data */
       icon: icon,
       largeIcon: largeIcon == null ? null : DrawableResourceAndroidBitmap(largeIcon),
@@ -104,120 +153,50 @@ class NotificationManager with NotificationHandlerMixin {
       visibility: NotificationVisibility.secret,
     );
   }
-
-  static const mipMapIcLaunch = '@mipmap/ic_launcher';
-  static const drawableStatDownload = '@android:drawable/stat_sys_download';
-  static const drawableStatDownloadDone = '@android:drawable/stat_sys_download_done';
-
-  Future<bool> showDownloadChannelNotification({
-    required int id,
-    required String title,
-    String? body,
-    String? subText,
-    String? ticker,
-    String? tag,
-    Object? payloadArguments,
-    String? icon,
-    String? largeIcon,
-    bool autoCancel = true,
-    bool ongoing = false,
-    bool showProgress = false,
-    bool indeterminate = false,
-    int maxProgress = 0,
-    int progress = 0,
-    String? category,
-  }) async {
-    var plugin = await getPlugin();
-    try {
-      await plugin.show(
-        id,
-        title,
-        body,
-        NotificationDetails(
-          android: _buildSilentNotificationDetails(
-            channelId: DL_NTFC_ID,
-            channelName: DL_NTFC_NAME,
-            channelDescription: DL_NTFC_DESCRIPTION,
-            subText: subText,
-            ticker: ticker,
-            tag: tag,
-            icon: icon,
-            largeIcon: largeIcon,
-            autoCancel: autoCancel,
-            ongoing: ongoing,
-            showProgress: showProgress,
-            indeterminate: indeterminate,
-            maxProgress: maxProgress,
-            progress: progress,
-            category: category,
-          ),
-        ),
-        payload: NotificationPayload(
-          channelId: DL_NTFC_ID,
-          messageId: id,
-          messageTag: tag,
-          arguments: payloadArguments,
-        ).buildString(),
-      );
-      return true;
-    } catch (e, s) {
-      globalLogger.e('showDownloadChannelNotification', e, s);
-      return false;
-    }
-  }
-
-  Future<bool> cancelNotification({required int id, String? tag}) async {
-    var plugin = await getPlugin();
-    try {
-      await plugin.cancel(id, tag: tag);
-      return true;
-    } catch (e, s) {
-      globalLogger.e('cancelNotification', e, s);
-      return false;
-    }
-  }
 }
 
-class NotificationPayload {
-  const NotificationPayload({
-    required this.channelId,
-    required this.messageId,
-    this.messageTag,
-    this.arguments,
-  });
+abstract class NotificationHandler {
+  NotificationHandler();
+
+  bool check(BuildContext? context, String channelId, int messageId, String? messageTag, Object? arguments);
+
+  void select(BuildContext? context, String channelId, int messageId, String? messageTag, Object? arguments);
+}
+
+class NotificationChannel {
+  const NotificationChannel._(this.id, this.name, this.description);
+
+  final String id;
+  final String name;
+  final String description;
+}
+
+class _NotificationPayload {
+  const _NotificationPayload(this.channelId, this.messageId, this.messageTag, this.arguments);
 
   final String channelId;
   final int messageId;
   final String? messageTag;
   final Object? arguments;
 
-  String buildString() {
-    var m = <String, dynamic>{
-      'channelId': channelId,
-      'messageId': messageId,
-      'messageTag': messageTag,
-      'arguments': arguments,
-    };
+  String toJson() {
+    var m = <String, dynamic>{'channel_id': channelId, 'message_id': messageId, 'message_tag': messageTag, 'arguments': arguments};
     return json.encode(m);
   }
 
-  static NotificationPayload? fromString(String payload) {
+  static _NotificationPayload? fromJson(String? s) {
     try {
-      var m = json.decode(payload) as Map<String, dynamic>;
-      var channelId = m['channelId'];
-      var messageId = m['messageId'];
-      var messageTag = m['messageTag'];
+      var m = json.decode(s ?? '{}') as Map<String, dynamic>;
+      var channelId = m['channel_id'];
+      var messageId = m['message_id'];
+      var messageTag = m['message_tag'];
       var arguments = m['arguments'];
       if (channelId == null || messageId == null) {
         return null;
       }
-      return NotificationPayload(
-        channelId: channelId,
-        messageId: messageId,
-        messageTag: messageTag,
-        arguments: arguments,
-      );
-    } catch (_) {
+      return _NotificationPayload(channelId, messageId, messageTag, arguments);
+    } catch (e, s) {
+      globalLogger.w('_NotificationPayload.fromJson', e, s);
       return null;
     }
   }

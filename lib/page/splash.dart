@@ -15,6 +15,7 @@ import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/message.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
+import 'package:manhuagui_flutter/service/storage/download_notification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Splash 页 (flutter_native_splash)
@@ -62,8 +63,9 @@ class SplashPage extends StatefulWidget {
   }
 
   static void prepareWithContext(BuildContext context) async {
-    // 1. register context for notification
+    // 1. register something to notification
     NotificationManager.instance.registerContext(context);
+    NotificationManager.instance.registerHandler(DownloadNotificationHandler());
 
     // 2. check latest message asynchronously
     Future.microtask(() async {

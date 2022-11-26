@@ -15,7 +15,7 @@ abstract class _SettingView extends StatelessWidget {
   final double? width;
   final double height;
 
-  Widget get rightWidget;
+  Widget buildRightWidget(BuildContext context);
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,7 @@ abstract class _SettingView extends StatelessWidget {
         SizedBox(
           height: height,
           width: width,
-          child: rightWidget,
+          child: buildRightWidget(context),
         ),
       ],
     );
@@ -74,9 +74,19 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
   final void Function(T) onChanged;
 
   @override
-  Widget get rightWidget => DropdownButton<T>(
+  Widget buildRightWidget(BuildContext context) => DropdownButton<T>(
         value: value,
-        items: values.map((s) => DropdownMenuItem<T>(child: builder(s), value: s)).toList(),
+        items: values
+            .map(
+              (s) => DropdownMenuItem<T>(
+                child: DefaultTextStyle(
+                  child: builder(s),
+                  style: Theme.of(context).textTheme.bodyText2!,
+                ),
+                value: s,
+              ),
+            )
+            .toList(),
         underline: Container(color: Colors.white),
         isExpanded: true,
         onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
@@ -106,7 +116,7 @@ class SettingSwitcherView extends _SettingView {
   final void Function(bool) onChanged;
 
   @override
-  Widget get rightWidget => Switch(
+  Widget buildRightWidget(BuildContext context) => Switch(
         value: value,
         onChanged: enable ? onChanged : null,
       );
@@ -137,7 +147,7 @@ class SettingButtonView extends _SettingView {
   final void Function() onPressed;
 
   @override
-  Widget get rightWidget => Padding(
+  Widget buildRightWidget(BuildContext context) => Padding(
         padding: buttonPadding,
         child: ElevatedButton(
           child: buttonChild,

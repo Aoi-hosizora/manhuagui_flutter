@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
@@ -74,8 +75,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
 
   final _data = <TinyManga>[];
   var _total = 0;
-  var _currOrder = MangaOrder.byPopular;
-  var _lastOrder = MangaOrder.byPopular;
+  var _currOrder = AppSetting.global.defaultMangaOrder;
+  var _lastOrder = AppSetting.global.defaultMangaOrder;
   late var _currGenre = widget.defaultGenre ?? allGenres[0];
   late var _lastGenre = widget.defaultGenre ?? allGenres[0];
   var _currAge = allAges[0];

@@ -60,17 +60,13 @@ class _MangaTocPageState extends State<MangaTocPage> {
   DownloadedManga? _downloadEntity;
 
   Future<void> _loadHistory() async {
-    try {
-      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-      if (mounted) setState(() {});
-    } catch (_) {}
+    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadDownload() async {
-    try {
-      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-      if (mounted) setState(() {});
-    } catch (_) {}
+    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    if (mounted) setState(() {});
   }
 
   @override

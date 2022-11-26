@@ -26,11 +26,9 @@ class MineSubPage extends StatefulWidget {
   const MineSubPage({
     Key? key,
     this.action,
-    this.physicsController,
   }) : super(key: key);
 
   final ActionController? action;
-  final CustomScrollPhysicsController? physicsController;
 
   @override
   _MineSubPageState createState() => _MineSubPageState();
@@ -270,7 +268,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         ),
         extendBodyBehindAppBar: true,
         body: PageView(
-          physics: CustomScrollPhysics(controller: widget.physicsController),
+          physics: DefaultCustomScrollPhysics.of(context),
           children: [body],
         ),
       );
