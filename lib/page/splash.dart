@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/message_dialog.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -12,7 +12,7 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
-import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/message.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -35,7 +35,7 @@ class SplashPage extends StatefulWidget {
 
   static Future<void> prepare() async {
     // 0. fake delay
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 200));
 
     // 1. check permission
     var ok = await _checkPermission();
@@ -49,8 +49,8 @@ class SplashPage extends StatefulWidget {
     await PrefsManager.instance.loadPrefs();
 
     // 3. update global setting
-    var setting = await GlbSettingPrefs.getSetting();
-    GlbSetting.updateGlobalSetting(setting);
+    var setting = await AppSettingPrefs.getSetting();
+    AppSetting.updateGlobalSetting(setting);
   }
 
   static Future<bool> _checkPermission() async {

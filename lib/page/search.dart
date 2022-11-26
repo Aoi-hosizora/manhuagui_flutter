@@ -43,7 +43,7 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await Future.delayed(Duration(milliseconds: 400));
+      await Future.delayed(CustomPageRouteTheme.of(context)?.transitionDuration ?? kMaterialTransitionDuration);
       _searchController.open();
     });
   }
@@ -148,6 +148,7 @@ class _SearchPageState extends State<SearchPage> {
         drawer: AppDrawer(
           currentSelection: DrawerSelection.search,
         ),
+        drawerEdgeDragWidth: MediaQuery.of(context).size.width,
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [

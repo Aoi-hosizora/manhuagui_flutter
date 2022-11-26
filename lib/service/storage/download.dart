@@ -3,7 +3,7 @@ import 'dart:io' show Directory, File;
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
@@ -78,11 +78,11 @@ Future<File?> downloadImageToGallery(String url) async {
       option: DownloadOption(
         behavior: DownloadBehavior.preferUsingCache,
         conflictHandler: (_) async => DownloadConflictBehavior.addSuffix,
-        headTimeout: GlbSetting.global.dlTimeoutBehavior.determineDuration(
+        headTimeout: AppSetting.global.dlTimeoutBehavior.determineDuration(
           normal: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
           long: Duration(milliseconds: DOWNLOAD_HEAD_LTIMEOUT),
         ),
-        downloadTimeout: GlbSetting.global.dlTimeoutBehavior.determineDuration(
+        downloadTimeout: AppSetting.global.dlTimeoutBehavior.determineDuration(
           normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
           long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
         ),

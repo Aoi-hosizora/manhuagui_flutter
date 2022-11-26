@@ -61,7 +61,9 @@ class DownloadTocPage extends StatefulWidget {
 
 class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProviderStateMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final _tabBarKey = GlobalKey<State<StatefulWidget>>();
   late final _tabController = TabController(length: 2, vsync: this);
+  final _physicsController = CustomScrollPhysicsController();
   final _scrollController = ScrollController();
   final _cancelHandlers = <VoidCallback>[];
 
@@ -149,7 +151,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     if (data != null) {
       _error = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _entity = data;
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) {
@@ -291,7 +293,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DrawerScaffold(
       appBar: AppBar(
         title: Text('章节下载管理'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
@@ -311,6 +313,15 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
+      drawerEdgeDragWidth: null,
+      drawerExtraDragTriggers: [
+        DrawerDragTrigger(
+          top: 0,
+          height: _tabBarKey.currentContext?.findRenderObject()?.getBoundInAncestorCoordinate(context.findRenderObject()).let((rect) => rect.top + rect.height) ?? 0,
+          dragWidth: MediaQuery.of(context).size.width,
+        ),
+      ],
+      physicsController: _physicsController,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         notificationPredicate: (n) => n.depth <= 2,
@@ -323,6 +334,14 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
           onRefresh: () => _loadData(),
           childBuilder: (c) => ExtendedNestedScrollView(
             controller: _scrollController,
+            onNotification: (e) {
+              if (e is ScrollEndNotification) {
+                WidgetsBinding.instance?.addPostFrameCallback((_) {
+                  if (mounted) setState(() {}); // <<< for updating DrawerDragTrigger
+                });
+              }
+              return false;
+            },
             headerSliverBuilder: (context, _) => [
               SliverToBoxAdapter(
                 child: Column(
@@ -392,17 +411,23 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                         color: Colors.white,
                         elevation: 2,
                         child: Center(
-                          child: TabBar(
-                            controller: _tabController,
-                            labelColor: Theme.of(context).primaryColor,
-                            unselectedLabelColor: Colors.grey[600],
-                            indicatorColor: Theme.of(context).primaryColor,
-                            isScrollable: true,
-                            indicatorSize: TabBarIndicatorSize.label,
-                            tabs: const [
-                              SizedBox(height: 36.0, child: Center(child: Text('已完成'))),
-                              SizedBox(height: 36.0, child: Center(child: Text('未完成'))),
-                            ],
+                          child: StatefulWidgetWithCallback(
+                            postFrameCallbackForInitState: (_) {
+                              if (mounted) setState(() {}); // <<< for updating DrawerDragTrigger
+                            },
+                            child: TabBar(
+                              key: _tabBarKey,
+                              controller: _tabController,
+                              labelColor: Theme.of(context).primaryColor,
+                              unselectedLabelColor: Colors.grey[600],
+                              indicatorColor: Theme.of(context).primaryColor,
+                              isScrollable: true,
+                              indicatorSize: TabBarIndicatorSize.label,
+                              tabs: const [
+                                SizedBox(height: 36.0, child: Center(child: Text('已完成'))),
+                                SizedBox(height: 36.0, child: Center(child: Text('未完成'))),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -415,6 +440,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
             activeControllerIndex: _tabController.index,
             bodyBuilder: (c, controllers) => TabBarView(
               controller: _tabController,
+              physics: CustomScrollPhysics(controller: _physicsController),
               children: [
                 // ****************************************************************
                 // 已下载的章节

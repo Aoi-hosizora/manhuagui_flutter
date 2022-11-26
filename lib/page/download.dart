@@ -303,6 +303,7 @@ class _DownloadPageState extends State<DownloadPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.download,
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshableListView<DownloadedManga>(
         data: _data,
         getData: () => _getData(),

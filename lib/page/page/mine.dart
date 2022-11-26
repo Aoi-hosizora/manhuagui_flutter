@@ -26,9 +26,11 @@ class MineSubPage extends StatefulWidget {
   const MineSubPage({
     Key? key,
     this.action,
+    this.physicsController,
   }) : super(key: key);
 
   final ActionController? action;
+  final CustomScrollPhysicsController? physicsController;
 
   @override
   _MineSubPageState createState() => _MineSubPageState();
@@ -81,7 +83,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       _data = null;
       _error = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _data = result.data;
     } catch (e, s) {
       _data = null;
@@ -236,41 +238,48 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var appBar = AppBar(
-      automaticallyImplyLeading: false,
-      actions: [
-        AppBarActionButton(
-          icon: Icon(Icons.notifications, color: Colors.black54),
-          tooltip: '历史消息',
-          onPressed: () => Navigator.of(context).push(
-            CustomPageRoute(
-              context: context,
-              builder: (c) => MessagePage(),
+    Widget _buildScaffold({required Widget body}) {
+      return Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          actions: [
+            AppBarActionButton(
+              icon: Icon(Icons.notifications, color: Colors.black54),
+              tooltip: '历史消息',
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => MessagePage(),
+                ),
+              ),
             ),
-          ),
-        ),
-        AppBarActionButton(
-          icon: Icon(Icons.settings, color: Colors.black54),
-          tooltip: '应用设置',
-          onPressed: () => Navigator.of(context).push(
-            CustomPageRoute(
-              context: context,
-              builder: (c) => SettingPage(),
+            AppBarActionButton(
+              icon: Icon(Icons.settings, color: Colors.black54),
+              tooltip: '应用设置',
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => SettingPage(),
+                ),
+              ),
             ),
-          ),
+          ],
+          foregroundColor: Colors.transparent,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
-      ],
-      foregroundColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    );
+        extendBodyBehindAppBar: true,
+        body: PageView(
+          physics: CustomScrollPhysics(controller: widget.physicsController),
+          children: [body],
+        ),
+      );
+    }
 
     if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
       _data = null;
       _error = '';
-      return Scaffold(
-        appBar: appBar,
-        extendBodyBehindAppBar: true,
+      return _buildScaffold(
         body: LoginFirstView(
           checking: _loginChecking,
           error: _loginCheckError,
@@ -284,9 +293,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       );
     }
 
-    return Scaffold(
-      appBar: appBar,
-      extendBodyBehindAppBar: true,
+    return _buildScaffold(
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _loadUser,

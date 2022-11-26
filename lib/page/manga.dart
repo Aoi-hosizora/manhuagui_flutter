@@ -131,7 +131,7 @@ class _MangaPageState extends State<MangaPage> {
       _data = null;
       _error = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _data = result.data;
 
       // 5. 更新漫画阅读历史
@@ -339,6 +339,7 @@ class _MangaPageState extends State<MangaPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _loadData,

@@ -65,7 +65,7 @@ class _AuthorPageState extends State<AuthorPage> {
       _data = null;
       _error = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _data = result.data;
     } catch (e, s) {
       _data = null;
@@ -112,6 +112,7 @@ class _AuthorPageState extends State<AuthorPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PlaceholderText.from(
         isLoading: _loading,
         errorText: _error,

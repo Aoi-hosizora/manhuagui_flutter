@@ -13,9 +13,11 @@ class HomeSubPage extends StatefulWidget {
   const HomeSubPage({
     Key? key,
     this.action,
+    this.physicsController,
   }) : super(key: key);
 
   final ActionController? action;
+  final CustomScrollPhysicsController? physicsController;
 
   @override
   _HomeSubPageState createState() => _HomeSubPageState();
@@ -100,6 +102,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       ),
       body: TabBarView(
         controller: _controller,
+        physics: CustomScrollPhysics(controller: widget.physicsController),
         children: _tabs.map((t) => t.item2).toList(),
       ),
     );

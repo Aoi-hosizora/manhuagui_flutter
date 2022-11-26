@@ -4,13 +4,13 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
@@ -58,6 +58,7 @@ class _SettingPageState extends State<SettingPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.setting,
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: ListView(
         padding: EdgeInsets.zero,
         physics: AlwaysScrollableScrollPhysics(),
@@ -155,13 +156,13 @@ class _SettingPageState extends State<SettingPage> {
           _item(
             title: '高级设置',
             action: () async {
-              var setting = await GlbSettingPrefs.getSetting();
+              var setting = await AppSettingPrefs.getSetting();
               await showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('高级设置'),
                   scrollable: true,
-                  content: GlbSettingSubPage(
+                  content: AppSettingSubPage(
                     setting: setting,
                     onSettingChanged: (s) => setting = s,
                   ),
@@ -170,8 +171,8 @@ class _SettingPageState extends State<SettingPage> {
                       child: Text('确定'),
                       onPressed: () async {
                         Navigator.of(c).pop();
-                        await GlbSettingPrefs.setSetting(setting);
-                        GlbSetting.updateGlobalSetting(setting);
+                        await AppSettingPrefs.setSetting(setting);
+                        AppSetting.updateGlobalSetting(setting);
                         if (mounted) setState(() {});
                       },
                     ),

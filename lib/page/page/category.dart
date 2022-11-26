@@ -11,9 +11,11 @@ class CategorySubPage extends StatefulWidget {
   const CategorySubPage({
     Key? key,
     this.action,
+    this.physicsController,
   }) : super(key: key);
 
   final ActionController? action;
+  final CustomScrollPhysicsController? physicsController;
 
   @override
   _CategorySubPageState createState() => _CategorySubPageState();
@@ -93,6 +95,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
       ),
       body: TabBarView(
         controller: _controller,
+        physics: CustomScrollPhysics(controller: widget.physicsController),
         children: _tabs.map((t) => t.item2).toList(),
       ),
     );

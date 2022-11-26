@@ -20,13 +20,14 @@ class IndexPage extends StatefulWidget {
 class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMixin {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   late final _controller = TabController(length: 4, vsync: this);
+  final _physicsController = CustomScrollPhysicsController();
   var _selectedIndex = 0;
   late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
-    Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
-    Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1])),
-    Tuple3('订阅', Icons.loyalty, SubscribeSubPage(action: _actions[2])),
-    Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
+    Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0], physicsController: _physicsController)),
+    Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1], physicsController: _physicsController)),
+    Tuple3('订阅', Icons.loyalty, SubscribeSubPage(action: _actions[2], physicsController: _physicsController)),
+    Tuple3('我的', Icons.person, MineSubPage(action: _actions[3], physicsController: _physicsController)),
   ];
   final _cancelHandlers = <VoidCallback>[];
 
@@ -87,11 +88,25 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
-      child: Scaffold(
+      child: DrawerScaffold(
         key: _scaffoldKey,
         drawer: AppDrawer(
           currentSelection: DrawerSelection.home,
         ),
+        drawerEdgeDragWidth: null,
+        drawerExtraDragTriggers: [
+          DrawerDragTrigger(
+            top: 0,
+            height: MediaQuery.of(context).padding.top + Theme.of(context).appBarTheme.toolbarHeight!,
+            dragWidth: MediaQuery.of(context).size.width,
+          ),
+          DrawerDragTrigger(
+            bottom: 0,
+            height: MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight,
+            dragWidth: MediaQuery.of(context).size.width,
+          ),
+        ],
+        physicsController: _physicsController,
         body: TabBarView(
           physics: NeverScrollableScrollPhysics(),
           controller: _controller,

@@ -6,8 +6,8 @@ import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 
 /// 设置页-高级设置
 
-class GlbSetting {
-  const GlbSetting({
+class AppSetting {
+  const AppSetting({
     required this.timeoutBehavior,
     required this.dlTimeoutBehavior,
     required this.enableLogger,
@@ -19,7 +19,7 @@ class GlbSetting {
   final bool enableLogger; // 记录调试日志
   final bool usingDownloadedPage; // 阅读时载入已下载的页面
 
-  GlbSetting.defaultSetting()
+  AppSetting.defaultSetting()
       : this(
           timeoutBehavior: TimeoutBehavior.normal,
           dlTimeoutBehavior: TimeoutBehavior.normal,
@@ -27,13 +27,13 @@ class GlbSetting {
           usingDownloadedPage: true,
         );
 
-  GlbSetting copyWith({
+  AppSetting copyWith({
     TimeoutBehavior? timeoutBehavior,
     TimeoutBehavior? dlTimeoutBehavior,
     bool? enableLogger,
     bool? usingDownloadedPage,
   }) {
-    return GlbSetting(
+    return AppSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
       dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
       enableLogger: enableLogger ?? this.enableLogger,
@@ -41,9 +41,9 @@ class GlbSetting {
     );
   }
 
-  static GlbSetting global = GlbSetting.defaultSetting();
+  static AppSetting global = AppSetting.defaultSetting(); // TODO 将 static global 为 AppSetting instance
 
-  static updateGlobalSetting(GlbSetting s) {
+  static updateGlobalSetting(AppSetting s) {
     global = s;
     if (!s.enableLogger) {
       LogConsolePage.finalize();
@@ -101,28 +101,28 @@ extension TimeoutBehaviorExtension on TimeoutBehavior {
   }
 }
 
-class GlbSettingSubPage extends StatefulWidget {
-  const GlbSettingSubPage({
+class AppSettingSubPage extends StatefulWidget {
+  const AppSettingSubPage({
     Key? key,
     required this.setting,
     required this.onSettingChanged,
   }) : super(key: key);
 
-  final GlbSetting setting;
-  final void Function(GlbSetting) onSettingChanged;
+  final AppSetting setting;
+  final void Function(AppSetting) onSettingChanged;
 
   @override
-  State<GlbSettingSubPage> createState() => _GlbSettingSubPageState();
+  State<AppSettingSubPage> createState() => _AppSettingSubPageState();
 }
 
-class _GlbSettingSubPageState extends State<GlbSettingSubPage> with SettingSubPageStateMixin<GlbSetting, GlbSettingSubPage> {
+class _AppSettingSubPageState extends State<AppSettingSubPage> with SettingSubPageStateMixin<AppSetting, AppSettingSubPage> {
   late var _timeoutBehavior = widget.setting.timeoutBehavior;
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
   late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
 
   @override
-  GlbSetting get newestSetting => GlbSetting(
+  AppSetting get newestSetting => AppSetting(
         timeoutBehavior: _timeoutBehavior,
         dlTimeoutBehavior: _dlTimeoutBehavior,
         enableLogger: _enableLogger,

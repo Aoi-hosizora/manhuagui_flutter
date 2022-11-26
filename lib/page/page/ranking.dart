@@ -57,7 +57,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _genres.addAll(allRankTypes);
       _genres.addAll(result.data.data.map((c) => c.toTiny()));
     } catch (e, s) {
@@ -154,7 +154,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                       }
                     },
                   ),
-                  Expanded(child: SizedBox(width: 0)),
+                  Expanded(child: const SizedBox.shrink()),
                   OptionPopupView<TinyCategory>(
                     items: allRankDurations,
                     value: _currDuration,

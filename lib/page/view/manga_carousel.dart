@@ -53,7 +53,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
           ),
           itemCount: widget.mangas.length,
           itemBuilder: (c, i, _) => Container(
-            color: Colors.white, // Colors.accents[i],
+            color: Colors.white,
             child: Stack(
               children: [
                 ClipRect(

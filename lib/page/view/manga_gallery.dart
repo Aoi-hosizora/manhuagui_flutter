@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:photo_view/photo_view.dart';
@@ -190,7 +190,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             urlFuture: widget.imageUrlFutures[idx],
             headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
             cacheManager: _cache,
-            networkTimeout: GlbSetting.global.timeoutBehavior.determineDuration(
+            networkTimeout: AppSetting.global.timeoutBehavior.determineDuration(
               normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
               long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
             ),
@@ -265,7 +265,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           urlFuture: widget.imageUrlFutures[idx],
           headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
           cacheManager: _cache,
-          networkTimeout: GlbSetting.global.timeoutBehavior.determineDuration(
+          networkTimeout: AppSetting.global.timeoutBehavior.determineDuration(
             normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
             long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
           ),

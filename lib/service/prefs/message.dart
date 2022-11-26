@@ -41,4 +41,8 @@ class MessagePrefs {
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {
     // pass
   }
+
+  static Future<void> upgradeFromVer2To3(SharedPreferences prefs) async {
+    // pass
+  }
 }

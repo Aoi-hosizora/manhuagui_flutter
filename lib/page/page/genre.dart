@@ -60,7 +60,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _genres.add(allGenres[0]);
       _genres.addAll(result.data.data.map((c) => c.toTiny()));
     } catch (e, s) {

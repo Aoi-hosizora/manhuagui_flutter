@@ -324,7 +324,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
           child: AnimatedSwitcher(
             duration: _kMaskDuration,
             child: !_masking
-                ? SizedBox(height: 0)
+                ? const SizedBox.shrink()
                 : Container(
                     color: Colors.black,
                     alignment: Alignment.center,
@@ -343,14 +343,14 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
 
 class _ScrollHelper {
   static Rect? getScrollViewRect<T extends State>(GlobalKey<T> key) {
-    var scrollRect = key.currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+    var scrollRect = key.currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
     return scrollRect;
   }
 
   static int? getVisibleTargetItemIndex<T extends State>(List<GlobalKey<T>> itemKeys, Rect scrollRect) {
     int outIndex = -1;
     for (var i = 0; i < itemKeys.length; i++) {
-      var itemRect = itemKeys[i].currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+      var itemRect = itemKeys[i].currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
       if (itemRect != null) {
         if (itemRect.top <= scrollRect.top && itemRect.bottom > scrollRect.top) {
           outIndex = i;
@@ -375,7 +375,7 @@ class _ScrollHelper {
       if (index < 0 || index >= itemKeys.length) {
         return null;
       }
-      return itemKeys[index].currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+      return itemKeys[index].currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
     }
 
     // automatically scroll the data view, to make sure if the target item rect is not null

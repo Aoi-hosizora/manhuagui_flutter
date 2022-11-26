@@ -13,7 +13,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_select.dart';
 import 'package:manhuagui_flutter/page/download_toc.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -222,7 +222,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       }).toList();
       _fileFutures = [
         for (int idx = 0; idx < _data!.pageCount; idx++)
-          !GlbSetting.global.usingDownloadedPage
+          !AppSetting.global.usingDownloadedPage
               ? Future<File?>.value(null) // 阅读时不载入已下载的页面
               : getDownloadedChapterPageFile(
                   mangaId: widget.mangaId,
@@ -522,7 +522,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         ),
       ),
     );
-    await Future.delayed(Duration(milliseconds: 200 + 10)); // bottomSheetExitDuration
+    await Future.delayed(kBottomSheetExitDuration + Duration(milliseconds: 10));
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
@@ -544,7 +544,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         ),
       ),
     );
-    await Future.delayed(Duration(milliseconds: 200 + 10)); // bottomSheetExitDuration
+    await Future.delayed(kBottomSheetExitDuration + Duration(milliseconds: 10));
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
@@ -574,7 +574,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             child: AnimatedSwitcher(
               duration: _kAnimationDuration,
               child: !(!_loading && _data != null && _ScreenHelper.showAppBar)
-                  ? SizedBox(height: 0)
+                  ? const SizedBox.shrink()
                   : AppBar(
                       backgroundColor: Colors.black.withOpacity(0.7),
                       elevation: 0,
@@ -721,7 +721,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   child: AnimatedSwitcher(
                     duration: _kAnimationDuration,
                     child: !(_data != null && !_ScreenHelper.showAppBar && !_inExtraPage && _setting.showPageHint)
-                        ? SizedBox(height: 0)
+                        ? const SizedBox.shrink()
                         : Container(
                             color: Colors.black.withOpacity(0.7),
                             padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
@@ -748,7 +748,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   child: AnimatedSwitcher(
                     duration: _kAnimationDuration,
                     child: !(_data != null && _ScreenHelper.showAppBar)
-                        ? SizedBox(height: 0)
+                        ? const SizedBox.shrink()
                         : Container(
                             color: Colors.black.withOpacity(0.7),
                             padding: EdgeInsets.only(left: 12, right: 12, top: 0, bottom: _ScreenHelper.bottomPanelDistance + 6),

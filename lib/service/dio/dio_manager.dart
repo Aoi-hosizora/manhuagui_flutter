@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
+import 'package:manhuagui_flutter/page/page/app_setting.dart';
 
 class DioManager {
   DioManager._();
@@ -37,7 +37,7 @@ class DioManager {
       _noTimeoutDio!.interceptors.add(LogInterceptor());
     }
 
-    switch (GlbSetting.global.timeoutBehavior) {
+    switch (AppSetting.global.timeoutBehavior) {
       case TimeoutBehavior.normal:
         return _dio!;
       case TimeoutBehavior.long:

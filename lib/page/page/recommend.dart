@@ -62,7 +62,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       _data = null;
       _error = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _data = r.data;
     } catch (e, s) {
       _data = null;

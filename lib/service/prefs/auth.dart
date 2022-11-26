@@ -96,4 +96,8 @@ class AuthPrefs {
     await prefs.migrateBool(oldKey: 'REMEMBER_PASSWORD', newKey: _rememberPasswordKey, defaultValue: false);
     await prefs.migrateStringList(oldKey: 'USERNAME_PASSWORD_PAIRS', newKey: _usernamePasswordPairsKey, defaultValue: []);
   }
+
+  static Future<void> upgradeFromVer2To3(SharedPreferences prefs) async {
+    // pass
+  }
 }

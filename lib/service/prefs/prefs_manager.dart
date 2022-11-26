@@ -1,5 +1,5 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/message.dart';
@@ -32,7 +32,7 @@ class PrefsManager {
     return _prefs!;
   }
 
-  static const newestVersion = 2; // current newest SharedPreferences version
+  static const newestVersion = 3; // current newest SharedPreferences version
 
   Future<void> _checkUpgrade(SharedPreferences prefs) async {
     var version = prefs.getInt('VERSION') ?? 1;
@@ -42,15 +42,21 @@ class PrefsManager {
 
     if (version <= 1) {
       version = 2; // 1 -> 2 upgrade
+      await AppSettingPrefs.upgradeFromVer1To2(prefs);
       await AuthPrefs.upgradeFromVer1To2(prefs);
       await DlSettingPrefs.upgradeFromVer1To2(prefs);
-      await GlbSettingPrefs.upgradeFromVer1To2(prefs);
       await MessagePrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
       await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }
     if (version == 2) {
-      // ...
+      version = 3; // 2 -> 3 upgrade
+      await AppSettingPrefs.upgradeFromVer2To3(prefs);
+      await AuthPrefs.upgradeFromVer2To3(prefs);
+      await DlSettingPrefs.upgradeFromVer2To3(prefs);
+      await MessagePrefs.upgradeFromVer2To3(prefs);
+      await SearchHistoryPrefs.upgradeFromVer2To3(prefs);
+      await ViewSettingPrefs.upgradeFromVer2To3(prefs);
     }
 
     prefs.setInt('VERSION', newestVersion);

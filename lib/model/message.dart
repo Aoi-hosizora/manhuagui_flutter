@@ -18,9 +18,9 @@ class Message {
 
   Map<String, dynamic> toJson() => _$MessageToJson(this);
 
-  String get createdAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
+  String get createdAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt.toLocal());
 
-  String get updatedAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(updatedAt);
+  String get updatedAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(updatedAt.toLocal());
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

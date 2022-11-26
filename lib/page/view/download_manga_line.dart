@@ -27,7 +27,7 @@ class DownloadMangaLineView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var progress = DownloadMangaLineProgress.fromEntityAndTask(entity: mangaEntity, task: downloadTask);
-    var downloadedSize = filesize(downloadedBytes, 2, false);
+    var downloadedSize = filesizeWithoutSpace(downloadedBytes, 2, true);
 
     // !!!
     switch (progress.status) {
@@ -114,7 +114,7 @@ class LargeDownloadMangaLineView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var progress = DownloadMangaLineProgress.fromEntityAndTask(entity: mangaEntity, task: downloadTask);
-    var downloadedSize = filesize(downloadedBytes, 2, false);
+    var downloadedSize = filesizeWithoutSpace(downloadedBytes, 2, true);
 
     // !!!
     switch (progress.status) {

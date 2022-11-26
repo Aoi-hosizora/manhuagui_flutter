@@ -45,11 +45,13 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
     super.initState();
 
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      await Future.delayed(Duration(milliseconds: 400));
+      _loading = false;
+      if (mounted) setState(() {});
+    });
+
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _getDownloadedChapters(); // get in async
-      Future.delayed(Duration(milliseconds: 300), () {
-        _loading = false;
-        if (mounted) setState(() {});
-      });
       _setting = await DlSettingPrefs.getSetting();
       if (mounted) setState(() {});
     });

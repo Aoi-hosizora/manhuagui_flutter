@@ -34,11 +34,10 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      Future.delayed(Duration(milliseconds: 300), () {
-        _loading = false;
-        if (mounted) setState(() {});
-      });
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      await Future.delayed(Duration(milliseconds: 400));
+      _loading = false;
+      if (mounted) setState(() {});
     });
   }
 
