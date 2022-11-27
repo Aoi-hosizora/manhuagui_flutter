@@ -5,11 +5,12 @@
 
 ### Dependencies
 
-+ See [pubspec.yaml](./pubspec.yaml).
++ Development environment: `Flutter 2.10.5 channel stable / Dart 2.16.2`
++ Visit [pubspec.yaml](./pubspec.yaml) for packages.
 
 ### Install
 
-+ See [Release](https://github.com/Aoi-hosizora/manhuagui_flutter/releases).
++ Visit [Release](https://github.com/Aoi-hosizora/manhuagui_flutter/releases) for versions.
 
 ### Screenshots
 

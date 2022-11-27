@@ -107,7 +107,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
           ),
         ],
         physicsController: _physicsController,
-        body: DefaultCustomScrollPhysics(
+        body: DefaultScrollPhysics(
           physics: CustomScrollPhysics(controller: _physicsController),
           child: TabBarView(
             physics: NeverScrollableScrollPhysics(),

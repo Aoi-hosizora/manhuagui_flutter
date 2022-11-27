@@ -98,7 +98,7 @@ class DownloadMangaLineView extends StatelessWidget {
   }
 }
 
-/// 漫画下载行（大），在 [DownloadTocPage] 使用
+/// 漫画下载行（大），在 [DownloadMangaPage] 使用
 class LargeDownloadMangaLineView extends StatelessWidget {
   const LargeDownloadMangaLineView({
     Key? key,

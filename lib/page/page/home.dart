@@ -100,7 +100,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       ),
       body: TabBarView(
         controller: _controller,
-        physics: DefaultCustomScrollPhysics.of(context),
+        physics: DefaultScrollPhysics.of(context),
         children: _tabs.map((t) => t.item2).toList(),
       ),
     );

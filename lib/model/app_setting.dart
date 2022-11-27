@@ -75,10 +75,10 @@ class ViewSetting {
   final bool fullscreen; // 全屏阅读
   final int preloadCount; // 预加载页数
 
-  static const ViewSetting defaultSetting = ViewSetting(
+  static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
     showPageHint: true,
-    showClock: true,
+    showClock: false,
     showNetwork: false,
     showBattery: false,
     enablePageSpace: true,
@@ -165,7 +165,7 @@ class DlSetting {
   final bool defaultToDeleteFiles; // 默认删除已下载的文件
   final int downloadPagesTogether; // 同时下载的页面数量
 
-  static const DlSetting defaultSetting = DlSetting(
+  static const defaultSetting = DlSetting(
     invertDownloadOrder: false,
     defaultToDeleteFiles: false,
     downloadPagesTogether: 3,
@@ -201,7 +201,7 @@ class OtherSetting {
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
 
-  static const OtherSetting defaultSetting = OtherSetting(
+  static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
     dlTimeoutBehavior: TimeoutBehavior.normal,
     enableLogger: false,

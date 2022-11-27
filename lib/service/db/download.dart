@@ -4,6 +4,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
 class DownloadDao {
+  DownloadDao._();
+
   static const _tblDownloadManga = 'tbl_download_manga';
   static const _colDmMangaId = 'mid';
   static const _colDmMangaTitle = 'title';

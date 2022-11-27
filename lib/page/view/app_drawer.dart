@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 
 enum DrawerSelection {
-  none, // MangaPage / AuthorPage / DownloadTocPage
+  none, // MangaPage / AuthorPage / DownloadMangaPage
   home, // IndexPage
   search, // SearchPage
   download, // DownloadPage

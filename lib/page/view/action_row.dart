@@ -28,7 +28,7 @@ class ActionItem {
   final double rotateAngle;
 }
 
-/// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [MangaViewerPage] / [DownloadTocPage] 使用
+/// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [MangaViewerPage] / [DownloadChoosePage] 使用
 class ActionRowView extends StatelessWidget {
   const ActionRowView.four({
     Key? key,

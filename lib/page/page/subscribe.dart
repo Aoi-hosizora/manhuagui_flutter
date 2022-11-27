@@ -107,7 +107,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
       ),
       body: TabBarView(
         controller: _controller,
-        physics: DefaultCustomScrollPhysics.of(context),
+        physics: DefaultScrollPhysics.of(context),
         children: _tabs.map((t) => t.item2).toList(),
       ),
     );

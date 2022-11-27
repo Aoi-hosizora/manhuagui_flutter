@@ -93,7 +93,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
       ),
       body: TabBarView(
         controller: _controller,
-        physics: DefaultCustomScrollPhysics.of(context),
+        physics: DefaultScrollPhysics.of(context),
         children: _tabs.map((t) => t.item2).toList(),
       ),
     );

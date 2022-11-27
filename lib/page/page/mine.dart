@@ -268,7 +268,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         ),
         extendBodyBehindAppBar: true,
         body: PageView(
-          physics: DefaultCustomScrollPhysics.of(context),
+          physics: DefaultScrollPhysics.of(context),
           children: [body],
         ),
       );

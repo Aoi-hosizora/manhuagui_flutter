@@ -21,12 +21,12 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     required this.mangaTitle,
     required this.chapterIds,
     required this.invertOrder,
-    int? parallel,
+    required int parallel,
   })  : _doingTask = false,
         _succeeded = false,
         _canceled = false,
         _progress = DownloadMangaProgress.waiting(),
-        _pageQueue = Queue(parallel: parallel ?? AppSetting.instance.dl.downloadPagesTogether);
+        _pageQueue = Queue(parallel: parallel);
 
   final int mangaId;
   final String mangaTitle;
@@ -539,8 +539,8 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
   required String mangaCover,
   required String mangaUrl,
   required List<int> chapterIds,
-  required int parallel,
-  required bool invertOrder,
+  int? parallel,
+  bool? invertOrder,
   required bool addToTask,
   //
   List<MangaChapterGroup>? throughGroupList,
@@ -551,8 +551,8 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
     mangaId: mangaId,
     mangaTitle: mangaTitle,
     chapterIds: chapterIds,
-    parallel: parallel,
-    invertOrder: invertOrder,
+    parallel: parallel ?? AppSetting.instance.dl.downloadPagesTogether,
+    invertOrder: invertOrder ?? AppSetting.instance.dl.invertDownloadOrder,
   );
 
   // 2. 更新数据库
@@ -561,7 +561,7 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
     getChapterTitleGroupPages: (cid) {
-      // => DownloadSelectPage
+      // => DownloadChoosePage
       if (throughGroupList != null) {
         var tuple = throughGroupList.findChapterAndGroupName(cid);
         if (tuple == null) {
@@ -573,7 +573,7 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
         return Tuple3(chapterTitle, groupName, pageCount);
       }
 
-      // => DownloadPage / DownloadTocPage
+      // => DownloadPage / DownloadMangaPage
       if (throughChapterList != null) {
         var chapter = throughChapterList.where((el) => el.chapterId == cid).firstOrNull;
         if (chapter == null) {

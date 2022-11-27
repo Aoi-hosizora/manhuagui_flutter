@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/download_toc.dart';
+import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
@@ -114,8 +114,6 @@ class _DownloadPageState extends State<DownloadPage> {
       mangaCover: entity.mangaCover,
       mangaUrl: entity.mangaUrl,
       chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
-      parallel: AppSetting.instance.dl.downloadPagesTogether,
-      invertOrder: AppSetting.instance.dl.invertDownloadOrder,
       addToTask: false,
       throughChapterList: entity.downloadedChapters,
     );
@@ -294,10 +292,10 @@ class _DownloadPageState extends State<DownloadPage> {
             onLinePressed: () => Navigator.of(context).push(
               CustomPageRoute(
                 context: context,
-                builder: (c) => DownloadTocPage(
+                builder: (c) => DownloadMangaPage(
                   mangaId: entity.mangaId,
                 ),
-                settings: DownloadTocPage.buildRouteSetting(
+                settings: DownloadMangaPage.buildRouteSetting(
                   mangaId: entity.mangaId,
                 ),
               ),

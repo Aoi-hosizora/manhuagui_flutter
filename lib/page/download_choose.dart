@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/download_toc.dart';
+import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/warning_text.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -142,8 +141,6 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
       chapterIds: chapterIds.toList(),
-      parallel: AppSetting.instance.dl.downloadPagesTogether,
-      invertOrder: AppSetting.instance.dl.invertDownloadOrder,
       addToTask: true,
       throughGroupList: widget.groups,
       throughChapterList: null,
@@ -162,11 +159,11 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
           onPressed: () => Navigator.of(context).push(
             CustomPageRoute(
               context: context,
-              builder: (c) => DownloadTocPage(
+              builder: (c) => DownloadMangaPage(
                 mangaId: widget.mangaId,
                 gotoDownloading: true,
               ),
-              settings: DownloadTocPage.buildRouteSetting(
+              settings: DownloadMangaPage.buildRouteSetting(
                 mangaId: widget.mangaId,
               ),
             ),

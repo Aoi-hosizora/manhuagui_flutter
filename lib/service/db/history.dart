@@ -4,6 +4,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
 class HistoryDao {
+  HistoryDao._();
+
   static const _tblHistory = 'tbl_history';
   static const _colUsername = 'username';
   static const _colMangaId = 'id';

@@ -14,7 +14,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
-import 'package:manhuagui_flutter/page/download_toc.dart';
+import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -438,10 +438,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await Navigator.of(context).push(
       CustomPageRoute(
         context: context,
-        builder: (c) => DownloadTocPage(
+        builder: (c) => DownloadMangaPage(
           mangaId: widget.mangaId,
         ),
-        settings: DownloadTocPage.buildRouteSetting(
+        settings: DownloadMangaPage.buildRouteSetting(
           mangaId: widget.mangaId,
         ),
       ),

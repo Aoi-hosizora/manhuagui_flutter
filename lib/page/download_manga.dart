@@ -25,9 +25,9 @@ import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 章节下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
-class DownloadTocPage extends StatefulWidget {
-  const DownloadTocPage({
+/// 漫画章节下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
+class DownloadMangaPage extends StatefulWidget {
+  const DownloadMangaPage({
     Key? key,
     required this.mangaId,
     this.gotoDownloading = false,
@@ -37,11 +37,11 @@ class DownloadTocPage extends StatefulWidget {
   final bool gotoDownloading;
 
   @override
-  State<DownloadTocPage> createState() => _DownloadTocPageState();
+  State<DownloadMangaPage> createState() => _DownloadMangaPageState();
 
   static RouteSettings buildRouteSetting({required int mangaId}) {
     return RouteSettings(
-      name: '/DownloadTocPage',
+      name: '/DownloadedMangaPage',
       arguments: <String, Object>{'mangaId': mangaId},
     );
   }
@@ -53,14 +53,14 @@ class DownloadTocPage extends StatefulWidget {
       return true;
     });
 
-    if (setting.name != '/DownloadTocPage' || setting.arguments is! Map<String, Object>) {
+    if (setting.name != '/DownloadedMangaPage' || setting.arguments is! Map<String, Object>) {
       return false;
     }
     return (setting.arguments! as Map<String, Object>)['mangaId'] == mangaId;
   }
 }
 
-class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProviderStateMixin {
+class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTickerProviderStateMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _tabBarKey = GlobalKey<State<StatefulWidget>>();
   late final _tabController = TabController(length: 2, vsync: this);
@@ -198,8 +198,6 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       mangaCover: _entity!.mangaCover,
       mangaUrl: _entity!.mangaUrl,
       chapterIds: _entity!.downloadedChapters.map((el) => el.chapterId).toList(),
-      parallel: AppSetting.instance.dl.downloadPagesTogether,
-      invertOrder: AppSetting.instance.dl.invertDownloadOrder,
       addToTask: true,
       throughChapterList: _entity!.downloadedChapters,
     );
@@ -292,7 +290,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
   Widget build(BuildContext context) {
     return DrawerScaffold(
       appBar: AppBar(
-        title: Text('章节下载管理'),
+        title: Text('漫画章节下载管理'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(

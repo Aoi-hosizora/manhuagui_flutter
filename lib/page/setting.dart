@@ -220,11 +220,10 @@ class _SettingPageState extends State<SettingPage> {
               applicationIcon: Image.asset('${ASSETS_PREFIX}logo_xxhdpi.png', height: 60, width: 60),
               children: [
                 SizedBox(height: 20),
-                for (var description in APP_DESCRIPTIONS)
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.subtitle1,
-                  ),
+                SelectableText(
+                  APP_DESCRIPTION,
+                  style: Theme.of(context).textTheme.subtitle1,
+                ),
               ],
             ),
           ),

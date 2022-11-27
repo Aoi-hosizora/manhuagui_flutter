@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/download_toc.dart';
+import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
 class DownloadNotificationHelper {
+  DownloadNotificationHelper._();
+
   static Future<void> showDoneNotification(int mangaId, String mangaTitle, bool success) async {
     await _showNotification(
       id: mangaId,
@@ -110,15 +112,15 @@ class DownloadNotificationHandler extends NotificationHandler {
   @override
   void select(BuildContext? context, String channelId, int messageId, String? messageTag, Object? arguments) {
     var mangaId = messageId;
-    if (context != null && !DownloadTocPage.isCurrentRoute(context, mangaId)) {
+    if (context != null && !DownloadMangaPage.isCurrentRoute(context, mangaId)) {
       Navigator.of(context).push(
         CustomPageRoute(
           context: context,
-          builder: (c) => DownloadTocPage(
+          builder: (c) => DownloadMangaPage(
             mangaId: mangaId,
             gotoDownloading: true,
           ),
-          settings: DownloadTocPage.buildRouteSetting(
+          settings: DownloadMangaPage.buildRouteSetting(
             mangaId: mangaId,
           ),
         ),
