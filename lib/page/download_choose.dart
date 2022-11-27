@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download_toc.dart';
-import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/warning_text.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
 /// 选择下载章节页，展示所给 [MangaChapterGroup] 列表信息，并提供章节选择功能
-class DownloadSelectPage extends StatefulWidget {
-  const DownloadSelectPage({
+class DownloadChoosePage extends StatefulWidget {
+  const DownloadChoosePage({
     Key? key,
     required this.mangaId,
     required this.mangaTitle,
@@ -30,32 +29,23 @@ class DownloadSelectPage extends StatefulWidget {
   final List<MangaChapterGroup> groups;
 
   @override
-  State<DownloadSelectPage> createState() => _DownloadSelectPageState();
+  State<DownloadChoosePage> createState() => _DownloadChoosePageState();
 }
 
-class _DownloadSelectPageState extends State<DownloadSelectPage> {
+class _DownloadChoosePageState extends State<DownloadChoosePage> {
   final _controller = ScrollController();
   var _loading = true; // fake loading flag
   VoidCallback? _cancelHandler;
 
-  var _setting = DlSetting.defaultSetting();
-
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _getDownloadedChapters(); // get in async
       await Future.delayed(Duration(milliseconds: 400));
       _loading = false;
       if (mounted) setState(() {});
     });
-
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _getDownloadedChapters(); // get in async
-      _setting = await DlSettingPrefs.getSetting();
-      if (mounted) setState(() {});
-    });
-
     _cancelHandler = EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
       if (event.mangaId == widget.mangaId) {
         await _getDownloadedChapters();
@@ -152,8 +142,8 @@ class _DownloadSelectPageState extends State<DownloadSelectPage> {
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
       chapterIds: chapterIds.toList(),
-      parallel: _setting.downloadPagesTogether,
-      invertOrder: _setting.invertDownloadOrder,
+      parallel: AppSetting.instance.dl.downloadPagesTogether,
+      invertOrder: AppSetting.instance.dl.invertDownloadOrder,
       addToTask: true,
       throughGroupList: widget.groups,
       throughChapterList: null,

@@ -1,6 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
+class SettingSubPage extends StatelessWidget {
+  const SettingSubPage({
+    Key? key,
+    required this.children,
+  }) : super(key: key);
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width - //
+          (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: children,
+      ),
+    );
+  }
+}
+
 abstract class _SettingView extends StatelessWidget {
   const _SettingView({
     Key? key,
@@ -156,25 +178,6 @@ class SettingButtonView extends _SettingView {
       );
 }
 
-mixin SettingSubPageStateMixin<T extends Object, U extends StatefulWidget> on State<U> {
-  T get newestSetting;
-
-  List<Widget> get settingLines;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width - //
-          (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: settingLines,
-      ),
-    );
-  }
-}
-
 class HelpIconView extends StatelessWidget {
   const HelpIconView({
     Key? key,
@@ -207,7 +210,8 @@ class HelpIconView extends StatelessWidget {
           ),
         ),
         highlightShape: useRectangle ? BoxShape.rectangle : BoxShape.circle,
-        radius: (iconSize + padding.horizontal) / 2,
+        containedInkWell: useRectangle,
+        radius: (iconSize + padding.horizontal) / 2 * (useRectangle ? calcSqrt(2) : 1),
         onTap: () => showDialog(
           context: context,
           builder: (c) => AlertDialog(

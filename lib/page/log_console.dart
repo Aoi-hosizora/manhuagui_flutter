@@ -32,6 +32,8 @@ class LogConsolePage extends StatefulWidget {
       _bufferSize = bufferSize;
       _eventBuffer.clear();
       _logger.addOutputListener(_callback);
+
+      globalLogger.i('initialize LogConsolePage');
     }
   }
 

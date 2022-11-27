@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/message.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/prefs/message.dart';
+import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 
 Future<void> showNewVersionDialog({
   required BuildContext context,
@@ -15,7 +15,7 @@ Future<void> showNewVersionDialog({
   var msg = newVersion;
   var cnt = newVersion.newVersion!;
   var needUpgrade = isVersionNewer(cnt.version, APP_VERSION) == true;
-  var hasRead = (await MessagePrefs.getReadMessages()).contains(msg.mid);
+  var hasRead = (await ReadMessagePrefs.getReadMessages()).contains(msg.mid);
 
   var canceled = await showDialog<bool>(
     context: context,
@@ -63,7 +63,7 @@ Future<void> showNewVersionDialog({
               child: Text('去更新'),
               onPressed: () async {
                 launchInBrowser(context: context, url: cnt.releasePage);
-                await MessagePrefs.addReadMessage(msg.mid); // <<< set to read first
+                await ReadMessagePrefs.addReadMessage(msg.mid); // <<< set to read first
                 onChanged?.call();
               },
             ),
@@ -89,7 +89,7 @@ Future<void> showNewVersionDialog({
   );
 
   if (canceled != true) {
-    await MessagePrefs.addReadMessage(msg.mid);
+    await ReadMessagePrefs.addReadMessage(msg.mid);
     onChanged?.call();
   }
 }
@@ -101,7 +101,7 @@ Future<void> showNotificationDialog({
 }) async {
   var msg = notification;
   var cnt = notification.notification!;
-  var hasRead = (await MessagePrefs.getReadMessages()).contains(msg.mid);
+  var hasRead = (await ReadMessagePrefs.getReadMessages()).contains(msg.mid);
 
   var canceled = await showDialog<bool>(
     context: context,
@@ -157,7 +157,7 @@ Future<void> showNotificationDialog({
   );
 
   if (canceled != true) {
-    await MessagePrefs.addReadMessage(msg.mid);
+    await ReadMessagePrefs.addReadMessage(msg.mid);
     onChanged?.call();
   }
 }

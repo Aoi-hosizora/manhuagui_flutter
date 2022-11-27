@@ -1,10 +1,10 @@
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MessagePrefs {
-  MessagePrefs._();
+class ReadMessagePrefs {
+  ReadMessagePrefs._();
 
-  static const _readMessagesKey = 'MessagePrefs_readMessageIds'; // list
+  static const _readMessagesKey = 'ReadMessagePrefs_readMessageIds'; // list
 
   static Future<List<int>> getReadMessages() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -15,7 +15,6 @@ class MessagePrefs {
     final prefs = await PrefsManager.instance.loadPrefs();
     await prefs.setStringList(_readMessagesKey, []);
   }
-
 
   static Future<List<int>> addReadMessages(List<int> mids) async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -43,6 +42,6 @@ class MessagePrefs {
   }
 
   static Future<void> upgradeFromVer2To3(SharedPreferences prefs) async {
-    // pass
+    await prefs.migrateStringList(oldKey: 'MessagePrefs_readMessageIds', newKey: _readMessagesKey, defaultValue: []);
   }
 }

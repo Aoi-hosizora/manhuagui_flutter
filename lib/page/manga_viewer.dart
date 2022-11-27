@@ -8,12 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
-import 'package:manhuagui_flutter/page/download_select.dart';
+import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_toc.dart';
-import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -31,7 +32,6 @@ import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
-import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:wakelock/wakelock.dart';
 
 /// 漫画章节阅读页
@@ -72,11 +72,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   final _mangaGalleryViewKey = GlobalKey<MangaGalleryViewState>();
   final _cancelHandlers = <VoidCallback>[];
 
-  var _setting = ViewSetting.defaultSetting();
   Timer? _timer;
   var _currentTime = '00:00';
   var _networkInfo = 'WIFI';
   var _batteryInfo = '0%';
+
+  ViewSetting get _setting => AppSetting.instance.view;
 
   @override
   void initState() {
@@ -100,11 +101,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         setState: () => mountedSetState(() {}),
       );
 
-      // setting
-      _setting = await ViewSettingPrefs.getSetting();
-      if (mounted) setState(() {});
-
-      // apply settings
+      // apply settings to screen
       await _ScreenHelper.toggleWakelock(enable: _setting.keepScreenOn);
       await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
     });
@@ -224,7 +221,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       }).toList();
       _fileFutures = [
         for (int idx = 0; idx < _data!.pageCount; idx++)
-          !AppSetting.global.usingDownloadedPage
+          !AppSetting.instance.other.usingDownloadedPage
               ? Future<File?>.value(null) // 阅读时不载入已下载的页面
               : getDownloadedChapterPageFile(
                   mangaId: widget.mangaId,
@@ -331,53 +328,25 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _showHelpRegion = false; // 显示区域提示
 
   Future<void> _onSettingPressed() async {
-    _setting = await ViewSettingPrefs.getSetting();
-    var setting = _setting.copyWith();
-    return showDialog(
+    var ok = await showViewSettingDialog(
       context: context,
-      builder: (c) => AlertDialog(
-        title: Text('阅读设置'),
-        scrollable: true,
-        content: ViewSettingSubPage(
-          setting: setting,
-          onSettingChanged: (s) => setting = s,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-        actions: [
-          TextButton(
-            child: Text('操作'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              _showHelpRegion = true;
-              if (mounted) setState(() {});
-              _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
-            },
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                child: Text('确定'),
-                onPressed: () async {
-                  Navigator.of(c).pop();
-                  _setting = setting;
-                  if (mounted) setState(() {});
-                  await ViewSettingPrefs.setSetting(_setting);
-
-                  // apply settings
-                  await _ScreenHelper.toggleWakelock(enable: _setting.keepScreenOn);
-                  await _ScreenHelper.setSystemUIWhenSettingChanged(fullscreen: _setting.fullscreen);
-                },
-              ),
-              TextButton(
-                child: Text('取消'),
-                onPressed: () => Navigator.of(c).pop(),
-              ),
-            ],
-          ),
-        ],
+      anotherButtonBuilder: (c) => TextButton(
+        child: Text('操作'),
+        onPressed: () {
+          Navigator.of(c).pop();
+          _showHelpRegion = true;
+          if (mounted) setState(() {});
+          _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
+        },
       ),
     );
+
+    // apply settings to screen
+    if (ok) {
+      if (mounted) setState(() {});
+      await _ScreenHelper.toggleWakelock(enable: _setting.keepScreenOn);
+      await _ScreenHelper.setSystemUIWhenSettingChanged(fullscreen: _setting.fullscreen);
+    }
   }
 
   Future<void> _download(int imageIndex, String url) async {
@@ -452,7 +421,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await Navigator.of(context).push(
       CustomPageRoute(
         context: context,
-        builder: (c) => DownloadSelectPage(
+        builder: (c) => DownloadChoosePage(
           mangaId: widget.mangaId,
           mangaTitle: widget.mangaTitle,
           mangaCover: widget.mangaCover,
@@ -662,6 +631,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     imageUrls: _data!.pages,
                     imageUrlFutures: _urlFutures!,
                     imageFileFutures: _fileFutures!,
+                    networkTimeout: AppSetting.instance.other.timeoutBehavior.determineValue(
+                      normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+                      long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
+                    ),
                     preloadPagesCount: _setting.preloadCount,
                     verticalScroll: _setting.viewDirection == ViewDirection.topToBottom,
                     horizontalReverseScroll: _setting.viewDirection == ViewDirection.rightToLeft,

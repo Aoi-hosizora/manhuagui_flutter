@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/message_dialog.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -13,8 +12,8 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/message.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
+import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:manhuagui_flutter/service/storage/download_notification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -49,9 +48,8 @@ class SplashPage extends StatefulWidget {
     await DBManager.instance.getDB();
     await PrefsManager.instance.loadPrefs();
 
-    // 3. update global setting
-    var setting = await AppSettingPrefs.getSetting();
-    AppSetting.updateGlobalSetting(setting);
+    // 3. load all settings
+    await AppSettingPrefs.loadAllSettings();
   }
 
   static Future<bool> _checkPermission() async {
@@ -86,7 +84,7 @@ class SplashPage extends StatefulWidget {
   }
 
   static Future<void> _checkLatestMessage(BuildContext context) async {
-    var readMessages = await MessagePrefs.getReadMessages();
+    var readMessages = await ReadMessagePrefs.getReadMessages();
     final client = RestClient(DioManager.instance.dio);
     var m = (await client.getLatestMessage()).data;
 

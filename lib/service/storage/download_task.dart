@@ -1,9 +1,9 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -26,7 +26,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         _succeeded = false,
         _canceled = false,
         _progress = DownloadMangaProgress.waiting(),
-        _pageQueue = Queue(parallel: parallel ?? DlSetting.defaultSetting().downloadPagesTogether);
+        _pageQueue = Queue(parallel: parallel ?? AppSetting.instance.dl.downloadPagesTogether);
 
   final int mangaId;
   final String mangaTitle;

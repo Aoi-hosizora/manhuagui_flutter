@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/page/dl_finished.dart';
+import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_unfinished.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
-import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -19,7 +21,6 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
@@ -191,15 +192,14 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
     }
 
     // 开始 => 快速构造下载任务，同步更新数据库，并入队异步等待执行
-    var setting = await DlSettingPrefs.getSetting();
     await quickBuildDownloadMangaQueueTask(
       mangaId: _entity!.mangaId,
       mangaTitle: _entity!.mangaTitle,
       mangaCover: _entity!.mangaCover,
       mangaUrl: _entity!.mangaUrl,
       chapterIds: _entity!.downloadedChapters.map((el) => el.chapterId).toList(),
-      parallel: setting.downloadPagesTogether,
-      invertOrder: setting.invertDownloadOrder,
+      parallel: AppSetting.instance.dl.downloadPagesTogether,
+      invertOrder: AppSetting.instance.dl.invertDownloadOrder,
       addToTask: true,
       throughChapterList: _entity!.downloadedChapters,
     );
@@ -234,8 +234,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
       return;
     }
 
-    var setting = await DlSettingPrefs.getSetting();
-    var alsoDeleteFile = setting.defaultToDeleteFiles;
+    var alsoDeleteFile = AppSetting.instance.dl.defaultToDeleteFiles;
     await showDialog(
       context: context,
       builder: (c) => StatefulBuilder(
@@ -269,9 +268,7 @@ class _DownloadTocPageState extends State<DownloadTocPage> with SingleTickerProv
                 await DownloadDao.deleteChapter(mid: entity.mangaId, cid: entity.chapterId);
                 if (mounted) setState(() {});
 
-                var setting = await DlSettingPrefs.getSetting();
-                setting = setting.copyWith(defaultToDeleteFiles: alsoDeleteFile);
-                await DlSettingPrefs.setSetting(setting);
+                await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
                 if (alsoDeleteFile) {
                   await deleteDownloadedChapter(mangaId: entity.mangaId, chapterId: entity.chapterId);
                   getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) {

@@ -1,10 +1,8 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/message.dart';
+import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
-import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefsManager {
@@ -44,19 +42,15 @@ class PrefsManager {
       version = 2; // 1 -> 2 upgrade
       await AppSettingPrefs.upgradeFromVer1To2(prefs);
       await AuthPrefs.upgradeFromVer1To2(prefs);
-      await DlSettingPrefs.upgradeFromVer1To2(prefs);
-      await MessagePrefs.upgradeFromVer1To2(prefs);
+      await ReadMessagePrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
-      await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }
     if (version == 2) {
       version = 3; // 2 -> 3 upgrade
       await AppSettingPrefs.upgradeFromVer2To3(prefs);
       await AuthPrefs.upgradeFromVer2To3(prefs);
-      await DlSettingPrefs.upgradeFromVer2To3(prefs);
-      await MessagePrefs.upgradeFromVer2To3(prefs);
+      await ReadMessagePrefs.upgradeFromVer2To3(prefs);
       await SearchHistoryPrefs.upgradeFromVer2To3(prefs);
-      await ViewSettingPrefs.upgradeFromVer2To3(prefs);
     }
 
     prefs.setInt('VERSION', newestVersion);

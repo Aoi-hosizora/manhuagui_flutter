@@ -4,14 +4,11 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
-import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
+import 'package:manhuagui_flutter/page/page/other_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 /// 设置页
@@ -93,96 +90,21 @@ class _SettingPageState extends State<SettingPage> {
           _spacer(),
           _item(
             title: '漫画阅读设置',
-            action: () async {
-              var setting = await ViewSettingPrefs.getSetting();
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('漫画阅读设置'),
-                  scrollable: true,
-                  content: ViewSettingSubPage(
-                    setting: setting,
-                    onSettingChanged: (s) => setting = s,
-                  ),
-                  actions: [
-                    TextButton(
-                      child: Text('确定'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        await ViewSettingPrefs.setSetting(setting);
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () => Navigator.of(c).pop(),
-                    ),
-                  ],
-                ),
-              );
-            },
+            action: () => showViewSettingDialog(context: context),
           ),
           _divider(),
           _item(
             title: '漫画下载设置',
-            action: () async {
-              var setting = await DlSettingPrefs.getSetting();
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('漫画下载设置'),
-                  scrollable: true,
-                  content: DlSettingSubPage(
-                    setting: setting,
-                    onSettingChanged: (s) => setting = s,
-                  ),
-                  actions: [
-                    TextButton(
-                      child: Text('确定'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        await DlSettingPrefs.setSetting(setting);
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () => Navigator.of(c).pop(),
-                    ),
-                  ],
-                ),
-              );
-            },
+            action: () => showDlSettingDialog(context: context),
           ),
           _divider(),
           _item(
-            title: '高级设置',
+            title: '其他设置',
             action: () async {
-              var setting = await AppSettingPrefs.getSetting();
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('高级设置'),
-                  scrollable: true,
-                  content: AppSettingSubPage(
-                    setting: setting,
-                    onSettingChanged: (s) => setting = s,
-                  ),
-                  actions: [
-                    TextButton(
-                      child: Text('确定'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        await AppSettingPrefs.setSetting(setting);
-                        AppSetting.updateGlobalSetting(setting);
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () => Navigator.of(c).pop(),
-                    ),
-                  ],
-                ),
-              );
+              var ok = await showOtherSettingDialog(context: context);
+              if (ok) {
+                if (mounted) setState(() {});
+              }
             },
           ),
           // *******************************************************

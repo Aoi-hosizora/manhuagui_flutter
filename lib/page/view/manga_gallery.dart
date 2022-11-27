@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/page/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:photo_view/photo_view.dart';
@@ -17,6 +16,7 @@ class MangaGalleryView extends StatefulWidget {
     required this.imageUrls,
     required this.imageUrlFutures,
     required this.imageFileFutures,
+    required this.networkTimeout,
     required this.preloadPagesCount,
     required this.verticalScroll,
     required this.horizontalReverseScroll,
@@ -37,6 +37,7 @@ class MangaGalleryView extends StatefulWidget {
   final List<String> imageUrls;
   final List<Future<String>> imageUrlFutures;
   final List<Future<File?>> imageFileFutures;
+  final Duration? networkTimeout;
   final int preloadPagesCount;
   final bool verticalScroll;
   final bool horizontalReverseScroll;
@@ -190,10 +191,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             urlFuture: widget.imageUrlFutures[idx],
             headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
             cacheManager: _cache,
-            networkTimeout: AppSetting.global.timeoutBehavior.determineDuration(
-              normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
-              long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
-            ),
+            networkTimeout: widget.networkTimeout,
             fileFuture: widget.imageFileFutures[idx],
             fileMustExist: false, // <<<
           ),
@@ -265,10 +263,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           urlFuture: widget.imageUrlFutures[idx],
           headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
           cacheManager: _cache,
-          networkTimeout: AppSetting.global.timeoutBehavior.determineDuration(
-            normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
-            long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
-          ),
+          networkTimeout: widget.networkTimeout,
           fileFuture: widget.imageFileFutures[idx],
           fileMustExist: false,
         ),

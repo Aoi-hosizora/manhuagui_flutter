@@ -1,103 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 
 /// 漫画章节阅读页-阅读设置
-
-class ViewSetting {
-  const ViewSetting({
-    required this.viewDirection,
-    required this.showPageHint,
-    this.showClock = true,
-    this.showNetwork = false,
-    this.showBattery = false,
-    required this.enablePageSpace,
-    required this.keepScreenOn,
-    required this.fullscreen,
-    required this.preloadCount,
-  });
-
-  final ViewDirection viewDirection; // 阅读方向
-  final bool showPageHint; // 显示页面提示
-  final bool showClock; // 显示当前时间
-  final bool showNetwork; // 显示网络状态
-  final bool showBattery; // 显示电源余量
-  final bool enablePageSpace; // 显示页面间空白
-  final bool keepScreenOn; // 屏幕常亮
-  final bool fullscreen; // 全屏阅读
-  final int preloadCount; // 预加载页数
-
-  ViewSetting.defaultSetting()
-      : this(
-          viewDirection: ViewDirection.leftToRight,
-          showPageHint: true,
-          showClock: true,
-          showNetwork: false,
-          showBattery: false,
-          enablePageSpace: true,
-          keepScreenOn: true,
-          fullscreen: false,
-          preloadCount: 2,
-        );
-
-  ViewSetting copyWith({
-    ViewDirection? viewDirection,
-    bool? showPageHint,
-    bool? showClock,
-    bool? showNetwork,
-    bool? showBattery,
-    bool? enablePageSpace,
-    bool? keepScreenOn,
-    bool? fullscreen,
-    int? preloadCount,
-  }) {
-    return ViewSetting(
-      viewDirection: viewDirection ?? this.viewDirection,
-      showPageHint: showPageHint ?? this.showPageHint,
-      enablePageSpace: enablePageSpace ?? this.enablePageSpace,
-      showClock: showClock ?? this.showClock,
-      showNetwork: showNetwork ?? this.showNetwork,
-      showBattery: showBattery ?? this.showBattery,
-      keepScreenOn: keepScreenOn ?? this.keepScreenOn,
-      fullscreen: fullscreen ?? this.fullscreen,
-      preloadCount: preloadCount ?? this.preloadCount,
-    );
-  }
-}
-
-enum ViewDirection {
-  leftToRight,
-  rightToLeft,
-  topToBottom,
-}
-
-extension ViewDirectionExtension on ViewDirection {
-  int toInt() {
-    if (this == ViewDirection.leftToRight) {
-      return 0;
-    }
-    if (this == ViewDirection.rightToLeft) {
-      return 1;
-    }
-    if (this == ViewDirection.topToBottom) {
-      return 2;
-    }
-    return 0;
-  }
-
-  static ViewDirection fromInt(int i) {
-    if (i == 0) {
-      return ViewDirection.leftToRight;
-    }
-    if (i == 1) {
-      return ViewDirection.rightToLeft;
-    }
-    if (i == 2) {
-      return ViewDirection.topToBottom;
-    }
-    return ViewDirection.leftToRight;
-  }
-}
-
 class ViewSettingSubPage extends StatefulWidget {
   const ViewSettingSubPage({
     Key? key,
@@ -112,7 +18,7 @@ class ViewSettingSubPage extends StatefulWidget {
   State<ViewSettingSubPage> createState() => _ViewSettingSubPageState();
 }
 
-class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSubPageStateMixin<ViewSetting, ViewSettingSubPage> {
+class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _viewDirection = widget.setting.viewDirection;
   late var _showPageHint = widget.setting.showPageHint;
   late var _showClock = widget.setting.showClock;
@@ -123,7 +29,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSub
   late var _fullscreen = widget.setting.fullscreen;
   late var _preloadCount = widget.setting.preloadCount;
 
-  @override
   ViewSetting get newestSetting => ViewSetting(
         viewDirection: _viewDirection,
         showPageHint: _showPageHint,
@@ -137,15 +42,14 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSub
       );
 
   @override
-  List<Widget> get settingLines => [
+  Widget build(BuildContext context) {
+    return SettingSubPage(
+      children: [
         SettingComboBoxView<ViewDirection>(
           title: '阅读方向',
           value: _viewDirection,
           values: const [ViewDirection.leftToRight, ViewDirection.rightToLeft, ViewDirection.topToBottom],
-          builder: (s) => Text(
-            s == ViewDirection.leftToRight ? '从左往右' : (s == ViewDirection.rightToLeft ? '从右往左' : '从上往下'),
-            style: Theme.of(context).textTheme.bodyText2,
-          ),
+          builder: (s) => Text(s.toOptionTitle()),
           onChanged: (s) {
             _viewDirection = s;
             widget.onSettingChanged.call(newestSetting);
@@ -153,7 +57,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSub
           },
         ),
         SettingSwitcherView(
-          title: '显示页面提示文字',
+          title: '显示阅读页面提示',
           value: _showPageHint,
           onChanged: (b) {
             _showPageHint = b;
@@ -220,8 +124,8 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSub
         ),
         SettingComboBoxView<int>(
           title: '预加载页数',
-          value: _preloadCount.clamp(0, 5),
-          values: const [0, 1, 2, 3, 4, 5],
+          value: _preloadCount.clamp(0, 6),
+          values: const [0, 1, 2, 3, 4, 5, 6],
           builder: (s) => Text(s == 0 ? '禁用预加载' : '前后$s页'),
           onChanged: (c) {
             _preloadCount = c.clamp(0, 5);
@@ -229,5 +133,44 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> with SettingSub
             if (mounted) setState(() {});
           },
         ),
-      ];
+      ],
+    );
+  }
+}
+
+Future<bool> showViewSettingDialog({required BuildContext context, Widget Function(BuildContext)? anotherButtonBuilder}) async {
+  var setting = AppSetting.instance.view;
+  var ok = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text('漫画阅读设置'),
+      scrollable: true,
+      content: ViewSettingSubPage(
+        setting: setting,
+        onSettingChanged: (s) => setting = s,
+      ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actions: [
+        anotherButtonBuilder?.call(c) ?? SizedBox.shrink(),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              child: Text('确定'),
+              onPressed: () async {
+                AppSetting.instance.update(view: setting);
+                await AppSettingPrefs.saveViewSetting();
+                Navigator.of(c).pop(true);
+              },
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).pop(false),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
 }
