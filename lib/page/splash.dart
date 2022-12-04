@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/view/message_dialog.dart';
+import 'package:manhuagui_flutter/page/page/message_dialog.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';

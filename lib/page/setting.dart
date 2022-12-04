@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
-import 'package:manhuagui_flutter/page/page/other_setting.dart';
-import 'package:manhuagui_flutter/page/page/export_import.dart';
+import 'package:manhuagui_flutter/page/page/setting_data.dart';
+import 'package:manhuagui_flutter/page/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 /// 设置页
 class SettingPage extends StatefulWidget {
@@ -110,7 +107,30 @@ class _SettingPageState extends State<SettingPage> {
           ),
           // *******************************************************
           _spacer(),
+          _item(
+            title: '导出数据到外部存储',
+            action: () => showExportDataDialog(context: context),
+          ),
+          _divider(),
+          _item(
+            title: '从外部存储导入数据',
+            action: () async {
+              await showImportDataDialog(context: context);
+              if (mounted) setState(() {});
+            },
+          ),
+          // _divider(),
+          // _item(
+          //   title: '从外部存储恢复下载记录',
+          //   action: () {}, // TODO
+          // ),
+          _divider(),
+          _item(
+            title: '清除图像缓存',
+            action: () => showClearCacheDialog(context: context),
+          ),
           if (LogConsolePage.initialized) ...[
+            _divider(),
             _item(
               title: '查看调试日志',
               action: () => Navigator.of(context).push(
@@ -120,69 +140,7 @@ class _SettingPageState extends State<SettingPage> {
                 ),
               ),
             ),
-            _divider(),
           ],
-          // _item(
-          //   title: '从已下载漫画导入下载记录',
-          //   action: () {},
-          // ),
-          // _divider(),
-          _item(
-            title: '导出数据到外部存储',
-            action: () => showExportDataDialog(context: context),
-          ),
-          _divider(),
-          _item(
-            title: '从外部存储导入数据',
-            action: () => showImportDataDialog(context: context),
-          ),
-          _divider(),
-          _item(
-            title: '清除图像缓存',
-            action: () async {
-              var cachedBytes = await getDefaultCacheManagerDirectoryBytes();
-              if (cachedBytes < 1024) {
-                Fluttertoast.showToast(msg: '当前不存在图像缓存。'); // <1MB
-                return;
-              }
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('清除图像缓存'),
-                  content: Text('当前图像缓存共占用 ${filesize(cachedBytes)} 空间，是否清除？\n\n注意：该操作仅清除图像缓存，并不影响阅读历史、搜索历史等数据。'),
-                  actions: [
-                    TextButton(
-                      child: Text('清除'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (c) => const AlertDialog(
-                            contentPadding: EdgeInsets.zero,
-                            content: CircularProgressDialogOption(
-                              progress: CircularProgressIndicator(),
-                              child: Text('清除图像缓存...'),
-                            ),
-                          ),
-                        );
-                        await Future.delayed(Duration(milliseconds: 500));
-                        await DefaultCacheManager().store.emptyCache();
-                        Navigator.of(context).pop();
-                        Fluttertoast.showToast(msg: '已清除所有图像缓存');
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () {
-                        Navigator.of(c).pop();
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
           // *******************************************************
           _spacer(),
           _item(
@@ -207,7 +165,7 @@ class _SettingPageState extends State<SettingPage> {
               context: context,
               builder: (c) => AlertDialog(
                 title: Text('检查更新'),
-                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。是否打开 GitHub Release 页面手动检查更新？'),
+                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。\n\n是否打开 GitHub Release 页面手动检查更新？'),
                 actions: [
                   TextButton(
                     child: Text('打开'),

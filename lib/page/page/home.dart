@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/page/overall.dart';
-import 'package:manhuagui_flutter/page/page/ranking.dart';
-import 'package:manhuagui_flutter/page/page/recent.dart';
-import 'package:manhuagui_flutter/page/page/recommend.dart';
+import 'package:manhuagui_flutter/page/page/home_overall.dart';
+import 'package:manhuagui_flutter/page/page/home_ranking.dart';
+import 'package:manhuagui_flutter/page/page/home_recent.dart';
+import 'package:manhuagui_flutter/page/page/home_recommend.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';

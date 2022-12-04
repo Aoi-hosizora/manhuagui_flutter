@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// 点击图像时的 Ripple 效果，在 [MineSubPage] / [MangaPage] / [AuthorPage] / [LargeDownloadLineView] 使用
 class FullRippleWidget extends StatelessWidget {
   const FullRippleWidget({
     Key? key,

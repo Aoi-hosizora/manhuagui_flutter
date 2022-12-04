@@ -19,20 +19,15 @@ class DBManager {
 
   Future<Database> getDB() async {
     if (_database == null || !_database!.isOpen) {
-      var filepath = join(await getDatabasesPath(), DB_NAME);
-      _database ??= await _openDatabase(filepath);
+      var filepath = join(await getDatabasesPath(), DB_NAME); // /data/user/0/.../databases/db_xxx
+      _database ??= await openDB(filepath);
     }
     return _database!;
   }
 
-  Future<void> closeDB() async {
-    await _database?.close();
-    _database = null;
-  }
-
   static const _newestVersion = 2;
 
-  Future<Database> _openDatabase(String filepath) async {
+  Future<Database> openDB(String filepath) async {
     return await openDatabase(
       filepath,
       version: _newestVersion,
@@ -53,8 +48,9 @@ class DBManager {
     );
   }
 
-  Future<Database> getAnotherDB(String filepath) async {
-    return await _openDatabase(filepath);
+  Future<void> closeDB() async {
+    await _database?.close();
+    _database = null;
   }
 }
 
@@ -102,34 +98,17 @@ extension DatabaseExecutorExtension on DatabaseExecutor {
       globalLogger.e('safeExecute', e, s);
     }
   }
-
-  Future<int?> copyTo(DatabaseExecutor anotherDB, String tableName, List<String> columns) async {
-    try {
-      await anotherDB.rawDelete('DELETE FROM $tableName');
-      var results = await rawQuery('SELECT ${columns.join(', ')} FROM $tableName');
-      for (var r in results) {
-        await anotherDB.rawInsert(
-          'INSERT INTO $tableName (${columns.join(', ')}) VALUES (${columns.map((_) => '?').join(', ')})',
-          columns.map((col) => r[col]!).toList(),
-        );
-      }
-      return results.length;
-    } catch (e, s) {
-      globalLogger.e('copyTo_db', e, s);
-      return null;
-    }
-  }
 }
 
 extension DatabaseExtension on Database {
   Future<T?> safeTransaction<T>(
-    Future<T> Function(Transaction txn, void Function({Object? msg}) rollback) action, {
+    Future<T> Function(Transaction tx, void Function({Object? msg}) rollback) action, {
     bool? exclusive,
   }) async {
     try {
       return await transaction<T?>(
-        (txn) async {
-          return await action(txn, ({msg}) => throw (msg ?? 'rollback'));
+        (tx) async {
+          return await action(tx, ({msg}) => throw (msg ?? 'rollback'));
         },
         exclusive: exclusive,
       );

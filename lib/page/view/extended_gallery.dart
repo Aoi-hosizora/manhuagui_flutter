@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
+/// 使用 [ExtendedPhotoGallery] 和 [ReloadablePhotoView] 扩展的横向/纵向画廊展示，在 [MangaGalleryView] 使用
+
 class HorizontalGalleryView extends StatefulWidget {
   const HorizontalGalleryView({
     Key? key,

@@ -7,6 +7,8 @@ import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 
+/// Splash页/消息页-新版本更新/通知公告对话框
+
 Future<void> showNewVersionDialog({
   required BuildContext context,
   required Message newVersion,
@@ -26,7 +28,7 @@ Future<void> showNewVersionDialog({
         title: Text('${cnt.version} 版本可用'),
         scrollable: true,
         content: SizedBox(
-          width: MediaQuery.of(context).size.width - (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
+          width: getDialogMaxWidth(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +114,7 @@ Future<void> showNotificationDialog({
         title: Text(msg.title),
         scrollable: true,
         content: SizedBox(
-          width: MediaQuery.of(context).size.width - (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
+          width: getDialogMaxWidth(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

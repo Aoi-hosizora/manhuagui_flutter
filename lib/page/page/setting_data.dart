@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/storage/export_import.dart';
+import 'package:manhuagui_flutter/service/storage/storage.dart';
 
-/// 设置页-导出数据
+/// 设置页-导出数据/导入数据/清除缓存
+
 class ExportDataSubPage extends StatefulWidget {
   const ExportDataSubPage({
     Key? key,
@@ -108,19 +111,10 @@ Future<void> showExportDataDialog({required BuildContext context}) async {
     return;
   }
 
-  showDialog(
+  await _showFakeProgressDialog(
     context: context,
-    barrierDismissible: false,
-    builder: (c) => const AlertDialog(
-      contentPadding: EdgeInsets.zero,
-      content: CircularProgressDialogOption(
-        progress: CircularProgressIndicator(),
-        child: Text('导出数据中...'),
-      ),
-    ),
+    text: '导出数据中...',
   );
-
-  await Future.delayed(Duration(milliseconds: 500));
   var name = await exportData(types);
   Navigator.of(context).pop();
   if (name != null) {
@@ -137,11 +131,17 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
     return;
   }
 
+  var mergeData = false; // TODO replace or merge ???
   var name = await showDialog<String>(
     context: context,
     builder: (c) => SimpleDialog(
       title: Text('导入数据'),
       children: [
+        CheckBoxDialogOption(
+          initialValue: mergeData,
+          onChanged: (b) => mergeData = b,
+          text: '覆盖原有数据',
+        ),
         for (var name in names)
           TextDialogOption(
             text: Text(name),
@@ -154,19 +154,10 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
     return;
   }
 
-  showDialog(
+  await _showFakeProgressDialog(
     context: context,
-    barrierDismissible: false,
-    builder: (c) => const AlertDialog(
-      contentPadding: EdgeInsets.zero,
-      content: CircularProgressDialogOption(
-        progress: CircularProgressIndicator(),
-        child: Text('导入数据中...'),
-      ),
-    ),
+    text: '导入数据中...',
   );
-
-  await Future.delayed(Duration(milliseconds: 500));
   var types = await importData(name);
   Navigator.of(context).pop();
   if (types != null) {
@@ -187,4 +178,55 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
   } else {
     Fluttertoast.showToast(msg: '导入数据失败');
   }
+}
+
+Future<void> showClearCacheDialog({required BuildContext context}) async {
+  var cachedBytes = await getDefaultCacheManagerDirectoryBytes();
+  if (cachedBytes < 2048) {
+    Fluttertoast.showToast(msg: '当前不存在图像缓存。'); // <2KB
+    return;
+  }
+  await showDialog(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text('清除图像缓存'),
+      content: Text('当前图像缓存共占用 ${filesize(cachedBytes)} 空间，是否清除？\n\n注意：该操作仅清除图像缓存，并不影响阅读历史、搜索历史等数据。'),
+      actions: [
+        TextButton(
+          child: Text('清除'),
+          onPressed: () async {
+            Navigator.of(c).pop();
+            await _showFakeProgressDialog(
+              context: context,
+              text: '清除图像缓存...',
+            );
+            await DefaultCacheManager().store.emptyCache();
+            Navigator.of(context).pop();
+            Fluttertoast.showToast(msg: '已清除所有图像缓存');
+          },
+        ),
+        TextButton(
+          child: Text('取消'),
+          onPressed: () {
+            Navigator.of(c).pop();
+          },
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _showFakeProgressDialog({required BuildContext context, required String text}) async {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (c) => AlertDialog(
+      contentPadding: EdgeInsets.zero,
+      content: CircularProgressDialogOption(
+        progress: CircularProgressIndicator(),
+        child: Text(text),
+      ),
+    ),
+  );
+  await Future.delayed(Duration(milliseconds: 300));
 }

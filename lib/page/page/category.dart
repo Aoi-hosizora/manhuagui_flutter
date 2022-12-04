@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/page/author.dart';
-import 'package:manhuagui_flutter/page/page/genre.dart';
+import 'package:manhuagui_flutter/page/page/category_author.dart';
+import 'package:manhuagui_flutter/page/page/category_genre.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';

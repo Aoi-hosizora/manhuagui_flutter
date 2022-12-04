@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
+/// 与设置相关的 [SettingSubPage] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [OtherSettingSubPage] 使用
 class SettingSubPage extends StatelessWidget {
   const SettingSubPage({
     Key? key,
@@ -226,6 +227,47 @@ class HelpIconView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class CheckBoxDialogOption extends StatefulWidget {
+  const CheckBoxDialogOption({
+    Key? key,
+    required this.initialValue,
+    required this.onChanged,
+    required this.text,
+  }) : super(key: key);
+
+  final bool initialValue;
+  final void Function(bool) onChanged;
+  final String text;
+
+  @override
+  State<CheckBoxDialogOption> createState() => _CheckBoxDialogOptionState();
+}
+
+class _CheckBoxDialogOptionState extends State<CheckBoxDialogOption> {
+  late bool _value = widget.initialValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconTextDialogOption(
+      icon: AbsorbPointer(
+        absorbing: true,
+        child: Checkbox(
+          value: _value,
+          onChanged: (_) {},
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+        ),
+      ),
+      text: Text(widget.text),
+      onPressed: () {
+        _value = !_value;
+        if (mounted) setState(() {});
+        widget.onChanged.call(_value);
+      },
     );
   }
 }

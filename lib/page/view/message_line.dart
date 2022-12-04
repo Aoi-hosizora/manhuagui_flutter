@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/message.dart';
-import 'package:manhuagui_flutter/page/view/message_dialog.dart';
+import 'package:manhuagui_flutter/page/page/message_dialog.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 
+/// 历史消息行，在 [MessagePage] 使用
 class MessageLineView extends StatelessWidget {
   const MessageLineView({
     Key? key,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/download.dart';
-import 'package:manhuagui_flutter/page/page/history.dart';
-import 'package:manhuagui_flutter/page/page/shelf.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_history.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';

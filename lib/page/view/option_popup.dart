@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
+/// 可弹出选项的按钮，在 [OverallSubPage] / [RankingSubPage] / [GenreSubPage] / [AuthorSubPage] / [AuthorPage] / [SearchPage] 使用
 class OptionPopupView<T extends Object> extends StatefulWidget {
   const OptionPopupView({
     Key? key,
