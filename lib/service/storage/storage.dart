@@ -66,6 +66,14 @@ class PathUtils {
     return path_.extension(path);
   }
 
+  static String getBasename(String path) {
+    return path_.basename(path);
+  }
+
+  static String getDirname(String path) {
+    return path_.dirname(path);
+  }
+
   static Future<String> joinPathAndCheck(List<String> paths, {bool isDirectoryPath = false}) async {
     var newPath = path_.joinAll(paths);
     var directory = Directory(isDirectoryPath ? newPath : path_.dirname(newPath));

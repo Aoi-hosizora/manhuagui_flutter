@@ -36,7 +36,7 @@ class MainActivity: FlutterActivity(), MethodCallHandler {
                 // https://github.com/CarnegieTechnologies/gallery_saver/blob/master/android/src/main/kotlin/carnegietechnologies/gallery_saver/FileUtils.kt
                 // https://github.com/hui-z/image_gallery_saver/blob/master/android/src/main/kotlin/com/example/imagegallerysaver/ImageGallerySaverPlugin.kt
                 // https://developer.android.com/training/camera/photobasics#TaskGallery
-                val filepath = call.argument<Any>("filepath").toString() ?: ""
+                val filepath = call.argument<Any>("filepath")?.toString() ?: ""
                 val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
                 val f = File(filepath)
                 intent.data = Uri.fromFile(f)

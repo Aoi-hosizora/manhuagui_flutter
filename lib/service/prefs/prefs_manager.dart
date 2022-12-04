@@ -20,7 +20,7 @@ class PrefsManager {
   Future<SharedPreferences> loadPrefs() async {
     if (_prefs == null) {
       _prefs = await SharedPreferences.getInstance();
-      await _checkUpgrade(_prefs!);
+      await _upgradePrefs(_prefs!);
     }
     return _prefs!;
   }
@@ -30,11 +30,11 @@ class PrefsManager {
     return _prefs!;
   }
 
-  static const newestVersion = 3; // current newest SharedPreferences version
+  static const _newestVersion = 3;
 
-  Future<void> _checkUpgrade(SharedPreferences prefs) async {
+  Future<void> _upgradePrefs(SharedPreferences prefs) async {
     var version = prefs.getInt('VERSION') ?? 1;
-    if (version == newestVersion) {
+    if (version == _newestVersion) {
       return;
     }
 
@@ -53,7 +53,7 @@ class PrefsManager {
       await SearchHistoryPrefs.upgradeFromVer2To3(prefs);
     }
 
-    prefs.setInt('VERSION', newestVersion);
+    prefs.setInt('VERSION', _newestVersion);
   }
 }
 
@@ -70,7 +70,7 @@ typedef DoubleKey = TypedKey<double>;
 typedef StringListKey = TypedKey<List<String>>;
 
 extension SharedPreferencesExtension on SharedPreferences {
-  T? safeGet<T>(TypedKey<T> key) {
+  T? safeGet<T>(TypedKey<T> key, {bool canThrow = false}) {
     try {
       if (key is TypedKey<String>) {
         return getString(key.key) as T?;
@@ -84,42 +84,49 @@ extension SharedPreferencesExtension on SharedPreferences {
       if (key is TypedKey<double>) {
         return getDouble(key.key) as T?;
       }
-      if (key is TypedKey<List<String>>) {
+      if (key is TypedKey<List>) {
         return getStringList(key.key) as T?;
       }
       throw ArgumentError('Invalid type: $T');
     } catch (e, s) {
+      if (canThrow) rethrow;
       globalLogger.e('safeGet<$T>', e, s);
       return null;
     }
   }
 
-  Future<bool> safeSet<T>(TypedKey<T> key, T value) async {
+  Future<bool> safeSet<T>(TypedKey<T> key, T value, {bool canThrow = false}) async {
     try {
-      if (value is String) {
+      if (key is TypedKey<String> && value is String) {
         return await setString(key.key, value);
       }
-      if (value is bool) {
+      if (key is TypedKey<bool> && value is bool) {
         return await setBool(key.key, value);
       }
-      if (value is int) {
+      if (key is TypedKey<int> && value is int) {
         return await setInt(key.key, value);
       }
-      if (value is double) {
+      if (key is TypedKey<double> && value is double) {
         return await setDouble(key.key, value);
       }
-      if (value is List<String>) {
-        return await setStringList(key.key, value);
+      if (key is TypedKey<List> && value is List) {
+        if (value is List<String>) {
+          return await setStringList(key.key, value);
+        }
+        return await setStringList(key.key, value.map((v) => v.toString()).toList());
       }
-      throw ArgumentError('Invalid type: $T');
+      throw ArgumentError('Invalid type: ${TypedKey<T>} <-> $T');
     } catch (e, s) {
+      if (canThrow) rethrow;
       globalLogger.e('safeSet<$T>', e, s);
       return false;
     }
   }
 
   Future<bool> safeMigrate<T>(dynamic oldKey, TypedKey<T> newKey, {T? defaultValue}) async {
-    if (oldKey is String) oldKey = TypedKey<T>(oldKey);
+    if (oldKey is String) {
+      oldKey = TypedKey<T>(oldKey);
+    }
     if (oldKey is! TypedKey<T>) {
       globalLogger.e('Invalid oldKey type: ${oldKey.runtimeType}, want TypedKey<$T>');
       return false;
@@ -138,20 +145,46 @@ extension SharedPreferencesExtension on SharedPreferences {
         return result;
       }
     } catch (e, s) {
-      globalLogger.e('migrate<$T>', e, s);
+      globalLogger.e('safeMigrate<$T>', e, s);
     }
     return false;
   }
 
-  int? copyToMap(Map<String, Object> anotherMap, List<TypedKey> keys) {
-    var oldLength = anotherMap.length;
-    for (var key in keys) {
-      var value = safeGet(key); // depending on types
-      if (value != null) {
-        anotherMap[key.key] = value;
+  Future<int?> copyTo(Map<String, dynamic> map, List<TypedKey> keys) async {
+    try {
+      var rows = 0;
+      for (var key in keys) {
+        var value = safeGet(key, canThrow: true);
+        if (value != null) {
+          print('${key.key} $value');
+          map[key.key] = value;
+          rows++;
+        }
       }
+      return rows;
+    } catch (e, s) {
+      globalLogger.e('copyTo_map', e, s);
+      return null;
     }
-    var rows = anotherMap.length - oldLength;
-    return rows; // non-null
+  }
+}
+
+extension JsonMapExtension on Map<String, dynamic> {
+  Future<int?> copyTo(SharedPreferences prefs, List<TypedKey> keys) async {
+    try {
+      var rows = 0;
+      for (var key in keys) {
+        var value = this[key.key];
+        if (value != null) {
+          print('${key.key} $value');
+          await prefs.safeSet(key, value, canThrow: true);
+          rows++;
+        }
+      }
+      return rows;
+    } catch (e, s) {
+      globalLogger.e('copyTo_prefs', e, s);
+      return null;
+    }
   }
 }

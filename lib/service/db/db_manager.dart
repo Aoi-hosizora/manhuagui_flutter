@@ -19,20 +19,23 @@ class DBManager {
 
   Future<Database> getDB() async {
     if (_database == null || !_database!.isOpen) {
-      var path = await getDatabasesPath();
-      _database ??= await _openDatabase(path);
+      var filepath = join(await getDatabasesPath(), DB_NAME);
+      _database ??= await _openDatabase(filepath);
     }
     return _database!;
   }
 
-  Future<Database> getAnotherDB(String path) async {
-    return await _openDatabase(path);
+  Future<void> closeDB() async {
+    await _database?.close();
+    _database = null;
   }
 
-  Future<Database> _openDatabase(String path) async {
+  static const _newestVersion = 2;
+
+  Future<Database> _openDatabase(String filepath) async {
     return await openDatabase(
-      join(path, DB_NAME),
-      version: 2,
+      filepath,
+      version: _newestVersion,
       onCreate: (db, _) async {
         await HistoryDao.createTable(db);
         await DownloadDao.createTable(db);
@@ -50,13 +53,12 @@ class DBManager {
     );
   }
 
-  Future<void> closeDB() async {
-    await _database?.close();
-    _database = null;
+  Future<Database> getAnotherDB(String filepath) async {
+    return await _openDatabase(filepath);
   }
 }
 
-extension DatabaseExtension on DatabaseExecutor {
+extension DatabaseExecutorExtension on DatabaseExecutor {
   Future<List<Map<String, Object?>>?> safeRawQuery(String sql, [List<Object?>? arguments]) async {
     try {
       return await rawQuery(sql, arguments);
@@ -101,18 +103,38 @@ extension DatabaseExtension on DatabaseExecutor {
     }
   }
 
-  Future<int?> copyToDB(Database anotherDB, String tableName, List<String> columns) async {
+  Future<int?> copyTo(DatabaseExecutor anotherDB, String tableName, List<String> columns) async {
     try {
-      var results = await rawQuery('SELECT ${HistoryDao.columns.join(', ')} FROM ${HistoryDao.tableName}');
+      await anotherDB.rawDelete('DELETE FROM $tableName');
+      var results = await rawQuery('SELECT ${columns.join(', ')} FROM $tableName');
       for (var r in results) {
         await anotherDB.rawInsert(
-          'INSERT INTO ${HistoryDao.tableName} (${HistoryDao.columns.join(', ')}) VALUES (${HistoryDao.columns.map((_) => '?').join(', ')})',
-          HistoryDao.columns.map((col) => r[col]!).toList(),
+          'INSERT INTO $tableName (${columns.join(', ')}) VALUES (${columns.map((_) => '?').join(', ')})',
+          columns.map((col) => r[col]!).toList(),
         );
       }
       return results.length;
     } catch (e, s) {
-      globalLogger.e('copyToAnotherDB', e, s);
+      globalLogger.e('copyTo_db', e, s);
+      return null;
+    }
+  }
+}
+
+extension DatabaseExtension on Database {
+  Future<T?> safeTransaction<T>(
+    Future<T> Function(Transaction txn, void Function({Object? msg}) rollback) action, {
+    bool? exclusive,
+  }) async {
+    try {
+      return await transaction<T?>(
+        (txn) async {
+          return await action(txn, ({msg}) => throw (msg ?? 'rollback'));
+        },
+        exclusive: exclusive,
+      );
+    } catch (e, s) {
+      globalLogger.e('safeTransaction', e, s);
       return null;
     }
   }

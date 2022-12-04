@@ -170,7 +170,20 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
   var types = await importData(name);
   Navigator.of(context).pop();
   if (types != null) {
-    Fluttertoast.showToast(msg: '数据 "$name" 已导入，包括：${types.toTypeTitle()}');
+    if (types.isEmpty) {
+      Fluttertoast.showToast(msg: '"$name" 内不包括数据');
+    } else {
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text('导入数据'),
+          content: Text('数据 "$name" 已导入。\n\n数据内包括：${types.toTypeTitle()}。'),
+          actions: [
+            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop()),
+          ],
+        ),
+      );
+    }
   } else {
     Fluttertoast.showToast(msg: '导入数据失败');
   }

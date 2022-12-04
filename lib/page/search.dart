@@ -450,7 +450,7 @@ class _SearchPageState extends State<SearchPage> {
                                 ),
                                 onTap: () {}, // 返回
                               ),
-                            if (_histories.isNotEmpty && (_text.isEmpty || _q == _text))
+                            if (_histories.isNotEmpty && _text.isEmpty)
                               InkWell(
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(vertical: 10),
