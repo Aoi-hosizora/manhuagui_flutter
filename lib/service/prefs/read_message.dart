@@ -4,16 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ReadMessagePrefs {
   ReadMessagePrefs._();
 
-  static const _readMessagesKey = 'ReadMessagePrefs_readMessageIds'; // list
+  static const _readMessagesKey = StringListKey('ReadMessagePrefs_readMessageIds');
 
   static Future<List<int>> getReadMessages() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    return prefs.safeGetStringList(_readMessagesKey)?.map((e) => int.tryParse(e) ?? 0).toList() ?? [];
+    return prefs.safeGet<List<String>>(_readMessagesKey)?.map((e) => int.tryParse(e) ?? 0).toList() ?? [];
   }
 
   static Future<void> clearReadMessages() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    await prefs.setStringList(_readMessagesKey, []);
+    await prefs.safeSet<List<String>>(_readMessagesKey, []);
   }
 
   static Future<List<int>> addReadMessages(List<int> mids) async {
@@ -21,7 +21,7 @@ class ReadMessagePrefs {
     var data = await getReadMessages();
     data.removeWhere((el) => mids.contains(el));
     data.addAll(mids);
-    await prefs.setStringList(_readMessagesKey, data.map((e) => e.toString()).toList());
+    await prefs.safeSet<List<String>>(_readMessagesKey, data.map((e) => e.toString()).toList());
     return data;
   }
 
@@ -33,7 +33,7 @@ class ReadMessagePrefs {
     final prefs = await PrefsManager.instance.loadPrefs();
     var data = await getReadMessages();
     data.remove(mid);
-    await prefs.setStringList(_readMessagesKey, data.map((e) => e.toString()).toList());
+    await prefs.safeSet<List<String>>(_readMessagesKey, data.map((e) => e.toString()).toList());
     return data;
   }
 
@@ -42,6 +42,6 @@ class ReadMessagePrefs {
   }
 
   static Future<void> upgradeFromVer2To3(SharedPreferences prefs) async {
-    await prefs.migrateStringList(oldKey: 'MessagePrefs_readMessageIds', newKey: _readMessagesKey, defaultValue: []);
+    await prefs.safeMigrate<List<String>>('MessagePrefs_readMessageIds', _readMessagesKey, defaultValue: []);
   }
 }

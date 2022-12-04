@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/other_setting.dart';
+import 'package:manhuagui_flutter/page/page/export_import.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
@@ -121,6 +122,21 @@ class _SettingPageState extends State<SettingPage> {
             ),
             _divider(),
           ],
+          // _item(
+          //   title: '从已下载漫画导入下载记录',
+          //   action: () {},
+          // ),
+          // _divider(),
+          _item(
+            title: '导出数据到外部存储',
+            action: () => showExportDataDialog(context: context),
+          ),
+          _divider(),
+          _item(
+            title: '从外部存储导入数据',
+            action: () => showImportDataDialog(context: context),
+          ),
+          _divider(),
           _item(
             title: '清除图像缓存',
             action: () async {

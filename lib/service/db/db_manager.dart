@@ -20,26 +20,34 @@ class DBManager {
   Future<Database> getDB() async {
     if (_database == null || !_database!.isOpen) {
       var path = await getDatabasesPath();
-      _database = await openDatabase(
-        join(path, DB_NAME),
-        version: 2,
-        onCreate: (db, _) async {
-          await HistoryDao.createTable(db);
-          await DownloadDao.createTable(db);
-        },
-        onUpgrade: (db, version, _) async {
-          if (version <= 1) {
-            version = 2; // 1 -> 2 upgrade
-            await HistoryDao.upgradeFromVer1To2(db);
-            await DownloadDao.upgradeFromVer1To2(db);
-          }
-          if (version == 2) {
-            // ...
-          }
-        },
-      );
+      _database ??= await _openDatabase(path);
     }
     return _database!;
+  }
+
+  Future<Database> getAnotherDB(String path) async {
+    return await _openDatabase(path);
+  }
+
+  Future<Database> _openDatabase(String path) async {
+    return await openDatabase(
+      join(path, DB_NAME),
+      version: 2,
+      onCreate: (db, _) async {
+        await HistoryDao.createTable(db);
+        await DownloadDao.createTable(db);
+      },
+      onUpgrade: (db, version, _) async {
+        if (version <= 1) {
+          version = 2; // 1 -> 2 upgrade
+          await HistoryDao.upgradeFromVer1To2(db);
+          await DownloadDao.upgradeFromVer1To2(db);
+        }
+        if (version == 2) {
+          // ...
+        }
+      },
+    );
   }
 
   Future<void> closeDB() async {
@@ -48,7 +56,7 @@ class DBManager {
   }
 }
 
-extension DatabaseExtension on Database {
+extension DatabaseExtension on DatabaseExecutor {
   Future<List<Map<String, Object?>>?> safeRawQuery(String sql, [List<Object?>? arguments]) async {
     try {
       return await rawQuery(sql, arguments);
@@ -90,6 +98,22 @@ extension DatabaseExtension on Database {
       return await execute(sql, arguments);
     } catch (e, s) {
       globalLogger.e('safeExecute', e, s);
+    }
+  }
+
+  Future<int?> copyToDB(Database anotherDB, String tableName, List<String> columns) async {
+    try {
+      var results = await rawQuery('SELECT ${HistoryDao.columns.join(', ')} FROM ${HistoryDao.tableName}');
+      for (var r in results) {
+        await anotherDB.rawInsert(
+          'INSERT INTO ${HistoryDao.tableName} (${HistoryDao.columns.join(', ')}) VALUES (${HistoryDao.columns.map((_) => '?').join(', ')})',
+          HistoryDao.columns.map((col) => r[col]!).toList(),
+        );
+      }
+      return results.length;
+    } catch (e, s) {
+      globalLogger.e('copyToAnotherDB', e, s);
+      return null;
     }
   }
 }

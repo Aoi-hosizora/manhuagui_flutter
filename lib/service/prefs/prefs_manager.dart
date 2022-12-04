@@ -57,55 +57,101 @@ class PrefsManager {
   }
 }
 
+class TypedKey<T> {
+  const TypedKey(this.key);
+
+  final String key;
+}
+
+typedef StringKey = TypedKey<String>;
+typedef BoolKey = TypedKey<bool>;
+typedef IntKey = TypedKey<int>;
+typedef DoubleKey = TypedKey<double>;
+typedef StringListKey = TypedKey<List<String>>;
+
 extension SharedPreferencesExtension on SharedPreferences {
-  String? safeGetString(String key) => _safeGet<String>(() => getString(key));
-
-  bool? safeGetBool(String key) => _safeGet<bool>(() => getBool(key));
-
-  int? safeGetInt(String key) => _safeGet<int>(() => getInt(key));
-
-  double? safeGetDouble(String key) => _safeGet<double>(() => getDouble(key));
-
-  List<String>? safeGetStringList(String key) => _safeGet<List<String>>(() => getStringList(key));
-
-  T? _safeGet<T>(T? Function() getter) {
+  T? safeGet<T>(TypedKey<T> key) {
     try {
-      return getter();
+      if (key is TypedKey<String>) {
+        return getString(key.key) as T?;
+      }
+      if (key is TypedKey<bool>) {
+        return getBool(key.key) as T?;
+      }
+      if (key is TypedKey<int>) {
+        return getInt(key.key) as T?;
+      }
+      if (key is TypedKey<double>) {
+        return getDouble(key.key) as T?;
+      }
+      if (key is TypedKey<List<String>>) {
+        return getStringList(key.key) as T?;
+      }
+      throw ArgumentError('Invalid type: $T');
     } catch (e, s) {
-      globalLogger.e('_safeGet<$T>', e, s);
+      globalLogger.e('safeGet<$T>', e, s);
       return null;
     }
   }
 
-  Future<bool> migrateString({required String oldKey, required String newKey, String? defaultValue}) async => //
-      await _migrate<String>(oldKey, newKey, getString, setString, defaultValue);
+  Future<bool> safeSet<T>(TypedKey<T> key, T value) async {
+    try {
+      if (value is String) {
+        return await setString(key.key, value);
+      }
+      if (value is bool) {
+        return await setBool(key.key, value);
+      }
+      if (value is int) {
+        return await setInt(key.key, value);
+      }
+      if (value is double) {
+        return await setDouble(key.key, value);
+      }
+      if (value is List<String>) {
+        return await setStringList(key.key, value);
+      }
+      throw ArgumentError('Invalid type: $T');
+    } catch (e, s) {
+      globalLogger.e('safeSet<$T>', e, s);
+      return false;
+    }
+  }
 
-  Future<bool> migrateBool({required String oldKey, required String newKey, bool? defaultValue}) async => //
-      await _migrate<bool>(oldKey, newKey, getBool, setBool, defaultValue);
+  Future<bool> safeMigrate<T>(dynamic oldKey, TypedKey<T> newKey, {T? defaultValue}) async {
+    if (oldKey is String) oldKey = TypedKey<T>(oldKey);
+    if (oldKey is! TypedKey<T>) {
+      globalLogger.e('Invalid oldKey type: ${oldKey.runtimeType}, want TypedKey<$T>');
+      return false;
+    }
 
-  Future<bool> migrateInt({required String oldKey, required String newKey, int? defaultValue}) async => //
-      await _migrate<int>(oldKey, newKey, getInt, setInt, defaultValue);
-
-  Future<bool> migrateDouble({required String oldKey, required String newKey, double? defaultValue}) async => //
-      await _migrate<double>(oldKey, newKey, getDouble, setDouble, defaultValue);
-
-  Future<bool> migrateStringList({required String oldKey, required String newKey, List<String>? defaultValue}) async => //
-      await _migrate<List<String>>(oldKey, newKey, getStringList, setStringList, defaultValue);
-
-  Future<bool> _migrate<T>(String oldKey, String newKey, T? Function(String) getter, Future<bool> Function(String, T) setter, T? defaultValue) async {
-    if (oldKey == newKey) {
+    if (oldKey.key == newKey.key) {
       return true;
     }
     try {
-      T? data = getter(oldKey) ?? defaultValue;
+      T? data = safeGet(oldKey) ?? defaultValue;
       if (data != null) {
-        var result = await setter(newKey, data);
-        remove(oldKey);
+        var result = await safeSet(newKey, data);
+        if (result) {
+          await remove(oldKey.key);
+        }
         return result;
       }
     } catch (e, s) {
-      globalLogger.e('_migrate<$T>', e, s);
+      globalLogger.e('migrate<$T>', e, s);
     }
     return false;
+  }
+
+  int? copyToMap(Map<String, Object> anotherMap, List<TypedKey> keys) {
+    var oldLength = anotherMap.length;
+    for (var key in keys) {
+      var value = safeGet(key); // depending on types
+      if (value != null) {
+        anotherMap[key.key] = value;
+      }
+    }
+    var rows = anotherMap.length - oldLength;
+    return rows; // non-null
   }
 }

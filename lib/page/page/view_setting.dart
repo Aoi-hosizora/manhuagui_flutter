@@ -29,7 +29,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _fullscreen = widget.setting.fullscreen;
   late var _preloadCount = widget.setting.preloadCount;
 
-  ViewSetting get newestSetting => ViewSetting(
+  ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
         showPageHint: _showPageHint,
         showClock: _showClock,
@@ -52,7 +52,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           builder: (s) => Text(s.toOptionTitle()),
           onChanged: (s) {
             _viewDirection = s;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -61,7 +61,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _showPageHint,
           onChanged: (b) {
             _showPageHint = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -71,7 +71,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           enable: _showPageHint,
           onChanged: (b) {
             _showClock = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -81,7 +81,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           enable: _showPageHint,
           onChanged: (b) {
             _showNetwork = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -91,7 +91,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           enable: _showPageHint,
           onChanged: (b) {
             _showBattery = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -100,7 +100,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _enablePageSpace,
           onChanged: (b) {
             _enablePageSpace = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -109,7 +109,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _keepScreenOn,
           onChanged: (b) {
             _keepScreenOn = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -118,7 +118,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _fullscreen,
           onChanged: (b) {
             _fullscreen = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -129,7 +129,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           builder: (s) => Text(s == 0 ? '禁用预加载' : '前后$s页'),
           onChanged: (c) {
             _preloadCount = c.clamp(0, 5);
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),

@@ -11,9 +11,9 @@ import 'package:manhuagui_flutter/service/storage/storage.dart';
 // path
 // ====
 
-Future<String> _getDownloadImageDirectoryPath(String url) async {
+Future<String> _getDownloadImageFilePath(String url) async {
   var basename = getTimestampTokenForFilename();
-  var extension = PathUtils.getExtension(url.split('?')[0]);
+  var extension = PathUtils.getExtension(url.split('?')[0]); // include "."
   var filename = '$basename$extension';
   var directoryPath = await lowerThanAndroidR()
       ? await getPublicStorageDirectoryPath() // /storage/emulated/0/Manhuagui/manhuagui_image/IMG_20220917_131013_206.jpg
@@ -36,7 +36,7 @@ Future<String> _getDownloadMangaDirectoryPath([int? mangaId, int? chapterId]) as
 
 Future<String> _getDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
   var basename = (pageIndex + 1).toString().padLeft(4, '0');
-  var extension = PathUtils.getExtension(url.split('?')[0]);
+  var extension = PathUtils.getExtension(url.split('?')[0]); // include "."
   var filename = '$basename$extension';
   return PathUtils.joinPath([await _getDownloadMangaDirectoryPath(mangaId, chapterId), filename]);
 }
@@ -66,7 +66,7 @@ Future<File?> getDownloadedChapterPageFile({required int mangaId, required int c
 
 Future<File?> downloadImageToGallery(String url) async {
   try {
-    var filepath = await _getDownloadImageDirectoryPath(url);
+    var filepath = await _getDownloadImageFilePath(url);
     var f = await downloadFile(
       url: url,
       filepath: filepath,

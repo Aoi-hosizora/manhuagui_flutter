@@ -281,3 +281,25 @@ extension TimeoutBehaviorExtension on TimeoutBehavior {
     }
   }
 }
+
+enum ExportDataType {
+  // from db
+  readHistories, // 漫画阅读历史
+  downloadRecords, // 漫画下载记录
+
+  // from prefs
+  searchHistories, // 漫画搜索历史
+  appSetting, // 所有设置
+}
+
+extension ExportDataTypeListExtension on List<ExportDataType> {
+  String toTypeTitle() {
+    var names = [
+      if (contains(ExportDataType.readHistories)) '漫画阅读历史',
+      if (contains(ExportDataType.downloadRecords)) '漫画下载记录',
+      if (contains(ExportDataType.searchHistories)) '漫画搜索历史',
+      if (contains(ExportDataType.appSetting)) '所有设置',
+    ];
+    return names.join('、');
+  }
+}

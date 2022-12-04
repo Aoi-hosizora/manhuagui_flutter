@@ -17,6 +17,10 @@ class HistoryDao {
   static const _colChapterPage = 'chapter_page';
   static const _colLastTime = 'last_time';
 
+  static String get tableName => _tblHistory;
+
+  static List<String> get columns => [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colChapterId, _colChapterTitle, _colChapterPage, _colLastTime];
+
   static const _createTblHistory = '''
     CREATE TABLE $_tblHistory(
       $_colUsername VARCHAR(1023),

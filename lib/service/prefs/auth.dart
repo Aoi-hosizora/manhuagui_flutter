@@ -7,37 +7,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthPrefs {
   AuthPrefs._();
 
-  static const _tokenKey = 'AuthPrefs_token'; // string
-  static const _rememberUsernameKey = 'AuthPrefs_rememberUsername'; // bool
-  static const _rememberPasswordKey = 'AuthPrefs_rememberPassword'; // bool
-  static const _usernamePasswordPairsKey = 'AuthPrefs_usernamePasswordPairs'; // list
+  static const _tokenKey = StringKey('AuthPrefs_token');
+  static const _rememberUsernameKey = BoolKey('AuthPrefs_rememberUsername');
+  static const _rememberPasswordKey = BoolKey('AuthPrefs_rememberPassword');
+  static const _usernamePasswordPairsKey = StringListKey('AuthPrefs_usernamePasswordPairs');
 
   static Future<String> getToken() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    return prefs.safeGetString(_tokenKey) ?? '';
+    return prefs.safeGet<String>(_tokenKey) ?? '';
   }
 
   static Future<void> setToken(String token) async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    await prefs.setString(_tokenKey, token);
+    await prefs.safeSet<String>(_tokenKey, token);
   }
 
   static Future<Tuple2<bool, bool>> getRememberOption() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    var rememberUsername = prefs.safeGetBool(_rememberUsernameKey) ?? true;
-    var rememberPassword = prefs.safeGetBool(_rememberPasswordKey) ?? false;
+    var rememberUsername = prefs.safeGet<bool>(_rememberUsernameKey) ?? true;
+    var rememberPassword = prefs.safeGet<bool>(_rememberPasswordKey) ?? false;
     return Tuple2(rememberUsername, rememberPassword);
   }
 
   static Future<void> setRememberOption(bool rememberUsername, bool rememberPassword) async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    await prefs.setBool(_rememberUsernameKey, rememberUsername);
-    await prefs.setBool(_rememberPasswordKey, rememberPassword);
+    await prefs.safeSet<bool>(_rememberUsernameKey, rememberUsername);
+    await prefs.safeSet<bool>(_rememberPasswordKey, rememberPassword);
   }
 
   static Future<List<Tuple2<String, String>>> getUsernamePasswordPairs() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    var data = prefs.safeGetStringList(_usernamePasswordPairsKey) ?? [];
+    var data = prefs.safeGet<List<String>>(_usernamePasswordPairsKey) ?? [];
     return _usernamePasswordStringsToTuples(data);
   }
 
@@ -51,7 +51,7 @@ class AuthPrefs {
     var data = await getUsernamePasswordPairs();
     data.removeWhere((t) => t.item1 == username);
     data.insert(0, Tuple2(username, password)); // 新 > 旧
-    await prefs.setStringList(_usernamePasswordPairsKey, _usernamePasswordTuplesToStrings(data));
+    await prefs.safeSet<List<String>>(_usernamePasswordPairsKey, _usernamePasswordTuplesToStrings(data));
     return data;
   }
 
@@ -59,7 +59,7 @@ class AuthPrefs {
     final prefs = await PrefsManager.instance.loadPrefs();
     var data = await getUsernamePasswordPairs();
     data.removeWhere((t) => t.item1 == username);
-    await prefs.setStringList(_usernamePasswordPairsKey, _usernamePasswordTuplesToStrings(data));
+    await prefs.safeSet<List<String>>(_usernamePasswordPairsKey, _usernamePasswordTuplesToStrings(data));
     return data;
   }
 
@@ -91,10 +91,10 @@ class AuthPrefs {
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {
-    await prefs.migrateString(oldKey: 'TOKEN', newKey: _tokenKey, defaultValue: '');
-    await prefs.migrateBool(oldKey: 'REMEMBER_USERNAME', newKey: _rememberUsernameKey, defaultValue: true);
-    await prefs.migrateBool(oldKey: 'REMEMBER_PASSWORD', newKey: _rememberPasswordKey, defaultValue: false);
-    await prefs.migrateStringList(oldKey: 'USERNAME_PASSWORD_PAIRS', newKey: _usernamePasswordPairsKey, defaultValue: []);
+    await prefs.safeMigrate<String>('TOKEN', _tokenKey, defaultValue: '');
+    await prefs.safeMigrate<bool>('REMEMBER_USERNAME', _rememberUsernameKey, defaultValue: true);
+    await prefs.safeMigrate<bool>('REMEMBER_PASSWORD', _rememberPasswordKey, defaultValue: false);
+    await prefs.safeMigrate<List<String>>('USERNAME_PASSWORD_PAIRS', _usernamePasswordPairsKey, defaultValue: []);
   }
 
   static Future<void> upgradeFromVer2To3(SharedPreferences prefs) async {

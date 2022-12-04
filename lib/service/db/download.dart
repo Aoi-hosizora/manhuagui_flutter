@@ -25,6 +25,10 @@ class DownloadDao {
       PRIMARY KEY ($_colDmMangaId)
     )''';
 
+  static String get mangaTableName => _tblDownloadManga;
+
+  static List<String> get mangaColumns => [_colDmMangaId, _colDmMangaTitle, _colDmMangaCover, _colDmMangaUrl, _colDmError, _colDmUpdatedAt];
+
   static const _tblDownloadChapter = 'tbl_download_chapter';
   static const _colDcMangaId = 'mid';
   static const _colDcChapterId = 'cid';
@@ -45,6 +49,10 @@ class DownloadDao {
       $_colDcSuccessCount INTEGER,
       PRIMARY KEY ($_colDcMangaId, $_colDcChapterId)
     )''';
+
+  static String get chapterTableName => _tblDownloadChapter;
+
+  static List<String> get chapterColumns => [_colDcMangaId, _colDcChapterId, _colDcChapterTitle, _tblDcChapterGroup, _colDcTotalCount, _colDcTriedCount, _colDcSuccessCount];
 
   static Future<void> createTable(Database db) async {
     await db.safeExecute(_createTblDownloadManga);

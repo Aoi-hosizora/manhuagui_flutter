@@ -27,7 +27,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
   late var _defaultToDeleteFiles = widget.setting.defaultToDeleteFiles;
   late var _downloadPagesTogether = widget.setting.downloadPagesTogether;
 
-  DlSetting get newestSetting => DlSetting(
+  DlSetting get _newestSetting => DlSetting(
         invertDownloadOrder: _invertDownloadOrder,
         defaultToDeleteFiles: _defaultToDeleteFiles,
         downloadPagesTogether: _downloadPagesTogether,
@@ -55,7 +55,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           builder: (s) => Text(!s ? '正序 (旧到新)' : '逆序 (新到旧)'),
           onChanged: (c) {
             _invertDownloadOrder = c;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -64,7 +64,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           value: _defaultToDeleteFiles,
           onChanged: (b) {
             _defaultToDeleteFiles = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -77,7 +77,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           builder: (s) => Text('$s页'),
           onChanged: (c) {
             _downloadPagesTogether = c.clamp(1, 8);
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),

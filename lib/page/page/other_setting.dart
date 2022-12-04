@@ -29,7 +29,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
 
-  OtherSetting get newestSetting => OtherSetting(
+  OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
         dlTimeoutBehavior: _dlTimeoutBehavior,
         enableLogger: _enableLogger,
@@ -53,7 +53,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           builder: (s) => Text(s.toOptionTitle()),
           onChanged: (s) {
             _timeoutBehavior = s;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -68,7 +68,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           builder: (s) => Text(s.toOptionTitle()),
           onChanged: (s) {
             _dlTimeoutBehavior = s;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -77,7 +77,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _enableLogger,
           onChanged: (b) {
             _enableLogger = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -87,7 +87,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _usingDownloadedPage,
           onChanged: (b) {
             _usingDownloadedPage = b;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -98,7 +98,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           builder: (s) => Text(s.toTitle()),
           onChanged: (s) {
             _defaultMangaOrder = s;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -109,7 +109,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           builder: (s) => Text(s.toTitle()),
           onChanged: (s) {
             _defaultAuthorOrder = s;
-            widget.onSettingChanged.call(newestSetting);
+            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
