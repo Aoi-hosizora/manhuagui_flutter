@@ -119,11 +119,6 @@ class _SettingPageState extends State<SettingPage> {
               if (mounted) setState(() {});
             },
           ),
-          // _divider(),
-          // _item(
-          //   title: '从外部存储恢复下载记录',
-          //   action: () {}, // TODO
-          // ),
           _divider(),
           _item(
             title: '清除图像缓存',
@@ -210,6 +205,7 @@ class _SettingPageState extends State<SettingPage> {
               style: TextStyle(color: Colors.grey),
             ),
           ),
+          _spacer(),
         ],
       ),
     );

@@ -25,6 +25,11 @@ class DBManager {
     return _database!;
   }
 
+  Future<void> closeDB() async {
+    await _database?.close();
+    _database = null;
+  }
+
   static const _newestVersion = 2;
 
   Future<Database> openDB(String filepath) async {
@@ -47,11 +52,14 @@ class DBManager {
       },
     );
   }
+}
 
-  Future<void> closeDB() async {
-    await _database?.close();
-    _database = null;
-  }
+class TableMetadata {
+  const TableMetadata({required this.tableName, required this.primaryKeys, required this.columns});
+
+  final String tableName;
+  final List<String> primaryKeys;
+  final List<String> columns;
 }
 
 extension DatabaseExecutorExtension on DatabaseExecutor {
@@ -101,16 +109,13 @@ extension DatabaseExecutorExtension on DatabaseExecutor {
 }
 
 extension DatabaseExtension on Database {
-  Future<T?> safeTransaction<T>(
-    Future<T> Function(Transaction tx, void Function({Object? msg}) rollback) action, {
-    bool? exclusive,
-  }) async {
+  Future<T?> exclusiveTransaction<T>(Future<T> Function(Transaction tx, void Function({Object? msg}) rollback) action) async {
     try {
       return await transaction<T?>(
         (tx) async {
-          return await action(tx, ({msg}) => throw (msg ?? 'rollback'));
+          return await action(tx, ({msg}) => throw 'Rollback: $msg');
         },
-        exclusive: exclusive,
+        exclusive: true,
       );
     } catch (e, s) {
       globalLogger.e('safeTransaction', e, s);

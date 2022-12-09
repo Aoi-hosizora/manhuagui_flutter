@@ -17,10 +17,6 @@ class HistoryDao {
   static const _colChapterPage = 'chapter_page';
   static const _colLastTime = 'last_time';
 
-  static String get tableName => _tblHistory;
-
-  static List<String> get columns => [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colChapterId, _colChapterTitle, _colChapterPage, _colLastTime];
-
   static const _createTblHistory = '''
     CREATE TABLE $_tblHistory(
       $_colUsername VARCHAR(1023),
@@ -34,6 +30,12 @@ class HistoryDao {
       $_colLastTime DATETIME,
       PRIMARY KEY ($_colUsername, $_colMangaId)
     )''';
+
+  static const metadata = TableMetadata(
+    tableName: _tblHistory,
+    primaryKeys: [_colUsername, _colMangaId],
+    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colChapterId, _colChapterTitle, _colChapterPage, _colLastTime],
+  );
 
   static Future<void> createTable(Database db) async {
     await db.safeExecute(_createTblHistory);

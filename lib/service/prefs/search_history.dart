@@ -8,8 +8,8 @@ class SearchHistoryPrefs {
 
   static List<TypedKey> get keys => [_searchHistoryKey];
 
-  static Future<List<String>> getSearchHistories() async {
-    final prefs = await PrefsManager.instance.loadPrefs();
+  static Future<List<String>> getSearchHistories({SharedPreferences? prefs}) async {
+    prefs ??= await PrefsManager.instance.loadPrefs();
     return prefs.safeGet<List<String>>(_searchHistoryKey) ?? [];
   }
 

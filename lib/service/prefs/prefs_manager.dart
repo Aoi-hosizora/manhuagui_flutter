@@ -15,20 +15,25 @@ class PrefsManager {
     return _instance!;
   }
 
-  SharedPreferences? _prefs; // global SharedPreferences instance
+  SharedPreferences? _prefs; // global PrefsStore (SharedPreferences) instance
 
   Future<SharedPreferences> loadPrefs() async {
     if (_prefs == null) {
       _prefs = await SharedPreferences.getInstance();
-      await _upgradePrefs(_prefs!);
+      await upgradePrefs(_prefs!);
     }
     return _prefs!;
   }
 
+  Future<SharedPreferences> reloadPrefs() async {
+    _prefs = null;
+    return await loadPrefs();
+  }
+
   static const _newestVersion = 3;
 
-  Future<void> _upgradePrefs(SharedPreferences prefs) async {
-    var version = prefs.getInt('VERSION') ?? 1;
+  Future<void> upgradePrefs(SharedPreferences prefs) async {
+    var version = prefs.getVersion();
     if (version == _newestVersion) {
       return;
     }
@@ -48,7 +53,7 @@ class PrefsManager {
       await SearchHistoryPrefs.upgradeFromVer2To3(prefs);
     }
 
-    prefs.setInt('VERSION', _newestVersion);
+    await prefs.setVersion(_newestVersion);
   }
 }
 
@@ -65,6 +70,19 @@ typedef DoubleKey = TypedKey<double>;
 typedef StringListKey = TypedKey<List<String>>;
 
 extension SharedPreferencesExtension on SharedPreferences {
+  int getVersion() {
+    try {
+      return getInt('VERSION') ?? 1;
+    } catch (e, s) {
+      globalLogger.e('getVersion', e, s);
+      return 1;
+    }
+  }
+
+  Future<bool> setVersion(int version) async {
+    return await setInt('VERSION', version);
+  }
+
   T? safeGet<T>(TypedKey<T> key, {bool canThrow = false}) {
     try {
       if (key is TypedKey<String>) {
@@ -82,7 +100,7 @@ extension SharedPreferencesExtension on SharedPreferences {
       if (key is TypedKey<List>) {
         return getStringList(key.key) as T?;
       }
-      throw ArgumentError('Invalid type: $T');
+      throw ArgumentError('Invalid key type: ${TypedKey<T>} (${key.runtimeType})');
     } catch (e, s) {
       if (canThrow) rethrow;
       globalLogger.e('safeGet<$T>', e, s);
@@ -110,7 +128,7 @@ extension SharedPreferencesExtension on SharedPreferences {
         }
         return await setStringList(key.key, value.map((v) => v.toString()).toList());
       }
-      throw ArgumentError('Invalid type: ${TypedKey<T>} key and $T value');
+      throw ArgumentError('Invalid key or value type: ${TypedKey<T>} (${key.runtimeType}) and $T (${value.runtimeType})');
     } catch (e, s) {
       if (canThrow) rethrow;
       globalLogger.e('safeSet<$T>', e, s);

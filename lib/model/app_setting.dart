@@ -289,17 +289,42 @@ enum ExportDataType {
 
   // from prefs
   searchHistories, // 漫画搜索历史
-  appSetting, // 所有设置
+  appSetting, // 所有设置项
 }
 
-extension ExportDataTypeListExtension on List<ExportDataType> {
+extension ExportDataTypeExtension on ExportDataType {
   String toTypeTitle() {
-    var names = [
-      if (contains(ExportDataType.readHistories)) '漫画阅读历史',
-      if (contains(ExportDataType.downloadRecords)) '漫画下载记录',
-      if (contains(ExportDataType.searchHistories)) '漫画搜索历史',
-      if (contains(ExportDataType.appSetting)) '所有设置',
+    switch (this) {
+      case ExportDataType.readHistories:
+        return '漫画阅读历史';
+      case ExportDataType.downloadRecords:
+        return '漫画下载记录';
+      case ExportDataType.searchHistories:
+        return '漫画搜索历史';
+      case ExportDataType.appSetting:
+        return '所有设置项';
+    }
+  }
+}
+
+class ExportDataTypeCounter {
+  ExportDataTypeCounter();
+
+  int? readHistories;
+  int? downloadRecords;
+  int? searchHistories;
+  int? appSetting;
+
+  bool get isEmpty => readHistories == null && downloadRecords == null && searchHistories == null && appSetting == null;
+
+  @override
+  String toString() {
+    var titles = [
+      if (readHistories != null) '${readHistories ?? 0} 条漫画阅读历史',
+      if (downloadRecords != null) '${downloadRecords ?? 0} 条漫画下载记录',
+      if (searchHistories != null) '${searchHistories ?? 0} 条漫画搜索历史',
+      if (appSetting != null) '${appSetting ?? 0} 条设置项',
     ];
-    return names.join('、');
+    return titles.join('、');
   }
 }
