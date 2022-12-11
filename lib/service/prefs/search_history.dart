@@ -21,7 +21,7 @@ class SearchHistoryPrefs {
   static Future<List<String>> addSearchHistory(String s) async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var data = await getSearchHistories();
-    data.remove(s);
+    data.removeWhere((h) => h == s);
     data.insert(0, s); // 新 > 旧
     await prefs.safeSet<List<String>>(_searchHistoryKey, data);
     return data;
@@ -30,7 +30,7 @@ class SearchHistoryPrefs {
   static Future<List<String>> removeSearchHistory(String s) async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var data = await getSearchHistories();
-    data.remove(s);
+    data.removeWhere((h) => h == s);
     await prefs.safeSet<List<String>>(_searchHistoryKey, data);
     return data;
   }

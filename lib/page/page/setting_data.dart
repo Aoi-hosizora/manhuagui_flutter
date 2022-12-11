@@ -112,15 +112,15 @@ Future<void> showExportDataDialog({required BuildContext context}) async {
   }
 
   await _showFakeProgressDialog(context, '导出数据中...');
-  var nameAndTypes = await exportData(allTypes);
+  var nameAndCounter = await exportData(allTypes);
   Navigator.of(context).pop();
-  if (nameAndTypes == null) {
+  if (nameAndCounter == null) {
     Fluttertoast.showToast(msg: '导出数据失败');
     return;
   }
 
-  var name = nameAndTypes.item1;
-  var counter = nameAndTypes.item2;
+  var name = nameAndCounter.item1;
+  var counter = nameAndCounter.item2;
   showDialog(
     context: context,
     builder: (c) => AlertDialog(
@@ -151,6 +151,7 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
           onChanged: (b) => mergeData = b,
           text: '与现有数据合并',
         ),
+        Divider(thickness: 1),
         for (var name in names)
           TextDialogOption(
             text: Text(name),

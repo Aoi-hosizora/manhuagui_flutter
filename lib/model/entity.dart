@@ -101,6 +101,9 @@ class DownloadedManga {
   int get failedPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
 
+  DownloadedChapter? findChapter(int cid) => //
+      downloadedChapters.where((chapter) => chapter.chapterId == cid).firstOrNull;
+
   DownloadedManga copyWith({
     int? mangaId,
     String? mangaTitle,
@@ -172,7 +175,7 @@ class DownloadedChapter {
       cid: chapterId,
       title: chapterTitle,
       mid: mangaId,
-      url: '',
+      url: 'https://www.manhuagui.com/comic/$mangaId/$chapterId.html',
       pageCount: totalPageCount,
       isNew: false,
     );

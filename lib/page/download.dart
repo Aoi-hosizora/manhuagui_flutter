@@ -143,7 +143,7 @@ class _DownloadPageState extends State<DownloadPage> {
                   alsoDeleteFile = v ?? false;
                   _setState(() {});
                 },
-                dense: false,
+                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),

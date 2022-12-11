@@ -270,9 +270,7 @@ class _MangaPageState extends State<MangaPage> {
           builder: (c) => MangaViewerPage(
             parentContext: context,
             mangaId: _data!.mid,
-            mangaTitle: _data!.title,
             mangaCover: _data!.cover,
-            mangaUrl: _data!.url,
             chapterGroups: _data!.chapterGroups,
             chapterId: chapterId,
             initialPage: _history?.chapterId == chapterId
@@ -308,9 +306,7 @@ class _MangaPageState extends State<MangaPage> {
         builder: (c) => MangaViewerPage(
           parentContext: context,
           mangaId: _data!.mid,
-          mangaTitle: _data!.title,
           mangaCover: _data!.cover,
-          mangaUrl: _data!.url,
           chapterGroups: _data!.chapterGroups,
           chapterId: cid,
           initialPage: page,

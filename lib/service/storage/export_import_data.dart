@@ -291,7 +291,7 @@ Future<int?> _copyToDB(DatabaseExecutor db, DatabaseExecutor db2, TableMetadata 
     }
     return results.length;
   } catch (e, s) {
-    globalLogger.e('copyTo_DatabaseExecutor', e, s);
+    globalLogger.e('_copyToDB', e, s);
     return null;
   }
 }
@@ -316,7 +316,7 @@ Future<int?> _copyToPrefs(SharedPreferences prefs, SharedPreferences prefs2, Lis
     }
     return rows;
   } catch (e, s) {
-    globalLogger.e('copyTo_SharedPreferences', e, s);
+    globalLogger.e('_copyToPrefs', e, s);
     return null;
   }
 }
@@ -342,7 +342,7 @@ class _SharedPreferencesMap implements SharedPreferences {
   List<String>? getStringList(String key) {
     var list = _data[key] as List?;
     if (list != null && list is! List<String>) {
-      list = list.cast<String>().toList();
+      list = list.cast<String>().toList(); // keep the same as SharedPreferences source code
       _data[key] = list;
     }
     return list?.toList() as List<String>?;

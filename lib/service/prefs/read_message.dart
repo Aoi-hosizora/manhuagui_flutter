@@ -32,7 +32,7 @@ class ReadMessagePrefs {
   static Future<List<int>> removeReadMessage(int mid) async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var data = await getReadMessages();
-    data.remove(mid);
+    data.removeWhere((h) => h == mid);
     await prefs.safeSet<List<String>>(_readMessagesKey, data.map((e) => e.toString()).toList());
     return data;
   }

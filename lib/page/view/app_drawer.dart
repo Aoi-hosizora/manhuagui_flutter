@@ -71,7 +71,8 @@ class _AppDrawerState extends State<AppDrawer> {
     if (isFirst) {
       Navigator.of(context).push(route);
     } else {
-      Navigator.of(context).pushReplacement(route);
+      // Navigator.of(context).pushReplacement(route); // TODO not all page need to replace
+      Navigator.of(context).push(route);
     }
   }
 

@@ -15,7 +15,7 @@ class PrefsManager {
     return _instance!;
   }
 
-  SharedPreferences? _prefs; // global PrefsStore (SharedPreferences) instance
+  SharedPreferences? _prefs; // global SharedPreferences instance
 
   Future<SharedPreferences> loadPrefs() async {
     if (_prefs == null) {
