@@ -41,7 +41,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
   Widget build(BuildContext context) {
     super.build(context);
     var unfinishedChapters = widget.mangaEntity.downloadedChapters //
-        .where((el) => !el.succeeded)
+        .where((el) => !el.succeeded || el.needUpdate)
         .toList();
     if (!widget.invertOrder) {
       unfinishedChapters.sort((i, j) => i.chapterId.compareTo(j.chapterId));

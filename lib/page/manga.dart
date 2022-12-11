@@ -115,9 +115,9 @@ class _MangaPageState extends State<MangaPage> {
           _subscribeCount = r.data.count;
           if (mounted) setState(() {});
         } catch (e, s) {
-          if (_error.isEmpty) {
-            Fluttertoast.showToast(msg: wrapError(e, s).text);
-          }
+          var we = wrapError(e, s);
+          globalLogger.e('MangaPage._loadData checkShelfManga', e, s);
+          Fluttertoast.showToast(msg: we.text);
         }
       });
     }
@@ -208,8 +208,6 @@ class _MangaPageState extends State<MangaPage> {
       Fluttertoast.showToast(msg: '用户未登录');
       return;
     }
-
-    final client = RestClient(DioManager.instance.dio);
     var toSubscribe = _subscribed != true; // 去订阅
     if (!toSubscribe) {
       var ok = await showDialog<bool>(
@@ -218,14 +216,8 @@ class _MangaPageState extends State<MangaPage> {
           title: Text('取消订阅确认'),
           content: Text('是否取消订阅《${_data!.title}》？'),
           actions: [
-            TextButton(
-              child: Text('确定'),
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
+            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
           ],
         ),
       );
@@ -234,27 +226,27 @@ class _MangaPageState extends State<MangaPage> {
       }
     }
 
+    final client = RestClient(DioManager.instance.dio);
     _subscribing = true;
     if (mounted) setState(() {});
-
     try {
       await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: _data!.mid);
       _subscribed = toSubscribe;
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(toSubscribe ? '订阅漫画成功' : '取消订阅漫画成功'),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画成功' : '取消订阅漫画成功')));
       EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: _data!.mid, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err'),
-        ),
-      );
+      var already = err.contains('已经被'), notYet = err.contains('还没有被');
+      if (already || notYet) {
+        _subscribed = already;
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err))); // 漫画已经被订阅 / 漫画还没有被订阅
+        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: _data!.mid, subscribe: _subscribed));
+      } else {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err')));
+      }
     } finally {
       _subscribing = false;
       if (mounted) setState(() {});
@@ -275,7 +267,7 @@ class _MangaPageState extends State<MangaPage> {
             chapterGroups: _data!.chapterGroups,
             initialPage: _history?.chapterId == chapterId
                 ? _history?.chapterPage ?? 1 // have read
-                : 1, // have not read
+                : 1 /* have not read */,
             onlineMode: true,
           ),
         ),

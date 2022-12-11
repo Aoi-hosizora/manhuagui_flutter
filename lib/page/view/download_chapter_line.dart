@@ -119,9 +119,14 @@ class DownloadChapterLineView extends StatelessWidget {
         icon = Icons.play_arrow;
         break;
       case DownloadChapterLineStatus.succeeded: // use success
-        subTitle = '已完成，$successProgressText';
+        subTitle = '已完成 ($successProgressText)';
         progressValue = successProgressValue;
         icon = Icons.file_download_done;
+        break;
+      case DownloadChapterLineStatus.update: // use success
+        subTitle = '已完成 (需要更新数据)';
+        progressValue = successProgressValue;
+        icon = Icons.priority_high;
         break;
       case DownloadChapterLineStatus.failed: // use success
         subTitle = '$successProgressText (${progress.unfinishedPageCount} 页未完成)';
@@ -151,6 +156,7 @@ enum DownloadChapterLineStatus {
   // 已结束
   paused, // useEntity
   succeeded, // useEntity
+  update, // useEntity
   failed, // useEntity
 }
 
@@ -206,7 +212,11 @@ class DownloadChapterLineProgress {
       if (entity.triedPageCount != entity.totalPageCount) {
         status = DownloadChapterLineStatus.paused;
       } else if (entity.successPageCount == entity.totalPageCount) {
-        status = DownloadChapterLineStatus.succeeded;
+        if (!entity.needUpdate) {
+          status = DownloadChapterLineStatus.succeeded;
+        } else {
+          status = DownloadChapterLineStatus.update;
+        }
       } else {
         status = DownloadChapterLineStatus.failed;
       }

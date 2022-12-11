@@ -66,6 +66,7 @@ class DownloadedManga {
   final bool error;
   final DateTime updatedAt;
   final List<DownloadedChapter> downloadedChapters;
+  final bool needUpdate;
 
   const DownloadedManga({
     required this.mangaId,
@@ -75,6 +76,7 @@ class DownloadedManga {
     required this.error,
     required this.updatedAt,
     required this.downloadedChapters,
+    required this.needUpdate,
   });
 
   List<int> get totalChapterIds => //
@@ -112,6 +114,7 @@ class DownloadedManga {
     bool? error,
     DateTime? updatedAt,
     List<DownloadedChapter>? downloadedChapters,
+    bool? needUpdate,
   }) {
     return DownloadedManga(
       mangaId: mangaId ?? this.mangaId,
@@ -121,6 +124,7 @@ class DownloadedManga {
       error: error ?? this.error,
       updatedAt: updatedAt ?? this.updatedAt,
       downloadedChapters: downloadedChapters ?? this.downloadedChapters,
+      needUpdate: needUpdate ?? this.needUpdate,
     );
   }
 }
@@ -133,6 +137,7 @@ class DownloadedChapter {
   final int totalPageCount;
   final int triedPageCount;
   final int successPageCount;
+  final bool needUpdate;
 
   bool get tried => triedPageCount > 0;
 
@@ -148,6 +153,7 @@ class DownloadedChapter {
     required this.totalPageCount,
     required this.triedPageCount,
     required this.successPageCount,
+    required this.needUpdate,
   });
 
   DownloadedChapter copyWith({
@@ -158,6 +164,7 @@ class DownloadedChapter {
     int? totalPageCount,
     int? triedPageCount,
     int? successPageCount,
+    bool? needUpdate,
   }) {
     return DownloadedChapter(
       mangaId: mangaId ?? this.mangaId,
@@ -167,6 +174,7 @@ class DownloadedChapter {
       totalPageCount: totalPageCount ?? this.totalPageCount,
       triedPageCount: triedPageCount ?? this.triedPageCount,
       successPageCount: successPageCount ?? this.successPageCount,
+      needUpdate: needUpdate ?? this.needUpdate,
     );
   }
 

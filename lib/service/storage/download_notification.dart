@@ -52,12 +52,11 @@ class DownloadNotificationHelper {
         var tried = progress.triedChapterPageCount ?? 0;
         show('${chapter.title} $tried/${chapter.pageCount}', tried, chapter.pageCount);
         break;
-      default:
-      // skip
+      default: // pass
     }
   }
 
-  static Future<void> cancelNotification({required int mangaId}) async {
+  static Future<void> cancelNotification(int mangaId) async {
     await NotificationManager.instance.cancelNotification(id: mangaId);
   }
 

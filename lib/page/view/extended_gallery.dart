@@ -304,7 +304,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                           ? math.max(widget.viewportPageSpace, 10) // for first page, space must be larger than 10
                           : widget.viewportPageSpace /* for remaining pages */,
                     ),
-                    child: _buildPhotoItem(context, i),
+                    child: _buildPhotoItem(context, i), // TODO 竖直滚动的 GalleryView 暂时无法缩放页面
                   ),
                 ),
 

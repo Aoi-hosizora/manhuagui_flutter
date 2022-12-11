@@ -34,6 +34,7 @@ class DownloadMangaLineView extends StatelessWidget {
       case DownloadMangaLineStatus.waiting:
       case DownloadMangaLineStatus.paused:
       case DownloadMangaLineStatus.succeeded:
+      case DownloadMangaLineStatus.update:
       case DownloadMangaLineStatus.failed:
         assert(
           progress.stopped,
@@ -53,9 +54,11 @@ class DownloadMangaLineView extends StatelessWidget {
                   ? '已暂停 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)'
                   : progress.status == DownloadMangaLineStatus.succeeded
                       ? '已完成'
-                      : progress.notFinishedPageCount! < 0
-                          ? '下载出错'
-                          : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
+                      : progress.status == DownloadMangaLineStatus.update
+                          ? '已完成 (需要更新数据)'
+                          : progress.notFinishedPageCount! < 0
+                              ? '下载出错'
+                              : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
           showProgressBar: false,
           progressBarValue: null,
           disableAction: false,
@@ -121,6 +124,7 @@ class LargeDownloadMangaLineView extends StatelessWidget {
       case DownloadMangaLineStatus.waiting:
       case DownloadMangaLineStatus.paused:
       case DownloadMangaLineStatus.succeeded:
+      case DownloadMangaLineStatus.update:
       case DownloadMangaLineStatus.failed:
         assert(
           progress.stopped,
@@ -140,9 +144,11 @@ class LargeDownloadMangaLineView extends StatelessWidget {
                   ? '已暂停 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)'
                   : progress.status == DownloadMangaLineStatus.succeeded
                       ? '已完成'
-                      : progress.notFinishedPageCount! < 0
-                          ? '下载出错'
-                          : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
+                      : progress.status == DownloadMangaLineStatus.update
+                          ? '已完成 (需要更新数据)'
+                          : progress.notFinishedPageCount! < 0
+                              ? '下载出错'
+                              : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
         );
       case DownloadMangaLineStatus.downloading:
       case DownloadMangaLineStatus.pausing:
@@ -178,6 +184,7 @@ enum DownloadMangaLineStatus {
   // 已结束
   paused, // stopped
   succeeded, // stopped
+  update, // stopped
   failed, // stopped
 }
 
@@ -260,7 +267,11 @@ class DownloadMangaLineProgress {
         if (entity.triedPageCountInAll != entity.totalPageCountInAll) {
           status = DownloadMangaLineStatus.paused; // stopped
         } else if (entity.successChapterIds.length == entity.totalChapterIds.length) {
-          status = DownloadMangaLineStatus.succeeded; // stopped
+          if (!entity.needUpdate) {
+            status = DownloadMangaLineStatus.succeeded; // stopped
+          } else {
+            status = DownloadMangaLineStatus.update; // stopped
+          }
         } else {
           status = DownloadMangaLineStatus.failed; // stopped (failed to get chapter or download page)
         }
@@ -270,7 +281,7 @@ class DownloadMangaLineProgress {
     }
 
     if (task == null || task.succeeded || (!task.canceled && task.progress.stage == DownloadMangaProgressStage.waiting)) {
-      // waiting / paused / succeeded / failed / failed
+      // waiting / paused / succeeded / update / failed
       assert(
         status != DownloadMangaLineStatus.downloading && status != DownloadMangaLineStatus.pausing,
         'status must not be downloading and pausing and current progress is stopped',

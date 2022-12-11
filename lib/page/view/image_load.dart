@@ -103,9 +103,10 @@ class ImageLoadFailedView extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 30),
             child: Text(
               error == null
-                  ? ''
-                  : error.toString().contains('not found while given url is null')
-                      ? '当前处于离线模式，但该页尚未下载'
+                  ? '未知错误'
+                  : // Image file "/storage/emulated/0/Manhuagui/manhuagui_download/39793/620266/0005.webp" is not found while given url is null.
+                  error.toString().contains('not found while given url is null')
+                      ? '该页尚未下载，且未获取到该页的链接'
                       : wrapError(error, StackTrace.empty).text,
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,

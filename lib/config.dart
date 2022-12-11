@@ -40,5 +40,5 @@ const MESSAGE_URL = 'https://www.manhuagui.com/user/message/system';
 const EDIT_PROFILE_URL = 'https://www.manhuagui.com/user/center/proinfo';
 const REGISTER_URL = 'https://www.manhuagui.com/user/register';
 const SOURCE_CODE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter';
-const FEEDBACK_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/issues/new';
+const FEEDBACK_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/issues';
 const RELEASE_URL = 'https://github.com/Aoi-hosizora/manhuagui_flutter/releases';

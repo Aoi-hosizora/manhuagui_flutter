@@ -39,7 +39,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
   Widget build(BuildContext context) {
     super.build(context);
     var succeededChapters = widget.mangaEntity.downloadedChapters //
-        .where((el) => el.succeeded)
+        .where((el) => el.succeeded && !el.needUpdate)
         .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
         .toList();
 

@@ -30,27 +30,34 @@ class DBManager {
     _database = null;
   }
 
-  static const _newestVersion = 2;
+  static const _newestVersion = 3;
 
   Future<Database> openDB(String filepath) async {
     return await openDatabase(
       filepath,
       version: _newestVersion,
-      onCreate: (db, _) async {
-        await HistoryDao.createTable(db);
-        await DownloadDao.createTable(db);
-      },
-      onUpgrade: (db, version, _) async {
-        if (version <= 1) {
-          version = 2; // 1 -> 2 upgrade
-          await HistoryDao.upgradeFromVer1To2(db);
-          await DownloadDao.upgradeFromVer1To2(db);
-        }
-        if (version == 2) {
-          // ...
-        }
-      },
+      onCreate: (db, _) async => await _onUpgrade(db, 0),
+      onUpgrade: (db, oldVersion, _) async => _onUpgrade(db, oldVersion),
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion) async {
+    var version = oldVersion;
+    if (version == 0) {
+      version = 1; // x -> 1 create
+      await HistoryDao.createForVer1(db);
+      await DownloadDao.createForVer1(db);
+    }
+    if (version == 1) {
+      version = 2; // 1 -> 2 upgrade
+      await HistoryDao.upgradeFromVer1To2(db);
+      await DownloadDao.upgradeFromVer1To2(db);
+    }
+    if (version == 2) {
+      version = 3; // 2 -> 3 upgrade
+      await HistoryDao.upgradeFromVer2To3(db);
+      await DownloadDao.upgradeFromVer2To3(db);
+    }
   }
 }
 

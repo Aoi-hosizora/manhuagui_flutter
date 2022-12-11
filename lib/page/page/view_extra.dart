@@ -42,7 +42,7 @@ class ViewExtraSubPage extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 6),
         child: Center(
           child: Text(
-            '无法在离线模式下跳转章节',
+            '当前处于离线模式，但未在下载列表获取到章节跳转信息',
             style: Theme.of(context).textTheme.subtitle1?.copyWith(
                   fontSize: 18,
                   color: Colors.grey[600],
@@ -261,7 +261,7 @@ class ViewExtraSubPage extends StatelessWidget {
                 child: Column(
                   children: [
                     NetworkImageView(
-                      url: data.chapterCover ?? '',
+                      url: data.chapterCover,
                       height: 150,
                       width: 150 / 0.618,
                       fit: BoxFit.cover,
