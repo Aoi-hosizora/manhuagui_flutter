@@ -23,7 +23,7 @@ class ShelfMangaLineView extends StatelessWidget {
       icon2: Icons.access_time,
       text2: '更新于 ${manga.newestDuration}',
       icon3: Icons.import_contacts,
-      text3: '最近阅读至 ${manga.lastChapter.isEmpty ? '未知话' : manga.lastChapter} (${manga.lastDuration})',
+      text3: '最近阅读至 ${manga.lastChapter.isEmpty ? '未知章节' : manga.lastChapter} (${manga.lastDuration})',
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

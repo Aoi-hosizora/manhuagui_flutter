@@ -129,6 +129,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   DownloadedManga? _entity;
   DownloadMangaQueueTask? _task;
   var _byte = 0;
+  var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
   var _invertOrder = true;
   MangaHistory? _history;
   Manga? _mangaData; // loaded in background
@@ -199,20 +200,21 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   }
 
   void _readChapter(int chapterId) {
-    // TODO 离线阅读功能，跳过请求章节信息
-    _loadMangaDataAsync(forceRefresh: false); // 异步请求章节目录，尽量避免 MangaViewerPage 做多次请求
+    _loadMangaDataAsync(forceRefresh: false); // 异步请求章节目录，尽量避免 MangaViewerPage 反复请求
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
           parentContext: context,
           mangaId: widget.mangaId,
+          chapterId: chapterId,
           mangaCover: _entity!.mangaCover,
           chapterGroups: _mangaData?.chapterGroups /* nullable */,
-          chapterId: chapterId,
           initialPage: _history?.chapterId == chapterId
               ? _history?.chapterPage ?? 1 // have read
-              : 1, // have not read
+              : 1,
+          // have not read
+          onlineMode: _onlineMode,
         ),
       ),
     );
@@ -351,7 +353,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     // ****************************************************************
                     Container(
                       color: Colors.white,
-                      child: ActionRowView.four(
+                      child: ActionRowView.five(
                         action1: ActionItem.simple(
                           '查看漫画',
                           Icons.description,
@@ -367,16 +369,25 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                           ),
                         ),
                         action2: ActionItem.simple(
+                          _onlineMode ? '在线模式' : '离线模式',
+                          _onlineMode ? Icons.travel_explore : Icons.public_off,
+                          () async {
+                            _onlineMode = !_onlineMode;
+                            if (mounted) setState(() {});
+                            await updateDlSettingDefaultToOnlineMode(_onlineMode);
+                          },
+                        ),
+                        action3: ActionItem.simple(
                           _invertOrder ? '倒序显示' : '正序显示',
                           _invertOrder ? Icons.arrow_downward : Icons.arrow_upward,
                           () => mountedSetState(() => _invertOrder = !_invertOrder),
                         ),
-                        action3: ActionItem.simple(
+                        action4: ActionItem.simple(
                           '开始下载',
                           Icons.play_arrow,
                           () => _startOrPause(start: true),
                         ),
-                        action4: ActionItem.simple(
+                        action5: ActionItem.simple(
                           '暂停下载',
                           Icons.pause,
                           () => _startOrPause(start: false),

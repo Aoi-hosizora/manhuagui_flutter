@@ -68,11 +68,10 @@ class _AppDrawerState extends State<AppDrawer> {
       disableCanTransitionFrom: _routeTheme?.disableCanTransitionFrom,
       transitionsBuilder: _routeTheme?.transitionsBuilder,
     );
-    if (isFirst) {
+    if (isFirst || widget.currentSelection == DrawerSelection.none) {
       Navigator.of(context).push(route);
     } else {
-      // Navigator.of(context).pushReplacement(route); // TODO not all page need to replace
-      Navigator.of(context).push(route);
+      Navigator.of(context).pushReplacement(route);
     }
   }
 

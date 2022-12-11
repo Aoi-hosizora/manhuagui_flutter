@@ -26,11 +26,13 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
   late var _invertDownloadOrder = widget.setting.invertDownloadOrder;
   late var _defaultToDeleteFiles = widget.setting.defaultToDeleteFiles;
   late var _downloadPagesTogether = widget.setting.downloadPagesTogether;
+  late var _defaultToOnlineMode = widget.setting.defaultToOnlineMode;
 
   DlSetting get _newestSetting => DlSetting(
         invertDownloadOrder: _invertDownloadOrder,
         defaultToDeleteFiles: _defaultToDeleteFiles,
         downloadPagesTogether: _downloadPagesTogether,
+        defaultToOnlineMode: _defaultToOnlineMode,
       );
 
   bool? _lowerThanAndroidR;
@@ -77,6 +79,15 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           builder: (s) => Text('$s页'),
           onChanged: (c) {
             _downloadPagesTogether = c.clamp(1, 8);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '默认以在线模式阅读',
+          value: _defaultToOnlineMode,
+          onChanged: (b) {
+            _defaultToOnlineMode = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -150,6 +161,13 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
 Future<void> updateDlSettingDefaultToDeleteFiles(bool alsoDeleteFile) async {
   var setting = AppSetting.instance.dl;
   var newSetting = setting.copyWith(defaultToDeleteFiles: alsoDeleteFile);
+  AppSetting.instance.update(dl: newSetting);
+  await AppSettingPrefs.saveDlSetting();
+}
+
+Future<void> updateDlSettingDefaultToOnlineMode(bool onlineMode) async {
+  var setting = AppSetting.instance.dl;
+  var newSetting = setting.copyWith(defaultToOnlineMode: onlineMode);
   AppSetting.instance.update(dl: newSetting);
   await AppSettingPrefs.saveDlSetting();
 }

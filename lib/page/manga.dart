@@ -270,12 +270,13 @@ class _MangaPageState extends State<MangaPage> {
           builder: (c) => MangaViewerPage(
             parentContext: context,
             mangaId: _data!.mid,
+            chapterId: chapterId,
             mangaCover: _data!.cover,
             chapterGroups: _data!.chapterGroups,
-            chapterId: chapterId,
             initialPage: _history?.chapterId == chapterId
                 ? _history?.chapterPage ?? 1 // have read
                 : 1, // have not read
+            onlineMode: true,
           ),
         ),
       );
@@ -306,10 +307,11 @@ class _MangaPageState extends State<MangaPage> {
         builder: (c) => MangaViewerPage(
           parentContext: context,
           mangaId: _data!.mid,
+          chapterId: cid,
           mangaCover: _data!.cover,
           chapterGroups: _data!.chapterGroups,
-          chapterId: cid,
           initialPage: page,
+          onlineMode: true,
         ),
       ),
     );

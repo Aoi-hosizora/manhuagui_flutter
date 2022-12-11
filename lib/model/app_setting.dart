@@ -159,27 +159,32 @@ class DlSetting {
     required this.invertDownloadOrder,
     required this.defaultToDeleteFiles,
     required this.downloadPagesTogether,
+    required this.defaultToOnlineMode,
   });
 
   final bool invertDownloadOrder; // 漫画章节下载顺序
   final bool defaultToDeleteFiles; // 默认删除已下载的文件
   final int downloadPagesTogether; // 同时下载的页面数量
+  final bool defaultToOnlineMode; // 默认以在线模式阅读
 
   static const defaultSetting = DlSetting(
     invertDownloadOrder: false,
     defaultToDeleteFiles: false,
     downloadPagesTogether: 3,
+    defaultToOnlineMode: true,
   );
 
   DlSetting copyWith({
     bool? invertDownloadOrder,
     bool? defaultToDeleteFiles,
     int? downloadPagesTogether,
+    bool? defaultToOnlineMode,
   }) {
     return DlSetting(
       invertDownloadOrder: invertDownloadOrder ?? this.invertDownloadOrder,
       defaultToDeleteFiles: defaultToDeleteFiles ?? this.defaultToDeleteFiles,
       downloadPagesTogether: downloadPagesTogether ?? this.downloadPagesTogether,
+      defaultToOnlineMode: defaultToOnlineMode ?? this.defaultToOnlineMode,
     );
   }
 }

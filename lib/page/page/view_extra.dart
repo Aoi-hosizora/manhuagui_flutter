@@ -37,6 +37,21 @@ class ViewExtraSubPage extends StatelessWidget {
   final void Function() toPop;
 
   Widget _buildChapters(BuildContext context) {
+    if (data.prevChapterId == null || data.nextChapterId == null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 6),
+        child: Center(
+          child: Text(
+            '无法在离线模式下跳转章节',
+            style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                  fontSize: 18,
+                  color: Colors.grey[600],
+                ),
+          ),
+        ),
+      );
+    }
+
     Widget _buildAction({required String text, required String subText, required bool left, required void Function() action, required bool disable}) {
       return InkWell(
         onTap: disable ? null : action,
@@ -83,8 +98,8 @@ class ViewExtraSubPage extends StatelessWidget {
 
     var prev = Expanded(
       child: _buildAction(
-        text: data.prevChapterId != 0 ? '阅读上一章节' : '暂无上一章节',
-        subText: data.prevChapterTitle,
+        text: data.prevChapterId! != 0 ? '阅读上一章节' : '暂无上一章节',
+        subText: data.prevChapterTitle!,
         left: !reverseScroll ? true : false,
         disable: data.prevChapterId == 0,
         action: () => toGotoChapter.call(true),
@@ -93,8 +108,8 @@ class ViewExtraSubPage extends StatelessWidget {
 
     var next = Expanded(
       child: _buildAction(
-        text: data.nextChapterId != 0 ? '阅读下一章节' : '暂无下一章节',
-        subText: data.nextChapterTitle,
+        text: data.nextChapterId! != 0 ? '阅读下一章节' : '暂无下一章节',
+        subText: data.nextChapterTitle!,
         left: !reverseScroll ? false : true,
         disable: data.nextChapterId == 0,
         action: () => toGotoChapter.call(false),
@@ -246,7 +261,7 @@ class ViewExtraSubPage extends StatelessWidget {
                 child: Column(
                   children: [
                     NetworkImageView(
-                      url: data.chapterCover,
+                      url: data.chapterCover ?? '',
                       height: 150,
                       width: 150 / 0.618,
                       fit: BoxFit.cover,

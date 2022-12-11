@@ -17,7 +17,7 @@ class ImageLoadingView extends StatelessWidget {
     var event = this.event;
     return Container(
       color: Colors.black,
-      padding: EdgeInsets.symmetric(vertical: 30),
+      padding: EdgeInsets.symmetric(vertical: 40),
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
       ),
@@ -46,10 +46,10 @@ class ImageLoadingView extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 30),
             child: Text(
               event == null
-                  ? ''
+                  ? '　'
                   : (event.expectedTotalBytes ?? 0) == 0
-                      ? filesize(event.cumulativeBytesLoaded)
-                      : '${filesize(event.cumulativeBytesLoaded)} / ${filesize(event.expectedTotalBytes!)}',
+                      ? '　${filesize(event.cumulativeBytesLoaded)}　'
+                      : '　${filesize(event.cumulativeBytesLoaded)} / ${filesize(event.expectedTotalBytes!)}　',
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),
@@ -74,7 +74,7 @@ class ImageLoadFailedView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.black,
-      padding: EdgeInsets.symmetric(vertical: 30),
+      padding: EdgeInsets.symmetric(vertical: 40),
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
       ),
@@ -102,7 +102,11 @@ class ImageLoadFailedView extends StatelessWidget {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 30),
             child: Text(
-              error == null ? '' : wrapError(error, StackTrace.empty).text,
+              error == null
+                  ? ''
+                  : error.toString().contains('not found while given url is null')
+                      ? '当前处于离线模式，但该页尚未下载'
+                      : wrapError(error, StackTrace.empty).text,
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),

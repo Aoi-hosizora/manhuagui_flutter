@@ -66,8 +66,9 @@ class AppSettingPrefs {
   static const _invertDownloadOrderKey = BoolKey('AppSettingPrefs_invertDownloadOrder');
   static const _defaultToDeleteFilesKey = BoolKey('AppSettingPrefs_defaultToDeleteFiles');
   static const _downloadPagesTogetherKey = IntKey('AppSettingPrefs_downloadPagesTogether');
+  static const _defaultToOnlineModeKey = BoolKey('AppSettingPrefs_defaultToOnlineMode');
 
-  static List<TypedKey> get dlSettingKeys => [_invertDownloadOrderKey, _defaultToDeleteFilesKey, _downloadPagesTogetherKey];
+  static List<TypedKey> get dlSettingKeys => [_invertDownloadOrderKey, _defaultToDeleteFilesKey, _downloadPagesTogetherKey, _defaultToOnlineModeKey];
 
   static Future<void> loadDlSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -76,6 +77,7 @@ class AppSettingPrefs {
       invertDownloadOrder: prefs.safeGet<bool>(_invertDownloadOrderKey) ?? def.invertDownloadOrder,
       defaultToDeleteFiles: prefs.safeGet<bool>(_defaultToDeleteFilesKey) ?? def.defaultToDeleteFiles,
       downloadPagesTogether: prefs.safeGet<int>(_downloadPagesTogetherKey) ?? def.downloadPagesTogether,
+      defaultToOnlineMode: prefs.safeGet<bool>(_defaultToOnlineModeKey) ?? def.defaultToOnlineMode,
     );
     AppSetting.instance.update(dl: setting);
   }
@@ -86,6 +88,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_invertDownloadOrderKey, setting.invertDownloadOrder);
     await prefs.safeSet<bool>(_defaultToDeleteFilesKey, setting.defaultToDeleteFiles);
     await prefs.safeSet<int>(_downloadPagesTogetherKey, setting.downloadPagesTogether);
+    await prefs.safeSet<bool>(_defaultToOnlineModeKey, setting.defaultToOnlineMode);
   }
 
   static const _timeoutBehaviorKey = IntKey('AppSettingPrefs_timeoutBehavior');

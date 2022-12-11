@@ -34,8 +34,8 @@ class MangaGalleryView extends StatefulWidget {
   }) : super(key: key);
 
   final int imageCount;
-  final List<String> imageUrls;
-  final List<Future<String>> imageUrlFutures;
+  final List<String>? imageUrls;
+  final List<Future<String?>> imageUrlFutures;
   final List<Future<File?>> imageFileFutures;
   final Duration? networkTimeout;
   final int preloadPagesCount;
@@ -132,7 +132,9 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             text: Text('重新加载'),
             onPressed: () async {
               Navigator.of(c).pop();
-              await _cache.removeFile(widget.imageUrls[index]);
+              if (widget.imageUrls != null) {
+                await _cache.removeFile(widget.imageUrls![index]);
+              }
               if (!widget.verticalScroll) {
                 _horizontalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
               } else {
