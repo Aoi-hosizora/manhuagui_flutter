@@ -720,7 +720,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                           ),
                         if (_downloadChapter != null)
                           AppBarActionButton(
-                            icon: Icon(_downloadChapter!.succeeded ? Icons.download_done : Icons.download),
+                            icon: Icon(_downloadChapter!.succeeded && !_downloadChapter!.needUpdate ? Icons.download_done : Icons.vertical_align_bottom),
                             tooltip: '下载情况',
                             highlightColor: Colors.transparent,
                             onPressed: () => showDialog(
@@ -728,14 +728,20 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                               builder: (c) => AlertDialog(
                                 title: Text('下载情况'),
                                 content: Text(
-                                  '该章节' + (!_downloadChapter!.tried ? '正在等待下载。' : (!_downloadChapter!.succeeded ? '仅部分页下载完成。' : '已下载完成。')),
+                                  !_downloadChapter!.tried
+                                      ? '该章节正在等待下载。'
+                                      : !_downloadChapter!.succeeded
+                                          ? '该章节仅部分页下载完成。'
+                                          : _downloadChapter!.needUpdate
+                                              ? '该章节需要下载更新数据。'
+                                              : '该章节已下载完成。',
                                 ),
                                 actions: [
                                   TextButton(
                                     child: Text('查看'),
                                     onPressed: () {
                                       Navigator.of(c).pop();
-                                      _showDownloadedManga(gotoDownloading: !_downloadChapter!.tried || !_downloadChapter!.succeeded);
+                                      _showDownloadedManga(gotoDownloading: !_downloadChapter!.tried || !_downloadChapter!.succeeded || _downloadChapter!.needUpdate);
                                     },
                                   ),
                                   TextButton(
@@ -792,7 +798,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     onShareImage: (imageIndex) => shareText(
                       title: '漫画柜分享',
                       text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第$imageIndex页' + //
-                          _data!.pages[imageIndex - 1].let((url) => isPageUrlValidInMetadata(url) ? ' $url' : ''),
+                          _data!.pages[imageIndex - 1].let((url) => isPageUrlValidInMetadata(url) ? ' $url' : ' ${_data!.mangaUrl}'),
                     ),
                     onCenterAreaTapped: () {
                       _ScreenHelper.toggleAppBarVisibility(show: !_ScreenHelper.showAppBar, fullscreen: _setting.fullscreen);

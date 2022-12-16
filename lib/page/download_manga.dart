@@ -25,7 +25,7 @@ import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 漫画章节下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
+/// 下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
 class DownloadMangaPage extends StatefulWidget {
   const DownloadMangaPage({
     Key? key,
@@ -74,43 +74,35 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
     WidgetsBinding.instance?.addPostFrameCallback((_) => widget.gotoDownloading.ifTrue(() => _tabController.animateTo(1)));
 
-    // progress related
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
-      if (event.mangaId != widget.mangaId) {
-        return;
-      }
-      if (event.finished) {
-        _task = null;
-        if (mounted) setState(() {});
-      } else {
-        _task = QueueManager.instance.getDownloadMangaQueueTask(event.mangaId);
-        if (mounted) setState(() {});
-        if (_task != null && (_task!.progress.stage == DownloadMangaProgressStage.waiting || _task!.progress.stage == DownloadMangaProgressStage.gotChapter)) {
-          getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
-            _byte = b; // 只有在最开始等待、以及每次获得新章节时才遍历统计文件大小
-            if (mounted) setState(() {});
-          });
+    Tuple2<void Function(int, bool), void Function(int)> _updateData() /* TODO 后续需要移动该方法 */ {
+      void throughProgress(final int mangaId, final bool finished) async {
+        if (mangaId != widget.mangaId) return;
+        var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
+        if (finished) {
+          mountedSetState(() => _task = null);
+        } else if (task != null) {
+          mountedSetState(() => _task = task);
+          if (task.progress.stage == DownloadMangaProgressStage.waiting || task.progress.stage == DownloadMangaProgressStage.gotChapter) {
+            getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _byte = b)); // 仅在最开始等待、以及每次获得新章节时才统计文件大小
+          }
         }
       }
-    }));
 
-    // entity related
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-      if (event.mangaId != widget.mangaId) {
-        return;
+      void throughEntity(final int mangaId) async {
+        if (mangaId != widget.mangaId) return;
+        var entity = await DownloadDao.getManga(mid: mangaId);
+        if (entity != null) {
+          mountedSetState(() => _entity = entity);
+          getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次数据库发生变化时都统计文件大小
+        }
       }
-      var newEntity = await DownloadDao.getManga(mid: event.mangaId);
-      if (newEntity != null) {
-        _entity = newEntity;
-        if (mounted) setState(() {});
-        getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
-          _byte = b; // 在每次数据库发生变化时都遍历统计文件大小
-          if (mounted) setState(() {});
-        });
-      }
-    }));
 
-    // history related
+      return Tuple2(throughProgress, throughEntity);
+    }
+
+    var updater = _updateData();
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((ev) => updater.item2(ev.mangaId)));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
@@ -154,10 +146,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       _entity = data;
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-      getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) {
-        _byte = b; // 在每次刷新获取漫画下载记录时遍历统计文件大小
-        if (mounted) setState(() {});
-      });
+      getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次刷新时都重新统计文件大小
     } else {
       _error = '无法获取漫画下载记录';
     }
@@ -179,22 +168,48 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     }
   }
 
-  Future<void> _startOrPause({required bool start}) async {
+  Future<void> _startOrPauseManga({required bool start}) async {
     if (!start) {
       // 暂停 => 获取最新的任务，并取消
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
-      _task?.cancel();
+      if (_task != null && !_task!.cancelRequested) {
+        _task?.cancel();
+      }
       return;
     }
 
-    // 开始 => 快速构造下载任务，同步更新数据库，并入队异步等待执行
+    // 开始 => 构造任务、同步准备、入队
     await quickBuildDownloadMangaQueueTask(
       mangaId: _entity!.mangaId,
       mangaTitle: _entity!.mangaTitle,
       mangaCover: _entity!.mangaCover,
       mangaUrl: _entity!.mangaUrl,
       chapterIds: _entity!.downloadedChapters.map((el) => el.chapterId).toList(),
-      addToTask: true,
+      alsoAddTask: true,
+      throughGroupList: null,
+      throughChapterList: _entity!.downloadedChapters,
+    );
+  }
+
+  Future<void> _startOrPauseChapter(int chapterId, {required bool start}) async {
+    if (!start) {
+      // 暂停 => 获取最新的任务，并取消
+      print('_startOrPauseChapter 暂停下载章节 $chapterId');
+      _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
+      _task?.cancelChapter(chapterId);
+      return;
+    }
+
+    // 开始 => 构造任务、同步准备、入队
+    print('_startOrPauseChapter 下载章节 $chapterId');
+    await quickBuildDownloadMangaQueueTask(
+      mangaId: _entity!.mangaId,
+      mangaTitle: _entity!.mangaTitle,
+      mangaCover: _entity!.mangaCover,
+      mangaUrl: _entity!.mangaUrl,
+      chapterIds: [chapterId],
+      alsoAddTask: true,
+      throughGroupList: null,
       throughChapterList: _entity!.downloadedChapters,
     );
   }
@@ -212,8 +227,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
           chapterGroups: _mangaData?.chapterGroups /* nullable */,
           initialPage: _history?.chapterId == chapterId
               ? _history?.chapterPage ?? 1 // have read
-              : 1,
-          // have not read
+              : 1 /* have not read */,
           onlineMode: _onlineMode,
         ),
       ),
@@ -223,7 +237,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   Future<void> _deleteChapter(DownloadedChapter entity) async {
     _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
     if (_task != null) {
-      Fluttertoast.showToast(msg: '请先暂停下载，再删除章节');
+      Fluttertoast.showToast(msg: '请先暂停下载，然后再删除该章节');
       return;
     }
 
@@ -237,7 +251,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除漫画章节《${_entity!.mangaTitle}》${entity.chapterTitle}？'),
+              Text('是否删除《${_entity!.mangaTitle}》${entity.chapterTitle}？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -260,14 +274,10 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 _entity!.downloadedChapters.remove(entity);
                 await DownloadDao.deleteChapter(mid: entity.mangaId, cid: entity.chapterId);
                 if (mounted) setState(() {});
-
                 await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
                 if (alsoDeleteFile) {
                   await deleteDownloadedChapter(mangaId: entity.mangaId, chapterId: entity.chapterId);
-                  getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) {
-                    _byte = b;
-                    if (mounted) setState(() {});
-                  });
+                  getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) => mountedSetState(() => _byte = b)); // 删除文件后遍历统计文件大小
                 }
               },
             ),
@@ -285,7 +295,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   Widget build(BuildContext context) {
     return DrawerScaffold(
       appBar: AppBar(
-        title: Text('漫画章节下载管理'),
+        title: Text('漫画下载管理'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
@@ -341,7 +351,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     // ****************************************************************
                     Container(
                       color: Colors.white,
-                      child: LargeDownloadMangaLineView(
+                      child: DownloadMangaBlockView(
                         mangaEntity: _entity!,
                         downloadTask: _task,
                         downloadedBytes: _byte,
@@ -349,7 +359,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     ),
                     Container(height: 12),
                     // ****************************************************************
-                    // 四个按钮
+                    // 五个按钮
                     // ****************************************************************
                     Container(
                       color: Colors.white,
@@ -385,12 +395,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         action4: ActionItem.simple(
                           '开始下载',
                           Icons.play_arrow,
-                          () => _startOrPause(start: true),
+                          () => _startOrPauseManga(start: true),
                         ),
                         action5: ActionItem.simple(
                           '暂停下载',
                           Icons.pause,
-                          () => _startOrPause(start: false),
+                          () => _startOrPauseManga(start: false),
                         ),
                       ),
                     ),
@@ -469,9 +479,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   mangaEntity: _entity!,
                   downloadTask: _task,
                   invertOrder: _invertOrder,
-                  toControlChapter: (cid) {
-                    Fluttertoast.showToast(msg: '目前暂不支持单独下载或暂停某一章节'); // TODO 单个漫画下载特定章节/按照特定顺序下载
-                  },
+                  toControlChapter: _startOrPauseChapter,
                   toReadChapter: _readChapter,
                   toDeleteChapter: (cid) async {
                     var chapterEntity = _entity!.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;

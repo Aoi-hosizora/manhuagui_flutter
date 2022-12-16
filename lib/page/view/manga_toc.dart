@@ -238,7 +238,7 @@ class DownloadBadge extends StatelessWidget {
         ),
         child: Icon(
           state == DownloadBadgeState.downloading
-              ? Icons.download
+              ? Icons.vertical_align_bottom
               : state == DownloadBadgeState.done
                   ? Icons.file_download_done
                   : Icons.priority_high,
@@ -254,7 +254,7 @@ class DownloadBadge extends StatelessWidget {
       return null;
     }
     return DownloadBadge(
-      state: !entity.allTried
+      state: !entity.allTried || entity.needUpdate
           ? DownloadBadgeState.downloading
           : entity.succeeded
               ? DownloadBadgeState.done

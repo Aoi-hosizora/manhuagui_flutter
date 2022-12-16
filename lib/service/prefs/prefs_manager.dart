@@ -33,7 +33,7 @@ class PrefsManager {
   static const _newestVersion = 3;
 
   Future<void> upgradePrefs(SharedPreferences prefs) async {
-    var version = prefs.getVersion();
+    var version = prefs.getVersion(); // TODO 默认的版本号是 1 还是 newest? 需要防止首次 load 时 upgrade
     if (version == _newestVersion) {
       return;
     }

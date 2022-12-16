@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/warning_text.dart';
@@ -40,14 +42,14 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _getDownloadedChapters(); // get in async
+      _loadDownloadedChapters(); // get in async
       await Future.delayed(Duration(milliseconds: 400));
       _loading = false;
       if (mounted) setState(() {});
     });
     _cancelHandler = EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
       if (event.mangaId == widget.mangaId) {
-        await _getDownloadedChapters();
+        await _loadDownloadedChapters();
       }
     });
   }
@@ -62,7 +64,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
   final _selected = <int>[];
   final _downloadedChapters = <DownloadedChapter>[];
 
-  Future<void> _getDownloadedChapters() async {
+  Future<void> _loadDownloadedChapters() async {
     var entity = await DownloadDao.getManga(mid: widget.mangaId);
     _downloadedChapters.clear();
     _downloadedChapters.addAll(entity?.downloadedChapters ?? []);
@@ -72,43 +74,12 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
   Future<void> _downloadManga() async {
     // 1. 获取需要下载的章节
     if (_selected.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text('下载'),
-          content: Text('请选择需要下载的章节。'),
-          actions: [
-            TextButton(
-              child: Text('确定'),
-              onPressed: () => Navigator.of(c).pop(),
-            ),
-          ],
-        ),
-      );
+      Fluttertoast.showToast(msg: '请选择需要下载的章节');
       return;
     }
-    var chapterIds = <int>[];
-    for (var cid in _selected) {
-      var oldChapter = _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-      if (oldChapter != null && oldChapter.succeeded) {
-        continue; // 过滤掉已下载成功的章节
-      }
-      chapterIds.add(cid);
-    }
+    var chapterIds = filterNeedDownloadChapterIds(chapterIds: _selected, downloadedChapters: _downloadedChapters);
     if (chapterIds.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text('下载'),
-          content: Text('所选章节均已下载完毕。'),
-          actions: [
-            TextButton(
-              child: Text('确定'),
-              onPressed: () => Navigator.of(c).pop(),
-            ),
-          ],
-        ),
-      );
+      Fluttertoast.showToast(msg: '所选章节均已下载完毕');
       return;
     }
 
@@ -119,14 +90,8 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
         title: Text('下载确认'),
         content: Text('确定下载所选的 ${chapterIds.length} 个章节吗？'),
         actions: [
-          TextButton(
-            child: Text('下载'),
-            onPressed: () => Navigator.of(c).pop(true),
-          ),
-          TextButton(
-            child: Text('取消'),
-            onPressed: () => Navigator.of(c).pop(false),
-          ),
+          TextButton(child: Text('下载'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
         ],
       ),
     );
@@ -141,13 +106,13 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
       chapterIds: chapterIds.toList(),
-      addToTask: true,
+      alsoAddTask: true,
       throughGroupList: widget.groups,
       throughChapterList: null,
     );
 
     // 4. 更新界面，并显示提示
-    await _getDownloadedChapters();
+    await _loadDownloadedChapters();
     _selected.clear();
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -173,6 +138,31 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
     );
   }
 
+  var _isAllSelected = false;
+
+  void _selectChapter(int cid) {
+    if (!_selected.contains(cid)) {
+      _selected.add(cid);
+    } else {
+      _selected.remove(cid);
+    }
+    _isAllSelected = _selected.length == widget.groups.expand((group) => group.chapters.map((chapter) => chapter.cid)).length;
+    if (mounted) setState(() {});
+  }
+
+  void _selectAllOrUnselectAll() {
+    var allChapterIds = widget.groups.expand((group) => group.chapters.map((chapter) => chapter.cid));
+    if (_selected.length == allChapterIds.length) {
+      _selected.clear(); // unselect all
+      _isAllSelected = false;
+    } else {
+      _selected.clear();
+      _selected.addAll(allChapterIds); // select all
+      _isAllSelected = true;
+    }
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -186,18 +176,19 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
             onPressed: () => _downloadManga(),
           ),
           AppBarActionButton(
-            icon: Icon(Icons.select_all),
-            tooltip: '全选',
-            onPressed: () {
-              var allChapterIds = widget.groups.expand((group) => group.chapters.map((chapter) => chapter.cid)).toList();
-              if (_selected.length == allChapterIds.length) {
-                _selected.clear();
-              } else {
-                _selected.clear();
-                _selected.addAll(allChapterIds);
-              }
-              if (mounted) setState(() {});
-            },
+            icon: Icon(!_isAllSelected ? Icons.select_all : Icons.deselect),
+            tooltip: !_isAllSelected ? '全选' : '取消全选',
+            onPressed: _selectAllOrUnselectAll,
+          ),
+          AppBarActionButton(
+            icon: Icon(Icons.list),
+            tooltip: '查看下载列表',
+            onPressed: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => DownloadPage(),
+              ),
+            ),
           ),
         ],
       ),
@@ -227,23 +218,18 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),
-                  onChapterPressed: (cid) {
-                    if (!_selected.contains(cid)) {
-                      _selected.add(cid);
-                    } else {
-                      _selected.remove(cid);
-                    }
-                    if (mounted) setState(() {});
-                  },
+                  onChapterPressed: _selectChapter,
                 ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: _loading
-          ? null
-          : ScrollAnimatedFab(
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!_loading)
+            ScrollAnimatedFab(
               scrollController: _controller,
               condition: ScrollAnimatedCondition.direction,
               fab: FloatingActionButton(
@@ -252,6 +238,15 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                 onPressed: () => _controller.scrollToTop(),
               ),
             ),
+          // SizedBox(height: kFloatingActionButtonMargin),
+          // FloatingActionButton(
+          //   child: Icon(!_isAllSelected ? Icons.select_all : Icons.deselect),
+          //   tooltip: !_isAllSelected ? '全选' : '取消全选',
+          //   heroTag: null,
+          //   onPressed: _selectAllOrUnselectAll,
+          // ),
+        ],
+      ),
     );
   }
 }

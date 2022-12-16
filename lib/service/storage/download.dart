@@ -239,7 +239,9 @@ Future<bool> deleteDownloadedChapter({required int mangaId, required int chapter
   try {
     var mangaPath = await _getDownloadMangaDirectoryPath(mangaId, chapterId);
     var directory = Directory(mangaPath);
-    await directory.delete(recursive: true);
+    if (await directory.exists()) {
+      await directory.delete(recursive: true);
+    }
     return true;
   } catch (e, s) {
     globalLogger.e('deleteDownloadedChapter', e, s);

@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
-/// 章节下载管理页-未完成
+/// 下载管理页-未完成
 class DlUnfinishedSubPage extends StatefulWidget {
   const DlUnfinishedSubPage({
     Key? key,
@@ -25,7 +25,7 @@ class DlUnfinishedSubPage extends StatefulWidget {
   final DownloadedManga mangaEntity;
   final DownloadMangaQueueTask? downloadTask;
   final bool invertOrder;
-  final void Function(int cid) toControlChapter;
+  final void Function(int cid, {required bool start}) toControlChapter;
   final void Function(int cid) toReadChapter;
   final void Function(int cid) toDeleteChapter;
 
@@ -40,8 +40,8 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var unfinishedChapters = widget.mangaEntity.downloadedChapters //
-        .where((el) => !el.succeeded || el.needUpdate)
+    var unfinishedChapters = widget.mangaEntity.downloadedChapters
+        // .where((el) => !el.succeeded || el.needUpdate) // 仅包括未下载成功或需要更新的章节 // TODO 添加所有任务 SubPage
         .toList();
     if (!widget.invertOrder) {
       unfinishedChapters.sort((i, j) => i.chapterId.compareTo(j.chapterId));
@@ -54,6 +54,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
         controller: widget.innerController,
         interactive: true,
         crossAxisMargin: 2,
+        extraMargin: EdgeInsets.only(top: widget.injectorHandler.layoutExtent ?? 0),
         child: CustomScrollView(
           controller: widget.innerController,
           physics: AlwaysScrollableScrollPhysics(),
@@ -84,9 +85,10 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                         child: DownloadChapterLineView(
                           chapterEntity: chapter,
                           downloadTask: widget.downloadTask,
-                          onPressedWhenEnabled: () => widget.toControlChapter.call(chapter.chapterId),
-                          onPressedWhenDisabled: () => widget.toReadChapter.call(chapter.chapterId),
+                          onPressed: () => widget.toReadChapter.call(chapter.chapterId),
                           onLongPressed: () => widget.toDeleteChapter.call(chapter.chapterId),
+                          onIconPressedForStart: () => widget.toControlChapter.call(chapter.chapterId, start: true),
+                          onIconPressedForPause: () => widget.toControlChapter.call(chapter.chapterId, start: false),
                         ),
                       ),
                   ].separate(

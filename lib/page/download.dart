@@ -34,40 +34,36 @@ class _DownloadPageState extends State<DownloadPage> {
   void initState() {
     super.initState();
 
-    // progress related
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((event) async {
-      if (event.finished) {
-        _tasks.removeWhere((key, _) => key == event.mangaId);
-        if (mounted) setState(() {});
-      } else {
-        var task = QueueManager.instance.getDownloadMangaQueueTask(event.mangaId);
-        if (task != null) {
-          _tasks[event.mangaId] = task;
-          if (mounted) setState(() {});
+    Tuple2<void Function(int, bool), void Function(int)> _updateData() /* TODO 后续需要移动该方法 */ {
+      void throughProgress(final int mangaId, final bool finished) async {
+        var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
+        if (finished) {
+          mountedSetState(() => _tasks.removeWhere((key, _) => key == mangaId));
+        } else if (task != null) {
+          mountedSetState(() => _tasks[mangaId] = task);
           if (task.progress.stage == DownloadMangaProgressStage.waiting || task.progress.stage == DownloadMangaProgressStage.gotChapter) {
-            getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
-              _bytes[event.mangaId] = b; // 只有在最开始等待、以及每次获得新章节时才遍历统计文件大小
-              if (mounted) setState(() {});
-            });
+            getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 仅在最开始等待、以及每次获得新章节时才统计文件大小
           }
         }
       }
-    }));
 
-    // entity related
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-      var newEntity = await DownloadDao.getManga(mid: event.mangaId);
-      if (newEntity != null) {
-        _data.removeWhere((el) => el.mangaId == event.mangaId);
-        _data.insert(0, newEntity);
-        _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-        if (mounted) setState(() {});
-        getDownloadedMangaBytes(mangaId: event.mangaId).then((b) {
-          _bytes[event.mangaId] = b; // 在每次数据库发生变化时都遍历统计文件大小
+      void throughEntity(final int mangaId) async {
+        var entity = await DownloadDao.getManga(mid: mangaId);
+        if (entity != null) {
+          _data.removeWhere((el) => el.mangaId == mangaId);
+          _data.insert(0, entity);
+          _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           if (mounted) setState(() {});
-        });
+          getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 在每次数据库发生变化时都统计文件大小
+        }
       }
-    }));
+
+      return Tuple2(throughProgress, throughEntity);
+    }
+
+    var updater = _updateData();
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((ev) => updater.item2(ev.mangaId)));
   }
 
   @override
@@ -92,35 +88,36 @@ class _DownloadPageState extends State<DownloadPage> {
     }
     if (mounted) setState(() {});
     for (var entity in data) {
-      getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) {
-        _bytes[entity.mangaId] = b;
-        if (mounted) setState(() {});
-      });
+      getDownloadedMangaBytes(mangaId: entity.mangaId).then((b) => mountedSetState(() => _bytes[entity.mangaId] = b)); // 在每次刷新时都重新统计文件大小
     }
     return data;
   }
 
-  Future<DownloadMangaQueueTask?> _pauseOrContinue({required DownloadedManga entity, required DownloadMangaQueueTask? task, bool addTask = true}) async {
-    if (task != null && !task.canceled && !task.succeeded) {
+  Future<DownloadMangaQueueTask?> _pauseOrContinue({
+    required bool toPause,
+    required DownloadedManga entity,
+    required DownloadMangaQueueTask? task,
+    bool addTask = true,
+  }) async /* TODO 后续需要移动该方法 */ {
+    if (toPause) {
       // 暂停 => 取消任务
-      task.cancel();
+      if (task != null && !task.cancelRequested) {
+        task.cancel();
+      }
       return null;
     }
 
-    // 继续 => 快速构造下载任务，同步更新数据库，并根据 addTask 参数按要求入队
-    DownloadMangaQueueTask? newTask = await quickBuildDownloadMangaQueueTask(
+    // 继续 => 构造任务、同步准备、入队
+    return await quickBuildDownloadMangaQueueTask(
       mangaId: entity.mangaId,
       mangaTitle: entity.mangaTitle,
       mangaCover: entity.mangaCover,
       mangaUrl: entity.mangaUrl,
       chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
-      addToTask: false,
+      alsoAddTask: addTask /* <<< */,
+      throughGroupList: null,
       throughChapterList: entity.downloadedChapters,
     );
-    if (addTask && newTask != null) {
-      QueueManager.instance.addTask(newTask);
-    }
-    return newTask;
   }
 
   Future<void> _deleteManga(DownloadedManga entity) async {
@@ -134,7 +131,7 @@ class _DownloadPageState extends State<DownloadPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除漫画《${entity.mangaTitle}》？'),
+              Text('是否删除《${entity.mangaTitle}》？'),
               SizedBox(height: 5),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -159,7 +156,6 @@ class _DownloadPageState extends State<DownloadPage> {
                 await DownloadDao.deleteManga(mid: entity.mangaId);
                 await DownloadDao.deleteAllChapters(mid: entity.mangaId);
                 if (mounted) setState(() {});
-
                 await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
                 if (alsoDeleteFile) {
                   await deleteDownloadedManga(mangaId: entity.mangaId);
@@ -178,7 +174,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
   Completer<void>? _allStartCompleter;
 
-  Future<void> _allStartOrPause({required bool allStart}) async {
+  Future<void> _allStartOrPause({required bool allStart}) async /* TODO 后续需要移动该方法 */ {
     if (allStart) {
       // => 全部开始
 
@@ -188,19 +184,20 @@ class _DownloadPageState extends State<DownloadPage> {
       }
       _allStartCompleter = Completer<void>();
 
-      // 2. 逐漫画继续下载，异步，并等待所有"下载准备"结束
-      var entities = await DownloadDao.getMangas() ?? _data;
+      // 2. 逐漫画"继续下载"，异步，并等待所有"准备下载"结束
+      var entities = await DownloadDao.getMangas() ?? _data; // 按照下载时间逆序
       var tasks = QueueManager.instance.getDownloadMangaQueueTasks();
-      var prepares = <Future<DownloadMangaQueueTask?>>[];
+      var prepareFutures = <Future<DownloadMangaQueueTask?>>[];
       for (var entity in entities) {
         var task = tasks.where((el) => el.mangaId == entity.mangaId).firstOrNull;
-        if (task == null || !task.canceled) {
-          prepares.add(_pauseOrContinue(entity: entity, task: null, addTask: false));
+        if (task == null || task.cancelRequested) {
+          // 继续下载但暂不入队，等待所有任务准备结束再一起入队
+          prepareFutures.add(_pauseOrContinue(toPause: false, entity: entity, task: null, addTask: false));
         }
       }
-      var newTasks = await Future.wait(prepares);
+      var newTasks = await Future.wait(prepareFutures);
 
-      // 3. 按照下载时间逆序，并将新的下载任务入队
+      // 3. 按照下载时间逆序，将新的已准备好的下载任务一起入队
       var newTaskMap = <int, DownloadMangaQueueTask>{};
       for (var task in newTasks) {
         if (task != null) {
@@ -210,7 +207,7 @@ class _DownloadPageState extends State<DownloadPage> {
       for (var entity in entities) {
         var newTask = newTaskMap[entity.mangaId];
         if (newTask != null) {
-          QueueManager.instance.addTask(newTask);
+          QueueManager.instance.addTask(newTask); // 一起入队
         }
       }
 
@@ -222,7 +219,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
       // 1. 先取消目前所有的任务
       for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
-        if (!t.canceled) {
+        if (!t.cancelRequested) {
           t.cancel();
         }
       }
@@ -232,7 +229,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
       // 3. 再取消"全部开始"结束后所有的任务
       for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
-        if (!t.canceled) {
+        if (!t.cancelRequested) {
           t.cancel();
         }
       }
@@ -288,7 +285,7 @@ class _DownloadPageState extends State<DownloadPage> {
             mangaEntity: entity,
             downloadTask: task,
             downloadedBytes: _bytes[entity.mangaId] ?? 0,
-            onActionPressed: () => _pauseOrContinue(entity: entity, task: task),
+            onActionPressed: () => _pauseOrContinue(toPause: task != null, entity: entity, task: task),
             onLinePressed: () => Navigator.of(context).push(
               CustomPageRoute(
                 context: context,
