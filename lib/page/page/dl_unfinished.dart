@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
-/// 下载管理页-未完成
+/// 下载管理页-未完成/所有章节
 class DlUnfinishedSubPage extends StatefulWidget {
   const DlUnfinishedSubPage({
     Key? key,
@@ -13,10 +13,12 @@ class DlUnfinishedSubPage extends StatefulWidget {
     required this.injectorHandler,
     required this.mangaEntity,
     required this.downloadTask,
+    required this.showAllChapters,
     required this.invertOrder,
-    required this.toControlChapter,
     required this.toReadChapter,
     required this.toDeleteChapter,
+    required this.toControlChapter,
+    required this.toAdjustChapter,
   }) : super(key: key);
 
   final ScrollController innerController;
@@ -24,10 +26,12 @@ class DlUnfinishedSubPage extends StatefulWidget {
   final SliverOverlapAbsorberHandle injectorHandler;
   final DownloadedManga mangaEntity;
   final DownloadMangaQueueTask? downloadTask;
+  final bool showAllChapters;
   final bool invertOrder;
-  final void Function(int cid, {required bool start}) toControlChapter;
   final void Function(int cid) toReadChapter;
   final void Function(int cid) toDeleteChapter;
+  final void Function(int cid, {required bool start}) toControlChapter;
+  final void Function(int cid) toAdjustChapter;
 
   @override
   State<DlUnfinishedSubPage> createState() => _DlUnfinishedSubPageState();
@@ -40,9 +44,15 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var unfinishedChapters = widget.mangaEntity.downloadedChapters
-        // .where((el) => !el.succeeded || el.needUpdate) // 仅包括未下载成功或需要更新的章节 // TODO 添加所有任务 SubPage
-        .toList();
+    List<DownloadedChapter> unfinishedChapters;
+    if (!widget.showAllChapters) {
+      unfinishedChapters = widget.mangaEntity.downloadedChapters
+          .where((el) => !el.succeeded || el.needUpdate) // 仅包括未下载成功或需要更新的章节
+          .toList();
+    } else {
+      unfinishedChapters = widget.mangaEntity.downloadedChapters // 包括所有章节
+          .toList();
+    }
     if (!widget.invertOrder) {
       unfinishedChapters.sort((i, j) => i.chapterId.compareTo(j.chapterId));
     } else {
@@ -87,8 +97,9 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                           downloadTask: widget.downloadTask,
                           onPressed: () => widget.toReadChapter.call(chapter.chapterId),
                           onLongPressed: () => widget.toDeleteChapter.call(chapter.chapterId),
-                          onIconPressedForStart: () => widget.toControlChapter.call(chapter.chapterId, start: true),
-                          onIconPressedForPause: () => widget.toControlChapter.call(chapter.chapterId, start: false),
+                          onPauseIconPressed: () => widget.toControlChapter.call(chapter.chapterId, start: false),
+                          onStartIconPressed: () => widget.toControlChapter.call(chapter.chapterId, start: true),
+                          onIconLongPressed: () => widget.toAdjustChapter.call(chapter.chapterId),
                         ),
                       ),
                   ].separate(

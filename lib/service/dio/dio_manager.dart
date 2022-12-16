@@ -44,20 +44,18 @@ class DioManager {
   }
 }
 
-// TODO
-
 class LogInterceptor extends Interceptor {
   @override
   Future onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     print('┌─────────────────── Request ─────────────────────┐');
-    // print('date: ${DateTime.now().toIso8601String()}');
+    print('date: ${DateTime.now().toIso8601String()}');
     print('uri: ${options.uri}');
     print('method: ${options.method}');
-    // if (options.extra.isNotEmpty) {
-    //   print('extra: ${options.extra}');
-    // }
-    // print('headers:');
-    // options.headers.forEach((key, v) => print('    $key: $v'));
+    if (options.extra.isNotEmpty) {
+      print('extra: ${options.extra}');
+    }
+    print('headers:');
+    options.headers.forEach((key, v) => print('    $key: $v'));
     print('└─────────────────── Request ─────────────────────┘');
     return super.onRequest(options, handler);
   }
@@ -88,10 +86,10 @@ class LogInterceptor extends Interceptor {
   void _printResponse(Response response) {
     print('uri: ${response.requestOptions.uri}');
     print('method: ${response.requestOptions.method}');
-    // print('statusCode: ${response.statusCode}');
-    // if (!response.headers.isEmpty) {
-    //   print('headers:');
-    //   response.headers.forEach((key, v) => print('    $key: ${v.join(',')}'));
-    // }
+    print('statusCode: ${response.statusCode}');
+    if (!response.headers.isEmpty) {
+      print('headers:');
+      response.headers.forEach((key, v) => print('    $key: ${v.join(',')}'));
+    }
   }
 }

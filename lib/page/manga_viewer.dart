@@ -720,7 +720,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                           ),
                         if (_downloadChapter != null)
                           AppBarActionButton(
-                            icon: Icon(_downloadChapter!.succeeded && !_downloadChapter!.needUpdate ? Icons.download_done : Icons.vertical_align_bottom),
+                            icon: Icon(_downloadChapter!.succeeded && !_downloadChapter!.needUpdate ? Icons.file_download_done : Icons.downloading),
                             tooltip: '下载情况',
                             highlightColor: Colors.transparent,
                             onPressed: () => showDialog(

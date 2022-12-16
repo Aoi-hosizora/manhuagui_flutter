@@ -238,7 +238,7 @@ class DownloadBadge extends StatelessWidget {
         ),
         child: Icon(
           state == DownloadBadgeState.downloading
-              ? Icons.vertical_align_bottom
+              ? Icons.download
               : state == DownloadBadgeState.done
                   ? Icons.file_download_done
                   : Icons.priority_high,

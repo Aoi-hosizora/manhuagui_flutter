@@ -33,7 +33,7 @@ class PrefsManager {
   static const _newestVersion = 3;
 
   Future<void> upgradePrefs(SharedPreferences prefs) async {
-    var version = prefs.getVersion(); // TODO 默认的版本号是 1 还是 newest? 需要防止首次 load 时 upgrade
+    var version = prefs.getVersion();
     if (version == _newestVersion) {
       return;
     }
@@ -71,12 +71,13 @@ typedef StringListKey = TypedKey<List<String>>;
 
 extension SharedPreferencesExtension on SharedPreferences {
   int getVersion() {
+    int? version;
     try {
-      return getInt('VERSION') ?? 1;
+      version = getInt('VERSION');
     } catch (e, s) {
       globalLogger.e('getVersion', e, s);
-      return 1;
     }
+    return version ?? PrefsManager._newestVersion; // null version means it is the first time to load prefs
   }
 
   Future<bool> setVersion(int version) async {

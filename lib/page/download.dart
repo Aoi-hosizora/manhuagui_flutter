@@ -33,34 +33,6 @@ class _DownloadPageState extends State<DownloadPage> {
   @override
   void initState() {
     super.initState();
-
-    Tuple2<void Function(int, bool), void Function(int)> _updateData() /* TODO 后续需要移动该方法 */ {
-      void throughProgress(final int mangaId, final bool finished) async {
-        var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
-        if (finished) {
-          mountedSetState(() => _tasks.removeWhere((key, _) => key == mangaId));
-        } else if (task != null) {
-          mountedSetState(() => _tasks[mangaId] = task);
-          if (task.progress.stage == DownloadMangaProgressStage.waiting || task.progress.stage == DownloadMangaProgressStage.gotChapter) {
-            getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 仅在最开始等待、以及每次获得新章节时才统计文件大小
-          }
-        }
-      }
-
-      void throughEntity(final int mangaId) async {
-        var entity = await DownloadDao.getManga(mid: mangaId);
-        if (entity != null) {
-          _data.removeWhere((el) => el.mangaId == mangaId);
-          _data.insert(0, entity);
-          _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          if (mounted) setState(() {});
-          getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 在每次数据库发生变化时都统计文件大小
-        }
-      }
-
-      return Tuple2(throughProgress, throughEntity);
-    }
-
     var updater = _updateData();
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((ev) => updater.item2(ev.mangaId)));
@@ -93,12 +65,39 @@ class _DownloadPageState extends State<DownloadPage> {
     return data;
   }
 
+  Tuple2<void Function(int, bool), void Function(int)> _updateData() {
+    void throughProgress(final int mangaId, final bool finished) async {
+      var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
+      if (finished) {
+        mountedSetState(() => _tasks.removeWhere((key, _) => key == mangaId));
+      } else if (task != null) {
+        mountedSetState(() => _tasks[mangaId] = task);
+        if (task.progress.stage == DownloadMangaProgressStage.waiting || task.progress.stage == DownloadMangaProgressStage.gotChapter) {
+          getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 仅在最开始等待、以及每次获得新章节时才统计文件大小
+        }
+      }
+    }
+
+    void throughEntity(final int mangaId) async {
+      var entity = await DownloadDao.getManga(mid: mangaId);
+      if (entity != null) {
+        _data.removeWhere((el) => el.mangaId == mangaId);
+        _data.insert(0, entity);
+        _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        if (mounted) setState(() {});
+        getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 在每次数据库发生变化时都统计文件大小
+      }
+    }
+
+    return Tuple2(throughProgress, throughEntity);
+  }
+
   Future<DownloadMangaQueueTask?> _pauseOrContinue({
     required bool toPause,
     required DownloadedManga entity,
     required DownloadMangaQueueTask? task,
     bool addTask = true,
-  }) async /* TODO 后续需要移动该方法 */ {
+  }) async {
     if (toPause) {
       // 暂停 => 取消任务
       if (task != null && !task.cancelRequested) {
@@ -120,61 +119,9 @@ class _DownloadPageState extends State<DownloadPage> {
     );
   }
 
-  Future<void> _deleteManga(DownloadedManga entity) async {
-    var alsoDeleteFile = AppSetting.instance.dl.defaultToDeleteFiles;
-    await showDialog(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, _setState) => AlertDialog(
-          title: Text('漫画删除确认'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('是否删除《${entity.mangaTitle}》？'),
-              SizedBox(height: 5),
-              CheckboxListTile(
-                title: Text('同时删除已下载的文件'),
-                value: alsoDeleteFile,
-                onChanged: (v) {
-                  alsoDeleteFile = v ?? false;
-                  _setState(() {});
-                },
-                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: Text('删除'),
-              onPressed: () async {
-                Navigator.of(c).pop();
-                _data.remove(entity);
-                _total--;
-                await DownloadDao.deleteManga(mid: entity.mangaId);
-                await DownloadDao.deleteAllChapters(mid: entity.mangaId);
-                if (mounted) setState(() {});
-                await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
-                if (alsoDeleteFile) {
-                  await deleteDownloadedManga(mangaId: entity.mangaId);
-                }
-              },
-            ),
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(c).pop(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Completer<void>? _allStartCompleter;
 
-  Future<void> _allStartOrPause({required bool allStart}) async /* TODO 后续需要移动该方法 */ {
+  Future<void> _allStartOrPause({required bool allStart}) async {
     if (allStart) {
       // => 全部开始
 
@@ -234,6 +181,58 @@ class _DownloadPageState extends State<DownloadPage> {
         }
       }
     }
+  }
+
+  Future<void> _deleteManga(DownloadedManga entity) async {
+    var alsoDeleteFile = AppSetting.instance.dl.defaultToDeleteFiles;
+    await showDialog(
+      context: context,
+      builder: (c) => StatefulBuilder(
+        builder: (c, _setState) => AlertDialog(
+          title: Text('漫画删除确认'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('是否删除《${entity.mangaTitle}》？'),
+              SizedBox(height: 5),
+              CheckboxListTile(
+                title: Text('同时删除已下载的文件'),
+                value: alsoDeleteFile,
+                onChanged: (v) {
+                  alsoDeleteFile = v ?? false;
+                  _setState(() {});
+                },
+                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text('删除'),
+              onPressed: () async {
+                Navigator.of(c).pop();
+                _data.remove(entity);
+                _total--;
+                await DownloadDao.deleteManga(mid: entity.mangaId);
+                await DownloadDao.deleteAllChapters(mid: entity.mangaId);
+                if (mounted) setState(() {});
+                await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
+                if (alsoDeleteFile) {
+                  await deleteDownloadedManga(mangaId: entity.mangaId);
+                }
+              },
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).pop(),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

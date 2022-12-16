@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
-/// 章节下载行，在 [DlUnfinishedSubPage] 使用（功能上实现了包括下载完和未下载完的所有状态）
+/// 章节下载行，在 [DlUnfinishedSubPage] 使用，功能上实现了包括下载完和未下载完的所有状态
 class DownloadChapterLineView extends StatelessWidget {
   const DownloadChapterLineView({
     Key? key,
@@ -10,16 +10,18 @@ class DownloadChapterLineView extends StatelessWidget {
     required this.downloadTask,
     required this.onPressed,
     this.onLongPressed,
-    required this.onIconPressedForStart,
-    required this.onIconPressedForPause,
+    required this.onPauseIconPressed,
+    required this.onStartIconPressed,
+    this.onIconLongPressed,
   }) : super(key: key);
 
   final DownloadedChapter chapterEntity;
   final DownloadMangaQueueTask? downloadTask;
   final void Function() onPressed;
   final void Function()? onLongPressed;
-  final void Function() onIconPressedForStart;
-  final void Function() onIconPressedForPause;
+  final void Function() onPauseIconPressed;
+  final void Function() onStartIconPressed;
+  final void Function()? onIconLongPressed;
 
   Widget _buildGeneral({
     required BuildContext context,
@@ -72,6 +74,7 @@ class DownloadChapterLineView extends StatelessWidget {
                 ),
               ),
               onTap: onIconPressed,
+              onLongPress: onIconLongPressed,
             ),
           ],
         ),
@@ -101,19 +104,19 @@ class DownloadChapterLineView extends StatelessWidget {
         subTitle = '$successProgressText (等待下载中)';
         progressValue = successProgressValue;
         icon = Icons.pause;
-        onIconPressed = onIconPressedForPause;
+        onIconPressed = onPauseIconPressed;
         break;
       case DownloadChapterLineStatus.preparing: // use successXXX
         subTitle = '$successProgressText (正在获取章节信息)';
         progressValue = null;
         icon = Icons.pause;
-        onIconPressed = onIconPressedForPause;
+        onIconPressed = onPauseIconPressed;
         break;
       case DownloadChapterLineStatus.downloading: // use triedXXX
         subTitle = '下载中，$triedProgressText';
         progressValue = triedProgressValue;
         icon = Icons.pause;
-        onIconPressed = onIconPressedForPause;
+        onIconPressed = onPauseIconPressed;
         break;
       case DownloadChapterLineStatus.pausing: // use triedXXX
         subTitle = '$triedProgressText (暂停中)';
@@ -125,25 +128,25 @@ class DownloadChapterLineView extends StatelessWidget {
         subTitle = '$successProgressText (${progress.unfinishedPageCount} 页未完成)';
         progressValue = successProgressValue;
         icon = Icons.play_arrow;
-        onIconPressed = onIconPressedForStart;
+        onIconPressed = onStartIconPressed;
         break;
       case DownloadChapterLineStatus.succeeded: // use successXXX
         subTitle = '已完成 ($successProgressText)';
         progressValue = successProgressValue;
         icon = Icons.file_download_done;
-        onIconPressed = onIconPressedForStart;
+        onIconPressed = onStartIconPressed;
         break;
       case DownloadChapterLineStatus.nupdate: // use successXXX
         subTitle = '已完成 (需要更新数据)';
         progressValue = successProgressValue;
-        icon = Icons.vertical_align_bottom;
-        onIconPressed = onIconPressedForStart;
+        icon = Icons.update;
+        onIconPressed = onStartIconPressed;
         break;
       case DownloadChapterLineStatus.failed: // use successXXX
         subTitle = '$successProgressText (${progress.unfinishedPageCount} 页未完成)';
         progressValue = successProgressValue;
         icon = Icons.priority_high;
-        onIconPressed = onIconPressedForStart;
+        onIconPressed = onStartIconPressed;
         break;
     }
 
@@ -254,7 +257,7 @@ class DownloadChapterLineProgress {
       return DownloadChapterLineProgress(
         status: status,
         chapterInTask: chapterInTask,
-        totalPageCount: task!.progress.currentChapter?.pageCount ?? 0 /* TODO */,
+        totalPageCount: task!.progress.currentChapter?.pageCount ?? 0,
         triedPageCount: task.progress.triedChapterPageCount ?? 0,
         successPageCount: task.progress.successChapterPageCount ?? 0,
       );

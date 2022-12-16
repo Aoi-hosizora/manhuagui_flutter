@@ -387,7 +387,7 @@ class _ScrollHelper {
       var direction = currIndex > targetIndex ? -1 /* up */ : 1 /* down */;
       controller.jumpTo(controller.offset + direction * scrollRect.height * 0.98);
       await WidgetsBinding.instance?.endOfFrame;
-      await Future.delayed(Duration(milliseconds: 20)); // wait extra duration for page building
+      await Future.delayed(Duration(milliseconds: 30)); // wait extra duration for page building
       if (controller.offset < 0 || controller.offset > 1000000) {
         return false; // almost unreachable, only for abnormal behavior
       }

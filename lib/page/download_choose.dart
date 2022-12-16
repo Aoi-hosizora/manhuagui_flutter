@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
+import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/warning_text.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -171,24 +172,53 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
-            icon: Icon(Icons.download),
-            tooltip: '下载',
-            onPressed: () => _downloadManga(),
-          ),
-          AppBarActionButton(
             icon: Icon(!_isAllSelected ? Icons.select_all : Icons.deselect),
             tooltip: !_isAllSelected ? '全选' : '取消全选',
             onPressed: _selectAllOrUnselectAll,
           ),
-          AppBarActionButton(
-            icon: Icon(Icons.list),
-            tooltip: '查看下载列表',
-            onPressed: () => Navigator.of(context).push(
-              CustomPageRoute(
-                context: context,
-                builder: (c) => DownloadPage(),
+          PopupMenuButton(
+            child: Builder(
+              builder: (c) => AppBarActionButton(
+                icon: Icon(Icons.more_vert),
+                tooltip: '更多选项',
+                onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
               ),
             ),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                child: Text('漫画下载设置'),
+                onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
+                  (_) => showDlSettingDialog(context: context),
+                ),
+              ),
+              PopupMenuItem(
+                child: Text('查看下载列表'),
+                onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
+                  (_) => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => DownloadPage(),
+                    ),
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                child: Text('查看下载任务详情'),
+                onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
+                  (_) => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => DownloadMangaPage(
+                        mangaId: widget.mangaId,
+                      ),
+                      settings: DownloadMangaPage.buildRouteSetting(
+                        mangaId: widget.mangaId,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -238,13 +268,12 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                 onPressed: () => _controller.scrollToTop(),
               ),
             ),
-          // SizedBox(height: kFloatingActionButtonMargin),
-          // FloatingActionButton(
-          //   child: Icon(!_isAllSelected ? Icons.select_all : Icons.deselect),
-          //   tooltip: !_isAllSelected ? '全选' : '取消全选',
-          //   heroTag: null,
-          //   onPressed: _selectAllOrUnselectAll,
-          // ),
+          SizedBox(height: kFloatingActionButtonMargin),
+          FloatingActionButton(
+            child: Icon(Icons.download),
+            heroTag: null,
+            onPressed: () => _downloadManga(),
+          ),
         ],
       ),
     );

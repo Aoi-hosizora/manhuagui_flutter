@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
+import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
 class DownloadNotificationHelper {
   DownloadNotificationHelper._();
@@ -111,6 +112,11 @@ class DownloadNotificationHandler extends NotificationHandler {
   @override
   void select(BuildContext? context, String channelId, int messageId, String? messageTag, Object? arguments) {
     var mangaId = messageId;
+    var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
+    if (task == null || task.hasDone == true) {
+      // 以防万一，在点击时如果下载任务已结束就同时关闭系统通知
+      DownloadNotificationHelper.cancelNotification(mangaId);
+    }
     if (context != null && !DownloadMangaPage.isCurrentRoute(context, mangaId)) {
       Navigator.of(context).push(
         CustomPageRoute(
