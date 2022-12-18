@@ -53,13 +53,16 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
 
     final client = RestClient(DioManager.instance.dio);
     try {
-      var result = await client.getGenres();
+      if (globalGenres == null) {
+        var result = await client.getGenres();
+        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+      }
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _genres.addAll(allRankingTypes);
-      _genres.addAll(result.data.data.map((c) => c.toTiny()));
+      _genres.addAll(globalGenres!);
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;

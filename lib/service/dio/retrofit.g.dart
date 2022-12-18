@@ -361,7 +361,8 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<MangaRanking>>> getDayRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getDayRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};
@@ -383,7 +384,8 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<MangaRanking>>> getWeekRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getWeekRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};
@@ -405,7 +407,8 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<MangaRanking>>> getMonthRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getMonthRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};
@@ -427,7 +430,8 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<MangaRanking>>> getTotalRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getTotalRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};

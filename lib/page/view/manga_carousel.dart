@@ -70,8 +70,8 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
                     ),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(
-                        sigmaX: 15,
-                        sigmaY: 15,
+                        sigmaX: 16,
+                        sigmaY: 16,
                       ),
                       child: Container(
                         color: Colors.white.withOpacity(0.2),
@@ -113,8 +113,8 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
           bottom: 0,
           child: Container(
             width: MediaQuery.of(context).size.width,
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            color: Colors.white.withOpacity(0.7),
+            padding: EdgeInsets.only(left: 8, right: 10, top: 4, bottom: 4),
+            color: Colors.white.withOpacity(0.75),
             child: Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

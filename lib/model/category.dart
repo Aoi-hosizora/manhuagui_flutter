@@ -45,8 +45,13 @@ class TinyCategory {
   age:    (all|shaonv|shaonian|qingnian|ertong|tongyong)
   zone:   (all|japan|hongkong|other|europe|china|korea)
   status: (all|lianzai|wanjie)
-  ranking:   (all|zone|age|genre)
+
+  ranking_durations: (day|week|month|total)
+  ranking_type:      (all|...zones|...ages|...genres)
 */
+
+// 全局漫画类别
+List<TinyCategory>? globalGenres;
 
 // 按剧情
 final allGenres = <TinyCategory>[

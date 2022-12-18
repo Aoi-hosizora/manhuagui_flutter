@@ -290,7 +290,7 @@ class _AuthorPageState extends State<AuthorPage> {
                 interactiveScrollbar: true,
                 scrollbarMainAxisMargin: 2,
                 scrollbarCrossAxisMargin: 2,
-                scrollbarExtraMargin: EdgeInsets.only(top: NestedScrollView.sliverOverlapAbsorberHandleFor(c).layoutExtent ?? 0), // TODO test
+                scrollbarExtraMargin: EdgeInsets.only(top: NestedScrollView.sliverOverlapAbsorberHandleFor(c).layoutExtent ?? 0),
                 placeholderSetting: PlaceholderSetting().copyWithChinese(),
                 onPlaceholderStateChanged: (_, __) => _fabController.hide(),
                 refreshFirst: true,

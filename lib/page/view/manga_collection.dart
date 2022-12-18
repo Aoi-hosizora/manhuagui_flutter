@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
-import 'package:manhuagui_flutter/page/view/manga_group.dart';
+import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 enum MangaCollectionType {
@@ -16,7 +16,7 @@ enum MangaCollectionType {
   downloads,
 }
 
-/// 漫画集合，仅针对每日排行、最近更新、浏览历史、我的书架、下载列表，在 [RecommendSubPage] 使用
+/// 漫画集合，针对每日排行、最近更新、浏览历史、我的书架、下载列表，在 [RecommendSubPage] 使用
 class MangaCollectionView extends StatelessWidget {
   const MangaCollectionView({
     Key? key,
@@ -55,8 +55,8 @@ class MangaCollectionView extends StatelessWidget {
         ),
       ),
       radius: BorderRadius.circular(8),
-      splashColor: null,
       highlightColor: null,
+      splashColor: null,
       onTap: () {
         if (!gotoDownload) {
           Navigator.of(context).push(
@@ -241,7 +241,7 @@ class MangaCollectionView extends StatelessWidget {
               ),
               Text(
                 manga.triedChapterIds.length == manga.totalChapterIds.length
-                    ? '已完成 (${manga.totalChapterIds.length} 章节)' //
+                    ? '已完成 (共 ${manga.totalChapterIds.length} 章节)' //
                     : '未完成 (${manga.triedChapterIds.length}/${manga.totalChapterIds.length})',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -262,7 +262,7 @@ class MangaCollectionView extends StatelessWidget {
 
     switch (type) {
       case MangaCollectionType.rankings:
-        title = '今天的漫画排行榜';
+        title = '今日漫画排行榜';
         icon = Icons.trending_up;
         widgets = ranking?.sublist(0, ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList();
         break;
@@ -288,7 +288,7 @@ class MangaCollectionView extends StatelessWidget {
         break;
     }
 
-    return MangaGroupFrameworkView(
+    return HomepageColumnView(
       title: title,
       icon: icon,
       onMorePressed: onMorePressed,

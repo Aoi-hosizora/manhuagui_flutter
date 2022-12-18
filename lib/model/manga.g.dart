@@ -190,6 +190,12 @@ HomepageMangaGroupList _$HomepageMangaGroupListFromJson(
       serial: MangaGroupList.fromJson(json['serial'] as Map<String, dynamic>),
       finish: MangaGroupList.fromJson(json['finish'] as Map<String, dynamic>),
       latest: MangaGroupList.fromJson(json['latest'] as Map<String, dynamic>),
+      daily: (json['daily'] as List<dynamic>)
+          .map((e) => MangaRanking.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      genres: (json['genres'] as List<dynamic>)
+          .map((e) => Category.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$HomepageMangaGroupListToJson(
@@ -198,9 +204,11 @@ Map<String, dynamic> _$HomepageMangaGroupListToJson(
       'serial': instance.serial,
       'finish': instance.finish,
       'latest': instance.latest,
+      'daily': instance.daily,
+      'genres': instance.genres,
     };
 
-MangaRanking _$MangaRankFromJson(Map<String, dynamic> json) => MangaRanking(
+MangaRanking _$MangaRankingFromJson(Map<String, dynamic> json) => MangaRanking(
       mid: json['mid'] as int,
       title: json['title'] as String,
       cover: json['cover'] as String,
@@ -216,7 +224,8 @@ MangaRanking _$MangaRankFromJson(Map<String, dynamic> json) => MangaRanking(
       trend: json['trend'] as int,
     );
 
-Map<String, dynamic> _$MangaRankToJson(MangaRanking instance) => <String, dynamic>{
+Map<String, dynamic> _$MangaRankingToJson(MangaRanking instance) =>
+    <String, dynamic>{
       'mid': instance.mid,
       'title': instance.title,
       'cover': instance.cover,

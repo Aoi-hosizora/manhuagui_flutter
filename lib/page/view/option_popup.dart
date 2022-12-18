@@ -56,7 +56,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
             ),
           ),
           Positioned(
-            top: itemRect.bottom + 5 + 1 /* keep the same as ListHint vertical padding + divider height */,
+            top: itemRect.bottom + 5 /* keep the same as ListHint vertical padding */,
             left: 0,
             right: 0,
             child: Container(

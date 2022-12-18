@@ -39,9 +39,11 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
     widget.action?.addAction(() => _actions[_controller.index].invoke());
     _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((_) {
       _controller.animateTo(1);
+      _selectedIndex = 1;
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((_) {
       _controller.animateTo(3);
+      _selectedIndex = 3;
     }));
   }
 

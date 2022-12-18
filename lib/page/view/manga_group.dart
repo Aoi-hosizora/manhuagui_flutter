@@ -4,29 +4,51 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
+import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 enum MangaGroupViewStyle {
   normalFull,
-  normalTruncate,
-  smallTruncate,
-  smallOneLine,
+  smallTruncated,
 }
 
-/// 漫画分组，仅针对推荐列表，在 [RecommendSubPage] / [MangaGroupPage] 使用
-class MangaGroupView extends StatelessWidget {
+/// 漫画分组，针对推荐列表（热门连载、经典完结、最新上架），在 [RecommendSubPage] / [MangaGroupPage] 使用
+class MangaGroupView extends StatefulWidget {
   const MangaGroupView({
     Key? key,
-    required this.group,
-    required this.type,
+    required this.groupList,
     required this.style,
     this.onMorePressed,
   }) : super(key: key);
 
-  final MangaGroup group;
-  final MangaGroupType type;
+  final MangaGroupList groupList;
   final MangaGroupViewStyle style;
   final void Function()? onMorePressed;
+
+  @override
+  State<MangaGroupView> createState() => _MangaGroupViewState();
+}
+
+class _MangaGroupViewState extends State<MangaGroupView> {
+  late Map<String, MangaGroup> _groupMap = {
+    '': widget.groupList.topGroup,
+    for (var g in widget.groupList.groups1) g.title: g,
+    for (var g in widget.groupList.groups2) g.title: g,
+  };
+  var _currentSelectedName = '';
+
+  @override
+  void didUpdateWidget(covariant MangaGroupView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.groupList != widget.groupList) {
+      _groupMap = {
+        '': widget.groupList.topGroup,
+        for (var g in widget.groupList.groups1) g.title: g,
+        for (var g in widget.groupList.groups2) g.title: g,
+      };
+      _currentSelectedName = '';
+    }
+  }
 
   Widget _buildItem({required BuildContext context, required TinyBlockManga manga, required double width, required double height}) {
     return Column(
@@ -42,7 +64,7 @@ class MangaGroupView extends StatelessWidget {
                   url: manga.cover,
                   width: width,
                   height: height,
-                  radius: BorderRadius.circular(5),
+                  radius: BorderRadius.circular(4),
                   border: Border.all(width: 0.7, color: Colors.grey[400]!),
                 ),
               ),
@@ -55,10 +77,9 @@ class MangaGroupView extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      stops: const [0, 0.2, 1],
+                      stops: const [0, 1],
                       colors: [
                         Colors.grey[900]!.withOpacity(0),
-                        Colors.grey[900]!.withOpacity(0.2),
                         Colors.grey[900]!.withOpacity(0.8),
                       ],
                     ),
@@ -76,9 +97,9 @@ class MangaGroupView extends StatelessWidget {
               ),
             ],
           ),
-          radius: BorderRadius.circular(5),
-          splashColor: null,
+          radius: BorderRadius.circular(4),
           highlightColor: null,
+          splashColor: null,
           onTap: () => Navigator.of(context).push(
             CustomPageRoute(
               context: context,
@@ -95,6 +116,7 @@ class MangaGroupView extends StatelessWidget {
           padding: EdgeInsets.only(top: 2),
           child: Text(
             manga.title,
+            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 14),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -103,131 +125,80 @@ class MangaGroupView extends StatelessWidget {
     );
   }
 
-  Widget _buildGroupItems({required BuildContext context}) {
+  @override
+  Widget build(BuildContext context) {
     const hSpace = 15.0;
     const vSpace = 10.0;
+    var width = widget.style == MangaGroupViewStyle.normalFull
+        ? (MediaQuery.of(context).size.width - hSpace * 4) / 3 // | ▢ ▢ ▢ |
+        : (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
 
-    List<TinyBlockManga> mangas = group.mangas;
-    switch (style) {
+    var group = _groupMap[_currentSelectedName] ?? _groupMap['']!;
+    var mangas = group.mangas;
+    switch (widget.style) {
       case MangaGroupViewStyle.normalFull:
         break;
-      case MangaGroupViewStyle.normalTruncate:
-        if (mangas.length > 6) {
-          mangas = mangas.sublist(0, 6); // X X X | X X X
-        }
-        break;
-      case MangaGroupViewStyle.smallTruncate:
+      case MangaGroupViewStyle.smallTruncated:
         if (mangas.length > 8) {
           mangas = mangas.sublist(0, 8); // X X X X | X X X X
         }
         break;
-      case MangaGroupViewStyle.smallOneLine:
-        if (mangas.length > 4) {
-          mangas = mangas.sublist(0, 4); // X X X X
-        }
-        break;
     }
 
-    final largerWidth = (MediaQuery.of(context).size.width - hSpace * 4) / 3; // | ▢ ▢ ▢ |
-    final smallerWidth = (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
-    var widgets = <Widget>[];
-    for (var manga in mangas) {
-      var width = style == MangaGroupViewStyle.smallTruncate || style == MangaGroupViewStyle.smallOneLine ? smallerWidth : largerWidth;
-      widgets.add(
-        _buildItem(
-          context: context,
-          manga: manga,
-          width: width,
-          height: width / 3 * 4,
-        ),
-      );
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hSpace),
-      child: Wrap(
-        spacing: hSpace,
-        runSpacing: vSpace,
-        children: widgets,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var title = group.title.isEmpty ? type.toTitle() : (type.toTitle() + '・' + group.title);
-    var icon = type == MangaGroupType.serial
-        ? Icons.whatshot
-        : type == MangaGroupType.finish
-            ? Icons.check_circle_outline
-            : Icons.fiber_new;
-
-    return MangaGroupFrameworkView(
-      title: title,
-      icon: icon,
-      onMorePressed: onMorePressed,
-      child: _buildGroupItems(context: context),
-    );
-  }
-}
-
-/// 漫画分组的统一框架，在 [MangaGroupView] / [MangaCollectionView] 使用
-class MangaGroupFrameworkView extends StatelessWidget {
-  const MangaGroupFrameworkView({
-    Key? key,
-    required this.title,
-    required this.icon,
-    required this.child,
-    this.onMorePressed,
-    this.hPadding = 15,
-    this.vPadding = 10,
-  }) : super(key: key);
-
-  final String title;
-  final IconData icon;
-  final Widget child;
-  final void Function()? onMorePressed;
-  final double hPadding;
-  final double vPadding;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
+    return HomepageColumnView(
+      title: widget.groupList.title + (_currentSelectedName.isEmpty ? '' : '・$_currentSelectedName'),
+      icon: widget.groupList.isSerial ? Icons.whatshot : (widget.groupList.isFinish ? Icons.check_circle_outline : Icons.fiber_new),
+      hPadding: 15,
+      vPadding: 10,
+      onMorePressed: widget.onMorePressed,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: hPadding, top: vPadding, bottom: vPadding),
-                child: IconText(
-                  icon: Icon(icon, size: 24, color: Colors.orange),
-                  text: Text(title, style: Theme.of(context).textTheme.subtitle1),
-                  space: 8,
-                ),
-              ),
-              if (onMorePressed != null)
-                Padding(
-                  padding: EdgeInsets.only(right: hPadding - 4, top: vPadding - 3, bottom: vPadding - 3),
-                  child: InkWell(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 6, right: 4, top: 3, bottom: 3),
-                      child: IconText(
-                        text: Text('查看更多', style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.orange)),
-                        icon: Icon(Icons.double_arrow, size: 20, color: Colors.orange),
-                        alignment: IconTextAlignment.r2l,
-                        space: 2,
+          SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 5), // 15 (hPadding) <= 10 + 5
+            physics: AlwaysScrollableScrollPhysics(),
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var name in _groupMap.keys)
+                  Material(
+                    color: name == _currentSelectedName ? Colors.white : Colors.transparent,
+                    child: InkWell(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        child: Text(
+                          name.isEmpty ? '置顶漫画' : name,
+                          style: Theme.of(context).textTheme.bodyText2?.copyWith(
+                                fontSize: 14,
+                                color: name == _currentSelectedName ? Theme.of(context).primaryColor : null,
+                              ),
+                        ),
                       ),
+                      onTap: () {
+                        _currentSelectedName = name;
+                        if (mounted) setState(() {});
+                      },
                     ),
-                    onTap: onMorePressed,
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-          child,
-          SizedBox(height: vPadding),
+          SizedBox(height: 10),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: hSpace),
+            child: Wrap(
+              spacing: hSpace,
+              runSpacing: vSpace,
+              children: [
+                for (var manga in mangas)
+                  _buildItem(
+                    context: context,
+                    manga: manga,
+                    width: width,
+                    height: width / 3 * 4,
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
