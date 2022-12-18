@@ -28,12 +28,17 @@ class NetworkImageView extends StatelessWidget {
       url = 'https:$url';
     }
 
-    return ClipRRect(
-      borderRadius: radius ?? BorderRadius.zero,
-      child: Container(
-        decoration: border == null ? null : BoxDecoration(border: border),
-        width: width,
-        height: height,
+    return Container(
+      decoration: border == null
+          ? null
+          : BoxDecoration(
+              border: border,
+              borderRadius: radius ?? BorderRadius.zero,
+            ),
+      width: width,
+      height: height,
+      child: ClipRRect(
+        borderRadius: radius ?? BorderRadius.zero,
         child: CachedNetworkImage(
           imageUrl: url,
           width: width,

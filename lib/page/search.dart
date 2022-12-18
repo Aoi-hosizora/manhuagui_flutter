@@ -389,7 +389,7 @@ class _SearchPageState extends State<SearchPage> {
                               onTap: () => Navigator.of(context).maybePop(), // => 返回
                             ),
                           // ===================================================================
-                          for (var h in _histories.repeat(20))
+                          for (var h in _histories)
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),

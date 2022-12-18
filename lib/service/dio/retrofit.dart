@@ -63,16 +63,16 @@ abstract class RestClient {
   Future<Result<ResultPage<SmallManga>>> getAuthorMangas({@Path() required int aid, @Query('page') required int page, @Query('order') required MangaOrder order});
 
   @GET('/rank/day')
-  Future<Result<ResultPage<MangaRank>>> getDayRanking({@Query('type') required String type});
+  Future<Result<ResultPage<MangaRanking>>> getDayRanking({@Query('type') required String type});
 
   @GET('/rank/week')
-  Future<Result<ResultPage<MangaRank>>> getWeekRanking({@Query('type') required String type});
+  Future<Result<ResultPage<MangaRanking>>> getWeekRanking({@Query('type') required String type});
 
   @GET('/rank/month')
-  Future<Result<ResultPage<MangaRank>>> getMonthRanking({@Query('type') required String type});
+  Future<Result<ResultPage<MangaRanking>>> getMonthRanking({@Query('type') required String type});
 
   @GET('/rank/total')
-  Future<Result<ResultPage<MangaRank>>> getTotalRanking({@Query('type') required String type});
+  Future<Result<ResultPage<MangaRanking>>> getTotalRanking({@Query('type') required String type});
 
   @GET('/comment/manga/{mid}')
   Future<Result<ResultPage<Comment>>> getMangaComments({@Path() required int mid, @Query('page') required int page});

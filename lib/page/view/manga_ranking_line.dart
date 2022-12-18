@@ -5,13 +5,13 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
 /// 漫画排名行，在 [RankingSubPage] 使用
-class MangaRankLineView extends StatelessWidget {
-  const MangaRankLineView({
+class MangaRankingLineView extends StatelessWidget {
+  const MangaRankingLineView({
     Key? key,
     required this.manga,
   }) : super(key: key);
 
-  final MangaRank manga;
+  final MangaRanking manga;
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +58,9 @@ class MangaRankLineView extends StatelessWidget {
               color: manga.order == 1
                   ? Colors.red
                   : manga.order == 2
-                      ? Colors.deepOrange
+                      ? Colors.orange
                       : manga.order == 3
-                          ? Colors.orange
+                          ? Colors.yellow[600]
                           : Colors.grey[400],
               borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24)),
             ),

@@ -7,9 +7,11 @@ import 'package:manhuagui_flutter/page/page/category_genre.dart';
 class GenrePage extends StatefulWidget {
   const GenrePage({
     Key? key,
+    this.genres,
     required this.genre,
   })  : super(key: key);
 
+  final List<TinyCategory>? genres;
   final TinyCategory genre;
 
   @override
@@ -25,6 +27,7 @@ class _GenrePageState extends State<GenrePage> {
         leading: AppBarActionButton.leading(context: context),
       ),
       body: GenreSubPage(
+        genres: widget.genres,
         defaultGenre: widget.genre,
       ),
     );

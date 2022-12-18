@@ -47,7 +47,6 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
             MangaGroupView(
               group: widget.group,
               type: widget.type,
-              controller: _controller,
               style: MangaGroupViewStyle.normalFull,
             ),
           ],

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
 import 'package:manhuagui_flutter/page/manga_random.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
+import 'package:manhuagui_flutter/page/view/manga_collection.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/page/view/warning_text.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
@@ -33,16 +38,27 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  VoidCallback? _cancelHandler;
+  AuthData? _oldAuthData;
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+        _oldAuthData = AuthManager.instance.authData;
+        if (mounted) setState(() {});
+        _loadCollections([MangaCollectionType.shelves, MangaCollectionType.histories]);
+      });
+    });
   }
 
   @override
   void dispose() {
+    _cancelHandler?.call();
     widget.action?.removeAction();
     _controller.dispose();
     _fabController.dispose();
@@ -50,23 +66,41 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   }
 
   var _loading = true;
-  HomepageMangaGroupList? _data;
+  HomepageMangaGroupList? _groupList;
   var _error = '';
+  var _selectedSerialName = '';
+  var _selectedFinishName = '';
+  var _selectedLatestName = '';
+  Map<String, MangaGroup>? _serialGroups;
+  Map<String, MangaGroup>? _finishGroups;
+  Map<String, MangaGroup>? _latestGroups;
 
   Future<void> _loadData() async {
+    _groupList = null;
+    _serialGroups = null;
+    _finishGroups = null;
+    _latestGroups = null;
     _loading = true;
     if (mounted) setState(() {});
 
+    // 1. 异步获取各种数据
+    _loadCollections(MangaCollectionType.values);
     final client = RestClient(DioManager.instance.dio);
+
+    // 2. 同步获取漫画分组数据
     try {
-      var r = await client.getHomepageMangas();
-      _data = null;
+      var result = await client.getHomepageMangas();
       _error = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
-      _data = r.data;
+      _groupList = result.data;
+      _selectedSerialName = '';
+      _selectedFinishName = '';
+      _selectedLatestName = '';
+      _serialGroups = {'': _groupList!.serial.topGroup, for (var g in _groupList!.serial.groups1) g.title: g, for (var g in _groupList!.serial.groups2) g.title: g};
+      _finishGroups = {'': _groupList!.finish.topGroup, for (var g in _groupList!.finish.groups1) g.title: g, for (var g in _groupList!.finish.groups2) g.title: g};
+      _latestGroups = {'': _groupList!.latest.topGroup, for (var g in _groupList!.latest.groups1) g.title: g, for (var g in _groupList!.serial.groups2) g.title: g};
     } catch (e, s) {
-      _data = null;
       _error = wrapError(e, s).text;
     } finally {
       _loading = false;
@@ -74,22 +108,179 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     }
   }
 
-  Widget _buildGroup(MangaGroup group, MangaGroupType type, MangaGroupViewStyle style) {
+  List<MangaRanking>? _rankings;
+  List<TinyManga>? _updates;
+  List<MangaHistory>? _histories;
+  List<ShelfManga>? _shelves;
+  List<DownloadedManga>? _downloads;
+  var _rankingsError = '';
+  var _updatesError = '';
+  var _shelvesError = '';
+
+  Future<void> _loadCollections(List<MangaCollectionType> types) async {
+    final client = RestClient(DioManager.instance.dio);
+
+    if (types.contains(MangaCollectionType.rankings)) {
+      Future.microtask(() async {
+        _rankings = null;
+        _rankingsError = '';
+        try {
+          var result = await client.getDayRanking(type: 'all');
+          _rankings = result.data.data;
+        } catch (e, s) {
+          _rankingsError = wrapError(e, s).text;
+        } finally {
+          if (mounted) setState(() {});
+        }
+      });
+    }
+
+    if (types.contains(MangaCollectionType.updates)) {
+      Future.microtask(() async {
+        _updates = null;
+        _updatesError = '';
+        try {
+          var result = await client.getRecentUpdatedMangas(page: 0);
+          _updates = result.data.data;
+        } catch (e, s) {
+          _updatesError = wrapError(e, s).text;
+        } finally {
+          if (mounted) setState(() {});
+        }
+      });
+    }
+
+    if (types.contains(MangaCollectionType.histories)) {
+      Future.microtask(() async {
+        _histories = null;
+        var result = await HistoryDao.getHistories(username: AuthManager.instance.username, page: 1);
+        _histories = result ?? [];
+        if (mounted) setState(() {});
+      });
+    }
+
+    if (types.contains(MangaCollectionType.shelves)) {
+      Future.microtask(() async {
+        _shelves = null;
+        _shelvesError = '';
+        if (AuthManager.instance.logined) {
+          try {
+            var result = await client.getShelfMangas(token: AuthManager.instance.token, page: 1);
+            _shelves = result.data.data;
+          } catch (e, s) {
+            _shelvesError = wrapError(e, s).text;
+          } finally {
+            if (mounted) setState(() {});
+          }
+        } else {
+          _shelvesError = '用户未登录';
+          _shelves = [];
+          if (mounted) setState(() {});
+        }
+      });
+    }
+
+    if (types.contains(MangaCollectionType.downloads)) {
+      Future.microtask(() async {
+        _downloads = null;
+        var result = await DownloadDao.getMangas();
+        _downloads = result ?? [];
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  Widget _buildCollection<T>(List<T>? list, String error, MangaCollectionType type) {
     return Padding(
       padding: EdgeInsets.only(top: 12),
-      child: MangaGroupView(
-        group: group,
+      child: MangaCollectionView(
         type: type,
-        style: style,
-        onMorePressed: () => Navigator.of(context).push(
-          CustomPageRoute(
-            context: context,
-            builder: (c) => MangaGroupPage(
-              group: group,
-              type: type,
+        ranking: type == MangaCollectionType.rankings ? _rankings : null,
+        updates: type == MangaCollectionType.updates ? _updates : null,
+        histories: type == MangaCollectionType.histories ? _histories : null,
+        shelves: type == MangaCollectionType.shelves ? _shelves : null,
+        downloads: type == MangaCollectionType.downloads ? _downloads : null,
+        error: error,
+        username: !AuthManager.instance.logined ? null : AuthManager.instance.username,
+        onMorePressed: () {
+          switch (type) {
+            case MangaCollectionType.rankings:
+              EventBusManager.instance.fire(ToRankingRequestedEvent());
+              break;
+            case MangaCollectionType.updates:
+              EventBusManager.instance.fire(ToRecentRequestedEvent());
+              break;
+            case MangaCollectionType.histories:
+              EventBusManager.instance.fire(ToHistoryRequestedEvent());
+              break;
+            case MangaCollectionType.shelves:
+              EventBusManager.instance.fire(ToShelfRequestedEvent());
+              break;
+            case MangaCollectionType.downloads:
+              Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()));
+              break;
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildGroup(MangaGroupType type) {
+    var groups = type == MangaGroupType.serial ? _serialGroups! : (type == MangaGroupType.finish ? _finishGroups! : _latestGroups!);
+    var selectedName = type == MangaGroupType.serial ? _selectedSerialName : (type == MangaGroupType.finish ? _selectedFinishName : _selectedLatestName);
+    var group = groups[selectedName] ?? groups['']!;
+    return Padding(
+      padding: EdgeInsets.only(top: 12),
+      child: Column(
+        children: [
+          MangaGroupView(
+            group: group,
+            type: type,
+            style: MangaGroupViewStyle.smallTruncate,
+            onMorePressed: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => MangaGroupPage(
+                  group: group,
+                  type: type,
+                ),
+              ),
             ),
           ),
-        ),
+          SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            scrollDirection: Axis.horizontal,
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  for (var name in groups.keys)
+                    Material(
+                      color: name == selectedName ? Colors.white : Colors.transparent,
+                      child: InkWell(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+                          child: Text(
+                            name.isEmpty ? '置顶漫画' : name,
+                            style: TextStyle(color: name == selectedName ? Theme.of(context).primaryColor : null),
+                          ),
+                        ),
+                        onTap: () {
+                          if (type == MangaGroupType.serial) {
+                            _selectedSerialName = name;
+                          } else if (type == MangaGroupType.finish) {
+                            _selectedFinishName = name;
+                          } else {
+                            _selectedLatestName = name;
+                          }
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -107,7 +298,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
-          isEmpty: _data == null,
+          isEmpty: _groupList == null,
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           onChanged: (_, __) => _fabController.hide(),
@@ -122,7 +313,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
               physics: AlwaysScrollableScrollPhysics(),
               children: [
                 MangaCarouselView(
-                  mangas: _data!.carouselMangas,
+                  mangas: _groupList!.carouselMangas,
                   height: 240,
                   imageWidth: 180,
                 ),
@@ -146,20 +337,19 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     ],
                   ),
                 ),
+                _buildCollection(_rankings, _rankingsError, MangaCollectionType.rankings), // 漫画排行
+                _buildCollection(_updates, _updatesError, MangaCollectionType.updates), // 最新更新
+                _buildCollection(_histories, '', MangaCollectionType.histories), // 浏览历史
+                _buildCollection(_shelves, _shelvesError, MangaCollectionType.shelves), // 我的书架
+                _buildCollection(_downloads, '', MangaCollectionType.downloads), // 漫画下载
                 SizedBox(height: 12),
                 WarningTextView(
-                  text: '由于漫画柜官方主页的推荐已有一段时间没有更新，因此本页的推荐列表也一直保持不变。',
+                  text: '由于漫画柜官方主页的推荐已有很长一段时间没有更新，因此以下推荐列表也一直保持不变。',
                   isWarning: false,
                 ),
-                _buildGroup(_data!.serial.topGroup, MangaGroupType.serial, MangaGroupViewStyle.normalTruncate), // 热门连载
-                _buildGroup(_data!.finish.topGroup, MangaGroupType.finish, MangaGroupViewStyle.normalTruncate), // 经典完结
-                _buildGroup(_data!.latest.topGroup, MangaGroupType.latest, MangaGroupViewStyle.normalTruncate), // 最新上架
-                for (var group in _data!.serial.groups) _buildGroup(group, MangaGroupType.serial, MangaGroupViewStyle.smallTruncate), // 热门连载...
-                for (var group in _data!.serial.otherGroups) _buildGroup(group, MangaGroupType.serial, MangaGroupViewStyle.smallOneLine), // 热门连载...
-                for (var group in _data!.finish.groups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallTruncate), // 经典完结...
-                for (var group in _data!.finish.otherGroups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallOneLine), // 经典完结...
-                for (var group in _data!.latest.groups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallTruncate), // 最新上架...
-                for (var group in _data!.latest.otherGroups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallOneLine), // 最新上架...
+                _buildGroup(MangaGroupType.serial), // 热门连载
+                _buildGroup(MangaGroupType.finish), // 经典完结
+                _buildGroup(MangaGroupType.latest), // 最新上架
                 SizedBox(height: 12),
                 Center(
                   child: Text(
