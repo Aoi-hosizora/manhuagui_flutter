@@ -28,6 +28,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
+  late var _clickToSearch = widget.setting.clickToSearch;
 
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
@@ -36,6 +37,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         usingDownloadedPage: _usingDownloadedPage,
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
+        clickToSearch: _clickToSearch,
       );
 
   @override
@@ -109,6 +111,15 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           builder: (s) => Text(s.toTitle()),
           onChanged: (s) {
             _defaultAuthorOrder = s;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '点击搜索历史执行搜索',
+          value: _clickToSearch,
+          onChanged: (b) {
+            _clickToSearch = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

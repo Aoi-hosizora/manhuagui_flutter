@@ -141,6 +141,8 @@ class _SearchPageState extends State<SearchPage> {
     if (mounted) setState(() {});
   }
 
+  double get appBarHeight => Theme.of(context).appBarTheme.toolbarHeight!;
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -158,11 +160,11 @@ class _SearchPageState extends State<SearchPage> {
               child: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).padding.top,
-                child: Container(color: Theme.of(context).primaryColor),
+                child: Container(color: Theme.of(context).primaryColor), // inside system notification bar
               ),
             ),
             Positioned.fill(
-              top: MediaQuery.of(context).padding.top + 45,
+              top: MediaQuery.of(context).padding.top + appBarHeight,
               child: MediaQuery.removePadding(
                 context: context,
                 removeTop: true,
@@ -178,6 +180,7 @@ class _SearchPageState extends State<SearchPage> {
                   setting: UpdatableDataViewSetting(
                     padding: EdgeInsets.zero,
                     interactiveScrollbar: true,
+                    scrollbarMainAxisMargin: 2,
                     scrollbarCrossAxisMargin: 2,
                     placeholderSetting: PlaceholderSetting(
                       showNothingIcon: _q != null,
@@ -233,257 +236,243 @@ class _SearchPageState extends State<SearchPage> {
               top: MediaQuery.of(context).padding.top,
               child: SizedBox(
                 width: MediaQuery.of(context).size.width,
-                height: 45,
+                height: appBarHeight,
                 child: AppBar(
                   automaticallyImplyLeading: false,
-                  toolbarHeight: 45, // keep the same as AppBarTheme
+                  toolbarHeight: appBarHeight, // fake AppBar, height => 45
                 ),
               ),
             ),
             Positioned(
               top: 0,
-              bottom: _searchController.isOpen ? 0 : MediaQuery.of(context).size.height - (MediaQuery.of(context).padding.top + 45),
+              bottom: _searchController.isOpen
+                  ? 0 // full of screen
+                  : MediaQuery.of(context).size.height - (MediaQuery.of(context).padding.top + appBarHeight) /* only lays on app bar */,
               left: 0,
               right: 0,
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 5 + 35 + 46) /* padding_top_5 + height_35 + magic_46 */,
-                ),
-                child: ExtendedScrollbar(
-                  controller: _searchScrollController,
-                  interactive: true,
-                  crossAxisMargin: 8 + 2 /* padding_right_8 + crossAxisMargin_2 */,
-                  mainAxisMargin: -46 /* magic */,
-                  child: FloatingSearchBar(
-                    controller: _searchController,
-                    scrollController: _searchScrollController,
-                    height: 35 /* 35 + 5 + 5 => 45 */,
-                    margins: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 5, left: 8, right: 8),
-                    padding: EdgeInsets.symmetric(horizontal: 2),
-                    insets: EdgeInsets.symmetric(horizontal: 4),
-                    scrollPadding: EdgeInsets.only(bottom: 16),
-                    elevation: 3.0,
-                    borderRadius: _searchController.isClosed
-                        ? BorderRadius.all(Radius.circular(4)) // all border sides have radius
-                        : BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)) /* only top borders have radius */,
-                    transitionDuration: Duration(milliseconds: 400),
-                    transitionCurve: Curves.easeInOut,
-                    transition: CircularFloatingSearchBarTransition(),
-                    hint: '输入标题名称、拼音或者 mid 搜索漫画',
-                    hintStyle: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).hintColor),
-                    queryStyle: Theme.of(context).textTheme.bodyText2,
-                    textInputType: TextInputType.text,
-                    textInputAction: TextInputAction.search,
-                    clearQueryOnClose: false,
-                    closeOnBackdropTap: false,
-                    iconColor: Colors.black54,
-                    automaticallyImplyBackButton: false,
-                    automaticallyImplyDrawerHamburger: false,
-                    leadingActions: [
-                      FloatingSearchBarAction(
-                        showIfOpened: true,
-                        showIfClosed: true,
-                        child: CircularButton(
-                          size: 18,
-                          icon: Icon(Icons.arrow_back, size: 18),
-                          tooltip: '返回',
-                          onPressed: () => Navigator.of(context).maybePop(), // 返回
-                        ),
+              child: ExtendedScrollbar(
+                controller: _searchScrollController,
+                interactive: true,
+                crossAxisMargin: 8 + 2 /* marginRight_8 + crossAxisMargin_2 */,
+                mainAxisMargin: -46 /* magic */,
+                extraMargin: EdgeInsets.only(top: 5 + 35 + 46 + 2 /* marginTop_5 + height_35 + magic_46 + mainAxisMargin_2 */),
+                child: FloatingSearchBar(
+                  controller: _searchController,
+                  scrollController: _searchScrollController,
+                  height: 35 /* 35 + 5 + 5 => 45 */,
+                  margins: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 5 /* marginTop_5 */, left: 8, right: 8 /* marginRight_8 */),
+                  padding: EdgeInsets.symmetric(horizontal: 2),
+                  insets: EdgeInsets.symmetric(horizontal: 4),
+                  scrollPadding: EdgeInsets.only(bottom: 16),
+                  elevation: 3.0,
+                  borderRadius: _searchController.isClosed
+                      ? BorderRadius.all(Radius.circular(4)) // all border sides have radius
+                      : BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)) /* only top borders have radius */,
+                  transitionDuration: Duration(milliseconds: 400),
+                  transitionCurve: Curves.easeInOut,
+                  transition: CircularFloatingSearchBarTransition(),
+                  hint: '输入标题名称、标题拼音或漫画 mid 搜索漫画',
+                  hintStyle: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).hintColor),
+                  queryStyle: Theme.of(context).textTheme.bodyText2,
+                  textInputType: TextInputType.text,
+                  textInputAction: TextInputAction.search,
+                  clearQueryOnClose: false,
+                  closeOnBackdropTap: false,
+                  iconColor: Colors.black54,
+                  automaticallyImplyBackButton: false,
+                  automaticallyImplyDrawerHamburger: false,
+                  leadingActions: [
+                    FloatingSearchBarAction(
+                      showIfOpened: true,
+                      showIfClosed: true,
+                      child: CircularButton(
+                        size: 18,
+                        icon: Icon(Icons.arrow_back, size: 18),
+                        tooltip: '返回',
+                        onPressed: () => Navigator.of(context).maybePop(), // => 返回
                       ),
-                    ],
-                    actions: [
-                      FloatingSearchBarAction(
-                        showIfOpened: true,
-                        showIfClosed: false,
-                        child: CircularButton(
-                          size: 18,
-                          icon: Icon(Icons.close, size: 18),
-                          tooltip: '清空',
-                          onPressed: () => _text = '',
-                        ),
+                    ),
+                  ],
+                  actions: [
+                    FloatingSearchBarAction(
+                      showIfOpened: true,
+                      showIfClosed: false,
+                      child: CircularButton(
+                        size: 18,
+                        icon: Icon(Icons.close, size: 18),
+                        tooltip: '清空',
+                        onPressed: () => _text = '', // => 清空
                       ),
-                      FloatingSearchBarAction(
-                        showIfOpened: true,
-                        showIfClosed: true,
-                        child: CircularButton(
-                          size: 18,
-                          icon: Icon(Icons.search, size: 18),
-                          tooltip: '清空',
-                          onPressed: () => _search(), // 搜索
-                        ),
+                    ),
+                    FloatingSearchBarAction(
+                      showIfOpened: true,
+                      showIfClosed: true,
+                      child: CircularButton(
+                        size: 18,
+                        icon: Icon(Icons.search, size: 18),
+                        tooltip: '搜索',
+                        onPressed: () => _search(), // => 搜索
                       ),
-                    ],
-                    debounceDelay: Duration(milliseconds: 150),
-                    onSubmitted: (_) => _search(),
-                    onFocusChanged: (focus) => _changeFocus(focus),
-                    onQueryChanged: (_) => _changeQuery(),
-                    builder: (_, __) => Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 4,
-                            spreadRadius: -1,
-                            offset: Offset(0, 5),
-                          ),
+                    ),
+                  ],
+                  debounceDelay: Duration(milliseconds: 150),
+                  onSubmitted: (_) => _search(),
+                  onFocusChanged: (focus) => _changeFocus(focus),
+                  onQueryChanged: (_) => _changeQuery(),
+                  builder: (_, __) => Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          spreadRadius: -1,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(4),
+                        bottomRight: Radius.circular(4),
+                      ),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Column(
+                        children: [
+                          // ===================================================================
+                          if (_text.isNotEmpty && _text != _q)
+                            InkWell(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: IconText(
+                                  icon: Icon(Icons.search, color: Colors.black45),
+                                  text: Flexible(
+                                    child: Text('搜索 "$_text"', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  ),
+                                ),
+                              ),
+                              onTap: () => _search(), // => 搜索
+                            ),
+                          if (_text.isNotEmpty && (int.tryParse(_text) ?? 0) > 0)
+                            InkWell(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: IconText(
+                                  icon: Icon(Icons.arrow_forward, color: Colors.black45),
+                                  text: Flexible(
+                                    child: Text('访问漫画 "mid: $_text"', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  ),
+                                ),
+                              ),
+                              onTap: () => Navigator.of(context).push(
+                                CustomPageRoute(
+                                  context: context,
+                                  builder: (c) => MangaPage(id: int.tryParse(_text)!, title: '漫画 mid: $_text', url: ''),
+                                ),
+                              ), // => 访问
+                            ),
+                          if (_q != null)
+                            InkWell(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: IconText.texts(
+                                  icon: Icon(Icons.arrow_back, color: Colors.black45),
+                                  texts: [
+                                    Text('返回 "'),
+                                    Flexible(
+                                      child: Text(_q!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    ),
+                                    Text('" 的搜索结果'),
+                                  ],
+                                ),
+                              ),
+                              onTap: () => Navigator.of(context).maybePop(), // => 返回
+                            ),
+                          // ===================================================================
+                          for (var h in _histories.repeat(20))
+                            InkWell(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: IconText(
+                                  icon: Icon(Icons.history, color: Colors.black45),
+                                  text: Flexible(
+                                    child: Text(h, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  ),
+                                ),
+                              ),
+                              onTap: () {
+                                _text = h; // => 候选
+                                if (AppSetting.instance.other.clickToSearch) {
+                                  _search(); // => 搜索
+                                }
+                              },
+                              onLongPress: () => showDialog(
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                  title: Text('删除搜索记录'),
+                                  content: Text('确定要删除 "$h" 吗？'),
+                                  actions: [
+                                    TextButton(
+                                      child: Text('删除'),
+                                      onPressed: () async {
+                                        Navigator.of(c).pop();
+                                        _histories.remove(h);
+                                        await SearchHistoryPrefs.removeSearchHistory(h);
+                                        if (mounted) setState(() {});
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text('取消'),
+                                      onPressed: () => Navigator.of(c).pop(),
+                                    ),
+                                  ],
+                                ),
+                              ), // => 删除
+                            ),
+                          // ===================================================================
+                          if (_histories.isEmpty)
+                            InkWell(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Center(
+                                  child: Text('暂无历史记录'),
+                                ),
+                              ),
+                              onTap: () {},
+                            ),
+                          if (_histories.isNotEmpty && _text.isEmpty)
+                            InkWell(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Center(
+                                  child: Text('清空历史记录'),
+                                ),
+                              ),
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                  title: Text('清空历史记录'),
+                                  content: Text('确定要清空所有历史记录吗？'),
+                                  actions: [
+                                    TextButton(
+                                      child: Text('清空'),
+                                      onPressed: () async {
+                                        _histories.clear();
+                                        await SearchHistoryPrefs.clearSearchHistories();
+                                        if (mounted) setState(() {});
+                                        Navigator.of(c).pop();
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text('取消'),
+                                      onPressed: () => Navigator.of(c).pop(),
+                                    ),
+                                  ],
+                                ),
+                              ), // => 清空
+                            ),
+                          // ===================================================================
                         ],
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(4),
-                          bottomRight: Radius.circular(4),
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Column(
-                          children: [
-                            // ===================================================================
-                            if (_text.isNotEmpty && _text != _q)
-                              InkWell(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: IconText(
-                                    icon: Icon(Icons.search, color: Colors.black45),
-                                    text: Flexible(
-                                      child: Text(
-                                        '搜索 "$_text"',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                onTap: () => _search(), // 搜索
-                              ),
-                            if (_text.isNotEmpty && (int.tryParse(_text) ?? 0) > 0)
-                              InkWell(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: IconText(
-                                    icon: Icon(Icons.arrow_forward, color: Colors.black45),
-                                    text: Text('访问漫画 mid: $_text'),
-                                  ),
-                                ),
-                                onTap: () => Navigator.of(context).push(
-                                  CustomPageRoute(
-                                    context: context,
-                                    builder: (c) => MangaPage(
-                                      id: int.tryParse(_text)!,
-                                      title: '漫画 mid: $_text',
-                                      url: '',
-                                    ),
-                                  ),
-                                ), // 访问
-                              ),
-                            if (_q != null)
-                              InkWell(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: IconText.texts(
-                                    icon: Icon(Icons.arrow_back, color: Colors.black45),
-                                    texts: [
-                                      Text('返回 "'),
-                                      Flexible(
-                                        child: Text(
-                                          _q!,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Text('" 的搜索结果'),
-                                    ],
-                                  ),
-                                ),
-                                onTap: () => Navigator.of(context).maybePop(), // 返回
-                              ),
-                            // ===================================================================
-                            for (var h in _histories)
-                              InkWell(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: IconText(
-                                    icon: Icon(Icons.history, color: Colors.black45),
-                                    text: Flexible(
-                                      child: Text(
-                                        h,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                onTap: () {
-                                  _text = h;
-                                  _search(); // 候选并搜索
-                                },
-                                onLongPress: () => showDialog(
-                                  context: context,
-                                  builder: (c) => AlertDialog(
-                                    title: Text('删除搜索记录'),
-                                    content: Text('确定要删除 "$h" 吗？'),
-                                    actions: [
-                                      TextButton(
-                                        child: Text('删除'),
-                                        onPressed: () async {
-                                          Navigator.of(c).pop();
-                                          _histories.remove(h);
-                                          await SearchHistoryPrefs.removeSearchHistory(h);
-                                          if (mounted) setState(() {});
-                                        },
-                                      ),
-                                      TextButton(
-                                        child: Text('取消'),
-                                        onPressed: () => Navigator.of(c).pop(),
-                                      ),
-                                    ],
-                                  ),
-                                ), // 删除
-                              ),
-                            // ===================================================================
-                            if (_histories.isEmpty)
-                              InkWell(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10),
-                                  child: Center(
-                                    child: Text('暂无历史记录'),
-                                  ),
-                                ),
-                                onTap: () {}, // 返回
-                              ),
-                            if (_histories.isNotEmpty && _text.isEmpty)
-                              InkWell(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10),
-                                  child: Center(
-                                    child: Text('清空历史记录'),
-                                  ),
-                                ),
-                                onTap: () => showDialog(
-                                  context: context,
-                                  builder: (c) => AlertDialog(
-                                    title: Text('清空历史记录'),
-                                    content: Text('确定要清空所有历史记录吗？'),
-                                    actions: [
-                                      TextButton(
-                                        child: Text('清空'),
-                                        onPressed: () async {
-                                          _histories.clear();
-                                          await SearchHistoryPrefs.clearSearchHistories();
-                                          if (mounted) setState(() {});
-                                          Navigator.of(c).pop();
-                                        },
-                                      ),
-                                      TextButton(
-                                        child: Text('取消'),
-                                        onPressed: () => Navigator.of(c).pop(),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            // ===================================================================
-                          ],
-                        ),
                       ),
                     ),
                   ),

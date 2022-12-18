@@ -97,8 +97,9 @@ class AppSettingPrefs {
   static const _usingDownloadedPageKey = BoolKey('AppSettingPrefs_usingDownloadedPage');
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
+  static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
 
-  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey];
+  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey];
 
   static Future<void> loadOtherSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -110,6 +111,7 @@ class AppSettingPrefs {
       usingDownloadedPage: prefs.safeGet<bool>(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
+      clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
     );
     AppSetting.instance.update(other: setting);
   }
@@ -123,6 +125,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_usingDownloadedPageKey, setting.usingDownloadedPage);
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
+    await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {

@@ -63,6 +63,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
       body: ExtendedScrollbar(
         controller: widget.innerController,
         interactive: true,
+        mainAxisMargin: 2,
         crossAxisMargin: 2,
         extraMargin: EdgeInsets.only(top: widget.injectorHandler.layoutExtent ?? 0),
         child: CustomScrollView(

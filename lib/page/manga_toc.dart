@@ -84,6 +84,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
           child: ExtendedScrollbar(
             controller: _controller,
             interactive: true,
+            mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
               controller: _controller,

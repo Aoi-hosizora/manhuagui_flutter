@@ -288,7 +288,9 @@ class _AuthorPageState extends State<AuthorPage> {
               setting: UpdatableDataViewSetting(
                 padding: EdgeInsets.zero,
                 interactiveScrollbar: true,
+                scrollbarMainAxisMargin: 2,
                 scrollbarCrossAxisMargin: 2,
+                scrollbarExtraMargin: EdgeInsets.only(top: NestedScrollView.sliverOverlapAbsorberHandleFor(c).layoutExtent ?? 0), // TODO test
                 placeholderSetting: PlaceholderSetting().copyWithChinese(),
                 onPlaceholderStateChanged: (_, __) => _fabController.hide(),
                 refreshFirst: true,

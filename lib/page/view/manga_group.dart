@@ -20,46 +20,16 @@ class MangaGroupView extends StatelessWidget {
     required this.type,
     this.controller,
     required this.style,
-    this.margin = EdgeInsets.zero,
-    this.padding = EdgeInsets.zero,
+    this.onMorePressed,
   }) : super(key: key);
 
   final MangaGroup group;
   final MangaGroupType type;
   final ScrollController? controller;
   final MangaGroupViewStyle style;
-  final EdgeInsets margin;
-  final EdgeInsets padding;
+  final void Function()? onMorePressed;
 
-  Widget _buildItem({required BuildContext context, required TinyBlockManga? manga, required double width, required double height, void Function()? onMorePressed}) {
-    if (manga == null) {
-      return Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: const [0, 0.5, 1],
-            colors: [
-              Colors.blue[100]!,
-              Colors.orange[200]!,
-              Colors.purple[100]!,
-            ],
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            child: Center(
-              child: Text('查看更多...'),
-            ),
-            onTap: onMorePressed,
-          ),
-        ),
-      );
-    }
-
+  Widget _buildItem({required BuildContext context, required TinyBlockManga manga, required double width, required double height}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,29 +42,34 @@ class MangaGroupView extends StatelessWidget {
                 url: manga.cover,
                 width: width,
                 height: height,
+                border: Border.all(width: 0.7, color: Colors.grey[400]!),
               ),
             ),
             Positioned(
               bottom: 0,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                 width: width,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: const [0, 1],
+                    stops: const [0, 0.2, 1],
                     colors: [
-                      Colors.grey[800]!.withOpacity(0),
-                      Colors.grey[800]!.withOpacity(0.9),
+                      Colors.grey[900]!.withOpacity(0),
+                      Colors.grey[900]!.withOpacity(0.2),
+                      Colors.grey[900]!.withOpacity(0.8),
                     ],
                   ),
                 ),
-                child: Text(
-                  manga.finished ? '${manga.newestChapter} 全' : '更新至 ${manga.newestChapter}',
-                  style: TextStyle(color: Colors.white),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Text(
+                    manga.finished ? '${manga.newestChapter} 全' : '更新至 ${manga.newestChapter}',
+                    style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.white),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ),
@@ -119,7 +94,7 @@ class MangaGroupView extends StatelessWidget {
         ),
         Container(
           width: width,
-          padding: EdgeInsets.only(top: 1.5),
+          padding: EdgeInsets.only(top: 2),
           child: Text(
             manga.title,
             maxLines: 1,
@@ -131,26 +106,26 @@ class MangaGroupView extends StatelessWidget {
   }
 
   Widget _buildGroupItems({required BuildContext context}) {
-    const hSpace = 10.0;
-    const vSpace = 12.0;
+    const hSpace = 15.0;
+    const vSpace = 10.0;
 
-    List<TinyBlockManga?> mangas = group.mangas;
+    List<TinyBlockManga> mangas = group.mangas;
     switch (style) {
       case MangaGroupViewStyle.normalFull:
         break;
       case MangaGroupViewStyle.normalTruncate:
         if (mangas.length > 6) {
-          mangas = [...mangas.sublist(0, 5), null]; // X X X | X X O
+          mangas = mangas.sublist(0, 6); // X X X | X X X
         }
         break;
       case MangaGroupViewStyle.smallTruncate:
         if (mangas.length > 8) {
-          mangas = [...mangas.sublist(0, 7), null]; // X X X X | X X X O
+          mangas = mangas.sublist(0, 8); // X X X X | X X X X
         }
         break;
       case MangaGroupViewStyle.smallOneLine:
         if (mangas.length > 4) {
-          mangas = [...mangas.sublist(0, 3), null]; // X X X O
+          mangas = mangas.sublist(0, 4); // X X X X
         }
         break;
     }
@@ -166,15 +141,6 @@ class MangaGroupView extends StatelessWidget {
           manga: manga,
           width: width,
           height: width / 3 * 4,
-          onMorePressed: () => Navigator.of(context).push(
-            CustomPageRoute(
-              context: context,
-              builder: (c) => MangaGroupPage(
-                group: group,
-                type: type,
-              ),
-            ),
-          ),
         ),
       );
     }
@@ -200,20 +166,43 @@ class MangaGroupView extends StatelessWidget {
 
     return Container(
       color: Colors.white,
-      margin: margin,
-      padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: IconText(
-              icon: Icon(icon, size: 20, color: Colors.orange),
-              text: Text(title, style: Theme.of(context).textTheme.subtitle1),
-              space: 6,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(left: 15, top: 8, bottom: 8),
+                child: IconText(
+                  icon: Icon(icon, size: 22, color: Colors.orange),
+                  text: Text(title, style: Theme.of(context).textTheme.subtitle1),
+                  space: 8,
+                ),
+              ),
+              if (onMorePressed != null)
+                Padding(
+                  padding: EdgeInsets.only(right: 15 - 4, top: 8 - 4, bottom: 8 - 4),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 7, right: 4, top: 4, bottom: 4),
+                        child: IconText(
+                          text: Text('查看更多', style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.orange)),
+                          icon: Icon(Icons.double_arrow, size: 20, color: Colors.orange),
+                          alignment: IconTextAlignment.r2l,
+                          space: 2,
+                        ),
+                      ),
+                      onTap: onMorePressed,
+                    ),
+                  ),
+                ),
+            ],
           ),
           _buildGroupItems(context: context),
+          SizedBox(height: 8),
         ],
       ),
     );

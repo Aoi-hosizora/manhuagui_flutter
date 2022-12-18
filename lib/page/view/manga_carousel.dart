@@ -113,7 +113,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
           bottom: 0,
           child: Container(
             width: MediaQuery.of(context).size.width,
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             color: Colors.white.withOpacity(0.7),
             child: Center(
               child: Row(
@@ -121,7 +121,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
                 children: [
                   Flexible(
                     child: Text(
-                      '${widget.mangas[_currentIndex].title} - ${widget.mangas[_currentIndex].newestChapter}',
+                      '《${widget.mangas[_currentIndex].title}》${widget.mangas[_currentIndex].newestChapter}',
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),

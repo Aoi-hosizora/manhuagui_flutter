@@ -269,13 +269,13 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
           if (allFinished && !entity.needUpdate)
             IconTextDialogOption(
               icon: Icon(Icons.update),
-              text: Text('设置为需要更新数据'),
+              text: Text('标记为需要更新数据'),
               onPressed: () => popAndCall(c, () => updateNeedUpdate(true)),
             ),
           if (allFinished && entity.needUpdate)
             IconTextDialogOption(
               icon: Icon(Icons.update_disabled),
-              text: Text('设置为不需要更新数据'),
+              text: Text('标记为不需要更新数据'),
               onPressed: () => popAndCall(c, () => updateNeedUpdate(false)),
             ),
         ],
@@ -403,7 +403,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
               ),
               if (_entity != null && !_entity!.error && _entity!.successChapterIds.length == _entity!.totalChapterIds.length)
                 PopupMenuItem(
-                  child: Text(!_entity!.needUpdate ? '设置为需要更新数据' : '设置为不需要更新数据'),
+                  child: Text(!_entity!.needUpdate ? '标记为需要更新数据' : '标记为不需要更新数据'),
                   onTap: () async {
                     await DownloadDao.addOrUpdateManga(manga: _entity!.copyWith(needUpdate: !_entity!.needUpdate));
                     var ev = DownloadedMangaEntityChangedEvent(mangaId: widget.mangaId);

@@ -47,6 +47,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
       body: ExtendedScrollbar(
         controller: widget.innerController,
         interactive: true,
+        mainAxisMargin: 2,
         crossAxisMargin: 2,
         extraMargin: EdgeInsets.only(top: widget.injectorHandler.layoutExtent ?? 0),
         child: CustomScrollView(

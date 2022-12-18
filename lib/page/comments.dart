@@ -65,6 +65,7 @@ class _CommentsPageState extends State<CommentsPage> {
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
           interactiveScrollbar: true,
+          scrollbarMainAxisMargin: 2,
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),

@@ -159,6 +159,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     controller: _scrollController,
                     interactive: true,
                     isAlwaysShown: true,
+                    mainAxisMargin: 2,
                     crossAxisMargin: 2,
                     child: SingleChildScrollView(
                       controller: _scrollController,

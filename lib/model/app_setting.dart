@@ -197,6 +197,7 @@ class OtherSetting {
     required this.usingDownloadedPage,
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
+    required this.clickToSearch,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
@@ -205,6 +206,7 @@ class OtherSetting {
   final bool usingDownloadedPage; // 阅读时载入已下载的页面
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
+  final bool clickToSearch; // 点击搜索历史执行搜索
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
@@ -213,6 +215,7 @@ class OtherSetting {
     usingDownloadedPage: true,
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
+    clickToSearch: false,
   );
 
   OtherSetting copyWith({
@@ -222,6 +225,7 @@ class OtherSetting {
     bool? usingDownloadedPage,
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
+    bool? clickToSearch,
   }) {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
@@ -230,6 +234,7 @@ class OtherSetting {
       usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
+      clickToSearch: clickToSearch ?? this.clickToSearch,
     );
   }
 }

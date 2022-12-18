@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/manga_group.dart';
 import 'package:manhuagui_flutter/page/manga_random.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
@@ -74,12 +75,22 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   }
 
   Widget _buildGroup(MangaGroup group, MangaGroupType type, MangaGroupViewStyle style) {
-    return MangaGroupView(
-      group: group,
-      type: type,
-      style: style,
-      margin: EdgeInsets.only(top: 12),
-      padding: EdgeInsets.only(bottom: 6),
+    return Padding(
+      padding: EdgeInsets.only(top: 12),
+      child: MangaGroupView(
+        group: group,
+        type: type,
+        style: style,
+        onMorePressed: () => Navigator.of(context).push(
+          CustomPageRoute(
+            context: context,
+            builder: (c) => MangaGroupPage(
+              group: group,
+              type: type,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -103,6 +114,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           childBuilder: (c) => ExtendedScrollbar(
             controller: _controller,
             interactive: true,
+            mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
               controller: _controller,
@@ -136,17 +148,17 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 ),
                 SizedBox(height: 12),
                 WarningTextView(
-                  text: '由于漫画柜官方主页推荐的漫画已有一段时间没有更新，因此本页的推荐列表也没有更新。',
+                  text: '由于漫画柜官方主页的推荐已有一段时间没有更新，因此本页的推荐列表也一直保持不变。',
                   isWarning: false,
                 ),
                 _buildGroup(_data!.serial.topGroup, MangaGroupType.serial, MangaGroupViewStyle.normalTruncate), // 热门连载
                 _buildGroup(_data!.finish.topGroup, MangaGroupType.finish, MangaGroupViewStyle.normalTruncate), // 经典完结
                 _buildGroup(_data!.latest.topGroup, MangaGroupType.latest, MangaGroupViewStyle.normalTruncate), // 最新上架
                 for (var group in _data!.serial.groups) _buildGroup(group, MangaGroupType.serial, MangaGroupViewStyle.smallTruncate), // 热门连载...
-                for (var group in _data!.finish.groups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallTruncate), // 经典完结...
-                for (var group in _data!.latest.groups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallTruncate), // 最新上架...
                 for (var group in _data!.serial.otherGroups) _buildGroup(group, MangaGroupType.serial, MangaGroupViewStyle.smallOneLine), // 热门连载...
+                for (var group in _data!.finish.groups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallTruncate), // 经典完结...
                 for (var group in _data!.finish.otherGroups) _buildGroup(group, MangaGroupType.finish, MangaGroupViewStyle.smallOneLine), // 经典完结...
+                for (var group in _data!.latest.groups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallTruncate), // 最新上架...
                 for (var group in _data!.latest.otherGroups) _buildGroup(group, MangaGroupType.latest, MangaGroupViewStyle.smallOneLine), // 最新上架...
                 SizedBox(height: 12),
                 Center(
