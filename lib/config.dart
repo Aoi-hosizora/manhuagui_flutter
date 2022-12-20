@@ -1,7 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
 const APP_NAME = 'Manhuagui';
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 const APP_LEGALESE = 'Copyright © 2020-2022 AoiHosizora';
 const APP_DESCRIPTION = //
     '第三方漫画柜 ($WEB_HOMEPAGE_URL) 安卓客户端，使用 Flutter 开发。\n'
