@@ -234,6 +234,18 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     }
   }
 
+  // PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState s) {
+  //   switch (s) {
+  //     case PhotoViewScaleState.initial:
+  //       return PhotoViewScaleState.originalSize;
+  //     case PhotoViewScaleState.covering:
+  //     case PhotoViewScaleState.originalSize:
+  //     case PhotoViewScaleState.zoomedIn:
+  //     case PhotoViewScaleState.zoomedOut:
+  //       return PhotoViewScaleState.initial;
+  //   }
+  // }
+
   Widget _buildPhotoItem(BuildContext context, int index) {
     final pageOptions = widget.imagePageBuilder(context, index); // index excludes non-PhotoView pages
     final options = PhotoViewOptions.merge(pageOptions, widget.fallbackOptions);
@@ -246,14 +258,14 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         maxScale: options.maxScale,
         backgroundDecoration: options.backgroundDecoration,
         filterQuality: options.filterQuality,
-        onTapDown: null,
-        onTapUp: null,
+        onTapDown: null /* >>> */,
+        onTapUp: null /* >>> */,
         loadingBuilder: options.loadingBuilder,
         errorBuilder: options.errorBuilder,
         basePosition: options.basePosition,
         controller: options.controller,
         customSize: options.customSize,
-        disableGestures: true,
+        disableGestures: true /* !!! */,
         enablePanAlways: options.enablePanAlways,
         enableRotation: options.enableRotation,
         gaplessPlayback: options.gaplessPlayback,
@@ -387,7 +399,7 @@ class _ScrollHelper {
       var direction = currIndex > targetIndex ? -1 /* up */ : 1 /* down */;
       controller.jumpTo(controller.offset + direction * scrollRect.height * 0.98);
       await WidgetsBinding.instance?.endOfFrame;
-      await Future.delayed(Duration(milliseconds: 30)); // wait extra duration for page building
+      await Future.delayed(Duration(milliseconds: 15)); // wait extra duration for page building
       if (controller.offset < 0 || controller.offset > 1000000) {
         return false; // almost unreachable, only for abnormal behavior
       }

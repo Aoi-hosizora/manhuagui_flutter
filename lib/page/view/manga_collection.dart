@@ -17,7 +17,7 @@ enum MangaCollectionType {
 }
 
 /// 漫画集合，针对每日排行、最近更新、浏览历史、我的书架、下载列表，在 [RecommendSubPage] 使用
-class MangaCollectionView extends StatelessWidget {
+class MangaCollectionView extends StatefulWidget {
   const MangaCollectionView({
     Key? key,
     required this.type,
@@ -41,6 +41,11 @@ class MangaCollectionView extends StatelessWidget {
   final String? username;
   final void Function()? onMorePressed;
 
+  @override
+  State<MangaCollectionView> createState() => _MangaCollectionViewState();
+}
+
+class _MangaCollectionViewState extends State<MangaCollectionView> with AutomaticKeepAliveClientMixin {
   Widget _buildCover(BuildContext context, int mid, String title, String url, String cover, double width, double height, {bool gotoDownload = false}) {
     return FullRippleWidget(
       child: Container(
@@ -240,7 +245,7 @@ class MangaCollectionView extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                manga.triedChapterIds.length == manga.totalChapterIds.length
+                manga.successChapterIds.length == manga.totalChapterIds.length
                     ? '已完成 (共 ${manga.totalChapterIds.length} 章节)' //
                     : '未完成 (${manga.triedChapterIds.length}/${manga.totalChapterIds.length})',
                 maxLines: 1,
@@ -255,49 +260,56 @@ class MangaCollectionView extends StatelessWidget {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     String title;
     IconData icon;
     List<Widget>? widgets;
+    bool twoLine = false;
 
-    switch (type) {
+    switch (widget.type) {
       case MangaCollectionType.rankings:
         title = '今日漫画排行榜';
         icon = Icons.trending_up;
-        widgets = ranking?.sublist(0, ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList();
+        widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList(); // # = 50 => 20
         break;
       case MangaCollectionType.updates:
         title = '最近更新的漫画';
         icon = Icons.cached;
-        widgets = updates?.map((el) => _buildUpdateItem(context, el)).toList();
+        widgets = widget.updates?.sublist(0, widget.updates!.length.clamp(0, 30)).map((el) => _buildUpdateItem(context, el)).toList(); // # = 42 => 30
         break;
       case MangaCollectionType.histories:
-        title = username == null ? '本地浏览历史' : '$username 的浏览历史';
+        title = widget.username == null ? '本地浏览历史' : '${widget.username} 的浏览历史';
         icon = Icons.history;
-        widgets = histories?.map((el) => _buildHistoryItem(context, el)).toList();
+        widgets = widget.histories?.map((el) => _buildHistoryItem(context, el)).toList(); // # = 50
+        twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.shelves:
-        title = username == null ? '我的书架' : '$username 的书架';
+        title = widget.username == null ? '我的书架' : '${widget.username} 的书架';
         icon = Icons.star_outlined;
-        widgets = shelves?.map((el) => _buildShelfItem(context, el)).toList();
+        widgets = widget.shelves?.map((el) => _buildShelfItem(context, el)).toList(); // # = 20
+        twoLine = widgets != null && widgets.length > 6;
         break;
       case MangaCollectionType.downloads:
         title = '漫画下载列表';
         icon = Icons.download;
-        widgets = downloads?.sublist(0, downloads!.length.clamp(0, 20)).map((el) => _buildDownloadItem(context, el)).toList();
+        widgets = widget.downloads?.sublist(0, widget.downloads!.length.clamp(0, 20)).map((el) => _buildDownloadItem(context, el)).toList(); // # = 20
         break;
     }
 
     return HomepageColumnView(
       title: title,
       icon: icon,
-      onMorePressed: onMorePressed,
-      hPadding: 15,
-      vPadding: 10,
+      onMorePressed: widget.onMorePressed,
+      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       child: PlaceholderText.from(
         isLoading: widgets == null,
         isEmpty: widgets?.isNotEmpty != true,
-        errorText: error,
+        errorText: widget.error,
         setting: PlaceholderSetting(
           showLoadingText: false,
           showNothingRetry: false,
@@ -311,17 +323,36 @@ class MangaCollectionView extends StatelessWidget {
         ).copyWithChinese(),
         childBuilder: (_) => SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 15),
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(), // for scrolling in recommend page
           scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (var i = 0; i < widgets!.length; i++)
-                Padding(
-                  padding: EdgeInsets.only(left: i == 0 ? 0 : 15),
-                  child: widgets[i],
+          child: !twoLine
+              ? Row(
+                  children: [
+                    for (var i = 0; i < widgets!.length; i++)
+                      Padding(
+                        padding: EdgeInsets.only(left: i == 0 ? 0 : 15),
+                        child: widgets[i],
+                      ),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < widgets!.length; i += 2)
+                      Padding(
+                        padding: EdgeInsets.only(left: i == 0 ? 0 : 15),
+                        child: Column(
+                          children: [
+                            widgets[i],
+                            if (i + 1 < widgets.length) ...[
+                              SizedBox(height: 10),
+                              widgets[i + 1],
+                            ],
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
         ),
       ),
     );

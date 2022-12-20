@@ -42,7 +42,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SettingSubPage(
+    return SettingDialogView(
       children: [
         SettingComboBoxView<TimeoutBehavior>(
           title: '网络请求超时时间',

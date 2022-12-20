@@ -183,7 +183,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
           initialScale: PhotoViewComputedScale.contained,
           minScale: PhotoViewComputedScale.contained / 2,
-          maxScale: PhotoViewComputedScale.covered * 2,
+          maxScale: 1.5,
           backgroundDecoration: BoxDecoration(color: Colors.black),
           filterQuality: FilterQuality.high,
           onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
@@ -255,11 +255,11 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
         initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained / 2,
-        maxScale: PhotoViewComputedScale.covered * 2,
+        maxScale: 1.5,
         backgroundDecoration: BoxDecoration(color: Colors.black),
         filterQuality: FilterQuality.high,
-        onTapDown: null,
-        onTapUp: null,
+        onTapDown: null /* >>> */,
+        onTapUp: null /* >>> */,
         imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
           key: key,
           urlFuture: widget.imageUrlFutures[idx],
@@ -288,8 +288,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
         ),
       ),
-      onImageTapDown: (d) => _onPointerDown(d.globalPosition),
-      onImageTapUp: (d) => _onPointerUp(d.globalPosition),
+      onImageTapDown: (d) => _onPointerDown(d.globalPosition) /* <<< */,
+      onImageTapUp: (d) => _onPointerUp(d.globalPosition) /* <<< */,
       onImageLongPressed: (idx) => _onLongPressed(idx),
       // ****************************************************************
       // 额外页

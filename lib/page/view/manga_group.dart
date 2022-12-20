@@ -50,6 +50,49 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     }
   }
 
+  Widget _buildTabs() {
+    // HomepageColumnView
+    // padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12)
+    // headerChildSpace: 8 /* 12 <= 8 + 4 */
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8 /* 12 <= 8 + 4 */),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 6 /* 15 (hPadding) <= 6 (this) + 9 (item) */, vertical: 4 /* 12 (vPadding) <= 4 (this) + 8 (space) */),
+        physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(), // for scrolling in recommend page
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (var name in _groupMap.keys)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  child: Container(
+                    margin: EdgeInsets.only(left: 9, right: 9, top: 4, bottom: 4 - 1.4 /* border_width */ - 1.6 /* border_padding */),
+                    padding: EdgeInsets.only(bottom: 1.6),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: name == _currentSelectedName ? BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.85), width: 1.4) : BorderSide.none,
+                      ),
+                    ),
+                    child: Text(
+                      name.isEmpty ? '置顶漫画' : name,
+                      style: Theme.of(context).textTheme.bodyText2?.copyWith(
+                            color: name == _currentSelectedName ? Theme.of(context).primaryColor : null,
+                          ),
+                    ),
+                  ),
+                  onTap: () {
+                    _currentSelectedName = name;
+                    if (mounted) setState(() {});
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildItem({required BuildContext context, required TinyBlockManga manga, required double width, required double height}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,41 +191,12 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     return HomepageColumnView(
       title: widget.groupList.title + (_currentSelectedName.isEmpty ? '' : '・$_currentSelectedName'),
       icon: widget.groupList.isSerial ? Icons.whatshot : (widget.groupList.isFinish ? Icons.check_circle_outline : Icons.fiber_new),
-      hPadding: 15,
-      vPadding: 10,
+      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+      headerChildSpace: 8,
       onMorePressed: widget.onMorePressed,
       child: Column(
         children: [
-          SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 5), // 15 (hPadding) <= 10 + 5
-            physics: AlwaysScrollableScrollPhysics(),
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (var name in _groupMap.keys)
-                  Material(
-                    color: name == _currentSelectedName ? Colors.white : Colors.transparent,
-                    child: InkWell(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        child: Text(
-                          name.isEmpty ? '置顶漫画' : name,
-                          style: Theme.of(context).textTheme.bodyText2?.copyWith(
-                                fontSize: 14,
-                                color: name == _currentSelectedName ? Theme.of(context).primaryColor : null,
-                              ),
-                        ),
-                      ),
-                      onTap: () {
-                        _currentSelectedName = name;
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10),
+          _buildTabs(),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: hSpace),
             child: Wrap(

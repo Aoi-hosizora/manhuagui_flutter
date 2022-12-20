@@ -48,7 +48,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SettingSubPage(
+    return SettingDialogView(
       children: [
         SettingComboBoxView<bool>(
           title: '漫画章节下载顺序',

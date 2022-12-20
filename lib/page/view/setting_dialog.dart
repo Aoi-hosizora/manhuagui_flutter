@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 与设置相关的 [SettingSubPage] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [OtherSettingSubPage] 使用
-class SettingSubPage extends StatelessWidget {
-  const SettingSubPage({
+/// 与设置相关的 [SettingDialogView] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [OtherSettingSubPage] 使用
+class SettingDialogView extends StatelessWidget {
+  const SettingDialogView({
     Key? key,
     required this.children,
   }) : super(key: key);
@@ -97,22 +97,38 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
   final void Function(T) onChanged;
 
   @override
-  Widget buildRightWidget(BuildContext context) => DropdownButton<T>(
-        value: value,
-        items: values
-            .map(
-              (s) => DropdownMenuItem<T>(
-                child: DefaultTextStyle(
-                  child: builder(s),
-                  style: Theme.of(context).textTheme.bodyText2!,
-                ),
-                value: s,
-              ),
-            )
-            .toList(),
-        underline: Container(color: Colors.white),
-        isExpanded: true,
-        onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
+  Widget buildRightWidget(BuildContext context) => Stack(
+        children: [
+          DropdownButton<T>(
+            value: value,
+            items: [
+              for (var v in values)
+                DropdownMenuItem<T>(
+                  value: v,
+                  child: DefaultTextStyle(
+                    style: Theme.of(context).textTheme.bodyText2!,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 2),
+                      child: builder(v),
+                    ),
+                  ),
+                )
+            ],
+            isExpanded: true,
+            underline: Container(),
+            onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 6,
+            child: Container(
+              height: 0.8,
+              margin: EdgeInsets.only(right: 4),
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+        ],
       );
 }
 

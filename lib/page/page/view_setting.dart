@@ -43,7 +43,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SettingSubPage(
+    return SettingDialogView(
       children: [
         SettingComboBoxView<ViewDirection>(
           title: '阅读方向',

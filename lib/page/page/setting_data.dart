@@ -36,7 +36,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SettingSubPage(
+    return SettingDialogView(
       children: [
         SettingSwitcherView(
           title: ExportDataType.readHistories.toTypeTitle(),

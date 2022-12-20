@@ -106,17 +106,18 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     final client = RestClient(DioManager.instance.dio);
 
     if (types.contains(MangaCollectionType.rankings)) {
-      // pass
+      // pass => #=50
     }
 
     if (types.contains(MangaCollectionType.updates)) {
       Future.microtask(() async {
-        _updates = null;
+        _updates = null; // loading
         _updatesError = '';
         try {
-          var result = await client.getRecentUpdatedMangas(page: 0);
+          var result = await client.getRecentUpdatedMangas(page: 0); // #=42
           _updates = result.data.data;
         } catch (e, s) {
+          _updates = []; // loaded but error
           _updatesError = wrapError(e, s).text;
         } finally {
           if (mounted) setState(() {});
@@ -126,8 +127,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     if (types.contains(MangaCollectionType.histories)) {
       Future.microtask(() async {
-        _histories = null;
-        var result = await HistoryDao.getHistories(username: AuthManager.instance.username, page: 1);
+        _histories = null; // loading
+        var result = await HistoryDao.getHistories(username: AuthManager.instance.username, page: 1, limit: 50); // #=50
         _histories = result ?? [];
         if (mounted) setState(() {});
       });
@@ -135,20 +136,21 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     if (types.contains(MangaCollectionType.shelves)) {
       Future.microtask(() async {
-        _shelves = null;
+        _shelves = null; // loading
         _shelvesError = '';
         if (AuthManager.instance.logined) {
           try {
-            var result = await client.getShelfMangas(token: AuthManager.instance.token, page: 1);
+            var result = await client.getShelfMangas(token: AuthManager.instance.token, page: 1); // #=20
             _shelves = result.data.data;
           } catch (e, s) {
+            _shelves = []; // loaded but error
             _shelvesError = wrapError(e, s).text;
           } finally {
             if (mounted) setState(() {});
           }
         } else {
+          _shelves = []; // loaded but unauthorized
           _shelvesError = '用户未登录';
-          _shelves = [];
           if (mounted) setState(() {});
         }
       });
@@ -156,9 +158,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     if (types.contains(MangaCollectionType.downloads)) {
       Future.microtask(() async {
-        _downloads = null;
+        _downloads = null; // loading
         var result = await DownloadDao.getMangas();
-        _downloads = result ?? [];
+        _downloads = result?.sublist(0, result.length.clamp(0, 20)) ?? []; // #=20
         if (mounted) setState(() {});
       });
     }
@@ -269,11 +271,11 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     ],
                   ),
                 ),
-                _buildCollection('', MangaCollectionType.rankings), // 漫画排行
-                _buildCollection(_updatesError, MangaCollectionType.updates), // 最新更新
+                _buildCollection('', MangaCollectionType.rankings), // 日排行榜
+                _buildCollection(_updatesError, MangaCollectionType.updates), // 最近更新
                 _buildCollection('', MangaCollectionType.histories), // 浏览历史
                 _buildCollection(_shelvesError, MangaCollectionType.shelves), // 我的书架
-                _buildCollection('', MangaCollectionType.downloads), // 漫画下载
+                _buildCollection('', MangaCollectionType.downloads), // 下载列表
                 Padding(
                   padding: EdgeInsets.only(top: 12),
                   child: HomepageColumnView(

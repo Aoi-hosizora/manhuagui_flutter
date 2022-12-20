@@ -9,16 +9,16 @@ class HomepageColumnView extends StatelessWidget {
     required this.icon,
     required this.child,
     this.onMorePressed,
-    this.hPadding = 15,
-    this.vPadding = 10,
+    this.padding = const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+    this.headerChildSpace,
   }) : super(key: key);
 
   final String title;
   final IconData icon;
   final Widget child;
   final void Function()? onMorePressed;
-  final double hPadding;
-  final double vPadding;
+  final EdgeInsets padding;
+  final double? headerChildSpace;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class HomepageColumnView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Padding(
-                padding: EdgeInsets.only(left: hPadding, top: vPadding, bottom: vPadding),
+                padding: EdgeInsets.only(left: padding.left, top: padding.top, bottom: headerChildSpace ?? padding.top),
                 child: IconText(
                   icon: Icon(icon, size: 25, color: Colors.orange),
                   text: Text(title, style: Theme.of(context).textTheme.subtitle1),
@@ -40,13 +40,20 @@ class HomepageColumnView extends StatelessWidget {
               ),
               if (onMorePressed != null)
                 Padding(
-                  padding: EdgeInsets.only(right: hPadding - 4, top: vPadding - 3, bottom: vPadding - 3),
+                  padding: EdgeInsets.only(right: padding.right - 5, top: (headerChildSpace ?? 0) / 2),
                   child: InkWell(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 6, right: 4, top: 3, bottom: 3),
+                      padding: EdgeInsets.only(left: 8, right: 5, top: 4, bottom: 4),
                       child: IconText(
-                        text: Text('查看更多', style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.orange)),
-                        icon: Icon(Icons.double_arrow, size: 20, color: Colors.orange),
+                        text: Text(
+                          '查看更多',
+                          style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.orange),
+                        ),
+                        icon: Icon(
+                          Icons.double_arrow,
+                          size: 20,
+                          color: Colors.orange,
+                        ),
                         alignment: IconTextAlignment.r2l,
                         space: 2,
                       ),
@@ -57,7 +64,7 @@ class HomepageColumnView extends StatelessWidget {
             ],
           ),
           child,
-          SizedBox(height: vPadding),
+          SizedBox(height: padding.bottom),
         ],
       ),
     );

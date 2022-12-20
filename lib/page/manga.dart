@@ -464,7 +464,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                              text: Text('订阅 ${_subscribeCount ?? '?'} / 排名 ${_data!.mangaRank}'),
+                              text: Text('排名 ${_data!.mangaRank} / 订阅数量 ${_subscribeCount ?? '未知'}'),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                             ),
@@ -519,6 +519,15 @@ class _MangaPageState extends State<MangaPage> {
                           ),
                         ),
                       ),
+                      longPress: () {
+                        if (_downloadEntity == null || _downloadEntity!.triedChapterIds.isEmpty) {
+                          Fluttertoast.showToast(msg: '未下载任何章节');
+                        } else if (_downloadEntity!.successChapterIds.length == _downloadEntity!.totalChapterIds.length) {
+                          Fluttertoast.showToast(msg: '已成功下载 ${_downloadEntity!.totalChapterIds.length} 章节');
+                        } else {
+                          Fluttertoast.showToast(msg: '未完成下载，已开始下载 ${_downloadEntity!.triedChapterIds.length}/${_downloadEntity!.totalChapterIds.length} 章节');
+                        }
+                      },
                     ),
                     action3: ActionItem(
                       text: _history?.read == true ? '继续阅读' : '开始阅读',

@@ -157,14 +157,14 @@ class ViewExtraSubPage extends StatelessWidget {
         enable: !subscribing,
       ),
       action3: ActionItem(
-        text: '下载漫画',
-        icon: Icons.download,
-        action: () => toDownload.call(),
-      ),
-      action4: ActionItem(
         text: '漫画目录',
         icon: Icons.menu,
         action: () => toShowToc.call(),
+      ),
+      action4: ActionItem(
+        text: '下载漫画',
+        icon: Icons.download,
+        action: () => toDownload.call(),
       ),
       action5: ActionItem(
         text: '查看评论',
