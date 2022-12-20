@@ -2,23 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
 class ActionItem {
-  const ActionItem({
-    required this.text,
-    required this.icon,
-    required this.action,
-    this.longPress,
-    this.enable = true,
-    this.rotateAngle = 0,
-  });
+  const ActionItem({required this.text, required this.icon, required this.action, this.longPress, this.enable = true, this.rotateAngle = 0});
 
-  const ActionItem.simple(
-    this.text,
-    this.icon,
-    this.action, {
-    this.longPress,
-    this.enable = true,
-    this.rotateAngle = 0,
-  });
+  const ActionItem.simple(this.text, this.icon, this.action, {this.longPress, this.enable = true, this.rotateAngle = 0});
 
   final String text;
   final IconData icon;
@@ -28,7 +14,7 @@ class ActionItem {
   final double rotateAngle;
 }
 
-/// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [MangaViewerPage] / [DownloadTocPage] 使用
+/// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [MangaViewerPage] / [ViewExtraSubPage] / [DownloadMangaPage] 使用
 class ActionRowView extends StatelessWidget {
   const ActionRowView.four({
     Key? key,

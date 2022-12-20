@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
+/// 使用 [ExtendedPhotoGallery] 和 [ReloadablePhotoView] 扩展的横向/纵向画廊展示，在 [MangaGalleryView] 使用
+
 class HorizontalGalleryView extends StatefulWidget {
   const HorizontalGalleryView({
     Key? key,
@@ -146,7 +148,7 @@ class VerticalGalleryView extends StatefulWidget {
   State<VerticalGalleryView> createState() => VerticalGalleryViewState();
 }
 
-const _kMaskDuration = Duration(milliseconds: 150);
+const _kMaskAnimDuration = Duration(milliseconds: 150);
 
 class VerticalGalleryViewState extends State<VerticalGalleryView> {
   late final _controller = ScrollController()..addListener(_onScrollChanged);
@@ -201,7 +203,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     } else {
       var scrollRect = _ScrollHelper.getScrollViewRect(_listKey);
       if (scrollRect != null) {
-        var index = _ScrollHelper.getVisibleTargetItemIndex(_itemKeys, scrollRect);
+        var index = _ScrollHelper.getVisibleExactItemIndex(_itemKeys, scrollRect);
         if (index != null) {
           widget.onPageChanged?.call(index);
         }
@@ -221,10 +223,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _jumping = true;
     _masking = masked;
     if (mounted) setState(() {});
-    await Future.delayed(_kMaskDuration);
+    await Future.delayed(_kMaskAnimDuration);
 
-    // TODO not accurate !!!
-    var ok = await _ScrollHelper.scrollToTargetIndex(_itemKeys, scrollRect, _controller, page, widget.viewportPageSpace);
+    var ok = await _ScrollHelper.scrollToIndex(_controller, page, _itemKeys, scrollRect, widget.viewportPageSpace);
     _jumping = false;
     _masking = false;
     if (mounted) setState(() {});
@@ -232,6 +233,18 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
       widget.onPageChanged?.call(page);
     }
   }
+
+  // PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState s) {
+  //   switch (s) {
+  //     case PhotoViewScaleState.initial:
+  //       return PhotoViewScaleState.originalSize;
+  //     case PhotoViewScaleState.covering:
+  //     case PhotoViewScaleState.originalSize:
+  //     case PhotoViewScaleState.zoomedIn:
+  //     case PhotoViewScaleState.zoomedOut:
+  //       return PhotoViewScaleState.initial;
+  //   }
+  // }
 
   Widget _buildPhotoItem(BuildContext context, int index) {
     final pageOptions = widget.imagePageBuilder(context, index); // index excludes non-PhotoView pages
@@ -245,14 +258,14 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         maxScale: options.maxScale,
         backgroundDecoration: options.backgroundDecoration,
         filterQuality: options.filterQuality,
-        onTapDown: null,
-        onTapUp: null,
+        onTapDown: null /* >>> */,
+        onTapUp: null /* >>> */,
         loadingBuilder: options.loadingBuilder,
         errorBuilder: options.errorBuilder,
         basePosition: options.basePosition,
         controller: options.controller,
         customSize: options.customSize,
-        disableGestures: true,
+        disableGestures: true /* !!! */,
         enablePanAlways: options.enablePanAlways,
         enableRotation: options.enableRotation,
         gaplessPlayback: options.gaplessPlayback,
@@ -303,7 +316,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                           ? math.max(widget.viewportPageSpace, 10) // for first page, space must be larger than 10
                           : widget.viewportPageSpace /* for remaining pages */,
                     ),
-                    child: _buildPhotoItem(context, i),
+                    child: _buildPhotoItem(context, i), // TODO 竖直滚动的 GalleryView 暂时无法缩放页面
                   ),
                 ),
 
@@ -322,9 +335,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         // <<<
         Positioned.fill(
           child: AnimatedSwitcher(
-            duration: _kMaskDuration,
+            duration: _kMaskAnimDuration,
             child: !_masking
-                ? SizedBox(height: 0)
+                ? const SizedBox.shrink()
                 : Container(
                     color: Colors.black,
                     alignment: Alignment.center,
@@ -342,69 +355,62 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
 }
 
 class _ScrollHelper {
-  static Rect? getScrollViewRect<T extends State>(GlobalKey<T> key) {
-    var scrollRect = key.currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+  static Rect? getScrollViewRect(GlobalKey key) {
+    var scrollRect = key.currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
     return scrollRect;
   }
 
-  static int? getVisibleTargetItemIndex<T extends State>(List<GlobalKey<T>> itemKeys, Rect scrollRect) {
-    int outIndex = -1;
+  static int? getVisibleExactItemIndex(List<GlobalKey> itemKeys, Rect scrollRect) {
     for (var i = 0; i < itemKeys.length; i++) {
-      var itemRect = itemKeys[i].currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+      var itemRect = itemKeys[i].currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
       if (itemRect != null) {
         if (itemRect.top <= scrollRect.top && itemRect.bottom > scrollRect.top) {
-          outIndex = i;
-          break;
+          return i;
         }
       }
     }
-    if (outIndex < 0 || outIndex >= itemKeys.length) {
-      return null;
-    }
-    return outIndex;
+    return null;
   }
 
-  static Future<bool> scrollToTargetIndex<T extends State>(
-    List<GlobalKey<T>> itemKeys,
-    Rect scrollRect,
-    ScrollController controller,
-    int targetIndex, [
-    double additionalOffset = 0,
-  ]) async {
-    Rect? getItemRect(int index) {
-      if (index < 0 || index >= itemKeys.length) {
-        return null;
-      }
-      return itemKeys[index].currentContext?.findRenderObject()?.getBoundInRootAncestorCoordinate();
+  static Future<bool> scrollToIndex(ScrollController controller, int targetIndex, List<GlobalKey> itemKeys, Rect scrollRect, [double additionalOffset = 0]) async {
+    // 0. jump to top or bottom directly if target index is predefined
+    if (targetIndex <= 0 || targetIndex >= itemKeys.length - 1) {
+      controller.jumpTo(targetIndex == 0 ? 0 : controller.position.maxScrollExtent);
+      await WidgetsBinding.instance?.endOfFrame;
+      return true;
     }
 
-    // automatically scroll the data view, to make sure if the target item rect is not null
+    // 1. scroll the scrollable view, make sure whether the target item rect is accessible (means not null) and valid (means showing within scrollable view)
+    Rect? getItemRect(int index) => index < 0 || index >= itemKeys.length
+        ? null //
+        : itemKeys[index].currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
     var targetItemRect = getItemRect(targetIndex);
-    while (targetItemRect == null) {
-      // get current visible item and check validity
-      var currIndex = getVisibleTargetItemIndex(itemKeys, scrollRect) ?? -1;
+    while (targetItemRect == null || targetItemRect.bottom <= scrollRect.top || targetItemRect.top >= scrollRect.bottom) {
+      // 1.1. get current visible item index
+      var currIndex = getVisibleExactItemIndex(itemKeys, scrollRect) ?? -1;
       if (currIndex < 0) {
         return false; // almost unreachable
       }
       if (currIndex == targetIndex) {
-        targetItemRect = getItemRect(targetIndex);
         break; // almost unreachable
       }
 
-      // automatically scroll (almost the real height of scroll view)
-      var direction = currIndex > targetIndex ? -1 : 1;
-      controller.jumpTo(controller.offset + direction * scrollRect.height * 0.95); // jump and wait for widget building
-      await WidgetsBinding.instance?.endOfFrame; // TODO not accurate, add duration ???
-      if (controller.offset < 0 || controller.offset > 500000) {
-        return false; // almost unreachable, only for exception
+      // 1.2. automatically scroll screen by screen
+      var direction = currIndex > targetIndex ? -1 /* up */ : 1 /* down */;
+      controller.jumpTo(controller.offset + direction * scrollRect.height * 0.98);
+      await WidgetsBinding.instance?.endOfFrame;
+      await Future.delayed(Duration(milliseconds: 15)); // wait extra duration for page building
+      if (controller.offset < 0 || controller.offset > 1000000) {
+        return false; // almost unreachable, only for abnormal behavior
       }
       targetItemRect = getItemRect(targetIndex);
     }
+
+    // 2. re-get the target item rect, and scroll to this item accurately
+    targetItemRect = getItemRect(targetIndex);
     if (targetItemRect == null) {
       return false; // almost unreachable
     }
-
-    // scroll to target index in new data view style
     controller.jumpTo(controller.offset + targetItemRect.top - scrollRect.top + additionalOffset + 1);
     await WidgetsBinding.instance?.endOfFrame;
     return true;

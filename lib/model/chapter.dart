@@ -15,6 +15,8 @@ class MangaChapter {
   final int nextCid;
   final int prevCid;
 
+  String get mangaUrl => 'https://www.manhuagui.com/comic/$mid';
+
   const MangaChapter({required this.cid, required this.title, required this.mid, required this.mangaTitle, required this.url, required this.pages, required this.pageCount, required this.nextCid, required this.prevCid});
 
   factory MangaChapter.fromJson(Map<String, dynamic> json) => _$MangaChapterFromJson(json);

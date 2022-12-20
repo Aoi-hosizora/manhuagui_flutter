@@ -1,19 +1,22 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/services.dart';
 
-bool? _lowerThanAndroidQ;
+// =======
+// version
+// =======
+
+int? _androidSDKVersion;
 
 Future<bool> lowerThanAndroidQ() async {
-  _lowerThanAndroidQ ??= Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt! < 29; // SDK 29 => Android 10
-  return _lowerThanAndroidQ!;
+  _androidSDKVersion ??= (await DeviceInfoPlugin().androidInfo).version.sdkInt!;
+  return Platform.isAndroid && _androidSDKVersion! < 29; // SDK 29 => Android 10 (Q)
 }
 
-bool? _lowerThanAndroidR;
-
 Future<bool> lowerThanAndroidR() async {
-  _lowerThanAndroidR ??= Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt! < 30; // SDK 30 => Android 11
-  return _lowerThanAndroidR!;
+  _androidSDKVersion ??= (await DeviceInfoPlugin().androidInfo).version.sdkInt!;
+  return Platform.isAndroid && _androidSDKVersion! < 30; // SDK 30 => Android 11 (R)
 }
 
 bool? isVersionNewer(String ver1, String ver2) {
@@ -47,4 +50,28 @@ bool? isVersionNewer(String ver1, String ver2) {
     return true;
   }
   return false;
+}
+
+// ==============
+// native channel
+// ==============
+
+const _channelName = 'com.aoihosizora.manhuagui';
+const _channel = MethodChannel(_channelName);
+const _restartAppMethodName = 'restartApp';
+const _insertMediaMethodName = 'insertMedia';
+
+Future<void> restartApp() async {
+  if (Platform.isAndroid) {
+    await _channel.invokeMethod(_restartAppMethodName);
+  }
+}
+
+Future<void> addToGallery(File file) async {
+  if (Platform.isAndroid) {
+    // Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
+    await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
+      'filepath': file.path,
+    });
+  }
 }

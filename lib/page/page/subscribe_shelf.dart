@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
-import 'package:manhuagui_flutter/page/view/option_popup.dart';
-import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/login_first.dart';
+import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-/// 首页-全部
-class OverallSubPage extends StatefulWidget {
-  const OverallSubPage({
+/// 订阅-书架
+class ShelfSubPage extends StatefulWidget {
+  const ShelfSubPage({
     Key? key,
     this.action,
   }) : super(key: key);
@@ -20,37 +20,53 @@ class OverallSubPage extends StatefulWidget {
   final ActionController? action;
 
   @override
-  _OverallSubPageState createState() => _OverallSubPageState();
+  _ShelfSubPageState createState() => _ShelfSubPageState();
 }
 
-class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAliveClientMixin {
+class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  VoidCallback? _cancelHandler;
+  AuthData? _oldAuthData;
+
+  var _loginChecking = true;
+  var _loginCheckError = '';
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+        _oldAuthData = AuthManager.instance.authData;
+        _loginChecking = false;
+        _loginCheckError = ev.error?.text ?? '';
+        if (mounted) setState(() {});
+        if (AuthManager.instance.logined) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
+        }
+      });
+      _loginChecking = true;
+      await AuthManager.instance.check();
+    });
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
+    _cancelHandler?.call();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
   }
 
-  final _data = <TinyManga>[];
+  final _data = <ShelfManga>[];
   var _total = 0;
-  var _currOrder = MangaOrder.byNew;
-  var _lastOrder = MangaOrder.byNew;
-  var _getting = false;
 
-  Future<PagedList<TinyManga>> _getData({required int page}) async {
+  Future<PagedList<ShelfManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.getAllMangas(page: page, order: _currOrder).onError((e, s) {
+    var result = await client.getShelfMangas(token: AuthManager.instance.token, page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -64,8 +80,22 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
+      _data.clear();
+      return LoginFirstView(
+        checking: _loginChecking,
+        error: _loginCheckError,
+        onErrorRetry: () async {
+          _loginChecking = true;
+          _loginCheckError = '';
+          if (mounted) setState(() {});
+          await AuthManager.instance.check();
+        },
+      );
+    }
+
     return Scaffold(
-      body: PaginationListView<TinyManga>(
+      body: PaginationListView<ShelfManga>(
         key: _pdvKey,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
@@ -77,6 +107,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
           interactiveScrollbar: true,
+          scrollbarMainAxisMargin: 2,
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
@@ -84,39 +115,19 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
-          onStartGettingData: () => mountedSetState(() => _getting = true),
-          onStopGettingData: () => mountedSetState(() => _getting = false),
-          onAppend: (_, l) {
-            _lastOrder = _currOrder;
-          },
           onError: (e) {
             if (_data.isNotEmpty) {
               Fluttertoast.showToast(msg: e.toString());
             }
-            _currOrder = _lastOrder;
-            if (mounted) setState(() {});
           },
         ),
         separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
+        itemBuilder: (c, _, item) => ShelfMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
-            ListHintView.textWidget(
-              leftText: '全部漫画 (共 $_total 部)',
-              rightWidget: OptionPopupView<MangaOrder>(
-                items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                value: _currOrder,
-                titleBuilder: (c, v) => v.toTitle(),
-                enable: !_getting,
-                onSelect: (o) {
-                  if (_currOrder != o) {
-                    _lastOrder = _currOrder;
-                    _currOrder = o;
-                    if (mounted) setState(() {});
-                    _pdvKey.currentState?.refresh();
-                  }
-                },
-              ),
+            ListHintView.textText(
+              leftText: '${AuthManager.instance.username} 订阅的漫画',
+              rightText: '共 $_total 部',
             ),
           ],
         ),

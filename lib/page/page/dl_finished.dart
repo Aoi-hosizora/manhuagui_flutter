@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 
-/// 章节下载管理页-已完成
+/// 下载管理页-已完成
 class DlFinishedSubPage extends StatefulWidget {
   const DlFinishedSubPage({
     Key? key,
@@ -38,8 +38,8 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var succeededChapters = widget.mangaEntity.downloadedChapters //
-        .where((el) => el.succeeded)
+    var succeededChapters = widget.mangaEntity.downloadedChapters
+        .where((el) => el.succeeded && !el.needUpdate) // 仅包括下载成功且不需要更新的章节
         .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
         .toList();
 
@@ -47,7 +47,9 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
       body: ExtendedScrollbar(
         controller: widget.innerController,
         interactive: true,
+        mainAxisMargin: 2,
         crossAxisMargin: 2,
+        extraMargin: EdgeInsets.only(top: widget.injectorHandler.layoutExtent ?? 0),
         child: CustomScrollView(
           controller: widget.innerController,
           physics: AlwaysScrollableScrollPhysics(),

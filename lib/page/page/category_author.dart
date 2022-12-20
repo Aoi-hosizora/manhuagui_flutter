@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
@@ -54,13 +55,16 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
 
     final client = RestClient(DioManager.instance.dio);
     try {
-      var result = await client.getGenres();
+      if (globalGenres == null) {
+        var result = await client.getGenres();
+        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+      }
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _genres.add(allGenres[0]);
-      _genres.addAll(result.data.data.map((c) => c.toTiny()));
+      _genres.addAll(globalGenres!);
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -72,8 +76,8 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
 
   final _data = <SmallAuthor>[];
   var _total = 0;
-  var _currOrder = AuthorOrder.byPopular;
-  var _lastOrder = AuthorOrder.byPopular;
+  var _currOrder = AppSetting.instance.other.defaultAuthorOrder;
+  var _lastOrder = AppSetting.instance.other.defaultAuthorOrder;
   var _currGenre = allGenres[0];
   var _lastGenre = allGenres[0];
   var _currAge = allAges[0];
@@ -125,6 +129,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
           setting: UpdatableDataViewSetting(
             padding: EdgeInsets.symmetric(vertical: 0),
             interactiveScrollbar: true,
+            scrollbarMainAxisMargin: 2,
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
@@ -206,7 +211,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
               ListHintView.textWidget(
                 leftText: '搜索结果 (共 $_total 位)',
                 rightWidget: OptionPopupView<AuthorOrder>(
-                  items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byUpdate],
+                  items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byNew],
                   value: _currOrder,
                   titleBuilder: (c, v) => v.toTitle(),
                   enable: !_getting,

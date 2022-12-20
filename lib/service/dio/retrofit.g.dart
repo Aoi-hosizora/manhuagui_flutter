@@ -361,88 +361,92 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<MangaRank>>> getDayRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getDayRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<Result<ResultPage<MangaRank>>>(
+        _setStreamType<Result<ResultPage<MangaRanking>>>(
             Options(method: 'GET', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/rank/day',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = Result<ResultPage<MangaRank>>.fromJson(
+    final value = Result<ResultPage<MangaRanking>>.fromJson(
       _result.data!,
-      (json) => ResultPage<MangaRank>.fromJson(
+      (json) => ResultPage<MangaRanking>.fromJson(
         json as Map<String, dynamic>,
-        (json) => MangaRank.fromJson(json as Map<String, dynamic>),
+        (json) => MangaRanking.fromJson(json as Map<String, dynamic>),
       ),
     );
     return value;
   }
 
   @override
-  Future<Result<ResultPage<MangaRank>>> getWeekRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getWeekRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<Result<ResultPage<MangaRank>>>(
+        _setStreamType<Result<ResultPage<MangaRanking>>>(
             Options(method: 'GET', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/rank/week',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = Result<ResultPage<MangaRank>>.fromJson(
+    final value = Result<ResultPage<MangaRanking>>.fromJson(
       _result.data!,
-      (json) => ResultPage<MangaRank>.fromJson(
+      (json) => ResultPage<MangaRanking>.fromJson(
         json as Map<String, dynamic>,
-        (json) => MangaRank.fromJson(json as Map<String, dynamic>),
+        (json) => MangaRanking.fromJson(json as Map<String, dynamic>),
       ),
     );
     return value;
   }
 
   @override
-  Future<Result<ResultPage<MangaRank>>> getMonthRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getMonthRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<Result<ResultPage<MangaRank>>>(
+        _setStreamType<Result<ResultPage<MangaRanking>>>(
             Options(method: 'GET', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/rank/month',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = Result<ResultPage<MangaRank>>.fromJson(
+    final value = Result<ResultPage<MangaRanking>>.fromJson(
       _result.data!,
-      (json) => ResultPage<MangaRank>.fromJson(
+      (json) => ResultPage<MangaRanking>.fromJson(
         json as Map<String, dynamic>,
-        (json) => MangaRank.fromJson(json as Map<String, dynamic>),
+        (json) => MangaRanking.fromJson(json as Map<String, dynamic>),
       ),
     );
     return value;
   }
 
   @override
-  Future<Result<ResultPage<MangaRank>>> getTotalRanking({required type}) async {
+  Future<Result<ResultPage<MangaRanking>>> getTotalRanking(
+      {required type}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'type': type};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<Result<ResultPage<MangaRank>>>(
+        _setStreamType<Result<ResultPage<MangaRanking>>>(
             Options(method: 'GET', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/rank/total',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = Result<ResultPage<MangaRank>>.fromJson(
+    final value = Result<ResultPage<MangaRanking>>.fromJson(
       _result.data!,
-      (json) => ResultPage<MangaRank>.fromJson(
+      (json) => ResultPage<MangaRanking>.fromJson(
         json as Map<String, dynamic>,
-        (json) => MangaRank.fromJson(json as Map<String, dynamic>),
+        (json) => MangaRanking.fromJson(json as Map<String, dynamic>),
       ),
     );
     return value;

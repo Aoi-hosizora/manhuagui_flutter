@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/view/message_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/prefs/message.dart';
+import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 
 /// 历史消息页，网络请求并展示 [Message] 信息
 class MessagePage extends StatefulWidget {
@@ -48,7 +48,7 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   Future<void> _loadReadMangas({List<Message>? data}) async {
-    var messages = await MessagePrefs.getReadMessages();
+    var messages = await ReadMessagePrefs.getReadMessages();
     _readMessages.clear();
     _readMessages.addAll(messages);
 
@@ -68,7 +68,7 @@ class _MessagePageState extends State<MessagePage> {
             child: Text('标记'),
             onPressed: () async {
               Navigator.of(c).pop();
-              var r = await MessagePrefs.addReadMessages(_data.map((m) => m.mid).toList());
+              var r = await ReadMessagePrefs.addReadMessages(_data.map((m) => m.mid).toList());
               _readMessages.clear();
               _readMessages.addAll(r);
               _unreadCount = 0;
@@ -95,7 +95,7 @@ class _MessagePageState extends State<MessagePage> {
             child: Text('标记'),
             onPressed: () async {
               Navigator.of(c).pop();
-              await MessagePrefs.clearReadMessages();
+              await ReadMessagePrefs.clearReadMessages();
               _readMessages.clear();
               _unreadCount = _data.length;
               if (mounted) setState(() {});
@@ -137,6 +137,7 @@ class _MessagePageState extends State<MessagePage> {
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
           interactiveScrollbar: true,
+          scrollbarMainAxisMargin: 2,
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),

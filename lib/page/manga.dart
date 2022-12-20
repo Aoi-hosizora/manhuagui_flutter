@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
-import 'package:manhuagui_flutter/page/download_select.dart';
+import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
@@ -14,11 +14,11 @@ import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_rating.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
-import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -115,9 +115,9 @@ class _MangaPageState extends State<MangaPage> {
           _subscribeCount = r.data.count;
           if (mounted) setState(() {});
         } catch (e, s) {
-          if (_error.isEmpty) {
-            Fluttertoast.showToast(msg: wrapError(e, s).text);
-          }
+          var we = wrapError(e, s);
+          globalLogger.e('MangaPage._loadData checkShelfManga', e, s);
+          Fluttertoast.showToast(msg: we.text);
         }
       });
     }
@@ -131,7 +131,7 @@ class _MangaPageState extends State<MangaPage> {
       _data = null;
       _error = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _data = result.data;
 
       // 5. 更新漫画阅读历史
@@ -208,8 +208,6 @@ class _MangaPageState extends State<MangaPage> {
       Fluttertoast.showToast(msg: '用户未登录');
       return;
     }
-
-    final client = RestClient(DioManager.instance.dio);
     var toSubscribe = _subscribed != true; // 去订阅
     if (!toSubscribe) {
       var ok = await showDialog<bool>(
@@ -218,14 +216,8 @@ class _MangaPageState extends State<MangaPage> {
           title: Text('取消订阅确认'),
           content: Text('是否取消订阅《${_data!.title}》？'),
           actions: [
-            TextButton(
-              child: Text('确定'),
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
+            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
           ],
         ),
       );
@@ -234,27 +226,27 @@ class _MangaPageState extends State<MangaPage> {
       }
     }
 
+    final client = RestClient(DioManager.instance.dio);
     _subscribing = true;
     if (mounted) setState(() {});
-
     try {
       await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: _data!.mid);
       _subscribed = toSubscribe;
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(toSubscribe ? '订阅漫画成功' : '取消订阅漫画成功'),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画成功' : '取消订阅漫画成功')));
       EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: _data!.mid, subscribe: _subscribed));
     } catch (e, s) {
       var err = wrapError(e, s).text;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err'),
-        ),
-      );
+      var already = err.contains('已经被'), notYet = err.contains('还没有被');
+      if (already || notYet) {
+        _subscribed = already;
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err))); // 漫画已经被订阅 / 漫画还没有被订阅
+        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: _data!.mid, subscribe: _subscribed));
+      } else {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err')));
+      }
     } finally {
       _subscribing = false;
       if (mounted) setState(() {});
@@ -270,14 +262,13 @@ class _MangaPageState extends State<MangaPage> {
           builder: (c) => MangaViewerPage(
             parentContext: context,
             mangaId: _data!.mid,
-            mangaTitle: _data!.title,
-            mangaCover: _data!.cover,
-            mangaUrl: _data!.url,
-            chapterGroups: _data!.chapterGroups,
             chapterId: chapterId,
+            mangaCover: _data!.cover,
+            chapterGroups: _data!.chapterGroups,
             initialPage: _history?.chapterId == chapterId
                 ? _history?.chapterPage ?? 1 // have read
-                : 1, // have not read
+                : 1 /* have not read */,
+            onlineMode: true,
           ),
         ),
       );
@@ -308,12 +299,11 @@ class _MangaPageState extends State<MangaPage> {
         builder: (c) => MangaViewerPage(
           parentContext: context,
           mangaId: _data!.mid,
-          mangaTitle: _data!.title,
-          mangaCover: _data!.cover,
-          mangaUrl: _data!.url,
-          chapterGroups: _data!.chapterGroups,
           chapterId: cid,
+          mangaCover: _data!.cover,
+          chapterGroups: _data!.chapterGroups,
           initialPage: page,
+          onlineMode: true,
         ),
       ),
     );
@@ -339,6 +329,7 @@ class _MangaPageState extends State<MangaPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _loadData,
@@ -351,6 +342,7 @@ class _MangaPageState extends State<MangaPage> {
           childBuilder: (c) => ExtendedScrollbar(
             controller: _controller,
             interactive: true,
+            mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
               controller: _controller,
@@ -472,7 +464,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                              text: Text('订阅 ${_subscribeCount ?? '?'} / 排名 ${_data!.mangaRank}'),
+                              text: Text('排名 ${_data!.mangaRank} / 订阅数量 ${_subscribeCount ?? '未知'}'),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                             ),
@@ -518,7 +510,7 @@ class _MangaPageState extends State<MangaPage> {
                       action: () => Navigator.of(context).push(
                         CustomPageRoute(
                           context: context,
-                          builder: (c) => DownloadSelectPage(
+                          builder: (c) => DownloadChoosePage(
                             mangaId: _data!.mid,
                             mangaTitle: _data!.title,
                             mangaCover: _data!.cover,
@@ -527,6 +519,15 @@ class _MangaPageState extends State<MangaPage> {
                           ),
                         ),
                       ),
+                      longPress: () {
+                        if (_downloadEntity == null || _downloadEntity!.triedChapterIds.isEmpty) {
+                          Fluttertoast.showToast(msg: '未下载任何章节');
+                        } else if (_downloadEntity!.successChapterIds.length == _downloadEntity!.totalChapterIds.length) {
+                          Fluttertoast.showToast(msg: '已成功下载 ${_downloadEntity!.totalChapterIds.length} 章节');
+                        } else {
+                          Fluttertoast.showToast(msg: '未完成下载，已开始下载 ${_downloadEntity!.triedChapterIds.length}/${_downloadEntity!.totalChapterIds.length} 章节');
+                        }
+                      },
                     ),
                     action3: ActionItem(
                       text: _history?.read == true ? '继续阅读' : '开始阅读',

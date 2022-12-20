@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/download.dart';
-import 'package:manhuagui_flutter/page/page/history.dart';
-import 'package:manhuagui_flutter/page/page/shelf.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_history.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -36,9 +36,11 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
     widget.action?.addAction(() => _actions[_controller.index].invoke());
     _cancelHandler = EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(0);
+      _selectedIndex = 0;
     });
     _cancelHandler = EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
       _controller.animateTo(1);
+      _selectedIndex = 1;
     });
   }
 
@@ -107,6 +109,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
       ),
       body: TabBarView(
         controller: _controller,
+        physics: DefaultScrollPhysics.of(context),
         children: _tabs.map((t) => t.item2).toList(),
       ),
     );

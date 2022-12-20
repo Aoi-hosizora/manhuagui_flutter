@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
@@ -11,11 +11,9 @@ class ViewExtraSubPage extends StatelessWidget {
     Key? key,
     required this.isHeader,
     required this.reverseScroll,
-    required this.chapter,
-    required this.mangaCover,
+    required this.data,
     required this.subscribing,
     required this.subscribed,
-    required this.chapterTitleGetter,
     required this.toJumpToImage,
     required this.toSubscribe,
     required this.toDownload,
@@ -27,11 +25,9 @@ class ViewExtraSubPage extends StatelessWidget {
 
   final bool isHeader;
   final bool reverseScroll;
-  final MangaChapter chapter;
-  final String mangaCover;
+  final MangaViewerPageData data;
   final bool subscribing;
   final bool subscribed;
-  final String? Function(int cid) chapterTitleGetter;
   final void Function(int imageIndex, bool animated) toJumpToImage;
   final void Function(bool gotoPrevious) toGotoChapter;
   final void Function() toSubscribe;
@@ -41,6 +37,21 @@ class ViewExtraSubPage extends StatelessWidget {
   final void Function() toPop;
 
   Widget _buildChapters(BuildContext context) {
+    if (data.prevChapterId == null || data.nextChapterId == null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 6),
+        child: Center(
+          child: Text(
+            '当前处于离线模式，但未在下载列表获取到章节跳转信息',
+            style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                  fontSize: 18,
+                  color: Colors.grey[600],
+                ),
+          ),
+        ),
+      );
+    }
+
     Widget _buildAction({required String text, required String subText, required bool left, required void Function() action, required bool disable}) {
       return InkWell(
         onTap: disable ? null : action,
@@ -87,20 +98,20 @@ class ViewExtraSubPage extends StatelessWidget {
 
     var prev = Expanded(
       child: _buildAction(
-        text: chapter.prevCid != 0 ? '阅读上一章节' : '暂无上一章节',
-        subText: chapterTitleGetter.call(chapter.prevCid) ?? '未知话',
+        text: data.prevChapterId! != 0 ? '阅读上一章节' : '暂无上一章节',
+        subText: data.prevChapterTitle!,
         left: !reverseScroll ? true : false,
-        disable: chapter.prevCid == 0,
+        disable: data.prevChapterId == 0,
         action: () => toGotoChapter.call(true),
       ),
     );
 
     var next = Expanded(
       child: _buildAction(
-        text: chapter.nextCid != 0 ? '阅读下一章节' : '暂无下一章节',
-        subText: chapterTitleGetter.call(chapter.nextCid) ?? '未知话',
+        text: data.nextChapterId! != 0 ? '阅读下一章节' : '暂无下一章节',
+        subText: data.nextChapterTitle!,
         left: !reverseScroll ? false : true,
-        disable: chapter.nextCid == 0,
+        disable: data.nextChapterId == 0,
         action: () => toGotoChapter.call(false),
       ),
     );
@@ -146,14 +157,14 @@ class ViewExtraSubPage extends StatelessWidget {
         enable: !subscribing,
       ),
       action3: ActionItem(
-        text: '下载漫画',
-        icon: Icons.download,
-        action: () => toDownload.call(),
-      ),
-      action4: ActionItem(
         text: '漫画目录',
         icon: Icons.menu,
         action: () => toShowToc.call(),
+      ),
+      action4: ActionItem(
+        text: '下载漫画',
+        icon: Icons.download,
+        action: () => toDownload.call(),
       ),
       action5: ActionItem(
         text: '查看评论',
@@ -187,7 +198,7 @@ class ViewExtraSubPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         NetworkImageView(
-                          url: mangaCover,
+                          url: data.mangaCover,
                           height: 200,
                           width: 150,
                           border: Border.all(
@@ -204,7 +215,7 @@ class ViewExtraSubPage extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  chapter.mangaTitle,
+                                  data.mangaTitle,
                                   style: Theme.of(context).textTheme.headline6,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
@@ -213,7 +224,7 @@ class ViewExtraSubPage extends StatelessWidget {
                               SizedBox(height: 10),
                               Flexible(
                                 child: Text(
-                                  chapter.title,
+                                  data.chapterTitle,
                                   style: Theme.of(context).textTheme.subtitle1?.copyWith(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w500,
@@ -250,7 +261,7 @@ class ViewExtraSubPage extends StatelessWidget {
                 child: Column(
                   children: [
                     NetworkImageView(
-                      url: chapter.pages[0],
+                      url: data.chapterCover,
                       height: 150,
                       width: 150 / 0.618,
                       fit: BoxFit.cover,
@@ -265,7 +276,7 @@ class ViewExtraSubPage extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            '- ${chapter.title} -',
+                            '- ${data.chapterTitle} -',
                             style: Theme.of(context).textTheme.headline6?.copyWith(
                                   fontWeight: FontWeight.w500,
                                   color: Theme.of(context).primaryColor,
@@ -294,7 +305,7 @@ class ViewExtraSubPage extends StatelessWidget {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('返回上一页'),
-                            onPressed: () => toJumpToImage.call(chapter.pages.length, true),
+                            onPressed: () => toJumpToImage.call(data.pageCount, true),
                           ),
                         ),
                       ],

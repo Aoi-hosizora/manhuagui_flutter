@@ -45,8 +45,13 @@ class TinyCategory {
   age:    (all|shaonv|shaonian|qingnian|ertong|tongyong)
   zone:   (all|japan|hongkong|other|europe|china|korea)
   status: (all|lianzai|wanjie)
-  rank:   (all|zone|age|genre)
+
+  ranking_durations: (day|week|month|total)
+  ranking_type:      (all|...zones|...ages|...genres)
 */
+
+// 全局漫画类别
+List<TinyCategory>? globalGenres;
 
 // 按剧情
 final allGenres = <TinyCategory>[
@@ -83,7 +88,7 @@ final allStatuses = <TinyCategory>[
 ];
 
 // 排行榜周期
-final allRankDurations = <TinyCategory>[
+final allRankingDurations = <TinyCategory>[
   const TinyCategory(title: '日排行', name: 'day'),
   const TinyCategory(title: '周排行', name: 'week'),
   const TinyCategory(title: '月排行', name: 'month'),
@@ -91,7 +96,7 @@ final allRankDurations = <TinyCategory>[
 ];
 
 // 排行榜类型
-final allRankTypes = <TinyCategory>[
+final allRankingTypes = <TinyCategory>[
   const TinyCategory(title: '全部', name: 'all'),
   // 按地区
   for (var i = 1; i < allZones.length; i++) allZones[i],

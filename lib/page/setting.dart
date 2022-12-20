@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
+import 'package:manhuagui_flutter/page/page/setting_data.dart';
+import 'package:manhuagui_flutter/page/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
-import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 /// 设置页
 class SettingPage extends StatefulWidget {
@@ -58,6 +53,7 @@ class _SettingPageState extends State<SettingPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.setting,
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: ListView(
         padding: EdgeInsets.zero,
         physics: AlwaysScrollableScrollPhysics(),
@@ -92,101 +88,44 @@ class _SettingPageState extends State<SettingPage> {
           _spacer(),
           _item(
             title: '漫画阅读设置',
-            action: () async {
-              var setting = await ViewSettingPrefs.getSetting();
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('漫画阅读设置'),
-                  scrollable: true,
-                  content: ViewSettingSubPage(
-                    setting: setting,
-                    onSettingChanged: (s) => setting = s,
-                  ),
-                  actions: [
-                    TextButton(
-                      child: Text('确定'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        await ViewSettingPrefs.setSetting(setting);
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () => Navigator.of(c).pop(),
-                    ),
-                  ],
-                ),
-              );
-            },
+            action: () => showViewSettingDialog(context: context),
           ),
           _divider(),
           _item(
             title: '漫画下载设置',
-            action: () async {
-              var setting = await DlSettingPrefs.getSetting();
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('漫画下载设置'),
-                  scrollable: true,
-                  content: DlSettingSubPage(
-                    setting: setting,
-                    onSettingChanged: (s) => setting = s,
-                  ),
-                  actions: [
-                    TextButton(
-                      child: Text('确定'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        await DlSettingPrefs.setSetting(setting);
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () => Navigator.of(c).pop(),
-                    ),
-                  ],
-                ),
-              );
-            },
+            action: () => showDlSettingDialog(context: context),
           ),
           _divider(),
           _item(
-            title: '高级设置',
+            title: '其他设置',
             action: () async {
-              var setting = await GlbSettingPrefs.getSetting();
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('高级设置'),
-                  scrollable: true,
-                  content: GlbSettingSubPage(
-                    setting: setting,
-                    onSettingChanged: (s) => setting = s,
-                  ),
-                  actions: [
-                    TextButton(
-                      child: Text('确定'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        await GlbSettingPrefs.setSetting(setting);
-                        GlbSetting.updateGlobalSetting(setting);
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () => Navigator.of(c).pop(),
-                    ),
-                  ],
-                ),
-              );
+              var ok = await showOtherSettingDialog(context: context);
+              if (ok) {
+                if (mounted) setState(() {});
+              }
             },
           ),
           // *******************************************************
           _spacer(),
+          _item(
+            title: '导出数据到外部存储',
+            action: () => showExportDataDialog(context: context),
+          ),
+          _divider(),
+          _item(
+            title: '从外部存储导入数据',
+            action: () async {
+              await showImportDataDialog(context: context);
+              if (mounted) setState(() {});
+            },
+          ),
+          _divider(),
+          _item(
+            title: '清除图像缓存',
+            action: () => showClearCacheDialog(context: context),
+          ),
           if (LogConsolePage.initialized) ...[
+            _divider(),
             _item(
               title: '查看调试日志',
               action: () => Navigator.of(context).push(
@@ -196,54 +135,7 @@ class _SettingPageState extends State<SettingPage> {
                 ),
               ),
             ),
-            _divider(),
           ],
-          _item(
-            title: '清除图像缓存',
-            action: () async {
-              var cachedBytes = await getDefaultCacheManagerDirectoryBytes();
-              if (cachedBytes < 1024) {
-                Fluttertoast.showToast(msg: '当前不存在图像缓存。'); // <1MB
-                return;
-              }
-              await showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('清除图像缓存'),
-                  content: Text('当前图像缓存共占用 ${filesize(cachedBytes)} 空间，是否清除？\n\n注意：该操作仅清除图像缓存，并不影响阅读历史、搜索历史等数据。'),
-                  actions: [
-                    TextButton(
-                      child: Text('清除'),
-                      onPressed: () async {
-                        Navigator.of(c).pop();
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (c) => const AlertDialog(
-                            contentPadding: EdgeInsets.zero,
-                            content: CircularProgressDialogOption(
-                              progress: CircularProgressIndicator(),
-                              child: Text('清除图像缓存...'),
-                            ),
-                          ),
-                        );
-                        await Future.delayed(Duration(milliseconds: 500));
-                        await DefaultCacheManager().store.emptyCache();
-                        Navigator.of(context).pop();
-                        Fluttertoast.showToast(msg: '已清除所有图像缓存');
-                      },
-                    ),
-                    TextButton(
-                      child: Text('取消'),
-                      onPressed: () {
-                        Navigator.of(c).pop();
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
           // *******************************************************
           _spacer(),
           _item(
@@ -268,7 +160,7 @@ class _SettingPageState extends State<SettingPage> {
               context: context,
               builder: (c) => AlertDialog(
                 title: Text('检查更新'),
-                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。是否打开 GitHub Release 页面手动检查更新？'),
+                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。\n\n是否打开 GitHub Release 页面手动检查更新？'),
                 actions: [
                   TextButton(
                     child: Text('打开'),
@@ -297,11 +189,10 @@ class _SettingPageState extends State<SettingPage> {
               applicationIcon: Image.asset('${ASSETS_PREFIX}logo_xxhdpi.png', height: 60, width: 60),
               children: [
                 SizedBox(height: 20),
-                for (var description in APP_DESCRIPTIONS)
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.subtitle1,
-                  ),
+                SelectableText(
+                  APP_DESCRIPTION,
+                  style: Theme.of(context).textTheme.subtitle1,
+                ),
               ],
             ),
           ),
@@ -314,6 +205,7 @@ class _SettingPageState extends State<SettingPage> {
               style: TextStyle(color: Colors.grey),
             ),
           ),
+          _spacer(),
         ],
       ),
     );

@@ -56,21 +56,28 @@ class DownloadLineView extends StatelessWidget {
           icon: icon2,
           text: text2,
         ),
-        GeneralLineIconText(
-          icon: icon3,
-          text: text3,
-        ),
-      ],
-      extrasInStack: [
-        if (showProgressBar)
-          Positioned(
-            bottom: 8 + 24 / 2 - (Theme.of(context).progressIndicatorTheme.linearMinHeight ?? 4) / 2 - 2,
-            left: 75 + 14 * 2,
-            right: 24 + 8 * 2 + 14,
-            child: LinearProgressIndicator(
-              value: progressBarValue,
+        Stack(
+          children: [
+            GeneralLineIconText(
+              icon: icon3,
+              text: text3,
+              iconSize: 20 /* also defaults to 20 */,
+              space: 8 /* also defaults to 8 */,
             ),
-          ),
+            if (showProgressBar)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: 20 + 8,
+                right: 24 + 8 * 2,
+                child: Center(
+                  child: LinearProgressIndicator(
+                    value: progressBarValue,
+                  ),
+                ),
+              ),
+          ],
+        )
       ],
       topExtrasInStack: [
         Positioned(
@@ -95,9 +102,9 @@ class DownloadLineView extends StatelessWidget {
   }
 }
 
-/// 通用的漫画下载行（大），在 [DownloadMangaBlockView] 使用
-class LargeDownloadLineView extends StatelessWidget {
-  const LargeDownloadLineView({
+/// 通用的漫画下载块（大），在 [DownloadMangaBlockView] 使用
+class DownloadBlockView extends StatelessWidget {
+  const DownloadBlockView({
     Key? key,
     required this.imageUrl,
     required this.title,
@@ -107,6 +114,8 @@ class LargeDownloadLineView extends StatelessWidget {
     required this.text2,
     required this.icon3,
     required this.text3,
+    required this.showProgressBar,
+    required this.progressBarValue,
   }) : super(key: key);
 
   final String imageUrl;
@@ -115,8 +124,10 @@ class LargeDownloadLineView extends StatelessWidget {
   final String text1;
   final IconData icon2;
   final String text2;
-  final IconData icon3;
-  final String text3;
+  final IconData? icon3;
+  final String? text3;
+  final bool showProgressBar;
+  final double? progressBarValue;
 
   @override
   Widget build(BuildContext context) {
@@ -179,12 +190,29 @@ class LargeDownloadLineView extends StatelessWidget {
                 textStyle: Theme.of(context).textTheme.subtitle2?.copyWith(fontSize: 16, fontWeight: FontWeight.normal),
                 padding: EdgeInsets.only(bottom: 4),
               ),
-              GeneralLineIconText(
-                icon: icon3,
-                text: text3,
-                iconSize: 22,
-                textStyle: Theme.of(context).textTheme.subtitle2?.copyWith(fontSize: 16, fontWeight: FontWeight.normal),
-                padding: EdgeInsets.only(bottom: 4),
+              Stack(
+                children: [
+                  GeneralLineIconText(
+                    icon: icon3,
+                    text: text3,
+                    iconSize: 22,
+                    space: 8 /* also defaults to 8 */,
+                    textStyle: Theme.of(context).textTheme.subtitle2?.copyWith(fontSize: 16, fontWeight: FontWeight.normal),
+                    padding: EdgeInsets.only(bottom: 4),
+                  ),
+                  if (showProgressBar)
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      left: 22 + 8,
+                      right: 0,
+                      child: Center(
+                        child: LinearProgressIndicator(
+                          value: progressBarValue,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),

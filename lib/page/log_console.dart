@@ -32,6 +32,8 @@ class LogConsolePage extends StatefulWidget {
       _bufferSize = bufferSize;
       _eventBuffer.clear();
       _logger.addOutputListener(_callback);
+
+      globalLogger.i('initialize LogConsolePage');
     }
   }
 
@@ -157,6 +159,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     controller: _scrollController,
                     interactive: true,
                     isAlwaysShown: true,
+                    mainAxisMargin: 2,
                     crossAxisMargin: 2,
                     child: SingleChildScrollView(
                       controller: _scrollController,

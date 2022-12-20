@@ -122,9 +122,16 @@ class TinyBlockManga {
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class MangaGroup {
-  // 1. X (#12)
-  // 2. 少女/爱情; 少年/热血; 竞技/体育; 武侠/格斗 (#10)
-  // 3. 推理/恐怖/悬疑; 百合/后宫/治愈; 社会/历史/战争; 校园/励志/冒险 (#15)
+  // title = "", #manga = 12 (topGroup)
+  // title = "少女/爱情", #manga = 10 (groups1)
+  // title = "少年/热血", #manga = 10 (groups1)
+  // title = "竞技/体育", #manga = 10 (groups1)
+  // title = "武侠/格斗", #manga = 10 (groups1)
+  // title = "推理/恐怖/悬疑", #manga = 15 (groups2)
+  // title = "百合/后宫/治愈", #manga = 15 (groups2)
+  // title = "社会/历史/战争", #manga = 15 (groups2)
+  // title = "校园/励志/冒险", #manga = 15 (groups2)
+
   final String title;
   final List<TinyBlockManga> mangas;
 
@@ -135,67 +142,66 @@ class MangaGroup {
   Map<String, dynamic> toJson() => _$MangaGroupToJson(this);
 }
 
-/// [MangaGroupList.title]
-enum MangaGroupType {
-  serial,
-  finish,
-  latest,
-}
-
-extension MangaGroupTitleExtension on MangaGroupType {
-  String toTitle() {
-    switch (this) {
-      case MangaGroupType.serial:
-        return '热门连载';
-      case MangaGroupType.finish:
-        return '经典完结';
-      case MangaGroupType.latest:
-        return '最新上架';
-    }
-  }
-}
-
 @JsonSerializable(fieldRename: FieldRename.snake)
 class MangaGroupList {
-  // 1. 热门连载: top_group, groups (#4), other_groups (#4)
-  // 2. 经典完结: top_group, groups (#4), other_groups (#4)
-  // 3. 最新上架: top_group, groups (#4)
-  final String title;
-  final MangaGroup topGroup;
-  final List<MangaGroup> groups;
-  final List<MangaGroup> otherGroups;
+  // serial => title = "热门连载", #topGroup = 1, #groups1 = 4, #groups2 = 4
+  // finish => title = "经典完结", #topGroup = 1, #groups1 = 4, #groups2 = 4
+  // latest => title = "最新上架", #topGroup = 1, #groups1 = 4, #groups2 = 4 (groups2 is fake)
 
-  const MangaGroupList({required this.title, required this.topGroup, required this.groups, required this.otherGroups});
+  final String title;
+  @JsonKey(name: 'top_group')
+  final MangaGroup topGroup;
+  @JsonKey(name: 'groups')
+  final List<MangaGroup> groups1;
+  @JsonKey(name: 'other_groups')
+  final List<MangaGroup> groups2;
+
+  const MangaGroupList({required this.title, required this.topGroup, required this.groups1, required this.groups2});
 
   factory MangaGroupList.fromJson(Map<String, dynamic> json) => _$MangaGroupListFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaGroupListToJson(this);
+
+  bool get isSerial => title == '热门连载';
+
+  bool get isFinish => title == '经典完结';
+
+  bool get isLatest => title == '最新上架';
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class HomepageMangaGroupList {
+  // 0. "" => 热门连载 | 经典完结 | 最新上架
+  // 1. "热门连载" => 少女/爱情 | 少年/热血 | 竞技/体育 | 武侠/格斗
+  // 2. "经典完结" => 少女/爱情 | 少年/热血 | 竞技/体育 | 武侠/格斗
+  // 3. "最新上架" => 少女/爱情 | 少年/热血 | 竞技/体育 | 武侠/格斗
+  // 4. "热门连载" => 推理/恐怖/悬疑 | 百合/后宫/治愈 | 社会/历史/战争 | 校园/励志/冒险
+  // 5. "经典完结" => 推理/恐怖/悬疑 | 百合/后宫/治愈 | 社会/历史/战争 | 校园/励志/冒险
+  // 6. "最新上架" => 推理/恐怖/悬疑 | 百合/后宫/治愈 | 社会/历史/战争 | 校园/励志/冒险 (all four tabs are fake)
+
   final MangaGroupList serial; // 热门连载
   final MangaGroupList finish; // 经典完结
   final MangaGroupList latest; // 最新上架
+  final List<MangaRanking> daily; // 日排行榜
+  final List<Category> genres; // 漫画类别
 
-  const HomepageMangaGroupList({required this.serial, required this.finish, required this.latest});
+  const HomepageMangaGroupList({required this.serial, required this.finish, required this.latest, required this.daily, required this.genres});
 
   factory HomepageMangaGroupList.fromJson(Map<String, dynamic> json) => _$HomepageMangaGroupListFromJson(json);
 
   Map<String, dynamic> toJson() => _$HomepageMangaGroupListToJson(this);
 
   List<TinyBlockManga> get carouselMangas {
-    var p1 = serial.topGroup.mangas.sublist(0, 4);
-    var p2 = serial.groups.map((e) => e.mangas.first);
-    var p3 = serial.otherGroups.map((e) => e.mangas.first);
+    var p1 = daily.sublist(0, 8).map((e) => e.toTinyBlock()).toList(); // # = 8
+    var p2 = serial.topGroup.mangas.sublist(0, 4); // # = 4
     return [
-      ...{...p1, ...p2, ...p3}
+      ...{p1[0], p1[1], p2[0], p2[1], p1[2], p1[3], p2[2], p2[3], p1[4], p1[5], p1[6], p1[7]}, // # ≒ 12
     ];
   }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
-class MangaRank {
+class MangaRanking {
   final int mid;
   final String title;
   final String cover;
@@ -208,11 +214,22 @@ class MangaRank {
   final double score;
   final int trend;
 
-  const MangaRank({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.authors, required this.newestChapter, required this.newestDate, required this.order, required this.score, required this.trend});
+  const MangaRanking({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.authors, required this.newestChapter, required this.newestDate, required this.order, required this.score, required this.trend});
 
-  factory MangaRank.fromJson(Map<String, dynamic> json) => _$MangaRankFromJson(json);
+  factory MangaRanking.fromJson(Map<String, dynamic> json) => _$MangaRankingFromJson(json);
 
-  Map<String, dynamic> toJson() => _$MangaRankToJson(this);
+  Map<String, dynamic> toJson() => _$MangaRankingToJson(this);
+
+  TinyBlockManga toTinyBlock() {
+    return TinyBlockManga(
+      mid: mid,
+      title: title,
+      cover: cover,
+      url: url,
+      finished: finished,
+      newestChapter: newestChapter,
+    );
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

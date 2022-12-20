@@ -5,7 +5,9 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/message.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/prefs/message.dart';
+import 'package:manhuagui_flutter/service/prefs/read_message.dart';
+
+/// Splash页/消息页-新版本更新/通知公告对话框
 
 Future<void> showNewVersionDialog({
   required BuildContext context,
@@ -15,18 +17,18 @@ Future<void> showNewVersionDialog({
   var msg = newVersion;
   var cnt = newVersion.newVersion!;
   var needUpgrade = isVersionNewer(cnt.version, APP_VERSION) == true;
-  var hasRead = (await MessagePrefs.getReadMessages()).contains(msg.mid);
+  var hasRead = (await ReadMessagePrefs.getReadMessages()).contains(msg.mid);
 
   var canceled = await showDialog<bool>(
     context: context,
-    barrierDismissible: !needUpgrade || !cnt.mustUpgrade,
+    barrierDismissible: false, // !needUpgrade || !cnt.mustUpgrade,
     builder: (c) => WillPopScope(
       onWillPop: () async => !needUpgrade || !cnt.mustUpgrade,
       child: AlertDialog(
         title: Text('${cnt.version} 版本可用'),
         scrollable: true,
         content: SizedBox(
-          width: MediaQuery.of(context).size.width - (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
+          width: getDialogMaxWidth(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +65,7 @@ Future<void> showNewVersionDialog({
               child: Text('去更新'),
               onPressed: () async {
                 launchInBrowser(context: context, url: cnt.releasePage);
-                await MessagePrefs.addReadMessage(msg.mid); // <<< set to read first
+                await ReadMessagePrefs.addReadMessage(msg.mid); // <<< set to read first
                 onChanged?.call();
               },
             ),
@@ -89,7 +91,7 @@ Future<void> showNewVersionDialog({
   );
 
   if (canceled != true) {
-    await MessagePrefs.addReadMessage(msg.mid);
+    await ReadMessagePrefs.addReadMessage(msg.mid);
     onChanged?.call();
   }
 }
@@ -101,18 +103,18 @@ Future<void> showNotificationDialog({
 }) async {
   var msg = notification;
   var cnt = notification.notification!;
-  var hasRead = (await MessagePrefs.getReadMessages()).contains(msg.mid);
+  var hasRead = (await ReadMessagePrefs.getReadMessages()).contains(msg.mid);
 
   var canceled = await showDialog<bool>(
     context: context,
-    barrierDismissible: hasRead || cnt.dismissible,
+    barrierDismissible: false, // hasRead || cnt.dismissible,
     builder: (c) => WillPopScope(
       onWillPop: () async => hasRead || cnt.dismissible,
       child: AlertDialog(
         title: Text(msg.title),
         scrollable: true,
         content: SizedBox(
-          width: MediaQuery.of(context).size.width - (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
+          width: getDialogMaxWidth(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,7 +159,7 @@ Future<void> showNotificationDialog({
   );
 
   if (canceled != true) {
-    await MessagePrefs.addReadMessage(msg.mid);
+    await ReadMessagePrefs.addReadMessage(msg.mid);
     onChanged?.call();
   }
 }

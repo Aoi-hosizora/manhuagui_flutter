@@ -3,16 +3,14 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
-import 'package:manhuagui_flutter/page/view/login_first.dart';
-import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-/// 订阅-书架
-class ShelfSubPage extends StatefulWidget {
-  const ShelfSubPage({
+/// 首页-更新
+class RecentSubPage extends StatefulWidget {
+  const RecentSubPage({
     Key? key,
     this.action,
   }) : super(key: key);
@@ -20,53 +18,33 @@ class ShelfSubPage extends StatefulWidget {
   final ActionController? action;
 
   @override
-  _ShelfSubPageState createState() => _ShelfSubPageState();
+  _RecentSubPageState createState() => _RecentSubPageState();
 }
 
-class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin {
-  final _pdvKey = GlobalKey<PaginationDataViewState>();
+class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveClientMixin {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  VoidCallback? _cancelHandler;
-  AuthData? _oldAuthData;
-
-  var _loginChecking = true;
-  var _loginCheckError = '';
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
-        _oldAuthData = AuthManager.instance.authData;
-        _loginChecking = false;
-        _loginCheckError = ev.error?.text ?? '';
-        if (mounted) setState(() {});
-        if (AuthManager.instance.logined) {
-          WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
-        }
-      });
-      _loginChecking = true;
-      await AuthManager.instance.check();
-    });
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
-    _cancelHandler?.call();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
   }
 
-  final _data = <ShelfManga>[];
+  final _data = <TinyManga>[];
   var _total = 0;
 
-  Future<PagedList<ShelfManga>> _getData({required int page}) async {
+  Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.getShelfMangas(token: AuthManager.instance.token, page: page).onError((e, s) {
+    var result = await client.getRecentUpdatedMangas(page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -80,23 +58,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
-      _data.clear();
-      return LoginFirstView(
-        checking: _loginChecking,
-        error: _loginCheckError,
-        onErrorRetry: () async {
-          _loginChecking = true;
-          _loginCheckError = '';
-          if (mounted) setState(() {});
-          await AuthManager.instance.check();
-        },
-      );
-    }
-
     return Scaffold(
-      body: PaginationListView<ShelfManga>(
-        key: _pdvKey,
+      body: PaginationListView<TinyManga>(
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
@@ -107,6 +70,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
           interactiveScrollbar: true,
+          scrollbarMainAxisMargin: 2,
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
@@ -121,11 +85,11 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           },
         ),
         separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, item) => ShelfMangaLineView(manga: item),
+        itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textText(
-              leftText: '${AuthManager.instance.username} 订阅的漫画',
+              leftText: '30天内更新的漫画',
               rightText: '共 $_total 部',
             ),
           ],

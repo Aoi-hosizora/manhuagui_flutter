@@ -4,6 +4,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
 class HistoryDao {
+  HistoryDao._();
+
   static const _tblHistory = 'tbl_history';
   static const _colUsername = 'username';
   static const _colMangaId = 'id';
@@ -15,22 +17,34 @@ class HistoryDao {
   static const _colChapterPage = 'chapter_page';
   static const _colLastTime = 'last_time';
 
-  static const _createTblHistory = '''
-    CREATE TABLE $_tblHistory(
-      $_colUsername VARCHAR(1023),
-      $_colMangaId INTEGER,
-      $_colMangaTitle VARCHAR(1023),
-      $_colMangaCover VARCHAR(1023),
-      $_colMangaUrl VARCHAR(1023),
-      $_colChapterId INTEGER,
-      $_colChapterTitle VARCHAR(1023),
-      $_colChapterPage INTEGER,
-      $_colLastTime DATETIME,
-      PRIMARY KEY ($_colUsername, $_colMangaId)
-    )''';
+  static const metadata = TableMetadata(
+    tableName: _tblHistory,
+    primaryKeys: [_colUsername, _colMangaId],
+    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colChapterId, _colChapterTitle, _colChapterPage, _colLastTime],
+  );
 
-  static Future<void> createTable(Database db) async {
-    await db.safeExecute(_createTblHistory);
+  static Future<void> createForVer1(Database db) async {
+    await db.safeExecute('''
+      CREATE TABLE $_tblHistory(
+        $_colUsername VARCHAR(1023),
+        $_colMangaId INTEGER,
+        $_colMangaTitle VARCHAR(1023),
+        $_colMangaCover VARCHAR(1023),
+        $_colMangaUrl VARCHAR(1023),
+        $_colChapterId INTEGER,
+        $_colChapterTitle VARCHAR(1023),
+        $_colChapterPage INTEGER,
+        $_colLastTime DATETIME,
+        PRIMARY KEY ($_colUsername, $_colMangaId)
+      )''');
+  }
+
+  static Future<void> upgradeFromVer1To2(Database db) async {
+    // pass
+  }
+
+  static Future<void> upgradeFromVer2To3(Database db) async {
+    // pass
   }
 
   static Future<int?> getHistoryCount({required String username}) async {
@@ -145,9 +159,5 @@ class HistoryDao {
       [username, mid],
     );
     return rows != null && rows >= 1;
-  }
-
-  static Future<void> upgradeFromVer1To2(Database db) async {
-    // skip
   }
 }

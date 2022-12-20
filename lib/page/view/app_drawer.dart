@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 
 enum DrawerSelection {
-  none, // MangaPage / AuthorPage / DownloadTocPage
+  none, // MangaPage / AuthorPage / DownloadMangaPage
   home, // IndexPage
   search, // SearchPage
   download, // DownloadPage
@@ -51,19 +51,28 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   void _gotoPage(Widget page) async {
-    Navigator.of(context).push(
-      CustomPageRoute(
-        context: null,
-        builder: (_) => page,
-        transitionDuration: _routeTheme?.transitionDuration,
-        reverseTransitionDuration: _routeTheme?.reverseTransitionDuration,
-        barrierColor: _routeTheme?.barrierColor,
-        barrierCurve: _routeTheme?.barrierCurve,
-        disableCanTransitionTo: _routeTheme?.disableCanTransitionTo,
-        disableCanTransitionFrom: _routeTheme?.disableCanTransitionFrom,
-        transitionsBuilder: _routeTheme?.transitionsBuilder,
-      ),
+    var isFirst = false;
+    Navigator.popUntil(context, (route) {
+      isFirst = route.isFirst;
+      return true;
+    });
+
+    var route = CustomPageRoute(
+      context: null,
+      builder: (_) => page,
+      transitionDuration: _routeTheme?.transitionDuration,
+      reverseTransitionDuration: _routeTheme?.reverseTransitionDuration,
+      barrierColor: _routeTheme?.barrierColor,
+      barrierCurve: _routeTheme?.barrierCurve,
+      disableCanTransitionTo: _routeTheme?.disableCanTransitionTo,
+      disableCanTransitionFrom: _routeTheme?.disableCanTransitionFrom,
+      transitionsBuilder: _routeTheme?.transitionsBuilder,
     );
+    if (isFirst || widget.currentSelection == DrawerSelection.none) {
+      Navigator.of(context).push(route);
+    } else {
+      Navigator.of(context).pushReplacement(route);
+    }
   }
 
   Future<void> _popUntilFirst() async {
@@ -87,7 +96,7 @@ class _AppDrawerState extends State<AppDrawer> {
           return;
         }
         _routeTheme = CustomPageRouteTheme.of(context); // get theme data before pop
-        if (Scaffold.of(context).isDrawerOpen) {
+        if (Scaffold.maybeOf(context)?.isDrawerOpen == true || DrawerScaffold.of(context)?.isDrawerOpen == true) {
           Navigator.of(context).pop();
         }
         action.call();

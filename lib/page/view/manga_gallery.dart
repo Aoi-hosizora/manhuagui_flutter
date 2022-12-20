@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/page/glb_setting.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:photo_view/photo_view.dart';
@@ -17,6 +16,7 @@ class MangaGalleryView extends StatefulWidget {
     required this.imageUrls,
     required this.imageUrlFutures,
     required this.imageFileFutures,
+    required this.networkTimeout,
     required this.preloadPagesCount,
     required this.verticalScroll,
     required this.horizontalReverseScroll,
@@ -34,9 +34,10 @@ class MangaGalleryView extends StatefulWidget {
   }) : super(key: key);
 
   final int imageCount;
-  final List<String> imageUrls;
-  final List<Future<String>> imageUrlFutures;
+  final List<String>? imageUrls;
+  final List<Future<String?>> imageUrlFutures;
   final List<Future<File?>> imageFileFutures;
+  final Duration? networkTimeout;
   final int preloadPagesCount;
   final bool verticalScroll;
   final bool horizontalReverseScroll;
@@ -131,7 +132,9 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             text: Text('重新加载'),
             onPressed: () async {
               Navigator.of(c).pop();
-              await _cache.removeFile(widget.imageUrls[index]);
+              if (widget.imageUrls != null) {
+                await _cache.removeFile(widget.imageUrls![index]);
+              }
               if (!widget.verticalScroll) {
                 _horizontalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
               } else {
@@ -180,7 +183,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
           initialScale: PhotoViewComputedScale.contained,
           minScale: PhotoViewComputedScale.contained / 2,
-          maxScale: PhotoViewComputedScale.covered * 2,
+          maxScale: 1.5,
           backgroundDecoration: BoxDecoration(color: Colors.black),
           filterQuality: FilterQuality.high,
           onTapDown: (c, d, v) => _onPointerDown(d.globalPosition),
@@ -190,10 +193,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             urlFuture: widget.imageUrlFutures[idx],
             headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
             cacheManager: _cache,
-            networkTimeout: GlbSetting.global.timeoutBehavior.determineDuration(
-              normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
-              long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
-            ),
+            networkTimeout: widget.networkTimeout,
             fileFuture: widget.imageFileFutures[idx],
             fileMustExist: false, // <<<
           ),
@@ -255,20 +255,17 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
         initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained / 2,
-        maxScale: PhotoViewComputedScale.covered * 2,
+        maxScale: 1.5,
         backgroundDecoration: BoxDecoration(color: Colors.black),
         filterQuality: FilterQuality.high,
-        onTapDown: null,
-        onTapUp: null,
+        onTapDown: null /* >>> */,
+        onTapUp: null /* >>> */,
         imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
           key: key,
           urlFuture: widget.imageUrlFutures[idx],
           headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
           cacheManager: _cache,
-          networkTimeout: GlbSetting.global.timeoutBehavior.determineDuration(
-            normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
-            long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
-          ),
+          networkTimeout: widget.networkTimeout,
           fileFuture: widget.imageFileFutures[idx],
           fileMustExist: false,
         ),
@@ -291,8 +288,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
         ),
       ),
-      onImageTapDown: (d) => _onPointerDown(d.globalPosition),
-      onImageTapUp: (d) => _onPointerUp(d.globalPosition),
+      onImageTapDown: (d) => _onPointerDown(d.globalPosition) /* <<< */,
+      onImageTapUp: (d) => _onPointerUp(d.globalPosition) /* <<< */,
       onImageLongPressed: (idx) => _onLongPressed(idx),
       // ****************************************************************
       // 额外页

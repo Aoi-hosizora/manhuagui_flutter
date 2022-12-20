@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
-import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
@@ -65,7 +66,7 @@ class _AuthorPageState extends State<AuthorPage> {
       _data = null;
       _error = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _data = result.data;
     } catch (e, s) {
       _data = null;
@@ -78,8 +79,8 @@ class _AuthorPageState extends State<AuthorPage> {
 
   final _mangas = <SmallManga>[];
   var _total = 0;
-  var _currOrder = MangaOrder.byPopular;
-  late var _lastOrder = _currOrder;
+  var _currOrder = AppSetting.instance.other.defaultMangaOrder;
+  var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
   var _getting = false;
 
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {
@@ -112,6 +113,7 @@ class _AuthorPageState extends State<AuthorPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PlaceholderText.from(
         isLoading: _loading,
         errorText: _error,
@@ -286,7 +288,9 @@ class _AuthorPageState extends State<AuthorPage> {
               setting: UpdatableDataViewSetting(
                 padding: EdgeInsets.zero,
                 interactiveScrollbar: true,
+                scrollbarMainAxisMargin: 2,
                 scrollbarCrossAxisMargin: 2,
+                scrollbarExtraMargin: EdgeInsets.only(top: NestedScrollView.sliverOverlapAbsorberHandleFor(c).layoutExtent ?? 0),
                 placeholderSetting: PlaceholderSetting().copyWithChinese(),
                 onPlaceholderStateChanged: (_, __) => _fabController.hide(),
                 refreshFirst: true,

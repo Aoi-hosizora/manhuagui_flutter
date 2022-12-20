@@ -36,11 +36,10 @@ class _MangaTocPageState extends State<MangaTocPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      Future.delayed(Duration(milliseconds: 300), () {
-        _loading = false;
-        if (mounted) setState(() {});
-      });
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      await Future.delayed(Duration(milliseconds: 400));
+      _loading = false;
+      if (mounted) setState(() {});
     });
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       _loadHistory();
@@ -61,17 +60,13 @@ class _MangaTocPageState extends State<MangaTocPage> {
   DownloadedManga? _downloadEntity;
 
   Future<void> _loadHistory() async {
-    try {
-      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-      if (mounted) setState(() {});
-    } catch (_) {}
+    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadDownload() async {
-    try {
-      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-      if (mounted) setState(() {});
-    } catch (_) {}
+    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    if (mounted) setState(() {});
   }
 
   @override
@@ -89,6 +84,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
           child: ExtendedScrollbar(
             controller: _controller,
             interactive: true,
+            mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
               controller: _controller,

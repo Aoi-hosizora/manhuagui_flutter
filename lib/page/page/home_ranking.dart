@@ -4,7 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
-import 'package:manhuagui_flutter/page/view/manga_rank_line.dart';
+import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -53,13 +53,16 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
 
     final client = RestClient(DioManager.instance.dio);
     try {
-      var result = await client.getGenres();
+      if (globalGenres == null) {
+        var result = await client.getGenres();
+        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+      }
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
-      _genres.addAll(allRankTypes);
-      _genres.addAll(result.data.data.map((c) => c.toTiny()));
+      await Future.delayed(kFlashListDuration);
+      _genres.addAll(allRankingTypes);
+      _genres.addAll(globalGenres!);
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -69,14 +72,14 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     }
   }
 
-  final _data = <MangaRank>[];
-  var _currType = allRankTypes[0];
-  var _lastType = allRankTypes[0];
-  var _currDuration = allRankDurations[0];
-  var _lastDuration = allRankDurations[0];
+  final _data = <MangaRanking>[];
+  var _currType = allRankingTypes[0];
+  var _lastType = allRankingTypes[0];
+  var _currDuration = allRankingDurations[0];
+  var _lastDuration = allRankingDurations[0];
   var _getting = false;
 
-  Future<List<MangaRank>> _getData() async {
+  Future<List<MangaRanking>> _getData() async {
     final client = RestClient(DioManager.instance.dio);
     var f = _currDuration.name == 'day'
         ? client.getDayRanking
@@ -105,7 +108,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         setting: PlaceholderSetting().copyWithChinese(),
         onRefresh: () => _loadGenres(),
         onChanged: (_, __) => _fabController.hide(),
-        childBuilder: (c) => RefreshableListView<MangaRank>(
+        childBuilder: (c) => RefreshableListView<MangaRanking>(
           key: _rdvKey,
           data: _data,
           getData: () => _getData(),
@@ -113,6 +116,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
           setting: UpdatableDataViewSetting(
             padding: EdgeInsets.symmetric(vertical: 0),
             interactiveScrollbar: true,
+            scrollbarMainAxisMargin: 2,
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
@@ -135,7 +139,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             },
           ),
           separator: Divider(height: 0, thickness: 1),
-          itemBuilder: (c, _, item) => MangaRankLineView(manga: item),
+          itemBuilder: (c, _, item) => MangaRankingLineView(manga: item),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
               ListHintView.widgets(
@@ -154,9 +158,9 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                       }
                     },
                   ),
-                  Expanded(child: SizedBox(width: 0)),
+                  Expanded(child: const SizedBox.shrink()),
                   OptionPopupView<TinyCategory>(
-                    items: allRankDurations,
+                    items: allRankingDurations,
                     value: _currDuration,
                     titleBuilder: (c, v) => v.title,
                     enable: !_getting,

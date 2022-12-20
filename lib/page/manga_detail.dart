@@ -64,6 +64,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
       body: ExtendedScrollbar(
         controller: _controller,
         interactive: true,
+        mainAxisMargin: 2,
         crossAxisMargin: 2,
         child: ListView(
           controller: _controller,

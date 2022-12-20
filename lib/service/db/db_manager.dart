@@ -19,25 +19,8 @@ class DBManager {
 
   Future<Database> getDB() async {
     if (_database == null || !_database!.isOpen) {
-      var path = await getDatabasesPath();
-      _database = await openDatabase(
-        join(path, DB_NAME),
-        version: 2,
-        onCreate: (db, _) async {
-          await HistoryDao.createTable(db);
-          await DownloadDao.createTable(db);
-        },
-        onUpgrade: (db, version, _) async {
-          if (version <= 1) {
-            version = 2; // 1 -> 2 upgrade
-            await HistoryDao.upgradeFromVer1To2(db);
-            await DownloadDao.upgradeFromVer1To2(db);
-          }
-          if (version == 2) {
-            // ...
-          }
-        },
-      );
+      var filepath = join(await getDatabasesPath(), DB_NAME); // /data/user/0/.../databases/db_xxx
+      _database ??= await openDB(filepath);
     }
     return _database!;
   }
@@ -46,9 +29,47 @@ class DBManager {
     await _database?.close();
     _database = null;
   }
+
+  static const _newestVersion = 3;
+
+  Future<Database> openDB(String filepath) async {
+    return await openDatabase(
+      filepath,
+      version: _newestVersion,
+      onCreate: (db, _) async => await _onUpgrade(db, 0),
+      onUpgrade: (db, oldVersion, _) async => _onUpgrade(db, oldVersion),
+    );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion) async {
+    var version = oldVersion;
+    if (version == 0) {
+      version = 1; // x -> 1 create
+      await HistoryDao.createForVer1(db);
+      await DownloadDao.createForVer1(db);
+    }
+    if (version == 1) {
+      version = 2; // 1 -> 2 upgrade
+      await HistoryDao.upgradeFromVer1To2(db);
+      await DownloadDao.upgradeFromVer1To2(db);
+    }
+    if (version == 2) {
+      version = 3; // 2 -> 3 upgrade
+      await HistoryDao.upgradeFromVer2To3(db);
+      await DownloadDao.upgradeFromVer2To3(db);
+    }
+  }
 }
 
-extension DatabaseExtension on Database {
+class TableMetadata {
+  const TableMetadata({required this.tableName, required this.primaryKeys, required this.columns});
+
+  final String tableName;
+  final List<String> primaryKeys;
+  final List<String> columns;
+}
+
+extension DatabaseExecutorExtension on DatabaseExecutor {
   Future<List<Map<String, Object?>>?> safeRawQuery(String sql, [List<Object?>? arguments]) async {
     try {
       return await rawQuery(sql, arguments);
@@ -90,6 +111,22 @@ extension DatabaseExtension on Database {
       return await execute(sql, arguments);
     } catch (e, s) {
       globalLogger.e('safeExecute', e, s);
+    }
+  }
+}
+
+extension DatabaseExtension on Database {
+  Future<T?> exclusiveTransaction<T>(Future<T> Function(Transaction tx, void Function({Object? msg}) rollback) action) async {
+    try {
+      return await transaction<T?>(
+        (tx) async {
+          return await action(tx, ({msg}) => throw 'Rollback: $msg');
+        },
+        exclusive: true,
+      );
+    } catch (e, s) {
+      globalLogger.e('safeTransaction', e, s);
+      return null;
     }
   }
 }

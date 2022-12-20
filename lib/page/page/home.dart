@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/page/overall.dart';
-import 'package:manhuagui_flutter/page/page/ranking.dart';
-import 'package:manhuagui_flutter/page/page/recent.dart';
-import 'package:manhuagui_flutter/page/page/recommend.dart';
+import 'package:manhuagui_flutter/page/page/home_overall.dart';
+import 'package:manhuagui_flutter/page/page/home_ranking.dart';
+import 'package:manhuagui_flutter/page/page/home_recent.dart';
+import 'package:manhuagui_flutter/page/page/home_recommend.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -39,9 +39,11 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
     widget.action?.addAction(() => _actions[_controller.index].invoke());
     _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((_) {
       _controller.animateTo(1);
+      _selectedIndex = 1;
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((_) {
       _controller.animateTo(3);
+      _selectedIndex = 3;
     }));
   }
 
@@ -100,6 +102,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       ),
       body: TabBarView(
         controller: _controller,
+        physics: DefaultScrollPhysics.of(context),
         children: _tabs.map((t) => t.item2).toList(),
       ),
     );

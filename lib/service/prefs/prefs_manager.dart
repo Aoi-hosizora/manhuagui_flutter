@@ -1,10 +1,8 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/service/prefs/glb_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
-import 'package:manhuagui_flutter/service/prefs/dl_setting.dart';
-import 'package:manhuagui_flutter/service/prefs/message.dart';
+import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
-import 'package:manhuagui_flutter/service/prefs/view_setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefsManager {
@@ -22,89 +20,146 @@ class PrefsManager {
   Future<SharedPreferences> loadPrefs() async {
     if (_prefs == null) {
       _prefs = await SharedPreferences.getInstance();
-      await _checkUpgrade(_prefs!);
+      await upgradePrefs(_prefs!);
     }
     return _prefs!;
   }
 
   Future<SharedPreferences> reloadPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-    return _prefs!;
+    _prefs = null;
+    return await loadPrefs();
   }
 
-  static const newestVersion = 2; // current newest SharedPreferences version
+  static const _newestVersion = 3;
 
-  Future<void> _checkUpgrade(SharedPreferences prefs) async {
-    var version = prefs.getInt('VERSION') ?? 1;
-    if (version == newestVersion) {
+  Future<void> upgradePrefs(SharedPreferences prefs) async {
+    var version = prefs.getVersion();
+    if (version == _newestVersion) {
       return;
     }
 
     if (version <= 1) {
       version = 2; // 1 -> 2 upgrade
+      await AppSettingPrefs.upgradeFromVer1To2(prefs);
       await AuthPrefs.upgradeFromVer1To2(prefs);
-      await DlSettingPrefs.upgradeFromVer1To2(prefs);
-      await GlbSettingPrefs.upgradeFromVer1To2(prefs);
-      await MessagePrefs.upgradeFromVer1To2(prefs);
+      await ReadMessagePrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
-      await ViewSettingPrefs.upgradeFromVer1To2(prefs);
     }
     if (version == 2) {
-      // ...
+      version = 3; // 2 -> 3 upgrade
+      await AppSettingPrefs.upgradeFromVer2To3(prefs);
+      await AuthPrefs.upgradeFromVer2To3(prefs);
+      await ReadMessagePrefs.upgradeFromVer2To3(prefs);
+      await SearchHistoryPrefs.upgradeFromVer2To3(prefs);
     }
 
-    prefs.setInt('VERSION', newestVersion);
+    await prefs.setVersion(_newestVersion);
   }
 }
 
+class TypedKey<T> {
+  const TypedKey(this.key);
+
+  final String key;
+}
+
+typedef StringKey = TypedKey<String>;
+typedef BoolKey = TypedKey<bool>;
+typedef IntKey = TypedKey<int>;
+typedef DoubleKey = TypedKey<double>;
+typedef StringListKey = TypedKey<List<String>>;
+
 extension SharedPreferencesExtension on SharedPreferences {
-  String? safeGetString(String key) => _safeGet<String>(() => getString(key));
-
-  bool? safeGetBool(String key) => _safeGet<bool>(() => getBool(key));
-
-  int? safeGetInt(String key) => _safeGet<int>(() => getInt(key));
-
-  double? safeGetDouble(String key) => _safeGet<double>(() => getDouble(key));
-
-  List<String>? safeGetStringList(String key) => _safeGet<List<String>>(() => getStringList(key));
-
-  T? _safeGet<T>(T? Function() getter) {
+  int getVersion() {
+    int? version;
     try {
-      return getter();
+      version = getInt('VERSION');
     } catch (e, s) {
-      globalLogger.e('_safeGet<$T>', e, s);
+      globalLogger.e('getVersion', e, s);
+    }
+    return version ?? PrefsManager._newestVersion; // null version means it is the first time to load prefs
+  }
+
+  Future<bool> setVersion(int version) async {
+    return await setInt('VERSION', version);
+  }
+
+  T? safeGet<T>(TypedKey<T> key, {bool canThrow = false}) {
+    try {
+      if (key is TypedKey<String>) {
+        return getString(key.key) as T?;
+      }
+      if (key is TypedKey<bool>) {
+        return getBool(key.key) as T?;
+      }
+      if (key is TypedKey<int>) {
+        return getInt(key.key) as T?;
+      }
+      if (key is TypedKey<double>) {
+        return getDouble(key.key) as T?;
+      }
+      if (key is TypedKey<List>) {
+        return getStringList(key.key) as T?;
+      }
+      throw ArgumentError('Invalid key type: ${TypedKey<T>} (${key.runtimeType})');
+    } catch (e, s) {
+      if (canThrow) rethrow;
+      globalLogger.e('safeGet<$T>', e, s);
       return null;
     }
   }
 
-  Future<bool> migrateString({required String oldKey, required String newKey, String? defaultValue}) async => //
-      await _migrate<String>(oldKey, newKey, getString, setString, defaultValue);
+  Future<bool> safeSet<T>(TypedKey<T> key, T value, {bool canThrow = false}) async {
+    try {
+      if (key is TypedKey<String> && value is String) {
+        return await setString(key.key, value);
+      }
+      if (key is TypedKey<bool> && value is bool) {
+        return await setBool(key.key, value);
+      }
+      if (key is TypedKey<int> && value is int) {
+        return await setInt(key.key, value);
+      }
+      if (key is TypedKey<double> && value is double) {
+        return await setDouble(key.key, value);
+      }
+      if (key is TypedKey<List> && value is List) {
+        if (value is List<String>) {
+          return await setStringList(key.key, value);
+        }
+        return await setStringList(key.key, value.map((v) => v.toString()).toList());
+      }
+      throw ArgumentError('Invalid key or value type: ${TypedKey<T>} (${key.runtimeType}) and $T (${value.runtimeType})');
+    } catch (e, s) {
+      if (canThrow) rethrow;
+      globalLogger.e('safeSet<$T>', e, s);
+      return false;
+    }
+  }
 
-  Future<bool> migrateBool({required String oldKey, required String newKey, bool? defaultValue}) async => //
-      await _migrate<bool>(oldKey, newKey, getBool, setBool, defaultValue);
+  Future<bool> safeMigrate<T>(dynamic oldKey, TypedKey<T> newKey, {T? defaultValue}) async {
+    if (oldKey is String) {
+      oldKey = TypedKey<T>(oldKey);
+    }
+    if (oldKey is! TypedKey<T>) {
+      globalLogger.e('Invalid oldKey type: ${oldKey.runtimeType}, want TypedKey<$T>');
+      return false;
+    }
 
-  Future<bool> migrateInt({required String oldKey, required String newKey, int? defaultValue}) async => //
-      await _migrate<int>(oldKey, newKey, getInt, setInt, defaultValue);
-
-  Future<bool> migrateDouble({required String oldKey, required String newKey, double? defaultValue}) async => //
-      await _migrate<double>(oldKey, newKey, getDouble, setDouble, defaultValue);
-
-  Future<bool> migrateStringList({required String oldKey, required String newKey, List<String>? defaultValue}) async => //
-      await _migrate<List<String>>(oldKey, newKey, getStringList, setStringList, defaultValue);
-
-  Future<bool> _migrate<T>(String oldKey, String newKey, T? Function(String) getter, Future<bool> Function(String, T) setter, T? defaultValue) async {
-    if (oldKey == newKey) {
+    if (oldKey.key == newKey.key) {
       return true;
     }
     try {
-      T? data = getter(oldKey) ?? defaultValue;
+      T? data = safeGet(oldKey) ?? defaultValue;
       if (data != null) {
-        var result = await setter(newKey, data);
-        remove(oldKey);
+        var result = await safeSet(newKey, data);
+        if (result) {
+          await remove(oldKey.key);
+        }
         return result;
       }
     } catch (e, s) {
-      globalLogger.e('_migrate<$T>', e, s);
+      globalLogger.e('safeMigrate<$T>', e, s);
     }
     return false;
   }

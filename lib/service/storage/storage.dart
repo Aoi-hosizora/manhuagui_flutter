@@ -1,7 +1,6 @@
-import 'dart:io' show File, Directory, Platform;
+import 'dart:io' show File, Directory;
 
 import 'package:external_path/external_path.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/config.dart';
@@ -67,6 +66,14 @@ class PathUtils {
     return path_.extension(path);
   }
 
+  static String getBasename(String path) {
+    return path_.basename(path);
+  }
+
+  static String getDirname(String path) {
+    return path_.dirname(path);
+  }
+
   static Future<String> joinPathAndCheck(List<String> paths, {bool isDirectoryPath = false}) async {
     var newPath = path_.joinAll(paths);
     var directory = Directory(isDirectoryPath ? newPath : path_.dirname(newPath));
@@ -75,25 +82,6 @@ class PathUtils {
     }
     return newPath;
   }
-}
-
-// =======
-// gallery
-// =======
-
-const _channelName = 'com.aoihosizora.manhuagui';
-const _channel = MethodChannel(_channelName);
-const _insertMediaMethodName = 'insertMedia';
-
-Future<void> addToGallery(File file) async {
-  if (!Platform.isAndroid) {
-    return; // unreachable
-  }
-
-  // Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
-  await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
-    'filepath': file.path,
-  });
 }
 
 // =====

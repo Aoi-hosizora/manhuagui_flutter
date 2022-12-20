@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 警告提醒文字，在 [RecommendSubPage] / [DownloadSelectPage] 使用
+/// 警告提醒文字，在 [RecommendSubPage] / [DownloadChoosePage] 使用
 class WarningTextView extends StatefulWidget {
   const WarningTextView({
     Key? key,

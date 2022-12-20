@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
+/// 漫画评分，在 [MangaPage] 使用
 class MangaRatingView extends StatelessWidget {
   const MangaRatingView({
     Key? key,
@@ -49,8 +50,7 @@ class MangaRatingDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width - (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal;
-    final barWidth = width * 0.6;
+    final barWidth = getDialogMaxWidth(context) * 0.6;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

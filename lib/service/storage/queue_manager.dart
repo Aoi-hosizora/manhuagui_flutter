@@ -44,7 +44,7 @@ class QueueManager {
     } finally {
       if (tasks.contains(task)) {
         tasks.remove(task);
-        await task.doDefer();
+        await task.doDefer(); // call doDefer only if contained
       }
     }
   }

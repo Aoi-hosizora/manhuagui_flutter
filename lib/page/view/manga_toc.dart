@@ -4,7 +4,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 
-/// 漫画章节目录（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadSelectPage] 使用
+/// 漫画章节目录（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadChoosePage] 使用
 class MangaTocView extends StatefulWidget {
   const MangaTocView({
     Key? key,
@@ -254,7 +254,7 @@ class DownloadBadge extends StatelessWidget {
       return null;
     }
     return DownloadBadge(
-      state: !entity.allTried
+      state: !entity.allTried || entity.needUpdate
           ? DownloadBadgeState.downloading
           : entity.succeeded
               ? DownloadBadgeState.done

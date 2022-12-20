@@ -22,7 +22,7 @@ class LoginFirstView extends StatelessWidget {
     return PlaceholderText(
       state: checking ? PlaceholderState.loading : (error.isEmpty ? PlaceholderState.nothing : PlaceholderState.error),
       errorText: error.isEmpty ? '' : '无法检查登录状态\n$error',
-      childBuilder: (c) => SizedBox(height: 0),
+      childBuilder: (c) => const SizedBox.shrink(),
       setting: PlaceholderSetting(
         nothingIcon: Icons.lock_open,
       ).copyWithChinese(

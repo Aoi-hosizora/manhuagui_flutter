@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -47,7 +48,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   }
 
   var _genreLoading = true;
-  final _genres = <TinyCategory>[];
+  late final _genres = <TinyCategory>[];
   var _genreError = '';
 
   Future<void> _loadGenres() async {
@@ -56,13 +57,16 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
 
     final client = RestClient(DioManager.instance.dio);
     try {
-      var result = await client.getGenres();
+      if (globalGenres == null) {
+        var result = await client.getGenres();
+        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+      }
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future.delayed(kFlashListDuration);
       _genres.add(allGenres[0]);
-      _genres.addAll(result.data.data.map((c) => c.toTiny()));
+      _genres.addAll(globalGenres!);
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -74,8 +78,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
 
   final _data = <TinyManga>[];
   var _total = 0;
-  var _currOrder = MangaOrder.byPopular;
-  var _lastOrder = MangaOrder.byPopular;
+  var _currOrder = AppSetting.instance.other.defaultMangaOrder;
+  var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
   late var _currGenre = widget.defaultGenre ?? allGenres[0];
   late var _lastGenre = widget.defaultGenre ?? allGenres[0];
   var _currAge = allAges[0];
@@ -130,6 +134,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
           setting: UpdatableDataViewSetting(
             padding: EdgeInsets.symmetric(vertical: 0),
             interactiveScrollbar: true,
+            scrollbarMainAxisMargin: 2,
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),

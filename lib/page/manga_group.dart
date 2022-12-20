@@ -3,16 +3,14 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
 
-/// 漫画分组页，展示所给 [MangaGroup] 信息
+/// 漫画分组页，展示所给 [MangaGroupList] (三个 [MangaGroup]) 信息
 class MangaGroupPage extends StatefulWidget {
   const MangaGroupPage({
     Key? key,
-    required this.group,
-    required this.type,
+    required this.groupList,
   }) : super(key: key);
 
-  final MangaGroup group;
-  final MangaGroupType type;
+  final MangaGroupList groupList;
 
   @override
   _MangaGroupPageState createState() => _MangaGroupPageState();
@@ -37,6 +35,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
       body: ExtendedScrollbar(
         controller: _controller,
         interactive: true,
+        mainAxisMargin: 2,
         crossAxisMargin: 2,
         child: ListView(
           controller: _controller,
@@ -44,9 +43,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
           physics: AlwaysScrollableScrollPhysics(),
           children: [
             MangaGroupView(
-              group: widget.group,
-              type: widget.type,
-              controller: _controller,
+              groupList: widget.groupList,
               style: MangaGroupViewStyle.normalFull,
             ),
           ],

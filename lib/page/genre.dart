@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/category.dart';
-import 'package:manhuagui_flutter/page/page/genre.dart';
+import 'package:manhuagui_flutter/page/page/category_genre.dart';
 
 /// 漫画类别页，同 [GenreSubPage]
 class GenrePage extends StatefulWidget {
   const GenrePage({
     Key? key,
     required this.genre,
-  })  : super(key: key);
+  }) : super(key: key);
 
   final TinyCategory genre;
 
