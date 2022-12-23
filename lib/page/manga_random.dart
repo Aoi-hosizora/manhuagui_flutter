@@ -7,7 +7,12 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
 /// 随机漫画页，网络请求并展示 [RandomMangaInfo] 并跳转至 [MangaPage]
 class MangaRandomPage extends StatefulWidget {
-  const MangaRandomPage({Key? key}) : super(key: key);
+  const MangaRandomPage({
+    Key? key,
+    required this.parentContext,
+  }) : super(key: key);
+
+  final BuildContext parentContext;
 
   @override
   State<MangaRandomPage> createState() => _MangaRandomPageState();
@@ -26,10 +31,9 @@ class _MangaRandomPageState extends State<MangaRandomPage> {
       var random = await client.getRandomManga();
       var mid = random.data.mid;
       var url = random.data.url;
-      Navigator.of(context).pop();
-      Navigator.of(context).push(
+      Navigator.of(context).pushReplacement(
         CustomPageRoute(
-          context: context,
+          context: widget.parentContext,
           builder: (c) => MangaPage(
             id: mid,
             title: '漫画 mid: $mid',

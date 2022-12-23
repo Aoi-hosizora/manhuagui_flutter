@@ -14,7 +14,7 @@ class MangaHistoryLineView extends StatelessWidget {
   }) : super(key: key);
 
   final MangaHistory history;
-  final Function() onLongPressed;
+  final Function()? onLongPressed;
 
   @override
   Widget build(BuildContext context) {

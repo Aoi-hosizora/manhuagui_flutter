@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 /// 漫画章节阅读页-额外页
@@ -15,11 +16,12 @@ class ViewExtraSubPage extends StatelessWidget {
     required this.subscribing,
     required this.subscribed,
     required this.toJumpToImage,
+    required this.toGotoChapter,
     required this.toSubscribe,
     required this.toDownload,
-    required this.toGotoChapter,
     required this.toShowToc,
     required this.toShowComments,
+    required this.toShowImage,
     required this.toPop,
   }) : super(key: key);
 
@@ -34,6 +36,7 @@ class ViewExtraSubPage extends StatelessWidget {
   final void Function() toDownload;
   final void Function() toShowToc;
   final void Function() toShowComments;
+  final void Function(String url, String title) toShowImage;
   final void Function() toPop;
 
   Widget _buildChapters(BuildContext context) {
@@ -197,14 +200,17 @@ class ViewExtraSubPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        NetworkImageView(
-                          url: data.mangaCover,
-                          height: 200,
-                          width: 150,
-                          border: Border.all(
-                            width: 1.0,
-                            color: Colors.grey[400]!,
+                        FullRippleWidget(
+                          child: NetworkImageView(
+                            url: data.mangaCover,
+                            height: 200,
+                            width: 150,
+                            border: Border.all(
+                              width: 1.0,
+                              color: Colors.grey[400]!,
+                            ),
                           ),
+                          onTap: () => toShowImage(data.mangaCover, '漫画封面'),
                         ),
                         SizedBox(width: 18),
                         Container(
@@ -260,15 +266,18 @@ class ViewExtraSubPage extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
                 child: Column(
                   children: [
-                    NetworkImageView(
-                      url: data.chapterCover,
-                      height: 150,
-                      width: 150 / 0.618,
-                      fit: BoxFit.cover,
-                      border: Border.all(
-                        width: 1.0,
-                        color: Colors.grey[400]!,
+                    FullRippleWidget(
+                      child: NetworkImageView(
+                        url: data.chapterCover,
+                        height: 150,
+                        width: 150 / 0.618,
+                        fit: BoxFit.cover,
+                        border: Border.all(
+                          width: 1.0,
+                          color: Colors.grey[400]!,
+                        ),
                       ),
+                      onTap: () => toShowImage(data.chapterCover, '章节封面'),
                     ),
                     SizedBox(height: 18),
                     Row(

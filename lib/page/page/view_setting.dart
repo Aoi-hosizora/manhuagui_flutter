@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 
 /// 漫画章节阅读页-阅读设置
@@ -128,7 +130,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           values: const [0, 1, 2, 3, 4, 5, 6],
           builder: (s) => Text(s == 0 ? '禁用预加载' : '前后$s页'),
           onChanged: (c) {
-            _preloadCount = c.clamp(0, 5);
+            _preloadCount = c.clamp(0, 6);
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -160,6 +162,7 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
               onPressed: () async {
                 AppSetting.instance.update(view: setting);
                 await AppSettingPrefs.saveViewSetting();
+                EventBusManager.instance.fire(AppSettingChangedEvent());
                 Navigator.of(c).pop(true);
               },
             ),

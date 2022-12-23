@@ -4,6 +4,8 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 
 /// 设置页-其他设置
@@ -29,6 +31,8 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _clickToSearch = widget.setting.clickToSearch;
+  late var _regularGroupRows = widget.setting.regularGroupRows;
+  late var _otherGroupRows = widget.setting.otherGroupRows;
 
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
@@ -38,6 +42,8 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
+      regularGroupRows: _regularGroupRows,
+      otherGroupRows: _otherGroupRows,
       );
 
   @override
@@ -124,6 +130,30 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingComboBoxView<int>(
+          title: '单话分组显示章节行数',
+          width: 75,
+          value: _regularGroupRows.clamp(1, 8),
+          values: const [1, 2, 3, 4, 5, 6, 7, 8],
+          builder: (s) => Text('$s行'),
+          onChanged: (c) {
+            _regularGroupRows = c.clamp(1, 8);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingComboBoxView<int>(
+          title: '其他分组显示章节行数',
+          width: 75,
+          value: _otherGroupRows.clamp(1, 8),
+          values: const [1, 2, 3, 4, 5, 6, 7, 8],
+          builder: (s) => Text('$s行'),
+          onChanged: (c) {
+            _otherGroupRows = c.clamp(1, 8);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
       ],
     );
   }
@@ -146,6 +176,7 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
           onPressed: () async {
             AppSetting.instance.update(other: setting);
             await AppSettingPrefs.saveOtherSetting();
+            EventBusManager.instance.fire(AppSettingChangedEvent());
             Navigator.of(c).pop(true);
           },
         ),

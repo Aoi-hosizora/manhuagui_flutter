@@ -160,7 +160,7 @@ class _SettingPageState extends State<SettingPage> {
               context: context,
               builder: (c) => AlertDialog(
                 title: Text('检查更新'),
-                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。\n\n是否打开 GitHub Release 页面手动检查更新？'),
+                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。\n\n是否用浏览器打开 GitHub Release 页面手动检查更新？'),
                 actions: [
                   TextButton(
                     child: Text('打开'),

@@ -41,3 +41,7 @@ class DownloadedMangaEntityChangedEvent {
 
   final int mangaId;
 }
+
+class AppSettingChangedEvent {
+  const AppSettingChangedEvent();
+}

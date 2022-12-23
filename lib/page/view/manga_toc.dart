@@ -10,6 +10,8 @@ class MangaTocView extends StatefulWidget {
     Key? key,
     required this.groups,
     required this.full,
+    this.firstGroupRowsIfNotFull = 3,
+    this.otherGroupsRowsIfNotFull = 1,
     this.gridPadding,
     this.highlightColor,
     this.highlightedChapters = const [],
@@ -22,6 +24,8 @@ class MangaTocView extends StatefulWidget {
 
   final List<MangaChapterGroup> groups;
   final bool full;
+  final int firstGroupRowsIfNotFull;
+  final int otherGroupsRowsIfNotFull;
   final EdgeInsets? gridPadding;
   final Color? highlightColor;
   final List<int> highlightedChapters;
@@ -54,6 +58,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       );
     }
 
+    // padding: EdgeInsets.fromLTRB(12, 6, 4, 6)
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -61,28 +66,25 @@ class _MangaTocViewState extends State<MangaTocView> {
           '章节列表',
           style: Theme.of(context).textTheme.subtitle1,
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 3),
-          child: Material(
-            color: Colors.transparent,
-            child: Row(
-              children: [
-                button(
-                  icon: Icons.keyboard_arrow_up,
-                  text: '正序',
-                  selected: !_invertOrder,
-                  padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
-                  onPressed: () => mountedSetState(() => _invertOrder = false),
-                ),
-                button(
-                  icon: Icons.keyboard_arrow_down,
-                  text: '倒序',
-                  selected: _invertOrder,
-                  padding: EdgeInsets.only(top: 3, bottom: 3, left: 5, right: 10),
-                  onPressed: () => mountedSetState(() => _invertOrder = true),
-                ),
-              ],
-            ),
+        Material(
+          color: Colors.transparent,
+          child: Row(
+            children: [
+              button(
+                icon: Icons.keyboard_arrow_up,
+                text: '正序',
+                selected: !_invertOrder,
+                padding: EdgeInsets.fromLTRB(5, 4, 10, 4),
+                onPressed: () => mountedSetState(() => _invertOrder = false),
+              ),
+              button(
+                icon: Icons.keyboard_arrow_down,
+                text: '倒序',
+                selected: _invertOrder,
+                padding: EdgeInsets.fromLTRB(5, 4, 10, 4),
+                onPressed: () => mountedSetState(() => _invertOrder = true),
+              ),
+            ],
           ),
         ),
       ],
@@ -97,8 +99,8 @@ class _MangaTocViewState extends State<MangaTocView> {
       maxLines: widget.full
           ? -1 // show all chapters
           : idx == 0
-              ? 3 // first line => show the first three lines
-              : 1 /* following lines => show the first line */,
+              ? widget.firstGroupRowsIfNotFull // first line => show the first three lines in default
+              : widget.otherGroupsRowsIfNotFull /* following lines => show the first line in default */,
       highlightColor: widget.highlightColor,
       highlightedChapters: widget.highlightedChapters,
       extrasInStack: (chapter) {
@@ -148,7 +150,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       children: [
         Container(
           color: Colors.white,
-          padding: EdgeInsets.only(left: 12, right: 4, top: 2, bottom: 2),
+          padding: EdgeInsets.fromLTRB(12, 6, 4, 6),
           child: _buildHeader(),
         ),
         Container(

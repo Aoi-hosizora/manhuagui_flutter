@@ -15,6 +15,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
+import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -639,6 +640,24 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
+  Future<void> _showImage(String url, String title) async {
+    await _ScreenHelper.restoreSystemUI(notificationBar: false, fullscreen: true);
+    await Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => ImageViewerPage(
+          url: url,
+          title: title,
+          ignoreSystemUI: true,
+        ),
+        settings: DownloadMangaPage.buildRouteSetting(
+          mangaId: widget.mangaId,
+        ),
+      ),
+    );
+    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -816,6 +835,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toDownload: _downloadManga,
                       toShowToc: _showToc,
                       toShowComments: _showComments,
+                      toShowImage: _showImage,
                       toPop: () => Navigator.of(context).maybePop(),
                     ),
                     lastPageBuilder: (c) => ViewExtraSubPage(
@@ -830,6 +850,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toDownload: _downloadManga,
                       toShowToc: _showToc,
                       toShowComments: _showComments,
+                      toShowImage: _showImage,
                       toPop: () => Navigator.of(context).maybePop(),
                     ),
                   ),
@@ -1114,8 +1135,12 @@ class _ScreenHelper {
     await WidgetsBinding.instance?.endOfFrame;
   }
 
-  static Future<void> restoreSystemUI() async {
-    setDefaultSystemUIOverlayStyle();
-    await setManualSystemUIMode(SystemUiOverlay.values);
+  static Future<void> restoreSystemUI({bool notificationBar = true, bool fullscreen = true}) async {
+    if (notificationBar) {
+      setDefaultSystemUIOverlayStyle();
+    }
+    if (fullscreen) {
+      await setManualSystemUIMode(SystemUiOverlay.values);
+    }
   }
 }

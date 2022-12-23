@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
+import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -83,9 +84,16 @@ class _CommentsPageState extends State<CommentsPage> {
           color: Colors.white,
           child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
         ),
-        itemBuilder: (c, _, item) => CommentLineView(
+        itemBuilder: (c, _, item) => CommentLineView.normalWithReplies(
           comment: item,
-          style: CommentLineViewStyle.normal,
+          onPressed: () => Navigator.of(context).push(
+            CustomPageRoute(
+              context: context,
+              builder: (c) => CommentPage(
+                comment: item,
+              ),
+            ),
+          ),
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

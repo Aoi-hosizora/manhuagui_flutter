@@ -13,10 +13,12 @@ class ImageViewerPage extends StatefulWidget {
     Key? key,
     required this.url,
     required this.title,
+    this.ignoreSystemUI = false,
   }) : super(key: key);
 
   final String url;
   final String title;
+  final bool ignoreSystemUI;
 
   @override
   State<ImageViewerPage> createState() => _ImageViewerPageState();
@@ -29,13 +31,15 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      setSystemUIOverlayStyle(
-        navigationBarIconBrightness: Brightness.light,
-        navigationBarColor: Colors.black,
-        navigationBarDividerColor: Colors.black,
-      );
-    });
+    if (!widget.ignoreSystemUI) {
+      WidgetsBinding.instance?.addPostFrameCallback((_) {
+        setSystemUIOverlayStyle(
+          navigationBarIconBrightness: Brightness.light,
+          navigationBarColor: Colors.black,
+          navigationBarDividerColor: Colors.black,
+        );
+      });
+    }
   }
 
   Future<void> _download(String url) async {
@@ -56,7 +60,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
 
     return WillPopScope(
       onWillPop: () async {
-        setDefaultSystemUIOverlayStyle();
+        if (!widget.ignoreSystemUI) {
+          setDefaultSystemUIOverlayStyle();
+        }
         return true;
       },
       child: Scaffold(

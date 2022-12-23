@@ -176,14 +176,14 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       color: Colors.white,
       child: InkWell(
         child: Padding(
-          padding: EdgeInsets.only(left: 16, right: 10, top: 10, bottom: 10),
+          padding: EdgeInsets.only(left: 16, right: 12, top: 12, bottom: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconText(
                 icon: Icon(icon, color: Colors.black54),
-                text: Text(text, style: Theme.of(context).textTheme.bodyText1),
-                space: 15,
+                text: Text(text, style: Theme.of(context).textTheme.subtitle1),
+                space: 16,
               ),
               Icon(Icons.chevron_right, color: Colors.black54),
             ],
@@ -247,7 +247,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               onPressed: () => Navigator.of(context).push(
                 CustomPageRoute(
                   context: context,
-                  builder: (c) => MessagePage(),
+                  builder: (c) => MessagePage(), // TODO badge
                 ),
               ),
             ),

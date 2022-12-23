@@ -198,6 +198,8 @@ class OtherSetting {
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
     required this.clickToSearch,
+    required this.regularGroupRows,
+    required this.otherGroupRows,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
@@ -207,6 +209,8 @@ class OtherSetting {
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
+  final int regularGroupRows; // 单话分组显示章节行数
+  final int otherGroupRows; // 其他分组显示章节行数
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
@@ -216,6 +220,8 @@ class OtherSetting {
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
     clickToSearch: false,
+    regularGroupRows: 3,
+    otherGroupRows: 1,
   );
 
   OtherSetting copyWith({
@@ -226,6 +232,8 @@ class OtherSetting {
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
     bool? clickToSearch,
+    int? regularGroupRows,
+    int? otherGroupRows,
   }) {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
@@ -235,6 +243,8 @@ class OtherSetting {
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       clickToSearch: clickToSearch ?? this.clickToSearch,
+      regularGroupRows: regularGroupRows ?? this.regularGroupRows,
+      otherGroupRows: otherGroupRows ?? this.otherGroupRows,
     );
   }
 }

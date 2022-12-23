@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
@@ -78,7 +80,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           values: const [1, 2, 3, 4, 5, 6],
           builder: (s) => Text('$s页'),
           onChanged: (c) {
-            _downloadPagesTogether = c.clamp(1, 8);
+            _downloadPagesTogether = c.clamp(1, 6);
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -145,6 +147,7 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
           onPressed: () async {
             AppSetting.instance.update(dl: setting);
             await AppSettingPrefs.saveDlSetting();
+            EventBusManager.instance.fire(AppSettingChangedEvent());
             Navigator.of(c).pop(true);
           },
         ),
@@ -163,6 +166,7 @@ Future<void> updateDlSettingDefaultToDeleteFiles(bool alsoDeleteFile) async {
   var newSetting = setting.copyWith(defaultToDeleteFiles: alsoDeleteFile);
   AppSetting.instance.update(dl: newSetting);
   await AppSettingPrefs.saveDlSetting();
+  EventBusManager.instance.fire(AppSettingChangedEvent());
 }
 
 Future<void> updateDlSettingDefaultToOnlineMode(bool onlineMode) async {
@@ -170,4 +174,5 @@ Future<void> updateDlSettingDefaultToOnlineMode(bool onlineMode) async {
   var newSetting = setting.copyWith(defaultToOnlineMode: onlineMode);
   AppSetting.instance.update(dl: newSetting);
   await AppSettingPrefs.saveDlSetting();
+  EventBusManager.instance.fire(AppSettingChangedEvent());
 }

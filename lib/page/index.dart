@@ -26,7 +26,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   late final _tabs = [
     Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
     Tuple3('分类', Icons.category, CategorySubPage(action: _actions[1])),
-    Tuple3('订阅', Icons.loyalty, SubscribeSubPage(action: _actions[2])),
+    Tuple3('订阅', Icons.loyalty, SubscribeSubPage(action: _actions[2])), // TODO badge
     Tuple3('我的', Icons.person, MineSubPage(action: _actions[3])),
   ];
   final _cancelHandlers = <VoidCallback>[];

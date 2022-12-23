@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
@@ -67,6 +69,7 @@ class _MangaPageState extends State<MangaPage> {
       }));
       await AuthManager.instance.check();
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) => _loadHistory()));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
     _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
@@ -646,6 +649,8 @@ class _MangaPageState extends State<MangaPage> {
                   child: MangaTocView(
                     groups: _data!.chapterGroups,
                     full: false,
+                    firstGroupRowsIfNotFull: AppSetting.instance.other.regularGroupRows,
+                    otherGroupsRowsIfNotFull: AppSetting.instance.other.otherGroupRows,
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
@@ -669,85 +674,122 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 // 评论
                 // ****************************************************************
-                PlaceholderText.from(
-                  isEmpty: _comments.isEmpty,
-                  isLoading: _commentLoading,
-                  errorText: _commentError.isEmpty ? '' : '加载漫画评论失败\n$_commentError',
-                  displayRule: PlaceholderDisplayRule.errorFirst,
-                  setting: PlaceholderSetting().copyWithChinese(
-                    loadingText: '评论加载中...',
-                    nothingText: '暂无评论',
-                  ),
-                  onRefresh: () => _getComments(),
-                  childBuilder: (_) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.fromLTRB(12, 6, 4, 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        color: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '评论区',
-                              style: Theme.of(context).textTheme.subtitle1,
-                            ),
-                            Text(
-                              '共 $_commentTotal 条',
-                              style: Theme.of(context).textTheme.subtitle1,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        color: Colors.white,
-                        child: Divider(height: 0, thickness: 1),
-                      ),
-                      for (var comment in _comments.sublist(0, _comments.length - 1)) ...[
-                        CommentLineView(
-                          comment: comment,
-                          style: CommentLineViewStyle.normal,
-                        ),
-                        Container(
-                          color: Colors.white,
-                          child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
-                        ),
-                      ],
-                      CommentLineView(
-                        comment: _comments.last,
-                        style: CommentLineViewStyle.normal,
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        color: Colors.white,
-                        child: Divider(height: 0, thickness: 1),
+                      Text(
+                        '评论区 (共 $_commentTotal 条)',
+                        style: Theme.of(context).textTheme.subtitle1,
                       ),
                       Material(
-                        color: Colors.white,
+                        color: Colors.transparent,
                         child: InkWell(
-                          onTap: () => Navigator.of(context).push(
-                            CustomPageRoute(
-                              context: context,
-                              builder: (c) => CommentsPage(
-                                mangaId: _data!.mid,
-                                mangaTitle: _data!.title,
-                              ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            child: Text(
+                              '发表评论',
+                              style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Theme.of(context).primaryColor),
                             ),
                           ),
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: 42,
-                            child: Center(
-                              child: Text(
-                                '查看更多评论...',
-                                style: Theme.of(context).textTheme.subtitle1,
-                              ),
+                          onTap: () => showDialog(
+                            context: context,
+                            builder: (c) => AlertDialog(
+                              title: Text('发送评论'),
+                              content: Text('是否用浏览器打开漫画页面来发表评论？'),
+                              actions: [
+                                TextButton(
+                                  child: Text('确定'),
+                                  onPressed: () {
+                                    Navigator.of(c).pop();
+                                    launchInBrowser(context: context, url: '${_data!.url}#Comment');
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('取消'),
+                                  onPressed: () => Navigator.of(c).pop(),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
                     ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  color: Colors.white,
+                  child: Divider(height: 0, thickness: 1),
+                ),
+                Container(
+                  color: Colors.white,
+                  child: PlaceholderText.from(
+                    isEmpty: _comments.isEmpty,
+                    isLoading: _commentLoading,
+                    errorText: _commentError.isEmpty ? '' : '加载漫画评论失败\n$_commentError',
+                    displayRule: PlaceholderDisplayRule.errorFirst,
+                    setting: PlaceholderSetting(
+                      progressPadding: EdgeInsets.all(25),
+                    ).copyWithChinese(
+                      loadingText: '评论加载中...',
+                      nothingText: '暂无评论',
+                    ),
+                    onRefresh: () => _getComments(),
+                    childBuilder: (_) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var i = 0; i < _comments.length; i++) ...[
+                          CommentLineView.normalWithReplies(
+                            comment: _comments[i],
+                            onPressed: () => Navigator.of(context).push(
+                              CustomPageRoute(
+                                context: context,
+                                builder: (c) => CommentPage(
+                                  comment: _comments[i],
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (i != _comments.length - 1)
+                            Container(
+                              color: Colors.white,
+                              child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
+                            ),
+                        ],
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          color: Colors.white,
+                          child: Divider(height: 0, thickness: 1),
+                        ),
+                        Material(
+                          color: Colors.white,
+                          child: InkWell(
+                            onTap: () => Navigator.of(context).push(
+                              CustomPageRoute(
+                                context: context,
+                                builder: (c) => CommentsPage(
+                                  mangaId: _data!.mid,
+                                  mangaTitle: _data!.title,
+                                ),
+                              ),
+                            ),
+                            child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              height: 42,
+                              child: Center(
+                                child: Text(
+                                  '查看更多评论...',
+                                  style: Theme.of(context).textTheme.subtitle1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

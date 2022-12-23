@@ -83,6 +83,11 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     EventBusManager.instance.fire(ev);
     var ev2 = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
     EventBusManager.instance.fire(ev2);
+    Future.delayed(Duration(seconds: 1), () {
+      if (_canceled) {
+        DownloadNotificationHelper.cancelNotification(mangaId); // 以防万一，等待1s后再取消系统通知一次
+      }
+    });
     return Future.value(null);
   }
 
