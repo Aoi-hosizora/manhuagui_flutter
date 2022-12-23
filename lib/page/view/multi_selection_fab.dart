@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 用于多选列表的 Fab 容器，在 [HistorySubPage] 使用
+class MultiSelectionFabOption {
+  const MultiSelectionFabOption({
+    required this.child,
+    required this.onPressed,
+  });
+
+  final Widget child;
+  final VoidCallback onPressed;
+}
+
+/// 用于多选列表的 Fab 容器，在 [HistorySubPage]、[DownloadPage]、[DlFinishedSubPage]、[DlUnfinishedSubPage] 使用
 class MultiSelectionFabContainer extends StatelessWidget {
   const MultiSelectionFabContainer({
     Key? key,
@@ -12,7 +22,7 @@ class MultiSelectionFabContainer extends StatelessWidget {
 
   final Widget fabForNormal;
   final MultiSelectableController multiSelectableController;
-  final List<Tuple2<Widget, VoidCallback>> fabForMultiSelection;
+  final List<MultiSelectionFabOption> fabForMultiSelection;
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +30,9 @@ class MultiSelectionFabContainer extends StatelessWidget {
       alignment: AlignmentDirectional.bottomEnd,
       children: [
         // normal mode
-        // ScrollAnimatedFab(
-        //   // ...
-        //   condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
-        // )
+        // => hide normal fab when multiSelecting with animation
+        // ScrollAnimatedFab.condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom
+        // ScrollAnimatedFab.customBehavior: (_) => false
         fabForNormal,
 
         // multi selection mode
@@ -31,16 +40,16 @@ class MultiSelectionFabContainer extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // multi selection actions
-            for (var tup in fabForMultiSelection)
+            for (var opt in fabForMultiSelection)
               Padding(
                 padding: EdgeInsets.only(bottom: kMiniButtonOffsetAdjustment),
                 child: AnimatedFab(
                   show: multiSelectableController.multiSelecting,
                   fab: FloatingActionButton(
-                    child: tup.item1,
+                    child: opt.child,
                     mini: true,
                     heroTag: null,
-                    onPressed: tup.item2,
+                    onPressed: opt.onPressed,
                   ),
                 ),
               ),
@@ -71,6 +80,43 @@ class MultiSelectionFabContainer extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class CheckboxForSelectableItem extends StatelessWidget {
+  const CheckboxForSelectableItem({
+    Key? key,
+    required this.tip,
+    required this.backgroundColor,
+    this.scale,
+    this.scaleAlignment = Alignment.bottomRight,
+  }) : super(key: key);
+
+  final SelectableItemTip tip;
+  final Color backgroundColor;
+  final double? scale;
+  final AlignmentGeometry scaleAlignment;
+
+  @override
+  Widget build(BuildContext context) {
+    var checkbox = Container(
+      color: backgroundColor,
+      child: Checkbox(
+        value: tip.isSelected,
+        onChanged: (v) => tip.toToggle?.call(),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+      ),
+    );
+
+    if (scale == null) {
+      return checkbox;
+    }
+    return Transform.scale(
+      scale: scale!,
+      alignment: scaleAlignment,
+      child: checkbox,
     );
   }
 }

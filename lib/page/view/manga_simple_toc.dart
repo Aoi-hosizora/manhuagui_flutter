@@ -15,6 +15,7 @@ class MangaSimpleTocView extends StatelessWidget {
     this.highlightedChapters = const [],
     this.showNewBadge = true,
     this.customBadgeBuilder,
+    this.itemBuilder,
     required this.onChapterPressed,
     this.onChapterLongPressed,
   }) : super(key: key);
@@ -26,6 +27,7 @@ class MangaSimpleTocView extends StatelessWidget {
   final List<int> highlightedChapters;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
+  final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
   final void Function(int cid) onChapterPressed;
   final void Function(int cid)? onChapterLongPressed;
 
@@ -48,6 +50,9 @@ class MangaSimpleTocView extends StatelessWidget {
           if (customBadge != null) customBadge,
         ];
       },
+      itemBuilder: itemBuilder == null
+          ? null //
+          : (ctx, chapter, itemWidget) => itemBuilder!.call(ctx, chapter?.cid, itemWidget),
       onChapterPressed: (chapter) {
         if (chapter != null) {
           onChapterPressed.call(chapter.cid);

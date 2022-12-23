@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -28,6 +30,7 @@ class DownloadPage extends StatefulWidget {
 class _DownloadPageState extends State<DownloadPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
 
   @override
@@ -43,6 +46,7 @@ class _DownloadPageState extends State<DownloadPage> {
     _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _fabController.dispose();
+    _msController.dispose();
     super.dispose();
   }
 
@@ -183,132 +187,176 @@ class _DownloadPageState extends State<DownloadPage> {
     }
   }
 
-  Future<void> _deleteManga(DownloadedManga entity) async {
+  Future<void> _deleteMangas({required List<int> mangaIds}) async {
+    var entities = _data.where((el) => mangaIds.contains(el.mangaId)).toList();
+    if (entities.isEmpty) {
+      return;
+    }
+    for (var entity in entities) {
+      var task = QueueManager.instance.getDownloadMangaQueueTask(entity.mangaId);
+      if (task != null) {
+        Fluttertoast.showToast(msg: '请先暂停下载《${entity.mangaTitle}》，然后再删除漫画');
+        return;
+      }
+    }
+
     var alsoDeleteFile = AppSetting.instance.dl.defaultToDeleteFiles;
-    await showDialog(
+    var ok = await showDialog(
       context: context,
       builder: (c) => StatefulBuilder(
         builder: (c, _setState) => AlertDialog(
-          title: Text('漫画删除确认'),
+          title: Text('删除确认'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('是否删除《${entity.mangaTitle}》？'),
-              SizedBox(height: 5),
+              if (entities.length == 1) Text('是否删除《${entities.first.mangaTitle}》漫画？\n'),
+              if (entities.length > 1) Text('是否删除以下 ${entities.length} 部漫画？\n\n' + entities.map((e) => '《${e.mangaTitle}》').join('\n') + '\n'),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
                 value: alsoDeleteFile,
-                onChanged: (v) {
-                  alsoDeleteFile = v ?? false;
-                  _setState(() {});
-                },
-                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
+                onChanged: (v) => _setState(() => alsoDeleteFile = v ?? false),
+                visualDensity: VisualDensity(horizontal: -4, vertical: -4),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),
             ],
           ),
+          scrollable: true,
           actions: [
-            TextButton(
-              child: Text('删除'),
-              onPressed: () async {
-                Navigator.of(c).pop();
-                _data.remove(entity);
-                _total--;
-                await DownloadDao.deleteManga(mid: entity.mangaId);
-                await DownloadDao.deleteAllChapters(mid: entity.mangaId);
-                if (mounted) setState(() {});
-                await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
-                if (alsoDeleteFile) {
-                  await deleteDownloadedManga(mangaId: entity.mangaId);
-                }
-              },
-            ),
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(c).pop(),
-            ),
+            TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
+            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
           ],
         ),
       ),
     );
+    if (ok != true) {
+      return;
+    }
+
+    // 退出多选模式、更新最新设置
+    _msController.exitMultiSelectionMode();
+    await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
+
+    // 更新列表和数据库
+    for (var mangaId in mangaIds) {
+      _data.removeWhere((el) => el.mangaId == mangaId);
+      _total--;
+      await DownloadDao.deleteManga(mid: mangaId);
+      await DownloadDao.deleteAllChapters(mid: mangaId);
+    }
+    if (mounted) setState(() {});
+
+    // 删除文件
+    if (alsoDeleteFile) {
+      for (var mangaId in mangaIds) {
+        await deleteDownloadedManga(mangaId: mangaId);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('下载列表 (共 $_total 部)'),
-        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
-        actions: [
-          AppBarActionButton(
-            icon: Icon(Icons.play_arrow),
-            tooltip: '全部开始',
-            onPressed: () => _allStartOrPause(allStart: true),
-          ),
-          AppBarActionButton(
-            icon: Icon(Icons.pause),
-            tooltip: '全部暂停',
-            onPressed: () => _allStartOrPause(allStart: false),
-          ),
-          AppBarActionButton(
-            icon: Icon(Icons.settings),
-            tooltip: '下载设置',
-            onPressed: () => showDlSettingDialog(context: context),
-          ),
-        ],
-      ),
-      drawer: AppDrawer(
-        currentSelection: DrawerSelection.download,
-      ),
-      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
-      body: RefreshableListView<DownloadedManga>(
-        data: _data,
-        getData: () => _getData(),
-        scrollController: _controller,
-        setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.symmetric(vertical: 0),
-          interactiveScrollbar: true,
-          scrollbarMainAxisMargin: 2,
-          scrollbarCrossAxisMargin: 2,
-          placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          refreshFirst: true,
-          clearWhenRefresh: false,
-          clearWhenError: false,
-        ),
-        separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, entity) {
-          DownloadMangaQueueTask? task = _tasks[entity.mangaId];
-          return DownloadMangaLineView(
-            mangaEntity: entity,
-            downloadTask: task,
-            downloadedBytes: _bytes[entity.mangaId] ?? 0,
-            onActionPressed: () => _pauseOrContinue(toPause: task != null, entity: entity, task: task),
-            onLinePressed: () => Navigator.of(context).push(
-              CustomPageRoute(
-                context: context,
-                builder: (c) => DownloadMangaPage(
-                  mangaId: entity.mangaId,
-                ),
-                settings: DownloadMangaPage.buildRouteSetting(
-                  mangaId: entity.mangaId,
-                ),
-              ),
+    return WillPopScope(
+      onWillPop: () async {
+        if (!_msController.multiSelecting) {
+          return true;
+        }
+        _msController.exitMultiSelectionMode();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('下载列表 (共 $_total 部)'),
+          leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
+          actions: [
+            AppBarActionButton(
+              icon: Icon(Icons.play_arrow),
+              tooltip: '全部开始',
+              onPressed: () => _allStartOrPause(allStart: true),
             ),
-            onLineLongPressed: () => _deleteManga(entity),
-          );
-        },
-      ),
-      floatingActionButton: ScrollAnimatedFab(
-        controller: _fabController,
-        scrollController: _controller,
-        condition: ScrollAnimatedCondition.direction,
-        fab: FloatingActionButton(
-          child: Icon(Icons.vertical_align_top),
-          heroTag: null,
-          onPressed: () => _controller.scrollToTop(),
+            AppBarActionButton(
+              icon: Icon(Icons.pause),
+              tooltip: '全部暂停',
+              onPressed: () => _allStartOrPause(allStart: false),
+            ),
+            AppBarActionButton(
+              icon: Icon(Icons.settings),
+              tooltip: '下载设置',
+              onPressed: () => showDlSettingDialog(context: context),
+            ),
+          ],
+        ),
+        drawer: AppDrawer(
+          currentSelection: DrawerSelection.download,
+        ),
+        drawerEdgeDragWidth: MediaQuery.of(context).size.width,
+        body: MultiSelectable<ValueKey<int>>(
+          controller: _msController,
+          stateSetter: () => mountedSetState(() {}),
+          onModeChanged: (_) => mountedSetState(() {}),
+          child: RefreshableListView<DownloadedManga>(
+            data: _data,
+            getData: () => _getData(),
+            scrollController: _controller,
+            setting: UpdatableDataViewSetting(
+              padding: EdgeInsets.symmetric(vertical: 0),
+              interactiveScrollbar: true,
+              scrollbarMainAxisMargin: 2,
+              scrollbarCrossAxisMargin: 2,
+              placeholderSetting: PlaceholderSetting().copyWithChinese(),
+              onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+              refreshFirst: true,
+              clearWhenRefresh: false,
+              clearWhenError: false,
+            ),
+            separator: Divider(height: 0, thickness: 1),
+            itemBuilder: (c, _, entity) {
+              DownloadMangaQueueTask? task = _tasks[entity.mangaId];
+              return SelectableCheckboxItem<ValueKey<int>>(
+                key: ValueKey<int>(entity.mangaId),
+                checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+                itemBuilder: (c, key, tip) => DownloadMangaLineView(
+                  mangaEntity: entity,
+                  downloadTask: task,
+                  downloadedBytes: _bytes[entity.mangaId] ?? 0,
+                  onActionPressed: () => _pauseOrContinue(toPause: task != null, entity: entity, task: task),
+                  onLinePressed: () => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => DownloadMangaPage(
+                        mangaId: entity.mangaId,
+                      ),
+                      settings: DownloadMangaPage.buildRouteSetting(
+                        mangaId: entity.mangaId,
+                      ),
+                    ),
+                  ),
+                  onLineLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
+                ),
+              );
+            },
+          ),
+        ),
+        floatingActionButton: MultiSelectionFabContainer(
+          fabForNormal: ScrollAnimatedFab(
+            controller: _fabController,
+            scrollController: _controller,
+            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
+            customBehavior: (_) => false,
+            fab: FloatingActionButton(
+              child: Icon(Icons.vertical_align_top),
+              heroTag: null,
+              onPressed: () => _controller.scrollToTop(),
+            ),
+          ),
+          multiSelectableController: _msController,
+          fabForMultiSelection: [
+            MultiSelectionFabOption(
+              child: Icon(Icons.delete),
+              onPressed: () => _deleteMangas(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
+            ),
+          ],
         ),
       ),
     );

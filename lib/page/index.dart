@@ -63,6 +63,22 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   DateTime? _lastBackPressedTime;
 
   Future<bool> _onWillPop() async {
+    var scopes = context.findDescendantElementsDFS<WillPopScope>(-1, (element) {
+      if (element.widget is! WillPopScope) {
+        return null;
+      }
+      return element.widget as WillPopScope;
+    });
+    if (scopes.isNotEmpty) {
+      scopes.removeAt(0); // remove the first WillPopScope
+    }
+    for (var s in scopes) {
+      var willPop = await s.onWillPop?.call(); // test onWillPop of descendants
+      if (willPop != null && !willPop) {
+        return false;
+      }
+    }
+
     if (_scaffoldKey.currentState?.isDrawerOpen == true || _scaffoldKey.currentState?.scaffoldState?.isDrawerOpen == true) {
       return true; // close drawer
     }

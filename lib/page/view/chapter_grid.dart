@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 
 /// 章节列表展示，在 [MangaTocView] / [MangaSimpleTocView] 使用
@@ -12,6 +13,7 @@ class ChapterGridView extends StatelessWidget {
     this.highlightColor,
     this.highlightedChapters = const [],
     this.extrasInStack,
+    this.itemBuilder,
     required this.onChapterPressed,
     this.onChapterLongPressed,
   }) : super(key: key);
@@ -23,6 +25,7 @@ class ChapterGridView extends StatelessWidget {
   final Color? highlightColor;
   final List<int> highlightedChapters;
   final List<Widget> Function(TinyMangaChapter? chapter)? extrasInStack;
+  final Widget Function(BuildContext context, TinyMangaChapter? chapter, Widget itemWidget)? itemBuilder;
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
   final void Function(TinyMangaChapter? chapter)? onChapterLongPressed;
 
@@ -73,6 +76,7 @@ class ChapterGridView extends StatelessWidget {
       var count = maxLines * 4;
       if (shown.length > count) {
         shown = [...shown.sublist(0, count - 1), null];
+        // for example:
         // maxLines: 3 => X X X X | X X X X | X X X O
         // maxLines: 1 => X X X O
       }
@@ -91,6 +95,8 @@ class ChapterGridView extends StatelessWidget {
               child: _buildItem(
                 context: context,
                 chapter: chapter,
+              ).let(
+                (itemWidget) => itemBuilder?.call(context, chapter, itemWidget) ?? itemWidget,
               ),
             ),
         ],

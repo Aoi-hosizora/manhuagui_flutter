@@ -37,9 +37,10 @@ class DownloadMangaProgressChangedEvent {
 }
 
 class DownloadedMangaEntityChangedEvent {
-  const DownloadedMangaEntityChangedEvent({required this.mangaId});
+  const DownloadedMangaEntityChangedEvent({required this.mangaId, this.byDeleting = false});
 
   final int mangaId;
+  final bool byDeleting;
 }
 
 class AppSettingChangedEvent {

@@ -209,7 +209,11 @@ Future<int> getDownloadedMangaBytes({required int mangaId}) async {
     var totalBytes = 0;
     await for (var entity in directory.list(recursive: true, followLinks: false)) {
       if (entity is File) {
-        totalBytes += await entity.length();
+        try {
+          totalBytes += await entity.length();
+        } catch (e, s) {
+          globalLogger.e('getDownloadedMangaBytes (skip)', e, s);
+        }
       }
     }
     return totalBytes;
