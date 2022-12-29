@@ -214,7 +214,7 @@ class _AuthorPageState extends State<AuthorPage> {
                             space: 8,
                           ),
                           IconText(
-                            icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
+                            icon: Icon(Icons.update, size: 20, color: Colors.orange),
                             text: Text('更新于 ${_data!.newestDate}'),
                             space: 8,
                           ),

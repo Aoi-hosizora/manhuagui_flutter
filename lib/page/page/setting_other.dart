@@ -42,8 +42,8 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
-      regularGroupRows: _regularGroupRows,
-      otherGroupRows: _otherGroupRows,
+        regularGroupRows: _regularGroupRows,
+        otherGroupRows: _otherGroupRows,
       );
 
   @override
@@ -58,7 +58,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           width: 75,
           value: _timeoutBehavior,
           values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
-          builder: (s) => Text(s.toOptionTitle()),
+          textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _timeoutBehavior = s;
             widget.onSettingChanged.call(_newestSetting);
@@ -73,7 +73,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           width: 75,
           value: _dlTimeoutBehavior,
           values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
-          builder: (s) => Text(s.toOptionTitle()),
+          textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _dlTimeoutBehavior = s;
             widget.onSettingChanged.call(_newestSetting);
@@ -103,7 +103,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           title: '漫画默认排序方式',
           value: _defaultMangaOrder,
           values: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-          builder: (s) => Text(s.toTitle()),
+          textBuilder: (s) => s.toTitle(),
           onChanged: (s) {
             _defaultMangaOrder = s;
             widget.onSettingChanged.call(_newestSetting);
@@ -114,7 +114,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           title: '漫画作者默认排序方式',
           value: _defaultAuthorOrder,
           values: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byNew],
-          builder: (s) => Text(s.toTitle()),
+          textBuilder: (s) => s.toTitle(),
           onChanged: (s) {
             _defaultAuthorOrder = s;
             widget.onSettingChanged.call(_newestSetting);
@@ -131,11 +131,11 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingComboBoxView<int>(
-          title: '单话分组显示章节行数',
+          title: '单话分组章节显示行数',
           width: 75,
           value: _regularGroupRows.clamp(1, 8),
           values: const [1, 2, 3, 4, 5, 6, 7, 8],
-          builder: (s) => Text('$s行'),
+          textBuilder: (s) => '$s行',
           onChanged: (c) {
             _regularGroupRows = c.clamp(1, 8);
             widget.onSettingChanged.call(_newestSetting);
@@ -143,13 +143,13 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingComboBoxView<int>(
-          title: '其他分组显示章节行数',
+          title: '其他分组章节显示行数',
           width: 75,
-          value: _otherGroupRows.clamp(1, 8),
-          values: const [1, 2, 3, 4, 5, 6, 7, 8],
-          builder: (s) => Text('$s行'),
+          value: _otherGroupRows.clamp(1, 5),
+          values: const [1, 2, 3, 4, 5],
+          textBuilder: (s) => '$s行',
           onChanged: (c) {
-            _otherGroupRows = c.clamp(1, 8);
+            _otherGroupRows = c.clamp(1, 5);
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

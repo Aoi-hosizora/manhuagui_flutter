@@ -209,8 +209,8 @@ class OtherSetting {
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
-  final int regularGroupRows; // 单话分组显示章节行数
-  final int otherGroupRows; // 其他分组显示章节行数
+  final int regularGroupRows; // 单话分组章节显示行数
+  final int otherGroupRows; // 其他分组章节显示行数
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,

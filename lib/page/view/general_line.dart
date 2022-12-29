@@ -14,6 +14,7 @@ class GeneralLineView extends StatelessWidget {
     required this.text2,
     required this.icon3,
     required this.text3,
+    this.cornerIcons,
     this.extrasInRow,
     this.extraWidthInRow,
     this.extrasInStack,
@@ -40,19 +41,21 @@ class GeneralLineView extends StatelessWidget {
         text2 = null,
         icon3 = null,
         text3 = null,
+        cornerIcons = null,
         super(key: key);
 
   // required
   final String imageUrl;
   final String title;
 
-  // simple rows
+  // basic rows
   final IconData? icon1;
   final String? text1;
   final IconData? icon2;
   final String? text2;
   final IconData? icon3;
   final String? text3;
+  final List<IconData>? cornerIcons;
 
   // custom rows
   final List<Widget>? customRows; // 取代上面的 iconX 和 textX
@@ -165,38 +168,60 @@ class GeneralLineIconText extends StatelessWidget {
     Key? key,
     required this.icon,
     required this.text,
+    this.cornerIcons,
     this.padding,
     this.iconSize,
+    this.cornerIconSize,
     this.textStyle,
     this.space,
+    this.cornerSpace,
+    this.textCornerSpace,
   }) : super(key: key);
 
   final IconData? icon;
   final String? text;
+  final List<IconData>? cornerIcons;
   final EdgeInsets? padding;
   final double? iconSize;
+  final double? cornerIconSize;
   final TextStyle? textStyle;
   final double? space;
+  final double? cornerSpace;
+  final double? textCornerSpace;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: padding ?? EdgeInsets.only(bottom: 2),
-      child: IconText(
+      padding: padding ?? EdgeInsets.only(bottom: 3),
+      child: IconText.texts(
         icon: Icon(
           icon,
           size: iconSize ?? 20,
           color: Colors.orange,
         ),
-        text: Flexible(
-          child: Text(
-            text ?? '',
-            style: textStyle ?? //
-                DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+        texts: [
+          Expanded(
+            child: Text(
+              text ?? '',
+              style: textStyle ?? //
+                  DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
+          SizedBox(width: textCornerSpace ?? 5),
+          for (var i = 0; i < (cornerIcons?.length ?? 0); i++)
+            Padding(
+              padding: EdgeInsets.only(
+                left: i > 0 ? (cornerSpace ?? 2) : 0,
+              ),
+              child: Icon(
+                cornerIcons![i], // Icons.download, Icons.star, Icons.bookmark, Icons.visibility
+                size: cornerIconSize ?? 18,
+                color: Colors.grey[500],
+              ),
+            ),
+        ],
         space: space ?? 8,
       ),
     );

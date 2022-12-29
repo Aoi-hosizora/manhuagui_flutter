@@ -86,21 +86,28 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   Widget _buildItem(String text, IconData icon, DrawerSelection? selection, void Function() action) {
-    return ListTile(
-      title: Text(text),
-      leading: Icon(icon),
-      selected: selection == null ? false : widget.currentSelection == selection,
-      selectedTileColor: Colors.grey[300],
-      onTap: () {
-        if (widget.currentSelection == selection) {
-          return;
-        }
-        _routeTheme = CustomPageRouteTheme.of(context); // get theme data before pop
-        if (Scaffold.maybeOf(context)?.isDrawerOpen == true || DrawerScaffold.of(context)?.isDrawerOpen == true) {
-          Navigator.of(context).pop();
-        }
-        action.call();
-      },
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: Theme.of(context).textTheme.copyWith(
+              bodyText1: Theme.of(context).textTheme.bodyText1?.copyWith(fontSize: 16),
+            ),
+      ),
+      child: ListTile(
+        title: Text(text),
+        leading: Icon(icon),
+        selected: selection == null ? false : widget.currentSelection == selection,
+        selectedTileColor: Colors.grey[300],
+        onTap: () {
+          if (widget.currentSelection == selection) {
+            return;
+          }
+          _routeTheme = CustomPageRouteTheme.of(context); // get theme data before pop
+          if (Scaffold.maybeOf(context)?.isDrawerOpen == true || DrawerScaffold.of(context)?.isDrawerOpen == true) {
+            Navigator.of(context).pop();
+          }
+          action.call();
+        },
+      ),
     );
   }
 
@@ -167,7 +174,7 @@ class _AppDrawerState extends State<AppDrawer> {
           _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage())),
           Divider(thickness: 1),
           _buildItem('我的书架', Icons.star_outlined, null, () => _gotoHomePageTab(ToShelfRequestedEvent())),
-          _buildItem('浏览历史', Icons.history, null, () => _gotoHomePageTab(ToHistoryRequestedEvent())),
+          _buildItem('阅读历史', Icons.history, null, () => _gotoHomePageTab(ToHistoryRequestedEvent())),
           _buildItem('最近更新', Icons.cached, null, () => _gotoHomePageTab(ToRecentRequestedEvent())),
           _buildItem('漫画排行', Icons.trending_up, null, () => _gotoHomePageTab(ToRankingRequestedEvent())),
           Divider(thickness: 1),

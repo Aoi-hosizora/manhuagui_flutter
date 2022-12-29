@@ -132,6 +132,12 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
             ),
           ),
           multiSelectableController: _msController,
+          onCounterPressed: () {
+            var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
+            var allEntities = widget.invertOrder ? widget.mangaEntity.downloadedChapters.reversed : widget.mangaEntity.downloadedChapters;
+            var titles = allEntities.where((el) => chapterIds.contains(el.chapterId)).map((m) => '《${m.chapterTitle}》').toList();
+            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+          },
           fabForMultiSelection: [
             MultiSelectionFabOption(
               child: Icon(Icons.delete),

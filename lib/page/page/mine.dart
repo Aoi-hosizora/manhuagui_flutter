@@ -182,7 +182,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             children: [
               IconText(
                 icon: Icon(icon, color: Colors.black54),
-                text: Text(text, style: Theme.of(context).textTheme.subtitle1),
+                text: Text(text, style: Theme.of(context).textTheme.bodyText1?.copyWith(fontSize: 16)),
                 space: 16,
               ),
               Icon(Icons.chevron_right, color: Colors.black54),
@@ -247,7 +247,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               onPressed: () => Navigator.of(context).push(
                 CustomPageRoute(
                   context: context,
-                  builder: (c) => MessagePage(), // TODO badge
+                  builder: (c) => MessagePage(),
                 ),
               ),
             ),
@@ -367,7 +367,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               SizedBox(height: 12),
               _buildActionLine(text: '我的书架', icon: Icons.star_outlined, action: () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
               _buildDivider(),
-              _buildActionLine(text: '浏览历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
+              _buildActionLine(text: '阅读历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
               _buildDivider(),
               _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
               SizedBox(height: 12),
@@ -384,8 +384,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildInfoLines(
                 title: '登录统计',
                 lines: [
-                  '本次登录IP：${_data!.loginIp}',
-                  '上次登录IP：${_data!.lastLoginIp}',
+                  '本次登录IP (非本地)：${_data!.loginIp}',
+                  '上次登录IP (非本地)：${_data!.lastLoginIp}',
                   '上次登录时间：${_data!.lastLoginTime}',
                   '累计登录天数：${_data!.cumulativeDayCount} 天',
                 ],

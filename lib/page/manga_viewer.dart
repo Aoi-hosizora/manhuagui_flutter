@@ -304,7 +304,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
       }
 
-      // 6. 异步更新浏览历史
+      // 6. 异步更新阅读历史
       _updateHistory();
     } catch (e, s) {
       _data = null;
@@ -941,12 +941,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                     icon: Icons.arrow_right_alt,
                                     rotateAngle: math.pi,
                                     action: () => _gotoChapter(gotoPrevious: !_isRightToLeft),
+                                    longPress: () => (!_isRightToLeft ? _data!.prevChapterTitle : _data!.nextChapterTitle)?.let((title) => Fluttertoast.showToast(msg: title)),
                                     enable: !_isRightToLeft ? (_data!.prevChapterId ?? 0) > 0 : (_data!.nextChapterId ?? 0) > 0,
                                   ),
                                   action2: ActionItem(
                                     text: !_isRightToLeft ? '下一章节' : '上一章节',
                                     icon: Icons.arrow_right_alt,
                                     action: () => _gotoChapter(gotoPrevious: _isRightToLeft),
+                                    longPress: () => (!_isRightToLeft ? _data!.nextChapterTitle : _data!.prevChapterTitle)?.let((title) => Fluttertoast.showToast(msg: title)),
                                     enable: !_isRightToLeft ? (_data!.nextChapterId ?? 0) > 0 : (_data!.prevChapterId ?? 0) > 0,
                                   ),
                                   action3: ActionItem(

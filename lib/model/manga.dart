@@ -195,7 +195,7 @@ class HomepageMangaGroupList {
     var p1 = daily.sublist(0, 8).map((e) => e.toTinyBlock()).toList(); // # = 8
     var p2 = serial.topGroup.mangas.sublist(0, 4); // # = 4
     return [
-      ...{p1[0], p1[1], p2[0], p2[1], p1[2], p1[3], p2[2], p2[3], p1[4], p1[5], p1[6], p1[7]}, // # ≒ 12
+      ...{p1[0], p1[1], p1[2], p2[0], p2[1], p1[3], p1[4], p1[5], p2[2], p2[3], p1[6], p1[7]}, // # ≒ 12
     ];
   }
 }

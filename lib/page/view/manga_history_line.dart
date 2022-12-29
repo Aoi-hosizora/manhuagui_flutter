@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
-/// 漫画浏览历史行，在 [HistorySubPage] 使用
+/// 漫画阅读历史行，在 [HistorySubPage] 使用
 class MangaHistoryLineView extends StatelessWidget {
   const MangaHistoryLineView({
     Key? key,
@@ -18,7 +17,6 @@ class MangaHistoryLineView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var lastTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(history.lastTime);
     void onPressed() {
       Navigator.of(context).push(
         CustomPageRoute(
@@ -38,10 +36,10 @@ class MangaHistoryLineView extends StatelessWidget {
         title: history.mangaTitle,
         icon1: null,
         text1: null,
-        icon2: Icons.subject,
+        icon2: Icons.notes,
         text2: '未开始阅读',
         icon3: Icons.access_time,
-        text3: lastTime,
+        text3: '浏览于 ${history.formattedLastTime}',
         onPressed: onPressed,
         onLongPressed: onLongPressed,
       );
@@ -49,12 +47,12 @@ class MangaHistoryLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: history.mangaCover,
       title: history.mangaTitle,
-      icon1: Icons.subject,
-      text1: '阅读至 ${history.chapterTitle}',
+      icon1: null,
+      text1: null,
       icon2: Icons.import_contacts,
-      text2: '第${history.chapterPage}页',
+      text2: '阅读至 ${history.chapterTitle} 第${history.chapterPage}页',
       icon3: Icons.access_time,
-      text3: lastTime,
+      text3: '阅读于 ${history.formattedLastTime}',
       onPressed: onPressed,
       onLongPressed: onLongPressed,
     );

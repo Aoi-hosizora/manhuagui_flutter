@@ -17,12 +17,28 @@ class MultiSelectionFabContainer extends StatelessWidget {
     Key? key,
     required this.fabForNormal,
     required this.multiSelectableController,
+    this.onCounterPressed,
     required this.fabForMultiSelection,
   }) : super(key: key);
 
   final Widget fabForNormal;
   final MultiSelectableController multiSelectableController;
+  final VoidCallback? onCounterPressed;
   final List<MultiSelectionFabOption> fabForMultiSelection;
+
+  static void showSelectedItemsDialogForCounter(BuildContext context, List<String> items) {
+    if (items.isEmpty) {
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('已选中 ${items.length} 项'),
+        content: Text([for (int i = 0; i < items.length; i++) '${i + 1}. ${items[i]}'].join('\n')),
+        actions: [TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop())],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +79,7 @@ class MultiSelectionFabContainer extends StatelessWidget {
                   child: Text(multiSelectableController.selectedItems.length.toString()),
                   mini: true,
                   heroTag: null,
-                  onPressed: () {},
+                  onPressed: () => onCounterPressed?.call(),
                 ),
               ),
             ),
@@ -119,23 +135,4 @@ class CheckboxForSelectableItem extends StatelessWidget {
       child: checkbox,
     );
   }
-}
-
-class ValueObjectKey<T, U> extends LocalKey {
-  const ValueObjectKey(this.value, this.object);
-
-  final T value;
-
-  final U object;
-
-  @override
-  bool operator ==(Object other) {
-    if (other.runtimeType != runtimeType) {
-      return false;
-    }
-    return other is ValueObjectKey<T, U> && other.value == value; // ignore object
-  }
-
-  @override
-  int get hashCode => hashValues(runtimeType, value); // ignore object
 }

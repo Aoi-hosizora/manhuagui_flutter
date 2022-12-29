@@ -80,7 +80,7 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
     this.enable = true,
     required this.value,
     required this.values,
-    required this.builder,
+    required this.textBuilder,
     required this.onChanged,
   }) : super(
           key: key,
@@ -93,7 +93,7 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
   final bool enable;
   final T value;
   final List<T> values;
-  final Widget Function(T) builder;
+  final String Function(T) textBuilder;
   final void Function(T) onChanged;
 
   @override
@@ -101,15 +101,27 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
         children: [
           DropdownButton<T>(
             value: value,
+            selectedItemBuilder: (c) => [
+              for (var v in values)
+                DropdownMenuItem<T>(
+                  value: v,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 2),
+                    child: Text(textBuilder(v), style: Theme.of(context).textTheme.bodyText2),
+                  ),
+                )
+            ],
             items: [
               for (var v in values)
                 DropdownMenuItem<T>(
                   value: v,
-                  child: DefaultTextStyle(
-                    style: Theme.of(context).textTheme.bodyText2!,
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 2),
-                      child: builder(v),
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 2),
+                    child: Text(
+                      textBuilder(v),
+                      style: Theme.of(context).textTheme.bodyText2!.copyWith(
+                            color: value == v ? Theme.of(context).primaryColor : null,
+                          ),
                     ),
                   ),
                 )
@@ -124,7 +136,7 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
             bottom: 6,
             child: Container(
               height: 0.8,
-              margin: EdgeInsets.only(right: 4),
+              margin: EdgeInsets.only(right: 5),
               color: Theme.of(context).primaryColor,
             ),
           ),
@@ -169,7 +181,7 @@ class SettingButtonView extends _SettingView {
     double? width,
     double height = 38,
     this.enable = true,
-    this.buttonPadding = const EdgeInsets.fromLTRB(0, 3, 9, 3),
+    this.buttonPadding = const EdgeInsets.fromLTRB(0, 4, 9, 4),
     required this.buttonChild,
     required this.onPressed,
   }) : super(

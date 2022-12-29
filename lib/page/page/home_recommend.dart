@@ -258,7 +258,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     children: [
                       ActionRowView.four(
                         action1: ActionItem.simple('我的书架', Icons.star_outlined, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
-                        action2: ActionItem.simple('浏览历史', Icons.history, () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
+                        action2: ActionItem.simple('阅读历史', Icons.history, () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
                         action3: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
                         action4: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaRandomPage(parentContext: context)))),
                       ),
@@ -273,7 +273,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 ),
                 _buildCollection('', MangaCollectionType.rankings), // 日排行榜
                 _buildCollection(_updatesError, MangaCollectionType.updates), // 最近更新
-                _buildCollection('', MangaCollectionType.histories), // 浏览历史
+                _buildCollection('', MangaCollectionType.histories), // 阅读历史
                 _buildCollection(_shelvesError, MangaCollectionType.shelves), // 我的书架
                 _buildCollection('', MangaCollectionType.downloads), // 下载列表
                 Padding(

@@ -305,7 +305,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   }
 
   Future<void> _deleteChapters({required List<int> chapterIds}) async {
-    var entities = _entity!.downloadedChapters.where((el) => chapterIds.contains(el.chapterId)).toList();
+    var allEntities = _invertOrder ? _entity!.downloadedChapters.reversed : _entity!.downloadedChapters;
+    var entities = allEntities.where((el) => chapterIds.contains(el.chapterId)).toList();
     if (entities.isEmpty) {
       return;
     }
@@ -326,7 +327,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (entities.length == 1) Text('是否删除《${entities.first.chapterTitle}》章节？\n'),
-              if (entities.length > 1) Text('是否删除以下 ${entities.length} 个章节？\n\n' + entities.map((e) => '《${e.chapterTitle}》').join('\n') + '\n'),
+              if (entities.length > 1)
+                Text(
+                  '是否删除以下 ${entities.length} 个章节？\n\n' + //
+                      [for (int i = 0; i < entities.length; i++) '${i + 1}. 《${entities[i].chapterTitle}》'].join('\n') +
+                      '\n',
+                ),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
                 value: alsoDeleteFile,

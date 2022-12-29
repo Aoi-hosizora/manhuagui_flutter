@@ -84,6 +84,7 @@ class ActionRowView extends StatelessWidget {
           text: Text(
             action.text,
             style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                  fontSize: 16,
                   color: action.enable
                       ? (iconColor ?? Colors.black) // enabled
                       : (disabledIconColor ?? Colors.grey) /* disabled */,

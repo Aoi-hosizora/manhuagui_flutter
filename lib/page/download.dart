@@ -211,7 +211,12 @@ class _DownloadPageState extends State<DownloadPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (entities.length == 1) Text('是否删除《${entities.first.mangaTitle}》漫画？\n'),
-              if (entities.length > 1) Text('是否删除以下 ${entities.length} 部漫画？\n\n' + entities.map((e) => '《${e.mangaTitle}》').join('\n') + '\n'),
+              if (entities.length > 1)
+                Text(
+                  '是否删除以下 ${entities.length} 部漫画？\n\n' + //
+                      [for (int i = 0; i < entities.length; i++) '${i + 1}. 《${entities[i].mangaTitle}》'].join('\n') +
+                      '\n',
+                ),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
                 value: alsoDeleteFile,
@@ -351,6 +356,11 @@ class _DownloadPageState extends State<DownloadPage> {
             ),
           ),
           multiSelectableController: _msController,
+          onCounterPressed: () {
+            var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
+            var titles = _data.where((el) => mangaIds.contains(el.mangaId)).map((m) => '《${m.mangaTitle}》').toList();
+            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+          },
           fabForMultiSelection: [
             MultiSelectionFabOption(
               child: Icon(Icons.delete),

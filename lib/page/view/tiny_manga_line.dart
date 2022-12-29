@@ -22,8 +22,9 @@ class TinyMangaLineView extends StatelessWidget {
       text1: manga.finished ? '已完结' : '连载中',
       icon2: Icons.subject,
       text2: '最新章节 ${manga.newestChapter}',
-      icon3: Icons.access_time,
+      icon3: Icons.update,
       text3: '更新于 ${manga.newestDate}',
+      // TODO 添加 "已添加至书架" "已被置顶" "已被浏览" 三个图标
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

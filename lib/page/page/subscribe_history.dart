@@ -10,7 +10,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 
-/// 订阅-浏览历史
+/// 订阅-阅读历史
 class HistorySubPage extends StatefulWidget {
   const HistorySubPage({
     Key? key,
@@ -86,11 +86,12 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       context: context,
       builder: (c) => AlertDialog(
         title: Text('刪除确认'),
-        content: Text(
-          histories.length == 1 //
-              ? '是否删除《${histories.first.mangaTitle}》阅读历史？'
-              : '是否删除以下 ${histories.length} 项阅读历史？\n\n' + histories.map((h) => '《${h.mangaTitle}》').join('\n'),
-        ),
+        content: histories.length == 1 //
+            ? Text('是否删除《${histories.first.mangaTitle}》阅读历史？')
+            : Text(
+                '是否删除以下 ${histories.length} 项阅读历史？\n\n' + //
+                    [for (int i = 0; i < histories.length; i++) '${i + 1}. 《${histories[i].mangaTitle}》'].join('\n'),
+              ),
         scrollable: true,
         actions: [
           TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
@@ -166,15 +167,15 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             extra: UpdatableDataViewExtraWidgets(
               innerTopWidgets: [
                 ListHintView.textWidget(
-                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的浏览历史' : '本地浏览历史') + (_historyUpdated ? ' (有更新)' : ''),
+                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '本地阅读历史') + (_historyUpdated ? ' (有更新)' : ''),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('共 $_total 部'),
                       SizedBox(width: 5),
                       HelpIconView(
-                        title: '浏览历史',
-                        hint: '注意：由于漫画柜官方并未提供漫画浏览历史记录的功能，所以本应用的浏览历史仅被记录在移动端本地，且不同账号的浏览历史互不影响。',
+                        title: '阅读历史',
+                        hint: '注意：由于漫画柜官方并未提供记录漫画阅读历史的功能，所以本应用的阅读历史仅被记录在移动端本地，且不同账号的阅读历史互不影响。',
                         useRectangle: true,
                         padding: EdgeInsets.all(3),
                       ),
@@ -198,6 +199,11 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             ),
           ),
           multiSelectableController: _msController,
+          onCounterPressed: () {
+            var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
+            var titles = _data.where((el) => mangaIds.contains(el.mangaId)).map((m) => '《${m.mangaTitle}》').toList();
+            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+          },
           fabForMultiSelection: [
             MultiSelectionFabOption(
               child: Icon(Icons.delete),

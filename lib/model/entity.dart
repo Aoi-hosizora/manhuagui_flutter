@@ -1,4 +1,5 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 
 class MangaHistory {
@@ -23,6 +24,27 @@ class MangaHistory {
   });
 
   bool get read => chapterId != 0;
+
+  String get formattedLastTime {
+    var long = DateFormat('yyyy-MM-dd HH:mm').format(lastTime);
+    var short = DateFormat('HH:mm').format(lastTime);
+
+    var du = DateTime.now().difference(lastTime);
+    if (du.inDays > 0) {
+      return long;
+    }
+    if (du.inHours != 0) {
+      return '${du.inHours}小时前 ($short)';
+    }
+    if (du.inMinutes != 0) {
+      return '${du.inMinutes}分钟前 ($short)';
+    }
+    return '不到1分钟前 ($short)';
+  }
+
+  String get fullFormattedLastTime {
+    return DateFormat('yyyy-MM-dd HH:mm').format(lastTime);
+  }
 
   MangaHistory copyWith({
     int? mangaId,

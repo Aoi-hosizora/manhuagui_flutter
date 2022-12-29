@@ -22,7 +22,7 @@ class MangaRankingLineView extends StatelessWidget {
       text1: manga.finished ? '已完结' : '连载中',
       icon2: Icons.subject,
       text2: '最新章节 ${manga.newestChapter}',
-      icon3: Icons.access_time,
+      icon3: Icons.update,
       text3: '更新于 ${manga.newestDate}',
       extraWidthInRow: 35 + 14,
       extrasInRow: [

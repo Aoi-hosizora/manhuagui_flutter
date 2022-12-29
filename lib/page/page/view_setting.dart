@@ -51,7 +51,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           title: '阅读方向',
           value: _viewDirection,
           values: const [ViewDirection.leftToRight, ViewDirection.rightToLeft, ViewDirection.topToBottom],
-          builder: (s) => Text(s.toOptionTitle()),
+          textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _viewDirection = s;
             widget.onSettingChanged.call(_newestSetting);
@@ -128,7 +128,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           title: '预加载页数',
           value: _preloadCount.clamp(0, 6),
           values: const [0, 1, 2, 3, 4, 5, 6],
-          builder: (s) => Text(s == 0 ? '禁用预加载' : '前后$s页'),
+          textBuilder: (s) => s == 0 ? '禁用预加载' : '前后$s页',
           onChanged: (c) {
             _preloadCount = c.clamp(0, 6);
             widget.onSettingChanged.call(_newestSetting);

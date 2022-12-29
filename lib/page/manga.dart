@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
+import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
@@ -32,6 +33,8 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/share.dart';
+import 'package:manhuagui_flutter/service/storage/download_task.dart';
+import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
 /// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
@@ -312,6 +315,133 @@ class _MangaPageState extends State<MangaPage> {
     );
   }
 
+  void _longPressDownloadAction() {
+    var noChapter = _downloadEntity == null || _downloadEntity!.triedChapterIds.isEmpty;
+    var success = !noChapter && _downloadEntity!.successChapterIds.length == _downloadEntity!.totalChapterIds.length;
+    var paused = QueueManager.instance.getDownloadMangaQueueTask(_data!.mid) == null;
+
+    String text;
+    if (noChapter) {
+      text = '尚未下载任何章节。';
+    } else if (success) {
+      text = '${_downloadEntity!.totalChapterIds.length} 个章节已全部下载完成。';
+    } else {
+      var suc = _downloadEntity!.successChapterIds.length;
+      var tot = _downloadEntity!.totalChapterIds.length;
+      text = (paused ? '下载已暂停' : '正在下载中') + '，已成功下载 $suc 个章节，共有 $tot 个章节在下载任务中。';
+    }
+
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('漫画下载情况'),
+        content: Text(text),
+        actions: [
+          if (noChapter)
+            TextButton(
+              child: Text('去下载'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => DownloadChoosePage(
+                      mangaId: _data!.mid,
+                      mangaTitle: _data!.title,
+                      mangaCover: _data!.cover,
+                      mangaUrl: _data!.url,
+                      groups: _data!.chapterGroups,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (!noChapter)
+            TextButton(
+              child: Text('查看下载'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => DownloadMangaPage(
+                      mangaId: _data!.mid,
+                      gotoDownloading: !success,
+                    ),
+                    settings: DownloadMangaPage.buildRouteSetting(
+                      mangaId: _data!.mid,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (!noChapter && !success && !paused)
+            TextButton(
+              child: Text('暂停下载'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                QueueManager.instance.getDownloadMangaQueueTask(_data!.mid)?.cancel();
+              },
+            ),
+          TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop()),
+        ],
+      ),
+    );
+  }
+
+  void _longPressHistoryAction() {
+    String text;
+    if (_history == null) {
+      text = '尚未开始阅读该漫画。';
+    } else if (!_history!.read) {
+      text = '尚未开始阅读该漫画。';
+    } else {
+      text = '最近阅读至 ${_history!.chapterTitle} 第${_history!.chapterPage}页 (${_history!.fullFormattedLastTime})。';
+    }
+
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('漫画阅读历史'),
+        content: Text(text),
+        actions: [
+          if (_history == null)
+            TextButton(
+              child: Text('保留该历史'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                _history = MangaHistory(
+                  mangaId: _data!.mid,
+                  mangaTitle: _data!.title,
+                  mangaCover: _data!.cover,
+                  mangaUrl: _data!.url,
+                  chapterId: 0 /* 未开始阅读 */,
+                  chapterTitle: '',
+                  chapterPage: 1,
+                  lastTime: DateTime.now(),
+                );
+                await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
+                if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent());
+              },
+            ),
+          if (_history != null)
+            TextButton(
+              child: Text('删除该历史'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: _data!.mid);
+                _history = null;
+                if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent());
+              },
+            ),
+          TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop()),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -461,13 +591,13 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.date_range, size: 20, color: Colors.orange),
-                              text: Text('发布于 ${_data!.publishYear} / ${_data!.mangaZone.replaceAll('漫画', '')}'),
+                              text: Text('发布于 ${_data!.publishYear} ${_data!.mangaZone.replaceAll('漫画', '')}'),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                             ),
                             IconText(
                               icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                              text: Text('排名 ${_data!.mangaRank} / 订阅数量 ${_subscribeCount ?? '未知'}'),
+                              text: Text('排名 ${_data!.mangaRank} / 订阅 ${_subscribeCount ?? '未知'}'),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                             ),
@@ -484,7 +614,7 @@ class _MangaPageState extends State<MangaPage> {
                               iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                             ),
                             IconText(
-                              icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
+                              icon: Icon(Icons.update, size: 20, color: Colors.orange),
                               text: Text(_data!.newestDate + (_data!.finished ? ' 已完结' : ' 连载中')),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 2.8),
@@ -522,27 +652,13 @@ class _MangaPageState extends State<MangaPage> {
                           ),
                         ),
                       ),
-                      longPress: () {
-                        if (_downloadEntity == null || _downloadEntity!.triedChapterIds.isEmpty) {
-                          Fluttertoast.showToast(msg: '未下载任何章节');
-                        } else if (_downloadEntity!.successChapterIds.length == _downloadEntity!.totalChapterIds.length) {
-                          Fluttertoast.showToast(msg: '已成功下载 ${_downloadEntity!.totalChapterIds.length} 章节');
-                        } else {
-                          Fluttertoast.showToast(msg: '未完成下载，已开始下载 ${_downloadEntity!.triedChapterIds.length}/${_downloadEntity!.totalChapterIds.length} 章节');
-                        }
-                      },
+                      longPress: _longPressDownloadAction,
                     ),
                     action3: ActionItem(
                       text: _history?.read == true ? '继续阅读' : '开始阅读',
                       icon: Icons.import_contacts,
                       action: () => _read(chapterId: null),
-                      longPress: () {
-                        if (_history == null || !_history!.read) {
-                          Fluttertoast.showToast(msg: '未开始阅读该漫画');
-                        } else if (_history != null) {
-                          Fluttertoast.showToast(msg: '上次阅读到 ${_history!.chapterTitle} 第${_history!.chapterPage}页');
-                        }
-                      },
+                      longPress: _longPressHistoryAction,
                     ),
                     action4: ActionItem(
                       text: '漫画详情',

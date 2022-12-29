@@ -25,8 +25,9 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   var _selectedIndex = 0;
   late final _actions = List.generate(2, (_) => ActionController());
   late final _tabs = [
-    Tuple2('书架', ShelfSubPage(action: _actions[0])),
-    Tuple2('浏览历史', HistorySubPage(action: _actions[1])),
+    Tuple2('书架', ShelfSubPage(action: _actions[0])), // TODO 添加书架记录缓存功能（初步设想入口设在本页），同时往漫画行添加 "已添加至书架" "已被置顶" "已被浏览" 三个图标
+    // TODO 置顶漫画 // TODO 同时添加置顶漫画排序功能（初步设想入口设在本页），并且需要在 ListHint 处添加 Help 按钮提示
+    Tuple2('阅读历史', HistorySubPage(action: _actions[1])),
   ];
   VoidCallback? _cancelHandler;
 

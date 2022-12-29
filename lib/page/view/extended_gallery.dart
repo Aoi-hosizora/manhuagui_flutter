@@ -102,7 +102,7 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
       reverse: widget.reverse,
       scrollDirection: Axis.horizontal,
       scrollPhysics: AlwaysScrollableScrollPhysics(),
-      changePageWhenFinished: true,
+      callPageChangedAtEnd: true,
       keepViewportMainAxisSize: true,
       fractionWidthFactor: null,
       fractionHeightFactor: null,
