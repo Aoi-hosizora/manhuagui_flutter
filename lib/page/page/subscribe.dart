@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_favorite.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_history.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
@@ -23,11 +23,11 @@ class SubscribeSubPage extends StatefulWidget {
 class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerProviderStateMixin {
   late final _controller = TabController(length: _tabs.length, vsync: this);
   var _selectedIndex = 0;
-  late final _actions = List.generate(2, (_) => ActionController());
+  late final _actions = List.generate(3, (_) => ActionController());
   late final _tabs = [
-    Tuple2('书架', ShelfSubPage(action: _actions[0])), // TODO 添加书架记录缓存功能（初步设想入口设在本页），同时往漫画行添加 "已添加至书架" "已被置顶" "已被浏览" 三个图标
-    // TODO 置顶漫画 // TODO 同时添加置顶漫画排序功能（初步设想入口设在本页），并且需要在 ListHint 处添加 Help 按钮提示
-    Tuple2('阅读历史', HistorySubPage(action: _actions[1])),
+    Tuple2('我的书架', ShelfSubPage(action: _actions[0])), // TODO 添加书架记录缓存功能（初步设想入口设在本页）
+    Tuple2('本地收藏', FavoriteSubPage(action: _actions[1])), // TODO 添加漫画排序功能（初步设想入口设在本页）
+    Tuple2('阅读历史', HistorySubPage(action: _actions[2])),
   ];
   VoidCallback? _cancelHandler;
 
@@ -39,9 +39,13 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
       _controller.animateTo(0);
       _selectedIndex = 0;
     });
-    _cancelHandler = EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
+    _cancelHandler = EventBusManager.instance.listen<ToFavoriteRequestedEvent>((_) {
       _controller.animateTo(1);
       _selectedIndex = 1;
+    });
+    _cancelHandler = EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
+      _controller.animateTo(2);
+      _selectedIndex = 2;
     });
   }
 
@@ -86,16 +90,6 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
-          AppBarActionButton(
-            icon: Icon(Icons.download),
-            tooltip: '查看下载列表',
-            onPressed: () => Navigator.of(context).push(
-              CustomPageRoute(
-                context: context,
-                builder: (c) => DownloadPage(),
-              ),
-            ),
-          ),
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索漫画',

@@ -249,6 +249,7 @@ class _DownloadPageState extends State<DownloadPage> {
       _total--;
       await DownloadDao.deleteManga(mid: mangaId);
       await DownloadDao.deleteAllChapters(mid: mangaId);
+      EventBusManager.instance.fire(DownloadedMangaEntityChangedEvent(mangaId: mangaId));
     }
     if (mounted) setState(() {});
 

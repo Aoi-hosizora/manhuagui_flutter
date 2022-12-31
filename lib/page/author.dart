@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
+import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
@@ -16,6 +17,7 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 /// 漫画作者页，网络请求并展示 [Author] 信息
 class AuthorPage extends StatefulWidget {
@@ -47,6 +49,7 @@ class _AuthorPageState extends State<AuthorPage> {
 
   @override
   void dispose() {
+    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -79,6 +82,7 @@ class _AuthorPageState extends State<AuthorPage> {
 
   final _mangas = <SmallManga>[];
   var _total = 0;
+  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
   var _currOrder = AppSetting.instance.other.defaultMangaOrder;
   var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
   var _getting = false;
@@ -89,6 +93,7 @@ class _AuthorPageState extends State<AuthorPage> {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
+    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
@@ -180,43 +185,37 @@ class _AuthorPageState extends State<AuthorPage> {
                             icon: Icon(Icons.person, size: 20, color: Colors.orange),
                             text: Flexible(
                               child: Text(
-                                '别名 ${_data!.alias}',
+                                '作者别名：${_data!.alias}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             space: 8,
+                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
                           ),
                           IconText(
                             icon: Icon(Icons.place, size: 20, color: Colors.orange),
-                            text: Text(_data!.zone),
+                            text: Text('地区：${_data!.zone}'),
                             space: 8,
+                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
                           ),
                           IconText(
                             icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
                             text: Text('平均评分 ${_data!.averageScore}'),
                             space: 8,
+                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
                           ),
                           IconText(
                             icon: Icon(Icons.edit, size: 20, color: Colors.orange),
                             text: Text('共收录 ${_data!.mangaCount} 部漫画'),
                             space: 8,
-                          ),
-                          IconText(
-                            icon: Icon(Icons.fiber_new_outlined, size: 20, color: Colors.orange),
-                            text: Flexible(
-                              child: Text(
-                                '最新收录 ${_data!.newestMangaTitle}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            space: 8,
+                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
                           ),
                           IconText(
                             icon: Icon(Icons.update, size: 20, color: Colors.orange),
-                            text: Text('更新于 ${_data!.newestDate}'),
+                            text: Text('收录更新于 ${_data!.newestDate}'),
                             space: 8,
+                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
                           ),
                         ],
                       ),
@@ -225,16 +224,49 @@ class _AuthorPageState extends State<AuthorPage> {
                 ),
               ),
             ),
+            SliverToBoxAdapter(
+              child: Container(height: 12),
+            ),
             // ****************************************************************
-            // 介绍
+            // 一些介绍
             // ****************************************************************
             SliverToBoxAdapter(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Material(
                 color: Colors.white,
-                child: Text(
-                  _data!.introduction.trim().isEmpty ? '暂无介绍' : _data!.introduction.trim(),
-                  style: Theme.of(context).textTheme.bodyText2,
+                child: InkWell(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Text(
+                      '作者介绍：\n' + (_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim()),
+                      style: Theme.of(context).textTheme.bodyText2,
+                    ),
+                  ),
+                  onTap: () {
+                    copyText(_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim(), showToast: false);
+                    Fluttertoast.showToast(msg: '作者介绍已经复制到剪贴板');
+                  },
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+                color: Colors.white,
+                child: Divider(height: 0, thickness: 1),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Material(
+                color: Colors.white,
+                child: InkWell(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Text(
+                      '最新收录：\n《${_data!.newestMangaTitle}》',
+                      style: Theme.of(context).textTheme.bodyText2,
+                    ),
+                  ),
+                  onTap: () => copyText(_data!.newestMangaTitle, showToast: true),
                 ),
               ),
             ),
@@ -312,7 +344,13 @@ class _AuthorPageState extends State<AuthorPage> {
               ),
               useOverlapInjector: true,
               separator: Divider(height: 0, thickness: 1),
-              itemBuilder: (c, _, item) => TinyMangaLineView(manga: item.toTiny()),
+              itemBuilder: (c, _, item) => TinyMangaLineView(
+                manga: item.toTiny(),
+                inDownload: _flagStorage.isInDownload(mangaId: item.mid),
+                inShelf: _flagStorage.isInShelf(mangaId: item.mid),
+                inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
+                inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+              ),
             ),
           ),
         ),

@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
+import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -37,6 +38,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   @override
   void dispose() {
     widget.action?.removeAction();
+    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -44,6 +46,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
 
   final _data = <TinyManga>[];
   var _total = 0;
+  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
   var _currOrder = MangaOrder.byNew; // 最新发布优先
   var _lastOrder = MangaOrder.byNew;
   var _getting = false;
@@ -54,6 +57,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
+    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
@@ -99,7 +103,13 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
           },
         ),
         separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
+        itemBuilder: (c, _, item) => TinyMangaLineView(
+          manga: item,
+          inDownload: _flagStorage.isInDownload(mangaId: item.mid),
+          inShelf: _flagStorage.isInShelf(mangaId: item.mid),
+          inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
+          inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+        ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textWidget(

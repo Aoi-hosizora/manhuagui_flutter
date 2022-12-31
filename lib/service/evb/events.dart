@@ -2,6 +2,10 @@ class ToShelfRequestedEvent {
   const ToShelfRequestedEvent();
 }
 
+class ToFavoriteRequestedEvent {
+  const ToFavoriteRequestedEvent();
+}
+
 class ToHistoryRequestedEvent {
   const ToHistoryRequestedEvent();
 }
@@ -19,14 +23,17 @@ class ToRankingRequestedEvent {
 }
 
 class HistoryUpdatedEvent {
-  const HistoryUpdatedEvent();
+  const HistoryUpdatedEvent({required this.mangaId});
+
+  final int mangaId;
 }
 
 class SubscribeUpdatedEvent {
-  const SubscribeUpdatedEvent({required this.mangaId, required this.subscribe});
+  const SubscribeUpdatedEvent({required this.mangaId, required this.inShelf, required this.inFavorite});
 
   final int mangaId;
-  final bool subscribe;
+  final bool? inShelf;
+  final bool? inFavorite;
 }
 
 class DownloadMangaProgressChangedEvent {

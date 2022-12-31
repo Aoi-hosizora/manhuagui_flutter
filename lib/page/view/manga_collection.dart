@@ -14,6 +14,7 @@ enum MangaCollectionType {
   histories,
   shelves,
   downloads,
+  // TODO favorites
 }
 
 /// 漫画集合，针对每日排行、最近更新、阅读历史、我的书架、下载列表，在 [RecommendSubPage] 使用
@@ -290,7 +291,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
         break;
       case MangaCollectionType.shelves:
         title = widget.username == null ? '我的书架' : '${widget.username} 的书架';
-        icon = Icons.star_outlined;
+        icon = Icons.star;
         widgets = widget.shelves?.map((el) => _buildShelfItem(context, el)).toList(); // # = 20
         twoLine = widgets != null && widgets.length > 6;
         break;

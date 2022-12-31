@@ -42,9 +42,7 @@ class MangaHistory {
     return '不到1分钟前 ($short)';
   }
 
-  String get fullFormattedLastTime {
-    return DateFormat('yyyy-MM-dd HH:mm').format(lastTime);
-  }
+  String get fullFormattedLastTime => DateFormat('yyyy-MM-dd HH:mm').format(lastTime);
 
   MangaHistory copyWith({
     int? mangaId,
@@ -80,6 +78,48 @@ class MangaHistory {
   }
 }
 
+class FavoriteManga {
+  final int mangaId;
+  final String mangaTitle;
+  final String mangaCover;
+  final String mangaUrl;
+  final String remark;
+  final int order;
+  final DateTime createdAt;
+
+  const FavoriteManga({
+    required this.mangaId,
+    required this.mangaTitle,
+    required this.mangaCover,
+    required this.mangaUrl,
+    required this.remark,
+    required this.order,
+    required this.createdAt,
+  });
+
+  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm').format(createdAt);
+
+  FavoriteManga copyWith({
+    int? mangaId,
+    String? mangaTitle,
+    String? mangaCover,
+    String? mangaUrl,
+    String? remark,
+    int? order,
+    DateTime? createdAt,
+  }) {
+    return FavoriteManga(
+      mangaId: mangaId ?? this.mangaId,
+      mangaTitle: mangaTitle ?? this.mangaTitle,
+      mangaCover: mangaCover ?? this.mangaCover,
+      mangaUrl: mangaUrl ?? this.mangaUrl,
+      remark: remark ?? this.remark,
+      order: order ?? this.order,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}
+
 class DownloadedManga {
   final int mangaId;
   final String mangaTitle;
@@ -101,6 +141,13 @@ class DownloadedManga {
     required this.needUpdate,
   });
 
+  bool get allChaptersSucceeded => totalChapterIds.length == successChapterIds.length;
+
+  DownloadedChapter? findChapter(int cid) => //
+      downloadedChapters.where((chapter) => chapter.chapterId == cid).firstOrNull;
+
+  // chapter related
+
   List<int> get totalChapterIds => //
       downloadedChapters.map((el) => el.chapterId).toList();
 
@@ -113,6 +160,8 @@ class DownloadedManga {
   int get failedChapterCount => //
       downloadedChapters.where((el) => !el.succeeded).length;
 
+  // page related
+
   int get totalPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
 
@@ -124,9 +173,6 @@ class DownloadedManga {
 
   int get failedPageCountInAll => //
       downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
-
-  DownloadedChapter? findChapter(int cid) => //
-      downloadedChapters.where((chapter) => chapter.chapterId == cid).firstOrNull;
 
   DownloadedManga copyWith({
     int? mangaId,

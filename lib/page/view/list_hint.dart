@@ -49,8 +49,8 @@ class ListHintView extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           child: Row(
             mainAxisAlignment: style == ListHintViewStyle.widgets
-                ? MainAxisAlignment.spaceAround /* | 　 　 　 | */
-                : MainAxisAlignment.spaceBetween /* | 　   　 | */,
+                ? MainAxisAlignment.spaceAround /* | ▢ ▢ ▢ | */
+                : MainAxisAlignment.spaceBetween /* | ▢   ▢ | */,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: style == ListHintViewStyle.textText
                 ? [

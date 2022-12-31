@@ -257,15 +257,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   child: Column(
                     children: [
                       ActionRowView.four(
-                        action1: ActionItem.simple('我的书架', Icons.star_outlined, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
-                        action2: ActionItem.simple('阅读历史', Icons.history, () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
-                        action3: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
-                        action4: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaRandomPage(parentContext: context)))),
+                        action1: ActionItem.simple('我的书架', Icons.star, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+                        action2: ActionItem.simple('本地收藏', Icons.bookmark, () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())),
+                        action3: ActionItem.simple('阅读历史', Icons.history, () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
+                        action4: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
                       ),
                       ActionRowView.four(
                         action1: ActionItem.simple('最近更新', Icons.cached, () => EventBusManager.instance.fire(ToRecentRequestedEvent())),
                         action2: ActionItem.simple('漫画排行', Icons.trending_up, () => EventBusManager.instance.fire(ToRankingRequestedEvent())),
-                        action3: ActionItem.simple('漫画类别', Icons.category, () => EventBusManager.instance.fire(ToGenreRequestedEvent())),
+                        action3: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaRandomPage(parentContext: context)))),
                         action4: ActionItem.simple('外部浏览', Icons.open_in_browser, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
                       ),
                     ],
@@ -274,6 +274,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 _buildCollection('', MangaCollectionType.rankings), // 日排行榜
                 _buildCollection(_updatesError, MangaCollectionType.updates), // 最近更新
                 _buildCollection('', MangaCollectionType.histories), // 阅读历史
+                // TODO 本地收藏
                 _buildCollection(_shelvesError, MangaCollectionType.shelves), // 我的书架
                 _buildCollection('', MangaCollectionType.downloads), // 下载列表
                 Padding(

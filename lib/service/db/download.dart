@@ -72,6 +72,10 @@ class DownloadDao {
     await db.safeExecute('UPDATE $_tblDownloadChapter SET $_colDcNeedUpdate = 1');
   }
 
+  static Future<void> upgradeFromVer3To4(Database db) async {
+    // pass
+  }
+
   static Future<int?> getMangaCount() async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
@@ -151,6 +155,20 @@ class DownloadDao {
       );
     }
     return out;
+  }
+
+  static Future<bool?> checkMangaExistence({required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colDmMangaId)
+         FROM $_tblDownloadManga
+         WHERE $_colDmMangaId = ?''',
+      [mid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
   }
 
   static Future<DownloadedManga?> getManga({required int mid}) async {

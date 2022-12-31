@@ -3,15 +3,24 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
+import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 
 /// 漫画行，[TinyManga]，在 [RecentSubPage] / [OverallSubPage] / [GenreSubPage] / [AuthorPage] / [SearchPage] 使用
 class TinyMangaLineView extends StatelessWidget {
   const TinyMangaLineView({
     Key? key,
     required this.manga,
+    this.inDownload = false,
+    this.inShelf = false,
+    this.inFavorite = false,
+    this.inHistory = false,
   }) : super(key: key);
 
   final TinyManga manga;
+  final bool inDownload;
+  final bool inShelf;
+  final bool inFavorite;
+  final bool inHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +33,7 @@ class TinyMangaLineView extends StatelessWidget {
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,
       text3: '更新于 ${manga.newestDate}',
-      // TODO 添加 "已添加至书架" "已被置顶" "已被浏览" 三个图标
+      cornerIcons: buildMangaCornerIcons(inDownload: inDownload, inShelf: inShelf, inFavorite: inFavorite, inHistory: inHistory),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

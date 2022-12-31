@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
+import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -38,6 +39,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   @override
   void dispose() {
     widget.action?.removeAction();
+    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -73,6 +75,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   }
 
   final _data = <MangaRanking>[];
+  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
   var _currType = allRankingTypes[0];
   var _lastType = allRankingTypes[0];
   var _currDuration = allRankingDurations[0];
@@ -91,6 +94,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     var result = await f(type: _currType.name).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
+    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
     return result.data.data;
   }
 
@@ -139,41 +143,51 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             },
           ),
           separator: Divider(height: 0, thickness: 1),
-          itemBuilder: (c, _, item) => MangaRankingLineView(manga: item),
+          itemBuilder: (c, _, item) => MangaRankingLineView(
+            manga: item,
+            inDownload: _flagStorage.isInDownload(mangaId: item.mid),
+            inShelf: _flagStorage.isInShelf(mangaId: item.mid),
+            inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
+            inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+          ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
-              ListHintView.widgets(
-                widgets: [
-                  OptionPopupView<TinyCategory>(
-                    items: _genres,
-                    value: _currType,
-                    titleBuilder: (c, v) => v.isAll() ? '分类' : v.title,
-                    enable: !_getting,
-                    onSelect: (t) {
-                      if (_currType != t) {
-                        _lastType = _currType;
-                        _currType = t;
-                        if (mounted) setState(() {});
-                        _rdvKey.currentState?.refresh();
-                      }
-                    },
-                  ),
-                  Expanded(child: const SizedBox.shrink()),
-                  OptionPopupView<TinyCategory>(
-                    items: allRankingDurations,
-                    value: _currDuration,
-                    titleBuilder: (c, v) => v.title,
-                    enable: !_getting,
-                    onSelect: (d) {
-                      if (_currDuration != d) {
-                        _lastDuration = _currDuration;
-                        _currDuration = d;
-                        if (mounted) setState(() {});
-                        _rdvKey.currentState?.refresh();
-                      }
-                    },
-                  ),
-                ],
+              ListHintView.textWidget(
+                leftText: '排行前50的漫画',
+                rightWidget: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    OptionPopupView<TinyCategory>(
+                      items: _genres,
+                      value: _currType,
+                      titleBuilder: (c, v) => v.isAll() ? '分类' : v.title,
+                      enable: !_getting,
+                      onSelect: (t) {
+                        if (_currType != t) {
+                          _lastType = _currType;
+                          _currType = t;
+                          if (mounted) setState(() {});
+                          _rdvKey.currentState?.refresh();
+                        }
+                      },
+                    ),
+                    SizedBox(width: 12),
+                    OptionPopupView<TinyCategory>(
+                      items: allRankingDurations,
+                      value: _currDuration,
+                      titleBuilder: (c, v) => v.title,
+                      enable: !_getting,
+                      onSelect: (d) {
+                        if (_currDuration != d) {
+                          _lastDuration = _currDuration;
+                          _currDuration = d;
+                          if (mounted) setState(() {});
+                          _rdvKey.currentState?.refresh();
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

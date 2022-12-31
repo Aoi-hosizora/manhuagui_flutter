@@ -209,7 +209,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             ],
             innerTopWidgets: [
               ListHintView.textWidget(
-                leftText: '搜索结果 (共 $_total 位)',
+                leftText: '筛选结果 (共 $_total 位)',
                 rightWidget: OptionPopupView<AuthorOrder>(
                   items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byNew],
                   value: _currOrder,

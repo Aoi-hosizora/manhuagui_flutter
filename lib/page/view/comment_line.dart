@@ -223,7 +223,7 @@ class CommentLineView extends StatelessWidget {
                               Padding(
                                 padding: EdgeInsets.only(bottom: 4),
                                 child: Text(
-                                  '共 ${comment.replyTimeline.length} 条评论，点击查看该楼层...',
+                                  '共 ${comment.replyTimeline.length} 条评论，点击查看回复楼层',
                                   style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).primaryColor),
                                 ),
                               ),

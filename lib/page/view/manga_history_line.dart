@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
+import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 
 /// 漫画阅读历史行，在 [HistorySubPage] 使用
 class MangaHistoryLineView extends StatelessWidget {
@@ -10,15 +11,30 @@ class MangaHistoryLineView extends StatelessWidget {
     Key? key,
     required this.history,
     required this.onLongPressed,
+    this.inDownload = false,
+    this.inShelf = false,
+    this.inFavorite = false,
   }) : super(key: key);
 
   final MangaHistory history;
   final Function()? onLongPressed;
+  final bool inDownload;
+  final bool inShelf;
+  final bool inFavorite;
 
   @override
   Widget build(BuildContext context) {
-    void onPressed() {
-      Navigator.of(context).push(
+    return GeneralLineView(
+      imageUrl: history.mangaCover,
+      title: history.mangaTitle,
+      icon1: null,
+      text1: null,
+      icon2: !history.read ? Icons.web_asset : Icons.import_contacts,
+      text2: !history.read ? '未开始阅读' : '阅读至 ${history.chapterTitle} 第${history.chapterPage}页',
+      icon3: Icons.access_time,
+      text3: '浏览于 ${history.formattedLastTime}',
+      cornerIcons: buildMangaCornerIcons(inDownload: inDownload, inShelf: inShelf, inFavorite: inFavorite, inHistory: true),
+      onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,
           builder: (c) => MangaPage(
@@ -27,33 +43,7 @@ class MangaHistoryLineView extends StatelessWidget {
             url: history.mangaUrl,
           ),
         ),
-      );
-    }
-
-    if (!history.read) {
-      return GeneralLineView(
-        imageUrl: history.mangaCover,
-        title: history.mangaTitle,
-        icon1: null,
-        text1: null,
-        icon2: Icons.notes,
-        text2: '未开始阅读',
-        icon3: Icons.access_time,
-        text3: '浏览于 ${history.formattedLastTime}',
-        onPressed: onPressed,
-        onLongPressed: onLongPressed,
-      );
-    }
-    return GeneralLineView(
-      imageUrl: history.mangaCover,
-      title: history.mangaTitle,
-      icon1: null,
-      text1: null,
-      icon2: Icons.import_contacts,
-      text2: '阅读至 ${history.chapterTitle} 第${history.chapterPage}页',
-      icon3: Icons.access_time,
-      text3: '阅读于 ${history.formattedLastTime}',
-      onPressed: onPressed,
+      ),
       onLongPressed: onLongPressed,
     );
   }

@@ -30,12 +30,13 @@ class MangaRatingView extends StatelessWidget {
           onRatingUpdate: (_) {},
         ),
         SizedBox(height: 4),
-        Text('平均分数: $averageScore / 10.0，共 $scoreCount 人评分'),
+        Text('平均评分: $averageScore，共 $scoreCount 人评分'),
       ],
     );
   }
 }
 
+/// 漫画评分细节，在 [MangaPage] 的评分投票对话框使用
 class MangaRatingDetailView extends StatelessWidget {
   const MangaRatingDetailView({
     Key? key,
@@ -48,9 +49,22 @@ class MangaRatingDetailView extends StatelessWidget {
   final int scoreCount;
   final List<String> perScores;
 
+  Size _textSize(String text, TextStyle style) {
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout(minWidth: 0, maxWidth: double.infinity);
+    return textPainter.size;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final barWidth = getDialogMaxWidth(context) * 0.6;
+    var scores = [for (var i = 0; i < 5; i++) (double.tryParse(perScores[i + 1].replaceAll('%', '')) ?? 0) / 100]; // [0,1,2,3,4] => star_1,2,3,4,5
+    var maxScore = scores.reduce((value, element) => value > element ? value : element);
+    var maxWidth = getDialogMaxWidth(context) - (18 * 5 + 6 + 8 + _textSize('88.8%', Theme.of(context).textTheme.bodyText2!).width);
+    var scoreWidths = [for (var i = 0; i < 5; i++) maxWidth / maxScore * scores[i]];
+    var scoreTexts = [for (var i = 0; i < 5; i++) perScores[i + 1]];
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -59,7 +73,7 @@ class MangaRatingDetailView extends StatelessWidget {
           children: [
             RatingBar.builder(
               itemCount: 5,
-              itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+              itemBuilder: (c, i) => Icon(Icons.grade, color: Colors.amber),
               initialRating: averageScore / 2.0,
               itemSize: 32,
               itemPadding: EdgeInsets.symmetric(horizontal: 2),
@@ -77,7 +91,7 @@ class MangaRatingDetailView extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 2),
+        SizedBox(height: 6),
         Align(
           alignment: Alignment.centerRight,
           child: Text(
@@ -85,7 +99,7 @@ class MangaRatingDetailView extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText2,
           ),
         ),
-        Divider(height: 16, thickness: 1),
+        Divider(height: 24, thickness: 1),
         for (var i = 4; i >= 0; i--)
           Padding(
             padding: EdgeInsets.only(bottom: i == 0 ? 0 : 5),
@@ -93,21 +107,21 @@ class MangaRatingDetailView extends StatelessWidget {
               children: [
                 RatingBar.builder(
                   itemCount: 5,
-                  itemBuilder: (c, i) => Icon(Icons.star, color: Colors.amber),
+                  itemBuilder: (c, i) => Icon(Icons.grade, color: Colors.amber),
                   initialRating: (i + 1).toDouble(),
-                  itemSize: 16,
+                  itemSize: 18,
                   allowHalfRating: false,
                   ignoreGestures: true,
                   onRatingUpdate: (_) {},
                 ),
                 Container(
-                  width: barWidth * (double.tryParse(perScores[i + 1].replaceAll('%', '')) ?? 0) / 100,
+                  width: scoreWidths[i],
                   height: 16,
                   color: Colors.amber,
-                  margin: EdgeInsets.only(left: 4, right: 6),
+                  margin: EdgeInsets.only(left: 6, right: 8),
                 ),
                 Text(
-                  perScores[i + 1],
+                  scoreTexts[i],
                   style: Theme.of(context).textTheme.bodyText2,
                 ),
               ],

@@ -17,6 +17,7 @@ class GeneralLineView extends StatelessWidget {
     this.cornerIcons,
     this.extrasInRow,
     this.extraWidthInRow,
+    this.extraRightPaddingForTitle,
     this.extrasInStack,
     this.topExtrasInStack,
     required this.onPressed,
@@ -31,6 +32,7 @@ class GeneralLineView extends StatelessWidget {
     required List<Widget> this.customRows,
     this.extrasInRow,
     this.extraWidthInRow,
+    this.extraRightPaddingForTitle,
     this.extrasInStack,
     this.topExtrasInStack,
     required this.onPressed,
@@ -63,6 +65,7 @@ class GeneralLineView extends StatelessWidget {
   // optional
   final List<Widget>? extrasInRow;
   final double? extraWidthInRow;
+  final double? extraRightPaddingForTitle;
   final List<Widget>? extrasInStack;
   final List<Widget>? topExtrasInStack;
 
@@ -103,7 +106,7 @@ class GeneralLineView extends StatelessWidget {
                   // 右上角标题
                   // ****************************************************************
                   Padding(
-                    padding: EdgeInsets.only(bottom: 4),
+                    padding: EdgeInsets.only(bottom: 4, right: extraRightPaddingForTitle ?? 0),
                     child: Text(
                       title,
                       style: Theme.of(context).textTheme.subtitle1,
@@ -118,7 +121,7 @@ class GeneralLineView extends StatelessWidget {
                   if (customRows == null) ...[
                     GeneralLineIconText(icon: icon1, text: text1),
                     GeneralLineIconText(icon: icon2, text: text2),
-                    GeneralLineIconText(icon: icon3, text: text3),
+                    GeneralLineIconText(icon: icon3, text: text3, cornerIcons: cornerIcons),
                   ],
 
                   // ****************************************************************
@@ -209,15 +212,15 @@ class GeneralLineIconText extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          SizedBox(width: textCornerSpace ?? 5),
+          SizedBox(width: textCornerSpace ?? 6),
           for (var i = 0; i < (cornerIcons?.length ?? 0); i++)
             Padding(
               padding: EdgeInsets.only(
-                left: i > 0 ? (cornerSpace ?? 2) : 0,
+                left: i > 0 ? (cornerSpace ?? 4) : 0,
               ),
               child: Icon(
-                cornerIcons![i], // Icons.download, Icons.star, Icons.bookmark, Icons.visibility
-                size: cornerIconSize ?? 18,
+                cornerIcons![i],
+                size: cornerIconSize ?? 18.5,
                 color: Colors.grey[500],
               ),
             ),

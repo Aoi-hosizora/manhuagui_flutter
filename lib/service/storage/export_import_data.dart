@@ -218,7 +218,7 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
 
   if (ok && counter.readHistories != null && counter.readHistories! > 0) {
     // notify manga read history is changed
-    EventBusManager.instance.fire(HistoryUpdatedEvent());
+    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1));
   }
   await exportedDB.close();
   return ok;

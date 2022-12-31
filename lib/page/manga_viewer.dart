@@ -16,12 +16,14 @@ import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -137,7 +139,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
       if (e.mangaId == widget.mangaId) {
-        _subscribed = e.subscribe;
+        _inShelf = e.inShelf ?? _inShelf;
+        _inFavorite = e.inFavorite ?? _inFavorite;
         if (mounted) setState(() {});
       }
     }));
@@ -195,8 +198,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   List<Future<File?>>? _fileFutures;
   var _error = '';
 
-  var _subscribing = false;
-  var _subscribed = false;
+  var _subscribing = false; // 执行订阅中
+  var _inShelf = false; // 书架
+  var _inFavorite = false; // 收藏
 
   Future<void> _loadData() async {
     _loading = true;
@@ -218,7 +222,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       Future.microtask(() async {
         try {
           var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mangaId);
-          _subscribed = r.data.isIn;
+          _inShelf = r.data.isIn;
           if (mounted) setState(() {});
         } catch (e, s) {
           var we = wrapError(e, s);
@@ -227,6 +231,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
       });
     }
+    Future.microtask(() async {
+      _inFavorite = await FavoriteDao.checkExistence(username: AuthManager.instance.username, mid: widget.mangaId) ?? false;
+    });
 
     // 3. 获取章节下载信息
     await _loadDownload();
@@ -367,7 +374,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           lastTime: DateTime.now(),
         ),
       );
-      EventBusManager.instance.fire(HistoryUpdatedEvent());
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId));
     }
   }
 
@@ -478,54 +485,24 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
-  Future<void> _subscribe() async {
-    if (!AuthManager.instance.logined) {
-      Fluttertoast.showToast(msg: '用户未登录');
-      return;
-    }
-    var toSubscribe = _subscribed != true; // 去订阅
-    if (!toSubscribe) {
-      var ok = await showDialog<bool>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text('取消订阅确认'),
-          content: Text('是否取消订阅《${_data!.mangaTitle}》？'),
-          actions: [
-            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
-            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
-          ],
-        ),
-      );
-      if (ok != true) {
-        return;
-      }
-    }
-
-    final client = RestClient(DioManager.instance.dio);
-    _subscribing = true;
-    if (mounted) setState(() {});
-    try {
-      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: widget.mangaId);
-      _subscribed = toSubscribe;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画成功' : '取消订阅漫画成功')));
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: widget.mangaId, subscribe: _subscribed));
-    } catch (e, s) {
-      var err = wrapError(e, s).text;
-      var already = err.contains('已经被订阅'), notYet = err.contains('还没有被订阅');
-      if (already || notYet) {
-        _subscribed = already;
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err))); // 漫画已经被订阅 / 漫画还没有被订阅
-        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: widget.mangaId, subscribe: _subscribed));
-      } else {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err')));
-      }
-    } finally {
-      _subscribing = false;
-      if (mounted) setState(() {});
-    }
+  void _subscribe() {
+    MangaPageState.subscribe(
+      context: context,
+      mangaId: widget.mangaId,
+      mangaTitle: _data!.mangaTitle,
+      mangaCover: _data!.mangaCover,
+      mangaUrl: _data!.mangaUrl,
+      nowInShelf: _inShelf,
+      nowInFavorite: _inFavorite,
+      showExtraInfo: false,
+      subscribeCount: 0,
+      favoriteRemark: '',
+      subscribingSetter: (s) => _subscribing = s,
+      stateSetter: () => mountedSetState(() {}),
+      inShelfSetter: (s) => _inShelf = s,
+      inFavoriteSetter: (s) => _inFavorite = s,
+      favoriteRemarkSetter: (r) {},
+    );
   }
 
   Future<void> _downloadManga() async {
@@ -828,7 +805,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       reverseScroll: _isRightToLeft,
                       data: _data!,
                       subscribing: _subscribing,
-                      subscribed: _subscribed,
+                      inShelf: _inShelf,
+                      inFavorite: _inFavorite,
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
                       toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       toSubscribe: _subscribe,
@@ -843,7 +821,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       reverseScroll: _isRightToLeft,
                       data: _data!,
                       subscribing: _subscribing,
-                      subscribed: _subscribed,
+                      inShelf: _inShelf,
+                      inFavorite: _inFavorite,
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim),
                       toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       toSubscribe: _subscribe,

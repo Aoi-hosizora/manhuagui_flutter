@@ -14,7 +14,8 @@ class ViewExtraSubPage extends StatelessWidget {
     required this.reverseScroll,
     required this.data,
     required this.subscribing,
-    required this.subscribed,
+    required this.inShelf,
+    required this.inFavorite,
     required this.toJumpToImage,
     required this.toGotoChapter,
     required this.toSubscribe,
@@ -29,7 +30,8 @@ class ViewExtraSubPage extends StatelessWidget {
   final bool reverseScroll;
   final MangaViewerPageData data;
   final bool subscribing;
-  final bool subscribed;
+  final bool inShelf;
+  final bool inFavorite;
   final void Function(int imageIndex, bool animated) toJumpToImage;
   final void Function(bool gotoPrevious) toGotoChapter;
   final void Function() toSubscribe;
@@ -154,9 +156,15 @@ class ViewExtraSubPage extends StatelessWidget {
         action: () => toPop.call(),
       ),
       action2: ActionItem(
-        text: !subscribed ? '订阅漫画' : '取消订阅',
-        icon: !subscribed ? Icons.star_border : Icons.star,
-        action: () => toSubscribe.call(),
+        text: !inShelf && !inFavorite
+            ? '订阅漫画'
+            : inShelf && !inFavorite
+                ? '已放书架'
+                : !inShelf && inFavorite
+                    ? '已加收藏'
+                    : '取消订阅',
+        icon: !inShelf && !inFavorite ? Icons.sell : Icons.loyalty,
+        action: subscribing ? null : () => toSubscribe.call(),
         enable: !subscribing,
       ),
       action3: ActionItem(

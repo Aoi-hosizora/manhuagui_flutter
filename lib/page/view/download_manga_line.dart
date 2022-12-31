@@ -58,7 +58,7 @@ class DownloadMangaLineView extends StatelessWidget {
                               ? '下载出错'
                               : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
           icon3: Icons.access_time,
-          text3: '下载于 ${DateFormat('yyyy-MM-dd HH:mm:ss').format(progress.lastDownloadTime!)}',
+          text3: '下载于 ${progress.formattedLastDownloadTime!}',
           showProgressBar: false,
           progressBarValue: null,
           disableAction: false,
@@ -149,7 +149,7 @@ class DownloadMangaBlockView extends StatelessWidget {
                               ? '下载出错'
                               : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
           icon3: Icons.access_time,
-          text3: '下载于 ${DateFormat('yyyy-MM-dd HH:mm:ss').format(progress.lastDownloadTime!)}',
+          text3: '下载于 ${progress.formattedLastDownloadTime!}',
           showProgressBar: false,
           progressBarValue: null,
         );
@@ -258,6 +258,8 @@ class DownloadMangaLineProgress {
   final int? triedPageCount;
   final int? totalPageCount;
 
+  String? get formattedLastDownloadTime => lastDownloadTime == null ? null : DateFormat('yyyy-MM-dd HH:mm:ss').format(lastDownloadTime!);
+
   // !!!
   static DownloadMangaLineProgress fromEntityAndTask({required DownloadedManga entity, required DownloadMangaQueueTask? task}) {
     DownloadMangaLineStatus status;
@@ -277,7 +279,7 @@ class DownloadMangaLineProgress {
       if (!entity.error) {
         if (entity.triedPageCountInAll != entity.totalPageCountInAll) {
           status = DownloadMangaLineStatus.paused; // whenStopped
-        } else if (entity.successChapterIds.length == entity.totalChapterIds.length) {
+        } else if (entity.allChaptersSucceeded) {
           if (!entity.needUpdate) {
             status = DownloadMangaLineStatus.succeeded; // whenStopped
           } else {

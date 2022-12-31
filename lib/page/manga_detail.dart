@@ -40,7 +40,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     Tuple2('漫画排名', widget.data.mangaRank),
     Tuple2('平均得分', widget.data.averageScore.toStringAsFixed(1)),
     Tuple2('评分人数', widget.data.scoreCount.toString()),
-    for (var num in [1, 2, 3, 4, 5]) Tuple2('评 $num 星比例', widget.data.perScores[num]),
+    for (var num in [5, 4, 3, 2, 1]) Tuple2('评 $num 星比例', widget.data.perScores[num]),
     Tuple2('简要介绍', widget.data.briefIntroduction),
     Tuple2('详细介绍', widget.data.introduction),
   ];

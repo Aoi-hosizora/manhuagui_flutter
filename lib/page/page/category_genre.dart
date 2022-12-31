@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
+import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -42,6 +43,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   @override
   void dispose() {
     widget.action?.removeAction();
+    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -78,6 +80,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
 
   final _data = <TinyManga>[];
   var _total = 0;
+  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
   var _currOrder = AppSetting.instance.other.defaultMangaOrder;
   var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
   late var _currGenre = widget.defaultGenre ?? allGenres[0];
@@ -105,6 +108,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     });
 
     _total = result.data.total;
+    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
@@ -164,7 +168,13 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
             },
           ),
           separator: Divider(height: 0, thickness: 1),
-          itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
+          itemBuilder: (c, _, item) => TinyMangaLineView(
+            manga: item,
+            inDownload: _flagStorage.isInDownload(mangaId: item.mid),
+            inShelf: _flagStorage.isInShelf(mangaId: item.mid),
+            inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
+            inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+          ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
               ListHintView.widgets(
@@ -230,7 +240,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
             ],
             innerTopWidgets: [
               ListHintView.textWidget(
-                leftText: '搜索结果 (共 $_total 部)',
+                leftText: '筛选结果 (共 $_total 部)',
                 rightWidget: OptionPopupView<MangaOrder>(
                   items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
                   value: _currOrder,

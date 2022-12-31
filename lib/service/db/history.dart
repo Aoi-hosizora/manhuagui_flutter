@@ -47,6 +47,10 @@ class HistoryDao {
     // pass
   }
 
+  static Future<void> upgradeFromVer3To4(Database db) async {
+    // pass
+  }
+
   static Future<int?> getHistoryCount({required String username}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
@@ -59,6 +63,20 @@ class HistoryDao {
       return null;
     }
     return firstIntValue(results);
+  }
+
+  static Future<bool?> checkExistence({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colMangaId)
+         FROM $_tblHistory
+         WHERE $_colUsername = ? AND $_colMangaId = ?''',
+      [username, mid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
   }
 
   static Future<MangaHistory?> getHistory({required String username, required int mid}) async {

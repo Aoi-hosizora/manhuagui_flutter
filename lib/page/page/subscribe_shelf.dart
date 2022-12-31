@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
+import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -56,12 +57,14 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   void dispose() {
     widget.action?.removeAction();
     _cancelHandler?.call();
+    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
   }
 
   final _data = <ShelfManga>[];
+  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
 
   Future<PagedList<ShelfManga>> _getData({required int page}) async {
@@ -70,6 +73,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
+    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), toQueryShelves: false);
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
@@ -122,11 +126,16 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           },
         ),
         separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, item) => ShelfMangaLineView(manga: item),
+        itemBuilder: (c, _, item) => ShelfMangaLineView(
+          manga: item,
+          inDownload: _flagStorage.isInDownload(mangaId: item.mid),
+          inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
+          inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+        ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textText(
-              leftText: '${AuthManager.instance.username} 订阅的漫画',
+              leftText: '${AuthManager.instance.username} 的书架 (按更新时间排序)',
               rightText: '共 $_total 部',
             ),
           ],

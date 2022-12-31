@@ -35,6 +35,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   void initState() {
     super.initState();
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToGenreRequestedEvent>((ev) => _jumpToPageByEvent(1, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((ev) => _jumpToPageByEvent(0, ev)));
@@ -110,19 +111,8 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
           currentSelection: DrawerSelection.home,
         ),
         drawerEdgeDragWidth: null,
-        drawerExtraDragTriggers: [
-          DrawerDragTrigger(
-            top: 0,
-            height: MediaQuery.of(context).padding.top + Theme.of(context).appBarTheme.toolbarHeight!,
-            dragWidth: MediaQuery.of(context).size.width,
-          ),
-          DrawerDragTrigger(
-            bottom: 0,
-            height: MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight,
-            dragWidth: MediaQuery.of(context).size.width,
-          ),
-        ],
         physicsController: _physicsController,
+        implicitlyOverscrollableScaffold: true,
         body: DefaultScrollPhysics(
           physics: CustomScrollPhysics(controller: _physicsController),
           child: TabBarView(

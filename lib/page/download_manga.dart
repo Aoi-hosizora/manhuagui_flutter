@@ -415,7 +415,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 child: Text(_onlyUnfinished ? '显示所有章节的下载情况' : '仅显示未完成的下载情况'),
                 onTap: () => mountedSetState(() => _onlyUnfinished = !_onlyUnfinished),
               ),
-              if (_entity != null && !_entity!.error && _entity!.successChapterIds.length == _entity!.totalChapterIds.length)
+              if (_entity != null && !_entity!.error && _entity!.allChaptersSucceeded)
                 PopupMenuItem(
                   child: Text(!_entity!.needUpdate ? '标记为需要更新数据' : '标记为不需要更新数据'),
                   onTap: () async {
@@ -432,14 +432,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
         currentSelection: DrawerSelection.none,
       ),
       drawerEdgeDragWidth: null,
-      drawerExtraDragTriggers: [
-        DrawerDragTrigger(
-          top: 0,
-          height: _tabBarKey.currentContext?.findRenderObject()?.getBoundInAncestorCoordinate(context.findRenderObject()).let((rect) => rect.top + rect.height) ?? 0,
-          dragWidth: MediaQuery.of(context).size.width,
-        ),
-      ],
       physicsController: _physicsController,
+      implicitlyOverscrollableScaffold: true,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         notificationPredicate: (n) => n.depth <= 2,
@@ -452,14 +446,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
           onRefresh: () => _loadData(),
           childBuilder: (c) => ExtendedNestedScrollView(
             controller: _scrollController,
-            onNotification: (e) {
-              if (e is ScrollEndNotification) {
-                WidgetsBinding.instance?.addPostFrameCallback((_) {
-                  if (mounted) setState(() {}); // <<< for updating DrawerDragTrigger
-                });
-              }
-              return false;
-            },
             headerSliverBuilder: (context, _) => [
               SliverToBoxAdapter(
                 child: Column(
@@ -538,23 +524,18 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         color: Colors.white,
                         elevation: 2,
                         child: Center(
-                          child: StatefulWidgetWithCallback(
-                            postFrameCallbackForInitState: (_) {
-                              if (mounted) setState(() {}); // <<< for updating DrawerDragTrigger
-                            },
-                            child: TabBar(
-                              key: _tabBarKey,
-                              controller: _tabController,
-                              labelColor: Theme.of(context).primaryColor,
-                              unselectedLabelColor: Colors.grey[600],
-                              indicatorColor: Theme.of(context).primaryColor,
-                              isScrollable: true,
-                              indicatorSize: TabBarIndicatorSize.label,
-                              tabs: [
-                                const SizedBox(height: 36.0, child: Center(child: Text('已完成'))),
-                                SizedBox(height: 36.0, child: Center(child: Text(_onlyUnfinished ? '未完成' : '所有章节'))),
-                              ],
-                            ),
+                          child: TabBar(
+                            key: _tabBarKey,
+                            controller: _tabController,
+                            labelColor: Theme.of(context).primaryColor,
+                            unselectedLabelColor: Colors.grey[600],
+                            indicatorColor: Theme.of(context).primaryColor,
+                            isScrollable: true,
+                            indicatorSize: TabBarIndicatorSize.label,
+                            tabs: [
+                              const SizedBox(height: 36.0, child: Center(child: Text('已完成'))),
+                              SizedBox(height: 36.0, child: Center(child: Text(_onlyUnfinished ? '未完成' : '所有章节'))),
+                            ],
                           ),
                         ),
                       ),
