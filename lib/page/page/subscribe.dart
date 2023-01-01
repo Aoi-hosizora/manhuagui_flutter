@@ -22,37 +22,38 @@ class SubscribeSubPage extends StatefulWidget {
 
 class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerProviderStateMixin {
   late final _controller = TabController(length: _tabs.length, vsync: this);
-  var _selectedIndex = 0;
+  var _selectedIndex = 0; // for tab bar
+  var _currentPageIndex = 0; // for tab bar view
   late final _actions = List.generate(3, (_) => ActionController());
   late final _tabs = [
-    Tuple2('我的书架', ShelfSubPage(action: _actions[0])), // TODO 添加书架记录缓存功能（初步设想入口设在本页）
-    Tuple2('本地收藏', FavoriteSubPage(action: _actions[1])), // TODO 添加漫画排序功能（初步设想入口设在本页）
+    Tuple2('书架', ShelfSubPage(action: _actions[0])),
+    Tuple2('收藏', FavoriteSubPage(action: _actions[1])),
     Tuple2('阅读历史', HistorySubPage(action: _actions[2])),
   ];
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    _cancelHandler = EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
+    _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(0);
       _selectedIndex = 0;
-    });
-    _cancelHandler = EventBusManager.instance.listen<ToFavoriteRequestedEvent>((_) {
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((_) {
       _controller.animateTo(1);
       _selectedIndex = 1;
-    });
-    _cancelHandler = EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
       _controller.animateTo(2);
       _selectedIndex = 2;
-    });
+    }));
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();
@@ -90,6 +91,18 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
+          if (_currentPageIndex == 0)
+            AppBarActionButton(
+              icon: Icon(Icons.sync),
+              tooltip: '同步书架记录',
+              onPressed: () => _actions[0].invoke('sync'),
+            ),
+          if (_currentPageIndex == 1)
+            AppBarActionButton(
+              icon: Icon(Icons.bookmark_border),
+              tooltip: '管理收藏分组',
+              onPressed: () => _actions[1].invoke('manage'),
+            ),
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索漫画',
@@ -102,10 +115,20 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
           ),
         ],
       ),
-      body: TabBarView(
-        controller: _controller,
-        physics: DefaultScrollPhysics.of(context),
-        children: _tabs.map((t) => t.item2).toList(),
+      body: PageChangedListener(
+        callPageChangedAtEnd: false,
+        onPageChanged: (i) {
+          if (!_controller.indexIsChanging || // swipe manually => indexIsChanging is false
+              i == _controller.index /* select tabBar => index equals to target index */) {
+            _currentPageIndex = i; // prevent setting to middle page
+            if (mounted) setState(() {});
+          }
+        },
+        child: TabBarView(
+          controller: _controller,
+          physics: DefaultScrollPhysics.of(context),
+          children: _tabs.map((t) => t.item2).toList(),
+        ),
       ),
     );
   }

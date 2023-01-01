@@ -191,31 +191,31 @@ class _AuthorPageState extends State<AuthorPage> {
                               ),
                             ),
                             space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
+                            iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
                           IconText(
                             icon: Icon(Icons.place, size: 20, color: Colors.orange),
                             text: Text('地区：${_data!.zone}'),
                             space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
+                            iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
                           IconText(
-                            icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
+                            icon: Icon(Icons.stars, size: 20, color: Colors.orange),
                             text: Text('平均评分 ${_data!.averageScore}'),
                             space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
+                            iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
                           IconText(
                             icon: Icon(Icons.edit, size: 20, color: Colors.orange),
                             text: Text('共收录 ${_data!.mangaCount} 部漫画'),
                             space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
+                            iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
                           IconText(
                             icon: Icon(Icons.update, size: 20, color: Colors.orange),
                             text: Text('收录更新于 ${_data!.newestDate}'),
                             space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 3.0),
+                            iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
                         ],
                       ),
@@ -224,11 +224,8 @@ class _AuthorPageState extends State<AuthorPage> {
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Container(height: 12),
-            ),
             // ****************************************************************
-            // 一些介绍
+            // 作者介绍 & 最新收录
             // ****************************************************************
             SliverToBoxAdapter(
               child: Material(
@@ -241,10 +238,7 @@ class _AuthorPageState extends State<AuthorPage> {
                       style: Theme.of(context).textTheme.bodyText2,
                     ),
                   ),
-                  onTap: () {
-                    copyText(_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim(), showToast: false);
-                    Fluttertoast.showToast(msg: '作者介绍已经复制到剪贴板');
-                  },
+                  onTap: () => copyText(_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim(), showToast: true),
                 ),
               ),
             ),
@@ -273,6 +267,9 @@ class _AuthorPageState extends State<AuthorPage> {
             SliverToBoxAdapter(
               child: Container(height: 12),
             ),
+            // ****************************************************************
+            // 漫画列表头
+            // ****************************************************************
             SliverOverlapAbsorber(
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(c),
               sliver: SliverPersistentHeader(
@@ -305,7 +302,7 @@ class _AuthorPageState extends State<AuthorPage> {
           ],
           controller: _controller,
           // ****************************************************************
-          // 漫画
+          // 漫画列表
           // ****************************************************************
           body: Builder(
             builder: (c) => PaginationSliverListView<SmallManga>(

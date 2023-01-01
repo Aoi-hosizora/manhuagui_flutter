@@ -16,7 +16,7 @@ import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
-import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_dialog.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -198,7 +198,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   List<Future<File?>>? _fileFutures;
   var _error = '';
 
-  var _subscribing = false; // 执行订阅中
+  int? _subscribeCount;
+  FavoriteManga? _favoriteManga;
+  var _subscribing = false; // 执行订阅操作中
   var _inShelf = false; // 书架
   var _inFavorite = false; // 收藏
 
@@ -223,6 +225,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         try {
           var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mangaId);
           _inShelf = r.data.isIn;
+          _subscribeCount = r.data.count;
           if (mounted) setState(() {});
         } catch (e, s) {
           var we = wrapError(e, s);
@@ -232,7 +235,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       });
     }
     Future.microtask(() async {
-      _inFavorite = await FavoriteDao.checkExistence(username: AuthManager.instance.username, mid: widget.mangaId) ?? false;
+      _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
+      _inFavorite = _favoriteManga != null;
     });
 
     // 3. 获取章节下载信息
@@ -486,7 +490,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   }
 
   void _subscribe() {
-    MangaPageState.subscribe(
+    showSubscribeDialog(
       context: context,
       mangaId: widget.mangaId,
       mangaTitle: _data!.mangaTitle,
@@ -494,14 +498,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaUrl: _data!.mangaUrl,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
-      showExtraInfo: false,
-      subscribeCount: 0,
-      favoriteRemark: '',
+      subscribeCount: _subscribeCount,
+      favoriteManga: _favoriteManga,
       subscribingSetter: (s) => _subscribing = s,
       stateSetter: () => mountedSetState(() {}),
       inShelfSetter: (s) => _inShelf = s,
       inFavoriteSetter: (s) => _inFavorite = s,
-      favoriteRemarkSetter: (r) {},
+      favoriteMangaSetter: (m) => _favoriteManga = m,
     );
   }
 

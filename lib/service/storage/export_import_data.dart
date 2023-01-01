@@ -5,6 +5,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -109,6 +110,18 @@ Future<bool> _exportDB(File dbFile, List<ExportDataType> types, ExportDataTypeCo
       }
       counter.downloadRecords = mangaRows;
     }
+    // favorite mangas
+    if (types.contains(ExportDataType.favoriteMangas)) {
+      var favoriteRows = await _copyToDB(tx, anotherDB, FavoriteDao.favoriteMetadata);
+      if (favoriteRows == null) {
+        return false;
+      }
+      var groupRows = await _copyToDB(tx, anotherDB, FavoriteDao.groupMetadata);
+      if (groupRows == null) {
+        return false;
+      }
+      counter.favoriteMangas = favoriteRows;
+    }
     return true;
   });
   ok ??= false;
@@ -212,6 +225,18 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     }
     if (downloadMangaRows > 0) {
       counter.downloadRecords = downloadMangaRows;
+    }
+    // favorite mangas
+    var favoriteMangaRows = await _copyToDB(exportedDB, db, FavoriteDao.favoriteMetadata, merge);
+    if (favoriteMangaRows == null) {
+      return false;
+    }
+    var favoriteGroupRows = await _copyToDB(exportedDB, db, FavoriteDao.groupMetadata, merge);
+    if (favoriteGroupRows == null) {
+      return false;
+    }
+    if (readHistoryRows > 0) {
+      counter.favoriteMangas = favoriteMangaRows;
     }
     return true;
   }();

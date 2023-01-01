@@ -149,17 +149,18 @@ class ActionRowView extends StatelessWidget {
     }
 
     double getTextWidth(String text, TextStyle style) => //
-        (TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr)..layout()).width;
+        (TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, textScaleFactor: MediaQuery.of(context).textScaleFactor)..layout()).width;
+    var screenWidth = MediaQuery.of(context).size.width;
     var itemWidth = getTextWidth('　　　　', Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16)) + 8 * 2;
-    var hPadding = (MediaQuery.of(context).size.width - itemWidth * 5) / 6; // | ▢ ▢ ▢ ▢ ▢ |
-    var hSpace = (MediaQuery.of(context).size.width - hPadding - itemWidth * 5.5) / 5; // | ▢ ▢ ▢ ▢ ▢ ▢|
+    var hPadding = (screenWidth - itemWidth * 5) / 6; // | ▢ ▢ ▢ ▢ ▢ |
+    var hSpace = (screenWidth - hPadding - itemWidth * 5.5) / 5; // | ▢ ▢ ▢ ▢ ▢ ▢|
     if (hSpace < 0) {
-      hPadding = (MediaQuery.of(context).size.width - itemWidth * 4) / 5; // | ▢ ▢ ▢ ▢ |
-      hSpace = (MediaQuery.of(context).size.width - hPadding - itemWidth * 4.5) / 4; // | ▢ ▢ ▢ ▢ ▢|
+      hPadding = (screenWidth - itemWidth * 4) / 5; // | ▢ ▢ ▢ ▢ |
+      hSpace = (screenWidth - hPadding - itemWidth * 4.5) / 4; // | ▢ ▢ ▢ ▢ ▢|
     }
     if (hSpace < 0) {
-      hPadding = (MediaQuery.of(context).size.width - itemWidth * 3) / 4; // | ▢ ▢ ▢ |
-      hSpace = (MediaQuery.of(context).size.width - hPadding - itemWidth * 3.5) / 3; // | ▢ ▢ ▢ ▢|
+      hPadding = (screenWidth - itemWidth * 3) / 4; // | ▢ ▢ ▢ |
+      hSpace = (screenWidth - hPadding - itemWidth * 3.5) / 3; // | ▢ ▢ ▢ ▢|
     }
 
     return Material(

@@ -38,6 +38,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
+    widget.action?.addAction('sync', () => Fluttertoast.showToast(msg: 'TODO')); // TODO 书架记录缓存
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
         _oldAuthData = AuthManager.instance.authData;
@@ -56,6 +57,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   void dispose() {
     widget.action?.removeAction();
+    widget.action?.removeAction('sync');
     _cancelHandler?.call();
     _flagStorage.dispose();
     _controller.dispose();
@@ -133,9 +135,9 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           inHistory: _flagStorage.isInHistory(mangaId: item.mid),
         ),
         extra: UpdatableDataViewExtraWidgets(
-          innerTopWidgets: [
+          outerTopWidgets: [
             ListHintView.textText(
-              leftText: '${AuthManager.instance.username} 的书架 (按更新时间排序)',
+              leftText: '${AuthManager.instance.username} 的书架 (更新时间排序)',
               rightText: '共 $_total 部',
             ),
           ],

@@ -31,12 +31,12 @@ class FavoriteMangaLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.mangaCover,
       title: manga.mangaTitle,
-      icon1: null,
-      text1: null,
-      icon2: Icons.comment_bank,
-      text2: '备注：${manga.remark.trim().isEmpty ? '暂无' : manga.remark.trim()}',
-      icon3: history == null || !history!.read ? Icons.web_asset : Icons.import_contacts,
-      text3: history == null ? '尚未浏览' : (!history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle} 第${history!.chapterPage}页'),
+      icon1: Icons.label_outline,
+      text1: '${manga.checkedGroupName}${manga.remark.trim().isEmpty ? '' : '・备注 ${manga.remark.trim()}'}',
+      icon2: history == null || !history!.read ? Icons.web_asset : Icons.import_contacts,
+      text2: history == null ? '尚未浏览' : (!history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle} 第${history!.chapterPage}页'),
+      icon3: Icons.access_time,
+      text3: '添加于 ${manga.formattedCreatedAt}',
       cornerIcons: buildMangaCornerIcons(inDownload: inDownload, inShelf: inShelf, inFavorite: true, inHistory: inHistory),
       extraRightPaddingForTitle: 28 - 14 + 5 /* badge width - line horizontal padding + extra space */,
       extrasInStack: [
@@ -50,11 +50,16 @@ class FavoriteMangaLineView extends StatelessWidget {
               color: Colors.orange,
               borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28)),
             ),
-            child: Container(
-              padding: EdgeInsets.only(top: 3, left: index < 10 ? 12 : (index < 10 ? 7 : 2)),
-              child: Text(
-                index.toString() /* manga.order.toString() */,
-                style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.white),
+            alignment: Alignment.topRight,
+            child: SizedBox(
+              width: 28 * 0.8,
+              height: 28 * 0.85,
+              child: Center(
+                child: Text(
+                  index.toString(),
+                  // manga.order.toString(),
+                  style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: index < 100 ? null : 12.5, color: Colors.white),
+                ),
               ),
             ),
           ),

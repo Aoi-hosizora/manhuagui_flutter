@@ -15,6 +15,7 @@ import 'package:manhuagui_flutter/page/view/manga_collection.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/page/view/warning_text.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -41,7 +42,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
   AuthData? _oldAuthData;
 
   @override
@@ -51,17 +52,17 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
 
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (ev) {
         _oldAuthData = AuthManager.instance.authData;
         if (mounted) setState(() {});
-        _loadCollections([MangaCollectionType.shelves, MangaCollectionType.histories]);
-      });
+        _loadCollections([MangaCollectionType.shelves, MangaCollectionType.favorites, MangaCollectionType.histories]);
+      }));
     });
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     widget.action?.removeAction();
     _controller.dispose();
     _fabController.dispose();
@@ -98,6 +99,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   List<TinyManga>? _updates;
   List<MangaHistory>? _histories;
   List<ShelfManga>? _shelves;
+  List<FavoriteManga>? _favorites;
   List<DownloadedManga>? _downloads;
   var _updatesError = '';
   var _shelvesError = '';
@@ -156,6 +158,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       });
     }
 
+    if (types.contains(MangaCollectionType.favorites)) {
+      Future.microtask(() async {
+        _favorites = null; // loading
+        var result = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: '', page: 1, limit: 20); // #=20
+        _favorites = result ?? [];
+        if (mounted) setState(() {});
+      });
+    }
+
     if (types.contains(MangaCollectionType.downloads)) {
       Future.microtask(() async {
         _downloads = null; // loading
@@ -175,6 +186,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         updates: type == MangaCollectionType.updates ? _updates : null,
         histories: type == MangaCollectionType.histories ? _histories : null,
         shelves: type == MangaCollectionType.shelves ? _shelves : null,
+        favorites: type == MangaCollectionType.favorites ? _favorites : null,
         downloads: type == MangaCollectionType.downloads ? _downloads : null,
         error: error,
         username: !AuthManager.instance.logined ? null : AuthManager.instance.username,
@@ -191,6 +203,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
               break;
             case MangaCollectionType.shelves:
               EventBusManager.instance.fire(ToShelfRequestedEvent());
+              break;
+            case MangaCollectionType.favorites:
+              EventBusManager.instance.fire(ToFavoriteRequestedEvent());
               break;
             case MangaCollectionType.downloads:
               Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()));
@@ -274,8 +289,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 _buildCollection('', MangaCollectionType.rankings), // 日排行榜
                 _buildCollection(_updatesError, MangaCollectionType.updates), // 最近更新
                 _buildCollection('', MangaCollectionType.histories), // 阅读历史
-                // TODO 本地收藏
                 _buildCollection(_shelvesError, MangaCollectionType.shelves), // 我的书架
+                _buildCollection('', MangaCollectionType.favorites), // 本地收藏
                 _buildCollection('', MangaCollectionType.downloads), // 下载列表
                 Padding(
                   padding: EdgeInsets.only(top: 12),

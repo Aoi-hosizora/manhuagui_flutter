@@ -66,20 +66,18 @@ class MangaRankingLineView extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: manga.order == 1
-                  ? Colors.red
-                  : manga.order == 2
-                      ? Colors.orange
-                      : manga.order == 3
-                          ? Colors.yellow[600]
-                          : Colors.grey[400],
+              color: manga.order == 1 ? Colors.red : (manga.order == 2 ? Colors.orange : (manga.order == 3 ? Colors.yellow[600] : Colors.grey[400])),
               borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28)),
             ),
-            child: Container(
-              padding: EdgeInsets.only(top: 3, left: manga.order < 10 ? 12 : 7),
-              child: Text(
-                manga.order.toString(),
-                style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.white),
+            alignment: Alignment.topRight,
+            child: SizedBox(
+              width: 28 * 0.8,
+              height: 28 * 0.85,
+              child: Center(
+                child: Text(
+                  manga.order.toString(),
+                  style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.white),
+                ),
               ),
             ),
           ),

@@ -10,10 +10,6 @@ class ToHistoryRequestedEvent {
   const ToHistoryRequestedEvent();
 }
 
-class ToGenreRequestedEvent {
-  const ToGenreRequestedEvent();
-}
-
 class ToRecentRequestedEvent {
   const ToRecentRequestedEvent();
 }
@@ -29,11 +25,12 @@ class HistoryUpdatedEvent {
 }
 
 class SubscribeUpdatedEvent {
-  const SubscribeUpdatedEvent({required this.mangaId, required this.inShelf, required this.inFavorite});
+  const SubscribeUpdatedEvent({required this.mangaId, this.inShelf, this.inFavorite, this.changedGroup});
 
   final int mangaId;
   final bool? inShelf;
   final bool? inFavorite;
+  final String? changedGroup;
 }
 
 class DownloadMangaProgressChangedEvent {

@@ -13,11 +13,11 @@ enum MangaCollectionType {
   updates,
   histories,
   shelves,
+  favorites,
   downloads,
-  // TODO favorites
 }
 
-/// 漫画集合，针对每日排行、最近更新、阅读历史、我的书架、下载列表，在 [RecommendSubPage] 使用
+/// 漫画集合，针对每日排行、最近更新、阅读历史、我的书架、本地收藏、下载列表，在 [RecommendSubPage] 使用
 class MangaCollectionView extends StatefulWidget {
   const MangaCollectionView({
     Key? key,
@@ -26,6 +26,7 @@ class MangaCollectionView extends StatefulWidget {
     this.updates,
     this.histories,
     this.shelves,
+    this.favorites,
     this.downloads,
     this.error,
     required this.username,
@@ -37,6 +38,7 @@ class MangaCollectionView extends StatefulWidget {
   final List<TinyManga>? updates;
   final List<MangaHistory>? histories;
   final List<ShelfManga>? shelves;
+  final List<FavoriteManga>? favorites;
   final List<DownloadedManga>? downloads;
   final String? error;
   final String? username;
@@ -226,6 +228,29 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
+  Widget _buildFavoriteItem(BuildContext context, FavoriteManga manga) {
+    final width = (MediaQuery.of(context).size.width - 15 * 6) / 5.5; // | ▢ ▢ ▢ ▢ ▢ ▢|
+    final height = width / 3 * 4;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaUrl, manga.mangaCover, width, height),
+        Container(
+          width: width,
+          padding: EdgeInsets.only(top: 2),
+          child: Text(
+            manga.mangaTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDownloadItem(BuildContext context, DownloadedManga manga) {
     final width = (MediaQuery.of(context).size.width - 15 * 4) / 3.5; // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
@@ -246,7 +271,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                manga.successChapterIds.length == manga.totalChapterIds.length
+                manga.allChaptersSucceeded
                     ? '已完成 (共 ${manga.totalChapterIds.length} 章节)' //
                     : '未完成 (${manga.triedChapterIds.length}/${manga.totalChapterIds.length})',
                 maxLines: 1,
@@ -294,6 +319,11 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
         icon = Icons.star;
         widgets = widget.shelves?.map((el) => _buildShelfItem(context, el)).toList(); // # = 20
         twoLine = widgets != null && widgets.length > 6;
+        break;
+      case MangaCollectionType.favorites:
+        title = widget.username == null ? '我的本地收藏' : '${widget.username} 的本地收藏';
+        icon = Icons.bookmark;
+        widgets = widget.favorites?.map((el) => _buildFavoriteItem(context, el)).toList(); // # = 20
         break;
       case MangaCollectionType.downloads:
         title = '漫画下载列表';

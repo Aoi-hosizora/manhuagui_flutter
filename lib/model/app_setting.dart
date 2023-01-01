@@ -198,6 +198,7 @@ class OtherSetting {
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
     required this.clickToSearch,
+    required this.defaultToFavoriteTop,
     required this.regularGroupRows,
     required this.otherGroupRows,
   });
@@ -209,6 +210,7 @@ class OtherSetting {
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
+  final bool defaultToFavoriteTop; // 默认添加至本地收藏顶部
   final int regularGroupRows; // 单话分组章节显示行数
   final int otherGroupRows; // 其他分组章节显示行数
 
@@ -220,6 +222,7 @@ class OtherSetting {
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
     clickToSearch: false,
+    defaultToFavoriteTop: false,
     regularGroupRows: 3,
     otherGroupRows: 1,
   );
@@ -232,6 +235,7 @@ class OtherSetting {
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
     bool? clickToSearch,
+    bool? defaultToFavoriteTop,
     int? regularGroupRows,
     int? otherGroupRows,
   }) {
@@ -243,6 +247,7 @@ class OtherSetting {
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       clickToSearch: clickToSearch ?? this.clickToSearch,
+      defaultToFavoriteTop: defaultToFavoriteTop ?? this.defaultToFavoriteTop,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
     );
@@ -306,6 +311,7 @@ enum ExportDataType {
   // from db
   readHistories, // 漫画阅读历史
   downloadRecords, // 漫画下载记录
+  favoriteMangas, // 本地收藏漫画
 
   // from prefs
   searchHistories, // 漫画搜索历史
@@ -319,6 +325,8 @@ extension ExportDataTypeExtension on ExportDataType {
         return '漫画阅读历史';
       case ExportDataType.downloadRecords:
         return '漫画下载记录';
+      case ExportDataType.favoriteMangas:
+        return '本地收藏漫画';
       case ExportDataType.searchHistories:
         return '漫画搜索历史';
       case ExportDataType.appSetting:
@@ -332,16 +340,18 @@ class ExportDataTypeCounter {
 
   int? readHistories;
   int? downloadRecords;
+  int? favoriteMangas;
   int? searchHistories;
   int? appSetting;
 
-  bool get isEmpty => readHistories == null && downloadRecords == null && searchHistories == null && appSetting == null;
+  bool get isEmpty => readHistories == null && downloadRecords == null && favoriteMangas == null && searchHistories == null && appSetting == null;
 
   @override
   String toString() {
     var titles = [
       if (readHistories != null) '${readHistories ?? 0} 条漫画阅读历史',
       if (downloadRecords != null) '${downloadRecords ?? 0} 条漫画下载记录',
+      if (favoriteMangas != null) '${favoriteMangas ?? 0} 部本地收藏漫画',
       if (searchHistories != null) '${searchHistories ?? 0} 条漫画搜索历史',
       if (appSetting != null) '${appSetting ?? 0} 条设置项',
     ];

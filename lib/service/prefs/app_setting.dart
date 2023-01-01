@@ -98,10 +98,11 @@ class AppSettingPrefs {
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
+  static const _defaultToFavoriteTopKey = BoolKey('AppSettingPrefs_defaultToFavoriteTop');
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
 
-  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _regularGroupRowsKey, _otherGroupRowsKey];
+  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _defaultToFavoriteTopKey, _regularGroupRowsKey, _otherGroupRowsKey];
 
   static Future<void> loadOtherSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -114,6 +115,7 @@ class AppSettingPrefs {
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
+      defaultToFavoriteTop: prefs.safeGet<bool>(_defaultToFavoriteTopKey) ?? def.defaultToFavoriteTop,
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
     );
@@ -130,7 +132,9 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
+    await prefs.safeSet<bool>(_defaultToFavoriteTopKey, setting.defaultToFavoriteTop);
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
+    await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {

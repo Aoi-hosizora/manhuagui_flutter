@@ -97,50 +97,16 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
   final void Function(T) onChanged;
 
   @override
-  Widget buildRightWidget(BuildContext context) => Stack(
-        children: [
-          DropdownButton<T>(
-            value: value,
-            selectedItemBuilder: (c) => [
-              for (var v in values)
-                DropdownMenuItem<T>(
-                  value: v,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 2),
-                    child: Text(textBuilder(v), style: Theme.of(context).textTheme.bodyText2),
-                  ),
-                )
-            ],
-            items: [
-              for (var v in values)
-                DropdownMenuItem<T>(
-                  value: v,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 2),
-                    child: Text(
-                      textBuilder(v),
-                      style: Theme.of(context).textTheme.bodyText2!.copyWith(
-                            color: value == v ? Theme.of(context).primaryColor : null,
-                          ),
-                    ),
-                  ),
-                )
-            ],
-            isExpanded: true,
-            underline: Container(),
-            onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 6,
-            child: Container(
-              height: 0.8,
-              margin: EdgeInsets.only(right: 5),
-              color: Theme.of(context).primaryColor,
+  Widget buildRightWidget(BuildContext context) => CustomCombobox<T>(
+        value: value,
+        items: [
+          for (var v in values)
+            CustomComboboxItem(
+              value: v,
+              text: textBuilder(v),
             ),
-          ),
         ],
+        onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
       );
 }
 
@@ -296,6 +262,80 @@ class _CheckBoxDialogOptionState extends State<CheckBoxDialogOption> {
         if (mounted) setState(() {});
         widget.onChanged.call(_value);
       },
+    );
+  }
+}
+
+class CustomComboboxItem<T> {
+  const CustomComboboxItem({
+    required this.value,
+    required this.text,
+  });
+
+  final T? value;
+  final String text;
+}
+
+class CustomCombobox<T> extends StatelessWidget {
+  const CustomCombobox({
+    Key? key,
+    required this.value,
+    required this.onChanged,
+    required this.items,
+    this.textStyle,
+  }) : super(key: key);
+
+  final T? value;
+  final ValueChanged<T?>? onChanged;
+  final List<CustomComboboxItem<T>> items;
+  final TextStyle? textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        DropdownButton<T>(
+          value: value,
+          selectedItemBuilder: (c) => [
+            for (var i in items)
+              DropdownMenuItem<T>(
+                value: i.value,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 2),
+                  child: Text(i.text, style: textStyle ?? Theme.of(context).textTheme.bodyText2),
+                ),
+              )
+          ],
+          items: [
+            for (var i in items)
+              DropdownMenuItem<T>(
+                value: i.value,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 2),
+                  child: Text(
+                    i.text,
+                    style: (textStyle ?? Theme.of(context).textTheme.bodyText2)?.copyWith(
+                      color: value == i.value ? Theme.of(context).primaryColor : null,
+                    ),
+                  ),
+                ),
+              )
+          ],
+          isExpanded: true,
+          underline: Container(),
+          onChanged: onChanged,
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 6,
+          child: Container(
+            height: 0.8,
+            margin: EdgeInsets.only(right: 3),
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+      ],
     );
   }
 }

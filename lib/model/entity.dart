@@ -84,6 +84,7 @@ class FavoriteManga {
   final String mangaCover;
   final String mangaUrl;
   final String remark;
+  final String groupName;
   final int order;
   final DateTime createdAt;
 
@@ -93,11 +94,14 @@ class FavoriteManga {
     required this.mangaCover,
     required this.mangaUrl,
     required this.remark,
+    required this.groupName,
     required this.order,
     required this.createdAt,
   });
 
   String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm').format(createdAt);
+
+  String get checkedGroupName => groupName.trim().isEmpty ? '默认分组' : groupName.trim();
 
   FavoriteManga copyWith({
     int? mangaId,
@@ -105,6 +109,7 @@ class FavoriteManga {
     String? mangaCover,
     String? mangaUrl,
     String? remark,
+    String? groupName,
     int? order,
     DateTime? createdAt,
   }) {
@@ -114,6 +119,37 @@ class FavoriteManga {
       mangaCover: mangaCover ?? this.mangaCover,
       mangaUrl: mangaUrl ?? this.mangaUrl,
       remark: remark ?? this.remark,
+      groupName: groupName ?? this.groupName,
+      order: order ?? this.order,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}
+
+class FavoriteGroup {
+  final String groupName;
+  final int order;
+  final DateTime createdAt;
+
+  const FavoriteGroup({
+    required this.groupName,
+    required this.order,
+    required this.createdAt,
+  });
+
+  String get checkedGroupName => groupName.trim().isEmpty ? '默认分组' : groupName.trim();
+
+  static bool isDefaultName(String s) => s.trim() == '默认' || s.trim() == '默认分组';
+
+  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
+
+  FavoriteGroup copyWith({
+    String? groupName,
+    int? order,
+    DateTime? createdAt,
+  }) {
+    return FavoriteGroup(
+      groupName: groupName ?? this.groupName,
       order: order ?? this.order,
       createdAt: createdAt ?? this.createdAt,
     );

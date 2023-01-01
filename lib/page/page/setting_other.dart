@@ -31,6 +31,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _clickToSearch = widget.setting.clickToSearch;
+  late var _defaultToFavoriteTop = widget.setting.defaultToFavoriteTop;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
 
@@ -42,6 +43,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
+        defaultToFavoriteTop: _defaultToFavoriteTop,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
       );
@@ -130,6 +132,15 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingSwitcherView(
+          title: '默认添加至本地收藏顶部',
+          value: _defaultToFavoriteTop,
+          onChanged: (b) {
+            _defaultToFavoriteTop = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
         SettingComboBoxView<int>(
           title: '单话分组章节显示行数',
           width: 75,
@@ -188,4 +199,12 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
     ),
   );
   return ok ?? false;
+}
+
+Future<void> updateOtherSettingDefaultToFavToTop(bool favoriteTop) async {
+  var setting = AppSetting.instance.other;
+  var newSetting = setting.copyWith(defaultToFavoriteTop: favoriteTop);
+  AppSetting.instance.update(other: newSetting);
+  await AppSettingPrefs.saveOtherSetting();
+  EventBusManager.instance.fire(AppSettingChangedEvent());
 }

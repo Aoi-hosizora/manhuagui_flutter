@@ -163,7 +163,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             separator: Divider(height: 0, thickness: 1),
             itemBuilder: (c, _, item) => SelectableCheckboxItem<ValueKey<int>>(
               key: ValueKey<int>(item.mangaId),
-              checkboxPosition: PositionArgument.fromLTRB(null, 0, 15, 0),
+              checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
               itemBuilder: (c, key, tip) => MangaHistoryLineView(
                 history: item,
@@ -174,7 +174,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               ),
             ),
             extra: UpdatableDataViewExtraWidgets(
-              innerTopWidgets: [
+              outerTopWidgets: [
                 ListHintView.textWidget(
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '本地阅读历史') + (_historyUpdated ? ' (有更新)' : ''),
                   rightWidget: Row(
