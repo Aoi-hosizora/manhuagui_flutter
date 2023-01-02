@@ -78,6 +78,40 @@ class MangaHistory {
   }
 }
 
+class ShelfCache {
+  final int mangaId;
+  final String mangaTitle;
+  final String mangaCover;
+  final String mangaUrl;
+  final DateTime cachedAt;
+
+  const ShelfCache({
+    required this.mangaId,
+    required this.mangaTitle,
+    required this.mangaCover,
+    required this.mangaUrl,
+    required this.cachedAt,
+  });
+
+  String get formattedCachedAt => DateFormat('yyyy-MM-dd HH:mm').format(cachedAt);
+
+  ShelfCache copyWith({
+    int? mangaId,
+    String? mangaTitle,
+    String? mangaCover,
+    String? mangaUrl,
+    DateTime? cachedAt,
+  }) {
+    return ShelfCache(
+      mangaId: mangaId ?? this.mangaId,
+      mangaTitle: mangaTitle ?? this.mangaTitle,
+      mangaCover: mangaCover ?? this.mangaCover,
+      mangaUrl: mangaUrl ?? this.mangaUrl,
+      cachedAt: cachedAt ?? this.cachedAt,
+    );
+  }
+}
+
 class FavoriteManga {
   final int mangaId;
   final String mangaTitle;

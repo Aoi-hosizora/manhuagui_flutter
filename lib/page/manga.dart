@@ -27,6 +27,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -129,6 +130,18 @@ class _MangaPageState extends State<MangaPage> {
           var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.id);
           _inShelf = r.data.isIn;
           _subscribeCount = r.data.count;
+
+          // 更新订阅缓存信息
+          if (_data != null) {
+            if (_inShelf) {
+              var cache = ShelfCache(mangaId: widget.id, mangaTitle: _data!.title, mangaCover: _data!.cover, mangaUrl: _data!.url, cachedAt: DateTime.now());
+              await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
+              EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, inShelf: true));
+            } else {
+              await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: widget.id);
+              EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, inShelf: false));
+            }
+          }
           if (mounted) setState(() {});
         } catch (e, s) {
           var we = wrapError(e, s);
@@ -155,7 +168,7 @@ class _MangaPageState extends State<MangaPage> {
       await Future.delayed(kFlashListDuration);
       _data = result.data;
 
-      // 5. 更新漫画阅读历史
+      // 5. 更新漫画阅读历史和订阅缓存信息
       await _loadHistory();
       var newHistory = _history?.copyWith(
             mangaId: _data!.mid,
@@ -178,6 +191,16 @@ class _MangaPageState extends State<MangaPage> {
         _history = newHistory;
         await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
         EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid));
+      }
+      if (_subscribeCount != null) {
+        if (_inShelf) {
+          var cache = ShelfCache(mangaId: widget.id, mangaTitle: _data!.title, mangaCover: _data!.cover, mangaUrl: _data!.url, cachedAt: DateTime.now());
+          await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
+          EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, inShelf: true));
+        } else {
+          await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: widget.id);
+          EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, inShelf: false));
+        }
       }
     } catch (e, s) {
       _data = null;

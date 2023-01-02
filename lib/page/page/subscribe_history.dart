@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -176,7 +176,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '本地阅读历史') + (_historyUpdated ? ' (有更新)' : ''),
+                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '未登录用户的阅读历史') + (_historyUpdated ? ' (有更新)' : ''),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -196,17 +196,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           ),
         ),
         floatingActionButton: MultiSelectionFabContainer(
-          fabForNormal: ScrollAnimatedFab(
-            controller: _fabController,
-            scrollController: _controller,
-            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
-            customBehavior: (_) => false,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_top),
-              heroTag: null,
-              onPressed: () => _controller.scrollToTop(),
-            ),
-          ),
           multiSelectableController: _msController,
           onCounterPressed: () {
             var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
@@ -219,6 +208,17 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               onPressed: () => _deleteHistories(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
           ],
+          fabForNormal: ScrollAnimatedFab(
+            controller: _fabController,
+            scrollController: _controller,
+            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
+            customBehavior: (_) => false,
+            fab: FloatingActionButton(
+              child: Icon(Icons.vertical_align_top),
+              heroTag: null,
+              onPressed: () => _controller.scrollToTop(),
+            ),
+          ),
         ),
       ),
     );

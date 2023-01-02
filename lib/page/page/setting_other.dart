@@ -31,6 +31,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _clickToSearch = widget.setting.clickToSearch;
+  late var _enableMangaFlags = widget.setting.enableMangaFlags;
   late var _defaultToFavoriteTop = widget.setting.defaultToFavoriteTop;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
@@ -43,6 +44,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
+        enableMangaFlags: _enableMangaFlags,
         defaultToFavoriteTop: _defaultToFavoriteTop,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
@@ -70,7 +72,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         SettingComboBoxView<TimeoutBehavior>(
           title: '漫画下载超时时间',
           hint: '当前设置对应的漫画下载超时时间为：' + //
-              (_timeoutBehavior.determineValue(normal: [DOWNLOAD_HEAD_TIMEOUT, DOWNLOAD_IMAGE_TIMEOUT], long: [DOWNLOAD_HEAD_LTIMEOUT, DOWNLOAD_IMAGE_LTIMEOUT])?.let((l) => //
+              (_dlTimeoutBehavior.determineValue(normal: [DOWNLOAD_HEAD_TIMEOUT, DOWNLOAD_IMAGE_TIMEOUT], long: [DOWNLOAD_HEAD_LTIMEOUT, DOWNLOAD_IMAGE_LTIMEOUT])?.let((l) => //
                   '${l[0] / 1000}s + ${l[1] / 1000}s') ?? '无超时时间设置'),
           width: 75,
           value: _dlTimeoutBehavior,
@@ -128,6 +130,16 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _clickToSearch,
           onChanged: (b) {
             _clickToSearch = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '列表显示漫画右下角图标',
+          hint: '漫画右下角图标含义分别为 "在下载列表中"、"在用户书架上"、"在本地收藏中"、"已被阅读或浏览"，注：禁用该选项并不会加快列表加载时间。',
+          value: _enableMangaFlags,
+          onChanged: (b) {
+            _enableMangaFlags = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

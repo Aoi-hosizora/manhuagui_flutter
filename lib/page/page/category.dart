@@ -22,10 +22,11 @@ class CategorySubPage extends StatefulWidget {
 class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin {
   late final _controller = TabController(length: _tabs.length, vsync: this);
   var _selectedIndex = 0;
+  late final _keys = List.generate(2, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(2, (_) => ActionController());
   late final _tabs = [
-    Tuple2('类别', GenreSubPage(action: _actions[0])),
-    Tuple2('漫画作者', AuthorSubPage(action: _actions[1])),
+    Tuple2('类别', GenreSubPage(key: _keys[0], action: _actions[0])),
+    Tuple2('漫画作者', AuthorSubPage(key: _keys[1], action: _actions[1])),
   ];
   VoidCallback? _cancelHandler;
 
@@ -33,6 +34,10 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
+    _cancelHandler = EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
+      _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
+      if (mounted) setState(() {});
+    });
   }
 
   @override

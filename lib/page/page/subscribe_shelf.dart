@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
+import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 订阅-书架
 class ShelfSubPage extends StatefulWidget {
   const ShelfSubPage({
     Key? key,
+    required this.parentContext,
     this.action,
   }) : super(key: key);
 
+  final BuildContext parentContext;
   final ActionController? action;
 
   @override
@@ -38,7 +45,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    widget.action?.addAction('sync', () => Fluttertoast.showToast(msg: 'TODO')); // TODO 书架记录缓存
+    widget.action?.addAction('sync', () => _syncShelfCaches());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
         _oldAuthData = AuthManager.instance.authData;
@@ -75,9 +82,46 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
+    for (var data in result.data.data) {
+      var cache = ShelfCache(mangaId: data.mid, mangaTitle: data.title, mangaCover: data.cover, mangaUrl: data.url, cachedAt: DateTime.now());
+      await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, inShelf: true));
+    }
     await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), toQueryShelves: false);
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
+  }
+
+  Future<void> _syncShelfCaches() async {
+    if (!AuthManager.instance.logined) {
+      Fluttertoast.showToast(msg: '用户未登录');
+      return;
+    }
+
+    await showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('同步书架记录'),
+        children: [
+          IconTextDialogOption(
+            icon: Icon(Icons.sync),
+            text: Text('执行同步操作'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              ShelfCacheSubPage.syncShelfCaches(context);
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.list_alt),
+            text: Text('查看已同步的记录'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              ShelfCacheSubPage.openShelfCachePage(widget.parentContext);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override

@@ -89,7 +89,7 @@ class _AppDrawerState extends State<AppDrawer> {
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.copyWith(
-              bodyText1: Theme.of(context).textTheme.bodyText1?.copyWith(fontSize: 16),
+              bodyText1: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 16),
             ),
       ),
       child: ListTile(

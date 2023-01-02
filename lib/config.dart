@@ -2,7 +2,7 @@
 
 const APP_NAME = 'Manhuagui';
 const APP_VERSION = '1.2.2';
-const APP_LEGALESE = 'Copyright © 2020-2022 AoiHosizora';
+const APP_LEGALESE = 'Copyright © 2020-2023 AoiHosizora';
 const APP_DESCRIPTION = //
     '第三方漫画柜 ($WEB_HOMEPAGE_URL) 安卓客户端，使用 Flutter 开发。\n'
     '作者：GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>\n'
@@ -19,11 +19,11 @@ const DL_NTFC_DESCRIPTION = '显示当前的漫画下载进度';
 const LOG_CONSOLE_BUFFER = 200;
 
 const DEBUG_ERROR = true;
-const CONNECT_TIMEOUT = 5000; // 5.0s (local -> my server)
-const SEND_TIMEOUT = 5000; // 5.0s (local -> my server)
-const RECEIVE_TIMEOUT = 8000; // 8.0s (my server -> manhuagui server -> my server -> local)
-const DOWNLOAD_HEAD_TIMEOUT = 4000; // 4.0s (local -> manhuagui server -> local)
-const DOWNLOAD_IMAGE_TIMEOUT = 12000; // 12.0s (local -> manhuagui server -> local)
+const CONNECT_TIMEOUT = 8000; // 8.0s (local -> my server)
+const SEND_TIMEOUT = 8000; // 8.0s (local -> my server)
+const RECEIVE_TIMEOUT = 12000; // 12.0s (my server -> manhuagui server -> my server -> local)
+const DOWNLOAD_HEAD_TIMEOUT = 5000; // 5.0s (local -> manhuagui server -> local)
+const DOWNLOAD_IMAGE_TIMEOUT = 15000; // 15.0s (local -> manhuagui server -> local)
 const CONNECT_LTIMEOUT = CONNECT_TIMEOUT * 2;
 const SEND_LTIMEOUT = SEND_TIMEOUT * 2;
 const RECEIVE_LTIMEOUT = RECEIVE_TIMEOUT * 2;

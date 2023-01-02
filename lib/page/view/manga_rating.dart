@@ -62,7 +62,7 @@ class MangaRatingDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     var scores = [for (var i = 0; i < 5; i++) (double.tryParse(perScores[i + 1].replaceAll('%', '')) ?? 0) / 100]; // [0,1,2,3,4] => star_1,2,3,4,5
     var maxScore = scores.reduce((value, element) => value > element ? value : element);
-    var maxWidth = getDialogMaxWidth(context) - (18 * 5 + 6 + 8 + _textWidth(context, '88.8%', Theme.of(context).textTheme.bodyText2!));
+    var maxWidth = getDialogContentMaxWidth(context) - (18 * 5 + 6 + 8 + _textWidth(context, '88.8%', Theme.of(context).textTheme.bodyText2!));
     var scoreWidths = [for (var i = 0; i < 5; i++) maxWidth / maxScore * scores[i]];
     var scoreTexts = [for (var i = 0; i < 5; i++) perScores[i + 1]];
 

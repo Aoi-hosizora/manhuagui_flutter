@@ -182,7 +182,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             children: [
               IconText(
                 icon: Icon(icon, color: Colors.black54),
-                text: Text(text, style: Theme.of(context).textTheme.bodyText1?.copyWith(fontSize: 16)),
+                text: Text(text, style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 16)),
                 space: 16,
               ),
               Icon(Icons.chevron_right, color: Colors.black54),

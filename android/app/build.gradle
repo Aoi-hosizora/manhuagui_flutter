@@ -36,8 +36,8 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.aoihosizora.manhuagui'
-        // applicationId 'com.aoihosizora.manhuagui_test'
+        // applicationId 'com.aoihosizora.manhuagui'
+        applicationId 'com.aoihosizora.manhuagui_test'
         versionCode 6
         versionName '1.2.2'
 

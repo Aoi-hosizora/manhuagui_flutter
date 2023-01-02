@@ -345,17 +345,6 @@ class _DownloadPageState extends State<DownloadPage> {
           ),
         ),
         floatingActionButton: MultiSelectionFabContainer(
-          fabForNormal: ScrollAnimatedFab(
-            controller: _fabController,
-            scrollController: _controller,
-            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
-            customBehavior: (_) => false,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_top),
-              heroTag: null,
-              onPressed: () => _controller.scrollToTop(),
-            ),
-          ),
           multiSelectableController: _msController,
           onCounterPressed: () {
             var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
@@ -368,6 +357,17 @@ class _DownloadPageState extends State<DownloadPage> {
               onPressed: () => _deleteMangas(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
           ],
+          fabForNormal: ScrollAnimatedFab(
+            controller: _fabController,
+            scrollController: _controller,
+            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
+            customBehavior: (_) => false,
+            fab: FloatingActionButton(
+              child: Icon(Icons.vertical_align_top),
+              heroTag: null,
+              onPressed: () => _controller.scrollToTop(),
+            ),
+          ),
         ),
       ),
     );

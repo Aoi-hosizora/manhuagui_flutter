@@ -151,16 +151,6 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
           ),
         ),
         floatingActionButton: MultiSelectionFabContainer(
-          fabForNormal: ScrollAnimatedFab(
-            scrollController: widget.innerController,
-            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
-            customBehavior: (_) => false,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_top),
-              heroTag: null,
-              onPressed: () => widget.outerController.scrollToTop(),
-            ),
-          ),
           multiSelectableController: _msController,
           onCounterPressed: () {
             var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
@@ -174,6 +164,16 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
               onPressed: () => widget.toDeleteChapters.call(chapterIds: _msController.selectedItems.map((k) => k.value).toList()),
             ),
           ],
+          fabForNormal: ScrollAnimatedFab(
+            scrollController: widget.innerController,
+            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
+            customBehavior: (_) => false,
+            fab: FloatingActionButton(
+              child: Icon(Icons.vertical_align_top),
+              heroTag: null,
+              onPressed: () => widget.outerController.scrollToTop(),
+            ),
+          ),
         ),
       ),
     );

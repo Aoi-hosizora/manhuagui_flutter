@@ -198,6 +198,7 @@ class OtherSetting {
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
     required this.clickToSearch,
+    required this.enableMangaFlags,
     required this.defaultToFavoriteTop,
     required this.regularGroupRows,
     required this.otherGroupRows,
@@ -210,6 +211,7 @@ class OtherSetting {
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
+  final bool enableMangaFlags; // 列表显示漫画右下角图标
   final bool defaultToFavoriteTop; // 默认添加至本地收藏顶部
   final int regularGroupRows; // 单话分组章节显示行数
   final int otherGroupRows; // 其他分组章节显示行数
@@ -222,6 +224,7 @@ class OtherSetting {
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
     clickToSearch: false,
+    enableMangaFlags: true,
     defaultToFavoriteTop: false,
     regularGroupRows: 3,
     otherGroupRows: 1,
@@ -235,6 +238,7 @@ class OtherSetting {
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
     bool? clickToSearch,
+    bool? enableMangaFlags,
     bool? defaultToFavoriteTop,
     int? regularGroupRows,
     int? otherGroupRows,
@@ -247,6 +251,7 @@ class OtherSetting {
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       clickToSearch: clickToSearch ?? this.clickToSearch,
+      enableMangaFlags: enableMangaFlags ?? this.enableMangaFlags,
       defaultToFavoriteTop: defaultToFavoriteTop ?? this.defaultToFavoriteTop,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,

@@ -4,8 +4,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/page/setting_other.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
+import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -35,9 +36,11 @@ void showSubscribeDialog({
     final client = RestClient(DioManager.instance.dio);
     subscribingSetter(true);
     stateSetter();
+    bool? addedToShelf;
     try {
       await (toAdd ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: mangaId);
       inShelfSetter(toAdd);
+      addedToShelf = toAdd;
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '成功将漫画放入书架' : '成功将漫画移出书架')));
       EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inShelf: toAdd));
@@ -46,6 +49,7 @@ void showSubscribeDialog({
       var already = err.contains('已经被'), notYet = err.contains('还没有被');
       if (already || notYet) {
         inShelfSetter(already);
+        addedToShelf = already;
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(already ? '漫画已经在书架上' : '漫画尚未在书架上'))); // 漫画已经被订阅 / 漫画还没有被订阅
         EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inShelf: already));
@@ -56,6 +60,15 @@ void showSubscribeDialog({
     } finally {
       subscribingSetter(false);
       stateSetter();
+    }
+
+    if (addedToShelf == true) {
+      var cache = ShelfCache(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, cachedAt: DateTime.now());
+      await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, inShelf: true));
+    } else if (addedToShelf == false) {
+      await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: mangaId);
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, inShelf: false));
     }
   }
 
@@ -77,7 +90,7 @@ void showSubscribeDialog({
               children: [
                 if (groups != null)
                   Container(
-                    width: getDialogMaxWidth(context),
+                    width: getDialogContentMaxWidth(context),
                     padding: EdgeInsets.only(left: 5, right: 5, bottom: 12),
                     child: CustomCombobox<String>(
                       value: groupName,
@@ -93,7 +106,7 @@ void showSubscribeDialog({
                     ),
                   ),
                 Container(
-                  width: getDialogMaxWidth(context),
+                  width: getDialogContentMaxWidth(context),
                   padding: EdgeInsets.only(left: 8, right: 12, bottom: 12),
                   child: TextField(
                     controller: controller,
@@ -225,8 +238,8 @@ void showSubscribeDialog({
         context: context,
         builder: (c) => AlertDialog(
           title: Text('修改收藏备注'),
-          content: Container(
-            width: getDialogMaxWidth(context),
+          content: SizedBox(
+            width: getDialogContentMaxWidth(context),
             child: TextField(
               controller: controller,
               maxLines: 1,
@@ -286,25 +299,25 @@ void showSubscribeDialog({
       children: [
         if (AuthManager.instance.logined && !nowInShelf)
           IconTextDialogOption(
-            icon: Icon(Icons.star_border, color: Colors.grey[800]),
+            icon: Icon(Icons.star_border),
             text: Text('放入我的书架'),
             onPressed: () => pop(c, () => addToShelf(toAdd: true)),
           ),
         if (AuthManager.instance.logined && nowInShelf)
           IconTextDialogOption(
-            icon: Icon(Icons.star, color: Colors.grey[800]),
+            icon: Icon(Icons.star),
             text: Text('移出我的书架'),
             onPressed: () => pop(c, () => addToShelf(toAdd: false)),
           ),
         if (!nowInFavorite)
           IconTextDialogOption(
-            icon: Icon(Icons.bookmark_border, color: Colors.grey[800]),
+            icon: Icon(Icons.bookmark_border),
             text: Text('添加本地收藏'),
             onPressed: () => pop(c, () => addToFavorite(toAdd: true)),
           ),
         if (nowInFavorite)
           IconTextDialogOption(
-            icon: Icon(Icons.bookmark, color: Colors.grey[800]),
+            icon: Icon(Icons.bookmark),
             text: Text('取消本地收藏'),
             onPressed: () => pop(c, () => addToFavorite(toAdd: false)),
           ),
@@ -312,13 +325,13 @@ void showSubscribeDialog({
           Divider(height: 16, thickness: 1),
           if (subscribeCount != null)
             IconTextDialogOption(
-              icon: Icon(Icons.stars, color: Colors.grey[800]),
+              icon: Icon(Icons.stars),
               text: Text('共 $subscribeCount 人将漫画放入书架'),
               onPressed: () {},
             ),
           if (favoriteManga != null)
             IconTextDialogOption(
-              icon: Icon(Icons.label, color: Colors.grey[800]),
+              icon: Icon(Icons.label),
               text: Flexible(
                 child: Text('当前收藏分组：${favoriteManga.checkedGroupName}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
@@ -326,7 +339,7 @@ void showSubscribeDialog({
             ),
           if (favoriteManga != null)
             IconTextDialogOption(
-              icon: Icon(Icons.comment_bank, color: Colors.grey[800]),
+              icon: Icon(Icons.comment_bank),
               text: Flexible(
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),

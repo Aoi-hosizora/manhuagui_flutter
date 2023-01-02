@@ -33,6 +33,13 @@ class SubscribeUpdatedEvent {
   final String? changedGroup;
 }
 
+class ShelfCacheUpdatedEvent {
+  const ShelfCacheUpdatedEvent({required this.mangaId, required this.inShelf});
+
+  final int mangaId;
+  final bool inShelf;
+}
+
 class DownloadMangaProgressChangedEvent {
   const DownloadMangaProgressChangedEvent({required this.mangaId, required this.finished});
 

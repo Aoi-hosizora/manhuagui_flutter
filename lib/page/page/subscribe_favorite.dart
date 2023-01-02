@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/page/view/favorite_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -230,7 +230,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           child: Theme(
             data: Theme.of(context).copyWith(
               textTheme: Theme.of(context).textTheme.copyWith(
-                    bodyText1: Theme.of(context).textTheme.bodyText1?.copyWith(fontSize: 16),
+                    bodyText1: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 16),
                   ),
             ),
             child: ListView(
@@ -244,13 +244,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                         CustomPageRoute(
                           context: context,
                           builder: (c) => FavoriteReorderPage(
-                            groupName: _currentGroup, // TODO
+                            groupName: _currentGroup,
                           ),
                         ),
                       );
                       if (ok == true) {
                         Navigator.of(context).pop();
-                        _pdvKey.currentState?.refresh(); // TODO
+                        _pdvKey.currentState?.refresh();
                       }
                     },
                   ),
@@ -348,7 +348,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '本地收藏') + //
+                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
                       (_currentGroup == '' ? '' : '  -  $_currentGroup') + //
                       (!_favoriteUpdated ? '' : ' (有更新)'),
                   rightWidget: Row(
@@ -358,8 +358,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                       SizedBox(width: 5),
                       HelpIconView(
                         title: '"本地收藏"与"我的书架"的区别',
-                        hint: '"我的书架"与漫画柜网页版保持同步，但受限于网页版功能，"我的书架"只能按照漫画更新时间排序显示；\n\n'
-                            '"本地收藏"仅记录在移动端本地，不提供章节更新提醒，但"本地收藏"的显示顺序可自由调整，默认添加至列表末尾或开头。',
+                        hint: '"我的书架"与漫画柜网页版保持同步，但受限于网页版功能，"我的书架"只能按照漫画更新时间排序显示。\n\n'
+                            '"本地收藏"仅记录在移动端本地，不提供章节更新提醒，但"本地收藏"中漫画的显示顺序可自由调整，且支持分组管理。',
                         useRectangle: true,
                         padding: EdgeInsets.all(3),
                       ),
@@ -371,17 +371,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           ),
         ),
         floatingActionButton: MultiSelectionFabContainer(
-          fabForNormal: ScrollAnimatedFab(
-            controller: _fabController,
-            scrollController: _controller,
-            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
-            customBehavior: (_) => false,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_top),
-              heroTag: null,
-              onPressed: () => _controller.scrollToTop(),
-            ),
-          ),
           multiSelectableController: _msController,
           onCounterPressed: () {
             var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
@@ -398,6 +387,17 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               onPressed: () => _deleteFavorites(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
           ],
+          fabForNormal: ScrollAnimatedFab(
+            controller: _fabController,
+            scrollController: _controller,
+            condition: !_msController.multiSelecting ? ScrollAnimatedCondition.direction : ScrollAnimatedCondition.custom,
+            customBehavior: (_) => false,
+            fab: FloatingActionButton(
+              child: Icon(Icons.vertical_align_top),
+              heroTag: null,
+              onPressed: () => _controller.scrollToTop(),
+            ),
+          ),
         ),
       ),
     );

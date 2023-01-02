@@ -28,7 +28,7 @@ Future<void> showNewVersionDialog({
         title: Text('${cnt.version} 版本可用'),
         scrollable: true,
         content: SizedBox(
-          width: getDialogMaxWidth(context),
+          width: getDialogContentMaxWidth(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +114,7 @@ Future<void> showNotificationDialog({
         title: Text(msg.title),
         scrollable: true,
         content: SizedBox(
-          width: getDialogMaxWidth(context),
+          width: getDialogContentMaxWidth(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

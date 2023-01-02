@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -14,6 +16,9 @@ List<IconData> buildMangaCornerIcons({
   required bool inFavorite,
   required bool inHistory,
 }) {
+  if (!AppSetting.instance.other.enableMangaFlags) {
+    return [];
+  }
   return [
     if (inDownload) Icons.download,
     if (inShelf) Icons.star,
@@ -28,10 +33,11 @@ class MangaCornerFlagsStorage {
       await queryAndStoreFlags(mangaIds: [event.mangaId], toQueryDownloads: false, toQueryShelves: false, toQueryFavorites: false);
       stateSetter();
     }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ShelfCacheUpdatedEvent>((event) async {
+      await queryAndStoreFlags(mangaIds: [event.mangaId], toQueryDownloads: false, toQueryFavorites: false, toQueryHistories: false);
+      stateSetter();
+    }));
     _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((event) async {
-      if (event.inShelf != null) {
-        await queryAndStoreFlags(mangaIds: [event.mangaId], toQueryDownloads: false, toQueryFavorites: false, toQueryHistories: false);
-      }
       if (event.inFavorite != null) {
         await queryAndStoreFlags(mangaIds: [event.mangaId], toQueryDownloads: false, toQueryShelves: false, toQueryHistories: false);
       }
@@ -79,7 +85,7 @@ class MangaCornerFlagsStorage {
           _downloadsMap[mangaId] = (await DownloadDao.checkMangaExistence(mid: mangaId)) ?? false;
         }
         if (toQueryShelves) {
-          _shelvesMap[mangaId] = false; // TODO
+          _shelvesMap[mangaId] = (await ShelfCacheDao.checkExistence(username: AuthManager.instance.username, mid: mangaId)) ?? false;
         }
         if (toQueryFavorites) {
           _favoritesMap[mangaId] = (await FavoriteDao.checkExistence(username: AuthManager.instance.username, mid: mangaId)) ?? false;

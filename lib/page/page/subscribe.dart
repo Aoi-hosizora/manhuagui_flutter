@@ -24,11 +24,12 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   late final _controller = TabController(length: _tabs.length, vsync: this);
   var _selectedIndex = 0; // for tab bar
   var _currentPageIndex = 0; // for tab bar view
+  late final _keys = List.generate(3, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(3, (_) => ActionController());
   late final _tabs = [
-    Tuple2('书架', ShelfSubPage(action: _actions[0])),
-    Tuple2('收藏', FavoriteSubPage(action: _actions[1])),
-    Tuple2('阅读历史', HistorySubPage(action: _actions[2])),
+    Tuple2('书架', ShelfSubPage(key: _keys[0], action: _actions[0], parentContext: context)),
+    Tuple2('收藏', FavoriteSubPage(key: _keys[1], action: _actions[1])),
+    Tuple2('阅读历史', HistorySubPage(key: _keys[2], action: _actions[2])),
   ];
   final _cancelHandlers = <VoidCallback>[];
 
@@ -36,6 +37,10 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
+      _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
+      if (mounted) setState(() {});
+    }));
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
       _controller.animateTo(0);
       _selectedIndex = 0;

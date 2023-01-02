@@ -74,7 +74,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
             StatefulWidgetWithCallback(
               postFrameCallbackForBuild: _helper.hasSearched()
                   ? null
-                  : (_) {
+                  : (_, __) {
                       if (_helper.searchForHighestCells()) {
                         if (mounted) setState(() {});
                       }

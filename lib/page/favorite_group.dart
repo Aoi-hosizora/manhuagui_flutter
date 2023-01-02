@@ -65,8 +65,8 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
       context: context,
       builder: (c) => AlertDialog(
         title: Text('创建新分组'),
-        content: Container(
-          width: getDialogMaxWidth(context),
+        content: SizedBox(
+          width: getDialogContentMaxWidth(context),
           child: TextField(
             controller: controller,
             maxLines: 1,
@@ -133,8 +133,8 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
       context: context,
       builder: (c) => AlertDialog(
         title: Text('重命名 "${group.groupName}" 分组'),
-        content: Container(
-          width: getDialogMaxWidth(context),
+        content: SizedBox(
+          width: getDialogContentMaxWidth(context),
           child: TextField(
             controller: controller,
             maxLines: 1,

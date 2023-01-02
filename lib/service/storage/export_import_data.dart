@@ -332,7 +332,9 @@ Future<int?> _copyToPrefs(SharedPreferences prefs, SharedPreferences prefs2, Lis
 
       if (merge && key is TypedKey<List> && value is List) {
         var existedValues = prefs2.safeGet(key) ?? [];
-        value.addAll(existedValues.where((v) => !value.contains(v)));
+        if (existedValues.isNotEmpty) {
+          value.addAll(existedValues.where((v) => !value.contains(v)));
+        }
       }
       var ok = await prefs2.safeSet(key, value, canThrow: true);
       if (ok) {
