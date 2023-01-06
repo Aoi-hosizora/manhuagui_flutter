@@ -59,7 +59,6 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
     try {
       for (var i = 0; i < _favorites.length; i++) {
         var favorite = _favorites[i].copyWith(order: i + 1);
-        // print('Reorder ${favorite.mangaTitle} ${i + 1}');
         await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: favorite);
       }
 
@@ -81,10 +80,10 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
         if (!_reordered) {
           return true;
         }
-        var ok = await showDialog(
+        var ok = await showDialog<bool>(
           context: context,
           builder: (c) => AlertDialog(
-            title: Text('离开收藏顺序调整'),
+            title: Text('离开确认'),
             content: Text('当前顺序调整尚未保存，是否离开？'),
             actions: [
               TextButton(child: Text('离开'), onPressed: () => Navigator.of(c).pop(true)),
@@ -129,8 +128,9 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
                 setting: PlaceholderSetting().copyWithChinese(),
                 childBuilder: (c) => ExtendedScrollbar(
                   controller: _controller,
+                  interactive: false /* <<< */,
+                  mainAxisMargin: 2,
                   crossAxisMargin: 2,
-                  interactive: false, // <<<
                   child: ReorderableListView.builder(
                     scrollController: _controller,
                     padding: EdgeInsets.zero,
@@ -141,11 +141,8 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: i == _favorites.length - 1
-                              ? BorderSide.none
-                              : BorderSide(
-                                  width: 1,
-                                  color: Theme.of(context).dividerColor,
-                                ),
+                              ? BorderSide.none //
+                              : BorderSide(width: 1, color: Theme.of(context).dividerColor),
                         ),
                       ),
                       child: FavoriteMangaReorderLineView(

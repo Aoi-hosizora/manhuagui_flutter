@@ -21,9 +21,7 @@ class SubscribeSubPage extends StatefulWidget {
 }
 
 class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerProviderStateMixin {
-  late final _controller = TabController(length: _tabs.length, vsync: this);
-  var _selectedIndex = 0; // for tab bar
-  var _currentPageIndex = 0; // for tab bar view
+  late final _controller = TabController(length: 3, vsync: this);
   late final _keys = List.generate(3, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(3, (_) => ActionController());
   late final _tabs = [
@@ -31,6 +29,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
     Tuple2('收藏', FavoriteSubPage(key: _keys[1], action: _actions[1])),
     Tuple2('阅读历史', HistorySubPage(key: _keys[2], action: _actions[2])),
   ];
+  var _currentPageIndex = 0; // for app bar actions only
   final _cancelHandlers = <VoidCallback>[];
 
   @override
@@ -41,18 +40,9 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
     }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) {
-      _controller.animateTo(0);
-      _selectedIndex = 0;
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((_) {
-      _controller.animateTo(1);
-      _selectedIndex = 1;
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) {
-      _controller.animateTo(2);
-      _selectedIndex = 2;
-    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) => _controller.animateTo(0)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((_) => _controller.animateTo(1)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) => _controller.animateTo(2)));
   }
 
   @override
@@ -72,25 +62,19 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          tabs: _tabs
-              .map(
-                (t) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    t.item1,
-                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                  ),
+          tabs: [
+            for (var t in _tabs)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 5),
+                child: Text(
+                  t.item1,
+                  style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white, fontSize: 16),
                 ),
               )
-              .toList(),
+          ],
           onTap: (idx) {
-            if (idx == _selectedIndex) {
+            if (!_controller.indexIsChanging) {
               _actions[idx].invoke();
-            } else {
-              _selectedIndex = idx;
             }
           },
         ),
@@ -104,9 +88,15 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             ),
           if (_currentPageIndex == 1)
             AppBarActionButton(
-              icon: Icon(Icons.bookmark_border),
+              icon: Icon(Icons.bookmark),
               tooltip: '管理收藏分组',
               onPressed: () => _actions[1].invoke('manage'),
+            ),
+          if (_currentPageIndex == 2)
+            AppBarActionButton(
+              icon: Icon(Icons.delete),
+              tooltip: '清空阅读历史',
+              onPressed: () => _actions[2].invoke('clear'),
             ),
           AppBarActionButton(
             icon: Icon(Icons.search),
@@ -123,9 +113,10 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
       body: PageChangedListener(
         callPageChangedAtEnd: false,
         onPageChanged: (i) {
-          if (!_controller.indexIsChanging || // swipe manually => indexIsChanging is false
-              i == _controller.index /* select tabBar => index equals to target index */) {
-            _currentPageIndex = i; // prevent setting to middle page
+          if (!_controller.indexIsChanging || i == _controller.index /* prevent setting to middle page */) {
+            // 1. swipe manually => indexIsChanging is false
+            // 2. select tabBar => index equals to target index
+            _currentPageIndex = i;
             if (mounted) setState(() {});
           }
         },

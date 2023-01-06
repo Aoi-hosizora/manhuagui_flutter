@@ -38,7 +38,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   VoidCallback? _cancelHandler;
   AuthData? _oldAuthData;
-
   var _loginChecking = true;
   var _loginCheckError = '';
 
@@ -386,10 +385,11 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildInfoLines(
                 title: '登录统计',
                 lines: [
-                  '本次登录IP (非本地)：${_data!.loginIp}',
-                  '上次登录IP (非本地)：${_data!.lastLoginIp}',
-                  '上次登录时间：${_data!.lastLoginTime}',
+                  '当前登录时间：无统计', // TODO 待补充，存储至 Prefs
+                  '上回登录时间：${_data!.lastLoginTime}' + (_data!.formattedLastLoginDuration?.let((s) => ' ($s)') ?? ''), // TODO test
                   '累计登录天数：${_data!.cumulativeDayCount} 天',
+                  '当前登录IP：${_data!.loginIp} (服务器)',
+                  '上回登录IP：${_data!.lastLoginIp} (服务器)',
                 ],
               ),
             ],

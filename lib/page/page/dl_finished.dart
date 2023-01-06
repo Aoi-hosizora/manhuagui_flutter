@@ -63,11 +63,11 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
 
     return WillPopScope(
       onWillPop: () async {
-        if (!_msController.multiSelecting) {
-          return true;
+        if (_msController.multiSelecting) {
+          _msController.exitMultiSelectionMode();
+          return false;
         }
-        _msController.exitMultiSelectionMode();
-        return false;
+        return true;
       },
       child: Scaffold(
         body: ExtendedScrollbar(
@@ -112,7 +112,9 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                               itemBuilder: (_, key, tip) => itemWidget /* single grid */,
                             ),
                       onChapterPressed: widget.toReadChapter,
-                      onChapterLongPressed: _msController.multiSelecting ? null : (chapterId) => _msController.enterMultiSelectionMode(alsoSelect: [ValueKey<int>(chapterId)]),
+                      onChapterLongPressed: _msController.multiSelecting
+                          ? null //
+                          : (chapterId) => _msController.enterMultiSelectionMode(alsoSelect: [ValueKey<int>(chapterId)]),
                     ),
                   ),
                 ),

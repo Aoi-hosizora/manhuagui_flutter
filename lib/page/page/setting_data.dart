@@ -155,36 +155,61 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
   var mergeData = true; // default to merge
   var name = await showDialog<String>(
     context: context,
-    builder: (c) => SimpleDialog(
-      title: Text('导入数据'),
-      children: [
-        CheckBoxDialogOption(
-          initialValue: mergeData,
-          onChanged: (b) => mergeData = b,
-          text: '与现有数据合并',
-        ),
-        Divider(thickness: 1),
-        for (var name in names)
-          TextDialogOption(
-            text: Text(name),
-            onPressed: () async {
-              var ok = await showDialog<bool>(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: Text('导入数据'),
-                  content: Text('确定导入数据 "$name"，并' + (mergeData ? '与现有数据合并？' : '覆盖现有数据？')),
-                  actions: [
-                    TextButton(child: Text('导入'), onPressed: () => Navigator.of(c).pop(true)),
-                    TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
-                  ],
-                ),
-              );
-              if (ok == true) {
-                Navigator.of(c).pop(name);
-              }
-            },
+    builder: (c) => StatefulBuilder(
+      builder: (_, _setState) => SimpleDialog(
+        title: Text('导入数据'),
+        children: [
+          for (var name in names)
+            TextDialogOption(
+              text: Text(name),
+              onPressed: () async {
+                var ok = await showDialog<bool>(
+                  context: context,
+                  builder: (c) => AlertDialog(
+                    title: Text('导入数据'),
+                    content: Text('确定导入数据 "$name"，并' + (mergeData ? '与现有数据合并？' : '覆盖现有数据？')),
+                    actions: [
+                      TextButton(child: Text('导入'), onPressed: () => Navigator.of(c).pop(true)),
+                      TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  Navigator.of(c).pop(name);
+                }
+              },
+              onLongPressed: () async {
+                var ok = await showDialog<bool>(
+                  context: context,
+                  builder: (c) => AlertDialog(
+                    title: Text('删除数据'),
+                    content: Text('是否删除导入数据 "$name"？'),
+                    actions: [
+                      TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
+                      TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  ok = await deleteImportData(name);
+                  if (ok) {
+                    names.remove(name);
+                    _setState(() {});
+                    Fluttertoast.showToast(msg: '"$name" 已删除');
+                  } else {
+                    Fluttertoast.showToast(msg: '"$name" 删除失败');
+                  }
+                }
+              },
+            ),
+          Divider(thickness: 1),
+          CheckBoxDialogOption(
+            initialValue: mergeData,
+            onChanged: (b) => mergeData = b,
+            text: '与现有数据合并',
           ),
-      ],
+        ],
+      ),
     ),
   );
   if (name == null || name.isEmpty) {
@@ -249,11 +274,14 @@ Future<void> _showFakeProgressDialog(BuildContext context, String text) async {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (c) => AlertDialog(
-      contentPadding: EdgeInsets.zero,
-      content: CircularProgressDialogOption(
-        progress: CircularProgressIndicator(),
-        child: Text(text),
+    builder: (c) => WillPopScope(
+      onWillPop: () async => false,
+      child: AlertDialog(
+        contentPadding: EdgeInsets.zero,
+        content: CircularProgressDialogOption(
+          progress: CircularProgressIndicator(),
+          child: Text(text),
+        ),
       ),
     ),
   );

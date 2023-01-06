@@ -16,6 +16,7 @@ class CommentLineView extends StatelessWidget {
     this.index,
     required this.style,
     required this.onPressed,
+    this.onLongPressed,
   }) : super(key: key);
 
   /// 在 [MangaPage] / [CommentsPage] 使用
@@ -23,11 +24,13 @@ class CommentLineView extends StatelessWidget {
     Key? key,
     required Comment comment,
     required void Function() onPressed,
+    void Function()? onLongPressed,
   }) : this(
           key: key,
           comment: comment,
           style: CommentLineViewStyle.normal,
           onPressed: onPressed,
+          onLongPressed: onLongPressed,
         );
 
   /// 在 [CommentPage] 使用
@@ -35,11 +38,13 @@ class CommentLineView extends StatelessWidget {
     Key? key,
     required Comment comment,
     required void Function() onPressed,
+    void Function()? onLongPressed,
   }) : this(
           key: key,
           comment: comment,
           style: CommentLineViewStyle.large,
           onPressed: onPressed,
+          onLongPressed: onLongPressed,
         );
 
   /// 在 [CommentPage] 使用
@@ -48,18 +53,21 @@ class CommentLineView extends StatelessWidget {
     required Comment comment,
     required int index,
     required void Function() onPressed,
+    void Function()? onLongPressed,
   }) : this(
           key: key,
           comment: comment,
           index: index,
           style: CommentLineViewStyle.large,
           onPressed: onPressed,
+          onLongPressed: onLongPressed,
         );
 
   final Comment comment;
   final int? index; // only for large style and replied comment
   final CommentLineViewStyle style;
   final void Function() onPressed;
+  final void Function()? onLongPressed;
 
   bool get large => style == CommentLineViewStyle.large;
 
@@ -156,14 +164,6 @@ class CommentLineView extends StatelessWidget {
                     ),
                     SizedBox(height: !large ? 8 : 15),
                     // ****************************************************************
-                    // 评论内容
-                    // ****************************************************************
-                    Text(
-                      comment.content,
-                      style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
-                    ),
-                    SizedBox(height: !large ? 8 : 15),
-                    // ****************************************************************
                     // 回复评论 (only for normal style)
                     // ****************************************************************
                     if (!large && comment.replyTimeline.isNotEmpty) ...[
@@ -233,6 +233,14 @@ class CommentLineView extends StatelessWidget {
                       SizedBox(height: !large ? 8 : 15),
                     ],
                     // ****************************************************************
+                    // 评论内容
+                    // ****************************************************************
+                    Text(
+                      comment.content,
+                      style: !large ? Theme.of(context).textTheme.bodyText2 : Theme.of(context).textTheme.subtitle1,
+                    ),
+                    SizedBox(height: !large ? 8 : 15),
+                    // ****************************************************************
                     // 评论数据
                     // ****************************************************************
                     Row(
@@ -274,6 +282,7 @@ class CommentLineView extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onPressed,
+              onLongPress: onLongPressed,
             ),
           ),
         ),

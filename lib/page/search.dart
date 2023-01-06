@@ -462,7 +462,7 @@ class _SearchPageState extends State<SearchPage> {
                                 context: context,
                                 builder: (c) => AlertDialog(
                                   title: Text('清空历史记录'),
-                                  content: Text('确定要清空所有历史记录吗？'),
+                                  content: Text('是否清空所有历史记录？'),
                                   actions: [
                                     TextButton(
                                       child: Text('清空'),

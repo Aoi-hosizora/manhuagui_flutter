@@ -37,6 +37,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
+    widget.action?.addAction('clear', () => _clearHistories());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) {
         _oldAuthData = AuthManager.instance.authData;
@@ -53,6 +54,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   @override
   void dispose() {
     widget.action?.removeAction();
+    widget.action?.removeAction('clear');
     _cancelHandlers.forEach((c) => c.call());
     _flagStorage.dispose();
     _controller.dispose();
@@ -78,6 +80,38 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     await _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), toQueryHistories: false);
     if (mounted) setState(() {});
     return PagedList(list: data, next: page + 1);
+  }
+
+  Future<void> _clearHistories() async {
+    // TODO test
+    if (_data.isEmpty) {
+      return;
+    }
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('清空确认'),
+        content: Text('是否清空所有阅读历史？'),
+        actions: [
+          TextButton(child: Text('清空'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+        ],
+      ),
+    );
+    if (ok != true) {
+      return;
+    }
+
+    // 退出多选模式、更新列表和数据库
+    _msController.exitMultiSelectionMode();
+    for (var manga in _data) {
+      await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: manga.mangaId);
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: manga.mangaId));
+    }
+    _data.clear();
+    _removed = 0;
+    _total = 0;
+    if (mounted) setState(() {});
   }
 
   Future<void> _deleteHistories({required List<int> mangaIds}) async {
@@ -127,11 +161,11 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     super.build(context);
     return WillPopScope(
       onWillPop: () async {
-        if (!_msController.multiSelecting) {
-          return true;
+        if (_msController.multiSelecting) {
+          _msController.exitMultiSelectionMode();
+          return false;
         }
-        _msController.exitMultiSelectionMode();
-        return false;
+        return true;
       },
       child: Scaffold(
         body: MultiSelectable<ValueKey<int>>(

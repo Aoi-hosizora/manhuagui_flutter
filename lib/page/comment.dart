@@ -22,7 +22,7 @@ class _CommentPageState extends State<CommentPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
-  void _onCommentPressed(Comment comment) {
+  void _showPopupMenu(Comment comment) {
     showDialog(
       context: context,
       builder: (c) => SimpleDialog(
@@ -88,7 +88,8 @@ class _CommentPageState extends State<CommentPage> {
           children: [
             CommentLineView.largeWithoutReplies(
               comment: widget.comment,
-              onPressed: () => _onCommentPressed(widget.comment),
+              onPressed: () => _showPopupMenu(widget.comment),
+              onLongPressed: () => _showPopupMenu(widget.comment),
             ),
             if (widget.comment.replyTimeline.isEmpty)
               Padding(
@@ -106,7 +107,8 @@ class _CommentPageState extends State<CommentPage> {
                 CommentLineView.largeForReply(
                   comment: widget.comment.replyTimeline[i].toComment(),
                   index: i + 1,
-                  onPressed: () => _onCommentPressed(widget.comment.replyTimeline[i].toComment()),
+                  onPressed: () => _showPopupMenu(widget.comment.replyTimeline[i].toComment()),
+                  onLongPressed: () => _showPopupMenu(widget.comment.replyTimeline[i].toComment()),
                 ),
                 if (i != widget.comment.replyTimeline.length - 1)
                   Container(

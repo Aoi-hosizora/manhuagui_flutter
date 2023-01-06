@@ -32,15 +32,12 @@ class AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<AppDrawer> {
   VoidCallback? _cancelHandler;
-  late CustomPageRouteThemeData? _routeTheme = CustomPageRouteTheme.of(context);
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _cancelHandler = AuthManager.instance.listen(null, (_) {
-        if (mounted) setState(() {});
-      });
+      _cancelHandler = AuthManager.instance.listen(null, (_) => mountedSetState(() {}));
     });
   }
 
@@ -50,9 +47,11 @@ class _AppDrawerState extends State<AppDrawer> {
     super.dispose();
   }
 
+  late CustomPageRouteThemeData? _routeTheme = CustomPageRouteTheme.of(context);
+
   void _gotoPage(Widget page) async {
     var isFirst = false;
-    Navigator.popUntil(context, (route) {
+    Navigator.of(context).popUntil((route) {
       isFirst = route.isFirst;
       return true;
     });
@@ -80,7 +79,7 @@ class _AppDrawerState extends State<AppDrawer> {
     Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
-  Future<void> _gotoHomePageTab(dynamic event) async {
+  Future<void> _gotoTabByEvent(dynamic event) async {
     await _popUntilFirst();
     EventBusManager.instance.fire(event);
   }
@@ -173,11 +172,11 @@ class _AppDrawerState extends State<AppDrawer> {
           _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
           _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage())),
           Divider(thickness: 1),
-          _buildItem('我的书架', Icons.star, null, () => _gotoHomePageTab(ToShelfRequestedEvent())),
-          _buildItem('本地收藏', Icons.bookmark, null, () => _gotoHomePageTab(ToFavoriteRequestedEvent())),
-          _buildItem('阅读历史', Icons.history, null, () => _gotoHomePageTab(ToHistoryRequestedEvent())),
-          _buildItem('最近更新', Icons.cached, null, () => _gotoHomePageTab(ToRecentRequestedEvent())),
-          _buildItem('漫画排行', Icons.trending_up, null, () => _gotoHomePageTab(ToRankingRequestedEvent())),
+          _buildItem('我的书架', Icons.star, null, () => _gotoTabByEvent(ToShelfRequestedEvent())),
+          _buildItem('本地收藏', Icons.bookmark, null, () => _gotoTabByEvent(ToFavoriteRequestedEvent())),
+          _buildItem('阅读历史', Icons.history, null, () => _gotoTabByEvent(ToHistoryRequestedEvent())),
+          _buildItem('最近更新', Icons.cached, null, () => _gotoTabByEvent(ToRecentRequestedEvent())),
+          _buildItem('漫画排行', Icons.trending_up, null, () => _gotoTabByEvent(ToRankingRequestedEvent())),
           Divider(thickness: 1),
           _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
           _buildItem('设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(SettingPage())),

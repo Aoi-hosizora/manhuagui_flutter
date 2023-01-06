@@ -5,6 +5,14 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!-- TODO -->
+
+    <!--
+        android:label="Manhuagui"
+        android:label="Manhuagui Test"
+        android:label="Manhuagui Beta"
+    -->
+
     <application
         android:label="Manhuagui"
         android:name="${applicationName}"

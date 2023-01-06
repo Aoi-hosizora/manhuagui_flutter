@@ -201,7 +201,7 @@ class _DownloadPageState extends State<DownloadPage> {
     }
 
     var alsoDeleteFile = AppSetting.instance.dl.defaultToDeleteFiles;
-    var ok = await showDialog(
+    var ok = await showDialog<bool>(
       context: context,
       builder: (c) => StatefulBuilder(
         builder: (c, _setState) => AlertDialog(
@@ -265,11 +265,11 @@ class _DownloadPageState extends State<DownloadPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (!_msController.multiSelecting) {
-          return true;
+        if (_msController.multiSelecting) {
+          _msController.exitMultiSelectionMode();
+          return false;
         }
-        _msController.exitMultiSelectionMode();
-        return false;
+        return true;
       },
       child: Scaffold(
         appBar: AppBar(

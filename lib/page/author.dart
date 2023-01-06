@@ -230,37 +230,38 @@ class _AuthorPageState extends State<AuthorPage> {
             SliverToBoxAdapter(
               child: Material(
                 color: Colors.white,
-                child: InkWell(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Text(
-                      '作者介绍：\n' + (_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim()),
-                      style: Theme.of(context).textTheme.bodyText2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Text(
+                          '作者介绍：\n' + (_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim()),
+                          style: Theme.of(context).textTheme.bodyText2,
+                        ),
+                      ),
+                      onTap: () => copyText(_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim(), showToast: true),
                     ),
-                  ),
-                  onTap: () => copyText(_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim(), showToast: true),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 1),
-                color: Colors.white,
-                child: Divider(height: 0, thickness: 1),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Material(
-                color: Colors.white,
-                child: InkWell(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Text(
-                      '最新收录：\n《${_data!.newestMangaTitle}》',
-                      style: Theme.of(context).textTheme.bodyText2,
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      color: Colors.white,
+                      child: Divider(height: 0, thickness: 1),
                     ),
-                  ),
-                  onTap: () => copyText(_data!.newestMangaTitle, showToast: true),
+                    InkWell(
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Text(
+                          '最新收录：\n《${_data!.newestMangaTitle}》',
+                          style: Theme.of(context).textTheme.bodyText2,
+                        ),
+                      ),
+                      onTap: () => copyText(_data!.newestMangaTitle, showToast: true),
+                    ),
+                  ],
                 ),
               ),
             ),

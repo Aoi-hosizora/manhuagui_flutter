@@ -3,11 +3,13 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_dialog.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -92,6 +94,10 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
+  Future<void> _showPopupMenu(ShelfManga manga) async {
+    // TODO
+  }
+
   Future<void> _syncShelfCaches() async {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
@@ -174,6 +180,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => ShelfMangaLineView(
           manga: item,
+          onLongPressed: () => _showPopupMenu(item),
           inDownload: _flagStorage.isInDownload(mangaId: item.mid),
           inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
           inHistory: _flagStorage.isInHistory(mangaId: item.mid),

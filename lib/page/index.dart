@@ -21,7 +21,6 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   final _scaffoldKey = GlobalKey<DrawerScaffoldState>();
   late final _controller = TabController(length: 4, vsync: this);
   final _physicsController = CustomScrollPhysicsController();
-  var _selectedIndex = 0;
   late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
     Tuple3('首页', Icons.home, HomeSubPage(action: _actions[0])),
@@ -34,7 +33,6 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
@@ -51,19 +49,18 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   }
 
   Future<void> _jumpToPageByEvent(int index, dynamic event) async {
-    _controller.animateTo(index);
-    if (_selectedIndex != index) {
-      // need to wait for animating, and then re-fire event (only fire twice in total)
-      await Future.delayed(_controller.animationDuration);
-      EventBusManager.instance.fire(event);
+    if (_controller.index != index) {
+      _controller.animateTo(index); // jump to target page with animation
+      if (mounted) setState(() {}); // set state right after calling animateTo
+      await Future.delayed(_controller.animationDuration); // wait for page transition animation
+      EventBusManager.instance.fire(event); // refire event for JUST LOADED pages (only fire twice in total)
     }
-    _selectedIndex = index;
-    if (mounted) setState(() {});
   }
 
   DateTime? _lastBackPressedTime;
 
   Future<bool> _onWillPop() async {
+    // call onWillPop for descendant elements
     var scopes = context.findDescendantElementsDFS<WillPopScope>(-1, (element) {
       if (element.widget is! WillPopScope) {
         return null;
@@ -75,11 +72,12 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     }
     for (var s in scopes) {
       var willPop = await s.onWillPop?.call(); // test onWillPop of descendants
-      if (willPop != null && !willPop) {
+      if (willPop != null && willPop == false) {
         return false;
       }
     }
 
+    // close drawer and show snack bar
     if (_scaffoldKey.currentState?.isDrawerOpen == true || _scaffoldKey.currentState?.scaffoldState?.isDrawerOpen == true) {
       return true; // close drawer
     }
@@ -128,21 +126,20 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
           ),
           child: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            items: _tabs
-                .map(
-                  (t) => BottomNavigationBarItem(
-                    label: t.item1,
-                    icon: Icon(t.item2),
-                  ),
-                )
-                .toList(),
-            onTap: (index) async {
-              if (_selectedIndex == index) {
-                _actions[_selectedIndex].invoke();
+            currentIndex: _controller.index,
+            items: [
+              for (var t in _tabs)
+                BottomNavigationBarItem(
+                  label: t.item1,
+                  icon: Icon(t.item2),
+                  tooltip: '',
+                ),
+            ],
+            onTap: (i) {
+              if (_controller.index == i) {
+                _actions[i].invoke();
               } else {
-                _controller.animateTo(index);
-                _selectedIndex = index;
+                _controller.animateTo(i);
                 if (mounted) setState(() {});
               }
             },

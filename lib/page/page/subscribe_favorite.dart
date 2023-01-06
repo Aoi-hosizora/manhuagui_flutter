@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/favorite_group.dart';
 import 'package:manhuagui_flutter/page/favorite_reorder.dart';
-import 'package:manhuagui_flutter/page/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/view/favorite_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
@@ -110,7 +109,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       return;
     }
 
-    var addToTop = AppSetting.instance.other.defaultToFavoriteTop;
+    var addToTop = false; // 默认添加到末尾
     showDialog(
       context: context,
       builder: (c) => SimpleDialog(
@@ -125,9 +124,9 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               onPressed: () async {
                 // 退出对话框、退出多选模式、保存新设置、调整顺序
                 var newGroupName = group.groupName;
+                var newCheckedGroupName = group.checkedGroupName;
                 Navigator.of(c).pop();
                 _msController.exitMultiSelectionMode();
-                await updateOtherSettingDefaultToFavToTop(addToTop);
                 if (addToTop) {
                   mangaIds = mangaIds.reversed.toList(); // 移至顶部需要倒序一个一个移动，移至底部则不需要
                 }
@@ -140,24 +139,19 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                   }
                   var order = await FavoriteDao.getFavoriteNewOrder(username: AuthManager.instance.username, groupName: newGroupName, addToTop: addToTop);
                   var newFavorite = oldFavorite.copyWith(groupName: newGroupName, order: order);
-                  await FavoriteDao.addOrUpdateFavorite(
-                    username: AuthManager.instance.username,
-                    favorite: newFavorite,
-                  );
+                  await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
                   if (newGroupName != _currentGroup) {
                     _data.removeWhere((el) => el.mangaId == mid); // 不同分组则删除数据
                     _removed++;
                     _total--;
                   } else {
                     _data.remove(oldFavorite); // 同一分组则更新列表
-                    if (addToTop) {
-                      _data.insert(0, newFavorite);
-                    } else {
-                      _data.add(newFavorite);
-                    }
+                    addToTop ? _data.insert(0, newFavorite) : _data.add(newFavorite);
                   }
-                  EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mid, inFavorite: true));
+                  EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mid, inFavorite: true)); // 不设置 changedGroup
                 }
+
+                Fluttertoast.showToast(msg: '已将 ${mangaIds.length} 项漫画移动至 $newCheckedGroupName');
                 if (mounted) setState(() {});
               },
             ),
@@ -218,11 +212,15 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     super.build(context);
     return WillPopScope(
       onWillPop: () async {
-        if (!_msController.multiSelecting) {
-          return true;
+        if (_scaffoldKey.currentState?.isEndDrawerOpen == true) {
+          Navigator.of(context).pop();
+          return false; // close drawer
         }
-        _msController.exitMultiSelectionMode();
-        return false;
+        if (_msController.multiSelecting) {
+          _msController.exitMultiSelectionMode();
+          return false;
+        }
+        return true;
       },
       child: Scaffold(
         key: _scaffoldKey,
@@ -238,7 +236,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                 AppBar(
                   leading: AppBarActionButton(
                     icon: Icon(Icons.low_priority),
-                    tooltip: '调整收藏顺序',
+                    tooltip: '调整漫画顺序',
                     onPressed: () async {
                       var ok = await Navigator.of(context).push<bool>(
                         CustomPageRoute(
@@ -249,6 +247,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                         ),
                       );
                       if (ok == true) {
+                        // 漫画顺序已调整
                         Navigator.of(context).pop();
                         _pdvKey.currentState?.refresh();
                       }
@@ -263,20 +262,35 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                       icon: Icon(Icons.label_outline),
                       tooltip: '管理收藏分组',
                       onPressed: () async {
-                        if (_groups == null) return;
+                        if (_groups == null) {
+                          return;
+                        }
+                        String? mappedGroupName;
                         var ok = await Navigator.of(context).push<bool>(
                           CustomPageRoute(
                             context: context,
                             builder: (c) => FavoriteGroupPage(
                               groups: _groups!,
+                              listenedGroupName: _currentGroup,
+                              onGroupChanged: (n) => mappedGroupName = n, // null => 被删除; not_null => 未被重命名/被重命名
                             ),
                           ),
                         );
                         if (ok == true) {
+                          // 修改可能被保存
                           _groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
-                          if (_groups?.where((el) => el.groupName == _currentGroup).isEmpty == true) {
-                            _currentGroup = ''; // 当前分组被删除，转至默认分组
+                          if (mappedGroupName == null) {
+                            _currentGroup = ''; // 被删除 => 转至默认分组
                             _pdvKey.currentState?.refresh();
+                          } else {
+                            if (_currentGroup == mappedGroupName!) {
+                              // 未被重命名 => pass
+                            } else {
+                              _currentGroup = mappedGroupName!; // 被重命名 => 修改当前分组名
+                              var newData = _data.map((f) => f.copyWith(groupName: _currentGroup)).toList();
+                              _data.clear();
+                              _data.addAll(newData);
+                            }
                           }
                           if (mounted) setState(() {});
                         }

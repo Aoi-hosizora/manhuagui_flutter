@@ -20,8 +20,7 @@ class CategorySubPage extends StatefulWidget {
 }
 
 class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin {
-  late final _controller = TabController(length: _tabs.length, vsync: this);
-  var _selectedIndex = 0;
+  late final _controller = TabController(length: 2, vsync: this);
   late final _keys = List.generate(2, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(2, (_) => ActionController());
   late final _tabs = [
@@ -57,25 +56,19 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          tabs: _tabs
-              .map(
-                (t) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    t.item1,
-                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                  ),
+          tabs: [
+            for (var t in _tabs)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 5),
+                child: Text(
+                  t.item1,
+                  style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white, fontSize: 16),
                 ),
               )
-              .toList(),
+          ],
           onTap: (idx) {
-            if (idx == _selectedIndex) {
+            if (!_controller.indexIsChanging) {
               _actions[idx].invoke();
-            } else {
-              _selectedIndex = idx;
             }
           },
         ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
-/// 通用行，在 [TinyMangaLineView] / [SmallAuthorLineView] / [MangaRankLinkView] / [ShelfMangaLineView] / [MangaHistoryLineView] / [DownloadLineView] 使用
+/// 通用行，在 [TinyMangaLineView] / [SmallAuthorLineView] / [MangaRankLinkView] / [ShelfMangaLineView] / [MangaHistoryLineView] / [DownloadLineView] / [FavoriteMangaLineView] 使用
 class GeneralLineView extends StatelessWidget {
   const GeneralLineView({
     Key? key,

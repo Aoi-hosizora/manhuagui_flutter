@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
@@ -15,6 +13,10 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
+/// 漫画页/章节阅读页-订阅对话框
+///
+// TODO 整理该文件
+
 void showSubscribeDialog({
   required BuildContext context,
   required int mangaId,
@@ -25,10 +27,10 @@ void showSubscribeDialog({
   required bool nowInFavorite,
   required int? subscribeCount,
   required FavoriteManga? favoriteManga,
-  required void Function(bool subscribing) subscribingSetter,
   required VoidCallback stateSetter,
+  required void Function(bool subscribing) subscribingSetter,
   required void Function(bool inShelf) inShelfSetter,
-  required void Function(bool inShelf) inFavoriteSetter,
+  required void Function(bool inFavorite) inFavoriteSetter,
   required void Function(FavoriteManga? favorite) favoriteMangaSetter,
 }) {
   // ****************************************************************
@@ -36,6 +38,7 @@ void showSubscribeDialog({
     final client = RestClient(DioManager.instance.dio);
     subscribingSetter(true);
     stateSetter();
+
     bool? addedToShelf;
     try {
       await (toAdd ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: mangaId);
@@ -77,14 +80,15 @@ void showSubscribeDialog({
     var groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
     var groupName = '';
     var remark = '';
-    var addToTop = AppSetting.instance.other.defaultToFavoriteTop;
+    var addToTop = false; // 默认添加到末尾
+
     if (toAdd) {
       var controller = TextEditingController();
       var ok = await showDialog<bool>(
         context: context,
         builder: (c) => StatefulBuilder(
           builder: (c, _setState) => AlertDialog(
-            title: Text('收藏漫画选项'),
+            title: Text('收藏漫画'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -111,7 +115,7 @@ void showSubscribeDialog({
                   child: TextField(
                     controller: controller,
                     maxLines: 1,
-                    autofocus: true,
+                    autofocus: false,
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.symmetric(vertical: 5),
                       labelText: '漫画备注',
@@ -143,7 +147,6 @@ void showSubscribeDialog({
         return;
       }
       remark = controller.text.trim();
-      await updateOtherSettingDefaultToFavToTop(addToTop);
     }
 
     subscribingSetter(true);
@@ -186,13 +189,13 @@ void showSubscribeDialog({
     if (oldFavorite == null) {
       return;
     }
-
     if (updateGroup) {
       var groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
       if (groups == null) {
         return;
       }
-      var addToTop = AppSetting.instance.other.defaultToFavoriteTop;
+
+      var addToTop = false; // 默认添加到末尾
       showDialog(
         context: context,
         builder: (c) => SimpleDialog(
@@ -206,17 +209,13 @@ void showSubscribeDialog({
                 ),
                 onPressed: () async {
                   Navigator.of(c).pop();
-                  await updateOtherSettingDefaultToFavToTop(addToTop);
                   var newGroupName = group.groupName;
                   var order = await FavoriteDao.getFavoriteNewOrder(username: AuthManager.instance.username, groupName: newGroupName, addToTop: addToTop);
                   var newFavorite = oldFavorite.copyWith(groupName: newGroupName, order: order);
-                  await FavoriteDao.addOrUpdateFavorite(
-                    username: AuthManager.instance.username,
-                    favorite: newFavorite,
-                  );
+                  await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
                   favoriteMangaSetter(newFavorite);
                   ScaffoldMessenger.of(context).clearSnackBars();
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画收藏于 "${newFavorite.checkedGroupName}"')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画收藏于 "$newGroupName"')));
                   EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: oldFavorite.groupName)); // 移动分组
                   EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: newFavorite.groupName));
                   stateSetter();
@@ -267,13 +266,10 @@ void showSubscribeDialog({
                 }
                 Navigator.of(c).pop();
                 var newFavorite = oldFavorite.copyWith(remark: newRemark);
-                await FavoriteDao.addOrUpdateFavorite(
-                  username: AuthManager.instance.username,
-                  favorite: newFavorite,
-                );
+                await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
                 favoriteMangaSetter(newFavorite);
                 ScaffoldMessenger.of(context).clearSnackBars();
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(newFavorite.remark == '' ? '已删除收藏备注' : '已将备注修改为 "${newFavorite.remark}"')));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(newRemark == '' ? '已删除收藏备注' : '已将备注修改为 "$newRemark"')));
                 EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: newFavorite.groupName));
                 stateSetter();
               },

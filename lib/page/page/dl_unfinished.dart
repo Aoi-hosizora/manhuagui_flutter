@@ -79,11 +79,11 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
 
     return WillPopScope(
       onWillPop: () async {
-        if (!_msController.multiSelecting) {
-          return true;
+        if (_msController.multiSelecting) {
+          _msController.exitMultiSelectionMode();
+          return false;
         }
-        _msController.exitMultiSelectionMode();
-        return false;
+        return true;
       },
       child: Scaffold(
         body: ExtendedScrollbar(

@@ -77,15 +77,15 @@ class FavoriteDao {
     if (groupName == null) {
       results = await db.safeRawQuery(
         '''SELECT COUNT(*)
-         FROM $_tblFavorite
-         WHERE $_colUsername = ?''',
+           FROM $_tblFavorite
+           WHERE $_colUsername = ?''',
         [username],
       );
     } else {
       results = await db.safeRawQuery(
         '''SELECT COUNT(*)
-         FROM $_tblFavorite
-         WHERE $_colUsername = ? AND $_colGroupName == ?''',
+           FROM $_tblFavorite
+           WHERE $_colUsername = ? AND $_colGroupName == ?''',
         [username, groupName],
       );
     }
@@ -145,18 +145,18 @@ class FavoriteDao {
       }
       results = await db.safeRawQuery(
         '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colRemark, $_colListOrder, $_colCreatedAt 
-         FROM $_tblFavorite
-         WHERE $_colUsername = ? AND $_colGroupName = ?
-         ORDER BY $_colListOrder ASC, $_colCreatedAt DESC
-         LIMIT $limit OFFSET $offset''',
+           FROM $_tblFavorite
+           WHERE $_colUsername = ? AND $_colGroupName = ?
+           ORDER BY $_colListOrder ASC, $_colCreatedAt DESC
+           LIMIT $limit OFFSET $offset''',
         [username, groupName],
       );
     } else {
       results = await db.safeRawQuery(
         '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colRemark, $_colListOrder, $_colCreatedAt 
-         FROM $_tblFavorite
-         WHERE $_colUsername = ? AND $_colGroupName = ?
-         ORDER BY $_colListOrder ASC, $_colCreatedAt DESC''',
+           FROM $_tblFavorite
+           WHERE $_colUsername = ? AND $_colGroupName = ?
+           ORDER BY $_colListOrder ASC, $_colCreatedAt DESC''',
         [username, groupName],
       );
     }
@@ -309,19 +309,30 @@ class FavoriteDao {
            WHERE $_colGUsername = ? AND $_colGGroupName = ?''',
         [group.groupName, group.order, group.createdAt.toIso8601String(), username, testGroupName],
       );
-      await updateMangasGroupName(username: username, oldName: testGroupName, newName: group.groupName);
+      await updateMangasGroupName(username: username, oldName: testGroupName, newName: group.groupName, addToTop: null); // 移动分组，不修改 order
     }
     return rows != null && rows >= 1;
   }
 
-  static Future<bool> updateMangasGroupName({required String username, required String oldName, required String newName}) async {
+  static Future<bool> updateMangasGroupName({required String username, required String oldName, required String newName, bool? addToTop}) async {
     final db = await DBManager.instance.getDB();
-    var ok = await db.safeRawUpdate(
-      '''UPDATE $_tblFavorite
-         SET $_colGroupName = ?
-         WHERE $_colUsername = ? AND $_colGroupName = ?''',
-      [newName, username, oldName],
-    );
+    int? ok;
+    if (addToTop == null) {
+      ok = await db.safeRawUpdate(
+        '''UPDATE $_tblFavorite
+           SET $_colGroupName = ?
+           WHERE $_colUsername = ? AND $_colGroupName = ?''',
+        [newName, username, oldName],
+      );
+    } else {
+      var newOrder = await getFavoriteNewOrder(username: username, groupName: newName, addToTop: addToTop);
+      ok = await db.safeRawUpdate(
+        '''UPDATE $_tblFavorite
+           SET $_colGroupName = ?, $_colListOrder = ?
+           WHERE $_colUsername = ? AND $_colGroupName = ?''',
+        [newName, newOrder, username, oldName],
+      );
+    }
     return ok != null;
   }
 
@@ -340,7 +351,7 @@ class FavoriteDao {
       return false; // cannot delete the default group
     }
     final db = await DBManager.instance.getDB();
-    await updateMangasGroupName(username: username, oldName: groupName, newName: '');
+    await updateMangasGroupName(username: username, oldName: groupName, newName: '', addToTop: false); // 移动分组，默认添加到末尾
     var rows = await db.safeRawDelete(
       '''DELETE FROM $_tblFavoriteGroup
          WHERE $_colGUsername = ? AND $_colGGroupName = ?''',

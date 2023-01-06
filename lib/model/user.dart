@@ -34,6 +34,35 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
+
+  Duration? get lastLoginDuration {
+    if (lastLoginTime.isEmpty) {
+      return null;
+    }
+    var ymd = lastLoginTime.split(' ')[0].split('/');
+    if (ymd.length != 3) {
+      return null;
+    }
+    var y = int.tryParse(ymd[0]);
+    var m = int.tryParse(ymd[1]);
+    var d = int.tryParse(ymd[2]);
+    if (y == null || m == null || d == null) {
+      return null;
+    }
+    var date = DateTime(y, m, d);
+    return DateTime.now().difference(date);
+  }
+
+  String? get formattedLastLoginDuration {
+    var duration = lastLoginDuration;
+    if (duration == null) {
+      return null;
+    }
+    if (duration.inDays == 0) {
+      return '今天';
+    }
+    return '${duration.inDays} 天前';
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

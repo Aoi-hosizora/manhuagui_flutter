@@ -55,6 +55,19 @@ Future<List<String>> getImportDataNames() async {
   }
 }
 
+Future<bool> deleteImportData(String name) async {
+  try {
+    var directory = Directory(await _getDataDirectoryPath(name));
+    if (await directory.exists()) {
+      await directory.delete(recursive: true);
+    }
+    return true;
+  } catch (e, s) {
+    globalLogger.e('deleteImportData', e, s);
+    return false;
+  }
+}
+
 // ======
 // export
 // ======

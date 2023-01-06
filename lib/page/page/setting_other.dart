@@ -32,7 +32,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _clickToSearch = widget.setting.clickToSearch;
   late var _enableMangaFlags = widget.setting.enableMangaFlags;
-  late var _defaultToFavoriteTop = widget.setting.defaultToFavoriteTop;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
 
@@ -45,7 +44,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
         enableMangaFlags: _enableMangaFlags,
-        defaultToFavoriteTop: _defaultToFavoriteTop,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
       );
@@ -136,19 +134,10 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         ),
         SettingSwitcherView(
           title: '列表显示漫画右下角图标',
-          hint: '漫画右下角图标含义分别为 "在下载列表中"、"在用户书架上"、"在本地收藏中"、"已被阅读或浏览"，注：禁用该选项并不会加快列表加载时间。',
+          hint: '漫画右下角图标含义分别为 "在下载列表中"、"在被同步的书架上"、"在本地收藏中"、"已被阅读或浏览"。',
           value: _enableMangaFlags,
           onChanged: (b) {
             _enableMangaFlags = b;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          title: '默认添加至本地收藏顶部',
-          value: _defaultToFavoriteTop,
-          onChanged: (b) {
-            _defaultToFavoriteTop = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -211,12 +200,4 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
     ),
   );
   return ok ?? false;
-}
-
-Future<void> updateOtherSettingDefaultToFavToTop(bool favoriteTop) async {
-  var setting = AppSetting.instance.other;
-  var newSetting = setting.copyWith(defaultToFavoriteTop: favoriteTop);
-  AppSetting.instance.update(other: newSetting);
-  await AppSettingPrefs.saveOtherSetting();
-  EventBusManager.instance.fire(AppSettingChangedEvent());
 }

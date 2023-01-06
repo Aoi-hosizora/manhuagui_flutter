@@ -22,8 +22,7 @@ class HomeSubPage extends StatefulWidget {
 }
 
 class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStateMixin {
-  late final _controller = TabController(length: _tabs.length, vsync: this);
-  var _selectedIndex = 0;
+  late final _controller = TabController(length: 4, vsync: this);
   late final _keys = List.generate(4, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
@@ -42,14 +41,8 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
     }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((_) {
-      _controller.animateTo(1);
-      _selectedIndex = 1;
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((_) {
-      _controller.animateTo(3);
-      _selectedIndex = 3;
-    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((_) => _controller.animateTo(1)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((_) => _controller.animateTo(3)));
   }
 
   @override
@@ -69,25 +62,19 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          tabs: _tabs
-              .map(
-                (t) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    t.item1,
-                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                  ),
+          tabs: [
+            for (var t in _tabs)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 5),
+                child: Text(
+                  t.item1,
+                  style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white, fontSize: 16),
                 ),
-              )
-              .toList(),
+              ),
+          ],
           onTap: (idx) {
-            if (idx == _selectedIndex) {
+            if (!_controller.indexIsChanging) {
               _actions[idx].invoke();
-            } else {
-              _selectedIndex = idx;
             }
           },
         ),

@@ -317,7 +317,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     }
 
     var alsoDeleteFile = AppSetting.instance.dl.defaultToDeleteFiles;
-    var ok = await showDialog(
+    var ok = await showDialog<bool>(
       context: context,
       builder: (c) => StatefulBuilder(
         builder: (c, _setState) => AlertDialog(

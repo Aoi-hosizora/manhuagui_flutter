@@ -164,10 +164,10 @@ class _SettingPageState extends State<SettingPage> {
                 actions: [
                   TextButton(
                     child: Text('打开'),
-                    onPressed: () => launchInBrowser(
-                      context: context,
-                      url: RELEASE_URL,
-                    ),
+                    onPressed: () {
+                      Navigator.of(c).pop();
+                      launchInBrowser(context: context, url: RELEASE_URL);
+                    },
                   ),
                   TextButton(
                     child: Text('取消'),

@@ -13,12 +13,14 @@ class ShelfMangaLineView extends StatelessWidget {
     this.inDownload = false,
     this.inFavorite = false,
     this.inHistory = false,
+    this.onLongPressed,
   }) : super(key: key);
 
   final ShelfManga manga;
   final bool inDownload;
   final bool inFavorite;
   final bool inHistory;
+  final VoidCallback? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +44,7 @@ class ShelfMangaLineView extends StatelessWidget {
           ),
         ),
       ),
+      onLongPressed: onLongPressed,
     );
   }
 }
