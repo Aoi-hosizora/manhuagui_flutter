@@ -170,7 +170,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                         child: SizedBox(
                           width: 2000,
                           child: SelectableText(
-                            _filteredBuffer.map((el) => el.plainText).join('\n'),
+                            _filteredBuffer.map((el) => el.plainText).join('\n'), // TODO 底部被遮挡
                             style: Theme.of(context).textTheme.bodyText2?.copyWith(fontFamily: 'monospace'),
                           ),
                         ),

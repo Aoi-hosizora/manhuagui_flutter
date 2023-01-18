@@ -248,7 +248,7 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     if (favoriteGroupRows == null) {
       return false;
     }
-    if (readHistoryRows > 0) {
+    if (favoriteMangaRows > 0) {
       counter.favoriteMangas = favoriteMangaRows;
     }
     return true;

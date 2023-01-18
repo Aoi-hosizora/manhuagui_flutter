@@ -18,6 +18,7 @@ class DlFinishedSubPage extends StatefulWidget {
     required this.history,
     required this.toReadChapter,
     required this.toDeleteChapters,
+    required this.toAdjustChapter,
   }) : super(key: key);
 
   final ScrollController innerController;
@@ -29,6 +30,7 @@ class DlFinishedSubPage extends StatefulWidget {
   final MangaHistory? history;
   final void Function(int cid) toReadChapter;
   final void Function({required List<int> chapterIds}) toDeleteChapters;
+  final void Function(int cid) toAdjustChapter;
 
   @override
   State<DlFinishedSubPage> createState() => _DlFinishedSubPageState();
@@ -56,7 +58,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var succeededChapters = widget.mangaEntity.downloadedChapters
+    var chapters = widget.mangaEntity.downloadedChapters
         .where((el) => el.succeeded && !el.needUpdate) // 仅包括下载成功且不需要更新的章节
         .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
         .toList();
@@ -91,7 +93,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                     stateSetter: () => mountedSetState(() {}),
                     onModeChanged: (_) => mountedSetState(() {}),
                     child: MangaSimpleTocView(
-                      chapters: succeededChapters,
+                      chapters: chapters,
                       invertOrder: widget.invertOrder,
                       showNewBadge: false,
                       highlightedChapters: [widget.history?.chapterId ?? 0],
@@ -131,6 +133,14 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
             MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
           },
           fabForMultiSelection: [
+            MultiSelectionFabOption(
+              child: Icon(Icons.more_horiz),
+              show: _msController.selectedItems.length == 1,
+              onPressed: () => chapters.where((el) => el.item2.cid == _msController.selectedItems.first.value).firstOrNull?.let((chapter) {
+                _msController.exitMultiSelectionMode();
+                widget.toAdjustChapter(chapter.item2.cid);
+              }),
+            ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
               onPressed: () => widget.toDeleteChapters.call(chapterIds: _msController.selectedItems.map((k) => k.value).toList()),

@@ -455,7 +455,7 @@ class _SearchPageState extends State<SearchPage> {
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
                                 child: Center(
-                                  child: Text('清空历史记录'),
+                                  child: Text('清空历史记录'), // TODO 管理历史记录
                                 ),
                               ),
                               onTap: () => showDialog(

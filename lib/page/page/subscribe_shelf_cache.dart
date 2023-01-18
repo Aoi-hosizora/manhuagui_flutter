@@ -15,7 +15,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
-/// 订阅-书架-同步书架记录
+/// 订阅-书架-供"同步我的书架"弹出菜单使用
 class ShelfCacheSubPage extends StatefulWidget {
   const ShelfCacheSubPage({
     Key? key,
@@ -214,8 +214,8 @@ class _ShelfCacheSubPageState extends State<ShelfCacheSubPage> {
         title: Text(cache.mangaTitle),
         children: [
           IconTextDialogOption(
-            icon: Icon(Icons.import_contacts),
-            text: Text('查看漫画'),
+            icon: Icon(Icons.arrow_forward),
+            text: Text('查看该漫画'),
             onPressed: () {
               Navigator.of(c).pop();
               Navigator.of(context).push(

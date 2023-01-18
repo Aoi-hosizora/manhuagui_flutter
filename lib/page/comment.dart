@@ -49,7 +49,7 @@ class _CommentPageState extends State<CommentPage> {
             },
           ),
           IconTextDialogOption(
-            icon: Icon(Icons.account_box),
+            icon: Icon(Icons.account_circle),
             text: Text('查看用户头像'),
             onPressed: () {
               Navigator.of(c).pop();

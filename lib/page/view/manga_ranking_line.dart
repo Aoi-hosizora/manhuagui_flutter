@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 
@@ -92,6 +93,13 @@ class MangaRankingLineView extends StatelessWidget {
             url: manga.url,
           ),
         ),
+      ),
+      onLongPressed: () => showPopupMenuForMangaList(
+        context: context,
+        mangaId: manga.mid,
+        mangaTitle: manga.title,
+        mangaCover: manga.cover,
+        mangaUrl: manga.url,
       ),
     );
   }

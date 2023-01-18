@@ -45,6 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       }
       if (mounted) setState(() {});
     });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _checkLogined());
   }
 
   @override
@@ -52,6 +53,10 @@ class _LoginPageState extends State<LoginPage> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkLogined() async {
+    // TODO AuthManager.instance.check => 检查到 "" 用户已登录，是否保持登录状态
   }
 
   Future<void> _login() async {
@@ -92,6 +97,7 @@ class _LoginPageState extends State<LoginPage> {
     } else {
       await AuthPrefs.addUsernamePasswordPair(username, '');
     }
+    await AuthPrefs.setLoginDateTime(DateTime.now());
 
     // pop
     Navigator.of(context).pop();

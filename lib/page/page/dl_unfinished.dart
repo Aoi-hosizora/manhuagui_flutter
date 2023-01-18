@@ -62,19 +62,19 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    List<DownloadedChapter> unfinishedChapters;
+    List<DownloadedChapter> chapters;
     if (!widget.showAllChapters) {
-      unfinishedChapters = widget.mangaEntity.downloadedChapters
+      chapters = widget.mangaEntity.downloadedChapters
           .where((el) => !el.succeeded || el.needUpdate) // 仅包括未下载成功或需要更新的章节
           .toList();
     } else {
-      unfinishedChapters = widget.mangaEntity.downloadedChapters // 包括所有章节
+      chapters = widget.mangaEntity.downloadedChapters // 包括所有章节
           .toList();
     }
     if (!widget.invertOrder) {
-      unfinishedChapters.sort((i, j) => i.chapterId.compareTo(j.chapterId));
+      chapters.sort((i, j) => i.chapterId.compareTo(j.chapterId));
     } else {
-      unfinishedChapters.sort((i, j) => j.chapterId.compareTo(i.chapterId));
+      chapters.sort((i, j) => j.chapterId.compareTo(i.chapterId));
     }
 
     return WillPopScope(
@@ -99,7 +99,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
               SliverOverlapInjector(
                 handle: widget.injectorHandler,
               ),
-              if (unfinishedChapters.isEmpty)
+              if (chapters.isEmpty)
                 SliverToBoxAdapter(
                   child: Container(
                     color: Colors.white,
@@ -112,7 +112,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                     ),
                   ),
                 ),
-              if (unfinishedChapters.isNotEmpty)
+              if (chapters.isNotEmpty)
                 MultiSelectable<ValueKey<int>>(
                   controller: _msController,
                   stateSetter: () => mountedSetState(() {}),
@@ -120,7 +120,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                   child: SliverList(
                     delegate: SliverChildListDelegate(
                       <Widget>[
-                        for (var chapter in unfinishedChapters)
+                        for (var chapter in chapters)
                           SelectableCheckboxItem<ValueKey<int>>(
                             key: ValueKey<int>(chapter.chapterId),
                             checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
@@ -159,6 +159,14 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
             MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
           },
           fabForMultiSelection: [
+            MultiSelectionFabOption(
+              child: Icon(Icons.more_horiz),
+              show: _msController.selectedItems.length == 1,
+              onPressed: () => chapters.where((el) => el.chapterId == _msController.selectedItems.first.value).firstOrNull?.let((chapter) {
+                _msController.exitMultiSelectionMode();
+                widget.toAdjustChapter(chapter.chapterId);
+              }),
+            ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
               onPressed: () => widget.toDeleteChapters.call(chapterIds: _msController.selectedItems.map((k) => k.value).toList()),

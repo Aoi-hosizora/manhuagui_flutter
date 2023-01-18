@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -37,6 +38,7 @@ class MineSubPage extends StatefulWidget {
 class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   VoidCallback? _cancelHandler;
+
   AuthData? _oldAuthData;
   var _loginChecking = true;
   var _loginCheckError = '';
@@ -67,6 +69,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
 
   var _loading = false;
   User? _data;
+  DateTime? _currLoginDateTime;
   var _error = '';
   var _checkining = false;
 
@@ -82,6 +85,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
+      _currLoginDateTime = await AuthPrefs.getLoginDateTime();
     } catch (e, s) {
       _data = null;
       var we = wrapError(e, s);
@@ -103,12 +107,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
 
   Future<void> _checkin() async {
     var password = await AuthPrefs.getUserPassword(AuthManager.instance.username);
-    if (password == null) {
+    if (password == null || password.isEmpty) {
       await showDialog(
         context: context,
         builder: (c) => AlertDialog(
           title: Text('登录签到'),
-          content: Text('只有在登录漫画柜时保存密码才能一键登录签到。'),
+          content: Text('只有在登录漫画柜时勾选 "保存密码" 才能一键登录签到。'), // TODO test
           actions: [
             TextButton(
               child: Text('确定'),
@@ -134,6 +138,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       if (mounted) setState(() {});
     }
 
+    await AuthPrefs.setLoginDateTime(DateTime.now());
     await _loadUser();
     if (_data != null) {
       Fluttertoast.showToast(msg: '登录签到成功，已累计登录${_data!.cumulativeDayCount}天');
@@ -182,7 +187,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               IconText(
                 icon: Icon(icon, color: Colors.black54),
                 text: Text(text, style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 16)),
-                space: 16,
+                space: 14,
               ),
               Icon(Icons.chevron_right, color: Colors.black54),
             ],
@@ -197,29 +202,51 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     return Divider(height: 0, thickness: thickness, indent: indent, endIndent: indent);
   }
 
-  Widget _buildInfoLines({required String title, required List<String> lines}) {
+  Widget _buildInfoLines({required IconData icon, required String title, required List<String> lines, String? hint}) {
     return Container(
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.only(left: 15, right: 15, top: 8),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.subtitle1,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: IconText(
+                  icon: Icon(icon, color: Colors.black54),
+                  text: Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  space: 14,
+                ),
+              ),
+              if (hint != null)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16 - 6, vertical: 10 - 6),
+                  child: HelpIconView(
+                    title: title,
+                    hint: hint,
+                    iconSize: 22,
+                    padding: EdgeInsets.all(6),
+                    iconColor: Colors.black54,
+                  ),
+                ),
+            ],
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: EdgeInsets.only(left: 10, right: 10, bottom: 10),
             child: _buildDivider(thickness: 1, indent: 0),
           ),
           for (var line in lines)
             Padding(
-              padding: EdgeInsets.only(left: 15, right: 15, bottom: 8),
+              padding: EdgeInsets.only(left: 16, right: 16, bottom: 10),
               child: Text(
                 line,
-                style: Theme.of(context).textTheme.subtitle1,
+                style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 16),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -262,7 +289,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
             ),
           ],
           foregroundColor: Colors.transparent,
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.transparent /* TODO 滚动 body 时布局重叠 */,
           elevation: 0,
         ),
         extendBodyBehindAppBar: true,
@@ -373,25 +400,29 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
               SizedBox(height: 12),
               _buildInfoLines(
+                icon: Icons.account_box,
                 title: '个人信息',
                 lines: [
                   '会员等级：${_data!.className}',
                   '个人成长值 / 账户积分：${_data!.score} 点',
                   '累计发送 ${_data!.totalCommentCount} 条评论，当前 ${_data!.unreadMessageCount} 条消息未读',
-                  '注册时间：${_data!.registerTime}',
+                  '注册时间：${_data!.formattedRegisterDateTime}', // yyyy/MM/dd HH:mm:ss
                 ],
               ),
               SizedBox(height: 12),
               _buildInfoLines(
+                icon: Icons.poll,
                 title: '登录统计',
+                hint: '注：登录IP并非指本设备的IP地址，而是指本第三方应用使用的服务器的IP地址。',
                 lines: [
-                  '当前登录时间：无统计', // TODO 待补充，存储至 Prefs
-                  '上回登录时间：${_data!.lastLoginTime}' + (_data!.formattedLastLoginDuration?.let((s) => ' ($s)') ?? ''), // TODO test
-                  '累计登录天数：${_data!.cumulativeDayCount} 天',
-                  '当前登录IP：${_data!.loginIp} (服务器)',
-                  '上回登录IP：${_data!.lastLoginIp} (服务器)',
+                  '当前登录时间：${_data!.formattedCurrLoginDateTimeWithDuration(_currLoginDateTime)}', // yyyy/MM/dd HH:mm:ss (x天前)
+                  '上回登录时间：${_data!.formattedLastLoginDateTimeWithDuration}', // yyyy/MM/dd HH:mm:ss (x天前)
+                  '累计登录时长：${_data!.cumulativeDayCount}天，' + (!User.isTodayLogined(_currLoginDateTime) ? '今天尚未登录签到' : '今天已登录签到'),
+                  '当前登录IP：${_data!.loginIp}',
+                  '上回登录IP：${_data!.lastLoginIp}',
                 ],
               ),
+              SizedBox(height: 12),
             ],
           ),
         ),

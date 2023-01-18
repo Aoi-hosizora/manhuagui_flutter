@@ -44,6 +44,7 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   carousel_slider: ^4.1.1
   flutter_typeahead: 3.2.7
+  path_icon: ^0.7.0
 
   # file system & others
   path: 1.8.0

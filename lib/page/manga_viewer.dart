@@ -16,7 +16,7 @@ import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
-import 'package:manhuagui_flutter/page/page/subscribe_dialog.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -490,7 +490,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   }
 
   void _subscribe() {
-    showSubscribeDialog(
+    showPopupMenuForSubscribing(
       context: context,
       mangaId: widget.mangaId,
       mangaTitle: _data!.mangaTitle,
@@ -500,11 +500,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       nowInFavorite: _inFavorite,
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
-      subscribingSetter: (s) => _subscribing = s,
-      stateSetter: () => mountedSetState(() {}),
-      inShelfSetter: (s) => _inShelf = s,
-      inFavoriteSetter: (s) => _inFavorite = s,
-      favoriteMangaSetter: (m) => _favoriteManga = m,
+      subscribing: (s) => mountedSetState(() => _subscribing = s),
+      inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
+      inFavoriteSetter: (f) => mountedSetState(() => _inFavorite = f),
+      favoriteSetter: (f) => mountedSetState(() => _favoriteManga = f),
     );
   }
 

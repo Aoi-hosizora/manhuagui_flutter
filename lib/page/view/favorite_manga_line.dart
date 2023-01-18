@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 
@@ -31,9 +32,9 @@ class FavoriteMangaLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.mangaCover,
       title: manga.mangaTitle,
-      icon1: Icons.label_outline,
+      icon1: Icons.folder_outlined,
       text1: '${manga.checkedGroupName}${manga.remark.trim().isEmpty ? '' : '・备注 ${manga.remark.trim()}'}',
-      icon2: history == null || !history!.read ? Icons.web_asset : Icons.import_contacts,
+      icon2: history == null || !history!.read ? CustomIcons.opened_empty_book : Icons.import_contacts,
       text2: history == null ? '尚未浏览' : (!history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle} 第${history!.chapterPage}页'),
       icon3: Icons.access_time,
       text3: '添加于 ${manga.formattedCreatedAt}',

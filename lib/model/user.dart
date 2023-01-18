@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user.g.dart';
@@ -35,33 +36,64 @@ class User {
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
-  Duration? get lastLoginDuration {
-    if (lastLoginTime.isEmpty) {
+  static DateTime? stringToDateTime(String s) {
+    if (s.isEmpty) {
       return null;
     }
-    var ymd = lastLoginTime.split(' ')[0].split('/');
-    if (ymd.length != 3) {
+    var df = DateFormat('yyyy/M/d HH:mm:ss');
+    try {
+      return df.parse(s);
+    } catch (_) {
       return null;
     }
-    var y = int.tryParse(ymd[0]);
-    var m = int.tryParse(ymd[1]);
-    var d = int.tryParse(ymd[2]);
-    if (y == null || m == null || d == null) {
-      return null;
-    }
-    var date = DateTime(y, m, d);
-    return DateTime.now().difference(date);
   }
 
-  String? get formattedLastLoginDuration {
-    var duration = lastLoginDuration;
-    if (duration == null) {
-      return null;
-    }
-    if (duration.inDays == 0) {
+  static String formatDateTime(DateTime dt, {bool ss = true}) {
+    var df = DateFormat(ss ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm');
+    return df.format(dt);
+  }
+
+  static String formatDuration(DateTime old) {
+    var now = DateTime.now();
+    now = DateTime(now.year, now.month, now.day);
+    old = DateTime(old.year, old.month, old.day);
+    var du = now.difference(old);
+    if (du.inDays == 0) {
       return '今天';
     }
-    return '${duration.inDays} 天前';
+    return '${du.inDays}天前';
+  }
+
+  String get formattedRegisterDateTime {
+    var dt = stringToDateTime(registerTime);
+    if (dt == null) {
+      return registerTime;
+    }
+    return formatDateTime(dt, ss: false);
+  }
+
+  String get formattedLastLoginDateTimeWithDuration {
+    var dt = stringToDateTime(lastLoginTime);
+    if (dt == null) {
+      return lastLoginTime;
+    }
+    return '${formatDateTime(dt)} (${formatDuration(dt)})';
+  }
+
+  String formattedCurrLoginDateTimeWithDuration(DateTime? currLoginTime) {
+    var dt = currLoginTime;
+    if (dt == null) {
+      return '未知';
+    }
+    return '${formatDateTime(dt)} (${formatDuration(dt)})';
+  }
+
+  static bool isTodayLogined(DateTime? currLoginTime) {
+    if (currLoginTime == null) {
+      return false;
+    }
+    var now = DateTime.now();
+    return currLoginTime.year == now.year && currLoginTime.month == now.month && currLoginTime.day == now.day;
   }
 }
 

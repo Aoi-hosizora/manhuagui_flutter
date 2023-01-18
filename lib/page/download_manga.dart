@@ -563,6 +563,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   history: _history,
                   toReadChapter: _readChapter,
                   toDeleteChapters: _deleteChapters,
+                  toAdjustChapter: _adjustChapterDetails,
                 ),
                 // ****************************************************************
                 // 未完成下载的章节 => 等待下载/正在下载/下载失败

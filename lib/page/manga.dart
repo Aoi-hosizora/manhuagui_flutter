@@ -16,9 +16,10 @@ import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
-import 'package:manhuagui_flutter/page/page/subscribe_dialog.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_rating.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
@@ -166,7 +167,7 @@ class _MangaPageState extends State<MangaPage> {
       _error = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
-      _data = result.data;
+      _data = result.data; // TODO 数据可能有异常，会导致历史数据更新有误
 
       // 5. 更新漫画阅读历史和订阅缓存信息
       await _loadHistory();
@@ -248,7 +249,7 @@ class _MangaPageState extends State<MangaPage> {
   }
 
   void _subscribe() {
-    showSubscribeDialog(
+    showPopupMenuForSubscribing(
       context: context,
       mangaId: _data!.mid,
       mangaTitle: _data!.title,
@@ -258,11 +259,10 @@ class _MangaPageState extends State<MangaPage> {
       nowInFavorite: _inFavorite,
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
-      subscribingSetter: (s) => _subscribing = s,
-      stateSetter: () => mountedSetState(() {}),
-      inShelfSetter: (s) => _inShelf = s,
-      inFavoriteSetter: (s) => _inFavorite = s,
-      favoriteMangaSetter: (m) => _favoriteManga = m,
+      subscribing: (s) => mountedSetState(() => _subscribing = s),
+      inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
+      inFavoriteSetter: (f) => mountedSetState(() => _inFavorite = f),
+      favoriteSetter: (f) => mountedSetState(() => _favoriteManga = f),
     );
   }
 
@@ -399,7 +399,7 @@ class _MangaPageState extends State<MangaPage> {
   void _longPressHistoryAction() {
     String text;
     if (_history == null) {
-      text = '尚未开始阅读该漫画，且不保留浏览痕迹。';
+      text = '尚未开始阅读该漫画，且当前浏览记录不会被保留。';
     } else if (!_history!.read) {
       text = '尚未开始阅读该漫画。';
     } else {
@@ -573,7 +573,7 @@ class _MangaPageState extends State<MangaPage> {
                               iconPadding: EdgeInsets.symmetric(vertical: 3.2),
                             ),
                             IconText(
-                              icon: Icon(Icons.bookmark, size: 20, color: Colors.orange),
+                              icon: Icon(Icons.category, size: 20, color: Colors.orange),
                               text: TextGroup.normal(
                                 texts: [
                                   PlainTextItem(text: '类别：'),
@@ -674,7 +674,7 @@ class _MangaPageState extends State<MangaPage> {
                       ),
                       ActionItem(
                         text: _history == null || !_history!.read ? '开始阅读' : '继续阅读',
-                        icon: _history == null ? Icons.web_asset : Icons.import_contacts,
+                        icon: _history == null ? CustomIcons.opened_empty_star_book : (!_history!.read ? CustomIcons.opened_empty_book : Icons.import_contacts),
                         action: () => _read(chapterId: null),
                         longPress: _longPressHistoryAction,
                       ),
@@ -762,7 +762,7 @@ class _MangaPageState extends State<MangaPage> {
                           style: TextStyle(color: Colors.black),
                           texts: [
                             if (_showBriefIntroduction) ...[
-                              PlainTextItem(text: _data!.briefIntroduction),
+                              PlainTextItem(text: _data!.briefIntroduction), // TODO fontSize, lineHeight
                               PlainTextItem(
                                 text: '　展开详情',
                                 style: TextStyle(color: Theme.of(context).primaryColor),
@@ -827,6 +827,7 @@ class _MangaPageState extends State<MangaPage> {
                   color: Colors.white,
                   child: MangaTocView(
                     groups: _data!.chapterGroups,
+                    // TODO 长按弹出菜单，阅读 / 下载 / 删除历史, 添加 prefix icon
                     full: false,
                     firstGroupRowsIfNotFull: AppSetting.instance.other.regularGroupRows,
                     otherGroupsRowsIfNotFull: AppSetting.instance.other.otherGroupRows,
@@ -860,7 +861,7 @@ class _MangaPageState extends State<MangaPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '评论区 (共 $_commentTotal 条)',
+                        '评论区 (共 $_commentTotal 条)', // TODO 添加 prefix icon
                         style: Theme.of(context).textTheme.subtitle1,
                       ),
                       Material(

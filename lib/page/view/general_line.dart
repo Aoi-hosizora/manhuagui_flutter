@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 /// 通用行，在 [TinyMangaLineView] / [SmallAuthorLineView] / [MangaRankLinkView] / [ShelfMangaLineView] / [MangaHistoryLineView] / [DownloadLineView] / [FavoriteMangaLineView] 使用
@@ -51,13 +52,13 @@ class GeneralLineView extends StatelessWidget {
   final String title;
 
   // basic rows
-  final IconData? icon1;
+  final dynamic icon1;
   final String? text1;
-  final IconData? icon2;
+  final dynamic icon2;
   final String? text2;
-  final IconData? icon3;
+  final dynamic icon3;
   final String? text3;
-  final List<IconData>? cornerIcons;
+  final List<dynamic>? cornerIcons;
 
   // custom rows
   final List<Widget>? customRows; // 取代上面的 iconX 和 textX
@@ -181,9 +182,9 @@ class GeneralLineIconText extends StatelessWidget {
     this.textCornerSpace,
   }) : super(key: key);
 
-  final IconData? icon;
+  final dynamic icon;
   final String? text;
-  final List<IconData>? cornerIcons;
+  final List<dynamic>? cornerIcons;
   final EdgeInsets? padding;
   final double? iconSize;
   final double? cornerIconSize;
@@ -197,7 +198,7 @@ class GeneralLineIconText extends StatelessWidget {
     return Padding(
       padding: padding ?? EdgeInsets.only(bottom: 3),
       child: IconText.texts(
-        icon: Icon(
+        icon: CustomIcon(
           icon,
           size: iconSize ?? 20,
           color: Colors.orange,
@@ -218,7 +219,7 @@ class GeneralLineIconText extends StatelessWidget {
               padding: EdgeInsets.only(
                 left: i > 0 ? (cornerSpace ?? 4) : 0,
               ),
-              child: Icon(
+              child: CustomIcon(
                 cornerIcons![i],
                 size: cornerIconSize ?? 18.5,
                 color: Colors.grey[500],

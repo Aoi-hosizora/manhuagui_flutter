@@ -35,6 +35,25 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (widget.mangas.isEmpty) {
+      return Container(
+        color: Colors.white,
+        width: MediaQuery.of(context).size.width,
+        height: widget.height,
+        child: PlaceholderText(
+          state: PlaceholderState.nothing,
+          childBuilder: (_) => SizedBox.shrink(),
+          setting: PlaceholderSetting(
+            showNothingRetry: false,
+            iconSize: 42,
+            textStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.grey[600]),
+          ).copyWithChinese(
+            nothingText: '漫画推荐列表为空',
+          ),
+        ),
+      );
+    }
+
     return Stack(
       children: [
         CarouselSlider.builder(

@@ -79,7 +79,8 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
 
     // close drawer and show snack bar
     if (_scaffoldKey.currentState?.isDrawerOpen == true || _scaffoldKey.currentState?.scaffoldState?.isDrawerOpen == true) {
-      return true; // close drawer
+      _scaffoldKey.currentState?.closeDrawer();
+      return false;
     }
     var now = DateTime.now();
     if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime!) > Duration(seconds: 2)) {

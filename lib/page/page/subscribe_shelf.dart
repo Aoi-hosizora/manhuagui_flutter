@@ -3,13 +3,12 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/page/subscribe_dialog.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
-import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -38,8 +37,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   VoidCallback? _cancelHandler;
-  AuthData? _oldAuthData;
 
+  AuthData? _oldAuthData;
   var _loginChecking = true;
   var _loginCheckError = '';
 
@@ -47,7 +46,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    widget.action?.addAction('sync', () => _syncShelfCaches());
+    widget.action?.addAction('sync', () => _openPopupMenuForShelfCache());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
         _oldAuthData = AuthManager.instance.authData;
@@ -94,11 +93,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
-  Future<void> _showPopupMenu(ShelfManga manga) async {
-    // TODO
-  }
-
-  Future<void> _syncShelfCaches() async {
+  Future<void> _openPopupMenuForShelfCache() async {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
       return;
@@ -107,11 +102,11 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     await showDialog(
       context: context,
       builder: (c) => SimpleDialog(
-        title: Text('同步书架记录'),
+        title: Text('同步我的书架'),
         children: [
           IconTextDialogOption(
             icon: Icon(Icons.sync),
-            text: Text('执行同步操作'),
+            text: Text('同步'),
             onPressed: () async {
               Navigator.of(c).pop();
               ShelfCacheSubPage.syncShelfCaches(context);
@@ -180,7 +175,21 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => ShelfMangaLineView(
           manga: item,
-          onLongPressed: () => _showPopupMenu(item),
+          onLongPressed: () => showPopupMenuForMangaList(
+            context: context,
+            mangaId: item.mid,
+            mangaTitle: item.title,
+            mangaCover: item.cover,
+            mangaUrl: item.url,
+            mustInShelf: true,
+            inShelfSetter: (inShelf) {
+              if (!inShelf) {
+                _data.removeWhere((el) => el.mid == item.mid); // TODO deal with deleting shelf
+                _total--; // TODO removed++
+                if (mounted) setState(() {});
+              }
+            },
+          ),
           inDownload: _flagStorage.isInDownload(mangaId: item.mid),
           inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
           inHistory: _flagStorage.isInHistory(mangaId: item.mid),

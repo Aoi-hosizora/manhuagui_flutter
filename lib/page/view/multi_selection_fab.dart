@@ -4,10 +4,12 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 class MultiSelectionFabOption {
   const MultiSelectionFabOption({
     required this.child,
+    this.show = true,
     required this.onPressed,
   });
 
   final Widget child;
+  final bool show;
   final VoidCallback onPressed;
 }
 
@@ -60,7 +62,7 @@ class MultiSelectionFabContainer extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(bottom: kMiniButtonOffsetAdjustment),
                 child: AnimatedFab(
-                  show: multiSelectableController.multiSelecting,
+                  show: multiSelectableController.multiSelecting && opt.show,
                   fab: FloatingActionButton(
                     child: opt.child,
                     mini: true,

@@ -83,7 +83,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
           if (_currentPageIndex == 0)
             AppBarActionButton(
               icon: Icon(Icons.sync),
-              tooltip: '同步书架记录',
+              tooltip: '同步我的书架',
               onPressed: () => _actions[0].invoke('sync'),
             ),
           if (_currentPageIndex == 1)

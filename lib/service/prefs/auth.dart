@@ -11,6 +11,7 @@ class AuthPrefs {
   static const _rememberUsernameKey = BoolKey('AuthPrefs_rememberUsername');
   static const _rememberPasswordKey = BoolKey('AuthPrefs_rememberPassword');
   static const _usernamePasswordPairsKey = StringListKey('AuthPrefs_usernamePasswordPairs');
+  static const _loginDateTimeKey = StringKey('AuthPrefs_loginDateTime');
 
   static Future<String> getToken() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -61,6 +62,16 @@ class AuthPrefs {
     data.removeWhere((t) => t.item1 == username);
     await prefs.safeSet<List<String>>(_usernamePasswordPairsKey, _usernamePasswordTuplesToStrings(data));
     return data;
+  }
+
+  static Future<DateTime?> getLoginDateTime() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    return DateTime.tryParse(prefs.safeGet<String>(_loginDateTimeKey) ?? '');
+  }
+
+  static Future<void> setLoginDateTime(DateTime dateTime) async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    await prefs.safeSet<String>(_loginDateTimeKey, dateTime.toIso8601String());
   }
 
   static List<Tuple2<String, String>> _usernamePasswordStringsToTuples(List<String> data) {

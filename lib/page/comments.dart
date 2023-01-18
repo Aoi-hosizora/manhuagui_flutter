@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -53,8 +54,12 @@ class _CommentsPageState extends State<CommentsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('漫画评论'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
       ),
+      drawer: AppDrawer(
+        currentSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PaginationListView<Comment>(
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),

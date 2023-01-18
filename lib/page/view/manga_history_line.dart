@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 
@@ -29,7 +30,7 @@ class MangaHistoryLineView extends StatelessWidget {
       title: history.mangaTitle,
       icon1: null,
       text1: null,
-      icon2: !history.read ? Icons.web_asset : Icons.import_contacts,
+      icon2: !history.read ? CustomIcons.opened_empty_book : Icons.import_contacts,
       text2: !history.read ? '未开始阅读' : '阅读至 ${history.chapterTitle} 第${history.chapterPage}页',
       icon3: Icons.access_time,
       text3: '浏览于 ${history.formattedLastTime}',

@@ -192,10 +192,23 @@ class HomepageMangaGroupList {
   Map<String, dynamic> toJson() => _$HomepageMangaGroupListToJson(this);
 
   List<TinyBlockManga> get carouselMangas {
-    var p1 = daily.sublist(0, 8).map((e) => e.toTinyBlock()).toList(); // # = 8
-    var p2 = serial.topGroup.mangas.sublist(0, 4); // # = 4
+    var p1 = daily.sublist(0, 8.clamp(0, daily.length)).map((e) => e.toTinyBlock()).toList(); // # = 8
+    var p2 = serial.topGroup.mangas.sublist(0, 4.clamp(0, serial.topGroup.mangas.length)); // # = 4
     return [
-      ...{p1[0], p1[1], p1[2], p2[0], p2[1], p1[3], p1[4], p1[5], p2[2], p2[3], p1[6], p1[7]}, // # ≒ 12
+      ...{
+        if (p1.isNotEmpty) p1[0],
+        if (p1.length >= 2) p1[1],
+        if (p1.length >= 3) p1[2],
+        if (p2.isNotEmpty) p2[0],
+        if (p2.length >= 2) p2[1],
+        if (p1.length >= 4) p1[3],
+        if (p1.length >= 5) p1[4],
+        if (p1.length >= 6) p1[5],
+        if (p2.length >= 3) p2[2],
+        if (p2.length >= 4) p2[3],
+        if (p1.length >= 7) p1[6],
+        if (p1.length >= 8) p1[7],
+      }, // # ≒ 12
     ];
   }
 }

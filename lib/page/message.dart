@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/message.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/message_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -115,7 +116,7 @@ class _MessagePageState extends State<MessagePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('历史消息'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.notifications_none),
@@ -129,6 +130,10 @@ class _MessagePageState extends State<MessagePage> {
           ),
         ],
       ),
+      drawer: AppDrawer(
+        currentSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshableListView<Message>(
         key: _rdvKey,
         data: _data,

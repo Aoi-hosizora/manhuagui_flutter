@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
 /// 作者行，[SmallAuthor]，在 [AuthorSubPage] 使用
@@ -33,6 +34,12 @@ class SmallAuthorLineView extends StatelessWidget {
             url: author.url,
           ),
         ),
+      ),
+      onLongPressed: () => showPopupMenuForAuthorList(
+        context: context,
+        authorId: author.aid,
+        authorName: author.name,
+        authorUrl: author.url,
       ),
     );
   }

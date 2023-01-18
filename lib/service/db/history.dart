@@ -169,13 +169,22 @@ class HistoryDao {
     return rows != null && rows >= 1;
   }
 
-  static Future<bool> deleteHistory({required String username, required int mid}) async {
+  static Future<bool> deleteHistory({required String username, required int? mid}) async {
     final db = await DBManager.instance.getDB();
-    var rows = await db.safeRawDelete(
-      '''DELETE FROM $_tblHistory
-         WHERE $_colUsername = ? AND $_colMangaId = ?''',
-      [username, mid],
-    );
+    int? rows;
+    if (mid != null) {
+      rows = await db.safeRawDelete(
+        '''DELETE FROM $_tblHistory
+           WHERE $_colUsername = ? AND $_colMangaId = ?''',
+        [username, mid],
+      );
+    } else {
+      rows = await db.safeRawDelete(
+        '''DELETE FROM $_tblHistory
+           WHERE $_colUsername = ?''',
+        [username],
+      );
+    }
     return rows != null && rows >= 1;
   }
 }

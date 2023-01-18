@@ -85,6 +85,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     EventBusManager.instance.fire(ev2);
     Future.delayed(Duration(seconds: 1), () {
       if (_canceled) {
+        // TODO 下载时当所有页面都被 cache，就会出现下载已完成但通知仍存在的问题
         DownloadNotificationHelper.cancelNotification(mangaId); // 以防万一，等待1s后再取消系统通知一次
       }
     });

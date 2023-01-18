@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
@@ -83,7 +84,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   }
 
   Future<void> _clearHistories() async {
-    // TODO test
     if (_data.isEmpty) {
       return;
     }
@@ -104,9 +104,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
 
     // 退出多选模式、更新列表和数据库
     _msController.exitMultiSelectionMode();
+    await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: null);
     for (var manga in _data) {
-      await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: manga.mangaId);
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: manga.mangaId));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: manga.mangaId)); // TODO ignore once
     }
     _data.clear();
     _removed = 0;
@@ -148,7 +148,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       _removed++;
       _total--;
       await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId)); // TODO ignore once
     }
     if (mounted) setState(() {});
   }
@@ -237,6 +237,28 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
           },
           fabForMultiSelection: [
+            MultiSelectionFabOption(
+              child: Icon(Icons.more_horiz),
+              show: _msController.selectedItems.length == 1,
+              onPressed: () => _data.where((el) => el.mangaId == _msController.selectedItems.first.value).firstOrNull?.let((manga) {
+                _msController.exitMultiSelectionMode();
+                showPopupMenuForMangaList(
+                  context: context,
+                  mangaId: manga.mangaId,
+                  mangaTitle: manga.mangaTitle,
+                  mangaCover: manga.mangaCover,
+                  mangaUrl: manga.mangaUrl,
+                  inHistorySetter: (inHistory) {
+                    if (!inHistory) {
+                      _data.removeWhere((el) => el.mangaId == manga.mangaId); // TODO deal with deleting history
+                      _removed++;
+                      _total--;
+                      if (mounted) setState(() {});
+                    }
+                  },
+                );
+              }),
+            ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
               onPressed: () => _deleteHistories(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
