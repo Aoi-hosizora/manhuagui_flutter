@@ -3,12 +3,13 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/manga_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/page/subscribe_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -21,11 +22,9 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 class ShelfSubPage extends StatefulWidget {
   const ShelfSubPage({
     Key? key,
-    required this.parentContext,
     this.action,
   }) : super(key: key);
 
-  final BuildContext parentContext;
   final ActionController? action;
 
   @override
@@ -36,8 +35,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
-  VoidCallback? _cancelHandler;
-
+  final _cancelHandlers = <VoidCallback>[];
   AuthData? _oldAuthData;
   var _loginChecking = true;
   var _loginCheckError = '';
@@ -46,9 +44,9 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    widget.action?.addAction('sync', () => _openPopupMenuForShelfCache());
+    widget.action?.addAction('sync', () => _showPopupMenuForShelfCache());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
+      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (ev) {
         _oldAuthData = AuthManager.instance.authData;
         _loginChecking = false;
         _loginCheckError = ev.error?.text ?? '';
@@ -56,17 +54,18 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         if (AuthManager.instance.logined) {
           WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
         }
-      });
+      }));
       _loginChecking = true;
       await AuthManager.instance.check();
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
     widget.action?.removeAction('sync');
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
@@ -74,26 +73,64 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   }
 
   final _data = <ShelfManga>[];
-  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
+  var _shelfUpdated = false;
 
   Future<PagedList<ShelfManga>> _getData({required int page}) async {
+    if (page == 1) {
+      // refresh
+      _shelfUpdated = false;
+    }
     final client = RestClient(DioManager.instance.dio);
     var result = await client.getShelfMangas(token: AuthManager.instance.token, page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    for (var data in result.data.data) {
+    for (var data in result.data.data.reversed) {
       var cache = ShelfCache(mangaId: data.mid, mangaTitle: data.title, mangaCover: data.cover, mangaUrl: data.url, cachedAt: DateTime.now());
       await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, inShelf: true));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, added: true));
     }
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), toQueryShelves: false);
+    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), queryShelves: false);
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
-  Future<void> _openPopupMenuForShelfCache() async {
+  void _updateByEvent(ShelfUpdatedEvent event) {
+    if (event.added) {
+      // 新增 => 显示有更新
+      _shelfUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (!event.added && !event.fromShelfPage) {
+      // 非本页引起的删除 => 显示有更新
+      _shelfUpdated = true;
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _showPopupMenu({required ShelfManga manga}) {
+    showPopupMenuForMangaList(
+      context: context,
+      mangaId: manga.mid,
+      mangaTitle: manga.title,
+      mangaCover: manga.cover,
+      mangaUrl: manga.url,
+      fromShelfList: true,
+      inShelfSetter: (inShelf) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
+        if (!inShelf) {
+          _data.removeWhere((el) => el.mid == manga.mid);
+          _total--; // TODO removed++
+          if (mounted) setState(() {});
+        }
+      },
+    );
+  }
+
+  Future<void> _showPopupMenuForShelfCache() async {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
       return;
@@ -109,15 +146,20 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
             text: Text('同步'),
             onPressed: () async {
               Navigator.of(c).pop();
-              ShelfCacheSubPage.syncShelfCaches(context);
+              MangaShelfCachePage.syncShelfCaches(context);
             },
           ),
           IconTextDialogOption(
-            icon: Icon(Icons.list_alt),
+            icon: Icon(Icons.format_list_bulleted),
             text: Text('查看已同步的记录'),
             onPressed: () async {
               Navigator.of(c).pop();
-              ShelfCacheSubPage.openShelfCachePage(widget.parentContext);
+              Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => MangaShelfCachePage(),
+                ),
+              );
             },
           ),
         ],
@@ -175,30 +217,26 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => ShelfMangaLineView(
           manga: item,
-          onLongPressed: () => showPopupMenuForMangaList(
-            context: context,
-            mangaId: item.mid,
-            mangaTitle: item.title,
-            mangaCover: item.cover,
-            mangaUrl: item.url,
-            mustInShelf: true,
-            inShelfSetter: (inShelf) {
-              if (!inShelf) {
-                _data.removeWhere((el) => el.mid == item.mid); // TODO deal with deleting shelf
-                _total--; // TODO removed++
-                if (mounted) setState(() {});
-              }
-            },
-          ),
-          inDownload: _flagStorage.isInDownload(mangaId: item.mid),
-          inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
-          inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+          flags: _flagStorage.getFlags(mangaId: item.mid, forceInShelf: true),
+          onLongPressed: () => _showPopupMenu(manga: item),
         ),
         extra: UpdatableDataViewExtraWidgets(
           outerTopWidgets: [
-            ListHintView.textText(
-              leftText: '${AuthManager.instance.username} 的书架 (更新时间排序)',
-              rightText: '共 $_total 部',
+            ListHintView.textWidget(
+              leftText: '${AuthManager.instance.username} 的书架' + (_shelfUpdated ? ' (有更新)' : ''),
+              rightWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('共 $_total 部'),
+                  SizedBox(width: 5),
+                  HelpIconView(
+                    title: '我的书架',
+                    hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的倒序显示。',
+                    useRectangle: true,
+                    padding: EdgeInsets.all(3),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

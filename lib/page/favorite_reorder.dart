@@ -61,7 +61,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
         var favorite = _favorites[i].copyWith(order: i + 1);
         await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: favorite);
       }
-
+      // 无需任何通知，变化的仅是 order，由 FavoriteSubPage 自行刷新列表
       Navigator.of(context).pop(true);
     } catch (e, s) {
       // unreachable
@@ -102,7 +102,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
           leading: AppBarActionButton.leading(context: context),
           actions: [
             AppBarActionButton(
-              icon: Icon(Icons.replay),
+              icon: Icon(Icons.settings_backup_restore),
               tooltip: '还原修改',
               onPressed: _saving ? null : () => _loadData(),
             ),

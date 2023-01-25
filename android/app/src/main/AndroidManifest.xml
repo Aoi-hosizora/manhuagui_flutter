@@ -14,7 +14,7 @@
     -->
 
     <application
-        android:label="Manhuagui Beta"
+        android:label="Manhuagui"
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"

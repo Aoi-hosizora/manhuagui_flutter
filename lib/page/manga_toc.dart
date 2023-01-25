@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -17,12 +18,14 @@ class MangaTocPage extends StatefulWidget {
     required this.mangaTitle,
     required this.groups,
     required this.onChapterPressed,
+    this.onChapterLongPressed,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
   final List<MangaChapterGroup> groups;
   final void Function(int cid) onChapterPressed;
+  final void Function(int cid)? onChapterLongPressed;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
@@ -46,7 +49,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
       _loadDownload();
     });
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) => _loadHistory()));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((_) => _loadDownload()));
   }
 
   @override
@@ -76,6 +79,10 @@ class _MangaTocPageState extends State<MangaTocPage> {
         title: Text(widget.mangaTitle),
         leading: AppBarActionButton.leading(context: context),
       ),
+      drawer: AppDrawer(
+        currentSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PlaceholderText(
         state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
         setting: PlaceholderSetting().copyWithChinese(),
@@ -99,6 +106,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),
                   onChapterPressed: widget.onChapterPressed,
+                  onChapterLongPressed: widget.onChapterLongPressed,
                 ),
               ],
             ),

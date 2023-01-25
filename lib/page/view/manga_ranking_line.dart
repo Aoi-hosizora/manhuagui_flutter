@@ -11,17 +11,11 @@ class MangaRankingLineView extends StatelessWidget {
   const MangaRankingLineView({
     Key? key,
     required this.manga,
-    this.inDownload = false,
-    this.inShelf = false,
-    this.inFavorite = false,
-    this.inHistory = false,
+    this.flags,
   }) : super(key: key);
 
   final MangaRanking manga;
-  final bool inDownload;
-  final bool inShelf;
-  final bool inFavorite;
-  final bool inHistory;
+  final MangaCornerFlags? flags;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +28,7 @@ class MangaRankingLineView extends StatelessWidget {
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,
       text3: '更新于 ${manga.newestDate}',
-      cornerIcons: buildMangaCornerIcons(inDownload: inDownload, inShelf: inShelf, inFavorite: inFavorite, inHistory: inHistory),
+      cornerIcons: flags?.buildIcons(),
       extraRightPaddingForTitle: 28 - 14 + 5 /* badge width - line horizontal padding + extra space */,
       extrasInStack: [
         Positioned(

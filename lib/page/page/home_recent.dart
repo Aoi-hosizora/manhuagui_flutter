@@ -43,7 +43,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
 
   final _data = <TinyManga>[];
   var _total = 0;
-  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -91,10 +91,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
         separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => TinyMangaLineView(
           manga: item,
-          inDownload: _flagStorage.isInDownload(mangaId: item.mid),
-          inShelf: _flagStorage.isInShelf(mangaId: item.mid),
-          inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
-          inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+          flags: _flagStorage.getFlags(mangaId: item.mid),
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

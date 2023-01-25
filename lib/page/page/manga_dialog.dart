@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -19,25 +21,34 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
+import 'package:manhuagui_flutter/service/storage/download_task.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+// TODO adjust icons
 
 /// 各个列表页-漫画弹出菜单 & 漫画作者弹出菜单
 /// 漫画收藏页-移动分组对话框 & 修改备注对话框
+/// 漫画页-漫画章节弹出菜单
 /// 漫画页/章节页-漫画订阅对话框
 
+// => called by pages which contains manga line view
 void showPopupMenuForMangaList({
   required BuildContext context,
   required int mangaId,
   required String mangaTitle,
   required String mangaCover,
   required String mangaUrl,
-  bool mustInShelf = false,
-  void Function(bool inShelf)? inShelfSetter, // TODO update ShelfSubPage
-  void Function(bool inFavorite)? inFavoriteSetter, // TODO update FavoriteSubPage
-  void Function(bool inHistory)? inHistorySetter, // TODO update HistorySubPage
+  bool fromShelfList = false,
+  bool fromFavoriteList = false,
+  bool fromHistoryList = false,
+  void Function(bool inShelf)? inShelfSetter,
+  void Function(bool inFavorite)? inFavoriteSetter,
+  void Function(bool inHistory)? inHistorySetter,
 }) async {
   var nowInDownload = await DownloadDao.checkMangaExistence(mid: mangaId) ?? false;
   var nowInFavorite = await FavoriteDao.checkExistence(username: AuthManager.instance.username, mid: mangaId) ?? false;
   var mangaHistory = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
+  var expandShelfOptions = false;
 
   var helper = _DialogHelper(
     context: context,
@@ -46,14 +57,11 @@ void showPopupMenuForMangaList({
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
   );
-  Future<void> pop(BuildContext context, VoidCallback callback) async {
+  void pop(BuildContext context, VoidCallback callback) {
     Navigator.of(context).pop();
     callback();
   }
 
-  // TODO adjust icons
-
-  var expandShelfOptions = false;
   showDialog(
     context: context,
     builder: (c) => StatefulBuilder(
@@ -82,16 +90,16 @@ void showPopupMenuForMangaList({
             ),
 
           /// 书架
-          if (AuthManager.instance.logined && mustInShelf)
+          if (AuthManager.instance.logined && fromShelfList)
             IconTextDialogOption(
-              icon: Icon(Icons.star),
+              icon: Icon(MdiIcons.starMinusOutline), // Icons.star
               text: Text('移出我的书架'),
-              onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter)),
+              onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
             ),
-          if (AuthManager.instance.logined && !mustInShelf) ...[
+          if (AuthManager.instance.logined && !fromShelfList) ...[
             if (!expandShelfOptions)
               IconTextDialogOption(
-                icon: Icon(Icons.star_half),
+                icon: Icon(MdiIcons.starCogOutline),
                 text: Text('管理我的书架'),
                 onPressed: () => _setState(() => expandShelfOptions = true),
               ),
@@ -106,22 +114,22 @@ void showPopupMenuForMangaList({
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       IconTextDialogOption(
-                        icon: Icon(Icons.star_half, color: Colors.black26),
-                        text: Text('隐藏'),
+                        icon: Icon(MdiIcons.starCogOutline, color: Colors.black26),
+                        text: Text('隐藏选项'),
                         padding: optionPadding,
                         onPressed: () => _setState(() => expandShelfOptions = false),
                       ),
                       IconTextDialogOption(
-                        icon: Icon(Icons.star_border),
+                        icon: Icon(MdiIcons.starPlusOutline), // Icons.star_border
                         text: Text('放入我的书架'),
                         padding: optionPadding,
-                        onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: null, onUpdated: inShelfSetter)),
+                        onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
                       ),
                       IconTextDialogOption(
-                        icon: Icon(Icons.star),
+                        icon: Icon(MdiIcons.starMinusOutline), // Icons.star
                         text: Text('移出我的书架'),
                         padding: optionPadding,
-                        onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter)),
+                        onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
                       ),
                     ],
                   ),
@@ -131,22 +139,22 @@ void showPopupMenuForMangaList({
 
           /// 收藏
           IconTextDialogOption(
-            icon: Icon(!nowInFavorite ? Icons.bookmark_border : Icons.bookmark),
+            icon: Icon(!nowInFavorite ? MdiIcons.bookmarkPlusOutline : MdiIcons.bookmarkMinusOutline), // Icons.bookmark_border : Icons.bookmark
             text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
             onPressed: () => pop(
               c,
               () => !nowInFavorite //
-                  ? helper.addToFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true))
-                  : helper.removeFromFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false)),
+                  ? helper.addToFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromMangaPage: false)
+                  : helper.removeFromFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
             ),
           ),
 
           /// 历史
           if (mangaHistory != null)
             IconTextDialogOption(
-              icon: CustomIcon(!mangaHistory.read ? CustomIcons.opened_empty_book : Icons.import_contacts),
+              icon: CustomIcon(!mangaHistory.read ? MdiIcons.deleteClockOutline : MdiIcons.deleteClock), // CustomIcons.opened_empty_book : Icons.import_contacts
               text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读历史'),
-              onPressed: () => pop(c, () => helper.removeHistory(onRemoved: () => inHistorySetter?.call(false), showSnackBar: true)),
+              onPressed: () => pop(c, () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false)),
             ),
         ],
       ),
@@ -154,6 +162,7 @@ void showPopupMenuForMangaList({
   );
 }
 
+// => called by pages which contains author line view
 void showPopupMenuForAuthorList({
   required BuildContext context,
   required int authorId,
@@ -195,6 +204,7 @@ void showPopupMenuForAuthorList({
   );
 }
 
+// => called in FavoriteSubPage
 void showUpdateFavoritesGroupDialog({
   required BuildContext context,
   required List<FavoriteManga> favorites,
@@ -213,10 +223,12 @@ void showUpdateFavoritesGroupDialog({
     selectedGroupName: selectedGroupName,
     onUpdated: onUpdated,
     showToast: true,
-    notifyFavList: false,
+    fromFavoriteList: true /* <<< only for favorite list */,
+    fromMangaPage: false,
   );
 }
 
+// => called in FavoriteSubPage
 void showUpdateFavoriteRemarkDialog({
   required BuildContext context,
   required FavoriteManga favorite,
@@ -233,24 +245,88 @@ void showUpdateFavoriteRemarkDialog({
     oldFavorite: favorite,
     onUpdated: onUpdated,
     showSnackBar: false,
-    notifyFavList: false,
+    fromFavoriteList: true /* <<< only for favorite list */,
+    fromMangaPage: false,
   );
 }
 
+// => called in MangaPage and for MangaTocPage
+void showPopupMenuForMangaToc({
+  required BuildContext context,
+  required int mangaId,
+  required String mangaTitle,
+  required String mangaCover,
+  required String mangaUrl,
+  required bool fromMangaPage,
+  required TinyMangaChapter chapter,
+  required List<MangaChapterGroup> chapterGroups,
+  required void Function(MangaHistory history)? onHistoryUpdated,
+}) async {
+  var downloadEntity = await DownloadDao.getManga(mid: mangaId);
+  var inDownloadTask = downloadEntity?.findChapter(chapter.cid) != null;
+  var historyEntity = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
+  var lastReadChapter = historyEntity?.chapterId == chapter.cid;
+
+  var helper = _DialogHelper(
+    context: context,
+    mangaId: mangaId,
+    mangaTitle: mangaTitle,
+    mangaCover: mangaCover,
+    mangaUrl: mangaUrl,
+  );
+  void pop(BuildContext context, VoidCallback callback) {
+    Navigator.of(context).pop();
+    callback();
+  }
+
+  showDialog(
+    context: context,
+    builder: (c) => SimpleDialog(
+      title: Text(chapter.title),
+      children: [
+        IconTextDialogOption(
+          icon: Icon(Icons.arrow_forward),
+          text: Text('阅读该章节'),
+          onPressed: () => pop(c, () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity)),
+        ),
+        if (!inDownloadTask)
+          IconTextDialogOption(
+            icon: Icon(Icons.download),
+            text: Text('下载该章节'),
+            onPressed: () => pop(c, () => helper.downloadSingleChapter(chapterId: chapter.cid, chapterTitle: chapter.title, chapterGroups: chapterGroups)),
+          ),
+        if (inDownloadTask)
+          IconTextDialogOption(
+            icon: Icon(Icons.download),
+            text: Text('查看下载详情'),
+            onPressed: () => pop(c, () => helper.gotoDownloadPage()),
+          ),
+        if (lastReadChapter)
+          IconTextDialogOption(
+            icon: Icon(Icons.import_contacts),
+            text: Text('删除阅读历史'),
+            onPressed: () => pop(c, () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage)),
+          ),
+      ],
+    ),
+  );
+}
+
+// => called in MangaPage and MangaViewerPage
 void showPopupMenuForSubscribing({
   required BuildContext context,
   required int mangaId,
   required String mangaTitle,
   required String mangaCover,
   required String mangaUrl,
+  required bool fromMangaPage,
   required bool nowInShelf,
   required bool nowInFavorite,
   required int? subscribeCount,
   required FavoriteManga? favoriteManga,
   required void Function(bool subscribing) subscribing,
   required void Function(bool inShelf) inShelfSetter,
-  required void Function(bool inFavorite) inFavoriteSetter,
-  required void Function(FavoriteManga? favorite) favoriteSetter,
+  required void Function(FavoriteManga? favorite) inFavoriteSetter,
 }) {
   var helper = _DialogHelper(
     context: context,
@@ -274,13 +350,13 @@ void showPopupMenuForSubscribing({
           IconTextDialogOption(
             icon: Icon(Icons.star_border),
             text: Text('放入我的书架'),
-            onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: subscribing, onUpdated: inShelfSetter)),
+            onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage)),
           ),
         if (AuthManager.instance.logined && nowInShelf)
           IconTextDialogOption(
             icon: Icon(Icons.star),
             text: Text('移出我的书架'),
-            onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter)),
+            onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage)),
           ),
 
         /// 收藏
@@ -288,31 +364,13 @@ void showPopupMenuForSubscribing({
           IconTextDialogOption(
             icon: Icon(Icons.bookmark_border),
             text: Text('添加本地收藏'),
-            onPressed: () => pop(
-              c,
-              () => helper.addToFavorite(
-                subscribing: subscribing,
-                onAdded: (f) {
-                  inFavoriteSetter.call(true);
-                  favoriteSetter.call(f);
-                },
-              ),
-            ),
+            onPressed: () => pop(c, () => helper.addToFavorite(subscribing: subscribing, onAdded: inFavoriteSetter, fromFavoriteList: false, fromMangaPage: fromMangaPage)),
           ),
         if (nowInFavorite)
           IconTextDialogOption(
             icon: Icon(Icons.bookmark),
             text: Text('取消本地收藏'),
-            onPressed: () => pop(
-              c,
-              () => helper.removeFromFavorite(
-                subscribing: subscribing,
-                onRemoved: () {
-                  inFavoriteSetter.call(false);
-                  favoriteSetter.call(null);
-                },
-              ),
-            ),
+            onPressed: () => pop(c, () => helper.removeFromFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage)),
           ),
 
         /// 额外选项
@@ -330,7 +388,7 @@ void showPopupMenuForSubscribing({
               text: Flexible(
                 child: Text('当前收藏分组：${favoriteManga.checkedGroupName}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
-              onPressed: () => pop(c, () => helper.updateFavoriteGroup(oldFavorite: favoriteManga, onUpdated: favoriteSetter)),
+              onPressed: () => pop(c, () => helper.updateFavoriteGroup(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage)),
             ),
           if (favoriteManga != null)
             IconTextDialogOption(
@@ -338,7 +396,7 @@ void showPopupMenuForSubscribing({
               text: Flexible(
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
-              onPressed: () => pop(c, () => helper.updateFavoriteRemark(oldFavorite: favoriteManga, onUpdated: favoriteSetter)),
+              onPressed: () => pop(c, () => helper.updateFavoriteRemark(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage)),
             ),
         ],
       ],
@@ -361,6 +419,10 @@ class _DialogHelper {
   final String mangaCover;
   final String mangaUrl;
 
+  // ============================
+  // static methods (show dialog)
+  // ============================
+
   static Future<Tuple3<String, String, bool>?> showAddToFavoriteDialog({
     required BuildContext context,
     required List<FavoriteGroup> groups,
@@ -371,20 +433,20 @@ class _DialogHelper {
 
     var ok = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (c) => StatefulBuilder(
         builder: (_, _setState) => AlertDialog(
           title: Text('收藏漫画'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // TODO hide keyboard first, https://github.com/flutter/flutter/issues/22075
               Container(
                 width: getDialogContentMaxWidth(context),
                 padding: EdgeInsets.only(left: 5, right: 5, bottom: 12),
                 child: CustomCombobox<String>(
                   value: groupName,
                   items: [
-                    for (var group in groups)
+                    for (var group in groups) // TODO hide keyboard first, https://github.com/flutter/flutter/issues/22075
                       CustomComboboxItem(
                         value: group.groupName,
                         text: group.checkedGroupName,
@@ -411,13 +473,17 @@ class _DialogHelper {
                   ),
                 ),
               ),
-              CheckboxListTile(
-                title: Text('添加至本地收藏顶部'),
-                value: addToTop,
-                onChanged: (v) => _setState(() => addToTop = v ?? false),
-                visualDensity: VisualDensity(horizontal: -4, vertical: -4),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
+              Container(
+                width: getDialogContentMaxWidth(context),
+                padding: EdgeInsets.only(top: 3),
+                child: CheckboxListTile(
+                  title: Text('添加至收藏顶部'),
+                  value: addToTop,
+                  onChanged: (v) => _setState(() => addToTop = v ?? false),
+                  visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
             ],
           ),
@@ -450,6 +516,12 @@ class _DialogHelper {
       builder: (c) => SimpleDialog(
         title: Text('移动收藏至分组'),
         children: [
+          CheckBoxDialogOption(
+            initialValue: addToTop,
+            onChanged: (v) => addToTop = v,
+            text: '添加至收藏顶部',
+          ),
+          Divider(thickness: 1),
           for (var group in groups)
             TextDialogOption(
               text: Text(
@@ -460,11 +532,6 @@ class _DialogHelper {
               ),
               onPressed: () => Navigator.of(c).pop(group),
             ),
-          CheckBoxDialogOption(
-            initialValue: addToTop,
-            onChanged: (v) => addToTop = v,
-            text: '添加至本地收藏顶部',
-          ),
         ],
       ),
     );
@@ -485,6 +552,7 @@ class _DialogHelper {
     var controller = TextEditingController()..text = remark; // remark
     var ok = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (c) => AlertDialog(
         title: Text('修改收藏备注'),
         content: SizedBox(
@@ -516,7 +584,10 @@ class _DialogHelper {
               }
             },
           ),
-          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(false),
+          ),
         ],
       ),
     );
@@ -528,6 +599,10 @@ class _DialogHelper {
       controller.text.trim(), // remark, empty-able
     );
   }
+
+  // =======================
+  // helper methods (others)
+  // =======================
 
   void gotoMangaPage() {
     Navigator.of(context).push(
@@ -549,12 +624,13 @@ class _DialogHelper {
     );
   }
 
-  void gotoDownloadPage() {
+  void gotoDownloadPage({bool gotoDownloading = false}) {
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
         builder: (c) => DownloadMangaPage(
           mangaId: mangaId,
+          gotoDownloading: gotoDownloading,
         ),
         settings: DownloadMangaPage.buildRouteSetting(
           mangaId: mangaId,
@@ -563,22 +639,72 @@ class _DialogHelper {
     );
   }
 
+  void gotoChapterPage({required int chapterId, required List<MangaChapterGroup> chapterGroups, required MangaHistory? history}) {
+    Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => MangaViewerPage(
+          parentContext: context,
+          mangaId: mangaId,
+          chapterId: chapterId,
+          mangaCover: mangaCover,
+          chapterGroups: chapterGroups,
+          initialPage: history?.chapterId == chapterId
+              ? history?.chapterPage ?? 1 // have read
+              : 1 /* have not read */,
+          onlineMode: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> downloadSingleChapter({required int chapterId, required String chapterTitle, required List<MangaChapterGroup> chapterGroups}) async {
+    await quickBuildDownloadMangaQueueTask(
+      mangaId: mangaId,
+      mangaTitle: mangaTitle,
+      mangaCover: mangaCover,
+      mangaUrl: mangaUrl,
+      chapterIds: [chapterId],
+      alsoAddTask: true,
+      throughGroupList: chapterGroups,
+      throughChapterList: null,
+    );
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('已添加 "$chapterTitle" 至漫画下载任务'),
+        action: SnackBarAction(
+          label: '查看',
+          onPressed: () => gotoDownloadPage(gotoDownloading: true),
+        ),
+      ),
+    );
+  }
+
+  // ========================
+  // methods (add and remove)
+  // ========================
+
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
   Future<void> addToOrRemoveFromShelf({
     required bool toAdd,
     required void Function(bool subscribing)? subscribing,
     required void Function(bool inShelf)? onUpdated,
+    required bool fromShelfList,
+    required bool fromMangaPage,
   }) async {
     final client = RestClient(DioManager.instance.dio);
-    subscribing?.call(true);
 
+    subscribing?.call(true);
     bool? added;
     try {
+      // 网络请求、(更新界面)、弹出提示、发送通知
       await (toAdd ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: mangaId);
       added = toAdd;
       onUpdated?.call(added);
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '成功将漫画放入书架' : '成功将漫画移出书架')));
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inShelf: added));
+      EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, added: added, fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
     } catch (e, s) {
       var err = wrapError(e, s).text;
       var already = err.contains('已经被'), notYet = err.contains('还没有被');
@@ -587,7 +713,7 @@ class _DialogHelper {
         onUpdated?.call(added);
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '漫画已经在书架上' : '漫画还未在书架上')));
-        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inShelf: added));
+        EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, added: added, fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
       } else {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '放入书架失败，$err' : '移出书架失败，$err')));
@@ -596,19 +722,23 @@ class _DialogHelper {
       subscribing?.call(false);
     }
 
+    // 针对书架，同时更新书架缓存
     if (added == true) {
       var cache = ShelfCache(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, cachedAt: DateTime.now());
       await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, inShelf: true));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: true));
     } else if (added == false) {
       await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: mangaId);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, inShelf: false));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false));
     }
   }
 
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
   Future<void> addToFavorite({
     required void Function(bool subscribing)? subscribing,
     required void Function(FavoriteManga newFavorite)? onAdded,
+    required bool fromFavoriteList,
+    required bool fromMangaPage,
   }) async {
     var groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
     if (groups == null) {
@@ -618,12 +748,13 @@ class _DialogHelper {
     if (result == null) {
       return;
     }
-
     var groupName = result.item1;
     var remark = result.item2;
     var addToTop = result.item3;
+
     subscribing?.call(true);
     try {
+      // 更新数据库、(更新界面)、弹出提示、发送通知
       var order = await FavoriteDao.getFavoriteNewOrder(username: AuthManager.instance.username, groupName: groupName, addToTop: addToTop);
       var newFavorite = FavoriteManga(
         mangaId: mangaId,
@@ -639,34 +770,76 @@ class _DialogHelper {
       onAdded?.call(newFavorite);
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('成功收藏漫画至 "${newFavorite.checkedGroupName}"')));
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: newFavorite.groupName));
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.added, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
     } finally {
       subscribing?.call(false);
     }
   }
 
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
   Future<void> removeFromFavorite({
     required void Function(bool subscribing)? subscribing,
     required void Function()? onRemoved,
+    required bool fromFavoriteList,
+    required bool fromMangaPage,
   }) async {
     subscribing?.call(true);
     try {
+      // 更新数据库、(更新界面)、弹出提示、发送通知
       var oldFavorite = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: mangaId);
+      var oldGroupName = oldFavorite?.groupName ?? '';
       await FavoriteDao.deleteFavorite(username: AuthManager.instance.username, mid: mangaId);
       onRemoved?.call();
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('成功取消收藏漫画')));
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: false, changedGroup: oldFavorite?.groupName));
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: oldGroupName, reason: UpdateReason.deleted, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
     } finally {
       subscribing?.call(false);
     }
   }
 
+  // => called by showPopupMenuForMangaList
+  Future<void> removeHistory({
+    required MangaHistory oldHistory,
+    required void Function()? onRemoved,
+    required bool fromHistoryList,
+    required bool fromMangaPage,
+  }) async {
+    // 更新数据库、(更新界面)、弹出提示、发送通知
+    await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
+    onRemoved?.call();
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(oldHistory.read ? '漫画阅读历史已删除' : '漫画浏览历史已删除')));
+    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage));
+  }
+
+  // => called by showPopupMenuForMangaToc
+  Future<void> clearChapterHistory({
+    required MangaHistory oldHistory,
+    required void Function(MangaHistory newHistory)? onUpdated,
+    required bool fromHistoryList,
+    required bool fromMangaPage,
+  }) async {
+    // 更新数据库、(更新界面)、弹出提示、发送通知
+    var newHistory = oldHistory.copyWith(chapterId: 0 /* 未开始阅读 */, chapterTitle: '', chapterPage: 1, lastTime: DateTime.now());
+    await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
+    onUpdated?.call(newHistory);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('章节阅读历史已删除')));
+    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage));
+  }
+
+  // =========================
+  // methods (update favorite)
+  // =========================
+
+  // => called by showPopupMenuForSubscribing
   Future<void> updateFavoriteGroup({
     required FavoriteManga oldFavorite,
     required void Function(FavoriteManga newFavorite)? onUpdated,
-    bool showSnackBar = true,
-    bool notifyFavList = true,
+    required bool showSnackBar,
+    required bool fromFavoriteList,
+    required bool fromMangaPage,
   }) async {
     var groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
     if (groups == null) {
@@ -676,32 +849,30 @@ class _DialogHelper {
     if (result == null) {
       return;
     }
-
     var group = result.item1;
     var addToTop = result.item2;
+
+    // 更新数据库、(更新界面)、弹出提示、发送通知
     var order = await FavoriteDao.getFavoriteNewOrder(username: AuthManager.instance.username, groupName: group.groupName, addToTop: addToTop);
     var newFavorite = oldFavorite.copyWith(groupName: group.groupName, order: order);
     await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
     onUpdated?.call(newFavorite);
-
     if (showSnackBar) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画收藏于 "${group.checkedGroupName}"')));
     }
-    if (notifyFavList) {
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: oldFavorite.groupName)); // 移动分组
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: newFavorite.groupName));
-    } else {
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: null)); // 收藏页将忽略该通知
-    }
+    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: oldFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
   }
 
+  // => called by showUpdateFavoritesGroupDialog
   Future<void> updateFavoritesGroup({
     required List<FavoriteManga> oldFavorites, // 按照收藏列表从上到下的顺序
     required String selectedGroupName,
     required void Function(List<FavoriteManga> newFavorites, bool addToTop) onUpdated,
-    bool showToast = true,
-    bool notifyFavList = true,
+    required bool showToast,
+    required bool fromFavoriteList,
+    required bool fromMangaPage,
   }) async {
     var groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
     if (groups == null) {
@@ -711,9 +882,10 @@ class _DialogHelper {
     if (result == null) {
       return;
     }
-
     var group = result.item1;
     var addToTop = result.item2;
+
+    // 更新数据库、(更新界面)、弹出提示、发送通知
     if (addToTop) {
       oldFavorites = oldFavorites.reversed.toList(); // 移至顶部需要倒序一个一个移动，移至底部则不需要
     }
@@ -725,62 +897,41 @@ class _DialogHelper {
       oldNewFavorites.add(Tuple2(oldFavorite, newFavorite));
     }
     onUpdated(oldNewFavorites.map((t) => t.item2).toList(), addToTop);
-
     if (showToast) {
+      await Fluttertoast.cancel();
       Fluttertoast.showToast(msg: '已将 ${oldFavorites.length} 部漫画收藏于 "${group.checkedGroupName}"');
     }
     for (var tuple in oldNewFavorites) {
       var oldFavorite = tuple.item1;
       var newFavorite = tuple.item2;
       var mangaId = newFavorite.mangaId;
-      if (notifyFavList) {
-        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: oldFavorite.groupName)); // 移动分组
-        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: newFavorite.groupName));
-      } else {
-        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: null)); // 本页将忽略该通知
-      }
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: oldFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
     }
   }
 
+  // => called by showUpdateFavoriteRemarkDialog, showPopupMenuForSubscribing
   Future<void> updateFavoriteRemark({
     required FavoriteManga oldFavorite,
     required void Function(FavoriteManga newFavorite) onUpdated,
-    bool showSnackBar = true,
-    bool notifyFavList = true,
+    required bool showSnackBar,
+    required bool fromFavoriteList,
+    required bool fromMangaPage,
   }) async {
     var result = await showEditFavoriteRemarkDialog(context: context, remark: oldFavorite.remark.trim());
     if (result == null) {
       return;
     }
-
     var newRemark = result.item;
+
+    // 更新数据库、(更新界面)、弹出提示、发送通知
     var newFavorite = oldFavorite.copyWith(remark: newRemark);
     await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
     onUpdated(newFavorite);
-
     if (showSnackBar) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(newRemark == '' ? '已删除收藏备注' : '已将备注修改为 "$newRemark"')));
     }
-    if (notifyFavList) {
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: newFavorite.groupName)); // 修改备注
-    } else {
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: mangaId, inFavorite: true, changedGroup: null)); // 收藏页将忽略该通知
-    }
-  }
-
-  Future<void> removeHistory({
-    required void Function()? onRemoved,
-    bool showSnackBar = true,
-  }) async {
-    var ok = await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
-    if (ok) {
-      onRemoved?.call();
-      if (showSnackBar) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('漫画历史已删除')));
-      }
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId));
-    }
+    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
   }
 }

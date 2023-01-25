@@ -11,17 +11,11 @@ class TinyMangaLineView extends StatelessWidget {
   const TinyMangaLineView({
     Key? key,
     required this.manga,
-    this.inDownload = false,
-    this.inShelf = false,
-    this.inFavorite = false,
-    this.inHistory = false,
+    this.flags,
   }) : super(key: key);
 
   final TinyManga manga;
-  final bool inDownload;
-  final bool inShelf;
-  final bool inFavorite;
-  final bool inHistory;
+  final MangaCornerFlags? flags;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +28,7 @@ class TinyMangaLineView extends StatelessWidget {
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,
       text3: '更新于 ${manga.newestDate}',
-      cornerIcons: buildMangaCornerIcons(inDownload: inDownload, inShelf: inShelf, inFavorite: inFavorite, inHistory: inHistory),
+      cornerIcons: flags?.buildIcons(),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

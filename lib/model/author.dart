@@ -13,11 +13,17 @@ class Author {
   final int mangaCount;
   final int newestMangaId;
   final String newestMangaTitle;
+  final String newestMangaUrl;
   final String newestDate;
+  final int highestMangaId;
+  final String highestMangaTitle;
+  final String highestMangaUrl;
+  final double highestScore;
   final double averageScore;
+  final int popularity;
   final String introduction;
 
-  const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestDate, required this.averageScore, required this.introduction});
+  const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestMangaUrl, required this.newestDate, required this.highestMangaId, required this.highestMangaTitle, required this.highestMangaUrl, required this.highestScore, required this.averageScore, required this.popularity, required this.introduction});
 
   factory Author.fromJson(Map<String, dynamic> json) => _$AuthorFromJson(json);
 

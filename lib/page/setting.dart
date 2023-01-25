@@ -24,7 +24,7 @@ class _SettingPageState extends State<SettingPage> {
       child: InkWell(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-          child: Text(title, style: Theme.of(context).textTheme.subtitle1),
+          child: Text(title, style: Theme.of(context).textTheme.subtitle1), // TODO add icon
         ),
         onTap: action,
       ),

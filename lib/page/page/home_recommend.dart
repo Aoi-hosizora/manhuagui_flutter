@@ -24,6 +24,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 首页-推荐
 class RecommendSubPage extends StatefulWidget {
@@ -272,8 +273,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   child: Column(
                     children: [
                       ActionRowView.four(
-                        action1: ActionItem.simple('我的书架', Icons.star, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
-                        action2: ActionItem.simple('本地收藏', Icons.bookmark, () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())),
+                        action1: ActionItem.simple('我的书架', MdiIcons.bookshelf, () => EventBusManager.instance.fire(ToShelfRequestedEvent())), // Icons.star
+                        action2: ActionItem.simple('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())), // Icons.bookmark
                         action3: ActionItem.simple('阅读历史', Icons.history, () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
                         action4: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
                       ),

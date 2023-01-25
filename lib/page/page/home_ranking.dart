@@ -75,7 +75,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   }
 
   final _data = <MangaRanking>[];
-  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _currType = allRankingTypes[0];
   var _lastType = allRankingTypes[0];
   var _currDuration = allRankingDurations[0];
@@ -145,10 +145,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
           separator: Divider(height: 0, thickness: 1),
           itemBuilder: (c, _, item) => MangaRankingLineView(
             manga: item,
-            inDownload: _flagStorage.isInDownload(mangaId: item.mid),
-            inShelf: _flagStorage.isInShelf(mangaId: item.mid),
-            inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
-            inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+            flags: _flagStorage.getFlags(mangaId: item.mid),
           ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [

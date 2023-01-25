@@ -13,19 +13,15 @@ class FavoriteMangaLineView extends StatelessWidget {
     required this.manga,
     required this.index,
     required this.history,
+    this.flags,
     required this.onLongPressed,
-    this.inDownload = false,
-    this.inShelf = false,
-    this.inHistory = false,
   }) : super(key: key);
 
   final FavoriteManga manga;
   final int index;
   final MangaHistory? history;
+  final MangaCornerFlags? flags;
   final Function()? onLongPressed;
-  final bool inDownload;
-  final bool inShelf;
-  final bool inHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +34,7 @@ class FavoriteMangaLineView extends StatelessWidget {
       text2: history == null ? '尚未浏览' : (!history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle} 第${history!.chapterPage}页'),
       icon3: Icons.access_time,
       text3: '添加于 ${manga.formattedCreatedAt}',
-      cornerIcons: buildMangaCornerIcons(inDownload: inDownload, inShelf: inShelf, inFavorite: true, inHistory: inHistory),
+      cornerIcons: flags?.buildIcons(),
       extraRightPaddingForTitle: 28 - 14 + 5 /* badge width - line horizontal padding + extra space */,
       extrasInStack: [
         Positioned(

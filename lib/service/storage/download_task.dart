@@ -72,17 +72,14 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       QueueManager.instance.tasks.remove(this); // if task is not running, remove it and call defer immediately
       doDefer();
     } else {
-      var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
-      EventBusManager.instance.fire(ev);
+      EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: false));
     }
   }
 
   @override
   Future<void> doDefer() {
-    var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: true); // finished means task is removed from queue
-    EventBusManager.instance.fire(ev);
-    var ev2 = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
-    EventBusManager.instance.fire(ev2);
+    EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: true)); // finished means task is removed from queue
+    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
     Future.delayed(Duration(seconds: 1), () {
       if (_canceled) {
         // TODO 下载时当所有页面都被 cache，就会出现下载已完成但通知仍存在的问题
@@ -105,8 +102,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         DownloadNotificationHelper.cancelNotification(mangaId);
       }
     }
-    var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
-    EventBusManager.instance.fire(ev);
+    EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: false));
   }
 
   Queue _pageQueue; // 用于下载章节页面的队列，可能会被 cancel
@@ -135,8 +131,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   void cancelChapter(int chapterId) {
     _chapterIds.where((el) => el.chapterId == chapterId && !el.canceled).firstOrNull?.cancel(); // 取消下载该章节
-    var ev = DownloadMangaProgressChangedEvent(mangaId: mangaId, finished: false);
-    EventBusManager.instance.fire(ev);
+    EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: false));
   }
 
   Future<bool> prepare({
@@ -208,8 +203,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         ),
       );
     }
-    var ev = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
-    EventBusManager.instance.fire(ev);
+    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId)); // 更新完漫画数据和章节数据后发送通知
 
     // 6. 判断是否入队
     if (previousTask != null) {
@@ -265,6 +259,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         await DownloadDao.addOrUpdateManga(
           manga: oldManga.copyWith(error: true), // 漫画数据获取失败
         );
+        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
       }
       return false;
     }
@@ -383,8 +378,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
               successPageCount: oldChapter.successPageCount /* 已成功下载的页数不做变化 */,
             ),
           );
-          var ev = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
-          EventBusManager.instance.fire(ev);
+          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
         }
         continue;
       }
@@ -509,8 +503,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
             needUpdate: false /* 已被更新，无需更新 */,
           ),
         );
-        var ev = DownloadedMangaEntityChangedEvent(mangaId: mangaId);
-        EventBusManager.instance.fire(ev);
+        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
       } // try-catch-finally
     } // for in chapterIds
 

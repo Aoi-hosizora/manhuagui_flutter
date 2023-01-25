@@ -8,7 +8,7 @@ import 'package:manhuagui_flutter/page/view/favorite_reorder_line.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
-/// 收藏分组页，展示所给 [FavoriteGroup] 并允许编辑和排序，以及保存到数据库
+/// 管理收藏分组页，展示所给 [FavoriteGroup] 并允许编辑和排序，以及保存到数据库
 class FavoriteGroupPage extends StatefulWidget {
   const FavoriteGroupPage({
     Key? key,
@@ -284,16 +284,16 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('收藏分组'),
+          title: Text('管理收藏分组'),
           leading: AppBarActionButton.leading(context: context),
           actions: [
             AppBarActionButton(
-              icon: Icon(Icons.add),
+              icon: Icon(Icons.create_new_folder_outlined),
               tooltip: '创建新分组',
               onPressed: _saving ? null : () => _addGroup(),
             ),
             AppBarActionButton(
-              icon: Icon(Icons.replay),
+              icon: Icon(Icons.settings_backup_restore),
               tooltip: '还原修改',
               onPressed: _saving ? null : () => _restore(),
             ),

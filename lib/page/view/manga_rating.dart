@@ -30,7 +30,10 @@ class MangaRatingView extends StatelessWidget {
           onRatingUpdate: (_) {},
         ),
         SizedBox(height: 4),
-        Text('平均评分: $averageScore，共 $scoreCount 人评分'),
+        Text(
+          '平均评分: $averageScore，共 $scoreCount 人评分',
+          style: Theme.of(context).textTheme.bodyText2,
+        ),
       ],
     );
   }

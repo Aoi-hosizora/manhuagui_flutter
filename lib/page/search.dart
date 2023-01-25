@@ -62,7 +62,7 @@ class _SearchPageState extends State<SearchPage> {
 
   final _data = <SmallManga>[];
   var _total = 0;
-  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _currOrder = AppSetting.instance.other.defaultMangaOrder;
   var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
   var _getting = false;
@@ -213,10 +213,7 @@ class _SearchPageState extends State<SearchPage> {
                   separator: Divider(height: 0, thickness: 1),
                   itemBuilder: (c, _, item) => TinyMangaLineView(
                     manga: item.toTiny(),
-                    inDownload: _flagStorage.isInDownload(mangaId: item.mid),
-                    inShelf: _flagStorage.isInShelf(mangaId: item.mid),
-                    inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
-                    inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+                    flags: _flagStorage.getFlags(mangaId: item.mid),
                   ),
                   extra: UpdatableDataViewExtraWidgets(
                     innerTopWidgets: [
@@ -455,7 +452,7 @@ class _SearchPageState extends State<SearchPage> {
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
                                 child: Center(
-                                  child: Text('清空历史记录'), // TODO 管理历史记录
+                                  child: Text('清空历史记录'),
                                 ),
                               ),
                               onTap: () => showDialog(

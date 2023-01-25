@@ -4,7 +4,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/author_detail.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -18,6 +21,7 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
+import 'package:manhuagui_flutter/service/native/share.dart';
 
 /// 漫画作者页，网络请求并展示 [Author] 信息
 class AuthorPage extends StatefulWidget {
@@ -82,7 +86,7 @@ class _AuthorPageState extends State<AuthorPage> {
 
   final _mangas = <SmallManga>[];
   var _total = 0;
-  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _currOrder = AppSetting.instance.other.defaultMangaOrder;
   var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
   var _getting = false;
@@ -96,6 +100,108 @@ class _AuthorPageState extends State<AuthorPage> {
     await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
+  }
+
+  void _showDescriptionPopupMenu() {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text(_data!.name),
+        children: [
+          if (_data!.alias.trim().isEmpty || _data!.alias != '暂无')
+            IconTextDialogOption(
+              icon: Icon(Icons.copy),
+              text: Text('复制作者别名'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                copyText(_data!.alias.trim(), showToast: true);
+              },
+            ),
+          IconTextDialogOption(
+            icon: Icon(Icons.copy),
+            text: Text('复制作者介绍'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              copyText(_data!.introduction, showToast: false);
+              Fluttertoast.showToast(msg: '作者介绍已经复制到剪贴板');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMangaPopupMenu({bool forNewest = false, bool forHighest = false}) {
+    if (forNewest) {
+      showDialog(
+        context: context,
+        builder: (c) => SimpleDialog(
+          title: Text(_data!.newestMangaTitle),
+          children: [
+            IconTextDialogOption(
+              icon: Icon(Icons.arrow_forward),
+              text: Text('查看该漫画'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => MangaPage(
+                      id: _data!.newestMangaId,
+                      title: _data!.newestMangaTitle,
+                      url: _data!.newestMangaUrl,
+                    ),
+                  ),
+                );
+              },
+            ),
+            IconTextDialogOption(
+              icon: Icon(Icons.copy),
+              text: Text('复制标题'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                copyText(_data!.newestMangaTitle, showToast: true);
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    if (forHighest) {
+      showDialog(
+        context: context,
+        builder: (c) => SimpleDialog(
+          title: Text(_data!.highestMangaTitle),
+          children: [
+            IconTextDialogOption(
+              icon: Icon(Icons.arrow_forward),
+              text: Text('查看该漫画'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => MangaPage(
+                      id: _data!.highestMangaId,
+                      title: _data!.highestMangaTitle,
+                      url: _data!.highestMangaUrl,
+                    ),
+                  ),
+                );
+              },
+            ),
+            IconTextDialogOption(
+              icon: Icon(Icons.copy),
+              text: Text('复制标题'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                copyText(_data!.highestMangaTitle, showToast: true);
+              },
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -182,32 +288,26 @@ class _AuthorPageState extends State<AuthorPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           IconText(
-                            icon: Icon(Icons.person, size: 20, color: Colors.orange),
-                            text: Flexible(
-                              child: Text(
-                                '作者别名：${_data!.alias}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            space: 8,
-                            iconPadding: EdgeInsets.symmetric(vertical: 2.8),
-                          ),
-                          IconText(
                             icon: Icon(Icons.place, size: 20, color: Colors.orange),
                             text: Text('地区：${_data!.zone}'),
                             space: 8,
                             iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
                           IconText(
-                            icon: Icon(Icons.stars, size: 20, color: Colors.orange),
-                            text: Text('平均评分 ${_data!.averageScore}'),
+                            icon: Icon(Icons.edit, size: 20, color: Colors.orange),
+                            text: Text('共收录 ${_data!.mangaCount} 部漫画'),
                             space: 8,
                             iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
                           IconText(
-                            icon: Icon(Icons.edit, size: 20, color: Colors.orange),
-                            text: Text('共收录 ${_data!.mangaCount} 部漫画'),
+                            icon: Icon(Icons.stars, size: 20, color: Colors.orange),
+                            text: Text('平均评分 ${_data!.averageScore} / 最高评分 ${_data!.highestScore}'),
+                            space: 8,
+                            iconPadding: EdgeInsets.symmetric(vertical: 2.8),
+                          ),
+                          IconText(
+                            icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
+                            text: Text('人气指数 ${_data!.popularity}'),
                             space: 8,
                             iconPadding: EdgeInsets.symmetric(vertical: 2.8),
                           ),
@@ -225,7 +325,48 @@ class _AuthorPageState extends State<AuthorPage> {
               ),
             ),
             // ****************************************************************
-            // 作者介绍 & 最新收录
+            // 四个按钮
+            // ****************************************************************
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: ActionRowView.four(
+                  action1: ActionItem.simple(
+                    '收藏作者', // 取消收藏
+                    Icons.bookmark_border, // Icons.bookmark
+                    () {}, // TODO 添加作者收藏功能
+                  ),
+                  action2: ActionItem(
+                    text: '查看漫画',
+                    icon: Icons.description_outlined,
+                    action: () {}, // TODO ActionItem 查看漫画 / 推荐作者
+                  ),
+                  action3: ActionItem(
+                    text: '作者详情',
+                    icon: Icons.subject,
+                    action: () => Navigator.of(context).push(
+                      CustomPageRoute(
+                        context: context,
+                        builder: (c) => AuthorDetailPage(data: _data!),
+                      ),
+                    ),
+                  ),
+                  action4: ActionItem(
+                    text: '分享作者',
+                    icon: Icons.share,
+                    action: () => shareText(
+                      title: '漫画柜分享',
+                      text: '【${_data!.name}】${_data!.url}',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(height: 12),
+            ),
+            // ****************************************************************
+            // 作者介绍/作者介绍 & 最新收录/评分最高
             // ****************************************************************
             SliverToBoxAdapter(
               child: Material(
@@ -236,13 +377,14 @@ class _AuthorPageState extends State<AuthorPage> {
                     InkWell(
                       child: Container(
                         width: MediaQuery.of(context).size.width,
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                         child: Text(
-                          '作者介绍：\n' + (_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim()),
+                          '作者别名：${_data!.alias}\n作者介绍：${_data!.introduction}',
                           style: Theme.of(context).textTheme.bodyText2,
                         ),
                       ),
-                      onTap: () => copyText(_data!.introduction.trim().isEmpty ? '${_data!.name}漫画全集' : _data!.introduction.trim(), showToast: true),
+                      onTap: () => _showDescriptionPopupMenu(),
+                      onLongPress: () => _showDescriptionPopupMenu(),
                     ),
                     Container(
                       width: MediaQuery.of(context).size.width,
@@ -253,14 +395,52 @@ class _AuthorPageState extends State<AuthorPage> {
                     InkWell(
                       child: Container(
                         width: MediaQuery.of(context).size.width,
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        child: Text(
-                          '最新收录：\n《${_data!.newestMangaTitle}》',
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                        child: TextGroup.normal(
                           style: Theme.of(context).textTheme.bodyText2,
+                          texts: [
+                            if (_data!.newestMangaId == _data!.highestMangaId) ...[
+                              SpanItem(span: WidgetSpan(child: Icon(Icons.trending_up, size: 20, color: Colors.grey[800]))),
+                              PlainTextItem(text: ' 最新收录 / '),
+                              SpanItem(span: WidgetSpan(child: Icon(Icons.fiber_new, size: 20, color: Colors.grey[800]))),
+                              PlainTextItem(text: ' 评分最高：\n'),
+                              PlainTextItem(text: '《${_data!.newestMangaTitle}》'),
+                            ],
+                            if (_data!.newestMangaId != _data!.highestMangaId) ...[
+                              SpanItem(span: WidgetSpan(child: Icon(Icons.fiber_new, size: 20, color: Colors.grey[800]))),
+                              PlainTextItem(text: ' 最新收录：\n'),
+                              PlainTextItem(text: '《${_data!.newestMangaTitle}》'),
+                            ],
+                          ],
                         ),
                       ),
-                      onTap: () => copyText(_data!.newestMangaTitle, showToast: true),
+                      onTap: () => _showMangaPopupMenu(forNewest: true),
+                      onLongPress: () => _showMangaPopupMenu(forNewest: true),
                     ),
+                    if (_data!.newestMangaId != _data!.highestMangaId) ...[
+                      Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        color: Colors.white,
+                        child: Divider(height: 0, thickness: 1),
+                      ),
+                      InkWell(
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                          child: TextGroup.normal(
+                            style: Theme.of(context).textTheme.bodyText2,
+                            texts: [
+                              SpanItem(span: WidgetSpan(child: Icon(Icons.trending_up, size: 20, color: Colors.grey[800]))),
+                              PlainTextItem(text: ' 评分最高：\n'),
+                              PlainTextItem(text: '《${_data!.highestMangaTitle}》'),
+                            ],
+                          ),
+                        ),
+                        onTap: () => _showMangaPopupMenu(forHighest: true),
+                        onLongPress: () => _showMangaPopupMenu(forHighest: true),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -344,10 +524,7 @@ class _AuthorPageState extends State<AuthorPage> {
               separator: Divider(height: 0, thickness: 1),
               itemBuilder: (c, _, item) => TinyMangaLineView(
                 manga: item.toTiny(),
-                inDownload: _flagStorage.isInDownload(mangaId: item.mid),
-                inShelf: _flagStorage.isInShelf(mangaId: item.mid),
-                inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
-                inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+                flags: _flagStorage.getFlags(mangaId: item.mid),
               ),
             ),
           ),

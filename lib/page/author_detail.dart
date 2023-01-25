@@ -1,47 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
-/// 漫画详情页，展示所给 [Manga] 信息
-class MangaDetailPage extends StatefulWidget {
-  const MangaDetailPage({
+/// 作者详情页，展示所给 [Author] 信息
+class AuthorDetailPage extends StatefulWidget {
+  const AuthorDetailPage({
     Key? key,
     required this.data,
   }) : super(key: key);
 
-  final Manga data;
+  final Author data;
 
   @override
-  _MangaDetailPageState createState() => _MangaDetailPageState();
+  _AuthorDetailPageState createState() => _AuthorDetailPageState();
 }
 
-class _MangaDetailPageState extends State<MangaDetailPage> {
+class _AuthorDetailPageState extends State<AuthorDetailPage> {
   final _controller = ScrollController();
   late final _details = [
-    Tuple2('mid', widget.data.mid.toString()),
-    Tuple2('标题', '《${widget.data.title}》'),
-    Tuple2('标题别名', widget.data.aliases.isEmpty ? '暂无' : widget.data.aliases.map((a) => '《$a》').join('\n')),
-    Tuple2('封面链接', widget.data.cover),
+    Tuple2('aid', widget.data.aid.toString()),
+    Tuple2('作者名', widget.data.name),
+    Tuple2('作者别名', widget.data.alias.trim().isNotEmpty ? widget.data.alias.trim() : '暂无'),
+    Tuple2('所属地区', widget.data.zone),
     Tuple2('网页链接', widget.data.url),
-    Tuple2('状态', widget.data.finished ? '已完结' : '连载中'),
-    Tuple2('出版年份', widget.data.publishYear),
-    Tuple2('漫画地区', widget.data.mangaZone),
-    Tuple2('漫画类别', widget.data.genres.map((g) => g.title).join(', ')),
-    Tuple2('漫画作者', widget.data.authors.map((a) => a.name).join(', ')),
-    Tuple2('最新章节', widget.data.newestChapter),
-    Tuple2('更新时间', widget.data.newestDate),
-    Tuple2('总章节数', widget.data.chapterGroups.expand((g) => g.chapters).length.toString()),
-    Tuple2('章节分组数', widget.data.chapterGroups.length.toString()),
-    for (var group in widget.data.chapterGroups) Tuple2('《${group.title}》章节数', group.chapters.length.toString()),
-    Tuple2('包含色情暴力', widget.data.banned ? '是' : '否'),
-    Tuple2('拥有版权', widget.data.copyright ? '是' : '否'),
-    Tuple2('漫画排名', widget.data.mangaRank),
-    Tuple2('平均得分', widget.data.averageScore.toStringAsFixed(1)),
-    Tuple2('评分人数', widget.data.scoreCount.toString()),
-    for (var num in [5, 4, 3, 2, 1]) Tuple2('评 $num 星比例', widget.data.perScores[num]),
-    Tuple2('简要介绍', widget.data.briefIntroduction),
-    Tuple2('详细介绍', widget.data.introduction),
+    Tuple2('人气指数', widget.data.popularity.toString()),
+    Tuple2('收录漫画数', widget.data.mangaCount.toString()),
+    Tuple2('收录更新时间', widget.data.newestDate),
+    Tuple2('最新收录漫画', '《${widget.data.newestMangaTitle}》mid: ${widget.data.newestMangaId}'),
+    Tuple2('评分最高漫画', '《${widget.data.highestMangaTitle}》mid: ${widget.data.highestMangaId}'),
+    Tuple2('最高评分', widget.data.highestScore.toString()),
+    Tuple2('平均评分', widget.data.averageScore.toString()),
+    Tuple2('作者介绍', widget.data.introduction.trim().isNotEmpty ? widget.data.introduction.trim() : '暂无'),
   ];
   late final _helper = TableCellHelper(_details.length, 2);
 
@@ -57,7 +47,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('漫画详情'),
+        title: Text('作者详情'),
         leading: AppBarActionButton.leading(context: context),
       ),
       body: ExtendedScrollbar(

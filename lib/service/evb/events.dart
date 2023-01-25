@@ -1,3 +1,7 @@
+// ======================
+// To XXX Requested Event
+// ======================
+
 class ToShelfRequestedEvent {
   const ToShelfRequestedEvent();
 }
@@ -18,40 +22,65 @@ class ToRankingRequestedEvent {
   const ToRankingRequestedEvent();
 }
 
+// =================
+// XXX Updated Event
+// =================
+
+enum UpdateReason { added, updated, deleted }
+
 class HistoryUpdatedEvent {
-  const HistoryUpdatedEvent({required this.mangaId});
+  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.fromHistoryPage = false, this.fromMangaPage = false});
 
   final int mangaId;
+  final UpdateReason reason;
+  final bool fromHistoryPage;
+  final bool fromMangaPage;
 }
 
-class SubscribeUpdatedEvent {
-  const SubscribeUpdatedEvent({required this.mangaId, this.inShelf, this.inFavorite, this.changedGroup});
+class ShelfUpdatedEvent {
+  const ShelfUpdatedEvent({required this.mangaId, required this.added, this.fromShelfPage = false, this.fromMangaPage = false});
 
   final int mangaId;
-  final bool? inShelf;
-  final bool? inFavorite;
-  final String? changedGroup;
+  final bool added;
+  final bool fromShelfPage;
+  final bool fromMangaPage;
+}
+
+class FavoriteUpdatedEvent {
+  const FavoriteUpdatedEvent({required this.mangaId, required this.group, required this.reason, this.fromFavoritePage = false, this.fromMangaPage = false});
+
+  final int mangaId;
+  final String group;
+  final UpdateReason reason;
+  final bool fromFavoritePage;
+  final bool fromMangaPage;
+}
+
+class DownloadUpdatedEvent {
+  const DownloadUpdatedEvent({required this.mangaId, this.fromDownloadPage = false, this.fromMangaPage = false, this.fromDownloadMangaPage = false});
+
+  final int mangaId;
+  final bool fromDownloadPage;
+  final bool fromMangaPage;
+  final bool fromDownloadMangaPage;
 }
 
 class ShelfCacheUpdatedEvent {
-  const ShelfCacheUpdatedEvent({required this.mangaId, required this.inShelf});
+  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added});
 
   final int mangaId;
-  final bool inShelf;
+  final bool added;
 }
 
-class DownloadMangaProgressChangedEvent {
-  const DownloadMangaProgressChangedEvent({required this.mangaId, required this.finished});
+// ============
+// Other Events
+// ============
+
+class DownloadProgressChangedEvent {
+  const DownloadProgressChangedEvent({required this.mangaId, required this.finished});
 
   final int mangaId;
   final bool finished;
-}
-
-class DownloadedMangaEntityChangedEvent {
-  const DownloadedMangaEntityChangedEvent({required this.mangaId, this.byDeleting = false});
-
-  final int mangaId;
-  final bool byDeleting;
 }
 
 class AppSettingChangedEvent {

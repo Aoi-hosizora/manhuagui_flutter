@@ -25,9 +25,25 @@ class MangaHistory {
 
   bool get read => chapterId != 0;
 
-  String get formattedLastTime {
-    var long = DateFormat('yyyy-MM-dd HH:mm').format(lastTime);
-    var short = DateFormat('HH:mm').format(lastTime);
+  String get formattedLastTime => DateFormat('yyyy-MM-dd HH:mm:ss').format(lastTime);
+
+  String get formattedLastDuration {
+    var du = DateTime.now().difference(lastTime);
+    if (du.inDays > 0) {
+      return '${du.inDays}天前';
+    }
+    if (du.inHours != 0) {
+      return '${du.inHours}小时前';
+    }
+    if (du.inMinutes != 0) {
+      return '${du.inMinutes}分钟前';
+    }
+    return '不到1分钟前';
+  }
+
+  String get formattedLastTimeWithDuration {
+    var long = DateFormat('yyyy-MM-dd HH:mm:ss').format(lastTime);
+    var short = DateFormat('HH:mm:ss').format(lastTime);
 
     var du = DateTime.now().difference(lastTime);
     if (du.inDays > 0) {
@@ -41,8 +57,6 @@ class MangaHistory {
     }
     return '不到1分钟前 ($short)';
   }
-
-  String get fullFormattedLastTime => DateFormat('yyyy-MM-dd HH:mm').format(lastTime);
 
   MangaHistory copyWith({
     int? mangaId,
@@ -110,6 +124,14 @@ class ShelfCache {
       cachedAt: cachedAt ?? this.cachedAt,
     );
   }
+
+  bool equals(ShelfCache o) {
+    return mangaId == o.mangaId && //
+        mangaTitle == o.mangaTitle &&
+        mangaCover == o.mangaCover &&
+        mangaUrl == o.mangaUrl &&
+        cachedAt == o.cachedAt;
+  }
 }
 
 class FavoriteManga {
@@ -133,7 +155,7 @@ class FavoriteManga {
     required this.createdAt,
   });
 
-  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm').format(createdAt);
+  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
 
   String get checkedGroupName => groupName.trim().isEmpty ? '默认分组' : groupName.trim();
 
@@ -157,6 +179,17 @@ class FavoriteManga {
       order: order ?? this.order,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  bool equals(FavoriteManga o) {
+    return mangaId == o.mangaId && //
+        mangaTitle == o.mangaTitle &&
+        mangaCover == o.mangaCover &&
+        mangaUrl == o.mangaUrl &&
+        remark == o.remark &&
+        groupName == o.groupName &&
+        order == o.order &&
+        createdAt == o.createdAt;
   }
 }
 
@@ -187,6 +220,59 @@ class FavoriteGroup {
       order: order ?? this.order,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  bool equals(FavoriteGroup o) {
+    return groupName == o.groupName && //
+        order == o.order &&
+        createdAt == o.createdAt;
+  }
+}
+
+class FavoriteAuthor {
+  final int authorId;
+  final String authorName;
+  final String authorCover;
+  final String authorUrl;
+  final String remark;
+  final DateTime createdAt;
+
+  const FavoriteAuthor({
+    required this.authorId,
+    required this.authorName,
+    required this.authorCover,
+    required this.authorUrl,
+    required this.remark,
+    required this.createdAt,
+  });
+
+  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
+
+  FavoriteAuthor copyWith({
+    int? authorId,
+    String? authorName,
+    String? authorCover,
+    String? authorUrl,
+    String? remark,
+    DateTime? createdAt,
+  }) {
+    return FavoriteAuthor(
+      authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      authorCover: authorCover ?? this.authorCover,
+      authorUrl: authorUrl ?? this.authorUrl,
+      remark: remark ?? this.remark,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  bool equals(FavoriteAuthor o) {
+    return authorId == o.authorId && //
+        authorName == o.authorName &&
+        authorCover == o.authorCover &&
+        authorUrl == o.authorUrl &&
+        remark == o.remark &&
+        createdAt == o.createdAt;
   }
 }
 
@@ -265,6 +351,17 @@ class DownloadedManga {
       needUpdate: needUpdate ?? this.needUpdate,
     );
   }
+
+  bool equals(DownloadedManga o) {
+    return mangaId == o.mangaId && //
+        mangaTitle == o.mangaTitle &&
+        mangaCover == o.mangaCover &&
+        mangaUrl == o.mangaUrl &&
+        error == o.error &&
+        updatedAt == o.updatedAt &&
+        downloadedChapters == o.downloadedChapters &&
+        needUpdate == o.needUpdate;
+  }
 }
 
 class DownloadedChapter {
@@ -314,6 +411,17 @@ class DownloadedChapter {
       successPageCount: successPageCount ?? this.successPageCount,
       needUpdate: needUpdate ?? this.needUpdate,
     );
+  }
+
+  bool equals(DownloadedChapter o) {
+    return mangaId == o.mangaId && //
+        chapterId == o.chapterId &&
+        chapterTitle == o.chapterTitle &&
+        chapterGroup == o.chapterGroup &&
+        totalPageCount == o.totalPageCount &&
+        triedPageCount == o.triedPageCount &&
+        successPageCount == o.successPageCount &&
+        needUpdate == o.needUpdate;
   }
 
   TinyMangaChapter toTiny() {

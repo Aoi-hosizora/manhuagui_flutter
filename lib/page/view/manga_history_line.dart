@@ -11,17 +11,13 @@ class MangaHistoryLineView extends StatelessWidget {
   const MangaHistoryLineView({
     Key? key,
     required this.history,
+    this.flags,
     required this.onLongPressed,
-    this.inDownload = false,
-    this.inShelf = false,
-    this.inFavorite = false,
   }) : super(key: key);
 
   final MangaHistory history;
+  final MangaCornerFlags? flags;
   final Function()? onLongPressed;
-  final bool inDownload;
-  final bool inShelf;
-  final bool inFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +29,8 @@ class MangaHistoryLineView extends StatelessWidget {
       icon2: !history.read ? CustomIcons.opened_empty_book : Icons.import_contacts,
       text2: !history.read ? '未开始阅读' : '阅读至 ${history.chapterTitle} 第${history.chapterPage}页',
       icon3: Icons.access_time,
-      text3: '浏览于 ${history.formattedLastTime}',
-      cornerIcons: buildMangaCornerIcons(inDownload: inDownload, inShelf: inShelf, inFavorite: inFavorite, inHistory: true),
+      text3: '浏览于 ${history.formattedLastTimeWithDuration}',
+      cornerIcons: flags?.buildIcons(),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

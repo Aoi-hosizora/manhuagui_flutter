@@ -255,8 +255,9 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
   }();
 
   if (ok && counter.readHistories != null && counter.readHistories! > 0) {
-    // notify manga read history is changed
-    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1));
+    // notify histories and favorites are changed
+    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
+    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added));
   }
   await exportedDB.close();
   return ok;

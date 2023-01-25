@@ -41,7 +41,7 @@ class MessageLineView extends StatelessWidget {
         title: Text('消息选项'),
         children: [
           IconTextDialogOption(
-            icon: Icon(Icons.import_contacts),
+            icon: Icon(Icons.arrow_forward),
             text: Text('查看详情'),
             onPressed: () async {
               Navigator.of(c).pop();

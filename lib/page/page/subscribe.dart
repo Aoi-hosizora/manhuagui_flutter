@@ -25,7 +25,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   late final _keys = List.generate(3, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(3, (_) => ActionController());
   late final _tabs = [
-    Tuple2('书架', ShelfSubPage(key: _keys[0], action: _actions[0], parentContext: context)),
+    Tuple2('书架', ShelfSubPage(key: _keys[0], action: _actions[0])),
     Tuple2('收藏', FavoriteSubPage(key: _keys[1], action: _actions[1])),
     Tuple2('阅读历史', HistorySubPage(key: _keys[2], action: _actions[2])),
   ];
@@ -88,8 +88,8 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             ),
           if (_currentPageIndex == 1)
             AppBarActionButton(
-              icon: Icon(Icons.bookmark),
-              tooltip: '管理收藏分组',
+              icon: Icon(Icons.bookmark_outline),
+              tooltip: '管理本地收藏',
               onPressed: () => _actions[1].invoke('manage'),
             ),
           if (_currentPageIndex == 2)

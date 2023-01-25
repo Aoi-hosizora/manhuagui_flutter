@@ -48,8 +48,8 @@ class User {
     }
   }
 
-  static String formatDateTime(DateTime dt, {bool ss = true}) {
-    var df = DateFormat(ss ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm');
+  static String formatDateTime(DateTime dt) {
+    var df = DateFormat('yyyy-MM-dd HH:mm:ss');
     return df.format(dt);
   }
 
@@ -69,7 +69,7 @@ class User {
     if (dt == null) {
       return registerTime;
     }
-    return formatDateTime(dt, ss: false);
+    return formatDateTime(dt);
   }
 
   String get formattedLastLoginDateTimeWithDuration {
@@ -88,12 +88,14 @@ class User {
     return '${formatDateTime(dt)} (${formatDuration(dt)})';
   }
 
-  static bool isTodayLogined(DateTime? currLoginTime) {
-    if (currLoginTime == null) {
-      return false;
-    }
+  bool isTodayLogined(DateTime? currLoginTime) {
+    var last = stringToDateTime(lastLoginTime);
+    var curr = currLoginTime;
     var now = DateTime.now();
-    return currLoginTime.year == now.year && currLoginTime.month == now.month && currLoginTime.day == now.day;
+    var logined = false;
+    logined = logined || (last != null && last.year == now.year && last.month == now.month && last.day == now.day);
+    logined = logined || (curr != null && curr.year == now.year && curr.month == now.month && curr.day == now.day);
+    return logined;
   }
 }
 

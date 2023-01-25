@@ -105,7 +105,7 @@ class HistoryDao {
     );
   }
 
-  static Future<List<MangaHistory>?> getHistories({required String username, required int page, int limit = 20, int offset = 0}) async {
+  static Future<List<MangaHistory>?> getHistories({required String username, required int page, bool includeUnread = true, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
     offset = limit * (page - 1) - offset;
     if (offset < 0) {
@@ -114,7 +114,7 @@ class HistoryDao {
     var results = await db.safeRawQuery(
       '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime 
          FROM $_tblHistory
-         WHERE $_colUsername = ?
+         WHERE $_colUsername = ? ${includeUnread ? '' : 'AND $_colChapterId <> 0'}
          ORDER BY $_colLastTime DESC
          LIMIT $limit OFFSET $offset''',
       [username],
@@ -169,22 +169,23 @@ class HistoryDao {
     return rows != null && rows >= 1;
   }
 
-  static Future<bool> deleteHistory({required String username, required int? mid}) async {
+  static Future<bool> deleteHistory({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
-    int? rows;
-    if (mid != null) {
-      rows = await db.safeRawDelete(
-        '''DELETE FROM $_tblHistory
-           WHERE $_colUsername = ? AND $_colMangaId = ?''',
-        [username, mid],
-      );
-    } else {
-      rows = await db.safeRawDelete(
-        '''DELETE FROM $_tblHistory
-           WHERE $_colUsername = ?''',
-        [username],
-      );
-    }
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblHistory
+         WHERE $_colUsername = ? AND $_colMangaId = ?''',
+      [username, mid],
+    );
     return rows != null && rows >= 1;
+  }
+
+  static Future<bool> clearHistories({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblHistory
+         WHERE $_colUsername = ?''',
+      [username],
+    );
+    return rows != null;
   }
 }

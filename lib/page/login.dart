@@ -56,7 +56,30 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _checkLogined() async {
-    // TODO AuthManager.instance.check => 检查到 "" 用户已登录，是否保持登录状态
+    if (!AuthManager.instance.logined) {
+      await AuthManager.instance.check();
+      if (!AuthManager.instance.logined) {
+        return;
+      }
+    }
+    var ok = await showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('登录状态'),
+        content: Text('检查到当前正以 "${AuthManager.instance.username}" 用户身份登录，是否保持该登录状态？'),
+        actions: [
+          TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+        ],
+      ),
+    );
+    if (ok != true) {
+      return;
+    }
+
+    // 再次通知一次，并关闭登录页面
+    AuthManager.instance.notify(logined: true);
+    Navigator.of(context).pop();
   }
 
   Future<void> _login() async {

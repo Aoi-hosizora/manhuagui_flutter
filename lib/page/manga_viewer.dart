@@ -137,14 +137,25 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     // data related
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
-    _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
-      if (e.mangaId == widget.mangaId) {
-        _inShelf = e.inShelf ?? _inShelf;
-        _inFavorite = e.inFavorite ?? _inFavorite;
+    _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) async {
+      if (ev.mangaId == widget.mangaId) {
+        _inShelf = ev.added;
         if (mounted) setState(() {});
       }
     }));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
+      if (ev.mangaId == widget.mangaId) {
+        _inFavorite = ev.reason != UpdateReason.deleted;
+        if (mounted) setState(() {});
+      }
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
+      if (ev.mangaId == widget.mangaId) {
+        _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+        _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
+        if (mounted) setState(() {});
+      }
+    }));
 
     // setting and screen related
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
@@ -240,7 +251,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     });
 
     // 3. 获取章节下载信息
-    await _loadDownload();
+    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
 
     try {
       if (widget.onlineMode) {
@@ -365,28 +377,19 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   // 载入时调用 / 离开页面时调用 / 跳转章节时调用
   Future<void> _updateHistory() async {
     if (_data != null) {
-      await HistoryDao.addOrUpdateHistory(
-        username: AuthManager.instance.username,
-        history: MangaHistory(
-          mangaId: widget.mangaId,
-          mangaTitle: _data!.mangaTitle,
-          mangaCover: _data!.mangaCover,
-          mangaUrl: _data!.mangaUrl,
-          chapterId: widget.chapterId,
-          chapterTitle: _data!.chapterTitle,
-          chapterPage: _currentPage,
-          lastTime: DateTime.now(),
-        ),
+      var history = MangaHistory(
+        mangaId: widget.mangaId,
+        mangaTitle: _data!.mangaTitle,
+        mangaCover: _data!.mangaCover,
+        mangaUrl: _data!.mangaUrl,
+        chapterId: widget.chapterId,
+        chapterTitle: _data!.chapterTitle,
+        chapterPage: _currentPage,
+        lastTime: DateTime.now(),
       );
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId));
+      await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: history);
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated));
     }
-  }
-
-  // 载入时调用 / 下载状态变化时调用
-  Future<void> _loadDownload() async {
-    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-    _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
-    if (mounted) setState(() {});
   }
 
   var _currentPage = 1; // image page only, starts from 1
@@ -496,14 +499,18 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaTitle: _data!.mangaTitle,
       mangaCover: _data!.mangaCover,
       mangaUrl: _data!.mangaUrl,
+      fromMangaPage: false,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
       subscribing: (s) => mountedSetState(() => _subscribing = s),
       inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
-      inFavoriteSetter: (f) => mountedSetState(() => _inFavorite = f),
-      favoriteSetter: (f) => mountedSetState(() => _favoriteManga = f),
+      inFavoriteSetter: (f) {
+        _inFavorite = f != null;
+        _favoriteManga = f;
+        if (mounted) setState(() {});
+      },
     );
   }
 

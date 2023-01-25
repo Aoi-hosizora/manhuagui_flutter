@@ -17,8 +17,7 @@ class Manga {
   final String mangaZone;
   final List<Category> genres;
   final List<TinyAuthor> authors;
-  final String alias;
-  final String aliasTitle;
+  final List<String> aliases;
   final bool finished;
   final String newestChapter;
   final String newestDate;
@@ -32,7 +31,7 @@ class Manga {
   final bool copyright;
   final List<MangaChapterGroup> chapterGroups;
 
-  const Manga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.alias, required this.aliasTitle, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction, required this.introduction, required this.mangaRank, required this.averageScore, required this.scoreCount, required this.perScores, required this.banned, required this.copyright, required this.chapterGroups});
+  const Manga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.aliases, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction, required this.introduction, required this.mangaRank, required this.averageScore, required this.scoreCount, required this.perScores, required this.banned, required this.copyright, required this.chapterGroups});
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 

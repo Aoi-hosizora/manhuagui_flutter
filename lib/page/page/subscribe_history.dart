@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -31,7 +32,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
-  var _historyUpdated = false;
   AuthData? _oldAuthData;
 
   @override
@@ -46,10 +46,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       }));
       await AuthManager.instance.check();
     });
-    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) {
-      _historyUpdated = true;
-      if (mounted) setState(() {});
-    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
@@ -64,10 +61,13 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     super.dispose();
   }
 
+  var _loading = false;
   final _data = <MangaHistory>[];
-  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
-  var _removed = 0;
+  var _removed = 0; // for query offset
+  var _includeUnreadMangas = true;
+  var _historyUpdated = false;
 
   Future<PagedList<MangaHistory>> _getData({required int page}) async {
     if (page == 1) {
@@ -76,42 +76,65 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       _historyUpdated = false;
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local history
-    var data = await HistoryDao.getHistories(username: username, page: page, offset: _removed) ?? [];
+    var data = await HistoryDao.getHistories(username: username, includeUnread: _includeUnreadMangas, page: page, offset: _removed) ?? [];
     _total = await HistoryDao.getHistoryCount(username: username) ?? 0;
-    await _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), toQueryHistories: false);
+    await _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryHistories: true /* for history read flag */);
     if (mounted) setState(() {});
     return PagedList(list: data, next: page + 1);
   }
 
-  Future<void> _clearHistories() async {
-    if (_data.isEmpty) {
-      return;
+  Future<void> _updateByEvent(HistoryUpdatedEvent event) async {
+    if (event.reason == UpdateReason.added) {
+      // 新增 => 显示有更新
+      _historyUpdated = true;
+      if (mounted) setState(() {});
     }
-    var ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text('清空确认'),
-        content: Text('是否清空所有阅读历史？'),
-        actions: [
-          TextButton(child: Text('清空'), onPressed: () => Navigator.of(c).pop(true)),
-          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
-        ],
-      ),
-    );
-    if (ok != true) {
+    if (event.reason == UpdateReason.deleted && !event.fromHistoryPage) {
+      // 非本页引起的删除 => 显示有更新
+      _historyUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (event.reason == UpdateReason.updated && !event.fromHistoryPage) {
+      // 非本页引起的更新 => 更新列表显示
+      // TODO 顺序变更如何提示？是否显示有更新？
+      var history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: event.mangaId);
+      if (history != null) {
+        for (var i = 0; i < _data.length; i++) {
+          if (_data[i].mangaId == event.mangaId) {
+            _data[i] = history;
+          }
+        }
+        if (mounted) setState(() {});
+      }
+    }
+  }
+
+  void _showPopupMenu({required int mangaId}) {
+    var history = _data.where((el) => el.mangaId == _msController.selectedItems.first.value).firstOrNull;
+    if (history == null) {
       return;
     }
 
-    // 退出多选模式、更新列表和数据库
+    // 退出多选模式、弹出菜单
     _msController.exitMultiSelectionMode();
-    await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: null);
-    for (var manga in _data) {
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: manga.mangaId)); // TODO ignore once
-    }
-    _data.clear();
-    _removed = 0;
-    _total = 0;
-    if (mounted) setState(() {});
+    showPopupMenuForMangaList(
+      context: context,
+      mangaId: history.mangaId,
+      mangaTitle: history.mangaTitle,
+      mangaCover: history.mangaCover,
+      mangaUrl: history.mangaUrl,
+      fromHistoryList: true,
+      inHistorySetter: (inHistory) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
+        if (!inHistory) {
+          _data.removeWhere((el) => el.mangaId == history.mangaId);
+          _removed++;
+          _total--;
+          if (mounted) setState(() {});
+        }
+      },
+    );
   }
 
   Future<void> _deleteHistories({required List<int> mangaIds}) async {
@@ -123,7 +146,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('刪除确认'),
+        title: Text('删除确认'),
         content: histories.length == 1 //
             ? Text('是否删除《${histories.first.mangaTitle}》阅读历史？')
             : Text(
@@ -141,14 +164,53 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       return;
     }
 
-    // 退出多选模式、更新列表和数据库
+    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
+    // 本页引起的删除 => 更新列表显示
     _msController.exitMultiSelectionMode();
     for (var mangaId in mangaIds) {
+      await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
       _data.removeWhere((h) => h.mangaId == mangaId);
       _removed++;
       _total--;
-      await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId)); // TODO ignore once
+    }
+    for (var mangaId in mangaIds) {
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _clearHistories() async {
+    _total = await HistoryDao.getHistoryCount(username: AuthManager.instance.username) ?? 0;
+    if (_total == 0) {
+      Fluttertoast.showToast(msg: '当前无漫画阅读历史');
+      return;
+    }
+
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('清空确认'),
+        content: Text('是否清空所有阅读历史？'),
+        actions: [
+          TextButton(child: Text('清空'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+        ],
+      ),
+    );
+    if (ok != true) {
+      return;
+    }
+
+    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
+    // 本页引起的删除 => 更新列表显示
+    _msController.exitMultiSelectionMode();
+    await HistoryDao.clearHistories(username: AuthManager.instance.username);
+    var mangaIds = _data.map((el) => el.mangaId).toList();
+    _data.clear();
+    _removed = mangaIds.length;
+    _total = 0;
+    for (var mangaId in mangaIds) {
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
     }
     if (mounted) setState(() {});
   }
@@ -193,6 +255,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               clearWhenError: false,
               updateOnlyIfNotEmpty: false,
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
+              onStartGettingData: () => mountedSetState(() => _loading = true),
+              onStopGettingData: () => mountedSetState(() => _loading = false),
             ),
             separator: Divider(height: 0, thickness: 1),
             itemBuilder: (c, _, item) => SelectableCheckboxItem<ValueKey<int>>(
@@ -201,10 +265,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
               itemBuilder: (c, key, tip) => MangaHistoryLineView(
                 history: item,
+                flags: _flagStorage.getFlags(mangaId: item.mangaId, forceInHistory: true),
                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
-                inDownload: _flagStorage.isInDownload(mangaId: item.mangaId),
-                inShelf: _flagStorage.isInShelf(mangaId: item.mangaId),
-                inFavorite: _flagStorage.isInFavorite(mangaId: item.mangaId),
               ),
             ),
             extra: UpdatableDataViewExtraWidgets(
@@ -226,6 +288,24 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                   ),
                 ),
               ],
+              listTopWidgets: [
+                CheckboxListTile(
+                  title: Text('显示包括未开始阅读的漫画历史', style: Theme.of(context).textTheme.bodyText2),
+                  value: _includeUnreadMangas,
+                  tileColor: Colors.white,
+                  onChanged: (v) {
+                    if (!_loading && v != null && v != _includeUnreadMangas) {
+                      _includeUnreadMangas = v;
+                      if (mounted) setState(() {});
+                      _pdvKey.currentState?.refresh();
+                    }
+                  },
+                  visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.only(left: 6),
+                ),
+                Divider(height: 0, thickness: 1),
+              ],
             ),
           ),
         ),
@@ -240,24 +320,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             MultiSelectionFabOption(
               child: Icon(Icons.more_horiz),
               show: _msController.selectedItems.length == 1,
-              onPressed: () => _data.where((el) => el.mangaId == _msController.selectedItems.first.value).firstOrNull?.let((manga) {
-                _msController.exitMultiSelectionMode();
-                showPopupMenuForMangaList(
-                  context: context,
-                  mangaId: manga.mangaId,
-                  mangaTitle: manga.mangaTitle,
-                  mangaCover: manga.mangaCover,
-                  mangaUrl: manga.mangaUrl,
-                  inHistorySetter: (inHistory) {
-                    if (!inHistory) {
-                      _data.removeWhere((el) => el.mangaId == manga.mangaId); // TODO deal with deleting history
-                      _removed++;
-                      _total--;
-                      if (mounted) setState(() {});
-                    }
-                  },
-                );
-              }),
+              onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),

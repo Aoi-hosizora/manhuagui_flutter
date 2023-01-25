@@ -9,9 +9,10 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 enum DrawerSelection {
-  none, // MangaPage / MangaGroupPage / DownloadMangaPage / CommentsPage / AuthorPage / MessagePage
+  none, // MangaPage / MangaGroupPage / MangaTocPage / CommentsPage / DownloadMangaPage / AuthorPage / MessagePage
   home, // IndexPage
   search, // SearchPage
   download, // DownloadPage
@@ -172,8 +173,8 @@ class _AppDrawerState extends State<AppDrawer> {
           _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
           _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage())),
           Divider(thickness: 1),
-          _buildItem('我的书架', Icons.star, null, () => _gotoTabByEvent(ToShelfRequestedEvent())),
-          _buildItem('本地收藏', Icons.bookmark, null, () => _gotoTabByEvent(ToFavoriteRequestedEvent())),
+          _buildItem('我的书架', MdiIcons.bookshelf, null, () => _gotoTabByEvent(ToShelfRequestedEvent())),
+          _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, null, () => _gotoTabByEvent(ToFavoriteRequestedEvent())),
           _buildItem('阅读历史', Icons.history, null, () => _gotoTabByEvent(ToHistoryRequestedEvent())),
           _buildItem('最近更新', Icons.cached, null, () => _gotoTabByEvent(ToRecentRequestedEvent())),
           _buildItem('漫画排行', Icons.trending_up, null, () => _gotoTabByEvent(ToRankingRequestedEvent())),

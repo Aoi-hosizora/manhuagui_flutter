@@ -134,7 +134,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         ),
         SettingSwitcherView(
           title: '列表显示漫画右下角图标',
-          hint: '漫画右下角图标含义分别为 "在下载列表中"、"在被同步的书架上"、"在本地收藏中"、"已被阅读或浏览"。',
+          hint: '漫画右下角图标含义分别为 "在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"，其中书架信息源自于本地同步的书架记录。',
           value: _enableMangaFlags,
           onChanged: (b) {
             _enableMangaFlags = b;

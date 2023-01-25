@@ -48,8 +48,8 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
       _loading = false;
       if (mounted) setState(() {});
     });
-    _cancelHandler = EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((event) async {
-      if (event.mangaId == widget.mangaId) {
+    _cancelHandler = EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
+      if (ev.mangaId == widget.mangaId) {
         await _loadDownloadedChapters();
       }
     });
@@ -113,7 +113,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
     );
 
     // 4. 更新界面，并显示提示
-    await _loadDownloadedChapters();
+    // await _loadDownloadedChapters(); => 由事件通知更新章节信息
     _selected.clear();
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).clearSnackBars();

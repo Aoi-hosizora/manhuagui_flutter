@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -17,7 +18,7 @@ import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 下载列表页，查询数据库并展示 [DownloadedManga] 列表信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
+/// 下载列表页，查询数据库并展示 [DownloadedManga] 列表信息，以及展示 [DownloadProgressChangedEvent] 进度信息
 class DownloadPage extends StatefulWidget {
   const DownloadPage({
     Key? key,
@@ -36,9 +37,9 @@ class _DownloadPageState extends State<DownloadPage> {
   @override
   void initState() {
     super.initState();
-    var updater = _updateData();
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((ev) => updater.item2(ev.mangaId)));
+    var updater = _updateByEvent();
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => ev.fromDownloadPage.ifFalse(() => updater.item2(ev.mangaId))));
   }
 
   @override
@@ -69,7 +70,7 @@ class _DownloadPageState extends State<DownloadPage> {
     return data;
   }
 
-  Tuple2<void Function(int, bool), void Function(int)> _updateData() {
+  Tuple2<void Function(int, bool), void Function(int)> _updateByEvent() {
     void throughProgress(final int mangaId, final bool finished) async {
       var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
       if (finished) {
@@ -239,25 +240,27 @@ class _DownloadPageState extends State<DownloadPage> {
       return;
     }
 
-    // 退出多选模式、更新最新设置
+    // 退出多选模式、保存设置
     _msController.exitMultiSelectionMode();
     await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
 
-    // 更新列表和数据库
+    // 更新数据库、更新列表显示
     for (var mangaId in mangaIds) {
-      _data.removeWhere((el) => el.mangaId == mangaId);
-      _total--;
       await DownloadDao.deleteManga(mid: mangaId);
       await DownloadDao.deleteAllChapters(mid: mangaId);
-      EventBusManager.instance.fire(DownloadedMangaEntityChangedEvent(mangaId: mangaId));
+      _data.removeWhere((el) => el.mangaId == mangaId);
+      _total--;
     }
     if (mounted) setState(() {});
 
-    // 删除文件
+    // 删除文件、最后再发送通知
     if (alsoDeleteFile) {
       for (var mangaId in mangaIds) {
         await deleteDownloadedManga(mangaId: mangaId);
       }
+    }
+    for (var mangaId in mangaIds) {
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, fromDownloadPage: true));
     }
   }
 
@@ -273,7 +276,7 @@ class _DownloadPageState extends State<DownloadPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('下载列表 (共 $_total 部)'),
+          title: Text('下载列表'),
           leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
           actions: [
             AppBarActionButton(
@@ -342,6 +345,14 @@ class _DownloadPageState extends State<DownloadPage> {
                 ),
               );
             },
+            extra: UpdatableDataViewExtraWidgets(
+              outerTopWidgets: [
+                ListHintView.textText(
+                  leftText: '本地的漫画下载列表',
+                  rightText: '共 $_total 部',
+                ), // TODO 搜索、排序
+              ],
+            ),
           ),
         ),
         floatingActionButton: MultiSelectionFabContainer(

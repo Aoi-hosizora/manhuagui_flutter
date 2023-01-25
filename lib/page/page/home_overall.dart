@@ -46,7 +46,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
 
   final _data = <TinyManga>[];
   var _total = 0;
-  late final _flagStorage = MangaCornerFlagsStorage(stateSetter: () => mountedSetState(() {}));
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _currOrder = MangaOrder.byNew; // 最新发布优先
   var _lastOrder = MangaOrder.byNew;
   var _getting = false;
@@ -105,10 +105,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         separator: Divider(height: 0, thickness: 1),
         itemBuilder: (c, _, item) => TinyMangaLineView(
           manga: item,
-          inDownload: _flagStorage.isInDownload(mangaId: item.mid),
-          inShelf: _flagStorage.isInShelf(mangaId: item.mid),
-          inFavorite: _flagStorage.isInFavorite(mangaId: item.mid),
-          inHistory: _flagStorage.isInHistory(mangaId: item.mid),
+          flags: _flagStorage.getFlags(mangaId: item.mid),
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

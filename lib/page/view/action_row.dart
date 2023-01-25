@@ -53,6 +53,7 @@ class ActionRowView extends StatelessWidget {
         physics = null,
         super(key: key);
 
+  // not be used currently
   const ActionRowView.scroll({
     Key? key,
     required List<ActionItem> this.actions,
@@ -77,7 +78,7 @@ class ActionRowView extends StatelessWidget {
   final ActionItem? action3;
   final ActionItem? action4;
   final ActionItem? action5;
-  final List<ActionItem>? actions;
+  final List<ActionItem>? actions; // not be used currently
   final ScrollPhysics? physics;
   final bool? compact;
   final Color? textColor;
@@ -105,8 +106,8 @@ class ActionRowView extends StatelessWidget {
                 child: CustomIcon(
                   action.icon,
                   color: action.enable
-                      ? (textColor ?? Colors.black54) // enabled
-                      : (disabledTextColor ?? Colors.grey) /* disabled */,
+                      ? (iconColor ?? Colors.black54) // enabled
+                      : (disabledIconColor ?? Colors.grey) /* disabled */,
                 ),
               ),
           text: Text(
@@ -114,8 +115,8 @@ class ActionRowView extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText1!.copyWith(
                   fontSize: 16,
                   color: action.enable
-                      ? (iconColor ?? Colors.black) // enabled
-                      : (disabledIconColor ?? Colors.grey) /* disabled */,
+                      ? (textColor ?? Colors.black) // enabled
+                      : (disabledTextColor ?? Colors.grey) /* disabled */,
                 ),
           ),
         ),

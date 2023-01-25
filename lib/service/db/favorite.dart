@@ -35,6 +35,21 @@ class FavoriteDao {
     columns: [_colGUsername, _colGGroupName, _colGGroupOrder, _colGCreatedAt],
   );
 
+  static const _tblFavoriteAuthor = 'tbl_favorite_author';
+  static const _colAUsername = 'username';
+  static const _colAAuthorId = 'id';
+  static const _colAAuthorName = 'author_name';
+  static const _colAAuthorCover = 'author_cover';
+  static const _colAAuthorUrl = 'author_url';
+  static const _colARemark = 'remark';
+  static const _colACreatedAt = 'created_at';
+
+  static const authorMetadata = TableMetadata(
+    tableName: _tblFavoriteAuthor,
+    primaryKeys: [_colAUsername, _colAAuthorId],
+    columns: [_colAUsername, _colAAuthorId, _colAAuthorName, _colAAuthorCover, _colAAuthorUrl, _colARemark, _colACreatedAt],
+  );
+
   static Future<void> createForVer1(Database db) async {
     // pass
   }
@@ -69,6 +84,17 @@ class FavoriteDao {
         $_colGCreatedAt DATETIME,
         PRIMARY KEY ($_colGUsername, $_colGGroupName)
       )''');
+    // await db.safeExecute('''
+    //   CREATE TABLE $_tblFavoriteAuthor(
+    //     $_colAUsername VARCHAR(1023),
+    //     $_colAAuthorId INTEGER,
+    //     $_colAAuthorName VARCHAR(1023),
+    //     $_colAAuthorCover VARCHAR(1023),
+    //     $_colAAuthorUrl VARCHAR(1023),
+    //     $_colARemark VARCHAR(1023),
+    //     $_colACreatedAt DATETIME,
+    //     PRIMARY KEY ($_colUsername, $_colAAuthorId)
+    //   )''');
   }
 
   static Future<int?> getFavoriteCount({required String username, required String? groupName}) async {

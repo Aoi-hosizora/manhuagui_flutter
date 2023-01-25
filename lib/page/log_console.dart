@@ -162,6 +162,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     mainAxisMargin: 2,
                     crossAxisMargin: 2,
                     child: SingleChildScrollView(
+                      padding: EdgeInsets.only(bottom: 150),
                       controller: _scrollController,
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
@@ -170,7 +171,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                         child: SizedBox(
                           width: 2000,
                           child: SelectableText(
-                            _filteredBuffer.map((el) => el.plainText).join('\n'), // TODO 底部被遮挡
+                            _filteredBuffer.map((el) => el.plainText).join('\n'),
                             style: Theme.of(context).textTheme.bodyText2?.copyWith(fontFamily: 'monospace'),
                           ),
                         ),

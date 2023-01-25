@@ -37,6 +37,7 @@ class MineSubPage extends StatefulWidget {
 
 class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  late final _controller = ScrollController()..addListener(() => mountedSetState(() {}));
   VoidCallback? _cancelHandler;
 
   AuthData? _oldAuthData;
@@ -64,6 +65,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void dispose() {
     _cancelHandler?.call();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -112,7 +114,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         context: context,
         builder: (c) => AlertDialog(
           title: Text('登录签到'),
-          content: Text('只有在登录漫画柜时勾选 "保存密码" 才能一键登录签到。'), // TODO test
+          content: Text('只有在登录漫画柜时勾选 "保存密码" 才能一键登录签到。'),
           actions: [
             TextButton(
               child: Text('确定'),
@@ -262,35 +264,44 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    Widget _buildScaffold({required Widget body}) {
+
+    Widget _buildScaffold({required Widget body, Text? title}) {
+      final showBackground = _controller.hasClients && _controller.offset >= 180 - Theme.of(context).appBarTheme.toolbarHeight!;
       return Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          actions: [
-            AppBarActionButton(
-              icon: Icon(Icons.notifications, color: Colors.black54),
-              tooltip: '历史消息',
-              onPressed: () => Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => MessagePage(),
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(Theme.of(context).appBarTheme.toolbarHeight!),
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 150),
+            color: showBackground ? Theme.of(context).primaryColor : Theme.of(context).primaryColor.withOpacity(0),
+            child: AppBar(
+              title: showBackground && title != null ? title : null,
+              automaticallyImplyLeading: false,
+              actions: [
+                AppBarActionButton(
+                  icon: Icon(Icons.notifications, color: showBackground ? null : Colors.black54),
+                  tooltip: '历史消息',
+                  onPressed: () => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => MessagePage(),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            AppBarActionButton(
-              icon: Icon(Icons.settings, color: Colors.black54),
-              tooltip: '应用设置',
-              onPressed: () => Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => SettingPage(),
+                AppBarActionButton(
+                  icon: Icon(Icons.settings, color: showBackground ? null : Colors.black54),
+                  tooltip: '应用设置',
+                  onPressed: () => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => SettingPage(),
+                    ),
+                  ),
                 ),
-              ),
+              ],
+              backgroundColor: Colors.transparent,
+              elevation: 0,
             ),
-          ],
-          foregroundColor: Colors.transparent,
-          backgroundColor: Colors.transparent /* TODO 滚动 body 时布局重叠 */,
-          elevation: 0,
+          ),
         ),
         extendBodyBehindAppBar: true,
         body: PageView(
@@ -318,6 +329,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
     }
 
     return _buildScaffold(
+      title: _data == null ? null : Text(_data!.username),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _loadUser,
@@ -328,6 +340,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadUser(),
           childBuilder: (c) => ListView(
+            controller: _controller,
             padding: EdgeInsets.zero,
             physics: AlwaysScrollableScrollPhysics(),
             children: [
@@ -406,18 +419,18 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   '会员等级：${_data!.className}',
                   '个人成长值 / 账户积分：${_data!.score} 点',
                   '累计发送 ${_data!.totalCommentCount} 条评论，当前 ${_data!.unreadMessageCount} 条消息未读',
-                  '注册时间：${_data!.formattedRegisterDateTime}', // yyyy/MM/dd HH:mm:ss
+                  '注册时间：${_data!.formattedRegisterDateTime}', // yyyy-MM-dd HH:mm:ss
                 ],
               ),
               SizedBox(height: 12),
               _buildInfoLines(
                 icon: Icons.poll,
                 title: '登录统计',
-                hint: '注：登录IP并非指本设备的IP地址，而是指本第三方应用使用的服务器的IP地址。',
+                hint: '"当前登录时间"仅记录在移动端本地，跨设备不同步。\n\n"登录IP"并非指本设备的IP地址，而是指本第三方应用使用的服务器的IP地址。',
                 lines: [
-                  '当前登录时间：${_data!.formattedCurrLoginDateTimeWithDuration(_currLoginDateTime)}', // yyyy/MM/dd HH:mm:ss (x天前)
-                  '上回登录时间：${_data!.formattedLastLoginDateTimeWithDuration}', // yyyy/MM/dd HH:mm:ss (x天前)
-                  '累计登录时长：${_data!.cumulativeDayCount}天，' + (!User.isTodayLogined(_currLoginDateTime) ? '今天尚未登录签到' : '今天已登录签到'),
+                  '当前登录时间：${_data!.formattedCurrLoginDateTimeWithDuration(_currLoginDateTime)}', // yyyy-MM-dd HH:mm:ss (x天前)
+                  '上回登录时间：${_data!.formattedLastLoginDateTimeWithDuration}', // yyyy-MM-dd HH:mm:ss (x天前)
+                  '累计登录时长：${_data!.cumulativeDayCount}天，' + (!_data!.isTodayLogined(_currLoginDateTime) ? '今天尚未登录签到' : '今天已登录签到'),
                   '当前登录IP：${_data!.loginIp}',
                   '上回登录IP：${_data!.lastLoginIp}',
                 ],

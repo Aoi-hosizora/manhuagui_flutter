@@ -19,8 +19,8 @@ Manga _$MangaFromJson(Map<String, dynamic> json) => Manga(
       authors: (json['authors'] as List<dynamic>)
           .map((e) => TinyAuthor.fromJson(e as Map<String, dynamic>))
           .toList(),
-      alias: json['alias'] as String,
-      aliasTitle: json['alias_title'] as String,
+      aliases:
+          (json['aliases'] as List<dynamic>).map((e) => e as String).toList(),
       finished: json['finished'] as bool,
       newestChapter: json['newest_chapter'] as String,
       newestDate: json['newest_date'] as String,
@@ -48,8 +48,7 @@ Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'manga_zone': instance.mangaZone,
       'genres': instance.genres,
       'authors': instance.authors,
-      'alias': instance.alias,
-      'alias_title': instance.aliasTitle,
+      'aliases': instance.aliases,
       'finished': instance.finished,
       'newest_chapter': instance.newestChapter,
       'newest_date': instance.newestDate,

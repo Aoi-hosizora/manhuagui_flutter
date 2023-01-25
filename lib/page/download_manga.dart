@@ -26,7 +26,7 @@ import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
-/// 下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadMangaProgressChangedEvent] 进度信息
+/// 下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadProgressChangedEvent] 进度信息
 class DownloadMangaPage extends StatefulWidget {
   const DownloadMangaPage({
     Key? key,
@@ -77,8 +77,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     WidgetsBinding.instance?.addPostFrameCallback((_) => widget.gotoDownloading.ifTrue(() => _tabController.animateTo(1)));
 
     var updater = _updateData();
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadMangaProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((ev) => ev.byDeleting.ifFalse(() => updater.item2(ev.mangaId))));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => ev.fromDownloadMangaPage.ifFalse(() => updater.item2(ev.mangaId))));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
@@ -235,9 +235,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     }
 
     Future<void> updateNeedUpdate(bool needUpdate) async {
-      await DownloadDao.addOrUpdateChapter(chapter: entity.copyWith(needUpdate: needUpdate));
-      var ev = DownloadedMangaEntityChangedEvent(mangaId: widget.mangaId);
-      EventBusManager.instance.fire(ev);
+      // 更新数据库、更新列表显示、发送通知
+      var newChapter = entity.copyWith(needUpdate: needUpdate);
+      await DownloadDao.addOrUpdateChapter(chapter: newChapter);
+      _entity?.downloadedChapters.replaceWhere((item) => item.chapterId == chapterId, (_) => newChapter);
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
+      if (mounted) setState(() {});
     }
 
     await showDialog(
@@ -247,12 +250,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
         children: [
           IconTextDialogOption(
             icon: Icon(Icons.import_contacts),
-            text: Text('阅读章节'),
+            text: Text('阅读该章节'),
             onPressed: () => popAndCall(c, () => _readChapter(chapterId)),
           ),
           IconTextDialogOption(
             icon: Icon(Icons.delete),
-            text: Text('删除章节'),
+            text: Text('删除该章节'),
             onPressed: () => popAndCall(c, () => _deleteChapters(chapterIds: [chapterId])),
           ),
           if (canStart)
@@ -355,27 +358,25 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       return;
     }
 
-    // 退出多选模式、更新列表和数据库
+    // 退出多选模式、保存设置
     _actionControllers.forEach((action) => action.invoke()); // exit multi selection mode
     await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
 
-    // 更新列表和数据库
+    // 更新数据库、更新列表显示
     for (var chapterId in chapterIds) {
-      _entity!.downloadedChapters.removeWhere((chapter) => chapter.chapterId == chapterId);
       await DownloadDao.deleteChapter(mid: widget.mangaId, cid: chapterId);
+      _entity!.downloadedChapters.removeWhere((chapter) => chapter.chapterId == chapterId);
     }
     if (mounted) setState(() {});
 
-    // 删除文件并统计大小
+    // 删除文件并统计大小、最后再发送通知
     if (alsoDeleteFile) {
       for (var chapterId in chapterIds) {
         await deleteDownloadedChapter(mangaId: widget.mangaId, chapterId: chapterId);
       }
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 删除文件后遍历统计文件大小
     }
-
-    // 最后再通知
-    EventBusManager.instance.fire(DownloadedMangaEntityChangedEvent(mangaId: widget.mangaId, byDeleting: true /* 使得本页不更新 */));
+    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
   }
 
   @override
@@ -419,9 +420,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 PopupMenuItem(
                   child: Text(!_entity!.needUpdate ? '标记为需要更新数据' : '标记为不需要更新数据'),
                   onTap: () async {
-                    await DownloadDao.addOrUpdateManga(manga: _entity!.copyWith(needUpdate: !_entity!.needUpdate));
-                    var ev = DownloadedMangaEntityChangedEvent(mangaId: widget.mangaId);
-                    EventBusManager.instance.fire(ev);
+                    // 更新数据库、更新数据、发送通知
+                    var newEntity = _entity!.copyWith(needUpdate: !_entity!.needUpdate);
+                    await DownloadDao.addOrUpdateManga(manga: newEntity);
+                    _entity = newEntity;
+                    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
+                    if (mounted) setState(() {});
                   },
                 ),
             ],
@@ -470,7 +474,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                       child: ActionRowView.five(
                         action1: ActionItem.simple(
                           '查看漫画',
-                          Icons.description,
+                          Icons.description_outlined,
                           () => Navigator.of(context).push(
                             CustomPageRoute(
                               context: context,
