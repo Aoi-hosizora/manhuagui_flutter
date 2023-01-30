@@ -22,8 +22,9 @@ class Author {
   final double averageScore;
   final int popularity;
   final String introduction;
+  final List<TinyZonedAuthor> relatedAuthors;
 
-  const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestMangaUrl, required this.newestDate, required this.highestMangaId, required this.highestMangaTitle, required this.highestMangaUrl, required this.highestScore, required this.averageScore, required this.popularity, required this.introduction});
+  const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestMangaUrl, required this.newestDate, required this.highestMangaId, required this.highestMangaTitle, required this.highestMangaUrl, required this.highestScore, required this.averageScore, required this.popularity, required this.introduction, required this.relatedAuthors});
 
   factory Author.fromJson(Map<String, dynamic> json) => _$AuthorFromJson(json);
 
@@ -58,4 +59,18 @@ class TinyAuthor {
   factory TinyAuthor.fromJson(Map<String, dynamic> json) => _$TinyAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyAuthorToJson(this);
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class TinyZonedAuthor {
+  final int aid;
+  final String name;
+  final String url;
+  final String zone;
+
+  const TinyZonedAuthor({required this.aid, required this.name, required this.url, required this.zone});
+
+  factory TinyZonedAuthor.fromJson(Map<String, dynamic> json) => _$TinyZonedAuthorFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TinyZonedAuthorToJson(this);
 }

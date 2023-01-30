@@ -11,6 +11,7 @@ class ListHintView extends StatelessWidget {
     Key? key,
     required String this.leftText,
     required String this.rightText,
+    this.padding,
   })  : rightWidget = null,
         widgets = null,
         style = ListHintViewStyle.textText,
@@ -20,6 +21,7 @@ class ListHintView extends StatelessWidget {
     Key? key,
     required String this.leftText,
     required Widget this.rightWidget,
+    this.padding,
   })  : rightText = null,
         widgets = null,
         style = ListHintViewStyle.textWidget,
@@ -28,6 +30,7 @@ class ListHintView extends StatelessWidget {
   const ListHintView.widgets({
     Key? key,
     required List<Widget> this.widgets,
+    this.padding,
   })  : leftText = null,
         rightText = null,
         rightWidget = null,
@@ -38,6 +41,7 @@ class ListHintView extends StatelessWidget {
   final String? rightText;
   final Widget? rightWidget;
   final List<Widget>? widgets;
+  final EdgeInsets? padding;
   final ListHintViewStyle style;
 
   @override
@@ -46,7 +50,7 @@ class ListHintView extends StatelessWidget {
       children: [
         Container(
           color: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: padding ?? EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           child: Row(
             mainAxisAlignment: style == ListHintViewStyle.widgets
                 ? MainAxisAlignment.spaceAround /* | ▢ ▢ ▢ | */

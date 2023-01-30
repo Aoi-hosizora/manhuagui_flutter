@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/small_author_line.dart';
@@ -40,6 +41,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   @override
   void dispose() {
     widget.action?.removeAction();
+    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     super.dispose();
@@ -75,6 +77,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   }
 
   final _data = <SmallAuthor>[];
+  late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
   var _currOrder = AppSetting.instance.other.defaultAuthorOrder;
   var _lastOrder = AppSetting.instance.other.defaultAuthorOrder;
@@ -100,6 +103,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     });
 
     _total = result.data.total;
+    await _flagStorage.queryAndStoreFlags(authorIds: result.data.data.map((e) => e.aid));
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
@@ -157,7 +161,10 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             },
           ),
           separator: Divider(height: 0, thickness: 1),
-          itemBuilder: (c, _, item) => SmallAuthorLineView(author: item),
+          itemBuilder: (c, _, item) => SmallAuthorLineView(
+            author: item,
+            flags: _flagStorage.getFlags(mangaId: item.aid),
+          ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
               ListHintView.widgets(

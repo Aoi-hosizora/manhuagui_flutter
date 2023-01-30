@@ -3,9 +3,9 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/shelf_cache_line.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -250,7 +250,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
         title: Text(cache.mangaTitle),
         children: [
           IconTextDialogOption(
-            icon: Icon(Icons.arrow_forward),
+            icon: Icon(Icons.description_outlined),
             text: Text('查看该漫画'),
             onPressed: () {
               Navigator.of(c).pop();
@@ -323,11 +323,9 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
                 children: [
                   Text('共 $_total 部'),
                   SizedBox(width: 5),
-                  HelpIconView(
+                  HelpIconView.forListHint(
                     title: '已同步的书架记录',
-                    hint: '书架记录同步功能仅用于显示列表中漫画右下角的书架图标。',
-                    useRectangle: true,
-                    padding: EdgeInsets.all(3),
+                    hint: '书架记录同步功能仅用于判断漫画是否在书架上，并用于显示漫画列表右下角的书架图标。',
                   ),
                 ],
               ),

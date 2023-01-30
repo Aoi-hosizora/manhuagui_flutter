@@ -72,6 +72,15 @@ class ShelfCacheUpdatedEvent {
   final bool added;
 }
 
+class FavoriteAuthorUpdatedEvent {
+  const FavoriteAuthorUpdatedEvent({required this.authorId, required this.reason, this.fromFavoritePage = false, this.fromAuthorPage = false});
+
+  final int authorId;
+  final UpdateReason reason;
+  final bool fromFavoritePage;
+  final bool fromAuthorPage;
+}
+
 // ============
 // Other Events
 // ============

@@ -3,11 +3,11 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
-import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -32,7 +32,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
-  AuthData? _oldAuthData;
+  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
@@ -40,8 +40,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     widget.action?.addAction(() => _controller.scrollToTop());
     widget.action?.addAction('clear', () => _clearHistories());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) {
-        _oldAuthData = AuthManager.instance.authData;
+      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) {
+        _currAuthData = AuthManager.instance.authData;
         _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
@@ -95,22 +95,14 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.updated && !event.fromHistoryPage) {
-      // 非本页引起的更新 => 更新列表显示
-      // TODO 顺序变更如何提示？是否显示有更新？
-      var history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: event.mangaId);
-      if (history != null) {
-        for (var i = 0; i < _data.length; i++) {
-          if (_data[i].mangaId == event.mangaId) {
-            _data[i] = history;
-          }
-        }
-        if (mounted) setState(() {});
-      }
+      // 非本页引起的更新 => 显示有更新 TODO 更新列表显示
+      _historyUpdated = true;
+      if (mounted) setState(() {});
     }
   }
 
   void _showPopupMenu({required int mangaId}) {
-    var history = _data.where((el) => el.mangaId == _msController.selectedItems.first.value).firstOrNull;
+    var history = _data.where((el) => el.mangaId == mangaId).firstOrNull;
     if (history == null) {
       return;
     }
@@ -278,11 +270,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                     children: [
                       Text('共 $_total 部'),
                       SizedBox(width: 5),
-                      HelpIconView(
+                      HelpIconView.forListHint(
                         title: '阅读历史',
                         hint: '注意：由于漫画柜官方并未提供记录漫画阅读历史的功能，所以本应用的阅读历史仅被记录在移动端本地，且不同账号间的阅读历史互不影响。',
-                        useRectangle: true,
-                        padding: EdgeInsets.all(3),
                       ),
                     ],
                   ),
@@ -303,7 +293,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                   visualDensity: VisualDensity(horizontal: -4, vertical: -4),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.only(left: 6),
-                ),
+                ), // TODO move to option menu in list hint
                 Divider(height: 0, thickness: 1),
               ],
             ),

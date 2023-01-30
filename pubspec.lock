@@ -665,27 +665,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.8.0"
-  path_drawing:
-    dependency: transitive
-    description:
-      name: path_drawing
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.5.1+1"
-  path_icon:
-    dependency: "direct main"
-    description:
-      name: path_icon
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.7.0"
-  path_parsing:
-    dependency: transitive
-    description:
-      name: path_parsing
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.2.1"
   path_provider:
     dependency: "direct main"
     description:

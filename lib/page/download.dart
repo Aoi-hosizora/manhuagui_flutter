@@ -347,10 +347,22 @@ class _DownloadPageState extends State<DownloadPage> {
             },
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
-                ListHintView.textText(
+                ListHintView.textWidget(
                   leftText: '本地的漫画下载列表',
-                  rightText: '共 $_total 部',
-                ), // TODO 搜索、排序
+                  rightWidget: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('共 $_total 部'),
+                      SizedBox(width: 5),
+                      // TODO 搜索
+                      // HelpIconView.forListHint(
+                      //   title: '',
+                      //   hint: '',
+                      //   onPressed: () {},
+                      // ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

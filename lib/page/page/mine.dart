@@ -9,10 +9,10 @@ import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -21,6 +21,7 @@ import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 我的
 class MineSubPage extends StatefulWidget {
@@ -40,25 +41,34 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   late final _controller = ScrollController()..addListener(() => mountedSetState(() {}));
   VoidCallback? _cancelHandler;
 
-  AuthData? _oldAuthData;
-  var _loginChecking = true;
-  var _loginCheckError = '';
+  var _currAuthData = AuthManager.instance.authData;
+  var _authChecking = true; // initialize to true
+  var _authCheckError = '';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() => _oldAuthData, (ev) {
-        _oldAuthData = AuthManager.instance.authData;
-        _loginChecking = false;
-        _loginCheckError = ev.error?.text ?? '';
-        if (mounted) setState(() {});
+      if (AuthManager.instance.logined) {
+        WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+      }
+    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandler = AuthManager.instance.listen(() => _currAuthData, (ev) {
+        // TODO remove currAuthData check and use `if () return` manually
+        _currAuthData = AuthManager.instance.authData;
+        _authChecking = false;
+        _authCheckError = ev.error?.text ?? '';
         if (AuthManager.instance.logined) {
-          WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+          _refreshIndicatorKey.currentState?.show(); // TODO improve logic
         }
+        if (mounted) setState(() {});
       });
-      _loginChecking = true;
+      _authChecking = true;
+      if (mounted) setState(() {});
       await AuthManager.instance.check();
+      _authChecking = false;
+      if (mounted) setState(() {});
     });
   }
 
@@ -232,8 +242,9 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   child: HelpIconView(
                     title: title,
                     hint: hint,
-                    iconSize: 22,
+                    rectangle: false,
                     padding: EdgeInsets.all(6),
+                    iconSize: 22,
                     iconColor: Colors.black54,
                   ),
                 ),
@@ -311,16 +322,16 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       );
     }
 
-    if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
+    if (_authChecking || _authCheckError.isNotEmpty || !AuthManager.instance.logined) {
       _data = null;
       _error = '';
       return _buildScaffold(
         body: LoginFirstView(
-          checking: _loginChecking,
-          error: _loginCheckError,
+          checking: _authChecking,
+          error: _authCheckError,
           onErrorRetry: () async {
-            _loginChecking = true;
-            _loginCheckError = '';
+            _authChecking = true;
+            _authCheckError = '';
             if (mounted) setState(() {});
             await AuthManager.instance.check();
           },
@@ -404,9 +415,9 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 ),
               ),
               SizedBox(height: 12),
-              _buildActionLine(text: '我的书架', icon: Icons.star, action: () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+              _buildActionLine(text: '我的书架', icon: MdiIcons.bookshelf, action: () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
               _buildDivider(),
-              _buildActionLine(text: '本地收藏', icon: Icons.bookmark, action: () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())),
+              _buildActionLine(text: '本地收藏', icon: MdiIcons.bookmarkBoxMultipleOutline, action: () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())),
               _buildDivider(),
               _buildActionLine(text: '阅读历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
               _buildDivider(),

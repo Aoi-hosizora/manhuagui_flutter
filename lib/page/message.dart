@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 历史消息页，网络请求并展示 [Message] 信息
 class MessagePage extends StatefulWidget {
@@ -119,12 +120,12 @@ class _MessagePageState extends State<MessagePage> {
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
-            icon: Icon(Icons.notifications_none),
+            icon: Icon(MdiIcons.bellCheck),
             tooltip: '全部标记为已阅读',
             onPressed: () => _markAllAsHasRead(context),
           ),
           AppBarActionButton(
-            icon: Icon(Icons.notification_add),
+            icon: Icon(MdiIcons.bellPlus),
             tooltip: '全部标记为未阅读',
             onPressed: () => _markAllAsUnread(context),
           ),

@@ -19,7 +19,6 @@ import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
-import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_rating.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
@@ -40,6 +39,7 @@ import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
@@ -60,23 +60,24 @@ class MangaPage extends StatefulWidget {
 
 class _MangaPageState extends State<MangaPage> {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
-  final _actionScrollKey = GlobalKey<State<StatefulWidget>>();
   final _controller = ScrollController();
-
   final _fabController = AnimatedFabController();
-  final _physicsController = CustomScrollPhysicsController();
   final _cancelHandlers = <VoidCallback>[];
-  AuthData? _oldAuthData;
+  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) async {
-        _oldAuthData = AuthManager.instance.authData;
+      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) async {
+        _currAuthData = AuthManager.instance.authData;
         _history = null;
-        _refreshIndicatorKey.currentState?.show();
+        _subscribeCount = null;
+        _favoriteManga = null;
+        _inShelf = false;
+        _inFavorite = false;
+        _loadData();
       }));
       await AuthManager.instance.check();
     });
@@ -107,6 +108,9 @@ class _MangaPageState extends State<MangaPage> {
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
       if (!ev.fromMangaPage && ev.mangaId == widget.id) {
         _inFavorite = ev.reason != UpdateReason.deleted;
+        if (ev.reason == UpdateReason.updated) {
+          _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: ev.mangaId);
+        }
         if (mounted) setState(() {});
       }
     }));
@@ -120,7 +124,7 @@ class _MangaPageState extends State<MangaPage> {
     super.dispose();
   }
 
-  var _loading = true;
+  var _loading = false; // TODO initialize to true or false => set this value in initState
   Manga? _data;
   var _error = '';
   TinyMangaChapter? _firstChapter;
@@ -139,12 +143,11 @@ class _MangaPageState extends State<MangaPage> {
     _data = null;
     if (mounted) setState(() {});
 
-    final client = RestClient(DioManager.instance.dio);
-
     // 1. 异步加载漫画评论首页
     _getComments();
 
     // 2. 异步获取漫画书架情况
+    final client = RestClient(DioManager.instance.dio);
     if (AuthManager.instance.logined) {
       Future.microtask(() async {
         try {
@@ -181,7 +184,7 @@ class _MangaPageState extends State<MangaPage> {
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
-      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // TODO
+      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // get last chapter
 
       // 5. 更新数据库的各种信息
       await _updateDatabaseAfterGot(/* update all */);
@@ -362,7 +365,7 @@ class _MangaPageState extends State<MangaPage> {
         Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
         return;
       }
-      cid = group.chapters.last.cid; // TODO
+      cid = group.chapters.last.cid; // get last chapter
       page = 1;
     } else {
       // 继续阅读
@@ -469,21 +472,9 @@ class _MangaPageState extends State<MangaPage> {
       builder: (c) => SimpleDialog(
         title: Text('漫画阅读历史'),
         children: [
-          if (_history != null)
-            IconTextDialogOption(
-              icon: Icon(Icons.update_disabled),
-              text: !_history!.read ? Text('删除浏览历史') : Text('删除阅读历史'),
-              onPressed: () async {
-                Navigator.of(c).pop();
-                _history = null;
-                await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: _data!.mid);
-                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.deleted, fromMangaPage: true));
-                if (mounted) setState(() {});
-              },
-            ),
           if (_history != null && _history!.read)
             IconTextDialogOption(
-              icon: Icon(Icons.update_disabled),
+              icon: Icon(MdiIcons.fileClock),
               text: Text('仅保留浏览历史'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -494,9 +485,21 @@ class _MangaPageState extends State<MangaPage> {
                 if (mounted) setState(() {});
               },
             ),
+          if (_history != null)
+            IconTextDialogOption(
+              icon: Icon(Icons.auto_delete),
+              text: Text(!_history!.read ? '删除浏览历史' : '删除阅读历史'),
+              onPressed: () async {
+                Navigator.of(c).pop();
+                _history = null;
+                await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: _data!.mid);
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.deleted, fromMangaPage: true));
+                if (mounted) setState(() {});
+              },
+            ),
           if (_history == null)
             IconTextDialogOption(
-              icon: Icon(Icons.history),
+              icon: Icon(MdiIcons.fileClock),
               text: Text('保留浏览历史'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -592,7 +595,7 @@ class _MangaPageState extends State<MangaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return DrawerScaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Text(_data?.title ?? widget.title),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
@@ -610,9 +613,7 @@ class _MangaPageState extends State<MangaPage> {
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
-      drawerEdgeDragWidth: null,
-      physicsController: _physicsController,
-      implicitlyOverscrollableScaffold: true,
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _loadData,
@@ -711,7 +712,7 @@ class _MangaPageState extends State<MangaPage> {
                                 ],
                               ),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 3.2),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
                               icon: Icon(Icons.category, size: 20, color: Colors.orange),
@@ -737,22 +738,22 @@ class _MangaPageState extends State<MangaPage> {
                                 ],
                               ),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 3.2),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
-                              icon: Icon(Icons.date_range, size: 20, color: Colors.orange),
+                              icon: Icon(Icons.event, size: 20, color: Colors.orange),
                               text: Text('发布于 ${_data!.publishYear} ${_data!.mangaZone.replaceAll('漫画', '')}'),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 3.2),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
                               icon: Icon(Icons.stars, size: 20, color: Colors.orange),
                               text: Text('排名 ${_data!.mangaRank} / 订阅 ${_subscribeCount ?? '未知'}'),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 3.2),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
-                              icon: Icon(Icons.subject, size: 20, color: Colors.orange),
+                              icon: Icon(Icons.notes, size: 20, color: Colors.orange),
                               text: Flexible(
                                 child: Text(
                                   '最新章节：${_data!.newestChapter}',
@@ -761,13 +762,13 @@ class _MangaPageState extends State<MangaPage> {
                                 ),
                               ),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 3.2),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
                               icon: Icon(Icons.update, size: 20, color: Colors.orange),
-                              text: Text((_data!.finished ? '已完结' : '连载中') + ' 更新于 ${_data!.newestDate}'),
+                              text: Text('更新于 ${_data!.newestDate} ${_data!.finished ? '已完结' : '连载中'}'),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 3.2),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                           ],
                         ),
@@ -781,9 +782,6 @@ class _MangaPageState extends State<MangaPage> {
                 Container(
                   color: Colors.white,
                   child: ActionRowView.five(
-                    key: _actionScrollKey,
-                    // physics: CustomScrollPhysics(controller: _physicsController),
-                    // actions: [
                     action1: ActionItem(
                       text: !_inShelf && !_inFavorite
                           ? '订阅漫画'
@@ -795,12 +793,6 @@ class _MangaPageState extends State<MangaPage> {
                       longPress: _subscribing ? null : () => _subscribe(),
                       enable: !_subscribing,
                     ),
-                    // ActionItem(
-                    //   text: _history == null || !_history!.read ? '开始阅读' : '继续阅读',
-                    //   icon: _history == null ? CustomIcons.opened_star_book : (!_history!.read ? CustomIcons.opened_empty_book : Icons.import_contacts),
-                    //   action: () => _read(chapterId: null),
-                    //   longPress: _showHistoryActionPopupMenu,
-                    // ),
                     action2: ActionItem(
                       text: '查看作者',
                       icon: Icons.person,
@@ -868,7 +860,6 @@ class _MangaPageState extends State<MangaPage> {
                         text: '【${_data!.title}】${_data!.url}',
                       ),
                     ),
-                    // ],
                   ),
                 ),
                 Container(
@@ -887,11 +878,7 @@ class _MangaPageState extends State<MangaPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          CustomIcon(
-                            _history == null ? CustomIcons.opened_star_book : (!_history!.read ? CustomIcons.opened_empty_book : Icons.import_contacts),
-                            size: 26,
-                            color: Colors.black54,
-                          ),
+                          Icon(Icons.import_contacts, size: 26, color: Colors.black54),
                           SizedBox(width: 16),
                           Flexible(
                             child: Column(

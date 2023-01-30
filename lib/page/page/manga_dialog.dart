@@ -3,12 +3,10 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
-import 'package:manhuagui_flutter/page/view/custom_icons.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -24,9 +22,7 @@ import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-// TODO adjust icons
-
-/// 各个列表页-漫画弹出菜单 & 漫画作者弹出菜单
+/// 漫画列表页-漫画弹出菜单
 /// 漫画收藏页-移动分组对话框 & 修改备注对话框
 /// 漫画页-漫画章节弹出菜单
 /// 漫画页/章节页-漫画订阅对话框
@@ -70,7 +66,7 @@ void showPopupMenuForMangaList({
         children: [
           /// 查看漫画
           IconTextDialogOption(
-            icon: Icon(Icons.arrow_forward),
+            icon: Icon(Icons.description_outlined),
             text: Text('查看该漫画'),
             onPressed: () => pop(c, () => helper.gotoMangaPage()),
           ),
@@ -92,14 +88,14 @@ void showPopupMenuForMangaList({
           /// 书架
           if (AuthManager.instance.logined && fromShelfList)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.starMinusOutline), // Icons.star
+              icon: Icon(MdiIcons.starMinus),
               text: Text('移出我的书架'),
               onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
             ),
           if (AuthManager.instance.logined && !fromShelfList) ...[
             if (!expandShelfOptions)
               IconTextDialogOption(
-                icon: Icon(MdiIcons.starCogOutline),
+                icon: Icon(MdiIcons.starCog),
                 text: Text('管理我的书架'),
                 onPressed: () => _setState(() => expandShelfOptions = true),
               ),
@@ -114,19 +110,19 @@ void showPopupMenuForMangaList({
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       IconTextDialogOption(
-                        icon: Icon(MdiIcons.starCogOutline, color: Colors.black26),
+                        icon: Icon(MdiIcons.starCog, color: Colors.black26),
                         text: Text('隐藏选项'),
                         padding: optionPadding,
                         onPressed: () => _setState(() => expandShelfOptions = false),
                       ),
                       IconTextDialogOption(
-                        icon: Icon(MdiIcons.starPlusOutline), // Icons.star_border
+                        icon: Icon(MdiIcons.starPlus),
                         text: Text('放入我的书架'),
                         padding: optionPadding,
                         onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
                       ),
                       IconTextDialogOption(
-                        icon: Icon(MdiIcons.starMinusOutline), // Icons.star
+                        icon: Icon(MdiIcons.starMinus),
                         text: Text('移出我的书架'),
                         padding: optionPadding,
                         onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
@@ -139,7 +135,7 @@ void showPopupMenuForMangaList({
 
           /// 收藏
           IconTextDialogOption(
-            icon: Icon(!nowInFavorite ? MdiIcons.bookmarkPlusOutline : MdiIcons.bookmarkMinusOutline), // Icons.bookmark_border : Icons.bookmark
+            icon: Icon(!nowInFavorite ? MdiIcons.bookmarkPlus : MdiIcons.bookmarkMinus),
             text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
             onPressed: () => pop(
               c,
@@ -152,54 +148,12 @@ void showPopupMenuForMangaList({
           /// 历史
           if (mangaHistory != null)
             IconTextDialogOption(
-              icon: CustomIcon(!mangaHistory.read ? MdiIcons.deleteClockOutline : MdiIcons.deleteClock), // CustomIcons.opened_empty_book : Icons.import_contacts
+              icon: Icon(Icons.auto_delete),
               text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读历史'),
               onPressed: () => pop(c, () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false)),
             ),
         ],
       ),
-    ),
-  );
-}
-
-// => called by pages which contains author line view
-void showPopupMenuForAuthorList({
-  required BuildContext context,
-  required int authorId,
-  required String authorName,
-  required String authorUrl,
-}) {
-  showDialog(
-    context: context,
-    builder: (c) => SimpleDialog(
-      title: Text(authorName),
-      children: [
-        IconTextDialogOption(
-          icon: Icon(Icons.arrow_forward),
-          text: Text('查看该作者'),
-          onPressed: () {
-            Navigator.of(c).pop();
-            Navigator.of(context).push(
-              CustomPageRoute(
-                context: context,
-                builder: (c) => AuthorPage(
-                  id: authorId,
-                  name: authorName,
-                  url: authorUrl,
-                ),
-              ),
-            );
-          },
-        ),
-        IconTextDialogOption(
-          icon: Icon(Icons.open_in_browser),
-          text: Text('用浏览器打开'),
-          onPressed: () {
-            Navigator.of(c).pop();
-            launchInBrowser(context: context, url: authorUrl);
-          },
-        ),
-      ],
     ),
   );
 }
@@ -285,7 +239,7 @@ void showPopupMenuForMangaToc({
       title: Text(chapter.title),
       children: [
         IconTextDialogOption(
-          icon: Icon(Icons.arrow_forward),
+          icon: Icon(Icons.import_contacts),
           text: Text('阅读该章节'),
           onPressed: () => pop(c, () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity)),
         ),
@@ -303,7 +257,7 @@ void showPopupMenuForMangaToc({
           ),
         if (lastReadChapter)
           IconTextDialogOption(
-            icon: Icon(Icons.import_contacts),
+            icon: Icon(Icons.auto_delete),
             text: Text('删除阅读历史'),
             onPressed: () => pop(c, () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage)),
           ),
@@ -348,13 +302,13 @@ void showPopupMenuForSubscribing({
         /// 书架
         if (AuthManager.instance.logined && !nowInShelf)
           IconTextDialogOption(
-            icon: Icon(Icons.star_border),
+            icon: Icon(MdiIcons.starPlus),
             text: Text('放入我的书架'),
             onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage)),
           ),
         if (AuthManager.instance.logined && nowInShelf)
           IconTextDialogOption(
-            icon: Icon(Icons.star),
+            icon: Icon(MdiIcons.starMinus),
             text: Text('移出我的书架'),
             onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage)),
           ),
@@ -362,13 +316,13 @@ void showPopupMenuForSubscribing({
         /// 收藏
         if (!nowInFavorite)
           IconTextDialogOption(
-            icon: Icon(Icons.bookmark_border),
+            icon: Icon(MdiIcons.bookmarkPlus),
             text: Text('添加本地收藏'),
             onPressed: () => pop(c, () => helper.addToFavorite(subscribing: subscribing, onAdded: inFavoriteSetter, fromFavoriteList: false, fromMangaPage: fromMangaPage)),
           ),
         if (nowInFavorite)
           IconTextDialogOption(
-            icon: Icon(Icons.bookmark),
+            icon: Icon(MdiIcons.bookmarkMinus),
             text: Text('取消本地收藏'),
             onPressed: () => pop(c, () => helper.removeFromFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage)),
           ),
@@ -392,7 +346,7 @@ void showPopupMenuForSubscribing({
             ),
           if (favoriteManga != null)
             IconTextDialogOption(
-              icon: Icon(Icons.comment_bank),
+              icon: Icon(MdiIcons.commentBookmark),
               text: Flexible(
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
@@ -468,7 +422,7 @@ class _DialogHelper {
                     labelText: '漫画备注',
                     icon: Padding(
                       padding: EdgeInsets.only(right: 2),
-                      child: Icon(Icons.comment_bank_outlined),
+                      child: Icon(MdiIcons.commentBookmarkOutline),
                     ),
                   ),
                 ),
@@ -500,7 +454,7 @@ class _DialogHelper {
 
     return Tuple3(
       groupName, // group
-      controller.text.trim(), // remark
+      controller.text.trim(), // remark, empty-able
       addToTop, // order
     );
   }
@@ -564,7 +518,7 @@ class _DialogHelper {
             decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(vertical: 5),
               labelText: '漫画备注',
-              icon: Icon(Icons.comment_bank_outlined),
+              icon: Icon(MdiIcons.commentBookmarkOutline),
             ),
           ),
         ),

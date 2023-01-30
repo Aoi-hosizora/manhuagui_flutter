@@ -5,16 +5,17 @@ import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/favorite_group.dart';
 import 'package:manhuagui_flutter/page/favorite_reorder.dart';
 import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/favorite_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
-import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 订阅-收藏
 class FavoriteSubPage extends StatefulWidget {
@@ -36,7 +37,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
-  AuthData? _oldAuthData;
+  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
@@ -44,8 +45,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     widget.action?.addAction(() => _controller.scrollToTop());
     widget.action?.addAction('manage', () => _scaffoldKey.currentState?.let((s) => !s.isEndDrawerOpen ? s.openEndDrawer() : Navigator.of(context).pop()));
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) {
-        _oldAuthData = AuthManager.instance.authData;
+      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) {
+        _currAuthData = AuthManager.instance.authData;
         _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
@@ -120,22 +121,25 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
+      // 非本页引起的更新 => 显示有更新
+      _favoriteUpdated = true;
+      if (mounted) setState(() {});
       // 非本页引起的更新 => 更新列表显示
       // TODO 顺序变更如何提示？是否显示有更新？
-      var favorite = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: event.mangaId);
-      if (favorite != null) {
-        for (var i = 0; i < _data.length; i++) {
-          if (_data[i].mangaId == event.mangaId) {
-            _data[i] = favorite;
-          }
-        }
-        if (mounted) setState(() {});
-      }
+      // var favorite = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: event.mangaId);
+      // if (favorite != null) {
+      //   for (var i = 0; i < _data.length; i++) {
+      //     if (_data[i].mangaId == event.mangaId) {
+      //       _data[i] = favorite;
+      //     }
+      //   }
+      //   if (mounted) setState(() {});
+      // }
     }
   }
 
   void _showPopupMenu({required int mangaId}) {
-    var favorite = _data.where((el) => el.mangaId == _msController.selectedItems.first.value).firstOrNull;
+    var favorite = _data.where((el) => el.mangaId == mangaId).firstOrNull;
     if (favorite == null) {
       return;
     }
@@ -352,17 +356,22 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                   height: Theme.of(context).appBarTheme.toolbarHeight!,
                   alignment: Alignment.center,
                   child: IconText(
-                    icon: Icon(Icons.bookmark_border, size: 23, color: Colors.grey[700]),
+                    icon: Icon(Icons.bookmark_border, color: Colors.grey[700]),
                     text: Text('管理本地收藏', style: Theme.of(context).textTheme.subtitle1),
-                    space: 10,
+                    space: 8,
                     mainAxisSize: MainAxisSize.min,
-                    iconPadding: EdgeInsets.only(top: 3),
+                    textPadding: EdgeInsets.only(bottom: 2),
                   ),
                 ),
                 ListTile(
                   leading: Icon(Icons.low_priority),
                   title: Text('调整已收藏漫画的顺序'),
                   onTap: () => _adjustOrder(),
+                ),
+                ListTile(
+                  leading: Icon(MdiIcons.folderMultipleOutline),
+                  title: Text('管理漫画收藏分组'),
+                  onTap: () => _manageGroups(),
                 ),
                 ListTile(
                   leading: Icon(Icons.people),
@@ -374,11 +383,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                     ),
                   ),
                 ),
-                ListTile(
-                  leading: Icon(Icons.folder_copy_outlined),
-                  title: Text('管理漫画收藏分组'),
-                  onTap: () => _manageGroups(),
-                ),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
@@ -387,11 +391,11 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                   height: Theme.of(context).appBarTheme.toolbarHeight!,
                   alignment: Alignment.center,
                   child: IconText(
-                    icon: Icon(Icons.folder_outlined, size: 23, color: Colors.grey[700]),
+                    icon: Icon(Icons.folder_open, color: Colors.grey[700]),
                     text: Text('切换当前分组', style: Theme.of(context).textTheme.subtitle1),
-                    space: 10,
+                    space: 8,
                     mainAxisSize: MainAxisSize.min,
-                    iconPadding: EdgeInsets.only(top: 3),
+                    textPadding: EdgeInsets.only(bottom: 2),
                   ),
                 ),
                 for (var g in _groups ?? <FavoriteGroup>[]) ...[
@@ -450,6 +454,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
+                  // padding: EdgeInsets.fromLTRB(10, 5, 6, 5),
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
                       (_currentGroup == '' ? '' : '  -  $_currentGroup') + //
                       (!_favoriteUpdated ? '' : ' (有更新)'),
@@ -458,16 +463,29 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                     children: [
                       Text('共 $_total 部'),
                       SizedBox(width: 5),
-                      HelpIconView(
+                      HelpIconView.forListHint(
                         title: '"我的书架"与"本地收藏"的区别',
                         hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的倒序显示。\n\n'
                             '"本地收藏"仅记录在移动端本地，不显示章节更新情况，但"本地收藏"支持分组管理漫画，且列表顺序可自由调整。',
-                        useRectangle: true,
-                        padding: EdgeInsets.all(3),
                       ),
+                      // TODO 搜索、排序
+                      // PopupMenuButton(
+                      //   child: Builder(
+                      //     builder: (c) => HelpIconView.forListHint(
+                      //       title: '',
+                      //       hint: '',
+                      //       iconData: Icons.more_vert,
+                      //       onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                      //     ),
+                      //   ),
+                      //   itemBuilder: (_) => [
+                      //     PopupMenuItem(child: Text('搜索'), onTap: () {}),
+                      //     PopupMenuItem(child: Text('排序'), onTap: () {}),
+                      //   ],
+                      // ),
                     ],
                   ),
-                ), // TODO 搜索、排序
+                ),
               ],
             ),
           ),
@@ -486,7 +504,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
-              child: Icon(Icons.comment_bank),
+              child: Icon(MdiIcons.commentBookmark),
               show: _msController.selectedItems.length == 1,
               onPressed: () => _updateFavoriteRemark(mangaId: _msController.selectedItems.first.value),
             ),

@@ -98,11 +98,11 @@ class AppSettingPrefs {
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
-  static const _enableMangaFlagsKey = BoolKey('AppSettingPrefs_enableMangaFlags');
+  static const _enableCornerIconsKey = BoolKey('AppSettingPrefs_enableCornerIcons');
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
 
-  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _enableMangaFlagsKey, _regularGroupRowsKey, _otherGroupRowsKey];
+  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _enableCornerIconsKey, _regularGroupRowsKey, _otherGroupRowsKey];
 
   static Future<void> loadOtherSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -115,7 +115,7 @@ class AppSettingPrefs {
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
-      enableMangaFlags: prefs.safeGet<bool>(_enableMangaFlagsKey) ?? def.enableMangaFlags,
+      enableCornerIcons: prefs.safeGet<bool>(_enableCornerIconsKey) ?? def.enableCornerIcons,
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
     );
@@ -132,7 +132,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
-    await prefs.safeSet<bool>(_enableMangaFlagsKey, setting.enableMangaFlags);
+    await prefs.safeSet<bool>(_enableCornerIconsKey, setting.enableCornerIcons);
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
   }

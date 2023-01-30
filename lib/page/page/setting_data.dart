@@ -3,8 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/storage/export_import_data.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
@@ -26,6 +26,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
   var _readHistories = true;
   var _downloadRecords = true;
   var _favoriteMangas = true;
+  var _favoriteAuthors = true;
   var _searchHistories = true;
   var _appSetting = true;
 
@@ -33,6 +34,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
         if (_readHistories) ExportDataType.readHistories,
         if (_downloadRecords) ExportDataType.downloadRecords,
         if (_favoriteMangas) ExportDataType.favoriteMangas,
+        if (_favoriteAuthors) ExportDataType.favoriteAuthors,
         if (_searchHistories) ExportDataType.searchHistories,
         if (_appSetting) ExportDataType.appSetting,
       ];
@@ -64,6 +66,15 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _favoriteMangas,
           onChanged: (b) {
             _favoriteMangas = b;
+            widget.onTypesChanged.call(_newestTypes);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: ExportDataType.favoriteAuthors.toTypeTitle(),
+          value: _favoriteAuthors,
+          onChanged: (b) {
+            _favoriteAuthors = b;
             widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },

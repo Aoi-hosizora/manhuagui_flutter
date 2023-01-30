@@ -31,7 +31,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _clickToSearch = widget.setting.clickToSearch;
-  late var _enableMangaFlags = widget.setting.enableMangaFlags;
+  late var _enableCornerIcons = widget.setting.enableCornerIcons;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
 
@@ -43,7 +43,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
-        enableMangaFlags: _enableMangaFlags,
+        enableCornerIcons: _enableCornerIcons,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
       );
@@ -133,11 +133,11 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '列表显示漫画右下角图标',
-          hint: '漫画右下角图标含义分别为 "在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"，其中书架信息源自于本地同步的书架记录。',
-          value: _enableMangaFlags,
+          title: '列表显示右下角图标',
+          hint: '漫画列表右下角图标有："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"，其中书架信息源自于本地同步的书架记录。\n\n漫画作者列表右下角图标仅有："在本地收藏中"。',
+          value: _enableCornerIcons,
           onChanged: (b) {
-            _enableMangaFlags = b;
+            _enableCornerIcons = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

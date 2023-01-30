@@ -12,7 +12,7 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 enum DrawerSelection {
-  none, // MangaPage / MangaGroupPage / MangaTocPage / CommentsPage / DownloadMangaPage / AuthorPage / MessagePage
+  none, // MangaPage / MangaGroupPage / MangaTocPage / CommentsPage / DownloadMangaPage / AuthorPage / FavoriteAuthorPage / MessagePage
   home, // IndexPage
   search, // SearchPage
   download, // DownloadPage

@@ -1,25 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 一些简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem]
+/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView]
 
 class HelpIconView extends StatelessWidget {
   const HelpIconView({
     Key? key,
     required this.title,
     required this.hint,
-    this.useRectangle = false,
+    required this.rectangle,
+    required this.padding,
+    this.iconData,
+    required this.iconSize,
+    this.iconColor,
+    this.onPressed,
+  }) : super(key: key);
+
+  const HelpIconView.forSettingDlg({
+    Key? key,
+    required this.title,
+    required this.hint,
+    this.rectangle = false,
     this.padding = const EdgeInsets.all(5),
+    this.iconData,
     this.iconSize = 20,
     this.iconColor,
+    this.onPressed,
+  }) : super(key: key);
+
+  const HelpIconView.forListHint({
+    Key? key,
+    required this.title,
+    required this.hint,
+    this.rectangle = true,
+    this.padding = const EdgeInsets.all(3),
+    this.iconData,
+    this.iconSize = 20,
+    this.iconColor,
+    this.onPressed,
   }) : super(key: key);
 
   final String title;
   final String hint;
-  final bool useRectangle;
+  final bool rectangle;
   final EdgeInsets padding;
+  final IconData? iconData;
   final double iconSize;
   final Color? iconColor;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -29,27 +57,28 @@ class HelpIconView extends StatelessWidget {
         child: Padding(
           padding: padding,
           child: Icon(
-            Icons.help_outline,
+            iconData ?? Icons.help_outline,
             size: iconSize,
             color: iconColor ?? Colors.grey[800],
           ),
         ),
-        highlightShape: useRectangle ? BoxShape.rectangle : BoxShape.circle,
-        containedInkWell: useRectangle,
-        radius: (iconSize + padding.horizontal) / 2 * (useRectangle ? calcSqrt(2) : 1),
-        onTap: () => showDialog(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: Text(title),
-            content: Text(hint),
-            actions: [
-              TextButton(
-                child: Text('确定'),
-                onPressed: () => Navigator.of(c).pop(),
-              ),
-            ],
-          ),
-        ),
+        highlightShape: rectangle ? BoxShape.rectangle : BoxShape.circle,
+        containedInkWell: rectangle,
+        radius: (iconSize + padding.horizontal) / 2 * (rectangle ? calcSqrt(2) : 1),
+        onTap: onPressed ??
+            () => showDialog(
+                  context: context,
+                  builder: (c) => AlertDialog(
+                    title: Text(title),
+                    content: Text(hint),
+                    actions: [
+                      TextButton(
+                        child: Text('确定'),
+                        onPressed: () => Navigator.of(c).pop(),
+                      ),
+                    ],
+                  ),
+                ),
       ),
     );
   }
@@ -166,6 +195,45 @@ class CustomCombobox<T> extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class WarningTextView extends StatelessWidget {
+  const WarningTextView({
+    Key? key,
+    required this.text,
+    required this.isWarning,
+  }) : super(key: key);
+
+  final String text;
+  final bool isWarning;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+      decoration: BoxDecoration(color: Colors.yellow),
+      alignment: Alignment.center,
+      child: TextGroup.normal(
+        texts: [
+          PlainTextItem(text: '【'),
+          PlainTextItem(
+            text: isWarning ? '注意' : '提示',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          SpanItem(
+            span: WidgetSpan(
+              child: Icon(
+                Icons.warning_amber,
+                color: Colors.grey[800],
+                size: 22,
+              ),
+            ),
+          ),
+          PlainTextItem(text: '】$text'),
+        ],
+      ),
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/page/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页
 class SettingPage extends StatefulWidget {
@@ -18,13 +19,17 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  Widget _item({required String title, required void Function() action}) {
+  Widget _item({required String title, required IconData icon, required void Function() action}) {
     return Material(
       color: Colors.white,
       child: InkWell(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-          child: Text(title, style: Theme.of(context).textTheme.subtitle1), // TODO add icon
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          child: IconText(
+            icon: Icon(icon, color: Colors.black54),
+            text: Text(title, style: Theme.of(context).textTheme.subtitle1),
+            space: 14,
+          ),
         ),
         onTap: action,
       ),
@@ -87,17 +92,20 @@ class _SettingPageState extends State<SettingPage> {
           // *******************************************************
           _spacer(),
           _item(
+            icon: MdiIcons.fileCog,
             title: '漫画阅读设置',
             action: () => showViewSettingDialog(context: context),
           ),
           _divider(),
           _item(
+            icon: MdiIcons.contentSaveCog,
             title: '漫画下载设置',
             action: () => showDlSettingDialog(context: context),
           ),
           _divider(),
           _item(
             title: '其他设置',
+            icon: MdiIcons.cogs,
             action: () async {
               var ok = await showOtherSettingDialog(context: context);
               if (ok) {
@@ -109,11 +117,13 @@ class _SettingPageState extends State<SettingPage> {
           _spacer(),
           _item(
             title: '导出数据到外部存储',
+            icon: MdiIcons.databaseExport,
             action: () => showExportDataDialog(context: context),
           ),
           _divider(),
           _item(
             title: '从外部存储导入数据',
+            icon: MdiIcons.databaseImport,
             action: () async {
               await showImportDataDialog(context: context);
               if (mounted) setState(() {});
@@ -122,12 +132,14 @@ class _SettingPageState extends State<SettingPage> {
           _divider(),
           _item(
             title: '清除图像缓存',
+            icon: Icons.cached,
             action: () => showClearCacheDialog(context: context),
           ),
           if (LogConsolePage.initialized) ...[
             _divider(),
             _item(
               title: '查看调试日志',
+              icon: Icons.bug_report,
               action: () => Navigator.of(context).push(
                 CustomPageRoute(
                   context: context,
@@ -140,22 +152,26 @@ class _SettingPageState extends State<SettingPage> {
           _spacer(),
           _item(
             title: '漫画柜/看漫画官网',
+            icon: Icons.open_in_browser,
             action: () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL),
           ),
           _divider(),
           _item(
             title: '本应用源代码',
+            icon: Icons.code,
             action: () => launchInBrowser(context: context, url: SOURCE_CODE_URL),
           ),
           // *******************************************************
           _spacer(),
           _item(
             title: '反馈及联系作者',
+            icon: Icons.feedback,
             action: () => launchInBrowser(context: context, url: FEEDBACK_URL),
           ),
           _divider(),
           _item(
             title: '检查更新',
+            icon: Icons.update,
             action: () => showDialog(
               context: context,
               builder: (c) => AlertDialog(
@@ -180,6 +196,7 @@ class _SettingPageState extends State<SettingPage> {
           _divider(),
           _item(
             title: '关于本应用',
+            icon: Icons.info,
             action: () => showAboutDialog(
               context: context,
               useRootNavigator: false,

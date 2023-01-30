@@ -32,10 +32,9 @@ class TinyMangaChapter {
   final String url; // useless
   final int pageCount;
   final bool isNew;
+  final int number;
 
-  // TODO add order for chapter group order
-
-  const TinyMangaChapter({required this.cid, required this.title, required this.mid, required this.url, required this.pageCount, required this.isNew});
+  const TinyMangaChapter({required this.cid, required this.title, required this.mid, required this.url, required this.pageCount, required this.isNew, required this.number});
 
   factory TinyMangaChapter.fromJson(Map<String, dynamic> json) => _$TinyMangaChapterFromJson(json);
 

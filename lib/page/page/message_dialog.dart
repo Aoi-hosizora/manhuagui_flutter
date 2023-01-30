@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 
-/// Splash页/消息页-新版本更新/通知公告对话框
+/// 初始页/消息页-新版本更新 & 通知公告对话框
 
 Future<void> showNewVersionDialog({
   required BuildContext context,

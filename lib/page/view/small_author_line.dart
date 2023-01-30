@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/page/author.dart';
-import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/page/author_dialog.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
 /// 作者行，[SmallAuthor]，在 [AuthorSubPage] 使用
@@ -10,9 +11,11 @@ class SmallAuthorLineView extends StatelessWidget {
   const SmallAuthorLineView({
     Key? key,
     required this.author,
+    this.flags,
   }) : super(key: key);
 
   final SmallAuthor author;
+  final AuthorCornerFlags? flags;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +28,7 @@ class SmallAuthorLineView extends StatelessWidget {
       text2: '共收录 ${author.mangaCount} 部漫画',
       icon3: Icons.update,
       text3: '更新于 ${author.newestDate}',
+      cornerIcons: flags?.buildIcons(),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,
@@ -39,7 +43,9 @@ class SmallAuthorLineView extends StatelessWidget {
         context: context,
         authorId: author.aid,
         authorName: author.name,
+        authorCover: author.cover,
         authorUrl: author.url,
+        authorZone: author.zone,
       ),
     );
   }

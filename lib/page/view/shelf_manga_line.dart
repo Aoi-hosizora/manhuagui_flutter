@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
-import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 
 /// 书架漫画行，在 [ShelfSubPage] 使用
 class ShelfMangaLineView extends StatelessWidget {
@@ -23,7 +23,7 @@ class ShelfMangaLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.cover,
       title: manga.title,
-      icon1: Icons.subject,
+      icon1: Icons.notes,
       text1: '最新章节 ' + manga.newestChapter,
       icon2: Icons.update,
       text2: '更新于 ${manga.newestDuration}',

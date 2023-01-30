@@ -17,7 +17,7 @@ import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:manhuagui_flutter/service/storage/download_notification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-/// Splash 页 (flutter_native_splash)
+/// 初始页 (flutter_native_splash)
 class SplashPage extends StatefulWidget {
   const SplashPage({
     Key? key,
@@ -45,6 +45,7 @@ class SplashPage extends StatefulWidget {
     }
 
     // 2. upgrade db and prefs
+
     await DBManager.instance.getDB();
     await PrefsManager.instance.loadPrefs();
 

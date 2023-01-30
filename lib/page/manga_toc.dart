@@ -77,7 +77,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.mangaTitle),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
       ),
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,

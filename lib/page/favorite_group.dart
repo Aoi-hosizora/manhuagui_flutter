@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/favorite_reorder_line.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 管理收藏分组页，展示所给 [FavoriteGroup] 并允许编辑和排序，以及保存到数据库
 class FavoriteGroupPage extends StatefulWidget {
@@ -288,7 +289,7 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
           leading: AppBarActionButton.leading(context: context),
           actions: [
             AppBarActionButton(
-              icon: Icon(Icons.create_new_folder_outlined),
+              icon: Icon(MdiIcons.folderPlusOutline),
               tooltip: '创建新分组',
               onPressed: _saving ? null : () => _addGroup(),
             ),

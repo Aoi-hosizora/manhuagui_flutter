@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 
 class ActionItem {
   const ActionItem({required this.text, required this.icon, required this.action, this.longPress, this.enable = true, this.rotateAngle = 0});
@@ -8,7 +7,7 @@ class ActionItem {
   const ActionItem.simple(this.text, this.icon, this.action, {this.longPress, this.enable = true, this.rotateAngle = 0});
 
   final String text;
-  final dynamic icon;
+  final IconData icon;
   final void Function()? action;
   final void Function()? longPress;
   final bool enable;
@@ -103,7 +102,7 @@ class ActionRowView extends StatelessWidget {
           icon: iconBuilder?.call(action) ??
               Transform.rotate(
                 angle: action.rotateAngle,
-                child: CustomIcon(
+                child: Icon(
                   action.icon,
                   color: action.enable
                       ? (iconColor ?? Colors.black54) // enabled

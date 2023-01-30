@@ -25,6 +25,7 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 下载管理页，查询数据库并展示 [DownloadedManga] 信息，以及展示 [DownloadProgressChangedEvent] 进度信息
 class DownloadMangaPage extends StatefulWidget {
@@ -497,7 +498,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         ),
                         action3: ActionItem.simple(
                           _invertOrder ? '倒序显示' : '正序显示',
-                          _invertOrder ? Icons.arrow_downward : Icons.arrow_upward,
+                          _invertOrder ? MdiIcons.sortDescending : MdiIcons.sortAscending,
                           () => mountedSetState(() => _invertOrder = !_invertOrder),
                         ),
                         action4: ActionItem.simple(

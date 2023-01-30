@@ -88,7 +88,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             ),
           if (_currentPageIndex == 1)
             AppBarActionButton(
-              icon: Icon(Icons.bookmark_outline),
+              icon: Icon(Icons.bookmark_border),
               tooltip: '管理本地收藏',
               onPressed: () => _actions[1].invoke('manage'),
             ),

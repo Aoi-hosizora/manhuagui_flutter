@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 
 /// 与设置相关的 [SettingDialogView] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [OtherSettingSubPage] 使用
 class SettingDialogView extends StatelessWidget {
@@ -54,7 +54,7 @@ abstract class _SettingView extends StatelessWidget {
             ),
             if (hint != null) ...[
               SizedBox(width: 2),
-              HelpIconView(
+              HelpIconView.forSettingDlg(
                 title: title,
                 hint: hint!,
               ),

@@ -41,13 +41,14 @@ class FavoriteDao {
   static const _colAAuthorName = 'author_name';
   static const _colAAuthorCover = 'author_cover';
   static const _colAAuthorUrl = 'author_url';
+  static const _colAAuthorZone = 'author_zone';
   static const _colARemark = 'remark';
   static const _colACreatedAt = 'created_at';
 
   static const authorMetadata = TableMetadata(
     tableName: _tblFavoriteAuthor,
     primaryKeys: [_colAUsername, _colAAuthorId],
-    columns: [_colAUsername, _colAAuthorId, _colAAuthorName, _colAAuthorCover, _colAAuthorUrl, _colARemark, _colACreatedAt],
+    columns: [_colAUsername, _colAAuthorId, _colAAuthorName, _colAAuthorCover, _colAAuthorUrl, _colAAuthorZone, _colARemark, _colACreatedAt],
   );
 
   static Future<void> createForVer1(Database db) async {
@@ -84,17 +85,18 @@ class FavoriteDao {
         $_colGCreatedAt DATETIME,
         PRIMARY KEY ($_colGUsername, $_colGGroupName)
       )''');
-    // await db.safeExecute('''
-    //   CREATE TABLE $_tblFavoriteAuthor(
-    //     $_colAUsername VARCHAR(1023),
-    //     $_colAAuthorId INTEGER,
-    //     $_colAAuthorName VARCHAR(1023),
-    //     $_colAAuthorCover VARCHAR(1023),
-    //     $_colAAuthorUrl VARCHAR(1023),
-    //     $_colARemark VARCHAR(1023),
-    //     $_colACreatedAt DATETIME,
-    //     PRIMARY KEY ($_colUsername, $_colAAuthorId)
-    //   )''');
+    await db.safeExecute('''
+      CREATE TABLE $_tblFavoriteAuthor(
+        $_colAUsername VARCHAR(1023),
+        $_colAAuthorId INTEGER,
+        $_colAAuthorName VARCHAR(1023),
+        $_colAAuthorCover VARCHAR(1023),
+        $_colAAuthorUrl VARCHAR(1023),
+        $_colAAuthorZone VARCHAR(1023),
+        $_colARemark VARCHAR(1023),
+        $_colACreatedAt DATETIME,
+        PRIMARY KEY ($_colAUsername, $_colAAuthorId)
+      )''');
   }
 
   static Future<int?> getFavoriteCount({required String username, required String? groupName}) async {
@@ -165,6 +167,7 @@ class FavoriteDao {
     final db = await DBManager.instance.getDB();
     List<Map<String, Object?>>? results;
     if (page > 0) {
+      // return in pagination
       offset = limit * (page - 1) - offset;
       if (offset < 0) {
         offset = 0;
@@ -178,6 +181,7 @@ class FavoriteDao {
         [username, groupName],
       );
     } else {
+      // return all
       results = await db.safeRawQuery(
         '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colRemark, $_colListOrder, $_colCreatedAt 
            FROM $_tblFavorite
@@ -274,6 +278,91 @@ class FavoriteDao {
     return out;
   }
 
+  static Future<int?> getAuthorCount({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblFavoriteAuthor
+         WHERE $_colAUsername = ?''',
+      [username],
+    );
+    if (results == null) {
+      return null;
+    }
+    return firstIntValue(results);
+  }
+
+  static Future<bool?> checkAuthorExistence({required String username, required int aid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colAAuthorId)
+         FROM $_tblFavoriteAuthor
+         WHERE $_colAUsername = ? AND $_colAAuthorId = ?''',
+      [username, aid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
+  }
+
+  static Future<FavoriteAuthor?> getAuthor({required String username, required int aid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT $_colAAuthorName, $_colAAuthorCover, $_colAAuthorUrl, $_colAAuthorZone, $_colARemark, $_colACreatedAt
+         FROM $_tblFavoriteAuthor
+         WHERE $_colAUsername = ? AND $_colAAuthorId = ?
+         ORDER BY $_colCreatedAt DESC
+         LIMIT 1''',
+      [username, aid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    var r = results.first;
+    return FavoriteAuthor(
+      authorId: aid,
+      authorName: r[_colAAuthorName]! as String,
+      authorCover: r[_colAAuthorCover]! as String,
+      authorUrl: r[_colAAuthorUrl]! as String,
+      authorZone: r[_colAAuthorZone]! as String,
+      remark: r[_colARemark]! as String,
+      createdAt: DateTime.parse(r[_colACreatedAt]! as String),
+    );
+  }
+
+  static Future<List<FavoriteAuthor>?> getAuthors({required String username, required int page, int limit = 20, int offset = 0}) async {
+    final db = await DBManager.instance.getDB();
+    offset = limit * (page - 1) - offset;
+    if (offset < 0) {
+      offset = 0;
+    }
+    var results = await db.safeRawQuery(
+      '''SELECT $_colAAuthorId, $_colAAuthorName, $_colAAuthorCover, $_colAAuthorUrl, $_colAAuthorZone, $_colARemark, $_colACreatedAt 
+           FROM $_tblFavoriteAuthor
+           WHERE $_colAUsername = ?
+           ORDER BY $_colACreatedAt DESC
+           LIMIT $limit OFFSET $offset''',
+      [username],
+    );
+    if (results == null) {
+      return null;
+    }
+    var out = <FavoriteAuthor>[];
+    for (var r in results) {
+      out.add(FavoriteAuthor(
+        authorId: r[_colAAuthorId]! as int,
+        authorName: r[_colAAuthorName]! as String,
+        authorCover: r[_colAAuthorCover]! as String,
+        authorUrl: r[_colAAuthorUrl]! as String,
+        authorZone: r[_colAAuthorZone]! as String,
+        remark: r[_colARemark]! as String,
+        createdAt: DateTime.parse(r[_colCreatedAt]! as String),
+      ));
+    }
+    return out;
+  }
+
   static Future<bool> addOrUpdateFavorite({required String username, required FavoriteManga favorite}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
@@ -347,7 +436,7 @@ class FavoriteDao {
       ok = await db.safeRawUpdate(
         '''UPDATE $_tblFavorite
            SET $_colGroupName = ?
-           WHERE $_colUsername = ? AND $_colGroupName = ?''',
+           WHERE $_colGUsername = ? AND $_colGroupName = ?''',
         [newName, username, oldName],
       );
     } else {
@@ -355,11 +444,42 @@ class FavoriteDao {
       ok = await db.safeRawUpdate(
         '''UPDATE $_tblFavorite
            SET $_colGroupName = ?, $_colListOrder = ?
-           WHERE $_colUsername = ? AND $_colGroupName = ?''',
+           WHERE $_colGUsername = ? AND $_colGroupName = ?''',
         [newName, newOrder, username, oldName],
       );
     }
     return ok != null;
+  }
+
+  static Future<bool> addOrUpdateAuthor({required String username, required FavoriteAuthor author}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblFavoriteAuthor
+         WHERE $_colAUsername = ? AND $_colAAuthorId = ?''',
+      [username, author.authorId],
+    );
+    if (results == null) {
+      return false;
+    }
+    var count = firstIntValue(results);
+
+    int? rows = 0;
+    if (count == 0) {
+      rows = await db.safeRawInsert(
+        '''INSERT INTO $_tblFavoriteAuthor ($_colAUsername, $_colAAuthorId, $_colAAuthorName, $_colAAuthorCover, $_colAAuthorUrl, $_colAAuthorZone, $_colARemark, $_colACreatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        [username, author.authorId, author.authorName, author.authorCover, author.authorUrl, author.authorZone, author.remark, author.createdAt.toIso8601String()],
+      );
+    } else {
+      rows = await db.safeRawUpdate(
+        '''UPDATE $_tblFavoriteAuthor
+           SET $_colAAuthorName = ?, $_colAAuthorCover = ?, $_colAAuthorUrl = ?, $_colAAuthorZone = ?, $_colARemark = ?, $_colACreatedAt = ?
+           WHERE $_colAUsername = ? AND $_colAAuthorId = ?''',
+        [author.authorName, author.authorCover, author.authorUrl, author.authorZone, author.remark, author.createdAt.toIso8601String(), username, author.authorId],
+      );
+    }
+    return rows != null && rows >= 1;
   }
 
   static Future<bool> deleteFavorite({required String username, required int mid}) async {
@@ -382,6 +502,16 @@ class FavoriteDao {
       '''DELETE FROM $_tblFavoriteGroup
          WHERE $_colGUsername = ? AND $_colGGroupName = ?''',
       [username, groupName],
+    );
+    return rows != null && rows >= 1;
+  }
+
+  static Future<bool> deleteAuthor({required String username, required int aid}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblFavoriteAuthor
+         WHERE $_colAUsername = ? AND $_colAAuthorId = ?''',
+      [username, aid],
     );
     return rows != null && rows >= 1;
   }

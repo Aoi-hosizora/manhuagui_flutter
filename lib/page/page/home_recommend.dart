@@ -8,12 +8,12 @@ import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
 import 'package:manhuagui_flutter/page/manga_random.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/genre_chip_list.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
 import 'package:manhuagui_flutter/page/view/manga_collection.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
-import 'package:manhuagui_flutter/page/view/warning_text.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -44,7 +44,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
-  AuthData? _oldAuthData;
+  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
@@ -53,8 +53,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
 
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (ev) {
-        _oldAuthData = AuthManager.instance.authData;
+      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (ev) {
+        _currAuthData = AuthManager.instance.authData;
         if (mounted) setState(() {});
         _loadCollections([MangaCollectionType.shelves, MangaCollectionType.favorites, MangaCollectionType.histories]);
       }));
@@ -273,8 +273,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   child: Column(
                     children: [
                       ActionRowView.four(
-                        action1: ActionItem.simple('我的书架', MdiIcons.bookshelf, () => EventBusManager.instance.fire(ToShelfRequestedEvent())), // Icons.star
-                        action2: ActionItem.simple('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())), // Icons.bookmark
+                        action1: ActionItem.simple('我的书架', MdiIcons.bookshelf, () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+                        action2: ActionItem.simple('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())),
                         action3: ActionItem.simple('阅读历史', Icons.history, () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
                         action4: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
                       ),

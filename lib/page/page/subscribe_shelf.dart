@@ -5,11 +5,11 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
-import 'package:manhuagui_flutter/page/view/manga_corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
-import 'package:manhuagui_flutter/page/view/simple_widgets.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -36,9 +36,10 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
-  AuthData? _oldAuthData;
-  var _loginChecking = true;
-  var _loginCheckError = '';
+
+  var _currAuthData = AuthManager.instance.authData;
+  var _authChecking = true; // initialize to true
+  var _authCheckError = '';
 
   @override
   void initState() {
@@ -46,17 +47,20 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     widget.action?.addAction(() => _controller.scrollToTop());
     widget.action?.addAction('sync', () => _showPopupMenuForShelfCache());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (ev) {
-        _oldAuthData = AuthManager.instance.authData;
-        _loginChecking = false;
-        _loginCheckError = ev.error?.text ?? '';
-        if (mounted) setState(() {});
+      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (ev) {
+        _currAuthData = AuthManager.instance.authData;
+        _authChecking = false;
+        _authCheckError = ev.error?.text ?? '';
         if (AuthManager.instance.logined) {
-          WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
+          _pdvKey.currentState?.refresh();
         }
+        if (mounted) setState(() {});
       }));
-      _loginChecking = true;
+      _authChecking = true;
+      if (mounted) setState(() {});
       await AuthManager.instance.check();
+      _authChecking = false;
+      if (mounted) setState(() {});
     });
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
@@ -123,7 +127,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
         if (!inShelf) {
           _data.removeWhere((el) => el.mid == manga.mid);
-          _total--; // TODO removed++
+          _total--; // no "removed++"
           if (mounted) setState(() {});
         }
       },
@@ -139,11 +143,11 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     await showDialog(
       context: context,
       builder: (c) => SimpleDialog(
-        title: Text('同步我的书架'),
+        title: Text('同步'),
         children: [
           IconTextDialogOption(
             icon: Icon(Icons.sync),
-            text: Text('同步'),
+            text: Text('同步我的书架'),
             onPressed: () async {
               Navigator.of(c).pop();
               MangaShelfCachePage.syncShelfCaches(context);
@@ -173,17 +177,21 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_loginChecking || _loginCheckError.isNotEmpty || !AuthManager.instance.logined) {
+    if (_authChecking || _authCheckError.isNotEmpty || !AuthManager.instance.logined) {
       _data.clear();
-      return LoginFirstView(
-        checking: _loginChecking,
-        error: _loginCheckError,
-        onErrorRetry: () async {
-          _loginChecking = true;
-          _loginCheckError = '';
-          if (mounted) setState(() {});
-          await AuthManager.instance.check();
-        },
+      _total = 0;
+      _shelfUpdated = false;
+      return Scaffold(
+        body: LoginFirstView(
+          checking: _authChecking,
+          error: _authCheckError,
+          onErrorRetry: () async {
+            _authChecking = true;
+            _authCheckError = '';
+            if (mounted) setState(() {});
+            await AuthManager.instance.check();
+          },
+        ),
       );
     }
 
@@ -229,11 +237,10 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
                 children: [
                   Text('共 $_total 部'),
                   SizedBox(width: 5),
-                  HelpIconView(
+                  HelpIconView.forListHint(
                     title: '我的书架',
                     hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的倒序显示。',
-                    useRectangle: true,
-                    padding: EdgeInsets.all(3),
+                    iconData: Icons.error_outline,
                   ),
                 ],
               ),

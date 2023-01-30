@@ -135,6 +135,14 @@ Future<bool> _exportDB(File dbFile, List<ExportDataType> types, ExportDataTypeCo
       }
       counter.favoriteMangas = favoriteRows;
     }
+    // favorite authors
+    if (types.contains(ExportDataType.favoriteAuthors)) {
+      var rows = await _copyToDB(tx, anotherDB, FavoriteDao.authorMetadata);
+      if (rows == null) {
+        return false;
+      }
+      counter.favoriteAuthors = rows;
+    }
     return true;
   });
   ok ??= false;
@@ -251,6 +259,14 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     if (favoriteMangaRows > 0) {
       counter.favoriteMangas = favoriteMangaRows;
     }
+    // favorite authors
+    var favoriteAuthorRows = await _copyToDB(exportedDB, db, FavoriteDao.authorMetadata, merge);
+    if (favoriteAuthorRows == null) {
+      return false;
+    }
+    if (favoriteAuthorRows > 0) {
+      counter.favoriteAuthors = favoriteAuthorRows;
+    }
     return true;
   }();
 
@@ -258,6 +274,7 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     // notify histories and favorites are changed
     EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
     EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added));
+    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added));
   }
   await exportedDB.close();
   return ok;

@@ -34,7 +34,7 @@ class AuthManager {
   var _data = AuthData(username: '', token: ''); // global auth data
   bool _loading = false; // global loading flag
 
-  AuthData get authData => _data;
+  AuthData? get authData => !logined ? null : _data; // TODO
 
   String get username => _data.username;
 
@@ -47,6 +47,13 @@ class AuthManager {
   void record({required String username, required String token}) {
     _data = AuthData(username: username, token: token);
   }
+
+  // TODO remove authDataGetter
+
+  // E/flutter ( 6510): [ERROR:flutter/lib/ui/ui_dart_state.cc(209)] Unhandled Exception: Unimplemented handling of missing static target
+  // E/flutter ( 6510): #0      AuthManager.listen.<anonymous closure> (package:manhuagui_flutter/service/evb/auth_manager.dart:53:27)
+  // E/flutter ( 6510): #1      _rootRunUnary (dart:async/zone.dart:1434:47)
+  // E/flutter ( 6510): #2      _CustomZone.runUnary (dart:async/zone.dart:1335:19)
 
   void Function() listen(AuthData? Function()? authDataGetter, void Function(AuthChangedEvent) onData) {
     return EventBusManager.instance.listen<AuthChangedEvent>((ev) {
@@ -64,10 +71,10 @@ class AuthManager {
 
   final _lock = Lock();
 
+  // TODO listenAndCheck
+
   Future<AuthChangedEvent> check() async {
     return _lock.synchronized<AuthChangedEvent>(() async {
-      _loading = true;
-
       // check if is logined
       if (AuthManager.instance.logined) {
         return AuthManager.instance.notify(logined: true);
@@ -80,6 +87,7 @@ class AuthManager {
       }
 
       // check stored token
+      _loading = true;
       final client = RestClient(DioManager.instance.dio);
       try {
         var r = await client.checkUserLogin(token: token);

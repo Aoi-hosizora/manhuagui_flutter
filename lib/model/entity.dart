@@ -234,6 +234,7 @@ class FavoriteAuthor {
   final String authorName;
   final String authorCover;
   final String authorUrl;
+  final String authorZone;
   final String remark;
   final DateTime createdAt;
 
@@ -242,6 +243,7 @@ class FavoriteAuthor {
     required this.authorName,
     required this.authorCover,
     required this.authorUrl,
+    required this.authorZone,
     required this.remark,
     required this.createdAt,
   });
@@ -253,6 +255,7 @@ class FavoriteAuthor {
     String? authorName,
     String? authorCover,
     String? authorUrl,
+    String? authorZone,
     String? remark,
     DateTime? createdAt,
   }) {
@@ -261,6 +264,7 @@ class FavoriteAuthor {
       authorName: authorName ?? this.authorName,
       authorCover: authorCover ?? this.authorCover,
       authorUrl: authorUrl ?? this.authorUrl,
+      authorZone: authorZone ?? this.authorZone,
       remark: remark ?? this.remark,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -271,6 +275,7 @@ class FavoriteAuthor {
         authorName == o.authorName &&
         authorCover == o.authorCover &&
         authorUrl == o.authorUrl &&
+        authorZone == o.authorZone &&
         remark == o.remark &&
         createdAt == o.createdAt;
   }
@@ -432,6 +437,7 @@ class DownloadedChapter {
       url: 'https://www.manhuagui.com/comic/$mangaId/$chapterId.html',
       pageCount: totalPageCount,
       isNew: false,
+      number: chapterId, // <<< use chapterId as number
     );
   }
 }

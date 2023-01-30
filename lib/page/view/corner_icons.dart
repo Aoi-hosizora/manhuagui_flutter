@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
-import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -8,8 +7,9 @@ import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 构建用于各类漫画行的 Corner 图标列表，在 [TinyMangaLineView] / [ShelfMangaLineView] / [MangaHistoryLineView] / [MangaRankingLineView] 使用
+/// 构建用于各类漫画行和作者行的 Corner 图标列表，在各个列表和列表项使用
 
 class MangaCornerFlags {
   const MangaCornerFlags({
@@ -26,15 +26,15 @@ class MangaCornerFlags {
   final bool inHistory;
   final bool historyRead;
 
-  List<dynamic> buildIcons() {
-    if (!AppSetting.instance.other.enableMangaFlags) {
+  List<IconData> buildIcons() {
+    if (!AppSetting.instance.other.enableCornerIcons) {
       return [];
     }
     return [
       if (inDownload) Icons.download,
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
-      if (inHistory && !historyRead) CustomIcons.opened_empty_book, // TODO use same ???
+      if (inHistory && !historyRead) MdiIcons.notebookOutline,
       if (inHistory && historyRead) Icons.import_contacts,
     ];
   }
@@ -42,7 +42,7 @@ class MangaCornerFlags {
 
 class MangaCornerFlagStorage {
   final _cancelHandlers = <VoidCallback>[];
-  AuthData? _oldAuthData;
+  var _currAuthData = AuthManager.instance.authData;
 
   MangaCornerFlagStorage({required VoidCallback stateSetter}) {
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
@@ -62,8 +62,8 @@ class MangaCornerFlagStorage {
       stateSetter();
     }));
 
-    _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) async {
-      _oldAuthData = AuthManager.instance.authData;
+    _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) async {
+      _currAuthData = AuthManager.instance.authData;
       var allMangaIds = {..._downloadsMap.keys, ..._shelvesMap.keys, ..._favoritesMap.keys, ..._historiesMap.keys};
       await queryAndStoreFlags(mangaIds: allMangaIds, queryDownloads: false);
       stateSetter();
@@ -127,6 +127,72 @@ class MangaCornerFlagStorage {
       inFavorite: forceInFavorite || (_favoritesMap[mangaId] ?? false),
       inHistory: forceInHistory || (_historiesMap[mangaId] ?? false),
       historyRead: _historiesReadMap[mangaId] ?? false,
+    );
+  }
+}
+
+class AuthorCornerFlags {
+  const AuthorCornerFlags({
+    required this.inFavorite,
+  });
+
+  final bool inFavorite;
+
+  List<IconData> buildIcons() {
+    if (!AppSetting.instance.other.enableCornerIcons) {
+      return [];
+    }
+    return [
+      if (inFavorite) Icons.bookmark,
+    ];
+  }
+}
+
+class AuthorCornerFlagStorage {
+  final _cancelHandlers = <VoidCallback>[];
+  var _currAuthData = AuthManager.instance.authData;
+
+  AuthorCornerFlagStorage({required VoidCallback stateSetter}) {
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) async {
+      await queryAndStoreFlags(authorIds: [ev.authorId]);
+      stateSetter();
+    }));
+    _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) async {
+      _currAuthData = AuthManager.instance.authData;
+      await queryAndStoreFlags(authorIds: _favoritesMap.keys);
+      stateSetter();
+    }));
+  }
+
+  void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
+    _favoritesMap.clear();
+  }
+
+  final _favoritesMap = <int, bool>{};
+
+  Future<void> queryAndStoreFlags({
+    required Iterable<int> authorIds,
+    bool queryFavorites = true,
+  }) async {
+    var futures = <Future>[];
+    for (var authorId in authorIds) {
+      var future = Future.microtask(() async {
+        if (queryFavorites) {
+          _favoritesMap[authorId] = (await FavoriteDao.checkAuthorExistence(username: AuthManager.instance.username, aid: authorId)) ?? false;
+        }
+      });
+      futures.add(future);
+    }
+    await Future.wait(futures);
+  }
+
+  AuthorCornerFlags getFlags({
+    required int mangaId,
+    bool forceInFavorite = false,
+  }) {
+    return AuthorCornerFlags(
+      inFavorite: forceInFavorite || (_favoritesMap[mangaId] ?? false),
     );
   }
 }

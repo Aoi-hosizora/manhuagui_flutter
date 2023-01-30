@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/message.dart';
 import 'package:manhuagui_flutter/page/page/message_dialog.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 历史消息行，在 [MessagePage] 使用
 class MessageLineView extends StatelessWidget {
@@ -41,7 +42,7 @@ class MessageLineView extends StatelessWidget {
         title: Text('消息选项'),
         children: [
           IconTextDialogOption(
-            icon: Icon(Icons.arrow_forward),
+            icon: Icon(MdiIcons.bellOutline), // use MdiIcons to align height
             text: Text('查看详情'),
             onPressed: () async {
               Navigator.of(c).pop();
@@ -50,7 +51,7 @@ class MessageLineView extends StatelessWidget {
           ),
           if (hasRead)
             IconTextDialogOption(
-              icon: Icon(Icons.notification_add),
+              icon: Icon(MdiIcons.bellPlus),
               text: Text('标记为未阅读'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -60,7 +61,7 @@ class MessageLineView extends StatelessWidget {
             ),
           if (!hasRead)
             IconTextDialogOption(
-              icon: Icon(Icons.notifications_none),
+              icon: Icon(MdiIcons.bellCheck),
               text: Text('标记为已阅读'),
               onPressed: () async {
                 Navigator.of(c).pop();
