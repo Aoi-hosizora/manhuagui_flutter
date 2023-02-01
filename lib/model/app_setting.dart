@@ -341,25 +341,32 @@ extension ExportDataTypeExtension on ExportDataType {
 class ExportDataTypeCounter {
   ExportDataTypeCounter();
 
-  int? readHistories;
-  int? downloadRecords;
-  int? favoriteMangas;
-  int? favoriteAuthors;
-  int? searchHistories;
-  int? appSetting;
+  int readHistories = 0;
+  int downloadRecords = 0;
+  int favoriteMangas = 0;
+  int favoriteAuthors = 0;
+  int searchHistories = 0;
+  int appSetting = 0;
 
-  // TODO improve nullable logic
-  bool get isEmpty => readHistories == null && downloadRecords == null && favoriteMangas == null && favoriteAuthors == null && searchHistories == null && appSetting == null;
+  bool get isEmpty =>
+      readHistories == 0 && //
+      downloadRecords == 0 &&
+      favoriteMangas == 0 &&
+      favoriteAuthors == 0 &&
+      searchHistories == 0 &&
+      appSetting == 0;
 
-  @override
-  String toString() {
+  String formatToString({required bool includeZero, required List<ExportDataType> includeTypes}) {
+    bool include(int count, ExportDataType type) => //
+        (includeZero || count != 0) && includeTypes.contains(type);
+
     var titles = [
-      if (readHistories != null) '${readHistories ?? 0} 条漫画阅读历史',
-      if (downloadRecords != null) '${downloadRecords ?? 0} 条漫画下载记录',
-      if (favoriteMangas != null) '${favoriteMangas ?? 0} 部本地收藏漫画',
-      if (favoriteAuthors != null) '${favoriteAuthors ?? 0} 位本地收藏作者',
-      if (searchHistories != null) '${searchHistories ?? 0} 条漫画搜索历史',
-      if (appSetting != null) '${appSetting ?? 0} 条设置项',
+      if (include(readHistories, ExportDataType.readHistories)) '$readHistories 条漫画阅读历史',
+      if (include(downloadRecords, ExportDataType.downloadRecords)) '$downloadRecords 条漫画下载记录',
+      if (include(favoriteMangas, ExportDataType.favoriteMangas)) '$favoriteMangas 部本地收藏漫画',
+      if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',
+      if (include(searchHistories, ExportDataType.searchHistories)) '$searchHistories 条漫画搜索历史',
+      if (include(appSetting, ExportDataType.appSetting)) '$appSetting 条设置项',
     ];
     return titles.join('、');
   }

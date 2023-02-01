@@ -42,7 +42,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
-    _cancelHandlers.forEach((h) => h.call());
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
     super.dispose();

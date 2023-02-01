@@ -39,55 +39,68 @@ class MineSubPage extends StatefulWidget {
 class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   late final _controller = ScrollController()..addListener(() => mountedSetState(() {}));
-  VoidCallback? _cancelHandler;
-
-  var _currAuthData = AuthManager.instance.authData;
-  var _authChecking = true; // initialize to true
-  var _authCheckError = '';
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show()); // TODO use _loadData or _refreshIndicatorKey
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      if (AuthManager.instance.logined) {
-        WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
-      }
-    });
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandler = AuthManager.instance.listen(() => _currAuthData, (ev) {
-        // TODO remove currAuthData check and use `if () return` manually
-        _currAuthData = AuthManager.instance.authData;
-        _authChecking = false;
-        _authCheckError = ev.error?.text ?? '';
-        if (AuthManager.instance.logined) {
-          _refreshIndicatorKey.currentState?.show(); // TODO improve logic
-        }
-        if (mounted) setState(() {});
-      });
-      _authChecking = true;
-      if (mounted) setState(() {});
+      _cancelHandlers.add(AuthManager.instance.listen((ev) => _updateByAuthEvent(ev))); // !!! with checking AuthManager.instance.authData
       await AuthManager.instance.check();
-      _authChecking = false;
-      if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     super.dispose();
   }
 
-  var _loading = false;
+  var _authChecking = !AuthManager.instance.logined; // initialize to true when not logined
+  var _authData = AuthManager.instance.authData;
+  var _authError = '';
+
+  void _updateByAuthEvent(AuthChangedEvent event) {
+    if (_authChecking) {
+      _authChecking = false;
+      if (mounted) setState(() {});
+    }
+    if (AuthManager.instance.authData.equals(_authData)) {
+      return;
+    }
+
+    _authData = AuthManager.instance.authData;
+    _authError = event.error?.text ?? '';
+    if (_authError.isEmpty) {
+      if (!AuthManager.instance.logined) {
+        _data = null;
+        _error = '';
+      } else {
+        WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show()); // TODO use _loadData or _refreshIndicatorKey
+      }
+      if (mounted) setState(() {});
+    }
+  }
+
+  var _loading = true; // initialize to true
   User? _data;
   DateTime? _currLoginDateTime;
   var _error = '';
   var _checkining = false;
 
-  Future<void> _loadUser() async {
+  Future<void> _loadData() async {
     _loading = true;
     if (mounted) setState(() {});
+
+    if (!AuthManager.instance.logined) {
+      _data = null;
+      _error = '';
+      _loading = false;
+      if (mounted) setState(() {});
+      return;
+    }
 
     final client = RestClient(DioManager.instance.dio);
     try {
@@ -102,6 +115,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       _data = null;
       var we = wrapError(e, s);
       _error = we.text;
+
+      // redirect to login page when 401
       if (we.response?.statusCode == 401) {
         Fluttertoast.showToast(msg: '登录失效，请重新登录');
         Navigator.of(context).push(
@@ -118,6 +133,10 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   }
 
   Future<void> _checkin() async {
+    if (!AuthManager.instance.logined) {
+      Fluttertoast.showToast(msg: '用户未登录');
+      return;
+    }
     var password = await AuthPrefs.getUserPassword(AuthManager.instance.username);
     if (password == null || password.isEmpty) {
       await showDialog(
@@ -136,24 +155,32 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       return;
     }
 
-    final client = RestClient(DioManager.instance.dio);
     _checkining = true;
     if (mounted) setState(() {});
+
+    final client = RestClient(DioManager.instance.dio);
     try {
-      await client.login(username: AuthManager.instance.username, password: password); // ignore token
+      var username = AuthManager.instance.username;
+      var result = await client.login(username: username, password: password);
+      var token = result.data.token;
+
+      // record login state and update token
+      AuthManager.instance.record(username: username, token: token);
+      AuthManager.instance.notify(logined: true);
+      await AuthPrefs.setToken(token);
+
+      // update login time and reload user data
+      await AuthPrefs.setLoginDateTime(DateTime.now());
+      await _loadData();
+      if (_data != null) {
+        Fluttertoast.showToast(msg: '登录签到成功，已累计登录${_data!.cumulativeDayCount}天');
+      }
     } catch (e, s) {
-      Fluttertoast.showToast(msg: '登录签到失败，${wrapError(e, s).text}');
-      return;
+      var error = wrapError(e, s).text;
+      Fluttertoast.showToast(msg: '登录签到失败，$error');
     } finally {
-      _data = null;
       _checkining = false;
       if (mounted) setState(() {});
-    }
-
-    await AuthPrefs.setLoginDateTime(DateTime.now());
-    await _loadUser();
-    if (_data != null) {
-      Fluttertoast.showToast(msg: '登录签到成功，已累计登录${_data!.cumulativeDayCount}天');
     }
   }
 
@@ -322,16 +349,17 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       );
     }
 
-    if (_authChecking || _authCheckError.isNotEmpty || !AuthManager.instance.logined) {
+    if (_authChecking || _authError.isNotEmpty || !AuthManager.instance.logined) {
       _data = null;
       _error = '';
       return _buildScaffold(
         body: LoginFirstView(
+          parentContext: context,
           checking: _authChecking,
-          error: _authCheckError,
+          error: _authError,
           onErrorRetry: () async {
             _authChecking = true;
-            _authCheckError = '';
+            _authError = '';
             if (mounted) setState(() {});
             await AuthManager.instance.check();
           },
@@ -343,13 +371,13 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       title: _data == null ? null : Text(_data!.username),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
-        onRefresh: _loadUser,
+        onRefresh: _loadData,
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
           isEmpty: _data == null,
           setting: PlaceholderSetting().copyWithChinese(),
-          onRefresh: () => _loadUser(),
+          onRefresh: () => _loadData(),
           childBuilder: (c) => ListView(
             controller: _controller,
             padding: EdgeInsets.zero,

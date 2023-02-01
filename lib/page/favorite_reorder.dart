@@ -24,11 +24,6 @@ class FavoriteReorderPage extends StatefulWidget {
 
 class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
   final _controller = ScrollController();
-  var _loading = false;
-  final _favorites = <FavoriteManga>[];
-  final _originIndex = <int, int>{};
-  var _reordered = false;
-  var _saving = false;
 
   @override
   void initState() {
@@ -36,20 +31,35 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  var _loading = true; // initialize to true
+  final _favorites = <FavoriteManga>[];
+  final _originIndex = <int, int>{};
+  var _reordered = false;
+  var _saving = false;
+
   Future<void> _loadData() async {
     _loading = true;
     _favorites.clear();
     _originIndex.clear();
     if (mounted) setState(() {});
 
-    var data = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: widget.groupName, page: -1) ?? [];
-    _favorites.addAll(data);
-    for (var i = 0; i < data.length; i++) {
-      _originIndex[data[i].mangaId] = i;
+    try {
+      var data = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: widget.groupName, page: -1) ?? [];
+      _favorites.addAll(data);
+      for (var i = 0; i < data.length; i++) {
+        _originIndex[data[i].mangaId] = i;
+      }
+    } finally {
+      _loading = false;
+      _reordered = false;
+      if (mounted) setState(() {});
     }
-    _loading = false;
-    _reordered = false;
-    if (mounted) setState(() {});
   }
 
   Future<void> _save() async {

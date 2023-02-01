@@ -46,7 +46,7 @@ class MangaViewerPage extends StatefulWidget {
     required this.chapterId,
     required this.mangaCover,
     required this.chapterGroups,
-    required this.onlineMode, // almost for downloading
+    required this.onlineMode,
     required this.initialPage, // starts from 1
   }) : super(key: key);
 
@@ -55,8 +55,8 @@ class MangaViewerPage extends StatefulWidget {
   final int chapterId;
   final String mangaCover;
   final List<MangaChapterGroup>? chapterGroups;
-  final int initialPage;
   final bool onlineMode;
+  final int initialPage;
 
   @override
   _MangaViewerPageState createState() => _MangaViewerPageState();
@@ -200,20 +200,21 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     super.dispose();
   }
 
-  var _loading = true;
+  var _loading = true; // initialize to true
   MangaViewerPageData? _data;
-  DownloadedManga? _downloadEntity;
-  DownloadedChapter? _downloadChapter;
+  var _error = '';
+
   int? _initialPage;
   List<Future<String?>>? _urlFutures;
   List<Future<File?>>? _fileFutures;
-  var _error = '';
 
   int? _subscribeCount;
   FavoriteManga? _favoriteManga;
   var _subscribing = false; // 执行订阅操作中
   var _inShelf = false; // 书架
   var _inFavorite = false; // 收藏
+  DownloadedManga? _downloadEntity;
+  DownloadedChapter? _downloadChapter;
 
   Future<void> _loadData() async {
     _loading = true;
@@ -231,7 +232,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
       });
 
-      // 2. 异步获取漫画订阅信息
+      // 2. 异步获取漫画书架信息
       Future.microtask(() async {
         try {
           var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mangaId);
@@ -245,19 +246,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
       });
     }
-    Future.microtask(() async {
-      _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
-      _inFavorite = _favoriteManga != null;
-    });
 
-    // 3. 获取章节下载信息
+    // 3. 获取各种数据库信息 (收藏、下载)
+    _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
+    _inFavorite = _favoriteManga != null;
     _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
     _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
 
     try {
       if (widget.onlineMode) {
-        // => a. 在线模式，通过网络获取章节数据
-        // a.4. 异步请求章节目录
+        // => (I) 在线模式，通过网络获取章节数据
+        // I.4. 异步请求章节目录
         Future<TaskResult<List<MangaChapterGroup>, Object>> groupsFuture;
         if (widget.chapterGroups != null) {
           groupsFuture = Future.value(Ok(widget.chapterGroups!));
@@ -272,7 +271,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           });
         }
 
-        // a.5. 获取章节数据并整合至 data
+        // I.5. 获取章节数据并整合至 page data
         var result = await client.getMangaChapter(mid: widget.mangaId, cid: widget.chapterId);
         var data = result.data;
         var groups = (await groupsFuture).unwrap(); // 等待成功获取章节目录
@@ -288,14 +287,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           prevChapterId: data.prevCid,
           chapterGroups: groups,
         );
-        _preparePageAndFutures();
+        _preparePageAndFutures(); // 初始化页码和页面列表
       } else {
-        // => b. 离线模式，使用已下载漫画章节数据
+        // => (II) 离线模式，使用已下载的漫画章节数据
         var manga = _downloadEntity, chapter = _downloadChapter;
         if (manga == null || chapter == null) {
           _error = '当前处于离线模式，但该章节尚未下载\n请先切换成在线模式再阅读';
         } else {
-          // b.4. 将下载漫画时记录的数据整合至 data
+          // II.4. 将下载漫画时记录的数据整合至 page data
           var metadata = await readMetadataFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageCount: chapter.totalPageCount);
           _error = '';
           _data = MangaViewerPageData(
@@ -309,9 +308,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             prevChapterId: metadata.item3,
             chapterGroups: widget.chapterGroups /* maybe null */,
           );
-          _preparePageAndFutures();
+          _preparePageAndFutures(); // 初始化页码和页面列表
 
-          // b.5. 异步请求章节目录
+          // II.5. 异步请求章节目录
           if (widget.chapterGroups == null) {
             Future.microtask(() async {
               try {
@@ -572,7 +571,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             mangaTitle: _data!.mangaTitle,
             groups: _data!.chapterGroups!,
             highlightedChapter: widget.chapterId,
-            downloadedChapters: _downloadEntity?.downloadedChapters ?? [],
             onChapterPressed: (cid) {
               if (cid == widget.chapterId) {
                 Fluttertoast.showToast(msg: '当前正在阅读 ${_data!.chapterTitle}');

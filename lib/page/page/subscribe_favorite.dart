@@ -37,7 +37,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
@@ -45,9 +44,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     widget.action?.addAction(() => _controller.scrollToTop());
     widget.action?.addAction('manage', () => _scaffoldKey.currentState?.let((s) => !s.isEndDrawerOpen ? s.openEndDrawer() : Navigator.of(context).pop()));
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) {
-        _currAuthData = AuthManager.instance.authData;
-        _pdvKey.currentState?.refresh();
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
+        _pdvKey.currentState?.refresh(); // TODO use _getData or _pdvKey
       }));
       await AuthManager.instance.check();
     });
@@ -59,27 +57,28 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     widget.action?.removeAction();
     widget.action?.removeAction('manage');
     _cancelHandlers.forEach((c) => c.call());
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     _msController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
   List<FavoriteGroup>? _groups;
   var _currentGroup = '';
+
   final _data = <FavoriteManga>[];
-  final _histories = <int, MangaHistory?>{};
-  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
   var _removed = 0; // for query offset
-  var _favoriteUpdated = false;
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreFavorites: true);
+  final _histories = <int, MangaHistory?>{};
+  var _isUpdated = false;
 
   Future<PagedList<FavoriteManga>> _getData({required int page}) async {
     if (page == 1) {
       // refresh
       _removed = 0;
-      _favoriteUpdated = false;
+      _isUpdated = false;
       _groups = null;
     }
     var username = AuthManager.instance.username;
@@ -89,8 +88,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     for (var item in data) {
       _histories[item.mangaId] = await HistoryDao.getHistory(username: username, mid: item.mangaId);
     }
-    await _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryFavorites: false);
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryFavorites: false).then((_) => mountedSetState(() {}));
     return PagedList(list: data, next: page + 1);
   }
 
@@ -106,35 +104,25 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     _pdvKey.currentState?.refresh();
   }
 
-  Future<void> _updateByEvent(FavoriteUpdatedEvent event) async {
+  void _updateByEvent(FavoriteUpdatedEvent event) async {
     if (event.group != _currentGroup) {
       return; // 非当前分组 => 忽略
     }
+
     if (event.reason == UpdateReason.added) {
       // 新增 => 显示有更新
-      _favoriteUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
       // 非本页引起的删除 => 显示有更新
-      _favoriteUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
       // 非本页引起的更新 => 显示有更新
-      _favoriteUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
-      // 非本页引起的更新 => 更新列表显示
-      // TODO 顺序变更如何提示？是否显示有更新？
-      // var favorite = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: event.mangaId);
-      // if (favorite != null) {
-      //   for (var i = 0; i < _data.length; i++) {
-      //     if (_data[i].mangaId == event.mangaId) {
-      //       _data[i] = favorite;
-      //     }
-      //   }
-      //   if (mounted) setState(() {});
-      // }
     }
   }
 
@@ -158,22 +146,22 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
         if (!inFavorite) {
           _data.removeWhere((el) => el.mangaId == favorite.mangaId);
-          _removed++;
           _total--;
+          _removed++;
           if (mounted) setState(() {});
         }
       },
     );
   }
 
-  Future<void> _updateFavoriteRemark({required int mangaId}) async {
+  void _updateFavoriteRemark({required int mangaId}) {
     var oldFavorite = _data.where((el) => el.mangaId == mangaId).firstOrNull;
     if (oldFavorite == null) {
       return;
     }
 
     // 不退出多选模式、先弹出菜单
-    showUpdateFavoriteRemarkDialog(
+    showUpdateFavoriteMangaRemarkDialog(
       context: context,
       favorite: oldFavorite,
       onUpdated: (newFavorite) {
@@ -190,14 +178,14 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     );
   }
 
-  Future<void> _moveFavoritesTo({required List<int> mangaIds}) async {
+  void _moveFavoritesTo({required List<int> mangaIds}) {
     var oldFavorites = _data.where((el) => mangaIds.contains(el.mangaId)).toList();
     if (oldFavorites.isEmpty) {
       return;
     }
 
     // 不退出多选模式、先弹出菜单
-    showUpdateFavoritesGroupDialog(
+    showUpdateFavoriteMangasGroupDialog(
       context: context,
       favorites: oldFavorites,
       selectedGroupName: _currentGroup,
@@ -208,8 +196,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         for (var newFavorite in newFavorites) {
           if (newFavorite.groupName != _currentGroup) {
             _data.removeWhere((el) => el.mangaId == newFavorite.mangaId); // 不同分组 => 从列表删除
-            _removed++;
             _total--;
+            _removed++;
           } else {
             _data.removeWhere((el) => el.mangaId == newFavorite.mangaId); // 同一分组 => 更新列表顺序
             addToTop ? _data.insert(0, newFavorite) : _data.add(newFavorite);
@@ -226,6 +214,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       return;
     }
 
+    // 不退出多选模式、先弹出对话框
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -253,13 +242,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     for (var mangaId in mangaIds) {
       await FavoriteDao.deleteFavorite(username: AuthManager.instance.username, mid: mangaId);
       _data.removeWhere((el) => el.mangaId == mangaId);
-      _removed++;
       _total--;
+      _removed++;
     }
+    if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: _currentGroup, reason: UpdateReason.deleted, fromFavoritePage: true));
     }
-    if (mounted) setState(() {});
   }
 
   Future<void> _adjustOrder() async {
@@ -432,7 +421,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               scrollbarCrossAxisMargin: 2,
               placeholderSetting: PlaceholderSetting().copyWithChinese(),
               onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-              refreshFirst: true,
+              refreshFirst: true /* <<< refresh first */,
               clearWhenRefresh: false,
               clearWhenError: false,
               updateOnlyIfNotEmpty: false,
@@ -454,10 +443,10 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  // padding: EdgeInsets.fromLTRB(10, 5, 6, 5),
+                  // TODO padding: EdgeInsets.fromLTRB(10, 5, 6, 5),
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
                       (_currentGroup == '' ? '' : '  -  $_currentGroup') + //
-                      (!_favoriteUpdated ? '' : ' (有更新)'),
+                      (!_isUpdated ? '' : ' (有更新)'),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

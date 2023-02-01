@@ -27,21 +27,21 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
     Tuple2('类别', GenreSubPage(key: _keys[0], action: _actions[0])),
     Tuple2('漫画作者', AuthorSubPage(key: _keys[1], action: _actions[1])),
   ];
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    _cancelHandler = EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
-    });
+    }));
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     widget.action?.removeAction();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());

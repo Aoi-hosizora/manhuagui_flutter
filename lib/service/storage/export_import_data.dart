@@ -102,48 +102,53 @@ Future<bool> _exportDB(File dbFile, List<ExportDataType> types, ExportDataTypeCo
   final db = await DBManager.instance.getDB();
   var anotherDB = await DBManager.instance.openDB(dbFile.path); // Database
 
+  // export database with transaction
   var ok = await db.exclusiveTransaction((tx, _) async {
-    // read histories
+    // => read histories
     if (types.contains(ExportDataType.readHistories)) {
       var rows = await _copyToDB(tx, anotherDB, HistoryDao.metadata);
       if (rows == null) {
-        return false;
+        return false; // error
       }
       counter.readHistories = rows;
     }
-    // download records
+
+    // => download records
     if (types.contains(ExportDataType.downloadRecords)) {
       var mangaRows = await _copyToDB(tx, anotherDB, DownloadDao.mangaMetadata);
       if (mangaRows == null) {
-        return false;
+        return false; // error
       }
       var chapterRows = await _copyToDB(tx, anotherDB, DownloadDao.chapterMetadata);
       if (chapterRows == null) {
-        return false;
+        return false; // error
       }
       counter.downloadRecords = mangaRows;
     }
-    // favorite mangas
+
+    // => favorite mangas
     if (types.contains(ExportDataType.favoriteMangas)) {
       var favoriteRows = await _copyToDB(tx, anotherDB, FavoriteDao.favoriteMetadata);
       if (favoriteRows == null) {
-        return false;
+        return false; // error
       }
       var groupRows = await _copyToDB(tx, anotherDB, FavoriteDao.groupMetadata);
       if (groupRows == null) {
-        return false;
+        return false; // error
       }
       counter.favoriteMangas = favoriteRows;
     }
-    // favorite authors
+
+    // => favorite authors
     if (types.contains(ExportDataType.favoriteAuthors)) {
       var rows = await _copyToDB(tx, anotherDB, FavoriteDao.authorMetadata);
       if (rows == null) {
-        return false;
+        return false; // error
       }
       counter.favoriteAuthors = rows;
     }
-    return true;
+
+    return true; // success
   });
   ok ??= false;
 
@@ -155,24 +160,27 @@ Future<bool> _exportPrefs(File prefsFile, List<ExportDataType> types, ExportData
   final prefs = await PrefsManager.instance.loadPrefs();
   var anotherPrefs = _SharedPreferencesMap.empty(); // SharedPreferences
 
+  // export shared preferences without transaction
   var ok = await () async {
-    // search histories
+    // => search histories
     if (types.contains(ExportDataType.searchHistories)) {
       var rows = await _copyToPrefs(prefs, anotherPrefs, SearchHistoryPrefs.keys);
       if (rows == null) {
-        return false;
+        return false; // error
       }
       counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories()).length; // use history list length as rows
     }
-    // app setting
+
+    // => app setting
     if (types.contains(ExportDataType.appSetting)) {
       var rows = await _copyToPrefs(prefs, anotherPrefs, AppSettingPrefs.keys);
       if (rows == null) {
-        return false;
+        return false; // error
       }
       counter.appSetting = rows;
     }
-    return true;
+
+    return true; // success
   }();
 
   ok = ok && await anotherPrefs.setVersion(prefs.getVersion());
@@ -196,10 +204,13 @@ Future<ExportDataTypeCounter?> importData(String name, {bool merge = false}) asy
     var counter = await db.exclusiveTransaction((tx, rollback) async {
       var counter = ExportDataTypeCounter();
       var ok1 = await _importDB(tmpDBFile, tx, counter, merge); // may fail
+      if (!ok1) {
+        rollback(msg: 'importData, importDB: $ok1, importPrefs: <not be executed>');
+        return null;
+      }
       var ok2 = await _importPrefs(tmpPrefsFile, prefs, counter, merge); // almost succeed
       if (!ok1 || !ok2) {
-        globalLogger.w('importData, importDB: $ok1, importPrefs: $ok2');
-        rollback(msg: 'importData');
+        rollback(msg: 'importData, importDB: $ok1, importPrefs: $ok2');
         return null;
       }
       return counter;
@@ -227,54 +238,56 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
   }
 
   var ok = await () async {
-    // read histories
+    // => read histories
     var readHistoryRows = await _copyToDB(exportedDB, db, HistoryDao.metadata, merge);
     if (readHistoryRows == null) {
-      return false;
+      return false; // error
     }
-    if (readHistoryRows > 0) {
-      counter.readHistories = readHistoryRows;
-    }
-    // download records
+    counter.readHistories = readHistoryRows;
+
+    // => download records
     var downloadMangaRows = await _copyToDB(exportedDB, db, DownloadDao.mangaMetadata, merge);
     if (downloadMangaRows == null) {
-      return false;
+      return false; // error
     }
     var downloadChapterRows = await _copyToDB(exportedDB, db, DownloadDao.chapterMetadata, merge);
     if (downloadChapterRows == null) {
-      return false;
+      return false; // error
     }
-    if (downloadMangaRows > 0) {
-      counter.downloadRecords = downloadMangaRows;
-    }
-    // favorite mangas
+    counter.downloadRecords = downloadMangaRows;
+
+    // => favorite mangas
     var favoriteMangaRows = await _copyToDB(exportedDB, db, FavoriteDao.favoriteMetadata, merge);
     if (favoriteMangaRows == null) {
-      return false;
+      return false; // error
     }
     var favoriteGroupRows = await _copyToDB(exportedDB, db, FavoriteDao.groupMetadata, merge);
     if (favoriteGroupRows == null) {
-      return false;
+      return false; // error
     }
-    if (favoriteMangaRows > 0) {
-      counter.favoriteMangas = favoriteMangaRows;
-    }
-    // favorite authors
+    counter.favoriteMangas = favoriteMangaRows;
+
+    // => favorite authors
     var favoriteAuthorRows = await _copyToDB(exportedDB, db, FavoriteDao.authorMetadata, merge);
     if (favoriteAuthorRows == null) {
-      return false;
+      return false; // error
     }
-    if (favoriteAuthorRows > 0) {
-      counter.favoriteAuthors = favoriteAuthorRows;
-    }
-    return true;
+    counter.favoriteAuthors = favoriteAuthorRows;
+
+    return true; // success
   }();
 
-  if (ok && counter.readHistories != null && counter.readHistories! > 0) {
+  if (ok) {
     // notify histories and favorites are changed
-    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
-    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added));
-    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added));
+    if (counter.readHistories > 0) {
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
+    }
+    if (counter.favoriteMangas > 0) {
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added));
+    }
+    if (counter.favoriteAuthors > 0) {
+      EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added));
+    }
   }
   await exportedDB.close();
   return ok;
@@ -292,31 +305,28 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
   await PrefsManager.instance.upgradePrefs(exportedPrefs); // upgrade prefs manually
 
   ok = await () async {
-    // search histories
+    // => search histories
     var searchHistoryRows = await _copyToPrefs(exportedPrefs, prefs, SearchHistoryPrefs.keys, merge);
     if (searchHistoryRows == null) {
-      return false;
+      return false; // error
     }
-    if (searchHistoryRows > 0) {
-      var exportedHistories = (await SearchHistoryPrefs.getSearchHistories(prefs: exportedPrefs));
-      if (exportedHistories.isNotEmpty) {
-        counter.searchHistories = exportedHistories.length; // use history list length as rows
-      }
-    }
-    // app setting
+    counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories(prefs: exportedPrefs)).length; // use history list length as rows
+
+    // => app setting
     var settingRows = await _copyToPrefs(exportedPrefs, prefs, AppSettingPrefs.keys, merge);
     if (settingRows == null) {
-      return false;
+      return false; // error
     }
-    if (settingRows > 0) {
-      counter.appSetting = settingRows;
-    }
-    return true;
+    counter.appSetting = settingRows;
+
+    return true; // success
   }();
 
-  if (ok && counter.appSetting != null && counter.appSetting! > 0) {
+  if (ok) {
     // apply data to AppSetting
-    await AppSettingPrefs.loadAllSettings();
+    if (counter.appSetting > 0) {
+      await AppSettingPrefs.loadAllSettings();
+    }
   }
   return ok;
 }

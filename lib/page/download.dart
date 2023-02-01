@@ -37,9 +37,8 @@ class _DownloadPageState extends State<DownloadPage> {
   @override
   void initState() {
     super.initState();
-    var updater = _updateByEvent();
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => ev.fromDownloadPage.ifFalse(() => updater.item2(ev.mangaId))));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => _updateByEvent(progressEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(entityEvent: ev)));
   }
 
   @override
@@ -70,10 +69,11 @@ class _DownloadPageState extends State<DownloadPage> {
     return data;
   }
 
-  Tuple2<void Function(int, bool), void Function(int)> _updateByEvent() {
-    void throughProgress(final int mangaId, final bool finished) async {
+  Future<void> _updateByEvent({DownloadProgressChangedEvent? progressEvent, DownloadUpdatedEvent? entityEvent}) async {
+    if (progressEvent != null) {
+      var mangaId = progressEvent.mangaId;
       var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
-      if (finished) {
+      if (progressEvent.finished) {
         mountedSetState(() => _tasks.removeWhere((key, _) => key == mangaId));
       } else if (task != null) {
         mountedSetState(() => _tasks[mangaId] = task);
@@ -83,7 +83,8 @@ class _DownloadPageState extends State<DownloadPage> {
       }
     }
 
-    void throughEntity(final int mangaId) async {
+    if (entityEvent != null) {
+      var mangaId = entityEvent.mangaId;
       var entity = await DownloadDao.getManga(mid: mangaId);
       if (entity != null) {
         _data.removeWhere((el) => el.mangaId == mangaId);
@@ -93,8 +94,6 @@ class _DownloadPageState extends State<DownloadPage> {
         getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 在每次数据库发生变化时都统计文件大小
       }
     }
-
-    return Tuple2(throughProgress, throughEntity);
   }
 
   Future<DownloadMangaQueueTask?> _pauseOrContinue({
@@ -109,19 +108,19 @@ class _DownloadPageState extends State<DownloadPage> {
         task.cancel();
       }
       return null;
+    } else {
+      // 继续 => 构造任务、同步准备、入队
+      return await quickBuildDownloadMangaQueueTask(
+        mangaId: entity.mangaId,
+        mangaTitle: entity.mangaTitle,
+        mangaCover: entity.mangaCover,
+        mangaUrl: entity.mangaUrl,
+        chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
+        alsoAddTask: addTask /* <<< */,
+        throughGroupList: null,
+        throughChapterList: entity.downloadedChapters,
+      );
     }
-
-    // 继续 => 构造任务、同步准备、入队
-    return await quickBuildDownloadMangaQueueTask(
-      mangaId: entity.mangaId,
-      mangaTitle: entity.mangaTitle,
-      mangaCover: entity.mangaCover,
-      mangaUrl: entity.mangaUrl,
-      chapterIds: entity.downloadedChapters.map((el) => el.chapterId).toList(),
-      alsoAddTask: addTask /* <<< */,
-      throughGroupList: null,
-      throughChapterList: entity.downloadedChapters,
-    );
   }
 
   Completer<void>? _allStartCompleter;
@@ -207,6 +206,7 @@ class _DownloadPageState extends State<DownloadPage> {
       builder: (c) => StatefulBuilder(
         builder: (c, _setState) => AlertDialog(
           title: Text('删除确认'),
+          scrollable: true,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,8 +215,7 @@ class _DownloadPageState extends State<DownloadPage> {
               if (entities.length > 1)
                 Text(
                   '是否删除以下 ${entities.length} 部漫画？\n\n' + //
-                      [for (int i = 0; i < entities.length; i++) '${i + 1}. 《${entities[i].mangaTitle}》'].join('\n') +
-                      '\n',
+                      ([for (int i = 0; i < entities.length; i++) '${i + 1}. 《${entities[i].mangaTitle}》'].join('\n') + '\n'),
                 ),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -228,7 +227,6 @@ class _DownloadPageState extends State<DownloadPage> {
               ),
             ],
           ),
-          scrollable: true,
           actions: [
             TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
             TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
@@ -315,9 +313,10 @@ class _DownloadPageState extends State<DownloadPage> {
               scrollbarCrossAxisMargin: 2,
               placeholderSetting: PlaceholderSetting().copyWithChinese(),
               onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-              refreshFirst: true,
+              refreshFirst: true /* <<< refresh first */,
               clearWhenRefresh: false,
               clearWhenError: false,
+              onStartRefreshing: () => _msController.exitMultiSelectionMode(),
             ),
             separator: Divider(height: 0, thickness: 1),
             itemBuilder: (c, _, entity) {

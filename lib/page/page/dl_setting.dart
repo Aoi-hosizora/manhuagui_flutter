@@ -113,7 +113,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
                   actions: [
                     TextButton(
                       child: Text('复制'),
-                      onPressed: () => copyText(directoryPath),
+                      onPressed: () => copyText(directoryPath, showToast: true),
                     ),
                     TextButton(
                       child: Text('确定'),

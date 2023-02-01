@@ -28,14 +28,12 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) {
-        _currAuthData = AuthManager.instance.authData;
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
         _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
@@ -46,47 +44,46 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
   @override
   void dispose() {
     _cancelHandlers.forEach((c) => c.call());
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     _msController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
   final _data = <FavoriteAuthor>[];
-  late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
   var _removed = 0; // for query offset
-  var _authorUpdated = false;
+  late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreFavorites: true);
+  var _isUpdated = false;
 
   Future<PagedList<FavoriteAuthor>> _getData({required int page}) async {
     if (page == 1) {
       // refresh
       _removed = 0;
-      _authorUpdated = false;
+      _isUpdated = false;
     }
-    var username = AuthManager.instance.username; // maybe empty, which represents local history
+    var username = AuthManager.instance.username;
     var data = await FavoriteDao.getAuthors(username: username, page: page, offset: _removed) ?? [];
     _total = await FavoriteDao.getAuthorCount(username: username) ?? 0;
-    await _flagStorage.queryAndStoreFlags(authorIds: data.map((e) => e.authorId), queryFavorites: false); // actually this will do nothing
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(authorIds: data.map((e) => e.authorId), queryFavorites: false).then((_) => mountedSetState(() {})); // actually this will do nothing
     return PagedList(list: data, next: page + 1);
   }
 
-  Future<void> _updateByEvent(FavoriteAuthorUpdatedEvent event) async {
+  void _updateByEvent(FavoriteAuthorUpdatedEvent event) async {
     if (event.reason == UpdateReason.added) {
       // 新增 => 显示有更新
-      _authorUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
       // 非本页引起的删除 => 显示有更新
-      _authorUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
       // 非本页引起的更新 => 显示有更新
-      _authorUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
   }
@@ -112,8 +109,8 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
         // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
         if (!inFavorite) {
           _data.removeWhere((el) => el.authorId == author.authorId);
-          _removed++;
           _total--;
+          _removed++;
           if (mounted) setState(() {});
         }
       },
@@ -150,17 +147,18 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       return;
     }
 
+    // 不退出多选模式、先弹出对话框
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('删除确认'),
+        scrollable: true,
         content: authors.length == 1 //
             ? Text('是否从本地收藏中删除漫画作者 "${authors.first.authorName}"？')
             : Text(
                 '是否从本地收藏删除以下 ${authors.length} 位漫画作者？\n\n' + //
                     [for (int i = 0; i < authors.length; i++) '${i + 1}. "${authors[i].authorName}"'].join('\n'),
               ),
-        scrollable: true,
         actions: [
           TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
           TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
@@ -177,13 +175,13 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
     for (var authorId in authorIds) {
       await FavoriteDao.deleteAuthor(username: AuthManager.instance.username, aid: authorId);
       _data.removeWhere((h) => h.authorId == authorId);
-      _removed++;
       _total--;
+      _removed++;
     }
+    if (mounted) setState(() {});
     for (var authorId in authorIds) {
       EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, fromFavoritePage: true));
     }
-    if (mounted) setState(() {});
   }
 
   @override
@@ -225,7 +223,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
               scrollbarCrossAxisMargin: 2,
               placeholderSetting: PlaceholderSetting().copyWithChinese(),
               onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-              refreshFirst: true,
+              refreshFirst: true /* <<< refresh first */,
               clearWhenRefresh: false,
               clearWhenError: false,
               updateOnlyIfNotEmpty: false,
@@ -245,7 +243,8 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  leftText: '${AuthManager.instance.username} 收藏的漫画作者' + (_authorUpdated ? ' (有更新)' : ''),
+                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
+                      (_isUpdated ? ' (有更新)' : ''),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

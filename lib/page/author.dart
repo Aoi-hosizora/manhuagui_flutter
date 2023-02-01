@@ -53,28 +53,22 @@ class _AuthorPageState extends State<AuthorPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) async {
-        _currAuthData = AuthManager.instance.authData;
-        _favoriteAuthor = null;
-        _inFavorite = false;
-        _loadData();
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) async {
+        _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: widget.id);
+        if (mounted) setState(() {});
       }));
       await AuthManager.instance.check();
     });
 
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) async {
       if (!ev.fromAuthorPage && ev.authorId == widget.id) {
-        _inFavorite = ev.reason != UpdateReason.deleted;
-        if (ev.reason == UpdateReason.updated) {
-          _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: ev.authorId);
-        }
+        _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: ev.authorId);
         if (mounted) setState(() {});
       }
     }));
@@ -82,26 +76,26 @@ class _AuthorPageState extends State<AuthorPage> {
 
   @override
   void dispose() {
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
-  var _loading = false;
+  var _loading = true; // initialize to true
   Author? _data;
   var _error = '';
   FavoriteAuthor? _favoriteAuthor;
-  var _inFavorite = false;
 
   Future<void> _loadData() async {
     _loading = true;
     _data = null;
+    _mangas.clear(); // 无需手动更新漫画列表
+    _total = 0;
     if (mounted) setState(() {});
 
     // 1. 获取数据库收藏信息
     _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: widget.id);
-    _inFavorite = _favoriteAuthor != null;
 
     // 2. 获取作者信息
     final client = RestClient(DioManager.instance.dio);
@@ -143,9 +137,10 @@ class _AuthorPageState extends State<AuthorPage> {
   final _mangas = <SmallManga>[];
   var _total = 0;
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  var _getting = false;
+
   var _currOrder = AppSetting.instance.other.defaultMangaOrder;
   var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
-  var _getting = false;
 
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -153,8 +148,7 @@ class _AuthorPageState extends State<AuthorPage> {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -168,7 +162,6 @@ class _AuthorPageState extends State<AuthorPage> {
       authorZone: _data!.zone,
       favoriteAuthor: _favoriteAuthor,
       favoriteSetter: (f) {
-        _inFavorite = f != null;
         _favoriteAuthor = f;
         if (mounted) setState(() {});
       },
@@ -183,20 +176,21 @@ class _AuthorPageState extends State<AuthorPage> {
         children: [
           for (var author in _data!.relatedAuthors)
             TextDialogOption(
-                text: Text('${author.name} (${author.zone})'),
-                onPressed: () {
-                  Navigator.of(c).pop();
-                  Navigator.of(context).push(
-                    CustomPageRoute(
-                      context: context,
-                      builder: (c) => AuthorPage(
-                        id: author.aid,
-                        name: author.name,
-                        url: author.url,
-                      ),
+              text: Text('${author.name} (${author.zone})'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => AuthorPage(
+                      id: author.aid,
+                      name: author.name,
+                      url: author.url,
                     ),
-                  );
-                }),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -436,8 +430,8 @@ class _AuthorPageState extends State<AuthorPage> {
                   color: Colors.white,
                   child: ActionRowView.four(
                     action1: ActionItem(
-                      text: !_inFavorite ? '收藏作者' : '取消收藏',
-                      icon: !_inFavorite ? Icons.bookmark_border : Icons.bookmark,
+                      text: _favoriteAuthor == null ? '收藏作者' : '取消收藏',
+                      icon: _favoriteAuthor == null ? Icons.bookmark_border : Icons.bookmark,
                       action: () => _favorite(),
                       longPress: () => _favorite(),
                     ),
@@ -609,7 +603,7 @@ class _AuthorPageState extends State<AuthorPage> {
                   refreshNotificationPredicate: (n) => false /* disable refresh */,
                   placeholderSetting: PlaceholderSetting().copyWithChinese(),
                   onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-                  refreshFirst: true,
+                  refreshFirst: true /* <<< refresh first */,
                   clearWhenRefresh: false,
                   clearWhenError: false,
                   updateOnlyIfNotEmpty: false,

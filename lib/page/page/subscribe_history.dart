@@ -32,7 +32,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
@@ -40,8 +39,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     widget.action?.addAction(() => _controller.scrollToTop());
     widget.action?.addAction('clear', () => _clearHistories());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) {
-        _currAuthData = AuthManager.instance.authData;
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
         _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
@@ -54,49 +52,48 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     widget.action?.removeAction();
     widget.action?.removeAction('clear');
     _cancelHandlers.forEach((c) => c.call());
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
     _msController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
-  var _loading = false;
   final _data = <MangaHistory>[];
-  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
   var _removed = 0; // for query offset
-  var _includeUnreadMangas = true;
-  var _historyUpdated = false;
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreHistories: false /* for history read flag */);
+  var _getting = false;
+  var _includeUnread = true; // for query condition
+  var _isUpdated = false;
 
   Future<PagedList<MangaHistory>> _getData({required int page}) async {
     if (page == 1) {
       // refresh
       _removed = 0;
-      _historyUpdated = false;
+      _isUpdated = false;
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local history
-    var data = await HistoryDao.getHistories(username: username, includeUnread: _includeUnreadMangas, page: page, offset: _removed) ?? [];
+    var data = await HistoryDao.getHistories(username: username, includeUnread: _includeUnread, page: page, offset: _removed) ?? [];
     _total = await HistoryDao.getHistoryCount(username: username) ?? 0;
-    await _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryHistories: true /* for history read flag */);
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryHistories: true /* for history read flag */).then((_) => mountedSetState(() {}));
     return PagedList(list: data, next: page + 1);
   }
 
-  Future<void> _updateByEvent(HistoryUpdatedEvent event) async {
+  void _updateByEvent(HistoryUpdatedEvent event) async {
     if (event.reason == UpdateReason.added) {
       // 新增 => 显示有更新
-      _historyUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.deleted && !event.fromHistoryPage) {
       // 非本页引起的删除 => 显示有更新
-      _historyUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
     if (event.reason == UpdateReason.updated && !event.fromHistoryPage) {
-      // 非本页引起的更新 => 显示有更新 TODO 更新列表显示
-      _historyUpdated = true;
+      // 非本页引起的更新 => 显示有更新
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
   }
@@ -121,8 +118,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
         // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
         if (!inHistory) {
           _data.removeWhere((el) => el.mangaId == history.mangaId);
-          _removed++;
           _total--;
+          _removed++;
           if (mounted) setState(() {});
         }
       },
@@ -135,6 +132,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       return;
     }
 
+    // 不退出多选模式、先弹出对话框
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -162,13 +160,13 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     for (var mangaId in mangaIds) {
       await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
       _data.removeWhere((h) => h.mangaId == mangaId);
-      _removed++;
       _total--;
+      _removed++;
     }
+    if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
     }
-    if (mounted) setState(() {});
   }
 
   Future<void> _clearHistories() async {
@@ -178,6 +176,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       return;
     }
 
+    // 不退出多选模式、先弹出对话框
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -199,12 +198,12 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     await HistoryDao.clearHistories(username: AuthManager.instance.username);
     var mangaIds = _data.map((el) => el.mangaId).toList();
     _data.clear();
-    _removed = mangaIds.length;
     _total = 0;
+    _removed = mangaIds.length;
+    if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
     }
-    if (mounted) setState(() {});
   }
 
   @override
@@ -242,13 +241,13 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               scrollbarCrossAxisMargin: 2,
               placeholderSetting: PlaceholderSetting().copyWithChinese(),
               onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-              refreshFirst: true,
+              refreshFirst: true /* <<< refresh first */,
               clearWhenRefresh: false,
               clearWhenError: false,
               updateOnlyIfNotEmpty: false,
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
-              onStartGettingData: () => mountedSetState(() => _loading = true),
-              onStopGettingData: () => mountedSetState(() => _loading = false),
+              onStartGettingData: () => mountedSetState(() => _getting = true),
+              onStopGettingData: () => mountedSetState(() => _getting = false),
             ),
             separator: Divider(height: 0, thickness: 1),
             itemBuilder: (c, _, item) => SelectableCheckboxItem<ValueKey<int>>(
@@ -264,7 +263,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '未登录用户的阅读历史') + (_historyUpdated ? ' (有更新)' : ''),
+                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '未登录用户的阅读历史') + (_isUpdated ? ' (有更新)' : ''),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -281,11 +280,11 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               listTopWidgets: [
                 CheckboxListTile(
                   title: Text('显示包括未开始阅读的漫画历史', style: Theme.of(context).textTheme.bodyText2),
-                  value: _includeUnreadMangas,
+                  value: _includeUnread,
                   tileColor: Colors.white,
                   onChanged: (v) {
-                    if (!_loading && v != null && v != _includeUnreadMangas) {
-                      _includeUnreadMangas = v;
+                    if (!_getting && v != null && v != _includeUnread) {
+                      _includeUnread = v;
                       if (mounted) setState(() {});
                       _pdvKey.currentState?.refresh();
                     }

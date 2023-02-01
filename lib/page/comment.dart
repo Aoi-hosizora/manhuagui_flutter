@@ -37,7 +37,7 @@ class _CommentPageState extends State<CommentPage> {
             text: Text('复制评论内容'),
             onPressed: () {
               Navigator.of(c).pop();
-              copyText(comment.content);
+              copyText(comment.content, showToast: true);
             },
           ),
           IconTextDialogOption(
@@ -45,7 +45,7 @@ class _CommentPageState extends State<CommentPage> {
             text: Text('复制用户名'),
             onPressed: () {
               Navigator.of(c).pop();
-              copyText(comment.username == '-' ? '匿名用户' : comment.username);
+              copyText(comment.username == '-' ? '匿名用户' : comment.username, showToast: true);
             },
           ),
           IconTextDialogOption(
@@ -97,7 +97,7 @@ class _CommentPageState extends State<CommentPage> {
                 child: Center(
                   child: Text(
                     '该评论暂无回复',
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Colors.grey[600]),
                   ),
                 ),
               ),

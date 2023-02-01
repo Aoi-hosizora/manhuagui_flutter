@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -34,7 +35,7 @@ class MangaCornerFlags {
       if (inDownload) Icons.download,
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
-      if (inHistory && !historyRead) MdiIcons.notebookOutline,
+      if (inHistory && !historyRead) MdiIcons.notebook,
       if (inHistory && historyRead) Icons.import_contacts,
     ];
   }
@@ -42,30 +43,49 @@ class MangaCornerFlags {
 
 class MangaCornerFlagStorage {
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
-  MangaCornerFlagStorage({required VoidCallback stateSetter}) {
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
-      await queryAndStoreFlags(mangaIds: [ev.mangaId], queryShelves: false, queryFavorites: false, queryHistories: false);
-      stateSetter();
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<ShelfCacheUpdatedEvent>((ev) async {
-      await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryFavorites: false, queryHistories: false);
-      stateSetter();
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
-      await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryHistories: false);
-      stateSetter();
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) async {
-      await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryFavorites: false);
-      stateSetter();
-    }));
+  MangaCornerFlagStorage({
+    required VoidCallback stateSetter,
+    bool ignoreDownloads = false,
+    bool ignoreShelves = false,
+    bool ignoreFavorites = false,
+    bool ignoreHistories = false,
+  }) {
+    if (!ignoreDownloads) {
+      _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
+        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryShelves: false, queryFavorites: false, queryHistories: false);
+        stateSetter();
+      }));
+    }
+    if (!ignoreShelves) {
+      _cancelHandlers.add(EventBusManager.instance.listen<ShelfCacheUpdatedEvent>((ev) async {
+        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryFavorites: false, queryHistories: false);
+        stateSetter();
+      }));
+    }
+    if (!ignoreFavorites) {
+      _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
+        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryHistories: false);
+        stateSetter();
+      }));
+    }
+    if (!ignoreHistories) {
+      _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) async {
+        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryFavorites: false);
+        stateSetter();
+      }));
+    }
 
-    _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) async {
-      _currAuthData = AuthManager.instance.authData;
+    // called when authorization changed
+    _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) async {
       var allMangaIds = {..._downloadsMap.keys, ..._shelvesMap.keys, ..._favoritesMap.keys, ..._historiesMap.keys};
-      await queryAndStoreFlags(mangaIds: allMangaIds, queryDownloads: false);
+      await queryAndStoreFlags(
+        mangaIds: allMangaIds,
+        queryDownloads: false,
+        queryShelves: !ignoreShelves,
+        queryFavorites: !ignoreFavorites,
+        queryHistories: !ignoreHistories,
+      );
       stateSetter();
     }));
   }
@@ -150,16 +170,25 @@ class AuthorCornerFlags {
 
 class AuthorCornerFlagStorage {
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
-  AuthorCornerFlagStorage({required VoidCallback stateSetter}) {
-    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) async {
-      await queryAndStoreFlags(authorIds: [ev.authorId]);
-      stateSetter();
-    }));
-    _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) async {
-      _currAuthData = AuthManager.instance.authData;
-      await queryAndStoreFlags(authorIds: _favoritesMap.keys);
+  AuthorCornerFlagStorage({
+    required VoidCallback stateSetter,
+    bool ignoreFavorites = false,
+  }) {
+    if (!ignoreFavorites) {
+      _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) async {
+        await queryAndStoreFlags(authorIds: [ev.authorId]);
+        stateSetter();
+      }));
+    }
+
+    // called when authorization changed
+    _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) async {
+      var allAuthorIds = {..._favoritesMap.keys};
+      await queryAndStoreFlags(
+        authorIds: allAuthorIds,
+        queryFavorites: !ignoreFavorites,
+      );
       stateSetter();
     }));
   }

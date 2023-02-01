@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
@@ -42,14 +43,24 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
   @override
   void initState() {
     super.initState();
-    widget.actionController.addAction(() => _msController.exitMultiSelectionMode());
+    widget.actionController.addAction('exitMultiSelectionMode', () => _msController.exitMultiSelectionMode());
   }
 
   @override
   void dispose() {
-    widget.actionController.removeAction();
+    widget.actionController.removeAction('exitMultiSelectionMode');
     _msController.dispose();
     super.dispose();
+  }
+
+  List<Tuple2<String, TinyMangaChapter>> _getData() {
+    var chapters = widget.mangaEntity.downloadedChapters
+        .where((el) => el.succeeded && !el.needUpdate) // 仅包括下载成功且不需要更新的章节
+        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
+        .toList();
+
+    // no need to sort in this sub page, it will be sorted in toc view
+    return chapters;
   }
 
   @override
@@ -58,10 +69,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var chapters = widget.mangaEntity.downloadedChapters
-        .where((el) => el.succeeded && !el.needUpdate) // 仅包括下载成功且不需要更新的章节
-        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
-        .toList();
+    var chapters = _getData();
 
     return WillPopScope(
       onWillPop: () async {
@@ -128,7 +136,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
           multiSelectableController: _msController,
           onCounterPressed: () {
             var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
-            var allEntities = widget.invertOrder ? widget.mangaEntity.downloadedChapters.reversed : widget.mangaEntity.downloadedChapters;
+            var allEntities = widget.invertOrder ? widget.mangaEntity.downloadedChapters.reversed : widget.mangaEntity.downloadedChapters; // chapters are in cid asc order
             var titles = allEntities.where((el) => chapterIds.contains(el.chapterId)).map((m) => '《${m.chapterTitle}》').toList();
             MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
           },

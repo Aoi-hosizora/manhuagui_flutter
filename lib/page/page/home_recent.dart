@@ -35,9 +35,9 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   @override
   void dispose() {
     widget.action?.removeAction();
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
@@ -51,8 +51,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -78,7 +77,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          refreshFirst: true,
+          refreshFirst: true /* <<< refresh first */,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
@@ -96,7 +95,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textText(
-              leftText: '30天内更新的漫画',
+              leftText: '最近更新的漫画',
               rightText: '共 $_total 部',
             ),
           ],

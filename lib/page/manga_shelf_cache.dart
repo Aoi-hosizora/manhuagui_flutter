@@ -107,8 +107,10 @@ class MangaShelfCachePage extends StatefulWidget {
         context: context,
         builder: (c) => AlertDialog(
           title: Text('同步书架记录'),
-          content: Text('同步过程中发生错误：$error。' + //
-              (caches.isEmpty ? '' : '\n是否继续执行已获得的 ${caches.length} 项记录的同步？')),
+          content: Text(
+            '同步过程中发生错误：$error。' + //
+                (caches.isEmpty ? '' : '\n是否继续执行已获得的 ${caches.length} 项记录的同步？'),
+          ),
           actions: [
             if (caches.isNotEmpty) TextButton(child: Text('继续'), onPressed: () => Navigator.of(c).pop(true)),
             TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
@@ -142,7 +144,7 @@ class MangaShelfCachePage extends StatefulWidget {
 
     // !!!
     for (var i = newCaches.length - 1; i >= 0; i--) {
-      newCaches[i] = newCaches[i].copyWith(cachedAt: DateTime.now()); // 书架上越老更新的漫画同步时间设置得越先
+      newCaches[i] = newCaches[i].copyWith(cachedAt: DateTime.now()); // reversed, 书架上越老更新的漫画同步时间设置得越先
     }
     var oldCaches = await ShelfCacheDao.getShelfCaches(username: AuthManager.instance.username) ?? [];
     var canDelete = !canceled && error == null; // 如果非取消且非错误，则删除已被移出书架的记录
@@ -179,15 +181,17 @@ class MangaShelfCachePage extends StatefulWidget {
 class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
   final _controller = ScrollController();
   final _fabControllers = [AnimatedFabController(), AnimatedFabController()];
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    // EventBusManager.instance.listen<ShelfCacheUpdatedEvent>((ev) { }); // => 本页的列表不自动刷新
+    _cancelHandlers.add(EventBusManager.instance.listen<ShelfCacheUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
   void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _fabControllers[0].dispose();
     _fabControllers[1].dispose();
@@ -196,12 +200,27 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
 
   final _data = <ShelfCache>[];
   var _total = 0;
+  var _isUpdated = false;
 
   Future<List<ShelfCache>> _getData() async {
     var data = await ShelfCacheDao.getShelfCaches(username: AuthManager.instance.username) ?? [];
     _total = data.length;
+    _isUpdated = false;
     if (mounted) setState(() {});
     return data;
+  }
+
+  void _updateByEvent(ShelfCacheUpdatedEvent event) async {
+    if (event.added) {
+      // 新增 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (!event.added && !event.fromShelfCachePage) {
+      // 非本页引起的删除 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _deleteCache({required int mangaId}) async {
@@ -209,8 +228,8 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
     await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: mangaId);
     _data.removeWhere((el) => el.mangaId == mangaId);
     _total--;
-    EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false));
     if (mounted) setState(() {});
+    EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, fromShelfCachePage: true));
   }
 
   Future<void> _clearCaches() async {
@@ -237,10 +256,10 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
     var mangaIds = _data.map((el) => el.mangaId).toList();
     _data.clear();
     _total = 0;
-    for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false));
-    }
     if (mounted) setState(() {});
+    for (var mangaId in mangaIds) {
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, fromShelfCachePage: true));
+    }
   }
 
   void _showPopupMenu(ShelfCache cache) {
@@ -304,7 +323,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabControllers.forEach((c) => c.hide()),
-          refreshFirst: true,
+          refreshFirst: true /* <<< refresh first */,
           clearWhenRefresh: false,
           clearWhenError: false,
         ),
@@ -321,7 +340,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
               rightWidget: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('共 $_total 部'),
+                  Text('共 $_total 部' + (_isUpdated ? ' (有更新)' : '')),
                   SizedBox(width: 5),
                   HelpIconView.forListHint(
                     title: '已同步的书架记录',

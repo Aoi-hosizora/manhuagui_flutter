@@ -39,9 +39,9 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   @override
   void dispose() {
     widget.action?.removeAction();
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
@@ -57,7 +57,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     try {
       if (globalGenres == null) {
         var result = await client.getGenres();
-        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+        globalGenres ??= result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
       }
       _genres.clear();
       _genreError = '';
@@ -76,11 +76,12 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
 
   final _data = <MangaRanking>[];
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  var _getting = false;
+
   var _currType = allRankingTypes[0];
   var _lastType = allRankingTypes[0];
   var _currDuration = allRankingDurations[0];
   var _lastDuration = allRankingDurations[0];
-  var _getting = false;
 
   Future<List<MangaRanking>> _getData() async {
     final client = RestClient(DioManager.instance.dio);
@@ -94,7 +95,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     var result = await f(type: _currType.name).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return result.data.data;
   }
 
@@ -124,7 +125,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-            refreshFirst: true,
+            refreshFirst: true /* <<< refresh first */,
             clearWhenRefresh: false,
             clearWhenError: false,
             onStartGettingData: () => mountedSetState(() => _getting = true),

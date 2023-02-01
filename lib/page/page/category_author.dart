@@ -41,13 +41,13 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   @override
   void dispose() {
     widget.action?.removeAction();
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
-  var _genreLoading = true;
+  var _genreLoading = true; // initialize to true
   final _genres = <TinyCategory>[];
   var _genreError = '';
 
@@ -59,7 +59,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     try {
       if (globalGenres == null) {
         var result = await client.getGenres();
-        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+        globalGenres ??= result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
       }
       _genres.clear();
       _genreError = '';
@@ -77,8 +77,10 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   }
 
   final _data = <SmallAuthor>[];
-  late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
+  late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  var _getting = false;
+
   var _currOrder = AppSetting.instance.other.defaultAuthorOrder;
   var _lastOrder = AppSetting.instance.other.defaultAuthorOrder;
   var _currGenre = allGenres[0];
@@ -87,7 +89,6 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   var _lastAge = allAges[0];
   var _currZone = allZones[0];
   var _lastZone = allZones[0];
-  var _getting = false;
 
   Future<PagedList<SmallAuthor>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -101,10 +102,8 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     var result = await f.onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
-
     _total = result.data.total;
-    await _flagStorage.queryAndStoreFlags(authorIds: result.data.data.map((e) => e.aid));
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(authorIds: result.data.data.map((e) => e.aid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -137,7 +136,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-            refreshFirst: true,
+            refreshFirst: true /* <<< refresh first */,
             clearWhenRefresh: false,
             clearWhenError: false,
             updateOnlyIfNotEmpty: false,

@@ -63,41 +63,35 @@ class _MangaPageState extends State<MangaPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (_) async {
-        _currAuthData = AuthManager.instance.authData;
-        _history = null;
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) async {
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
         _subscribeCount = null;
-        _favoriteManga = null;
+        _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id);
         _inShelf = false;
-        _inFavorite = false;
-        _loadData();
+        _inFavorite = _favoriteManga != null;
+        if (mounted) setState(() {});
       }));
       await AuthManager.instance.check();
     });
-    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
 
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) async {
-      if (!ev.fromMangaPage) {
+      if (!ev.fromMangaPage && ev.mangaId == widget.id) {
         _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
         if (mounted) setState(() {});
       }
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
-      if (!ev.fromMangaPage) {
+      if (!ev.fromMangaPage && ev.mangaId == widget.id) {
         _downloadEntity = await DownloadDao.getManga(mid: widget.id);
         if (mounted) setState(() {});
       }
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) async {
-      _downloadEntity = await DownloadDao.getManga(mid: widget.id);
-      if (mounted) setState(() {});
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) async {
       if (!ev.fromMangaPage && ev.mangaId == widget.id) {
@@ -107,10 +101,8 @@ class _MangaPageState extends State<MangaPage> {
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
       if (!ev.fromMangaPage && ev.mangaId == widget.id) {
-        _inFavorite = ev.reason != UpdateReason.deleted;
-        if (ev.reason == UpdateReason.updated) {
-          _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: ev.mangaId);
-        }
+        _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: ev.mangaId);
+        _inFavorite = _favoriteManga != null;
         if (mounted) setState(() {});
       }
     }));
@@ -124,7 +116,7 @@ class _MangaPageState extends State<MangaPage> {
     super.dispose();
   }
 
-  var _loading = false; // TODO initialize to true or false => set this value in initState
+  var _loading = true; // initialize to true
   Manga? _data;
   var _error = '';
   TinyMangaChapter? _firstChapter;

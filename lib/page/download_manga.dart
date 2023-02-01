@@ -74,16 +74,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) => widget.gotoDownloading.ifTrue(() => _tabController.animateTo(1)));
 
-    var updater = _updateData();
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => updater.item1(ev.mangaId, ev.finished)));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => ev.fromDownloadMangaPage.ifFalse(() => updater.item2(ev.mangaId))));
-    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) async {
-      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-      if (mounted) setState(() {});
-    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => _updateByEvent(progressEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(entityEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
   }
 
   @override
@@ -94,25 +90,28 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     super.dispose();
   }
 
-  var _loading = true;
-  DownloadedManga? _entity;
+  var _loading = true; // initialize to true
+  DownloadedManga? _data;
+  var _error = '';
+
   DownloadMangaQueueTask? _task;
   var _byte = 0;
+  MangaHistory? _history;
+  Manga? _mangaData; // loaded in background
   var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
   var _onlyUnfinished = true;
   var _invertOrder = true;
-  MangaHistory? _history;
-  Manga? _mangaData; // loaded in background
-  var _error = '';
 
   Future<void> _loadData() async {
     _loading = true;
-    _entity = null;
+    _data = null;
     _task = null;
+    _byte = 0;
     _history = null;
+    _mangaData = null;
     if (mounted) setState(() {});
 
-    // 异步请求章节目录
+    // 异步请求漫画数据
     _loadMangaDataAsync(forceRefresh: true);
 
     // 获取漫画下载记录，并更新下载任务等数据
@@ -121,7 +120,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       _error = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
-      _entity = data;
+      _data = data;
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次刷新时都重新统计文件大小
@@ -132,30 +131,31 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     if (mounted) setState(() {});
   }
 
-  Tuple2<void Function(int, bool), void Function(int)> _updateData() {
-    void throughProgress(final int mangaId, final bool finished) async {
-      if (mangaId != widget.mangaId) return;
-      var task = QueueManager.instance.getDownloadMangaQueueTask(mangaId);
-      if (finished) {
+  Future<void> _updateByEvent({DownloadProgressChangedEvent? progressEvent, DownloadUpdatedEvent? entityEvent, HistoryUpdatedEvent? historyEvent}) async {
+    if (progressEvent != null && progressEvent.mangaId == widget.mangaId) {
+      var task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
+      if (progressEvent.finished) {
         mountedSetState(() => _task = null);
       } else if (task != null) {
         mountedSetState(() => _task = task);
         if (task.progress.stage == DownloadMangaProgressStage.waiting || task.progress.stage == DownloadMangaProgressStage.gotChapter) {
-          getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _byte = b)); // 仅在最开始等待、以及每次获得新章节时才统计文件大小
+          getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 仅在最开始等待、以及每次获得新章节时才统计文件大小
         }
       }
     }
 
-    void throughEntity(final int mangaId) async {
-      if (mangaId != widget.mangaId) return;
-      var entity = await DownloadDao.getManga(mid: mangaId);
+    if (entityEvent != null && entityEvent.mangaId == widget.mangaId && !entityEvent.fromDownloadMangaPage) {
+      var entity = await DownloadDao.getManga(mid: widget.mangaId);
       if (entity != null) {
-        mountedSetState(() => _entity = entity);
-        getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次数据库发生变化时都统计文件大小
+        mountedSetState(() => _data = entity);
+        getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次数据库发生变化时都统计文件大小
       }
     }
 
-    return Tuple2(throughProgress, throughEntity);
+    if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _loadMangaDataAsync({bool forceRefresh = false}) async {
@@ -184,14 +184,14 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
 
     // 开始 => 构造任务、同步准备、入队
     await quickBuildDownloadMangaQueueTask(
-      mangaId: _entity!.mangaId,
-      mangaTitle: _entity!.mangaTitle,
-      mangaCover: _entity!.mangaCover,
-      mangaUrl: _entity!.mangaUrl,
-      chapterIds: _entity!.downloadedChapters.map((el) => el.chapterId).toList(),
+      mangaId: _data!.mangaId,
+      mangaTitle: _data!.mangaTitle,
+      mangaCover: _data!.mangaCover,
+      mangaUrl: _data!.mangaUrl,
+      chapterIds: _data!.downloadedChapters.map((el) => el.chapterId).toList(),
       alsoAddTask: true,
       throughGroupList: null,
-      throughChapterList: _entity!.downloadedChapters,
+      throughChapterList: _data!.downloadedChapters,
     );
   }
 
@@ -207,19 +207,19 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     // 开始 => 构造任务、同步准备、入队
     print('_startOrPauseChapter 下载章节 $chapterId');
     await quickBuildDownloadMangaQueueTask(
-      mangaId: _entity!.mangaId,
-      mangaTitle: _entity!.mangaTitle,
-      mangaCover: _entity!.mangaCover,
-      mangaUrl: _entity!.mangaUrl,
+      mangaId: _data!.mangaId,
+      mangaTitle: _data!.mangaTitle,
+      mangaCover: _data!.mangaCover,
+      mangaUrl: _data!.mangaUrl,
       chapterIds: [chapterId],
       alsoAddTask: true,
       throughGroupList: null,
-      throughChapterList: _entity!.downloadedChapters,
+      throughChapterList: _data!.downloadedChapters,
     );
   }
 
   Future<void> _adjustChapterDetails(int chapterId) async {
-    var entity = _entity?.downloadedChapters.where((el) => el.chapterId == chapterId).firstOrNull;
+    var entity = _data?.downloadedChapters.where((el) => el.chapterId == chapterId).firstOrNull;
     if (entity == null) {
       return;
     }
@@ -239,9 +239,9 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       // 更新数据库、更新列表显示、发送通知
       var newChapter = entity.copyWith(needUpdate: needUpdate);
       await DownloadDao.addOrUpdateChapter(chapter: newChapter);
-      _entity?.downloadedChapters.replaceWhere((item) => item.chapterId == chapterId, (_) => newChapter);
-      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
+      _data?.downloadedChapters.replaceWhere((item) => item.chapterId == chapterId, (_) => newChapter);
       if (mounted) setState(() {});
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
     }
 
     await showDialog(
@@ -297,7 +297,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
           parentContext: context,
           mangaId: widget.mangaId,
           chapterId: chapterId,
-          mangaCover: _entity!.mangaCover,
+          mangaCover: _data!.mangaCover,
           chapterGroups: _mangaData?.chapterGroups /* nullable */,
           initialPage: _history?.chapterId == chapterId
               ? _history?.chapterPage ?? 1 // have read
@@ -309,7 +309,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   }
 
   Future<void> _deleteChapters({required List<int> chapterIds}) async {
-    var allEntities = _invertOrder ? _entity!.downloadedChapters.reversed : _entity!.downloadedChapters;
+    var allEntities = _invertOrder ? _data!.downloadedChapters.reversed : _data!.downloadedChapters; // chapters are in cid asc order
     var entities = allEntities.where((el) => chapterIds.contains(el.chapterId)).toList();
     if (entities.isEmpty) {
       return;
@@ -326,6 +326,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       builder: (c) => StatefulBuilder(
         builder: (c, _setState) => AlertDialog(
           title: Text('删除确认'),
+          scrollable: true,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,8 +335,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
               if (entities.length > 1)
                 Text(
                   '是否删除以下 ${entities.length} 个章节？\n\n' + //
-                      [for (int i = 0; i < entities.length; i++) '${i + 1}. 《${entities[i].chapterTitle}》'].join('\n') +
-                      '\n',
+                      ([for (int i = 0; i < entities.length; i++) '${i + 1}. 《${entities[i].chapterTitle}》'].join('\n') + '\n'),
                 ),
               CheckboxListTile(
                 title: Text('同时删除已下载的文件'),
@@ -347,7 +347,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
               ),
             ],
           ),
-          scrollable: true,
           actions: [
             TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
             TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
@@ -360,13 +359,13 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     }
 
     // 退出多选模式、保存设置
-    _actionControllers.forEach((action) => action.invoke()); // exit multi selection mode
+    _actionControllers.forEach((action) => action.invoke('exitMultiSelectionMode'));
     await updateDlSettingDefaultToDeleteFiles(alsoDeleteFile);
 
     // 更新数据库、更新列表显示
     for (var chapterId in chapterIds) {
       await DownloadDao.deleteChapter(mid: widget.mangaId, cid: chapterId);
-      _entity!.downloadedChapters.removeWhere((chapter) => chapter.chapterId == chapterId);
+      _data!.downloadedChapters.removeWhere((chapter) => chapter.chapterId == chapterId);
     }
     if (mounted) setState(() {});
 
@@ -417,16 +416,16 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 child: Text(_onlyUnfinished ? '显示所有章节的下载情况' : '仅显示未完成的下载情况'),
                 onTap: () => mountedSetState(() => _onlyUnfinished = !_onlyUnfinished),
               ),
-              if (_entity != null && !_entity!.error && _entity!.allChaptersSucceeded)
+              if (_data != null && !_data!.error && _data!.allChaptersSucceeded)
                 PopupMenuItem(
-                  child: Text(!_entity!.needUpdate ? '标记为需要更新数据' : '标记为不需要更新数据'),
+                  child: Text(!_data!.needUpdate ? '标记为需要更新数据' : '标记为不需要更新数据'),
                   onTap: () async {
                     // 更新数据库、更新数据、发送通知
-                    var newEntity = _entity!.copyWith(needUpdate: !_entity!.needUpdate);
+                    var newEntity = _data!.copyWith(needUpdate: !_data!.needUpdate);
                     await DownloadDao.addOrUpdateManga(manga: newEntity);
-                    _entity = newEntity;
-                    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
+                    _data = newEntity;
                     if (mounted) setState(() {});
+                    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
                   },
                 ),
             ],
@@ -446,7 +445,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
-          isEmpty: _entity == null,
+          isEmpty: _data == null,
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => ExtendedNestedScrollView(
@@ -461,7 +460,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     Container(
                       color: Colors.white,
                       child: DownloadMangaBlockView(
-                        mangaEntity: _entity!,
+                        mangaEntity: _data!,
                         downloadTask: _task,
                         downloadedBytes: _byte,
                       ),
@@ -481,8 +480,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                               context: context,
                               builder: (c) => MangaPage(
                                 id: widget.mangaId,
-                                title: _entity!.mangaTitle,
-                                url: _entity!.mangaUrl,
+                                title: _data!.mangaTitle,
+                                url: _data!.mangaUrl,
                               ),
                             ),
                           ),
@@ -563,7 +562,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   outerController: _scrollController,
                   actionController: _actionControllers[0],
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
-                  mangaEntity: _entity!,
+                  mangaEntity: _data!,
                   invertOrder: _invertOrder,
                   history: _history,
                   toReadChapter: _readChapter,
@@ -578,7 +577,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   outerController: _scrollController,
                   actionController: _actionControllers[1],
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
-                  mangaEntity: _entity!,
+                  mangaEntity: _data!,
                   downloadTask: _task,
                   showAllChapters: !_onlyUnfinished,
                   invertOrder: _invertOrder,

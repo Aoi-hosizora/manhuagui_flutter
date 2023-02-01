@@ -38,18 +38,19 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
   @override
   void dispose() {
     widget.action?.removeAction();
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
   final _data = <TinyManga>[];
   var _total = 0;
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  var _getting = false;
+
   var _currOrder = MangaOrder.byNew; // 最新发布优先
   var _lastOrder = MangaOrder.byNew;
-  var _getting = false;
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -57,8 +58,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -85,7 +85,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          refreshFirst: true,
+          refreshFirst: true /* <<< refresh first */,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,

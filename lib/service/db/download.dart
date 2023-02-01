@@ -114,7 +114,8 @@ class DownloadDao {
     }
     var chapterResults = await db.safeRawQuery(
       '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcTriedCount, $_colDcSuccessCount, $_colDcNeedUpdate
-         FROM $_tblDownloadChapter''',
+         FROM $_tblDownloadChapter
+         ORDER BY $_colDcChapterId ASC''',
     );
     if (chapterResults == null) {
       return null;
@@ -185,7 +186,8 @@ class DownloadDao {
     var chapterResults = await db.safeRawQuery(
       '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcTriedCount, $_colDcSuccessCount, $_colDcNeedUpdate
          FROM $_tblDownloadChapter
-         WHERE $_colDcMangaId = ?''',
+         WHERE $_colDcMangaId = ?
+         ORDER BY $_colDcChapterId ASC''',
       [mid],
     );
     if (chapterResults == null) {

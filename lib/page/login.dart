@@ -23,28 +23,11 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _suggestionController = SuggestionsBoxController();
-  var _passwordVisible = false;
-  var _logining = false;
-
-  var _rememberUsername = true;
-  var _rememberPassword = false;
-  var _usernamePasswordPairs = <Tuple2<String, String>>[];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      var remTuple = await AuthPrefs.getRememberOption();
-      _rememberUsername = remTuple.item1;
-      _rememberPassword = remTuple.item2;
-      _usernamePasswordPairs = await AuthPrefs.getUsernamePasswordPairs();
-      if (_usernamePasswordPairs.isNotEmpty) {
-        var currentUser = _usernamePasswordPairs.first;
-        _usernameController.text = currentUser.item1;
-        _passwordController.text = currentUser.item2;
-      }
-      if (mounted) setState(() {});
-    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) => _checkLogined());
   }
 
@@ -53,6 +36,25 @@ class _LoginPageState extends State<LoginPage> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  var _rememberUsername = true;
+  var _rememberPassword = false;
+  var _usernamePasswordPairs = <Tuple2<String, String>>[];
+  var _passwordVisible = false;
+  var _logining = false;
+
+  Future<void> _loadData() async {
+    var remTuple = await AuthPrefs.getRememberOption();
+    _rememberUsername = remTuple.item1;
+    _rememberPassword = remTuple.item2;
+    _usernamePasswordPairs = await AuthPrefs.getUsernamePasswordPairs();
+    if (_usernamePasswordPairs.isNotEmpty) {
+      var currentUser = _usernamePasswordPairs.first;
+      _usernameController.text = currentUser.item1;
+      _passwordController.text = currentUser.item2;
+    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _checkLogined() async {
@@ -105,12 +107,12 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) setState(() {});
     }
 
-    // state
+    // set state
     Fluttertoast.showToast(msg: '$username 登录成功');
     AuthManager.instance.record(username: username, token: token);
     AuthManager.instance.notify(logined: true);
 
-    // prefs
+    // save to prefs
     await AuthPrefs.setToken(token);
     await AuthPrefs.setRememberOption(_rememberUsername, _rememberPassword);
     if (!_rememberUsername) {
@@ -122,8 +124,8 @@ class _LoginPageState extends State<LoginPage> {
     }
     await AuthPrefs.setLoginDateTime(DateTime.now());
 
-    // pop
-    Navigator.of(context).pop();
+    // pop this page
+    WidgetsBinding.instance?.addPostFrameCallback((_) => Navigator.of(context).maybePop());
   }
 
   @override

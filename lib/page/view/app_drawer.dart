@@ -38,7 +38,7 @@ class _AppDrawerState extends State<AppDrawer> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _cancelHandler = AuthManager.instance.listen(null, (_) => mountedSetState(() {}));
+      _cancelHandler = AuthManager.instance.listen((_) => mountedSetState(() {}));
     });
   }
 

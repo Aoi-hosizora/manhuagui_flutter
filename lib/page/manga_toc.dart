@@ -33,23 +33,14 @@ class MangaTocPage extends StatefulWidget {
 
 class _MangaTocPageState extends State<MangaTocPage> {
   final _controller = ScrollController();
-  var _loading = true; // fake loading flag
   final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await Future.delayed(Duration(milliseconds: 400));
-      _loading = false;
-      if (mounted) setState(() {});
-    });
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _loadHistory();
-      _loadDownload();
-    });
-    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) => _loadHistory()));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((_) => _loadDownload()));
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
   }
 
   @override
@@ -59,17 +50,33 @@ class _MangaTocPageState extends State<MangaTocPage> {
     super.dispose();
   }
 
+  var _loading = true; // initialize to true, fake loading flag
   MangaHistory? _history;
   DownloadedManga? _downloadEntity;
 
-  Future<void> _loadHistory() async {
-    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+  Future<void> _loadData() async {
+    _loading = true;
     if (mounted) setState(() {});
+
+    try {
+      await Future.delayed(Duration(milliseconds: 400)); // fake loading
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    } finally {
+      _loading = false;
+      if (mounted) setState(() {});
+    }
   }
 
-  Future<void> _loadDownload() async {
-    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-    if (mounted) setState(() {});
+  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent}) async {
+    if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+    if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
   }
 
   @override

@@ -44,17 +44,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
-  var _currAuthData = AuthManager.instance.authData;
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
-
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (ev) {
-        _currAuthData = AuthManager.instance.authData;
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
         if (mounted) setState(() {});
         _loadCollections([MangaCollectionType.shelves, MangaCollectionType.favorites, MangaCollectionType.histories]);
       }));
@@ -70,13 +67,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     super.dispose();
   }
 
-  var _loading = true;
+  var _loading = true; // initialize to true
   HomepageMangaGroupList? _data;
   var _error = '';
 
   Future<void> _loadData() async {
     _loading = true;
-    _data = null;
+    _data = null; // clear data also
     _error = '';
     if (mounted) setState(() {});
 
@@ -88,7 +85,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     try {
       var result = await client.getHomepageMangas();
       _data = result.data;
-      globalGenres = result.data.genres.map((e) => e.toTiny()).toList(); // 更新全局漫画类别
+      globalGenres ??= result.data.genres.map((e) => e.toTiny()).toList(); // 更新全局漫画类别
     } catch (e, s) {
       _error = wrapError(e, s).text;
     } finally {
@@ -116,6 +113,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       Future.microtask(() async {
         _updates = null; // loading
         _updatesError = '';
+        if (mounted) setState(() {});
         try {
           var result = await client.getRecentUpdatedMangas(page: 0); // #=42
           _updates = result.data.data;
@@ -141,6 +139,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       Future.microtask(() async {
         _shelves = null; // loading
         _shelvesError = '';
+        if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
           try {
             var result = await client.getShelfMangas(token: AuthManager.instance.token, page: 1); // #=20

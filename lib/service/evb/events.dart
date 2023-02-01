@@ -66,10 +66,11 @@ class DownloadUpdatedEvent {
 }
 
 class ShelfCacheUpdatedEvent {
-  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added});
+  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added, this.fromShelfCachePage = false});
 
   final int mangaId;
   final bool added;
+  final bool fromShelfCachePage;
 }
 
 class FavoriteAuthorUpdatedEvent {

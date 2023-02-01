@@ -8,11 +8,13 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 class LoginFirstView extends StatelessWidget {
   const LoginFirstView({
     Key? key,
+    required this.parentContext,
     required this.checking,
     this.error = '',
     this.onErrorRetry,
   }) : super(key: key);
 
+  final BuildContext parentContext;
   final bool checking;
   final String error;
   final void Function()? onErrorRetry;
@@ -32,17 +34,17 @@ class LoginFirstView extends StatelessWidget {
         errorRetryText: '重试',
       ),
       onRetryForNothing: () {
-        if (AuthManager.instance.logined) {
+        if (!AuthManager.instance.logined) {
+          Navigator.of(parentContext).push(
+            CustomPageRoute(
+              context: parentContext,
+              builder: (c) => LoginPage(),
+            ),
+          );
+        } else {
           Fluttertoast.showToast(msg: '${AuthManager.instance.username} 登录成功');
           AuthManager.instance.notify(logined: true);
-          return;
         }
-        Navigator.of(context).push(
-          CustomPageRoute(
-            context: context,
-            builder: (c) => LoginPage(),
-          ),
-        );
       },
       onRetryForError: onErrorRetry,
     );

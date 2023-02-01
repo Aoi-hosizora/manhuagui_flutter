@@ -288,7 +288,7 @@ class DownloadedManga {
   final String mangaUrl;
   final bool error;
   final DateTime updatedAt;
-  final List<DownloadedChapter> downloadedChapters;
+  final List<DownloadedChapter> downloadedChapters; // default in cid ascending order
   final bool needUpdate;
 
   const DownloadedManga({

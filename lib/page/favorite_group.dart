@@ -28,6 +28,13 @@ class FavoriteGroupPage extends StatefulWidget {
 
 class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
   final _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   late var _groups = widget.groups.toList();
   final _operations = <_GroupOperation>[];
   final _newToOlds = <String, String>{};
@@ -35,10 +42,13 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
   var _reordered = false;
   var _saving = false;
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _restore() {
+    _groups = widget.groups.toList();
+    _operations.clear();
+    _newToOlds.clear();
+    _oldToNews.clear();
+    _reordered = false;
+    if (mounted) setState(() {});
   }
 
   Future<void> _addGroup() async {
@@ -203,15 +213,6 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
     _operations.add(_DeleteGroupOp(group.groupName));
     _newToOlds.removeWhere((key, value) => key == group.groupName);
     _oldToNews.removeWhere((key, value) => value == group.groupName);
-    if (mounted) setState(() {});
-  }
-
-  void _restore() {
-    _groups = widget.groups.toList();
-    _operations.clear();
-    _newToOlds.clear();
-    _oldToNews.clear();
-    _reordered = false;
     if (mounted) setState(() {});
   }
 

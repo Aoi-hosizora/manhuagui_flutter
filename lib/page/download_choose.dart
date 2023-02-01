@@ -36,40 +36,44 @@ class DownloadChoosePage extends StatefulWidget {
 
 class _DownloadChoosePageState extends State<DownloadChoosePage> {
   final _controller = ScrollController();
-  var _loading = true; // fake loading flag
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _loadDownloadedChapters(); // get in async
-      await Future.delayed(Duration(milliseconds: 400));
-      _loading = false;
-      if (mounted) setState(() {});
-    });
-    _cancelHandler = EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
-      if (ev.mangaId == widget.mangaId) {
-        await _loadDownloadedChapters();
-      }
-    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     super.dispose();
   }
 
+  var _loading = true; // initialize to true, fake loading flag
+  DownloadedManga? _downloadEntity;
   final _selected = <int>[];
-  final _downloadedChapters = <DownloadedChapter>[];
 
-  Future<void> _loadDownloadedChapters() async {
-    var entity = await DownloadDao.getManga(mid: widget.mangaId);
-    _downloadedChapters.clear();
-    _downloadedChapters.addAll(entity?.downloadedChapters ?? []);
+  Future<void> _loadData() async {
+    _loading = true;
     if (mounted) setState(() {});
+
+    try {
+      await Future.delayed(Duration(milliseconds: 400)); // fake loading
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    } finally {
+      _loading = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _updateByEvent(DownloadUpdatedEvent ev) async {
+    if (ev.mangaId == widget.mangaId) {
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _downloadManga() async {
@@ -78,7 +82,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
       Fluttertoast.showToast(msg: '请选择需要下载的章节');
       return;
     }
-    var chapterIds = filterNeedDownloadChapterIds(chapterIds: _selected, downloadedChapters: _downloadedChapters);
+    var chapterIds = filterNeedDownloadChapterIds(chapterIds: _selected, downloadedChapters: _downloadEntity?.downloadedChapters ?? []);
     if (chapterIds.isEmpty) {
       Fluttertoast.showToast(msg: '所选章节均已下载完毕');
       return;
@@ -247,7 +251,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                   highlightColor: Theme.of(context).primaryColor.withOpacity(0.5),
                   highlightedChapters: _selected,
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
-                    entity: _downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                    entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),
                   onChapterPressed: _selectChapter,
                 ),

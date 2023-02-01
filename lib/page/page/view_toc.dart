@@ -3,6 +3,9 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 漫画章节阅读页-章节目录
 class ViewTocSubPage extends StatefulWidget {
@@ -12,7 +15,6 @@ class ViewTocSubPage extends StatefulWidget {
     required this.mangaTitle,
     required this.groups,
     required this.highlightedChapter,
-    required this.downloadedChapters,
     required this.onChapterPressed,
   }) : super(key: key);
 
@@ -20,7 +22,6 @@ class ViewTocSubPage extends StatefulWidget {
   final String mangaTitle;
   final List<MangaChapterGroup> groups;
   final int highlightedChapter;
-  final List<DownloadedChapter> downloadedChapters;
   final void Function(int cid) onChapterPressed;
 
   @override
@@ -29,22 +30,43 @@ class ViewTocSubPage extends StatefulWidget {
 
 class _ViewTocSubPageState extends State<ViewTocSubPage> {
   final _controller = ScrollController();
-  var _loading = true; // fake loading flag
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await Future.delayed(Duration(milliseconds: 400));
-      _loading = false;
-      if (mounted) setState(() {});
-    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
   void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     super.dispose();
+  }
+
+  var _loading = true; // initialize to true, fake loading flag
+  DownloadedManga? _downloadEntity;
+
+  Future<void> _loadData() async {
+    _loading = true;
+    if (mounted) setState(() {});
+
+    try {
+      await Future.delayed(Duration(milliseconds: 400)); // fake loading
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    } finally {
+      _loading = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _updateByEvent(DownloadUpdatedEvent ev) async {
+    if (ev.mangaId == widget.mangaId) {
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
   }
 
   @override
@@ -74,7 +96,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
                   full: true,
                   highlightedChapters: [widget.highlightedChapter],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
-                    entity: widget.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                    entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),
                   onChapterPressed: widget.onChapterPressed,
                 ),

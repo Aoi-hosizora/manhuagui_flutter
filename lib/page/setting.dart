@@ -92,13 +92,13 @@ class _SettingPageState extends State<SettingPage> {
           // *******************************************************
           _spacer(),
           _item(
-            icon: MdiIcons.fileCog,
+            icon: MdiIcons.bookCogOutline,
             title: '漫画阅读设置',
             action: () => showViewSettingDialog(context: context),
           ),
           _divider(),
           _item(
-            icon: MdiIcons.contentSaveCog,
+            icon: MdiIcons.contentSaveCogOutline,
             title: '漫画下载设置',
             action: () => showDlSettingDialog(context: context),
           ),
@@ -132,7 +132,7 @@ class _SettingPageState extends State<SettingPage> {
           _divider(),
           _item(
             title: '清除图像缓存',
-            icon: Icons.cached,
+            icon: MdiIcons.imageRemove,
             action: () => showClearCacheDialog(context: context),
           ),
           if (LogConsolePage.initialized) ...[

@@ -67,7 +67,7 @@ class ChapterGridView extends StatelessWidget {
 
     List<TinyMangaChapter?> shown = chapters.toList();
     if (!invertOrder) {
-      shown.sort((i, j) => i!.number.compareTo(j!.number));
+      shown.sort((i, j) => i!.number.compareTo(j!.number)); // sort through comparing with number
     } else {
       shown.sort((i, j) => j!.number.compareTo(i!.number));
     }

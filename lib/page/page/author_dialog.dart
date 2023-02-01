@@ -12,9 +12,9 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 作者列表页-作者弹出菜单
-/// 作者收藏页-修改备注对话框
-/// 作者页-作者收藏对话框
+/// 作者列表页-作者弹出菜单 [showPopupMenuForAuthorList]
+/// 作者收藏页-修改备注对话框 [showUpdateFavoriteAuthorRemarkDialog]
+/// 作者页-作者收藏对话框 [showPopupMenuForAuthorFavorite]
 
 // => called by pages which contains author line view
 void showPopupMenuForAuthorList({

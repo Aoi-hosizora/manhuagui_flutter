@@ -97,7 +97,7 @@ class _AuthorDetailPageState extends State<AuthorDetailPage> {
                           child: TableWholeRowInkWell.preferred(
                             child: Text('${_details[i].item1}　', style: Theme.of(context).textTheme.bodyText2),
                             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            onTap: () => copyText(_details[i].item2),
+                            onTap: () => copyText(_details[i].item2, showToast: true),
                             tableWidth: tableWidth,
                             accumulativeWidthRatio: 0,
                           ),
@@ -108,7 +108,7 @@ class _AuthorDetailPageState extends State<AuthorDetailPage> {
                           child: TableWholeRowInkWell.preferred(
                             child: Text('${_details[i].item2}　', style: Theme.of(context).textTheme.bodyText2),
                             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            onTap: () => copyText(_details[i].item2),
+                            onTap: () => copyText(_details[i].item2, showToast: true),
                             tableWidth: tableWidth,
                             accumulativeWidthRatio: 0.3,
                           ),

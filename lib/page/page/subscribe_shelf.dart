@@ -37,30 +37,14 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
 
-  var _currAuthData = AuthManager.instance.authData;
-  var _authChecking = true; // initialize to true
-  var _authCheckError = '';
-
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
     widget.action?.addAction('sync', () => _showPopupMenuForShelfCache());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _currAuthData, (ev) {
-        _currAuthData = AuthManager.instance.authData;
-        _authChecking = false;
-        _authCheckError = ev.error?.text ?? '';
-        if (AuthManager.instance.logined) {
-          _pdvKey.currentState?.refresh();
-        }
-        if (mounted) setState(() {});
-      }));
-      _authChecking = true;
-      if (mounted) setState(() {});
+      _cancelHandlers.add(AuthManager.instance.listen((ev) => _updateByAuthEvent(ev))); // !!! with checking AuthManager.instance.authData
       await AuthManager.instance.check();
-      _authChecking = false;
-      if (mounted) setState(() {});
     });
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
@@ -70,46 +54,75 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     widget.action?.removeAction();
     widget.action?.removeAction('sync');
     _cancelHandlers.forEach((c) => c.call());
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
+  var _authChecking = !AuthManager.instance.logined; // initialize to true when not logined
+  var _authData = AuthManager.instance.authData;
+  var _authError = '';
+
+  void _updateByAuthEvent(AuthChangedEvent event) {
+    if (_authChecking) {
+      _authChecking = false;
+      if (mounted) setState(() {});
+    }
+    if (AuthManager.instance.authData.equals(_authData)) {
+      return;
+    }
+
+    _authData = AuthManager.instance.authData;
+    _authError = event.error?.text ?? '';
+    if (_authError.isEmpty) {
+      if (!AuthManager.instance.logined) {
+        _data.clear();
+        _total = 0;
+        _isUpdated = false;
+      } else {
+        // 登录状态变更，刷新列表
+        WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh()); // TODO use _loadData or _pdvKey
+      }
+      if (mounted) setState(() {});
+    }
+  }
+
   final _data = <ShelfManga>[];
-  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _total = 0;
-  var _shelfUpdated = false;
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreShelves: true);
+  var _isUpdated = false;
 
   Future<PagedList<ShelfManga>> _getData({required int page}) async {
     if (page == 1) {
       // refresh
-      _shelfUpdated = false;
+      _isUpdated = false;
     }
     final client = RestClient(DioManager.instance.dio);
     var result = await client.getShelfMangas(token: AuthManager.instance.token, page: page).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    for (var data in result.data.data.reversed) {
-      var cache = ShelfCache(mangaId: data.mid, mangaTitle: data.title, mangaCover: data.cover, mangaUrl: data.url, cachedAt: DateTime.now());
-      await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, added: true));
-    }
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), queryShelves: false);
-    if (mounted) setState(() {});
+    Future.microtask(() async {
+      for (var data in result.data.data.reversed /* 书架上越老更新的漫画同步时间设置得越先 */) {
+        var cache = ShelfCache(mangaId: data.mid, mangaTitle: data.title, mangaCover: data.cover, mangaUrl: data.url, cachedAt: DateTime.now());
+        await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
+        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, added: true));
+      }
+    });
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), queryShelves: false).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
   void _updateByEvent(ShelfUpdatedEvent event) {
     if (event.added) {
       // 新增 => 显示有更新
-      _shelfUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
     if (!event.added && !event.fromShelfPage) {
       // 非本页引起的删除 => 显示有更新
-      _shelfUpdated = true;
+      _isUpdated = true;
       if (mounted) setState(() {});
     }
   }
@@ -177,17 +190,18 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_authChecking || _authCheckError.isNotEmpty || !AuthManager.instance.logined) {
+    if (_authChecking || _authError.isNotEmpty || !AuthManager.instance.logined) {
       _data.clear();
       _total = 0;
-      _shelfUpdated = false;
+      _isUpdated = false;
       return Scaffold(
         body: LoginFirstView(
+          parentContext: context,
           checking: _authChecking,
-          error: _authCheckError,
+          error: _authError,
           onErrorRetry: () async {
             _authChecking = true;
-            _authCheckError = '';
+            _authError = '';
             if (mounted) setState(() {});
             await AuthManager.instance.check();
           },
@@ -212,7 +226,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          refreshFirst: true,
+          refreshFirst: true /* <<< refresh first */,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
@@ -231,7 +245,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         extra: UpdatableDataViewExtraWidgets(
           outerTopWidgets: [
             ListHintView.textWidget(
-              leftText: '${AuthManager.instance.username} 的书架' + (_shelfUpdated ? ' (有更新)' : ''),
+              leftText: '${AuthManager.instance.username} 的书架' + (_isUpdated ? ' (有更新)' : ''),
               rightWidget: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

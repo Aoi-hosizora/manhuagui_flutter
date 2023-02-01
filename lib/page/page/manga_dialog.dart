@@ -22,10 +22,11 @@ import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 漫画列表页-漫画弹出菜单
-/// 漫画收藏页-移动分组对话框 & 修改备注对话框
-/// 漫画页-漫画章节弹出菜单
-/// 漫画页/章节页-漫画订阅对话框
+/// 漫画列表页-漫画弹出菜单 [showPopupMenuForMangaList]
+/// 漫画收藏页-移动分组对话框 [showUpdateFavoriteMangasGroupDialog]
+/// 漫画收藏页-修改备注对话框 [showUpdateFavoriteMangaRemarkDialog]
+/// 漫画页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
+/// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
 
 // => called by pages which contains manga line view
 void showPopupMenuForMangaList({
@@ -159,7 +160,7 @@ void showPopupMenuForMangaList({
 }
 
 // => called in FavoriteSubPage
-void showUpdateFavoritesGroupDialog({
+void showUpdateFavoriteMangasGroupDialog({
   required BuildContext context,
   required List<FavoriteManga> favorites,
   required String selectedGroupName,
@@ -183,7 +184,7 @@ void showUpdateFavoritesGroupDialog({
 }
 
 // => called in FavoriteSubPage
-void showUpdateFavoriteRemarkDialog({
+void showUpdateFavoriteMangaRemarkDialog({
   required BuildContext context,
   required FavoriteManga favorite,
   required void Function(FavoriteManga newFavorite) onUpdated,

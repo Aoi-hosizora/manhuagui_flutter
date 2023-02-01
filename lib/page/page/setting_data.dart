@@ -8,7 +8,9 @@ import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/storage/export_import_data.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
-/// 设置页-导出数据/导入数据/清除缓存
+/// 设置页-导出数据 [showExportDataDialog], [ExportDataSubPage]
+/// 设置页-导入数据 [showImportDataDialog]
+/// 设置页-清除缓存 [showClearCacheDialog]
 
 class ExportDataSubPage extends StatefulWidget {
   const ExportDataSubPage({
@@ -136,7 +138,7 @@ Future<void> showExportDataDialog({required BuildContext context}) async {
 
   await _showFakeProgressDialog(context, '导出数据中...');
   var nameAndCounter = await exportData(allTypes);
-  Navigator.of(context).pop();
+  Navigator.of(context).pop(); // dismiss progress dialog
   if (nameAndCounter == null) {
     Fluttertoast.showToast(msg: '导出数据失败');
     return;
@@ -144,11 +146,12 @@ Future<void> showExportDataDialog({required BuildContext context}) async {
 
   var name = nameAndCounter.item1;
   var counter = nameAndCounter.item2;
+  var resultString = counter.formatToString(includeZero: true, includeTypes: allTypes);
   showDialog(
     context: context,
     builder: (c) => AlertDialog(
       title: Text('导出数据'),
-      content: Text('数据已导出至 "$name"。\n\n数据内包括：\n${counter.toString()}。'),
+      content: Text('数据已导出至 "$name"。\n\n数据内包括：\n$resultString。'),
       actions: [
         TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop()),
       ],
@@ -229,7 +232,7 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
 
   await _showFakeProgressDialog(context, '导入数据中...');
   var counter = await importData(name, merge: mergeData);
-  Navigator.of(context).pop();
+  Navigator.of(context).pop(); // dismiss progress dialog
   if (counter == null) {
     Fluttertoast.showToast(msg: '导入数据失败');
     return;
@@ -238,11 +241,12 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
   if (counter.isEmpty) {
     Fluttertoast.showToast(msg: '"$name" 内不包括数据');
   } else {
+    var resultString = counter.formatToString(includeZero: false, includeTypes: ExportDataType.values);
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('导入数据'),
-        content: Text('数据 "$name" 已导入。\n\n数据内包括：${counter.toString()}。'),
+        content: Text('数据 "$name" 已导入。\n\n数据内包括：$resultString。'),
         actions: [
           TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop()),
         ],
@@ -252,9 +256,9 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
 }
 
 Future<void> showClearCacheDialog({required BuildContext context}) async {
-  await _showFakeProgressDialog(context, '检查缓存中...');
+  await _showFakeProgressDialog(context, '检查图像缓存中...');
   var cachedBytes = await getDefaultCacheManagerDirectoryBytes();
-  Navigator.of(context).pop();
+  Navigator.of(context).pop(); // dismiss progress dialog
   if (cachedBytes < 2048) {
     Fluttertoast.showToast(msg: '当前不存在图像缓存。'); // <2KB
     return;
@@ -277,7 +281,7 @@ Future<void> showClearCacheDialog({required BuildContext context}) async {
 
   await _showFakeProgressDialog(context, '清除图像缓存...');
   await DefaultCacheManager().store.emptyCache();
-  Navigator.of(context).pop();
+  Navigator.of(context).pop(); // dismiss progress dialog
   Fluttertoast.showToast(msg: '已清除所有图像缓存');
 }
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -15,6 +16,8 @@ class AuthData {
 
   final String username;
   final String token;
+
+  bool get logined => token.isNotEmpty;
 
   bool equals(AuthData? o) {
     return o != null && username == o.username && token == o.token;
@@ -32,15 +35,15 @@ class AuthManager {
   }
 
   var _data = AuthData(username: '', token: ''); // global auth data
-  bool _loading = false; // global loading flag
+  var _loading = false; // global loading flag
 
-  AuthData? get authData => !logined ? null : _data; // TODO
+  AuthData get authData => _data;
 
   String get username => _data.username;
 
   String get token => _data.token;
 
-  bool get logined => _data.token.isNotEmpty;
+  bool get logined => _data.logined;
 
   bool get loading => _loading;
 
@@ -48,16 +51,14 @@ class AuthManager {
     _data = AuthData(username: username, token: token);
   }
 
-  // TODO remove authDataGetter
+  void Function() listen(void Function(AuthChangedEvent) onData) {
+    return EventBusManager.instance.listen<AuthChangedEvent>(onData);
+  }
 
-  // E/flutter ( 6510): [ERROR:flutter/lib/ui/ui_dart_state.cc(209)] Unhandled Exception: Unimplemented handling of missing static target
-  // E/flutter ( 6510): #0      AuthManager.listen.<anonymous closure> (package:manhuagui_flutter/service/evb/auth_manager.dart:53:27)
-  // E/flutter ( 6510): #1      _rootRunUnary (dart:async/zone.dart:1434:47)
-  // E/flutter ( 6510): #2      _CustomZone.runUnary (dart:async/zone.dart:1335:19)
-
-  void Function() listen(AuthData? Function()? authDataGetter, void Function(AuthChangedEvent) onData) {
+  void Function() listenOnlyWhen(Tuple1<AuthData> authData /* mutable */, void Function(AuthChangedEvent) onData) {
     return EventBusManager.instance.listen<AuthChangedEvent>((ev) {
-      if (authDataGetter?.call()?.equals(authData) != true) {
+      if (!AuthManager.instance.authData.equals(authData.item)) {
+        authData.item = AuthManager.instance.authData;
         onData.call(ev);
       }
     });
@@ -71,11 +72,9 @@ class AuthManager {
 
   final _lock = Lock();
 
-  // TODO listenAndCheck
-
   Future<AuthChangedEvent> check() async {
     return _lock.synchronized<AuthChangedEvent>(() async {
-      // check if is logined
+      // check if currently logined
       if (AuthManager.instance.logined) {
         return AuthManager.instance.notify(logined: true);
       }
@@ -99,9 +98,9 @@ class AuthManager {
           await AuthPrefs.setToken('');
         }
         return AuthManager.instance.notify(logined: false, error: we);
+      } finally {
+        _loading = false;
       }
-    }).whenComplete(() {
-      _loading = false;
     });
   }
 }

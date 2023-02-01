@@ -43,14 +43,14 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   @override
   void dispose() {
     widget.action?.removeAction();
-    _flagStorage.dispose();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
-  var _genreLoading = true;
-  late final _genres = <TinyCategory>[];
+  var _genreLoading = true; // initialize to true
+  final _genres = <TinyCategory>[];
   var _genreError = '';
 
   Future<void> _loadGenres() async {
@@ -61,7 +61,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     try {
       if (globalGenres == null) {
         var result = await client.getGenres();
-        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+        globalGenres ??= result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
       }
       _genres.clear();
       _genreError = '';
@@ -81,6 +81,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   final _data = <TinyManga>[];
   var _total = 0;
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  var _getting = false;
+
   var _currOrder = AppSetting.instance.other.defaultMangaOrder;
   var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
   late var _currGenre = widget.defaultGenre ?? allGenres[0];
@@ -91,7 +93,6 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   var _lastZone = allZones[0];
   var _currStatus = allStatuses[0];
   var _lastStatus = allStatuses[0];
-  var _getting = false;
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -106,10 +107,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     var result = await f.onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
-
     _total = result.data.total;
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -142,7 +141,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-            refreshFirst: true,
+            refreshFirst: true /* <<< refresh first */,
             clearWhenRefresh: false,
             clearWhenError: false,
             updateOnlyIfNotEmpty: false,

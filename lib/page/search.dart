@@ -52,21 +52,22 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
-    _flagStorage.dispose();
     _searchController.dispose();
     _searchScrollController.dispose();
     _scrollController.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
   final _data = <SmallManga>[];
   var _total = 0;
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  final _histories = <String>[]; // search history
+  var _getting = false;
+
   var _currOrder = AppSetting.instance.other.defaultMangaOrder;
   var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
-  var _getting = false;
-  final _histories = <String>[];
 
   Future<PagedList<SmallManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -74,8 +75,7 @@ class _SearchPageState extends State<SearchPage> {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    await _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid));
-    if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -193,7 +193,7 @@ class _SearchPageState extends State<SearchPage> {
                       nothingText: _q == null ? '请在搜索框中输入关键字...' : '无内容',
                     ),
                     onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-                    refreshFirst: false,
+                    refreshFirst: false /* not to refresh first for search list */,
                     clearWhenRefresh: true,
                     clearWhenError: false,
                     updateOnlyIfNotEmpty: false,

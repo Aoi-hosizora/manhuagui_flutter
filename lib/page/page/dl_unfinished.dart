@@ -46,22 +46,17 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
   @override
   void initState() {
     super.initState();
-    widget.actionController.addAction(() => _msController.exitMultiSelectionMode());
+    widget.actionController.addAction('exitMultiSelectionMode', () => _msController.exitMultiSelectionMode());
   }
 
   @override
   void dispose() {
-    widget.actionController.removeAction();
+    widget.actionController.removeAction('exitMultiSelectionMode');
     _msController.dispose();
     super.dispose();
   }
 
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
+  List<DownloadedChapter> _getData() {
     List<DownloadedChapter> chapters;
     if (!widget.showAllChapters) {
       chapters = widget.mangaEntity.downloadedChapters
@@ -71,11 +66,23 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
       chapters = widget.mangaEntity.downloadedChapters // 包括所有章节
           .toList();
     }
+
+    // sort in this sub page
     if (!widget.invertOrder) {
-      chapters.sort((i, j) => i.chapterId.compareTo(j.chapterId));
+      chapters.sort((i, j) => i.chapterId.compareTo(j.chapterId)); // compare through chapterId
     } else {
       chapters.sort((i, j) => j.chapterId.compareTo(i.chapterId));
     }
+    return chapters;
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    var chapters = _getData();
 
     return WillPopScope(
       onWillPop: () async {
@@ -154,7 +161,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
           multiSelectableController: _msController,
           onCounterPressed: () {
             var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
-            var allEntities = widget.invertOrder ? widget.mangaEntity.downloadedChapters.reversed : widget.mangaEntity.downloadedChapters;
+            var allEntities = widget.invertOrder ? widget.mangaEntity.downloadedChapters.reversed : widget.mangaEntity.downloadedChapters; // chapters are in cid asc order
             var titles = allEntities.where((el) => chapterIds.contains(el.chapterId)).map((m) => '《${m.chapterTitle}》').toList();
             MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
           },

@@ -22,7 +22,6 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     required this.mangaId,
     required this.mangaTitle,
     required List<int> chapterIds,
-    required this.invertOrder,
     required int parallel,
   })  : _status = _TaskStatus.waiting,
         _canceled = false,
@@ -32,7 +31,6 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   final int mangaId;
   final String mangaTitle;
-  final bool invertOrder;
 
   _TaskStatus _status;
 
@@ -630,7 +628,7 @@ List<int> filterNeedDownloadChapterIds({required List<int> chapterIds, required 
   var out = <int>[];
   for (var cid in chapterIds) {
     var oldChapter = downloadedChapters.where((el) => el.chapterId == cid).firstOrNull;
-    if (oldChapter != null && oldChapter.succeeded && oldChapter.needUpdate) {
+    if (oldChapter != null && oldChapter.succeeded && !oldChapter.needUpdate) {
       continue; // 过滤被记录过、且已下载成功、且不需要更新的章节
     }
     out.add(cid);
@@ -652,11 +650,15 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
   List<DownloadedChapter>? throughChapterList,
 }) async {
   // 1. 构造漫画下载任务
+  if (!AppSetting.instance.dl.invertDownloadOrder) {
+    chapterIds.sort((i, j) => i.compareTo(j)); // compare through chapterId
+  } else {
+    chapterIds.sort((i, j) => j.compareTo(i));
+  }
   var newTask = DownloadMangaQueueTask(
     mangaId: mangaId,
     mangaTitle: mangaTitle,
     chapterIds: chapterIds,
-    invertOrder: AppSetting.instance.dl.invertDownloadOrder,
     parallel: AppSetting.instance.dl.downloadPagesTogether,
   );
 

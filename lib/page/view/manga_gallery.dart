@@ -158,6 +158,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
               widget.onShareImage.call(index + 1);
             },
           ),
+          // TODO 分享图片
         ],
       ),
     );
