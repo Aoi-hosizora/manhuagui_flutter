@@ -24,12 +24,12 @@ class FavoriteAuthorLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: author.authorCover,
       title: author.authorName,
-      icon1: MdiIcons.commentBookmark,
-      text1: '备注 ${author.remark.trim().isEmpty ? '暂无' : author.remark.trim()}',
-      icon2: Icons.place,
-      text2: author.authorZone,
+      icon1: Icons.place,
+      text1: author.authorZone,
+      icon2: MdiIcons.commentBookmarkOutline,
+      text2: author.remark.trim().isEmpty ? '暂无备注' : '备注 ${author.remark.trim()}',
       icon3: Icons.access_time,
-      text3: '添加于 ${author.formattedCreatedAt}',
+      text3: '收藏于 ${author.formattedCreatedAtWithDuration}',
       cornerIcons: flags?.buildIcons(),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(

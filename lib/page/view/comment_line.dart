@@ -247,7 +247,7 @@ class CommentLineView extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          comment.commentTime,
+                          comment.formattedCommentTime,
                           style: TextStyle(color: Colors.grey),
                         ),
                         Row(

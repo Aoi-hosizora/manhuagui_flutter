@@ -169,7 +169,7 @@ class _MangaPageState extends State<MangaPage> {
       // 4. 获取漫画信息
       var result = await client.getManga(mid: widget.id);
       if (result.data.title == '') {
-        throw Exception('未知错误'); // <<< 获取的数据有问题
+        throw SpecialException('未知错误'); // <<< 获取的数据有问题
       }
       _data = null;
       _error = '';
@@ -758,7 +758,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.update, size: 20, color: Colors.orange),
-                              text: Text('更新于 ${_data!.newestDate} ${_data!.finished ? '已完结' : '连载中'}'),
+                              text: Text('更新于 ${_data!.formattedNewestDate} ${_data!.finished ? '已完结' : '连载中'}'),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
@@ -865,42 +865,55 @@ class _MangaPageState extends State<MangaPage> {
                 Material(
                   color: Colors.white,
                   child: InkWell(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(Icons.import_contacts, size: 26, color: Colors.black54),
-                          SizedBox(width: 16),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _history == null || !_history!.read //
-                                      ? '开始阅读该漫画 (${_firstChapter?.title ?? '未知话'})'
-                                      : '继续阅读该漫画 (${_history!.chapterTitle} 第${_history!.chapterPage}页)',
-                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 1),
-                                Text(
-                                  _history == null || !_history!.read //
-                                      ? '无阅读历史${_history == null ? '且不保留浏览历史' : ''}'
-                                      : '最近阅读于 ${_history!.formattedLastTime} (${_history!.formattedLastDuration})',
-                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 13),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                     onTap: () => _read(chapterId: null),
                     onLongPress: _showHistoryPopupMenu,
+                    child: IconText(
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 9), // | ▢° ▢▢ |
+                      space: 14 /* 14 + 2 <= 16 (narrow than horizontal_padding_18) */,
+                      icon: Stack(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(right: 2),
+                            child: Icon(Icons.import_contacts, size: 26, color: Colors.black54),
+                          ),
+                          if (_history == null || !_history!.read)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                height: 10.5,
+                                width: 10.5,
+                                decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                child: _history != null ? null : Icon(Icons.remove, size: 10.5, color: Colors.white),
+                              ),
+                            ),
+                        ],
+                      ),
+                      text: Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _history == null || !_history!.read //
+                                  ? '开始阅读该漫画 (${_firstChapter?.title ?? '未知话'})'
+                                  : '继续阅读该漫画 (${_history!.chapterTitle} 第${_history!.chapterPage}页)',
+                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              _history == null || !_history!.read //
+                                  ? '无阅读历史${_history == null ? '，且不保留浏览历史' : ''}'
+                                  : '最近阅读于 ${_history!.formattedLastTimeAndFullDuration}',
+                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 Container(height: 12),

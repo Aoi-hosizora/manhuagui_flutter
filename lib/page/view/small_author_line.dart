@@ -27,7 +27,7 @@ class SmallAuthorLineView extends StatelessWidget {
       icon2: Icons.edit,
       text2: '共收录 ${author.mangaCount} 部漫画',
       icon3: Icons.update,
-      text3: '更新于 ${author.newestDate}',
+      text3: '更新于 ${author.formattedNewestDateWithDuration}',
       cornerIcons: flags?.buildIcons(),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(

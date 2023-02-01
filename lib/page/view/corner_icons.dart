@@ -35,8 +35,10 @@ class MangaCornerFlags {
       if (inDownload) Icons.download,
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
-      if (inHistory && !historyRead) MdiIcons.notebook,
-      if (inHistory && historyRead) Icons.import_contacts,
+      if (inHistory && AppSetting.instance.other.showMangaReadIcon) ...[
+        if (!historyRead) MdiIcons.notebook,
+        if (historyRead) Icons.import_contacts,
+      ],
     ];
   }
 }

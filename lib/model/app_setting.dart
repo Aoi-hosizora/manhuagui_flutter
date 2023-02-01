@@ -199,8 +199,10 @@ class OtherSetting {
     required this.defaultAuthorOrder,
     required this.clickToSearch,
     required this.enableCornerIcons,
+    required this.showMangaReadIcon,
     required this.regularGroupRows,
     required this.otherGroupRows,
+    required this.useLocalDataInShelf,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
@@ -211,8 +213,10 @@ class OtherSetting {
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
   final bool enableCornerIcons; // 列表显示右下角图标
+  final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final int regularGroupRows; // 单话分组章节显示行数
   final int otherGroupRows; // 其他分组章节显示行数
+  final bool useLocalDataInShelf; // 书架上显示本地阅读历史
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
@@ -223,8 +227,10 @@ class OtherSetting {
     defaultAuthorOrder: AuthorOrder.byPopular,
     clickToSearch: false,
     enableCornerIcons: true,
+    showMangaReadIcon: true,
     regularGroupRows: 3,
     otherGroupRows: 1,
+    useLocalDataInShelf: false,
   );
 
   OtherSetting copyWith({
@@ -236,8 +242,10 @@ class OtherSetting {
     AuthorOrder? defaultAuthorOrder,
     bool? clickToSearch,
     bool? enableCornerIcons,
+    bool? showMangaReadIcon,
     int? regularGroupRows,
     int? otherGroupRows,
+    bool? useLocalDataInShelf,
   }) {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
@@ -248,8 +256,10 @@ class OtherSetting {
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       clickToSearch: clickToSearch ?? this.clickToSearch,
       enableCornerIcons: enableCornerIcons ?? this.enableCornerIcons,
+      showMangaReadIcon: showMangaReadIcon ?? this.showMangaReadIcon,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
+      useLocalDataInShelf: useLocalDataInShelf ?? this.useLocalDataInShelf,
     );
   }
 }

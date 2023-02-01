@@ -4,6 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 part 'manga.g.dart';
 
@@ -36,6 +37,8 @@ class Manga {
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -59,6 +62,8 @@ class SmallManga {
 
   Map<String, dynamic> toJson() => _$SmallMangaToJson(this);
 
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
   TinyManga toTiny() {
     return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
   }
@@ -79,6 +84,16 @@ class TinyManga {
   factory TinyManga.fromJson(Map<String, dynamic> json) => _$TinyMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyMangaToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -232,6 +247,16 @@ class MangaRanking {
 
   Map<String, dynamic> toJson() => _$MangaRankingToJson(this);
 
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
+
   TinyBlockManga toTinyBlock() {
     return TinyBlockManga(
       mid: mid,
@@ -251,15 +276,28 @@ class ShelfManga {
   final String cover;
   final String url;
   final String newestChapter;
-  final String newestDuration;
+  final String newestDuration; // duration or date
   final String lastChapter;
-  final String lastDuration;
+  final String lastDuration; // duration or date
 
   const ShelfManga({required this.mid, required this.title, required this.cover, required this.url, required this.newestChapter, required this.newestDuration, required this.lastChapter, required this.lastDuration});
 
   factory ShelfManga.fromJson(Map<String, dynamic> json) => _$ShelfMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
+
+  String get formattedLastTimeForShelfLine {
+    var result = parseDurationOrDateString(lastDuration);
+    return result.duration ?? result.date; // "xxx天前" or "2023/02/02"
+  }
+
+  String get formattedNewestTimeForShelfLine {
+    var result = parseDurationOrDateString(newestDuration);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})'; // "xxx天前 (2023/02/02)" or "2023-02-02"
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

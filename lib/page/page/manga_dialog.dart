@@ -65,16 +65,21 @@ void showPopupMenuForMangaList({
       builder: (_, _setState) => SimpleDialog(
         title: Text(mangaTitle),
         children: [
-          /// 查看漫画
+          /// 基本选项
           IconTextDialogOption(
             icon: Icon(Icons.description_outlined),
             text: Text('查看该漫画'),
             onPressed: () => pop(c, () => helper.gotoMangaPage()),
           ),
           IconTextDialogOption(
+            icon: Icon(Icons.copy),
+            text: Text('复制漫画标题'),
+            onPressed: () => copyText(mangaTitle, showToast: true),
+          ),
+          IconTextDialogOption(
             icon: Icon(Icons.open_in_browser),
             text: Text('用浏览器打开'),
-            onPressed: () => pop(c, () => helper.launchBrowser()),
+            onPressed: () => pop(c, () => launchInBrowser(context: context, url: mangaUrl)),
           ),
           Divider(height: 16, thickness: 1),
 
@@ -221,6 +226,7 @@ void showPopupMenuForMangaToc({
   var inDownloadTask = downloadEntity?.findChapter(chapter.cid) != null;
   var historyEntity = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
   var lastReadChapter = historyEntity?.chapterId == chapter.cid;
+  var expandDetails = false;
 
   var helper = _DialogHelper(
     context: context,
@@ -236,33 +242,97 @@ void showPopupMenuForMangaToc({
 
   showDialog(
     context: context,
-    builder: (c) => SimpleDialog(
-      title: Text(chapter.title),
-      children: [
-        IconTextDialogOption(
-          icon: Icon(Icons.import_contacts),
-          text: Text('阅读该章节'),
-          onPressed: () => pop(c, () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity)),
-        ),
-        if (!inDownloadTask)
+    builder: (c) => StatefulBuilder(
+      builder: (c, _setState) => SimpleDialog(
+        title: Text(chapter.title),
+        children: [
+          /// 基本选项
           IconTextDialogOption(
-            icon: Icon(Icons.download),
-            text: Text('下载该章节'),
-            onPressed: () => pop(c, () => helper.downloadSingleChapter(chapterId: chapter.cid, chapterTitle: chapter.title, chapterGroups: chapterGroups)),
+            icon: Icon(Icons.import_contacts),
+            text: Text('阅读该章节'),
+            onPressed: () => pop(c, () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity)),
           ),
-        if (inDownloadTask)
           IconTextDialogOption(
-            icon: Icon(Icons.download),
-            text: Text('查看下载详情'),
-            onPressed: () => pop(c, () => helper.gotoDownloadPage()),
+            icon: Icon(Icons.copy),
+            text: Text('复制章节标题'),
+            onPressed: () => copyText(chapter.title, showToast: true),
           ),
-        if (lastReadChapter)
           IconTextDialogOption(
-            icon: Icon(Icons.auto_delete),
-            text: Text('删除阅读历史'),
-            onPressed: () => pop(c, () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage)),
+            icon: Icon(Icons.open_in_browser),
+            text: Text('用浏览器打开'),
+            onPressed: () => pop(c, () => launchInBrowser(context: context, url: chapter.url)),
           ),
-      ],
+          Divider(height: 16, thickness: 1),
+
+          /// 下载
+          if (!inDownloadTask)
+            IconTextDialogOption(
+              icon: Icon(Icons.download),
+              text: Text('下载该章节'),
+              onPressed: () => pop(c, () => helper.downloadSingleChapter(chapterId: chapter.cid, chapterTitle: chapter.title, chapterGroups: chapterGroups)),
+            ),
+          if (inDownloadTask)
+            IconTextDialogOption(
+              icon: Icon(Icons.download),
+              text: Text('查看下载详情'),
+              onPressed: () => pop(c, () => helper.gotoDownloadPage()),
+            ),
+
+          /// 下载
+          if (lastReadChapter)
+            IconTextDialogOption(
+              icon: Icon(Icons.auto_delete),
+              text: Text('删除阅读历史'),
+              onPressed: () => pop(c, () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage)),
+            ),
+
+          /// 查看信息
+          if (!expandDetails)
+            IconTextDialogOption(
+              icon: Icon(Icons.subject),
+              text: Text('查看章节基本信息'),
+              onPressed: () => _setState(() => expandDetails = true),
+            ),
+          if (expandDetails)
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: Theme.of(context).dividerColor, width: 1),
+              ),
+              child: EdgeInsets.symmetric(horizontal: 24.0 - 10, vertical: 10.0) /* _kIconTextDialogOptionPadding */ .let(
+                (optionPadding) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    IconTextDialogOption(
+                      icon: Icon(Icons.subject, color: Colors.black26),
+                      text: Text('隐藏基本信息'),
+                      padding: optionPadding,
+                      onPressed: () => _setState(() => expandDetails = false),
+                    ),
+                    IconTextDialogOption(
+                      icon: Icon(MdiIcons.identifier),
+                      text: Text('mid: ${chapter.mid}, cid: ${chapter.cid}'),
+                      padding: optionPadding,
+                      onPressed: () => copyText('mid: ${chapter.mid}, cid: ${chapter.cid}', showToast: true),
+                    ),
+                    IconTextDialogOption(
+                      icon: Icon(Icons.article),
+                      text: Text('章节共 ${chapter.pageCount} 页' + (chapter.isNew ? ' (NEW)' : '')),
+                      padding: optionPadding,
+                      onPressed: () {},
+                    ),
+                    IconTextDialogOption(
+                      icon: Icon(Icons.library_books),
+                      text: Text('属于【${chapterGroups.findChapterAndGroupName(chapter.cid)?.item2 ?? '未知'}】分组'),
+                      padding: optionPadding,
+                      onPressed: () => chapterGroups.findChapterAndGroupName(chapter.cid)?.item2.let((g) => copyText(g, showToast: true)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     ),
   );
 }
@@ -569,13 +639,6 @@ class _DialogHelper {
           url: mangaUrl,
         ),
       ),
-    );
-  }
-
-  void launchBrowser() {
-    launchInBrowser(
-      context: context,
-      url: mangaUrl,
     );
   }
 

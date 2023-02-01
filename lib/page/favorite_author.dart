@@ -252,7 +252,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                       SizedBox(width: 5),
                       HelpIconView.forListHint(
                         title: '本地收藏的漫画作者',
-                        hint: '"本地收藏"仅记录在移动端本地，但不同于本地收藏的漫画，该作者列表并不支持分组管理，且不支持顺序自由调整。',
+                        hint: '"本地收藏"仅记录在移动端本地，但该作者列表并不支持分组管理，且不支持顺序自由调整。',
                       ),
                       // TODO 搜索、排序
                     ],

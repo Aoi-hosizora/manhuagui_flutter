@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 part 'user.g.dart';
 
@@ -36,60 +37,44 @@ class User {
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
-  static DateTime? stringToDateTime(String s) {
-    if (s.isEmpty) {
-      return null;
-    }
-    var df = DateFormat('yyyy/M/d HH:mm:ss');
+  static DateTime? _parseDateTime(String s) {
     try {
-      return df.parse(s);
+      return DateFormat('yyyy/M/d HH:mm:ss').parse(s);
     } catch (_) {
       return null;
     }
   }
 
-  static String formatDateTime(DateTime dt) {
-    var df = DateFormat('yyyy-MM-dd HH:mm:ss');
-    return df.format(dt);
-  }
+  static String _formatDateTime(DateTime dt) => formatDatetimeAndDuration(dt, FormatPattern.datetime);
 
-  static String formatDuration(DateTime old) {
-    var now = DateTime.now();
-    now = DateTime(now.year, now.month, now.day);
-    old = DateTime(old.year, old.month, old.day);
-    var du = now.difference(old);
-    if (du.inDays == 0) {
-      return '今天';
-    }
-    return '${du.inDays}天前';
-  }
+  static String _formatDuration(DateTime dt) => formatDatetimeAndDuration(dt, FormatPattern.durationOnlyDate);
 
-  String get formattedRegisterDateTime {
-    var dt = stringToDateTime(registerTime);
+  String get formattedRegisterTime {
+    var dt = _parseDateTime(registerTime);
     if (dt == null) {
       return registerTime;
     }
-    return formatDateTime(dt);
+    return _formatDateTime(dt); // "2023/02/02 22:24:59"
   }
 
-  String get formattedLastLoginDateTimeWithDuration {
-    var dt = stringToDateTime(lastLoginTime);
+  String get formattedLastLoginTimeWithDuration {
+    var dt = _parseDateTime(lastLoginTime);
     if (dt == null) {
       return lastLoginTime;
     }
-    return '${formatDateTime(dt)} (${formatDuration(dt)})';
+    return '${_formatDateTime(dt)} (${_formatDuration(dt)})'; // "2023/02/02 22:24:59 (xxx天前)" or "2023/02/02 22:24:59 (今天)"
   }
 
-  String formattedCurrLoginDateTimeWithDuration(DateTime? currLoginTime) {
+  String formattedCurrLoginTimeWithDuration(DateTime? currLoginTime) {
     var dt = currLoginTime;
     if (dt == null) {
-      return '未知';
+      return '未知时间';
     }
-    return '${formatDateTime(dt)} (${formatDuration(dt)})';
+    return '${_formatDateTime(dt)} (${_formatDuration(dt)})'; // "2023/02/02 22:24:59 (xxx天前)" or "2023/02/02 22:24:59 (今天)"
   }
 
   bool isTodayLogined(DateTime? currLoginTime) {
-    var last = stringToDateTime(lastLoginTime);
+    var last = _parseDateTime(lastLoginTime);
     var curr = currLoginTime;
     var now = DateTime.now();
     var logined = false;

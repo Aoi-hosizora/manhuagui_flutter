@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页-其他设置
 class OtherSettingSubPage extends StatefulWidget {
@@ -32,8 +33,10 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _clickToSearch = widget.setting.clickToSearch;
   late var _enableCornerIcons = widget.setting.enableCornerIcons;
+  late var _showMangaReadIcon = widget.setting.showMangaReadIcon;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
+  late var _useLocalDataInShelf = widget.setting.useLocalDataInShelf;
 
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
@@ -44,8 +47,10 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
         enableCornerIcons: _enableCornerIcons,
+        showMangaReadIcon: _showMangaReadIcon,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
+        useLocalDataInShelf: _useLocalDataInShelf,
       );
 
   @override
@@ -134,10 +139,22 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         ),
         SettingSwitcherView(
           title: '列表显示右下角图标',
-          hint: '漫画列表右下角图标有："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"，其中书架信息源自于本地同步的书架记录。\n\n漫画作者列表右下角图标仅有："在本地收藏中"。',
+          hint: '该选项影响漫画列表与漫画作者列表，其中：\n'
+              '1. 漫画列表右下角图标含义分别为："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览" (书架信息来源于已同步的书架记录)；\n'
+              '2. 漫画作者列表右下角图标含义为："在本地收藏中"。',
           value: _enableCornerIcons,
           onChanged: (b) {
             _enableCornerIcons = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '漫画列表内显示阅读图标',
+          value: _showMangaReadIcon,
+          enable: _enableCornerIcons,
+          onChanged: (b) {
+            _showMangaReadIcon = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -166,6 +183,16 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingSwitcherView(
+          title: '书架上显示本地阅读历史',
+          hint: '该选项默认关闭，即书架上默认显示在线的阅读记录 (跨设备同步)，开启该选项可使得书架上显示本地的阅读记录 (跨设备不同步)。',
+          value: _useLocalDataInShelf,
+          onChanged: (b) {
+            _useLocalDataInShelf = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
       ],
     );
   }
@@ -176,7 +203,11 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: Text('其他设置'),
+      title: IconText(
+        icon: Icon(MdiIcons.cogs, size: 26),
+        text: Text('其他设置'),
+        space: 12,
+      ),
       scrollable: true,
       content: OtherSettingSubPage(
         setting: setting,

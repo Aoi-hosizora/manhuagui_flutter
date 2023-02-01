@@ -1,5 +1,5 @@
-import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 part 'message.g.dart';
 
@@ -18,9 +18,11 @@ class Message {
 
   Map<String, dynamic> toJson() => _$MessageToJson(this);
 
-  String get createdAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt.toLocal());
+  String get createdAtString => //
+      formatDatetimeAndDuration(createdAt.toLocal(), FormatPattern.datetime);
 
-  String get updatedAtString => DateFormat('yyyy-MM-dd HH:mm:ss').format(updatedAt.toLocal());
+  String get updatedAtString => //
+      formatDatetimeAndDuration(updatedAt.toLocal(), FormatPattern.datetime);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

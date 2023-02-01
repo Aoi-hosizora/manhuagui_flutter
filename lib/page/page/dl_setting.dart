@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
@@ -8,6 +9,7 @@ import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 下载列表页-下载设置
 class DlSettingSubPage extends StatefulWidget {
@@ -135,7 +137,11 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: Text('漫画下载设置'),
+      title: IconText(
+        icon: Icon(MdiIcons.contentSaveCogOutline, size: 26),
+        text: Text('漫画下载设置'),
+        space: 12,
+      ),
       scrollable: true,
       content: DlSettingSubPage(
         setting: setting,

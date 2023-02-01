@@ -44,7 +44,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show()); // TODO use _loadData or _refreshIndicatorKey
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData()); // TODO use _loadData or _refreshIndicatorKey
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listen((ev) => _updateByAuthEvent(ev))); // !!! with checking AuthManager.instance.authData
       await AuthManager.instance.check();
@@ -458,18 +458,18 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   '会员等级：${_data!.className}',
                   '个人成长值 / 账户积分：${_data!.score} 点',
                   '累计发送 ${_data!.totalCommentCount} 条评论，当前 ${_data!.unreadMessageCount} 条消息未读',
-                  '注册时间：${_data!.formattedRegisterDateTime}', // yyyy-MM-dd HH:mm:ss
+                  '注册时间：${_data!.formattedRegisterTime}', // XXXX-XX-XX XX:XX:XX
                 ],
               ),
               SizedBox(height: 12),
               _buildInfoLines(
                 icon: Icons.poll,
                 title: '登录统计',
-                hint: '"当前登录时间"仅记录在移动端本地，跨设备不同步。\n\n"登录IP"并非指本设备的IP地址，而是指本第三方应用使用的服务器的IP地址。',
+                hint: '提醒："当前登录时间"仅记录在移动端本地，跨设备不同步。\n\n提醒："登录IP"并非指本设备的IP地址，而是指本第三方应用使用的服务器的IP地址。',
                 lines: [
-                  '当前登录时间：${_data!.formattedCurrLoginDateTimeWithDuration(_currLoginDateTime)}', // yyyy-MM-dd HH:mm:ss (x天前)
-                  '上回登录时间：${_data!.formattedLastLoginDateTimeWithDuration}', // yyyy-MM-dd HH:mm:ss (x天前)
-                  '累计登录时长：${_data!.cumulativeDayCount}天，' + (!_data!.isTodayLogined(_currLoginDateTime) ? '今天尚未登录签到' : '今天已登录签到'),
+                  '当前登录时间：${_data!.formattedCurrLoginTimeWithDuration(_currLoginDateTime)}', // XXXX-XX-XX XX:XX:XX (X天前)
+                  '上回登录时间：${_data!.formattedLastLoginTimeWithDuration}', // XXXX-XX-XX XX:XX:XX (X天前)
+                  '累计登录时长：${_data!.cumulativeDayCount}天，' + (!_data!.isTodayLogined(_currLoginDateTime) ? '今天未登录签到' : '今天已登录签到'),
                   '当前登录IP：${_data!.loginIp}',
                   '上回登录IP：${_data!.lastLoginIp}',
                 ],

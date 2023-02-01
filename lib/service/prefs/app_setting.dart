@@ -99,10 +99,12 @@ class AppSettingPrefs {
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
   static const _enableCornerIconsKey = BoolKey('AppSettingPrefs_enableCornerIcons');
+  static const _showMangaReadIconKey = BoolKey('AppSettingPrefs_showMangaReadIcon');
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
+  static const _useLocalDataInShelfKey = BoolKey('AppSettingPrefs_useLocalDataInShelf');
 
-  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _enableCornerIconsKey, _regularGroupRowsKey, _otherGroupRowsKey];
+  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _enableCornerIconsKey, _showMangaReadIconKey, _regularGroupRowsKey, _otherGroupRowsKey, _useLocalDataInShelfKey];
 
   static Future<void> loadOtherSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -116,8 +118,10 @@ class AppSettingPrefs {
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
       enableCornerIcons: prefs.safeGet<bool>(_enableCornerIconsKey) ?? def.enableCornerIcons,
+      showMangaReadIcon: prefs.safeGet<bool>(_showMangaReadIconKey) ?? def.showMangaReadIcon,
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
+      useLocalDataInShelf: prefs.safeGet<bool>(_useLocalDataInShelfKey) ?? def.useLocalDataInShelf,
     );
     AppSetting.instance.update(other: setting);
   }
@@ -133,8 +137,10 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
     await prefs.safeSet<bool>(_enableCornerIconsKey, setting.enableCornerIcons);
+    await prefs.safeSet<bool>(_showMangaReadIconKey, setting.showMangaReadIcon);
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
+    await prefs.safeSet<bool>(_useLocalDataInShelfKey, setting.useLocalDataInShelf);
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {

@@ -71,7 +71,7 @@ class FavoriteGroupReorderLineView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(group.checkedGroupName, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text('创建于：${group.formattedCreatedAt}', maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text('创建于 ${group.formattedCreatedAt}', maxLines: 1, overflow: TextOverflow.ellipsis),
       leading: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

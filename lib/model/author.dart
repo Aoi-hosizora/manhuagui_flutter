@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 part 'author.g.dart';
 
@@ -29,6 +30,8 @@ class Author {
   factory Author.fromJson(Map<String, dynamic> json) => _$AuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuthorToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -46,6 +49,16 @@ class SmallAuthor {
   factory SmallAuthor.fromJson(Map<String, dynamic> json) => _$SmallAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$SmallAuthorToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

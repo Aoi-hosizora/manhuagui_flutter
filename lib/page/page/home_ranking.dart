@@ -151,7 +151,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
               ListHintView.textWidget(
-                leftText: '排行前50的漫画',
+                leftText: '排行榜内前50的漫画',
                 rightWidget: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

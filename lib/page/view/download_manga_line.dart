@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/download_line.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
@@ -58,7 +57,7 @@ class DownloadMangaLineView extends StatelessWidget {
                               ? '下载出错'
                               : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
           icon3: Icons.access_time,
-          text3: '下载于 ${progress.formattedLastDownloadTime!}',
+          text3: '下载于 ${mangaEntity.formattedUpdatedAtWithDuration}',
           showProgressBar: false,
           progressBarValue: null,
           disableAction: false,
@@ -149,7 +148,7 @@ class DownloadMangaBlockView extends StatelessWidget {
                               ? '下载出错'
                               : '下载出错 (${progress.notFinishedChapterCount!} 章节共 ${progress.notFinishedPageCount!} 页未完成)',
           icon3: Icons.access_time,
-          text3: '下载于 ${progress.formattedLastDownloadTime!}',
+          text3: '下载于 ${mangaEntity.formattedUpdatedAt}',
           showProgressBar: false,
           progressBarValue: null,
         );
@@ -204,7 +203,6 @@ class DownloadMangaLineProgress {
     required this.totalChapterCount,
     required int this.notFinishedPageCount,
     required int this.notFinishedChapterCount,
-    required DateTime this.lastDownloadTime,
   })  : stopped = true,
         preparing = false,
         gettingManga = false,
@@ -222,7 +220,6 @@ class DownloadMangaLineProgress {
         preparing = true,
         notFinishedPageCount = null,
         notFinishedChapterCount = null,
-        lastDownloadTime = null,
         triedPageCount = null,
         totalPageCount = null;
 
@@ -237,8 +234,7 @@ class DownloadMangaLineProgress {
         preparing = false,
         gettingManga = false,
         notFinishedPageCount = null,
-        notFinishedChapterCount = null,
-        lastDownloadTime = null;
+        notFinishedChapterCount = null;
 
   // both
   final DownloadMangaLineStatus status;
@@ -249,7 +245,6 @@ class DownloadMangaLineProgress {
   final bool stopped;
   final int? notFinishedPageCount;
   final int? notFinishedChapterCount;
-  final DateTime? lastDownloadTime;
 
   // preparing / downloading
   final bool preparing;
@@ -257,8 +252,6 @@ class DownloadMangaLineProgress {
   final String? chapterTitle;
   final int? triedPageCount;
   final int? totalPageCount;
-
-  String? get formattedLastDownloadTime => lastDownloadTime == null ? null : DateFormat('yyyy-MM-dd HH:mm:ss').format(lastDownloadTime!);
 
   // !!!
   static DownloadMangaLineProgress fromEntityAndTask({required DownloadedManga entity, required DownloadMangaQueueTask? task}) {
@@ -305,7 +298,6 @@ class DownloadMangaLineProgress {
         totalChapterCount: entity.totalChapterIds.length,
         notFinishedPageCount: entity.error ? -1 : entity.totalPageCountInAll - entity.successPageCountInAll,
         notFinishedChapterCount: entity.error ? -1 : entity.failedChapterCount,
-        lastDownloadTime: entity.updatedAt,
       );
     } else {
       // preparing / downloading / pausing => from task

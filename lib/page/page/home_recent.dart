@@ -96,7 +96,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
           innerTopWidgets: [
             ListHintView.textText(
               leftText: '最近更新的漫画',
-              rightText: '共 $_total 部',
+              rightText: '共 $_total 部 (30天内)',
             ),
           ],
         ),

@@ -22,7 +22,7 @@ class MangaShelfCachePage extends StatefulWidget {
   State<MangaShelfCachePage> createState() => _MangaShelfCachePageState();
 
   /// 同步书架缓存，在 [ShelfSubPage] 使用
-  static Future<void> syncShelfCaches(BuildContext context) async {
+  static Future<void> syncShelfCaches(BuildContext context, {void Function()? onFinish, bool fromShelfCachePage = false}) async {
     var caches = <ShelfCache>[];
     var currPage = 1;
     int? totalPages;
@@ -153,15 +153,16 @@ class MangaShelfCachePage extends StatefulWidget {
       var toDelete = oldCaches.where((el) => newCaches.where((el2) => el2.mangaId == el.mangaId).isEmpty).toList();
       for (var item in toDelete) {
         await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: item.mangaId);
-        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: false));
+        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: false, fromShelfCachePage: fromShelfCachePage));
       }
     }
     // >>> 更新所有新记录
     for (var item in newCaches) {
       await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: item);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: true));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: true, fromShelfCachePage: fromShelfCachePage));
     }
     Navigator.of(context).pop(); // 关闭"正在处理"对话框
+    onFinish?.call();
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
@@ -179,6 +180,7 @@ class MangaShelfCachePage extends StatefulWidget {
 }
 
 class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
+  final _rdvKey = GlobalKey<RefreshableDataViewState>();
   final _controller = ScrollController();
   final _fabControllers = [AnimatedFabController(), AnimatedFabController()];
   final _cancelHandlers = <VoidCallback>[];
@@ -262,6 +264,33 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
     }
   }
 
+  void _syncShelves() {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('同步确认'),
+        content: Text('是否检索并同步我的书架到本地？'),
+        actions: [
+          TextButton(
+            child: Text('同步'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              MangaShelfCachePage.syncShelfCaches(
+                context,
+                onFinish: () => _rdvKey.currentState?.refresh(),
+                fromShelfCachePage: true,
+              );
+            },
+          ),
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showPopupMenu(ShelfCache cache) {
     showDialog(
       context: context,
@@ -306,6 +335,11 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
+            icon: Icon(Icons.sync),
+            tooltip: '同步我的书架',
+            onPressed: () => _syncShelves(),
+          ),
+          AppBarActionButton(
             icon: Icon(Icons.delete),
             tooltip: '清空记录',
             onPressed: () => _clearCaches(),
@@ -313,6 +347,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
         ],
       ),
       body: RefreshableListView<ShelfCache>(
+        key: _rdvKey,
         data: _data,
         getData: () => _getData(),
         scrollController: _controller,

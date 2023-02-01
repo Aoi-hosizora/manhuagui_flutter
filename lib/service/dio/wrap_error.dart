@@ -11,7 +11,7 @@ import 'package:stack_trace/stack_trace.dart';
 enum ErrorType { networkError, statusError, resultError, otherError }
 
 class ErrorMessage {
-  const ErrorMessage(this.type, this.error, this.stack, this.text, [this.response, this.serviceCode, this.detail, this.casting, this.function]);
+  const ErrorMessage(this.type, this.error, this.stack, this.text, [this.response, this.serviceCode, this.detail, this.casting, this.special, this.function]);
 
   const ErrorMessage.network(dynamic error, StackTrace stack, String text) //
       : this(ErrorType.networkError, error, stack, text);
@@ -22,8 +22,8 @@ class ErrorMessage {
   const ErrorMessage.result(dynamic error, StackTrace stack, String text, {Response? response, int? serviceCode, dynamic detail}) //
       : this(ErrorType.resultError, error, stack, text, response, serviceCode, detail);
 
-  const ErrorMessage.other(dynamic error, StackTrace stack, String text, {bool? casting, String? function}) //
-      : this(ErrorType.otherError, error, stack, text, null, null, null, casting, function);
+  const ErrorMessage.other(dynamic error, StackTrace stack, String text, {bool? casting, bool? special, String? function}) //
+      : this(ErrorType.otherError, error, stack, text, null, null, null, casting, special, function);
 
   final ErrorType type;
   final dynamic error;
@@ -34,10 +34,21 @@ class ErrorMessage {
   final int? serviceCode;
   final dynamic detail;
   final bool? casting;
+  final bool? special;
   final String? function;
 
   @override
   String toString() => 'ErrorMessage [$type]: $text\n    Error: $error\n    Trace: $stack';
+}
+
+class SpecialException implements Exception {
+  const SpecialException([this.message]);
+
+  final String? message;
+
+  @override
+  String toString() => //
+      message == null ? 'Exception' : 'Exception: $message';
 }
 
 /// Wraps given error to [ErrorMessage].
@@ -238,9 +249,10 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   }
 
   // ======================================================================================================================
-  // ErrorType.otherError (_CastError, ...)
+  // ErrorType.otherError (_CastError, UnknownException, ...)
   String? readable;
   var casting = e.runtimeType.toString() == '_CastError';
+  var special = e is SpecialException;
   if (casting) {
     if (e.toString().contains('Null check operator used on a null value')) {
       readable = 'Got unexpected null value';
@@ -251,6 +263,8 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
         readable = 'Want "${match.group(2)}" but got "${match.group(1)}"';
       }
     }
+  } else if (special) {
+    readable = e.message ?? e.toString();
   }
   String? function;
   var frames = Trace.from(s).frames;
@@ -263,7 +277,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   String text;
   if (DEBUG_ERROR) {
     readable ??= '${e.runtimeType}: $e';
-    text = '应用发生错误: [DEBUG] $readable, ${function ?? '<?>'}'; // Application error
+    text = '应用发生错误: [DEBUG] $readable' + (special ? '' : ', ${function ?? '<line: ?>'}'); // Application error
   } else {
     readable ??= e.runtimeType.toString();
     text = '应用发生错误 ($readable)\n如果该错误反复出现，请向开发者反馈';
@@ -273,5 +287,5 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   print('===> error: ${e.runtimeType}: $e');
   print('===> trace:\n$s');
   print('└─────────────────── WrapError ───────────────────┘');
-  return ErrorMessage.other(e, s, text, casting: casting, function: function);
+  return ErrorMessage.other(e, s, text, casting: casting, special: special, function: function);
 }

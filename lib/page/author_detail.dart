@@ -26,7 +26,7 @@ class _AuthorDetailPageState extends State<AuthorDetailPage> {
     Tuple2('网页链接', widget.data.url),
     Tuple2('人气指数', widget.data.popularity.toString()),
     Tuple2('收录漫画数', widget.data.mangaCount.toString()),
-    Tuple2('收录更新时间', widget.data.newestDate),
+    Tuple2('收录更新时间', widget.data.formattedNewestDate),
     Tuple2('最新收录漫画', '《${widget.data.newestMangaTitle}》mid: ${widget.data.newestMangaId}'),
     Tuple2('评分最高漫画', '《${widget.data.highestMangaTitle}》mid: ${widget.data.highestMangaId}'),
     Tuple2('最高评分', widget.data.highestScore.toString()),

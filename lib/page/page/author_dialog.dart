@@ -46,16 +46,21 @@ void showPopupMenuForAuthorList({
     builder: (c) => SimpleDialog(
       title: Text(authorName),
       children: [
-        /// 查看作者
+        /// 基本选项
         IconTextDialogOption(
           icon: Icon(Icons.person),
           text: Text('查看该作者'),
           onPressed: () => pop(c, () => helper.gotoAuthorPage()),
         ),
         IconTextDialogOption(
+          icon: Icon(Icons.copy),
+          text: Text('复制作者名'),
+          onPressed: () => copyText(authorName, showToast: true),
+        ),
+        IconTextDialogOption(
           icon: Icon(Icons.open_in_browser),
           text: Text('用浏览器打开'),
-          onPressed: () => pop(c, () => helper.launchBrowser()),
+          onPressed: () => pop(c, () => launchInBrowser(context: context, url: authorUrl)),
         ),
         Divider(height: 16, thickness: 1),
 
@@ -140,9 +145,9 @@ void showPopupMenuForAuthorFavorite({
             text: Text('取消本地收藏'),
             onPressed: () => pop(c, () => helper.removeFromFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true)),
           ),
+        Divider(thickness: 1),
 
         /// 额外选项
-        Divider(thickness: 1),
         IconTextDialogOption(
           icon: Icon(Icons.people),
           text: Text('查看已收藏的作者'),
@@ -286,13 +291,6 @@ class _DialogHelper {
           url: authorUrl,
         ),
       ),
-    );
-  }
-
-  void launchBrowser() {
-    launchInBrowser(
-      context: context,
-      url: authorUrl,
     );
   }
 

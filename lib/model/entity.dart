@@ -1,6 +1,6 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:intl/intl.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 class MangaHistory {
   final int mangaId;
@@ -25,38 +25,17 @@ class MangaHistory {
 
   bool get read => chapterId != 0;
 
-  String get formattedLastTime => DateFormat('yyyy-MM-dd HH:mm:ss').format(lastTime);
+  String get formattedLastTime => //
+      formatDatetimeAndDuration(lastTime, FormatPattern.datetime);
 
-  String get formattedLastDuration {
-    var du = DateTime.now().difference(lastTime);
-    if (du.inDays > 0) {
-      return '${du.inDays}天前';
-    }
-    if (du.inHours != 0) {
-      return '${du.inHours}小时前';
-    }
-    if (du.inMinutes != 0) {
-      return '${du.inMinutes}分钟前';
-    }
-    return '不到1分钟前';
-  }
+  String get formattedLastTimeWithDuration => // for history line
+      formatDatetimeAndDuration(lastTime, FormatPattern.durationDatetimeOrDateTime);
 
-  String get formattedLastTimeWithDuration {
-    var long = DateFormat('yyyy-MM-dd HH:mm:ss').format(lastTime);
-    var short = DateFormat('HH:mm:ss').format(lastTime);
+  String get formattedLastTimeAndFullDuration => // for manga page
+      formatDatetimeAndDuration(lastTime, FormatPattern.datetimeDuration);
 
-    var du = DateTime.now().difference(lastTime);
-    if (du.inDays > 0) {
-      return long;
-    }
-    if (du.inHours != 0) {
-      return '${du.inHours}小时前 ($short)';
-    }
-    if (du.inMinutes != 0) {
-      return '${du.inMinutes}分钟前 ($short)';
-    }
-    return '不到1分钟前 ($short)';
-  }
+  String get formattedLastTimeOrDuration => // for favorite line and shelf line
+      formatDatetimeAndDuration(lastTime, FormatPattern.durationOrDate);
 
   MangaHistory copyWith({
     int? mangaId,
@@ -107,7 +86,8 @@ class ShelfCache {
     required this.cachedAt,
   });
 
-  String get formattedCachedAt => DateFormat('yyyy-MM-dd HH:mm').format(cachedAt);
+  String get formattedCachedAt => //
+      formatDatetimeAndDuration(cachedAt, FormatPattern.datetimeNoSec);
 
   ShelfCache copyWith({
     int? mangaId,
@@ -155,9 +135,13 @@ class FavoriteManga {
     required this.createdAt,
   });
 
-  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
-
   String get checkedGroupName => groupName.trim().isEmpty ? '默认分组' : groupName.trim();
+
+  String get formattedCreatedAt => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetime);
+
+  String get formattedCreatedAtWithDuration => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
 
   FavoriteManga copyWith({
     int? mangaId,
@@ -208,7 +192,11 @@ class FavoriteGroup {
 
   static bool isDefaultName(String s) => s.trim() == '默认' || s.trim() == '默认分组';
 
-  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
+  String get formattedCreatedAt => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetime);
+
+  String get formattedCreatedAtWithDuration => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
 
   FavoriteGroup copyWith({
     String? groupName,
@@ -248,7 +236,11 @@ class FavoriteAuthor {
     required this.createdAt,
   });
 
-  String get formattedCreatedAt => DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt);
+  String get formattedCreatedAt => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetime);
+
+  String get formattedCreatedAtWithDuration => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
 
   FavoriteAuthor copyWith({
     int? authorId,
@@ -301,6 +293,12 @@ class DownloadedManga {
     required this.downloadedChapters,
     required this.needUpdate,
   });
+
+  String get formattedUpdatedAt => //
+      formatDatetimeAndDuration(updatedAt, FormatPattern.datetime);
+
+  String get formattedUpdatedAtWithDuration => //
+      formatDatetimeAndDuration(updatedAt, FormatPattern.durationDatetimeOrDateTime);
 
   bool get allChaptersSucceeded => totalChapterIds.length == successChapterIds.length;
 

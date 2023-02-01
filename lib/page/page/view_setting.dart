@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画章节阅读页-阅读设置
 class ViewSettingSubPage extends StatefulWidget {
@@ -145,7 +147,11 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: Text('漫画阅读设置'),
+      title: IconText(
+        icon: Icon(MdiIcons.bookCogOutline, size: 26),
+        text: Text('漫画阅读设置'),
+        space: 12,
+      ),
       scrollable: true,
       content: ViewSettingSubPage(
         setting: setting,
