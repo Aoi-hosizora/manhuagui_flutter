@@ -247,6 +247,9 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     Manga manga;
     try {
       manga = (await client.getManga(mid: mangaId)).data;
+      if (manga.title == '') {
+        throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
+      }
     } catch (e, s) {
       // 请求错误 => 更新漫画下载表为下载错误，然后直接返回
       var we = wrapError(e, s);

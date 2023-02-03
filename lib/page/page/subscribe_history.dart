@@ -40,7 +40,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     widget.action?.addAction('clear', () => _clearHistories());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
-        _pdvKey.currentState?.refresh();
+        _searchKeyword = ''; // 清空搜索关键词
+        if (mounted) setState(() {});
+        _pdvKey.currentState?.refresh(); // TODO use _getData or _pdvKey when auth changed
       }));
       await AuthManager.instance.check();
     });
@@ -63,8 +65,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   var _total = 0;
   var _removed = 0; // for query offset
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreHistories: false /* for history read flag */);
-  var _getting = false;
   var _includeUnread = true; // for query condition
+  var _searchKeyword = ''; // for query condition
+  var _searchTitleOnly = true; // for query condition
   var _isUpdated = false;
 
   Future<PagedList<MangaHistory>> _getData({required int page}) async {
@@ -74,8 +77,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       _isUpdated = false;
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local history
-    var data = await HistoryDao.getHistories(username: username, includeUnread: _includeUnread, page: page, offset: _removed) ?? [];
-    _total = await HistoryDao.getHistoryCount(username: username) ?? 0;
+    var data = await HistoryDao.getHistories(username: username, includeUnread: _includeUnread, keyword: _searchKeyword, pureSearch: _searchTitleOnly, page: page, offset: _removed) ?? [];
+    _total = await HistoryDao.getHistoryCount(username: username, includeUnread: _includeUnread, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
+    if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryHistories: true /* for history read flag */).then((_) => mountedSetState(() {}));
     return PagedList(list: data, next: page + 1);
   }
@@ -96,6 +100,29 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _toSearch() async {
+    var result = await showKeywordDialogForSearching(
+      context: context,
+      title: Text('搜索漫画阅读历史'),
+      defaultText: _searchKeyword,
+      optionTitle: '仅搜索漫画标题',
+      optionValue: _searchTitleOnly,
+      hintForDialog: (only) => only ? '当前选项使得本次仅搜索漫画标题。' : '当前选项使得本次将搜索漫画ID以及漫画标题。',
+    );
+    if (result != null && result.item1.isNotEmpty) {
+      _searchKeyword = result.item1;
+      _searchTitleOnly = result.item2;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSearch() {
+    _searchKeyword = ''; // 清空搜索关键词
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   void _showPopupMenu({required int mangaId}) {
@@ -218,6 +245,10 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           _msController.exitMultiSelectionMode();
           return false;
         }
+        if (_searchKeyword.isNotEmpty) {
+          _exitSearch();
+          return false;
+        }
         return true;
       },
       child: Scaffold(
@@ -246,8 +277,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               clearWhenError: false,
               updateOnlyIfNotEmpty: false,
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
-              onStartGettingData: () => mountedSetState(() => _getting = true),
-              onStopGettingData: () => mountedSetState(() => _getting = false),
             ),
             separator: Divider(height: 0, thickness: 1),
             itemBuilder: (c, _, item) => SelectableCheckboxItem<ValueKey<int>>(
@@ -263,37 +292,59 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '未登录用户的阅读历史') + (_isUpdated ? ' (有更新)' : ''),
+                  padding: EdgeInsets.fromLTRB(10, 5, 6, 5), // for popup btn
+                  leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '未登录用户的阅读历史') + //
+                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('共 $_total 部'),
                       SizedBox(width: 5),
+                      if (_searchKeyword.isNotEmpty)
+                        HelpIconView.asButton(
+                          iconData: Icons.search_off,
+                          tooltip: '退出搜索',
+                          onPressed: () => _exitSearch(),
+                        ),
                       HelpIconView.forListHint(
                         title: '阅读历史',
-                        hint: '注意：由于漫画柜官方并未提供记录漫画阅读历史的功能，所以本应用的阅读历史仅被记录在移动端本地，且不同账号间的阅读历史互不影响。',
+                        hint: '提示：由于漫画柜官方并未提供记录漫画阅读历史的功能，所以本应用的阅读历史仅被记录在移动端本地，且不同账号间的阅读历史互不影响。',
+                        tooltip: '提示',
+                      ),
+                      PopupMenuButton(
+                        child: Builder(
+                          builder: (c) => HelpIconView.asButton(
+                            iconData: Icons.more_vert,
+                            tooltip: '更多选项',
+                            onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                          ),
+                        ),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            child: IconTextMenuItem(
+                              _includeUnread ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                              '显示未阅读的漫画',
+                            ),
+                            onTap: () {
+                              _includeUnread = !_includeUnread;
+                              if (mounted) setState(() {});
+                              _pdvKey.currentState?.refresh();
+                            },
+                          ),
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                          ),
+                          if (_searchKeyword.isNotEmpty)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                              onTap: () => _exitSearch(),
+                            ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-              ],
-              listTopWidgets: [
-                CheckboxListTile(
-                  title: Text('显示包括未开始阅读的漫画历史', style: Theme.of(context).textTheme.bodyText2),
-                  value: _includeUnread,
-                  tileColor: Colors.white,
-                  onChanged: (v) {
-                    if (!_getting && v != null && v != _includeUnread) {
-                      _includeUnread = v;
-                      if (mounted) setState(() {});
-                      _pdvKey.currentState?.refresh();
-                    }
-                  },
-                  visualDensity: VisualDensity(horizontal: -4, vertical: -4),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.only(left: 6),
-                ), // TODO move to option menu in list hint
-                Divider(height: 0, thickness: 1),
               ],
             ),
           ),

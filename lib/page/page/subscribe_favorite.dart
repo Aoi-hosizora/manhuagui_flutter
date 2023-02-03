@@ -45,7 +45,9 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     widget.action?.addAction('manage', () => _scaffoldKey.currentState?.let((s) => !s.isEndDrawerOpen ? s.openEndDrawer() : Navigator.of(context).pop()));
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
-        _pdvKey.currentState?.refresh(); // TODO use _getData or _pdvKey
+        _searchKeyword = ''; // 清空搜索关键词
+        if (mounted) setState(() {});
+        _pdvKey.currentState?.refresh(); // TODO use _getData or _pdvKey when auth changed
       }));
       await AuthManager.instance.check();
     });
@@ -72,6 +74,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   var _removed = 0; // for query offset
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreFavorites: true);
   final _histories = <int, MangaHistory?>{};
+  var _searchKeyword = ''; // for query condition
+  var _searchTitleOnly = true; // for query condition
   var _isUpdated = false;
 
   Future<PagedList<FavoriteManga>> _getData({required int page}) async {
@@ -82,26 +86,15 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       _groups = null;
     }
     var username = AuthManager.instance.username;
-    var data = await FavoriteDao.getFavorites(username: username, groupName: _currentGroup, page: page, offset: _removed) ?? [];
-    _total = await FavoriteDao.getFavoriteCount(username: username, groupName: _currentGroup) ?? 0;
+    var data = await FavoriteDao.getFavorites(username: username, groupName: _currentGroup, keyword: _searchKeyword, pureSearch: _searchTitleOnly, page: page, offset: _removed) ?? [];
+    _total = await FavoriteDao.getFavoriteCount(username: username, groupName: _currentGroup, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
     _groups ??= await FavoriteDao.getGroups(username: AuthManager.instance.username);
     for (var item in data) {
       _histories[item.mangaId] = await HistoryDao.getHistory(username: username, mid: item.mangaId);
     }
+    if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryFavorites: false).then((_) => mountedSetState(() {}));
     return PagedList(list: data, next: page + 1);
-  }
-
-  void _switchGroup(FavoriteGroup group) {
-    if (_currentGroup == group.groupName) {
-      return;
-    }
-
-    // switch and refresh
-    _currentGroup = group.groupName;
-    if (mounted) setState(() {});
-    Navigator.of(context).pop(); // close drawer
-    _pdvKey.currentState?.refresh();
   }
 
   void _updateByEvent(FavoriteUpdatedEvent event) async {
@@ -124,6 +117,29 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _toSearch() async {
+    var result = await showKeywordDialogForSearching(
+      context: context,
+      title: Text('搜索已收藏的漫画'),
+      defaultText: _searchKeyword,
+      optionTitle: '仅搜索漫画标题',
+      optionValue: _searchTitleOnly,
+      hintForDialog: (only) => only ? '当前选项使得本次仅搜索漫画标题。' : '当前选项使得本次将搜索漫画ID、漫画标题以及收藏备注。',
+    );
+    if (result != null && result.item1.isNotEmpty) {
+      _searchKeyword = result.item1;
+      _searchTitleOnly = result.item2;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSearch() {
+    _searchKeyword = ''; // 清空搜索关键词
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   void _showPopupMenu({required int mangaId}) {
@@ -251,6 +267,19 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     }
   }
 
+  void _switchGroup(FavoriteGroup group) {
+    if (_currentGroup == group.groupName) {
+      return;
+    }
+
+    // switch and refresh
+    _currentGroup = group.groupName; // 切换分组
+    _searchKeyword = ''; // 清除搜索关键词
+    if (mounted) setState(() {});
+    Navigator.of(context).pop(); // close drawer
+    _pdvKey.currentState?.refresh();
+  }
+
   Future<void> _adjustOrder() async {
     var ok = await Navigator.of(context).push<bool>(
       CustomPageRoute(
@@ -266,6 +295,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
 
     // 漫画顺序已调整 => 刷新列表
     Navigator.of(context).pop(); // close drawer
+    _searchKeyword = ''; // 清除搜索关键词
+    if (mounted) setState(() {});
     _pdvKey.currentState?.refresh();
   }
 
@@ -294,7 +325,9 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     _groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
     if (mappedGroupName == null) {
       // 被删除 => 转至默认分组并刷新列表
-      _currentGroup = '';
+      _currentGroup = ''; // 且华北分组
+      _searchKeyword = ''; // 清除搜索关键词
+      if (mounted) setState(() {});
       _pdvKey.currentState?.refresh();
     } else if (_currentGroup == mappedGroupName!) {
       // 未被重命名 => pass
@@ -322,6 +355,10 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         }
         if (_msController.multiSelecting) {
           _msController.exitMultiSelectionMode();
+          return false;
+        }
+        if (_searchKeyword.isNotEmpty) {
+          _exitSearch();
           return false;
         }
         return true;
@@ -443,35 +480,51 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  // TODO padding: EdgeInsets.fromLTRB(10, 5, 6, 5),
+                  padding: EdgeInsets.fromLTRB(10, 5, 6, 5), // for popup btn
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
                       (_currentGroup == '' ? '' : '  -  $_currentGroup') + //
-                      (!_isUpdated ? '' : ' (有更新)'),
+                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('共 $_total 部'),
                       SizedBox(width: 5),
+                      if (_searchKeyword.isNotEmpty)
+                        HelpIconView.asButton(
+                          iconData: Icons.search_off,
+                          tooltip: '退出搜索',
+                          onPressed: () => _exitSearch(),
+                        ),
                       HelpIconView.forListHint(
                         title: '"我的书架"与"本地收藏"的区别',
                         hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的倒序显示。\n\n'
                             '"本地收藏"仅记录在移动端本地，不显示章节更新情况，但"本地收藏"支持分组管理漫画，且列表顺序可自由调整。',
+                        tooltip: '提示',
                       ),
-                      // TODO 搜索、排序
-                      // PopupMenuButton(
-                      //   child: Builder(
-                      //     builder: (c) => HelpIconView.forListHint(
-                      //       title: '',
-                      //       hint: '',
-                      //       iconData: Icons.more_vert,
-                      //       onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
-                      //     ),
-                      //   ),
-                      //   itemBuilder: (_) => [
-                      //     PopupMenuItem(child: Text('搜索'), onTap: () {}),
-                      //     PopupMenuItem(child: Text('排序'), onTap: () {}),
-                      //   ],
-                      // ),
+                      PopupMenuButton(
+                        child: Builder(
+                          builder: (c) => HelpIconView.asButton(
+                            iconData: Icons.more_vert,
+                            tooltip: '更多选项',
+                            onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                          ),
+                        ),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                            onTap: () {}, // TODO !!! 排序
+                          ),
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                          ),
+                          if (_searchKeyword.isNotEmpty)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                              onTap: () => _exitSearch(),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

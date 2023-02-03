@@ -103,8 +103,9 @@ class AppSettingPrefs {
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
   static const _useLocalDataInShelfKey = BoolKey('AppSettingPrefs_useLocalDataInShelf');
+  static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
 
-  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _enableCornerIconsKey, _showMangaReadIconKey, _regularGroupRowsKey, _otherGroupRowsKey, _useLocalDataInShelfKey];
+  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey, _enableCornerIconsKey, _showMangaReadIconKey, _regularGroupRowsKey, _otherGroupRowsKey, _useLocalDataInShelfKey, _includeUnreadInHomeKey];
 
   static Future<void> loadOtherSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
@@ -122,6 +123,7 @@ class AppSettingPrefs {
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
       useLocalDataInShelf: prefs.safeGet<bool>(_useLocalDataInShelfKey) ?? def.useLocalDataInShelf,
+      includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
     );
     AppSetting.instance.update(other: setting);
   }
@@ -141,6 +143,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
     await prefs.safeSet<bool>(_useLocalDataInShelfKey, setting.useLocalDataInShelf);
+    await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
   }
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {

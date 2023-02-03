@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView]
+/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem]
 
 class HelpIconView extends StatelessWidget {
   const HelpIconView({
     Key? key,
     required this.title,
     required this.hint,
+    this.tooltip,
     required this.rectangle,
     required this.padding,
+    this.enable = true,
     this.iconData,
     required this.iconSize,
     this.iconColor,
@@ -20,8 +22,10 @@ class HelpIconView extends StatelessWidget {
     Key? key,
     required this.title,
     required this.hint,
+    this.tooltip,
     this.rectangle = false,
     this.padding = const EdgeInsets.all(5),
+    this.enable = true,
     this.iconData,
     this.iconSize = 20,
     this.iconColor,
@@ -32,54 +36,80 @@ class HelpIconView extends StatelessWidget {
     Key? key,
     required this.title,
     required this.hint,
+    this.tooltip,
     this.rectangle = true,
     this.padding = const EdgeInsets.all(3),
+    this.enable = true,
     this.iconData,
     this.iconSize = 20,
     this.iconColor,
     this.onPressed,
   }) : super(key: key);
 
+  const HelpIconView.asButton({
+    Key? key,
+    this.tooltip,
+    this.rectangle = true,
+    this.padding = const EdgeInsets.all(3),
+    this.enable = true,
+    required this.iconData,
+    this.iconSize = 20,
+    this.iconColor,
+    required this.onPressed,
+  })  : title = '',
+        hint = '',
+        super(key: key);
+
   final String title;
   final String hint;
+  final String? tooltip;
   final bool rectangle;
   final EdgeInsets padding;
+  final bool enable;
   final IconData? iconData;
   final double iconSize;
   final Color? iconColor;
-  final VoidCallback? onPressed;
+  final VoidCallback? onPressed; // ignore title and hint
 
   @override
   Widget build(BuildContext context) {
+    var view = InkResponse(
+      child: Padding(
+        padding: padding,
+        child: Icon(
+          iconData ?? Icons.help_outline,
+          size: iconSize,
+          color: iconColor ?? (enable ? Colors.grey[800] : Colors.grey[400]),
+        ),
+      ),
+      highlightShape: rectangle ? BoxShape.rectangle : BoxShape.circle,
+      containedInkWell: rectangle,
+      radius: (iconSize + padding.horizontal) / 2 * (rectangle ? calcSqrt(2) : 1),
+      onTap: !enable
+          ? null
+          : onPressed ??
+              () => showDialog(
+                    context: context,
+                    builder: (c) => AlertDialog(
+                      title: Text(title),
+                      content: Text(hint),
+                      actions: [
+                        TextButton(
+                          child: Text('确定'),
+                          onPressed: () => Navigator.of(c).pop(),
+                        ),
+                      ],
+                    ),
+                  ),
+    );
     return Material(
       color: Colors.transparent,
-      child: InkResponse(
-        child: Padding(
-          padding: padding,
-          child: Icon(
-            iconData ?? Icons.help_outline,
-            size: iconSize,
-            color: iconColor ?? Colors.grey[800],
-          ),
-        ),
-        highlightShape: rectangle ? BoxShape.rectangle : BoxShape.circle,
-        containedInkWell: rectangle,
-        radius: (iconSize + padding.horizontal) / 2 * (rectangle ? calcSqrt(2) : 1),
-        onTap: onPressed ??
-            () => showDialog(
-                  context: context,
-                  builder: (c) => AlertDialog(
-                    title: Text(title),
-                    content: Text(hint),
-                    actions: [
-                      TextButton(
-                        child: Text('确定'),
-                        onPressed: () => Navigator.of(c).pop(),
-                      ),
-                    ],
-                  ),
-                ),
-      ),
+      child: tooltip == null
+          ? view
+          : Tooltip(
+              message: tooltip!,
+              child: view,
+            ),
     );
   }
 }
@@ -234,6 +264,29 @@ class WarningTextView extends StatelessWidget {
           PlainTextItem(text: '】$text'),
         ],
       ),
+    );
+  }
+}
+
+class IconTextMenuItem extends StatelessWidget {
+  const IconTextMenuItem(
+    this.icon,
+    this.text, {
+    Key? key,
+    this.space = 12.0,
+  }) : super(key: key);
+
+  final IconData icon;
+  final String text;
+  final double? space;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconText(
+      icon: Icon(icon, color: Colors.black),
+      text: Text(text, style: Theme.of(context).textTheme.subtitle1),
+      space: space ?? 12.0,
+      mainAxisSize: MainAxisSize.min,
     );
   }
 }

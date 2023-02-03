@@ -324,6 +324,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
         title = widget.username == null ? '我的本地收藏' : '${widget.username} 的本地收藏';
         icon = Icons.bookmark;
         widgets = widget.favorites?.map((el) => _buildFavoriteItem(context, el)).toList(); // # = 20
+        twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.downloads:
         title = '漫画下载列表';

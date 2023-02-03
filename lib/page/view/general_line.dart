@@ -212,16 +212,16 @@ class GeneralLineIconText extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          SizedBox(width: textCornerSpace ?? 6),
+          SizedBox(width: textCornerSpace ?? 4),
           for (var i = 0; i < (cornerIcons?.length ?? 0); i++)
             Padding(
               padding: EdgeInsets.only(
-                left: i > 0 ? (cornerSpace ?? 4) : 0,
+                left: i > 0 ? (cornerSpace ?? 2.5) : 0,
               ),
               child: Icon(
                 cornerIcons![i],
-                size: cornerIconSize ?? 18.5,
-                color: Colors.grey[500],
+                size: cornerIconSize ?? 18,
+                color: Colors.grey,
               ),
             ),
         ],

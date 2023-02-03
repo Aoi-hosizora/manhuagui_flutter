@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -129,7 +130,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     if (types.contains(MangaCollectionType.histories)) {
       Future.microtask(() async {
         _histories = null; // loading
-        var result = await HistoryDao.getHistories(username: AuthManager.instance.username, page: 1, limit: 50); // #=50
+        var includeUnread = AppSetting.instance.other.includeUnreadInHome;
+        var result = await HistoryDao.getHistories(username: AuthManager.instance.username, includeUnread: includeUnread, page: 1, limit: 50); // #=50
         _histories = result ?? [];
         if (mounted) setState(() {});
       });

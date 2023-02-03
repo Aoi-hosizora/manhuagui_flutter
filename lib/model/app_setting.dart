@@ -203,6 +203,7 @@ class OtherSetting {
     required this.regularGroupRows,
     required this.otherGroupRows,
     required this.useLocalDataInShelf,
+    required this.includeUnreadInHome,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
@@ -217,6 +218,7 @@ class OtherSetting {
   final int regularGroupRows; // 单话分组章节显示行数
   final int otherGroupRows; // 其他分组章节显示行数
   final bool useLocalDataInShelf; // 书架上显示本地阅读历史
+  final bool includeUnreadInHome; // 首页显示未阅读的漫画
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
@@ -231,6 +233,7 @@ class OtherSetting {
     regularGroupRows: 3,
     otherGroupRows: 1,
     useLocalDataInShelf: false,
+    includeUnreadInHome: true,
   );
 
   OtherSetting copyWith({
@@ -246,6 +249,7 @@ class OtherSetting {
     int? regularGroupRows,
     int? otherGroupRows,
     bool? useLocalDataInShelf,
+    bool? includeUnreadInHome,
   }) {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
@@ -260,6 +264,7 @@ class OtherSetting {
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
       useLocalDataInShelf: useLocalDataInShelf ?? this.useLocalDataInShelf,
+      includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
     );
   }
 }

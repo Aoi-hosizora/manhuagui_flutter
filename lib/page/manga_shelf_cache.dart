@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/shelf_cache_line.dart';
@@ -146,7 +148,7 @@ class MangaShelfCachePage extends StatefulWidget {
     for (var i = newCaches.length - 1; i >= 0; i--) {
       newCaches[i] = newCaches[i].copyWith(cachedAt: DateTime.now()); // reversed, 书架上越老更新的漫画同步时间设置得越先
     }
-    var oldCaches = await ShelfCacheDao.getShelfCaches(username: AuthManager.instance.username) ?? [];
+    var oldCaches = await ShelfCacheDao.getShelfCaches(username: AuthManager.instance.username, page: null) ?? [];
     var canDelete = !canceled && error == null; // 如果非取消且非错误，则删除已被移出书架的记录
     if (canDelete) {
       // >>> 删除不存在的记录
@@ -180,14 +182,22 @@ class MangaShelfCachePage extends StatefulWidget {
 }
 
 class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
-  final _rdvKey = GlobalKey<RefreshableDataViewState>();
+  final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
-  final _fabControllers = [AnimatedFabController(), AnimatedFabController()];
+  final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
+        _searchKeyword = ''; // 清空搜索关键词
+        if (mounted) setState(() {});
+        _pdvKey.currentState?.refresh();
+      }));
+      await AuthManager.instance.check();
+    });
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfCacheUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
@@ -195,26 +205,33 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
   void dispose() {
     _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
-    _fabControllers[0].dispose();
-    _fabControllers[1].dispose();
+    _fabController.dispose();
     super.dispose();
   }
 
   final _data = <ShelfCache>[];
   var _total = 0;
+  var _removed = 0; // for query offset
+  var _searchKeyword = ''; // for query condition
+  var _searchTitleOnly = true; // for query condition
   var _isUpdated = false;
 
-  Future<List<ShelfCache>> _getData() async {
-    var data = await ShelfCacheDao.getShelfCaches(username: AuthManager.instance.username) ?? [];
-    _total = data.length;
-    _isUpdated = false;
+  Future<PagedList<ShelfCache>> _getData({required int page}) async {
+    if (page == 1) {
+      // refresh
+      _removed = 0;
+      _isUpdated = false;
+    }
+    var username = AuthManager.instance.username;
+    var data = await ShelfCacheDao.getShelfCaches(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly, page: page, offset: _removed) ?? [];
+    _total = await ShelfCacheDao.getShelfCacheCount(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
     if (mounted) setState(() {});
-    return data;
+    return PagedList(list: data, next: page + 1);
   }
 
   void _updateByEvent(ShelfCacheUpdatedEvent event) async {
-    if (event.added) {
-      // 新增 => 显示有更新
+    if (event.added && !event.fromShelfCachePage) {
+      // 非本页引起的新增 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
@@ -223,6 +240,29 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _toSearch() async {
+    var result = await showKeywordDialogForSearching(
+      context: context,
+      title: Text('搜索已同步的书架计划'),
+      defaultText: _searchKeyword,
+      optionTitle: '仅搜索漫画标题',
+      optionValue: _searchTitleOnly,
+      hintForDialog: (only) => only ? '当前选项使得本次仅搜索漫画标题。' : '当前选项使得本次将搜索漫画ID以及漫画标题。',
+    );
+    if (result != null && result.item1.isNotEmpty) {
+      _searchKeyword = result.item1;
+      _searchTitleOnly = result.item2;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSearch() {
+    _searchKeyword = ''; // 清空搜索关键词
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   Future<void> _deleteCache({required int mangaId}) async {
@@ -277,7 +317,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
               Navigator.of(c).pop();
               MangaShelfCachePage.syncShelfCaches(
                 context,
-                onFinish: () => _rdvKey.currentState?.refresh(),
+                onFinish: () => _pdvKey.currentState?.refresh(),
                 fromShelfCachePage: true,
               );
             },
@@ -329,87 +369,122 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('已同步的书架记录'),
-        leading: AppBarActionButton.leading(context: context),
-        actions: [
-          AppBarActionButton(
-            icon: Icon(Icons.sync),
-            tooltip: '同步我的书架',
-            onPressed: () => _syncShelves(),
-          ),
-          AppBarActionButton(
-            icon: Icon(Icons.delete),
-            tooltip: '清空记录',
-            onPressed: () => _clearCaches(),
-          ),
-        ],
-      ),
-      body: RefreshableListView<ShelfCache>(
-        key: _rdvKey,
-        data: _data,
-        getData: () => _getData(),
-        scrollController: _controller,
-        setting: UpdatableDataViewSetting(
-          padding: EdgeInsets.symmetric(vertical: 0),
-          interactiveScrollbar: true,
-          scrollbarMainAxisMargin: 2,
-          scrollbarCrossAxisMargin: 2,
-          placeholderSetting: PlaceholderSetting().copyWithChinese(),
-          onPlaceholderStateChanged: (_, __) => _fabControllers.forEach((c) => c.hide()),
-          refreshFirst: true /* <<< refresh first */,
-          clearWhenRefresh: false,
-          clearWhenError: false,
-        ),
-        separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, item) => ShelfCacheLineView(
-          manga: item,
-          onPressed: () => _showPopupMenu(item),
-          onLongPressed: () => _showPopupMenu(item),
-        ),
-        extra: UpdatableDataViewExtraWidgets(
-          outerTopWidgets: [
-            ListHintView.textWidget(
-              leftText: '${AuthManager.instance.username} 的书架记录',
-              rightWidget: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('共 $_total 部' + (_isUpdated ? ' (有更新)' : '')),
-                  SizedBox(width: 5),
-                  HelpIconView.forListHint(
-                    title: '已同步的书架记录',
-                    hint: '书架记录同步功能仅用于判断漫画是否在书架上，并用于显示漫画列表右下角的书架图标。',
-                  ),
-                ],
+    return WillPopScope(
+      onWillPop: () async {
+        if (_searchKeyword.isNotEmpty) {
+          _exitSearch();
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('已同步的书架记录'),
+          leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
+          actions: [
+            if (_searchKeyword.isNotEmpty)
+              AppBarActionButton(
+                icon: Icon(Icons.search_off),
+                tooltip: '退出搜索',
+                onPressed: () => _exitSearch(),
               ),
+            AppBarActionButton(
+              icon: Icon(Icons.sync),
+              tooltip: '同步我的书架',
+              onPressed: () => _syncShelves(),
+            ),
+            PopupMenuButton(
+              child: Builder(
+                builder: (c) => AppBarActionButton(
+                  icon: Icon(Icons.more_vert),
+                  tooltip: '更多选项',
+                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                ),
+              ),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.delete, '清空所有书架记录'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _clearCaches()),
+                ),
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                  onTap: () {}, // TODO !!! 排序
+                ),
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                ),
+                if (_searchKeyword.isNotEmpty)
+                  PopupMenuItem(
+                    child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                    onTap: () => _exitSearch(),
+                  ),
+              ],
             ),
           ],
         ),
-      ),
-      floatingActionButton: Stack(
-        children: [
-          ScrollAnimatedFab(
-            controller: _fabControllers[0],
-            scrollController: _controller,
-            condition: ScrollAnimatedCondition.direction,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_top),
-              heroTag: null,
-              onPressed: () => _controller.scrollToTop(),
-            ),
+        drawer: AppDrawer(
+          currentSelection: DrawerSelection.none,
+        ),
+        drawerEdgeDragWidth: MediaQuery.of(context).size.width,
+        body: PaginationListView<ShelfCache>(
+          key: _pdvKey,
+          data: _data,
+          getData: ({indicator}) => _getData(page: indicator),
+          scrollController: _controller,
+          paginationSetting: PaginationSetting(
+            initialIndicator: 1,
+            nothingIndicator: 0,
           ),
-          ScrollAnimatedFab(
-            controller: _fabControllers[1],
-            scrollController: _controller,
-            condition: ScrollAnimatedCondition.reverseDirection,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_bottom),
-              heroTag: null,
-              onPressed: () => _controller.scrollToBottom(),
-            ),
+          setting: UpdatableDataViewSetting(
+            padding: EdgeInsets.symmetric(vertical: 0),
+            interactiveScrollbar: true,
+            scrollbarMainAxisMargin: 2,
+            scrollbarCrossAxisMargin: 2,
+            placeholderSetting: PlaceholderSetting().copyWithChinese(),
+            onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+            refreshFirst: true /* <<< refresh first */,
+            clearWhenRefresh: false,
+            clearWhenError: false,
+            updateOnlyIfNotEmpty: false,
           ),
-        ],
+          separator: Divider(height: 0, thickness: 1),
+          itemBuilder: (c, _, item) => ShelfCacheLineView(
+            manga: item,
+            onPressed: () => _showPopupMenu(item),
+            onLongPressed: () => _showPopupMenu(item),
+          ),
+          extra: UpdatableDataViewExtraWidgets(
+            outerTopWidgets: [
+              ListHintView.textWidget(
+                leftText: '${AuthManager.instance.username} 的书架记录' + //
+                    (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
+                rightWidget: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('共 $_total 部'),
+                    SizedBox(width: 5),
+                    HelpIconView.forListHint(
+                      title: '已同步的书架记录',
+                      hint: '书架记录同步功能仅用于判断漫画是否在书架上，并用于显示漫画列表右下角的书架图标。',
+                      tooltip: '提示',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: ScrollAnimatedFab(
+          controller: _fabController,
+          scrollController: _controller,
+          condition: ScrollAnimatedCondition.direction,
+          fab: FloatingActionButton(
+            child: Icon(Icons.vertical_align_top),
+            heroTag: null,
+            onPressed: () => _controller.scrollToTop(),
+          ),
+        ),
       ),
     );
   }

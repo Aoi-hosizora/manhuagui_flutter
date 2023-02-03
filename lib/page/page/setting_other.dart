@@ -37,6 +37,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
   late var _useLocalDataInShelf = widget.setting.useLocalDataInShelf;
+  late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
 
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
@@ -51,6 +52,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
         useLocalDataInShelf: _useLocalDataInShelf,
+        includeUnreadInHome: _includeUnreadInHome,
       );
 
   @override
@@ -189,6 +191,15 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _useLocalDataInShelf,
           onChanged: (b) {
             _useLocalDataInShelf = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '首页显示未阅读的漫画',
+          value: _includeUnreadInHome,
+          onChanged: (b) {
+            _includeUnreadInHome = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

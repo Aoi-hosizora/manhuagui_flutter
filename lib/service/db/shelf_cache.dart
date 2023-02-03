@@ -1,3 +1,4 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:sqflite/sqflite.dart';
@@ -39,6 +40,30 @@ class ShelfCacheDao {
       )''');
   }
 
+  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool includeWHERE = false, bool includeAND = false, bool pureSearch = false}) {
+    return SQLHelper.buildLikeStatement(
+      [_colMangaTitle, if (!pureSearch) _colMangaId],
+      keyword,
+      includeWHERE: includeWHERE,
+      includeAND: includeAND,
+    );
+  }
+
+  static Future<int?> getShelfCacheCount({required String username, String? keyword, bool pureSearch = false}) async {
+    final db = await DBManager.instance.getDB();
+    var like = _buildLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblShelfCache
+         WHERE $_colUsername = ? ${like?.item1 ?? ''}''',
+      [username, ...(like?.item2 ?? [])],
+    );
+    if (results == null) {
+      return null;
+    }
+    return firstIntValue(results);
+  }
+
   static Future<bool?> checkExistence({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
@@ -54,15 +79,35 @@ class ShelfCacheDao {
     return firstIntValue(results)! > 0;
   }
 
-  static Future<List<ShelfCache>?> getShelfCaches({required String username}) async {
+  static Future<List<ShelfCache>?> getShelfCaches({required String username, String? keyword, bool pureSearch = false, required int? page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
-    var results = await db.safeRawQuery(
-      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCachedAt
-         FROM $_tblShelfCache
-         WHERE $_colUsername = ?
-         ORDER BY $_colCachedAt DESC''',
-      [username],
-    );
+    var like = _buildLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+
+    List<Map<String, Object?>>? results;
+    if (page != null && page > 0) {
+      // return in pagination
+      offset = limit * (page - 1) - offset;
+      if (offset < 0) {
+        offset = 0;
+      }
+      results = await db.safeRawQuery(
+        '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCachedAt
+           FROM $_tblShelfCache
+           WHERE $_colUsername = ? ${like?.item1 ?? ''}
+           ORDER BY $_colCachedAt DESC
+           LIMIT $limit OFFSET $offset''',
+        [username, ...(like?.item2 ?? [])],
+      );
+    } else {
+      // return all
+      results = await db.safeRawQuery(
+        '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCachedAt
+           FROM $_tblShelfCache
+           WHERE $_colUsername = ? ${like?.item1 ?? ''}
+           ORDER BY $_colCachedAt DESC''',
+        [username, ...(like?.item2 ?? [])],
+      );
+    }
     if (results == null) {
       return null;
     }

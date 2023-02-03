@@ -84,7 +84,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         _isUpdated = false;
       } else {
         // 登录状态变更，刷新列表
-        WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh()); // TODO use _loadData or _pdvKey
+        WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh()); // TODO use _loadData or _pdvKey when auth changed
       }
       if (mounted) setState(() {});
     }
@@ -116,6 +116,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     for (var item in result.data.data) {
       _histories[item.mid] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: item.mid);
     }
+    if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), queryShelves: false).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
@@ -261,9 +262,9 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
                   HelpIconView.forListHint(
                     title: '我的书架',
                     hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的倒序显示。\n\n'
-                        '提醒：当前书架上显示的阅读记录来源于${AppSetting.instance.other.useLocalDataInShelf ? '本地' : '在线'}的阅读历史，'
+                        '提示：当前书架上显示的阅读记录来源于${AppSetting.instance.other.useLocalDataInShelf ? '本地' : '在线'}的阅读历史，'
                         '该显示方式可在【设置-其他设置-书架上显示本地阅读历史】修改。',
-                    iconData: Icons.error_outline,
+                    tooltip: '提示',
                   ),
                 ],
               ),

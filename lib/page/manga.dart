@@ -169,7 +169,7 @@ class _MangaPageState extends State<MangaPage> {
       // 4. 获取漫画信息
       var result = await client.getManga(mid: widget.id);
       if (result.data.title == '') {
-        throw SpecialException('未知错误'); // <<< 获取的数据有问题
+        throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
       }
       _data = null;
       _error = '';
@@ -479,7 +479,7 @@ class _MangaPageState extends State<MangaPage> {
             ),
           if (_history != null)
             IconTextDialogOption(
-              icon: Icon(Icons.auto_delete),
+              icon: Icon(MdiIcons.deleteClock),
               text: Text(!_history!.read ? '删除浏览历史' : '删除阅读历史'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -758,7 +758,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.update, size: 20, color: Colors.orange),
-                              text: Text('更新于 ${_data!.formattedNewestDate} ${_data!.finished ? '已完结' : '连载中'}'),
+                              text: Text('更新于 ${_data!.formattedNewestDate}・${_data!.finished ? '已完结' : '连载中'}'),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),

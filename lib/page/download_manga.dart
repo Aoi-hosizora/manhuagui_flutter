@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/page/page/dl_setting.dart';
 import 'package:manhuagui_flutter/page/page/dl_unfinished.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -99,7 +100,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   MangaHistory? _history;
   Manga? _mangaData; // loaded in background
   var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
-  var _onlyUnfinished = true;
+  var _showAllChapters = false;
   var _invertOrder = true;
 
   Future<void> _loadData() async {
@@ -396,13 +397,13 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             ),
             itemBuilder: (_) => [
               PopupMenuItem(
-                child: Text('漫画下载设置'),
+                child: IconTextMenuItem(Icons.settings, '漫画下载设置'),
                 onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
                   (_) => showDlSettingDialog(context: context),
                 ),
               ),
               PopupMenuItem(
-                child: Text('查看下载列表'),
+                child: IconTextMenuItem(Icons.format_list_bulleted, '查看下载列表'),
                 onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
                   (_) => Navigator.of(context).push(
                     CustomPageRoute(
@@ -413,12 +414,18 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 ),
               ),
               PopupMenuItem(
-                child: Text(_onlyUnfinished ? '显示所有章节的下载情况' : '仅显示未完成的下载情况'),
-                onTap: () => mountedSetState(() => _onlyUnfinished = !_onlyUnfinished),
+                child: IconTextMenuItem(
+                  _showAllChapters ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                  '显示所有章节的下载情况',
+                ),
+                onTap: () => mountedSetState(() => _showAllChapters = !_showAllChapters),
               ),
               if (_data != null && !_data!.error && _data!.allChaptersSucceeded)
                 PopupMenuItem(
-                  child: Text(!_data!.needUpdate ? '标记为需要更新数据' : '标记为不需要更新数据'),
+                  child: IconTextMenuItem(
+                    !_data!.needUpdate ? Icons.update : Icons.update_disabled,
+                    !_data!.needUpdate ? '标记为需要更新数据' : '标记为不需要更新数据',
+                  ),
                   onTap: () async {
                     // 更新数据库、更新数据、发送通知
                     var newEntity = _data!.copyWith(needUpdate: !_data!.needUpdate);
@@ -538,7 +545,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             indicatorSize: TabBarIndicatorSize.label,
                             tabs: [
                               const SizedBox(height: 36.0, child: Center(child: Text('已完成'))),
-                              SizedBox(height: 36.0, child: Center(child: Text(_onlyUnfinished ? '未完成' : '所有章节'))),
+                              SizedBox(height: 36.0, child: Center(child: Text(!_showAllChapters ? '未完成' : '所有章节'))),
                             ],
                           ),
                         ),
@@ -579,7 +586,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
                   mangaEntity: _data!,
                   downloadTask: _task,
-                  showAllChapters: !_onlyUnfinished,
+                  showAllChapters: _showAllChapters,
                   invertOrder: _invertOrder,
                   toReadChapter: _readChapter,
                   toDeleteChapters: _deleteChapters,

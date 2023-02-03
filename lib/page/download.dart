@@ -7,7 +7,9 @@ import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/page/dl_setting.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
@@ -29,6 +31,7 @@ class DownloadPage extends StatefulWidget {
 }
 
 class _DownloadPageState extends State<DownloadPage> {
+  final _rdvKey = GlobalKey<RefreshableDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
@@ -54,10 +57,12 @@ class _DownloadPageState extends State<DownloadPage> {
   var _total = 0;
   final _tasks = <int, DownloadMangaQueueTask>{};
   final _bytes = <int, int>{};
+  var _searchKeyword = ''; // for query condition
+  var _searchTitleOnly = true; // for query condition
 
   Future<List<DownloadedManga>> _getData() async {
-    var data = await DownloadDao.getMangas() ?? [];
-    _total = await DownloadDao.getMangaCount() ?? 0;
+    var data = await DownloadDao.getMangas(keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? [];
+    _total = await DownloadDao.getMangaCount(keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
     _tasks.clear();
     for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
       _tasks[t.mangaId] = t;
@@ -86,14 +91,37 @@ class _DownloadPageState extends State<DownloadPage> {
     if (entityEvent != null) {
       var mangaId = entityEvent.mangaId;
       var entity = await DownloadDao.getManga(mid: mangaId);
-      if (entity != null) {
+      if (entity != null && (_searchKeyword.isEmpty || _data.any((el) => el.mangaId == mangaId) /* 要么没在搜索，要么在搜索且存在搜索结果中 */)) {
         _data.removeWhere((el) => el.mangaId == mangaId);
         _data.insert(0, entity);
-        _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt)); // TODO sort
         if (mounted) setState(() {});
         getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 在每次数据库发生变化时都统计文件大小
       }
     }
+  }
+
+  Future<void> _toSearch() async {
+    var result = await showKeywordDialogForSearching(
+      context: context,
+      title: Text('搜索漫画下载列表'),
+      defaultText: _searchKeyword,
+      optionTitle: '仅搜索漫画标题',
+      optionValue: _searchTitleOnly,
+      hintForDialog: (only) => only ? '当前选项使得本次仅搜索漫画标题。' : '当前选项使得本次将搜索漫画ID以及漫画标题。',
+    );
+    if (result != null && result.item1.isNotEmpty) {
+      _searchKeyword = result.item1;
+      _searchTitleOnly = result.item2;
+      if (mounted) setState(() {});
+      _rdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSearch() {
+    _searchKeyword = ''; // 清空搜索关键词
+    if (mounted) setState(() {});
+    _rdvKey.currentState?.refresh();
   }
 
   Future<DownloadMangaQueueTask?> _pauseOrContinue({
@@ -270,6 +298,10 @@ class _DownloadPageState extends State<DownloadPage> {
           _msController.exitMultiSelectionMode();
           return false;
         }
+        if (_searchKeyword.isNotEmpty) {
+          _exitSearch();
+          return false;
+        }
         return true;
       },
       child: Scaffold(
@@ -277,20 +309,52 @@ class _DownloadPageState extends State<DownloadPage> {
           title: Text('下载列表'),
           leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
           actions: [
-            AppBarActionButton(
-              icon: Icon(Icons.play_arrow),
-              tooltip: '全部开始',
-              onPressed: () => _allStartOrPause(allStart: true),
-            ),
+            if (_searchKeyword.isNotEmpty)
+              AppBarActionButton(
+                icon: Icon(Icons.search_off),
+                tooltip: '退出搜索',
+                onPressed: () => _exitSearch(),
+              ),
+            if (_searchKeyword.isEmpty)
+              AppBarActionButton(
+                icon: Icon(Icons.play_arrow),
+                tooltip: '全部开始',
+                onPressed: () => _allStartOrPause(allStart: true),
+              ),
             AppBarActionButton(
               icon: Icon(Icons.pause),
               tooltip: '全部暂停',
               onPressed: () => _allStartOrPause(allStart: false),
             ),
-            AppBarActionButton(
-              icon: Icon(Icons.settings),
-              tooltip: '下载设置',
-              onPressed: () => showDlSettingDialog(context: context),
+            PopupMenuButton(
+              child: Builder(
+                builder: (c) => AppBarActionButton(
+                  icon: Icon(Icons.more_vert),
+                  tooltip: '更多选项',
+                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                ),
+              ),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.settings, '漫画下载设置'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
+                    (_) => showDlSettingDialog(context: context),
+                  ),
+                ),
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                  onTap: () {}, // TODO !!! 排序
+                ),
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                ),
+                if (_searchKeyword.isNotEmpty)
+                  PopupMenuItem(
+                    child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                    onTap: () => _exitSearch(),
+                  ),
+              ],
             ),
           ],
         ),
@@ -303,6 +367,7 @@ class _DownloadPageState extends State<DownloadPage> {
           stateSetter: () => mountedSetState(() {}),
           onModeChanged: (_) => mountedSetState(() {}),
           child: RefreshableListView<DownloadedManga>(
+            key: _rdvKey,
             data: _data,
             getData: () => _getData(),
             scrollController: _controller,
@@ -346,21 +411,10 @@ class _DownloadPageState extends State<DownloadPage> {
             },
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
-                ListHintView.textWidget(
-                  leftText: '本地的漫画下载列表',
-                  rightWidget: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('共 $_total 部'),
-                      SizedBox(width: 5),
-                      // TODO 搜索
-                      // HelpIconView.forListHint(
-                      //   title: '',
-                      //   hint: '',
-                      //   onPressed: () {},
-                      // ),
-                    ],
-                  ),
+                ListHintView.textText(
+                  leftText: '本地的漫画下载列表' + //
+                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : ''),
+                  rightText: '共 $_total 部',
                 ),
               ],
             ),

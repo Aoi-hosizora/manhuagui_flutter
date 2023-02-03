@@ -27,6 +27,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 漫画收藏页-修改备注对话框 [showUpdateFavoriteMangaRemarkDialog]
 /// 漫画页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
+/// 部分漫画/作者列表页-搜索关键词对话框 [showKeywordDialogForSearching]
 
 // => called by pages which contains manga line view
 void showPopupMenuForMangaList({
@@ -154,7 +155,7 @@ void showPopupMenuForMangaList({
           /// 历史
           if (mangaHistory != null)
             IconTextDialogOption(
-              icon: Icon(Icons.auto_delete),
+              icon: Icon(MdiIcons.deleteClock), // use MdiIcons.deleteClock rather than Icons.auto_delete to align icons
               text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读历史'),
               onPressed: () => pop(c, () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false)),
             ),
@@ -281,7 +282,7 @@ void showPopupMenuForMangaToc({
           /// 下载
           if (lastReadChapter)
             IconTextDialogOption(
-              icon: Icon(Icons.auto_delete),
+              icon: Icon(MdiIcons.deleteClock),
               text: Text('删除阅读历史'),
               onPressed: () => pop(c, () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage)),
             ),
@@ -426,6 +427,102 @@ void showPopupMenuForSubscribing({
         ],
       ],
     ),
+  );
+}
+
+Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
+  required BuildContext context,
+  required Widget title,
+  Widget? extraContent,
+  String textFieldLabel = '搜索关键词',
+  String defaultText = '',
+  String optionTitle = '仅搜索漫画标题',
+  bool optionValue = true,
+  String emptyToast = '输入的搜索关键词为空',
+  String Function(bool)? hintForDialog,
+}) async {
+  var controller = TextEditingController()..text = defaultText;
+  var ok = await showDialog(
+    context: context,
+    builder: (c) => StatefulBuilder(
+      builder: (_, _setState) => AlertDialog(
+        title: title,
+        scrollable: true,
+        content: Column(
+          children: [
+            if (extraContent != null) ...[extraContent, Text(' ')],
+            Container(
+              width: getDialogContentMaxWidth(context),
+              padding: EdgeInsets.only(left: 8, right: 12, bottom: 12),
+              child: TextField(
+                controller: controller,
+                maxLines: 1,
+                autofocus: true,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(vertical: 5),
+                  labelText: textFieldLabel,
+                  icon: Icon(Icons.search),
+                ),
+              ),
+            ),
+            Container(
+              width: getDialogContentMaxWidth(context),
+              padding: EdgeInsets.only(top: 3),
+              child: CheckboxListTile(
+                title: Text(optionTitle),
+                value: optionValue,
+                onChanged: (v) => _setState(() => optionValue = v ?? false),
+                visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
+          if (hintForDialog == null) SizedBox.shrink(),
+          if (hintForDialog != null)
+            TextButton(
+              child: Text('提示'),
+              onPressed: () => showDialog(
+                context: context,
+                builder: (c) => AlertDialog(
+                  title: title,
+                  content: Text(hintForDialog.call(optionValue)),
+                  actions: [TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop())],
+                ),
+              ),
+            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                child: Text('确定'),
+                onPressed: () {
+                  if (controller.text.trim().isEmpty) {
+                    Fluttertoast.showToast(msg: emptyToast);
+                  } else {
+                    Navigator.of(c).pop(true);
+                  }
+                },
+              ),
+              TextButton(
+                child: Text('取消'),
+                onPressed: () => Navigator.of(c).pop(false),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+  if (ok != true) {
+    return null;
+  }
+  return Tuple2(
+    controller.text.trim(), // search keyword, must be not empty
+    optionValue, // option value
   );
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/page/author_dialog.dart';
+import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
@@ -34,6 +35,8 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
+        _searchKeyword = ''; // 清空搜索关键词
+        if (mounted) setState(() {});
         _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
@@ -55,6 +58,8 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
   var _total = 0;
   var _removed = 0; // for query offset
   late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreFavorites: true);
+  var _searchKeyword = ''; // for query condition
+  var _searchNameOnly = true; // for query condition
   var _isUpdated = false;
 
   Future<PagedList<FavoriteAuthor>> _getData({required int page}) async {
@@ -64,8 +69,9 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       _isUpdated = false;
     }
     var username = AuthManager.instance.username;
-    var data = await FavoriteDao.getAuthors(username: username, page: page, offset: _removed) ?? [];
-    _total = await FavoriteDao.getAuthorCount(username: username) ?? 0;
+    var data = await FavoriteDao.getAuthors(username: username, keyword: _searchKeyword, pureSearch: _searchNameOnly, page: page, offset: _removed) ?? [];
+    _total = await FavoriteDao.getAuthorCount(username: username, keyword: _searchKeyword, pureSearch: _searchNameOnly) ?? 0;
+    if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(authorIds: data.map((e) => e.authorId), queryFavorites: false).then((_) => mountedSetState(() {})); // actually this will do nothing
     return PagedList(list: data, next: page + 1);
   }
@@ -86,6 +92,29 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _toSearch() async {
+    var result = await showKeywordDialogForSearching(
+      context: context,
+      title: Text('搜索已收藏的漫画作者'),
+      defaultText: _searchKeyword,
+      optionTitle: '仅搜索作者名',
+      optionValue: _searchNameOnly,
+      hintForDialog: (only) => only ? '当前选项使得本次仅搜索作者名。' : '当前选项使得本次将搜索作者ID、作者名以及收藏备注。',
+    );
+    if (result != null && result.item1.isNotEmpty) {
+      _searchKeyword = result.item1;
+      _searchNameOnly = result.item2;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSearch() {
+    _searchKeyword = ''; // 清空搜索关键词
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   void _showPopupMenu({required int authorId}) {
@@ -192,12 +221,48 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
           _msController.exitMultiSelectionMode();
           return false;
         }
+        if (_searchKeyword.isNotEmpty) {
+          _exitSearch();
+          return false;
+        }
         return true;
       },
       child: Scaffold(
         appBar: AppBar(
           title: Text('已收藏的漫画作者'),
           leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
+          actions: [
+            if (_searchKeyword.isNotEmpty)
+              AppBarActionButton(
+                icon: Icon(Icons.search_off),
+                tooltip: '退出搜索',
+                onPressed: () => _exitSearch(),
+              ),
+            PopupMenuButton(
+              child: Builder(
+                builder: (c) => AppBarActionButton(
+                  icon: Icon(Icons.more_vert),
+                  tooltip: '更多选项',
+                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                ),
+              ),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.sort, '排序方式'),
+                  onTap: () {}, // TODO !!! 排序
+                ),
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.search, '搜索列表中的作者'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                ),
+                if (_searchKeyword.isNotEmpty)
+                  PopupMenuItem(
+                    child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                    onTap: () => _exitSearch(),
+                  ),
+              ],
+            ),
+          ],
         ),
         drawer: AppDrawer(
           currentSelection: DrawerSelection.none,
@@ -244,7 +309,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
               outerTopWidgets: [
                 ListHintView.textWidget(
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
-                      (_isUpdated ? ' (有更新)' : ''),
+                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -253,8 +318,8 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                       HelpIconView.forListHint(
                         title: '本地收藏的漫画作者',
                         hint: '"本地收藏"仅记录在移动端本地，但该作者列表并不支持分组管理，且不支持顺序自由调整。',
+                        tooltip: '提示',
                       ),
-                      // TODO 搜索、排序
                     ],
                   ),
                 ),

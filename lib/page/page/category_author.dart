@@ -103,6 +103,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
+    if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(authorIds: result.data.data.map((e) => e.aid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }

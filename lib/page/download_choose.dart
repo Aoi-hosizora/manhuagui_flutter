@@ -190,24 +190,13 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
             ),
             itemBuilder: (_) => [
               PopupMenuItem(
-                child: Text('漫画下载设置'),
+                child: IconTextMenuItem(Icons.settings, '漫画下载设置'),
                 onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
                   (_) => showDlSettingDialog(context: context),
                 ),
               ),
               PopupMenuItem(
-                child: Text('查看下载列表'),
-                onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
-                  (_) => Navigator.of(context).push(
-                    CustomPageRoute(
-                      context: context,
-                      builder: (c) => DownloadPage(),
-                    ),
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                child: Text('查看下载任务详情'),
+                child: IconTextMenuItem(Icons.download, '查看下载任务详情'),
                 onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
                   (_) => Navigator.of(context).push(
                     CustomPageRoute(
@@ -218,6 +207,17 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                       settings: DownloadMangaPage.buildRouteSetting(
                         mangaId: widget.mangaId,
                       ),
+                    ),
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                child: IconTextMenuItem(Icons.format_list_bulleted, '查看下载列表'),
+                onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
+                  (_) => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => DownloadPage(),
                     ),
                   ),
                 ),

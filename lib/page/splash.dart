@@ -45,7 +45,6 @@ class SplashPage extends StatefulWidget {
     }
 
     // 2. upgrade db and prefs
-
     await DBManager.instance.getDB();
     await PrefsManager.instance.loadPrefs();
 
