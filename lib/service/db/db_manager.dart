@@ -145,30 +145,3 @@ extension DatabaseExtension on Database {
     }
   }
 }
-
-class SQLHelper {
-  static Tuple2<String, List<String>>? buildLikeStatement(List<String> columns, String? keyword, {bool includeWHERE = false, bool includeAND = false}) {
-    if (keyword == null) {
-      return null;
-    }
-    keyword = keyword.trim();
-    if (keyword.isEmpty) {
-      return null;
-    }
-
-    var keywords = keyword.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_').split(' ').toSet().toList();
-    if (keywords.isEmpty) {
-      return null;
-    }
-
-    var statements = <String>[];
-    var arguments = <String>[];
-    for (var column in columns) {
-      statements.addAll([for (var _ in keywords) '`$column` LIKE ? ESCAPE \'\\\'']);
-      arguments.addAll([for (var keyword in keywords) '%$keyword%']);
-    }
-    var statement = statements.join(' OR ');
-    statement = (includeWHERE ? ' WHERE ' : ' ') + (includeAND ? ' AND ' : ' ') + '($statement)';
-    return Tuple2(statement, arguments);
-  }
-}

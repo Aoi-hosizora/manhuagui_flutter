@@ -112,8 +112,11 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _mangaData = null;
     if (mounted) setState(() {});
 
-    // 异步请求漫画数据
-    _loadMangaDataAsync(forceRefresh: true);
+    // 若为同步模式，则在最初加载时同时异步请求漫画数据
+    if (_onlineMode) {
+      // 同步模式会使得 MangaViewerPage 阻塞请求漫画数据，所以需要提前加载
+      _loadMangaDataAsync(forceRefresh: false);
+    }
 
     // 获取漫画下载记录，并更新下载任务等数据
     var data = await DownloadDao.getManga(mid: widget.mangaId);
@@ -167,7 +170,9 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     final client = RestClient(DioManager.instance.dio);
     try {
       var result = await client.getManga(mid: widget.mangaId);
-      _mangaData = result.data;
+      if (result.data.title != '' /* 确保获取的漫画数据没有问题 */) {
+        _mangaData = result.data;
+      }
     } catch (e, s) {
       wrapError(e, s); // ignored
     }
@@ -290,7 +295,9 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   }
 
   void _readChapter(int chapterId) {
-    _loadMangaDataAsync(forceRefresh: false); // 异步请求章节目录，尽量避免 MangaViewerPage 反复请求
+    // 此处不异步请求漫画数据，由 MangaViewerPage 请求并回传更新 _mangaData，从而避免重复请求
+    // _loadMangaDataAsync(forceRefresh: false);
+
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
@@ -304,6 +311,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
               ? _history?.chapterPage ?? 1 // have read
               : 1 /* have not read */,
           onlineMode: _onlineMode,
+          onMangaGot: (manga) => _mangaData = manga,
         ),
       ),
     );
@@ -501,9 +509,17 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             if (mounted) setState(() {});
                             await updateDlSettingDefaultToOnlineMode(_onlineMode);
                           },
+                          longPress: () => showDialog(
+                            context: context,
+                            builder: (c) => AlertDialog(
+                              title: Text('在线模式与离线模式'),
+                              content: Text('从下载列表中阅读章节时，若使用"在线模式"则会通过网络在线获取最新的章节数据，若使用"离线模式"则会使用下载时保存的章节数据。'),
+                              actions: [TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop())],
+                            ),
+                          ),
                         ),
                         action3: ActionItem.simple(
-                          _invertOrder ? '倒序显示' : '正序显示',
+                          _invertOrder ? '降序显示' : '升序显示',
                           _invertOrder ? MdiIcons.sortDescending : MdiIcons.sortAscending,
                           () => mountedSetState(() => _invertOrder = !_invertOrder),
                         ),

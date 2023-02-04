@@ -213,12 +213,12 @@ class OtherSetting {
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
-  final bool enableCornerIcons; // 列表显示右下角图标
+  final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final int regularGroupRows; // 单话分组章节显示行数
   final int otherGroupRows; // 其他分组章节显示行数
   final bool useLocalDataInShelf; // 书架上显示本地阅读历史
-  final bool includeUnreadInHome; // 首页显示未阅读的漫画
+  final bool includeUnreadInHome; // 首页历史显示未阅读漫画
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,

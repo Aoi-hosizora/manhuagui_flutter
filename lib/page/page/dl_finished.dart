@@ -112,10 +112,19 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                           ? itemWidget
                           : SelectableCheckboxItem<ValueKey<int>>(
                               key: ValueKey<int>(chapterId),
-                              checkboxPosition: PositionArgument.fromLTRB(null, null, 1, 1),
+                              checkboxPosition: PositionArgument.fromLTRB(null, null, 0.9, 1),
                               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(
                                 tip: tip,
-                                backgroundColor: Colors.white,
+                                backgroundColor: chapterId != widget.history?.chapterId
+                                    ? Colors.white // white background when not highlighted
+                                    : Theme.of(context).primaryColorLight.let(
+                                          (c) => Color.fromRGBO(
+                                            (255 - 0.6 * (255 - c.red)).toInt(),
+                                            (255 - 0.6 * (255 - c.green)).toInt(),
+                                            (255 - 0.6 * (255 - c.blue)).toInt(),
+                                            1.0,
+                                          ),
+                                        ), // primaryColorLight.withOpacity(0.6) background when highlighted
                                 scale: 0.7,
                                 scaleAlignment: Alignment.bottomRight,
                               ),

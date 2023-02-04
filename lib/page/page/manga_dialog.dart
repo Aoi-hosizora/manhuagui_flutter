@@ -10,6 +10,7 @@ import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -29,7 +30,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
 /// 部分漫画/作者列表页-搜索关键词对话框 [showKeywordDialogForSearching]
 
-// => called by pages which contains manga line view
+// => called by pages which contains manga line view (tiny / shelf / favorite / history / download / shelf cache)
 void showPopupMenuForMangaList({
   required BuildContext context,
   required int mangaId,
@@ -432,25 +433,25 @@ void showPopupMenuForSubscribing({
 
 Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
   required BuildContext context,
-  required Widget title,
-  Widget? extraContent,
+  required String title,
   String textFieldLabel = '搜索关键词',
   String defaultText = '',
   String optionTitle = '仅搜索漫画标题',
   bool optionValue = true,
+  String Function(bool)? optionHint,
   String emptyToast = '输入的搜索关键词为空',
-  String Function(bool)? hintForDialog,
+  String sameToast = '输入的搜索关键词没有变更',
 }) async {
   var controller = TextEditingController()..text = defaultText;
   var ok = await showDialog(
     context: context,
     builder: (c) => StatefulBuilder(
       builder: (_, _setState) => AlertDialog(
-        title: title,
+        title: Text(title),
         scrollable: true,
         content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if (extraContent != null) ...[extraContent, Text(' ')],
             Container(
               width: getDialogContentMaxWidth(context),
               padding: EdgeInsets.only(left: 8, right: 12, bottom: 12),
@@ -477,41 +478,33 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
                 contentPadding: EdgeInsets.zero,
               ),
             ),
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-        actions: [
-          if (hintForDialog == null) SizedBox.shrink(),
-          if (hintForDialog != null)
-            TextButton(
-              child: Text('提示'),
-              onPressed: () => showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: title,
-                  content: Text(hintForDialog.call(optionValue)),
-                  actions: [TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop())],
+            if (optionHint != null)
+              Container(
+                width: getDialogContentMaxWidth(context),
+                padding: EdgeInsets.only(left: 8, right: 8, top: 8),
+                child: Text(
+                  '(提示: ${optionHint.call(optionValue)})',
+                  style: Theme.of(context).textTheme.bodyText2,
                 ),
               ),
-            ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                child: Text('确定'),
-                onPressed: () {
-                  if (controller.text.trim().isEmpty) {
-                    Fluttertoast.showToast(msg: emptyToast);
-                  } else {
-                    Navigator.of(c).pop(true);
-                  }
-                },
-              ),
-              TextButton(
-                child: Text('取消'),
-                onPressed: () => Navigator.of(c).pop(false),
-              ),
-            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: Text('确定'),
+            onPressed: () {
+              if (controller.text.trim().isEmpty) {
+                Fluttertoast.showToast(msg: emptyToast);
+              } else if (controller.text.trim() == defaultText) {
+                Fluttertoast.showToast(msg: sameToast);
+              } else {
+                Navigator.of(c).pop(true);
+              }
+            },
+          ),
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(false),
           ),
         ],
       ),
@@ -524,6 +517,67 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
     controller.text.trim(), // search keyword, must be not empty
     optionValue, // option value
   );
+}
+
+Future<SortMethod?> showSortMethodDialogForSorting({
+  required BuildContext context,
+  required String title,
+  SortMethod defaultValue = SortMethod.byTimeDesc,
+  required String? idTitle,
+  required String? nameTitle,
+  required String? timeTitle,
+  required String? orderTitle,
+}) async {
+  var value = defaultValue.toAsc();
+  var desc = defaultValue.isDesc();
+  var ok = await showDialog(
+    context: context,
+    builder: (c) => StatefulBuilder(
+      builder: (_, _setState) => AlertDialog(
+        title: Text(title),
+        scrollable: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var tuple in [
+              if (idTitle != null) Tuple2(idTitle, SortMethod.byIdAsc),
+              if (nameTitle != null) Tuple2(nameTitle, SortMethod.byNameAsc),
+              if (timeTitle != null) Tuple2(timeTitle, SortMethod.byTimeAsc),
+              if (orderTitle != null) Tuple2(orderTitle, SortMethod.byOrderAsc),
+            ])
+              Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: RadioListTile<SortMethod>(
+                  title: Text('按${tuple.item1}${desc ? '降序' : '升序'}排序'),
+                  value: tuple.item2,
+                  groupValue: value,
+                  onChanged: (v) => v?.let((v) => _setState(() => value = v)),
+                  visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            CheckboxListTile(
+              title: Text('降序排序'),
+              value: desc,
+              onChanged: (v) => _setState(() => desc = v ?? false),
+              visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+        ],
+      ),
+    ),
+  );
+  if (ok != true) {
+    return null;
+  }
+  return !desc ? value.toAsc() : value.toDesc();
 }
 
 class _DialogHelper {
@@ -1002,7 +1056,9 @@ class _DialogHelper {
 
     // 更新数据库、(更新界面)、弹出提示、发送通知
     if (addToTop) {
-      oldFavorites = oldFavorites.reversed.toList(); // 移至顶部需要倒序一个一个移动，移至底部则不需要
+      oldFavorites.sort((i, j) => j.order.compareTo(i.order)); // 移至顶部 => 降序一个一个移动
+    } else {
+      oldFavorites.sort((i, j) => i.order.compareTo(j.order)); // 移至底部 => 升序一个一个移动
     }
     var oldNewFavorites = <Tuple2<FavoriteManga, FavoriteManga>>[];
     for (var oldFavorite in oldFavorites) {

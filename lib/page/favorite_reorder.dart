@@ -50,7 +50,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
     if (mounted) setState(() {});
 
     try {
-      var data = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: widget.groupName, page: -1) ?? [];
+      var data = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: widget.groupName, page: null) ?? [];
       _favorites.addAll(data);
       for (var i = 0; i < data.length; i++) {
         _originIndex[data[i].mangaId] = i;
@@ -127,7 +127,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
           children: [
             ListHintView.textText(
               leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '本地收藏') + //
-                  (widget.groupName == '' ? '' : '  -  ${widget.groupName}'),
+                  (widget.groupName == '' ? '' : ' - ${widget.groupName}'),
               rightText: '共 ${_favorites.length} 部',
             ),
             Expanded(

@@ -1,6 +1,7 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -77,8 +78,8 @@ class DownloadDao {
     // pass
   }
 
-  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool includeWHERE = false, bool includeAND = false, bool pureSearch = false}) {
-    return SQLHelper.buildLikeStatement(
+  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
       [_colDmMangaTitle, if (!pureSearch) _colDmMangaId],
       keyword,
       includeWHERE: includeWHERE,
@@ -88,7 +89,7 @@ class DownloadDao {
 
   static Future<int?> getMangaCount({String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildLikeStatement(keyword: keyword, includeWHERE: true, pureSearch: pureSearch);
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeWHERE: true);
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblDownloadManga
@@ -117,7 +118,7 @@ class DownloadDao {
 
   static Future<List<DownloadedManga>?> getMangas({String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildLikeStatement(keyword: keyword, includeWHERE: true, pureSearch: pureSearch);
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeWHERE: true);
     var mangaResults = await db.safeRawQuery(
       '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmError, $_colDmUpdatedAt, $_colDmNeedUpdate
          FROM $_tblDownloadManga

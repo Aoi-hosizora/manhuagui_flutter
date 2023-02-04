@@ -105,11 +105,11 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   Future<void> _toSearch() async {
     var result = await showKeywordDialogForSearching(
       context: context,
-      title: Text('搜索漫画阅读历史'),
+      title: '搜索漫画阅读历史',
       defaultText: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
-      hintForDialog: (only) => only ? '当前选项使得本次仅搜索漫画标题。' : '当前选项使得本次将搜索漫画ID以及漫画标题。',
+      optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID以及漫画标题',
     );
     if (result != null && result.item1.isNotEmpty) {
       _searchKeyword = result.item1;

@@ -44,7 +44,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData()); // TODO use _loadData or _refreshIndicatorKey
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listen((ev) => _updateByAuthEvent(ev))); // !!! with checking AuthManager.instance.authData
       await AuthManager.instance.check();
@@ -78,7 +78,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
         _data = null;
         _error = '';
       } else {
-        WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show()); // TODO use _loadData or _refreshIndicatorKey
+        // 登录状态变更，刷新用户信息
+        WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show()); // TODO use _loadData or _refreshIndicatorKey when auth changed
       }
       if (mounted) setState(() {});
     }

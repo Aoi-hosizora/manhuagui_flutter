@@ -16,7 +16,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 作者收藏页-修改备注对话框 [showUpdateFavoriteAuthorRemarkDialog]
 /// 作者页-作者收藏对话框 [showPopupMenuForAuthorFavorite]
 
-// => called by pages which contains author line view
+// => called by pages which contains author line view (tiny / favorite)
 void showPopupMenuForAuthorList({
   required BuildContext context,
   required int authorId,

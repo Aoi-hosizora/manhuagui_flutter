@@ -102,7 +102,7 @@ class _AuthorPageState extends State<AuthorPage> {
     try {
       var result = await client.getAuthor(aid: widget.id);
       if (result.data.name == '') {
-        throw SpecialException('未知错误'); // <<< 获取的数据有问题
+        throw SpecialException('未知错误'); // <<< 获取的作者数据有问题
       }
       _data = null;
       _error = '';
@@ -148,6 +148,7 @@ class _AuthorPageState extends State<AuthorPage> {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
+    if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
@@ -397,7 +398,7 @@ class _AuthorPageState extends State<AuthorPage> {
                   color: Colors.white,
                   child: ActionRowView.four(
                     action1: ActionItem(
-                      text: _favoriteAuthor == null ? '收藏作者' : '取消收藏',
+                      text: _favoriteAuthor == null ? '收藏作者' : '查看收藏',
                       icon: _favoriteAuthor == null ? Icons.bookmark_border : Icons.bookmark,
                       action: () => _favorite(),
                       longPress: () => _favorite(),

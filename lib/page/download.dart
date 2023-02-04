@@ -91,10 +91,11 @@ class _DownloadPageState extends State<DownloadPage> {
     if (entityEvent != null) {
       var mangaId = entityEvent.mangaId;
       var entity = await DownloadDao.getManga(mid: mangaId);
-      if (entity != null && (_searchKeyword.isEmpty || _data.any((el) => el.mangaId == mangaId) /* 要么没在搜索，要么在搜索且存在搜索结果中 */)) {
+      if (entity != null && (_searchKeyword.isEmpty || _data.any((el) => el.mangaId == mangaId))) {
+        // 只有在 **没在搜索**，或 **正在搜索且存在搜索结果中** 时，才更新列表
         _data.removeWhere((el) => el.mangaId == mangaId);
         _data.insert(0, entity);
-        _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt)); // TODO sort
+        _data.sort((a, b) => b.updatedAt.compareTo(a.updatedAt)); // 更新数据后按下载更新时间调整顺序
         if (mounted) setState(() {});
         getDownloadedMangaBytes(mangaId: mangaId).then((b) => mountedSetState(() => _bytes[mangaId] = b)); // 在每次数据库发生变化时都统计文件大小
       }
@@ -104,11 +105,11 @@ class _DownloadPageState extends State<DownloadPage> {
   Future<void> _toSearch() async {
     var result = await showKeywordDialogForSearching(
       context: context,
-      title: Text('搜索漫画下载列表'),
+      title: '搜索漫画下载列表',
       defaultText: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
-      hintForDialog: (only) => only ? '当前选项使得本次仅搜索漫画标题。' : '当前选项使得本次将搜索漫画ID以及漫画标题。',
+      optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID以及漫画标题',
     );
     if (result != null && result.item1.isNotEmpty) {
       _searchKeyword = result.item1;
@@ -153,7 +154,7 @@ class _DownloadPageState extends State<DownloadPage> {
 
   Completer<void>? _allStartCompleter;
 
-  Future<void> _allStartOrPause({required bool allStart}) async {
+  Future<void> _allStartOrPause({required bool allStart, bool Function(int mangaId)? condition}) async {
     if (allStart) {
       // => 全部开始
 
@@ -164,8 +165,10 @@ class _DownloadPageState extends State<DownloadPage> {
       _allStartCompleter = Completer<void>();
 
       // 2. 逐漫画"继续下载"，异步，并等待所有"准备下载"结束
-      var entities = await DownloadDao.getMangas() ?? _data; // 按照下载时间逆序
+      var entities = await DownloadDao.getMangas() ?? _data; // mangas are in updated_at desc order
+      entities = entities.where((el) => condition?.call(el.mangaId) ?? true).toList();
       var tasks = QueueManager.instance.getDownloadMangaQueueTasks();
+      tasks = tasks.where((el) => condition?.call(el.mangaId) ?? true).toList();
       var prepareFutures = <Future<DownloadMangaQueueTask?>>[];
       for (var entity in entities) {
         var task = tasks.where((el) => el.mangaId == entity.mangaId).firstOrNull;
@@ -176,7 +179,7 @@ class _DownloadPageState extends State<DownloadPage> {
       }
       var newTasks = await Future.wait(prepareFutures);
 
-      // 3. 按照下载时间逆序，将新的已准备好的下载任务一起入队
+      // 3. 按照下载时间降序，将新的已准备好的下载任务一起入队
       var newTaskMap = <int, DownloadMangaQueueTask>{};
       for (var task in newTasks) {
         if (task != null) {
@@ -186,7 +189,7 @@ class _DownloadPageState extends State<DownloadPage> {
       for (var entity in entities) {
         var newTask = newTaskMap[entity.mangaId];
         if (newTask != null) {
-          QueueManager.instance.addTask(newTask); // 一起入队
+          QueueManager.instance.addTask(newTask); // 按顺序一起入队
         }
       }
 
@@ -197,7 +200,9 @@ class _DownloadPageState extends State<DownloadPage> {
       // => 全部暂停
 
       // 1. 先取消目前所有的任务
-      for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
+      var tasks = QueueManager.instance.getDownloadMangaQueueTasks();
+      tasks = tasks.where((el) => condition?.call(el.mangaId) ?? true).toList();
+      for (var t in tasks) {
         if (!t.cancelRequested) {
           t.cancel();
         }
@@ -207,12 +212,31 @@ class _DownloadPageState extends State<DownloadPage> {
       await _allStartCompleter?.future;
 
       // 3. 再取消"全部开始"结束后所有的任务
-      for (var t in QueueManager.instance.getDownloadMangaQueueTasks()) {
+      tasks = QueueManager.instance.getDownloadMangaQueueTasks();
+      tasks = tasks.where((el) => condition?.call(el.mangaId) ?? true).toList();
+      for (var t in tasks) {
         if (!t.cancelRequested) {
           t.cancel();
         }
       }
     }
+  }
+
+  void _showPopupMenu({required int mangaId}) {
+    var history = _data.where((el) => el.mangaId == mangaId).firstOrNull;
+    if (history == null) {
+      return;
+    }
+
+    // 退出多选模式、弹出菜单
+    _msController.exitMultiSelectionMode();
+    showPopupMenuForMangaList(
+      context: context,
+      mangaId: history.mangaId,
+      mangaTitle: history.mangaTitle,
+      mangaCover: history.mangaCover,
+      mangaUrl: history.mangaUrl,
+    );
   }
 
   Future<void> _deleteMangas({required List<int> mangaIds}) async {
@@ -228,6 +252,7 @@ class _DownloadPageState extends State<DownloadPage> {
       }
     }
 
+    // 不退出多选模式、先弹出菜单
     var alsoDeleteFile = AppSetting.instance.dl.defaultToDeleteFiles;
     var ok = await showDialog<bool>(
       context: context,
@@ -342,10 +367,6 @@ class _DownloadPageState extends State<DownloadPage> {
                   ),
                 ),
                 PopupMenuItem(
-                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
-                  onTap: () {}, // TODO !!! 排序
-                ),
-                PopupMenuItem(
                   child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
                   onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
                 ),
@@ -428,6 +449,30 @@ class _DownloadPageState extends State<DownloadPage> {
             MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
           },
           fabForMultiSelection: [
+            MultiSelectionFabOption(
+              // TODO add tooltip
+              child: Icon(Icons.more_horiz),
+              show: _msController.selectedItems.length == 1,
+              onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
+            ),
+            MultiSelectionFabOption(
+              child: Icon(Icons.play_arrow),
+              onPressed: () {
+                var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
+                print(mangaIds);
+                _msController.exitMultiSelectionMode();
+                _allStartOrPause(allStart: true, condition: (id) => mangaIds.contains(id));
+              },
+            ),
+            MultiSelectionFabOption(
+              child: Icon(Icons.pause),
+              onPressed: () {
+                var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
+                print(mangaIds);
+                _msController.exitMultiSelectionMode();
+                _allStartOrPause(allStart: false, condition: (id) => mangaIds.contains(id));
+              },
+            ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
               onPressed: () => _deleteMangas(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),

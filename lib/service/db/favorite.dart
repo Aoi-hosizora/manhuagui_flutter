@@ -1,6 +1,7 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -100,8 +101,8 @@ class FavoriteDao {
       )''');
   }
 
-  static Tuple2<String, List<String>>? _buildFavoriteLikeStatement({String? keyword, bool includeWHERE = false, bool includeAND = false, bool pureSearch = false}) {
-    return SQLHelper.buildLikeStatement(
+  static Tuple2<String, List<String>>? _buildFavoriteLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
       [_colMangaTitle, if (!pureSearch) _colMangaId, if (!pureSearch) _colRemark],
       keyword,
       includeWHERE: includeWHERE,
@@ -109,8 +110,8 @@ class FavoriteDao {
     );
   }
 
-  static Tuple2<String, List<String>>? _buildAuthorLikeStatement({String? keyword, bool includeWHERE = false, bool includeAND = false, bool pureSearch = false}) {
-    return SQLHelper.buildLikeStatement(
+  static Tuple2<String, List<String>>? _buildAuthorLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
       [_colAAuthorName, if (!pureSearch) _colAAuthorId, if (!pureSearch) _colARemark],
       keyword,
       includeWHERE: includeWHERE,
@@ -118,9 +119,33 @@ class FavoriteDao {
     );
   }
 
+  static String _buildFavoriteOrderByStatement({required SortMethod sortMethod, bool includeORDERBY = false}) {
+    return QueryHelper.buildOrderByStatement(
+          sortMethod,
+          idColumn: _colMangaId,
+          nameColumn: _colMangaTitle,
+          timeColumn: _colCreatedAt,
+          orderColumn: _colListOrder,
+          includeORDERBY: includeORDERBY,
+        ) ??
+        '';
+  }
+
+  static String _buildAuthorOrderByStatement({required SortMethod sortMethod, bool includeORDERBY = false}) {
+    return QueryHelper.buildOrderByStatement(
+          sortMethod,
+          idColumn: _colAAuthorId,
+          nameColumn: _colAAuthorName,
+          timeColumn: _colACreatedAt,
+          orderColumn: null,
+          includeORDERBY: includeORDERBY,
+        ) ??
+        '';
+  }
+
   static Future<int?> getFavoriteCount({required String username, required String? groupName, String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildFavoriteLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var like = _buildFavoriteLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     List<Map<String, Object?>>? results;
     if (groupName == null) {
       results = await db.safeRawQuery(
@@ -183,9 +208,10 @@ class FavoriteDao {
     );
   }
 
-  static Future<List<FavoriteManga>?> getFavorites({required String username, required String groupName, String? keyword, bool pureSearch = false, required int? page, int limit = 20, int offset = 0}) async {
+  static Future<List<FavoriteManga>?> getFavorites({required String username, required String groupName, String? keyword, bool pureSearch = false, SortMethod sortMethod = SortMethod.byOrderAsc, required int? page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildFavoriteLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var like = _buildFavoriteLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
+    var orderBy = _buildFavoriteOrderByStatement(sortMethod: sortMethod, includeORDERBY: false);
     List<Map<String, Object?>>? results;
     if (page != null && page > 0) {
       // return in pagination
@@ -197,7 +223,7 @@ class FavoriteDao {
         '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colRemark, $_colListOrder, $_colCreatedAt 
            FROM $_tblFavorite
            WHERE $_colUsername = ? AND $_colGroupName = ? ${like?.item1 ?? ''}
-           ORDER BY $_colListOrder ASC, $_colCreatedAt DESC
+           ORDER BY $orderBy, $_colCreatedAt DESC
            LIMIT $limit OFFSET $offset''',
         [username, groupName, ...(like?.item2 ?? [])],
       );
@@ -207,7 +233,7 @@ class FavoriteDao {
         '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colRemark, $_colListOrder, $_colCreatedAt 
            FROM $_tblFavorite
            WHERE $_colUsername = ? AND $_colGroupName = ? ${like?.item1 ?? ''}
-           ORDER BY $_colListOrder ASC, $_colCreatedAt DESC''',
+           ORDER BY $orderBy, $_colCreatedAt DESC''',
         [username, groupName, ...(like?.item2 ?? [])],
       );
     }
@@ -301,7 +327,7 @@ class FavoriteDao {
 
   static Future<int?> getAuthorCount({required String username, String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildAuthorLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var like = _buildAuthorLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblFavoriteAuthor
@@ -353,18 +379,19 @@ class FavoriteDao {
     );
   }
 
-  static Future<List<FavoriteAuthor>?> getAuthors({required String username, String? keyword, bool pureSearch = false, required int page, int limit = 20, int offset = 0}) async {
+  static Future<List<FavoriteAuthor>?> getAuthors({required String username, String? keyword, bool pureSearch = false, SortMethod sortMethod = SortMethod.byTimeDesc, required int page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
     offset = limit * (page - 1) - offset;
     if (offset < 0) {
       offset = 0;
     }
-    var like = _buildAuthorLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var like = _buildAuthorLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
+    var orderBy = _buildAuthorOrderByStatement(sortMethod: sortMethod, includeORDERBY: false);
     var results = await db.safeRawQuery(
       '''SELECT $_colAAuthorId, $_colAAuthorName, $_colAAuthorCover, $_colAAuthorUrl, $_colAAuthorZone, $_colARemark, $_colACreatedAt 
            FROM $_tblFavoriteAuthor
            WHERE $_colAUsername = ? ${like?.item1 ?? ''}
-           ORDER BY $_colACreatedAt DESC
+           ORDER BY $orderBy
            LIMIT $limit OFFSET $offset''',
       [username, ...(like?.item2 ?? [])],
     );

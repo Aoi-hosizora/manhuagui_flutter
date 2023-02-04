@@ -58,7 +58,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           title: '漫画章节下载顺序',
           value: _invertDownloadOrder,
           values: const [false, true],
-          textBuilder: (s) => !s ? '正序 (旧到新)' : '逆序 (新到旧)',
+          textBuilder: (s) => !s ? '升序 (旧到新)' : '降序 (新到旧)',
           onChanged: (c) {
             _invertDownloadOrder = c;
             widget.onSettingChanged.call(_newestSetting);
@@ -89,6 +89,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
         ),
         SettingSwitcherView(
           title: '默认以在线模式阅读',
+          hint: '从下载列表中阅读章节时，若使用"在线模式"则会通过网络在线获取最新的章节数据，若使用"离线模式"则会使用下载时保存的章节数据。',
           value: _defaultToOnlineMode,
           onChanged: (b) {
             _defaultToOnlineMode = b;

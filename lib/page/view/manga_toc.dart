@@ -72,14 +72,14 @@ class _MangaTocViewState extends State<MangaTocView> {
             children: [
               button(
                 icon: Icons.keyboard_arrow_up,
-                text: '正序',
+                text: '升序',
                 selected: !_invertOrder,
                 padding: EdgeInsets.fromLTRB(5, 4, 10, 4),
                 onPressed: () => mountedSetState(() => _invertOrder = false),
               ),
               button(
                 icon: Icons.keyboard_arrow_down,
-                text: '倒序',
+                text: '降序',
                 selected: _invertOrder,
                 padding: EdgeInsets.fromLTRB(5, 4, 10, 4),
                 onPressed: () => mountedSetState(() => _invertOrder = true),

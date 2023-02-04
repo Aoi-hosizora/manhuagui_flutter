@@ -10,6 +10,7 @@ import 'package:manhuagui_flutter/page/view/favorite_author_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -60,6 +61,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
   late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreFavorites: true);
   var _searchKeyword = ''; // for query condition
   var _searchNameOnly = true; // for query condition
+  var _sortMethod = SortMethod.byTimeDesc; // for query condition
   var _isUpdated = false;
 
   Future<PagedList<FavoriteAuthor>> _getData({required int page}) async {
@@ -69,7 +71,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       _isUpdated = false;
     }
     var username = AuthManager.instance.username;
-    var data = await FavoriteDao.getAuthors(username: username, keyword: _searchKeyword, pureSearch: _searchNameOnly, page: page, offset: _removed) ?? [];
+    var data = await FavoriteDao.getAuthors(username: username, keyword: _searchKeyword, pureSearch: _searchNameOnly, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
     _total = await FavoriteDao.getAuthorCount(username: username, keyword: _searchKeyword, pureSearch: _searchNameOnly) ?? 0;
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(authorIds: data.map((e) => e.authorId), queryFavorites: false).then((_) => mountedSetState(() {})); // actually this will do nothing
@@ -97,11 +99,11 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
   Future<void> _toSearch() async {
     var result = await showKeywordDialogForSearching(
       context: context,
-      title: Text('搜索已收藏的漫画作者'),
+      title: '搜索已收藏的漫画作者',
       defaultText: _searchKeyword,
       optionTitle: '仅搜索作者名',
       optionValue: _searchNameOnly,
-      hintForDialog: (only) => only ? '当前选项使得本次仅搜索作者名。' : '当前选项使得本次将搜索作者ID、作者名以及收藏备注。',
+      optionHint: (only) => only ? '当前选项使得本次仅搜索作者名' : '当前选项使得本次将搜索作者ID、作者名以及收藏备注',
     );
     if (result != null && result.item1.isNotEmpty) {
       _searchKeyword = result.item1;
@@ -115,6 +117,23 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
     _searchKeyword = ''; // 清空搜索关键词
     if (mounted) setState(() {});
     _pdvKey.currentState?.refresh();
+  }
+
+  Future<void> _toSort() async {
+    var sort = await showSortMethodDialogForSorting(
+      context: context,
+      title: '漫画作者排序方式',
+      defaultValue: _sortMethod,
+      idTitle: '作者ID',
+      nameTitle: '作者名',
+      timeTitle: '收藏时间',
+      orderTitle: null,
+    );
+    if (sort != null && sort != _sortMethod) {
+      _sortMethod = sort;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
   }
 
   void _showPopupMenu({required int authorId}) {
@@ -248,10 +267,6 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
               ),
               itemBuilder: (_) => [
                 PopupMenuItem(
-                  child: IconTextMenuItem(Icons.sort, '排序方式'),
-                  onTap: () {}, // TODO !!! 排序
-                ),
-                PopupMenuItem(
                   child: IconTextMenuItem(Icons.search, '搜索列表中的作者'),
                   onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
                 ),
@@ -260,6 +275,10 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                     child: IconTextMenuItem(Icons.search_off, '退出搜索'),
                     onTap: () => _exitSearch(),
                   ),
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.sort, '作者排序方式'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
+                ),
               ],
             ),
           ],

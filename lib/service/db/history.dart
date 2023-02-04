@@ -1,6 +1,7 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -52,8 +53,8 @@ class HistoryDao {
     // pass
   }
 
-  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool includeWHERE = false, bool includeAND = false, bool pureSearch = false}) {
-    return SQLHelper.buildLikeStatement(
+  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
       [_colMangaTitle, if (!pureSearch) _colMangaId],
       keyword,
       includeWHERE: includeWHERE,
@@ -63,7 +64,7 @@ class HistoryDao {
 
   static Future<int?> getHistoryCount({required String username, bool includeUnread = true, String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblHistory
@@ -122,7 +123,7 @@ class HistoryDao {
     if (offset < 0) {
       offset = 0;
     }
-    var like = _buildLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
       '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime 
          FROM $_tblHistory

@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -76,6 +77,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   final _histories = <int, MangaHistory?>{};
   var _searchKeyword = ''; // for query condition
   var _searchTitleOnly = true; // for query condition
+  var _sortMethod = SortMethod.byOrderAsc; // for query condition
   var _isUpdated = false;
 
   Future<PagedList<FavoriteManga>> _getData({required int page}) async {
@@ -86,7 +88,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       _groups = null;
     }
     var username = AuthManager.instance.username;
-    var data = await FavoriteDao.getFavorites(username: username, groupName: _currentGroup, keyword: _searchKeyword, pureSearch: _searchTitleOnly, page: page, offset: _removed) ?? [];
+    var data = await FavoriteDao.getFavorites(username: username, groupName: _currentGroup, keyword: _searchKeyword, pureSearch: _searchTitleOnly, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
     _total = await FavoriteDao.getFavoriteCount(username: username, groupName: _currentGroup, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
     _groups ??= await FavoriteDao.getGroups(username: AuthManager.instance.username);
     for (var item in data) {
@@ -122,11 +124,11 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   Future<void> _toSearch() async {
     var result = await showKeywordDialogForSearching(
       context: context,
-      title: Text('搜索已收藏的漫画'),
+      title: '搜索已收藏的漫画',
       defaultText: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
-      hintForDialog: (only) => only ? '当前选项使得本次仅搜索漫画标题。' : '当前选项使得本次将搜索漫画ID、漫画标题以及收藏备注。',
+      optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID、漫画标题以及收藏备注',
     );
     if (result != null && result.item1.isNotEmpty) {
       _searchKeyword = result.item1;
@@ -140,6 +142,23 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     _searchKeyword = ''; // 清空搜索关键词
     if (mounted) setState(() {});
     _pdvKey.currentState?.refresh();
+  }
+
+  Future<void> _toSort() async {
+    var sort = await showSortMethodDialogForSorting(
+      context: context,
+      title: '漫画排序方式',
+      defaultValue: _sortMethod,
+      idTitle: '漫画ID',
+      nameTitle: '漫画标题',
+      timeTitle: '收藏时间',
+      orderTitle: '收藏顺序',
+    );
+    if (sort != null && sort != _sortMethod) {
+      _sortMethod = sort;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
   }
 
   void _showPopupMenu({required int mangaId}) {
@@ -471,7 +490,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
               itemBuilder: (c, key, tip) => FavoriteMangaLineView(
                 manga: item,
-                index: idx + 1,
+                index: _searchKeyword.isNotEmpty /* show index badge only when no searching and sort by order asc */
+                    ? null
+                    : (_sortMethod == SortMethod.byOrderAsc
+                        ? idx + 1
+                        : _sortMethod == SortMethod.byOrderDesc
+                            ? _total - idx
+                            : null),
                 history: _histories[item.mangaId],
                 flags: _flagStorage.getFlags(mangaId: item.mangaId, forceInFavorite: true),
                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
@@ -482,7 +507,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                 ListHintView.textWidget(
                   padding: EdgeInsets.fromLTRB(10, 5, 6, 5), // for popup btn
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
-                      (_currentGroup == '' ? '' : '  -  $_currentGroup') + //
+                      (_currentGroup == '' ? '' : ' - $_currentGroup') + //
                       (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -497,7 +522,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                         ),
                       HelpIconView.forListHint(
                         title: '"我的书架"与"本地收藏"的区别',
-                        hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的倒序显示。\n\n'
+                        hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的降序显示。\n\n'
                             '"本地收藏"仅记录在移动端本地，不显示章节更新情况，但"本地收藏"支持分组管理漫画，且列表顺序可自由调整。',
                         tooltip: '提示',
                       ),
@@ -509,11 +534,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                             onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
                           ),
                         ),
-                        itemBuilder: (_) => [
-                          PopupMenuItem(
-                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
-                            onTap: () {}, // TODO !!! 排序
-                          ),
+                        itemBuilder: (c) => [
                           PopupMenuItem(
                             child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
                             onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
@@ -523,6 +544,10 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                               child: IconTextMenuItem(Icons.search_off, '退出搜索'),
                               onTap: () => _exitSearch(),
                             ),
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
+                          ),
                         ],
                       ),
                     ],

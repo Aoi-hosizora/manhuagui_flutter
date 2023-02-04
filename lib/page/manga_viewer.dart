@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
@@ -48,6 +49,7 @@ class MangaViewerPage extends StatefulWidget {
     required this.chapterGroups,
     required this.onlineMode,
     required this.initialPage, // starts from 1
+    this.onMangaGot, // for download manga page
   }) : super(key: key);
 
   final BuildContext parentContext;
@@ -57,6 +59,7 @@ class MangaViewerPage extends StatefulWidget {
   final List<MangaChapterGroup>? chapterGroups;
   final bool onlineMode;
   final int initialPage;
+  final void Function(Manga)? onMangaGot;
 
   @override
   _MangaViewerPageState createState() => _MangaViewerPageState();
@@ -264,6 +267,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           groupsFuture = Future.microtask(() async {
             try {
               var result = await client.getManga(mid: widget.mangaId);
+              if (result.data.title == '') {
+                throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
+              }
+              widget.onMangaGot?.call(result.data); // 将漫画数据保存至 DownloadMangaPage
               return Ok(result.data.chapterGroups);
             } catch (e) {
               return Err(e); // ignore stack trace
@@ -315,6 +322,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             Future.microtask(() async {
               try {
                 var result = await client.getManga(mid: widget.mangaId);
+                if (result.data.title == '') {
+                  throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
+                }
+                widget.onMangaGot?.call(result.data); // 将漫画数据保存至 DownloadMangaPage
                 _data = _data?.updateChapterGroups(result.data.chapterGroups); // no need to setState
               } catch (e, s) {
                 var we = wrapError(e, s);
@@ -633,9 +644,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           url: url,
           title: title,
           ignoreSystemUI: true,
-        ),
-        settings: DownloadMangaPage.buildRouteSetting(
-          mangaId: widget.mangaId,
         ),
       ),
     );

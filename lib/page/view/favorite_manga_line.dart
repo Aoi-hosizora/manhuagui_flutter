@@ -18,7 +18,7 @@ class FavoriteMangaLineView extends StatelessWidget {
   }) : super(key: key);
 
   final FavoriteManga manga;
-  final int index;
+  final int? index;
   final MangaHistory? history;
   final MangaCornerFlags? flags;
   final void Function()? onLongPressed;
@@ -35,32 +35,35 @@ class FavoriteMangaLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '收藏于 ${manga.formattedCreatedAtWithDuration}',
       cornerIcons: flags?.buildIcons(),
-      extraRightPaddingForTitle: 28 - 14 + 5 /* badge width - line horizontal padding + extra space */,
+      extraRightPaddingForTitle: index != null
+          ? 28 - 14 + 5 // badge width - line horizontal padding + extra space
+          : null /* no extra padding */,
       extrasInStack: [
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: Colors.orange,
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28)),
-            ),
-            alignment: Alignment.topRight,
-            child: SizedBox(
-              width: 28 * 0.8,
-              height: 28 * 0.85,
-              child: Center(
-                child: Text(
-                  index.toString(),
-                  // manga.order.toString(),
-                  style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: index < 100 ? null : 12.5, color: Colors.white),
+        if (index != null)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28)),
+              ),
+              alignment: Alignment.topRight,
+              child: SizedBox(
+                width: 28 * 0.8,
+                height: 28 * 0.85,
+                child: Center(
+                  child: Text(
+                    index!.toString(),
+                    // manga.order.toString(),
+                    style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: index! < 100 ? null : 12.5, color: Colors.white),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(

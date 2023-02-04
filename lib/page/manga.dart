@@ -778,7 +778,7 @@ class _MangaPageState extends State<MangaPage> {
                       text: !_inShelf && !_inFavorite
                           ? '订阅漫画'
                           : _inShelf && _inFavorite
-                              ? '取消订阅'
+                              ? '查看订阅'
                               : (_inShelf && !_inFavorite ? '已放书架' : '已加收藏'),
                       icon: !_inShelf && !_inFavorite ? Icons.sell : Icons.loyalty,
                       action: _subscribing ? null : () => _subscribe(),

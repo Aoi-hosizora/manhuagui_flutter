@@ -140,10 +140,11 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '列表显示右下角图标',
-          hint: '该选项影响漫画列表与漫画作者列表，其中：\n'
-              '1. 漫画列表右下角图标含义分别为："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览" (书架信息来源于已同步的书架记录)；\n'
-              '2. 漫画作者列表右下角图标含义为："在本地收藏中"。',
+          title: '列表内显示右下角图标',
+          hint: '该选项影响漫画列表与漫画作者列表，其中：\n\n'
+              '1. 漫画列表右下角图标含义分别为："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"；\n'
+              '2. 漫画作者列表右下角图标含义为："在本地收藏中"。\n\n'
+              '提示：上述信息都来源于本地记录或同步的数据，显示这些图标并不会增加网络请求次数。',
           value: _enableCornerIcons,
           onChanged: (b) {
             _enableCornerIcons = b;
@@ -196,7 +197,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '首页显示未阅读的漫画',
+          title: '首页历史显示未阅读漫画',
           value: _includeUnreadInHome,
           onChanged: (b) {
             _includeUnreadInHome = b;

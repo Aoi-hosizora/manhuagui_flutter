@@ -311,7 +311,9 @@ class DownloadMangaLineProgress {
       if (task.progress.manga == null || task.progress.currentChapter == null) {
         return DownloadMangaLineProgress.whenPreparing(
           status: status,
-          startedChapterCount: mergedStarted.length,
+          startedChapterCount: task.progress.manga == null
+              ? mergedStarted.length // preparing manga => use entity and task merged started chapter count
+              : taskStarted.length /* preparing chapter => use task started chapter count */,
           totalChapterCount: mergedTotal.length,
           gettingManga: task.progress.manga == null,
           chapterTitle: task.progress.currentChapterTitle,
@@ -319,7 +321,7 @@ class DownloadMangaLineProgress {
       } else {
         return DownloadMangaLineProgress.whenDownloading(
           status: status,
-          startedChapterCount: mergedStarted.length,
+          startedChapterCount: taskStarted.length /* downloading pages => use task started chapter count */,
           totalChapterCount: mergedTotal.length,
           chapterTitle: task.progress.currentChapter!.title,
           triedPageCount: task.progress.triedChapterPageCount ?? 0,

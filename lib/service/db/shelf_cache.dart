@@ -1,6 +1,7 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -40,8 +41,8 @@ class ShelfCacheDao {
       )''');
   }
 
-  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool includeWHERE = false, bool includeAND = false, bool pureSearch = false}) {
-    return SQLHelper.buildLikeStatement(
+  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
       [_colMangaTitle, if (!pureSearch) _colMangaId],
       keyword,
       includeWHERE: includeWHERE,
@@ -49,9 +50,21 @@ class ShelfCacheDao {
     );
   }
 
+  static String _buildOrderByStatement({required SortMethod sortMethod, bool includeORDERBY = false}) {
+    return QueryHelper.buildOrderByStatement(
+          sortMethod,
+          idColumn: _colMangaId,
+          nameColumn: _colMangaTitle,
+          timeColumn: _colCachedAt,
+          orderColumn: null,
+          includeORDERBY: includeORDERBY,
+        ) ??
+        '';
+  }
+
   static Future<int?> getShelfCacheCount({required String username, String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblShelfCache
@@ -79,10 +92,10 @@ class ShelfCacheDao {
     return firstIntValue(results)! > 0;
   }
 
-  static Future<List<ShelfCache>?> getShelfCaches({required String username, String? keyword, bool pureSearch = false, required int? page, int limit = 20, int offset = 0}) async {
+  static Future<List<ShelfCache>?> getShelfCaches({required String username, String? keyword, bool pureSearch = false, SortMethod sortMethod = SortMethod.byTimeDesc, required int? page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
-    var like = _buildLikeStatement(keyword: keyword, includeAND: true, pureSearch: pureSearch);
-
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
+    var orderBy = _buildOrderByStatement(sortMethod: sortMethod, includeORDERBY: false);
     List<Map<String, Object?>>? results;
     if (page != null && page > 0) {
       // return in pagination
@@ -94,7 +107,7 @@ class ShelfCacheDao {
         '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCachedAt
            FROM $_tblShelfCache
            WHERE $_colUsername = ? ${like?.item1 ?? ''}
-           ORDER BY $_colCachedAt DESC
+           ORDER BY $orderBy
            LIMIT $limit OFFSET $offset''',
         [username, ...(like?.item2 ?? [])],
       );
@@ -104,7 +117,7 @@ class ShelfCacheDao {
         '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCachedAt
            FROM $_tblShelfCache
            WHERE $_colUsername = ? ${like?.item1 ?? ''}
-           ORDER BY $_colCachedAt DESC''',
+           ORDER BY $orderBy''',
         [username, ...(like?.item2 ?? [])],
       );
     }
