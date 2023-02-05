@@ -304,6 +304,8 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   Widget build(BuildContext context) {
     super.build(context);
 
+    // TODO show something when not logined or logining or loading or error
+
     Widget _buildScaffold({required Widget body, Text? title}) {
       final showBackground = _controller.hasClients && _controller.offset >= 180 - Theme.of(context).appBarTheme.toolbarHeight!;
       return Scaffold(

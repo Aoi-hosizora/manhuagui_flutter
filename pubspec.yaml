@@ -16,14 +16,11 @@ dependencies:
   fluttertoast: 8.0.7
   url_launcher: ^6.1.5
   permission_handler: ^10.0.0
-  flutter_native_splash: 2.1.6
   json_annotation: ^4.6.0
   dio: ^4.0.6
   retrofit: ^3.0.1+1
   intl: ^0.17.0
   basic_utils: ^5.2.2
-  synchronized: ^3.0.0+3
-  queue: ^3.1.0+1
 
   # assists
   flutter_web_browser: ^0.17.1
@@ -33,6 +30,7 @@ dependencies:
   battery_info: ^1.1.1
   connectivity_plus: 2.3.6+1
   flutter_local_notifications: 9.9.1
+  flutter_native_splash: 2.1.6
 
   # widgets
   flutter_ahlib:
@@ -52,6 +50,8 @@ dependencies:
   shared_preferences: ^2.0.15
   event_bus: ^2.0.0
   sqflite: ^2.0.2+1
+  synchronized: ^3.0.0+3
+  queue: ^3.1.0+1
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +67,10 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/
+  fonts:
+    - family: CustomIcons
+      fonts:
+        - asset: lib/assets/icons/CustomIcons.ttf
 
 flutter_native_splash:
   color: '#FFFFFF'

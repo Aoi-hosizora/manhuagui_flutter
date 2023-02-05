@@ -519,8 +519,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                           ),
                         ),
                         action3: ActionItem.simple(
-                          _invertOrder ? '降序显示' : '升序显示',
-                          _invertOrder ? MdiIcons.sortDescending : MdiIcons.sortAscending,
+                          _invertOrder ? '逆序显示' : '正序显示',
+                          _invertOrder ? MdiIcons.sortNumericDescending : MdiIcons.sortNumericAscending,
                           () => mountedSetState(() => _invertOrder = !_invertOrder),
                         ),
                         action4: ActionItem.simple(

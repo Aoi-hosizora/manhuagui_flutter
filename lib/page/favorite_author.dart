@@ -100,7 +100,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索已收藏的漫画作者',
-      defaultText: _searchKeyword,
+      currText: _searchKeyword,
       optionTitle: '仅搜索作者名',
       optionValue: _searchNameOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索作者名' : '当前选项使得本次将搜索作者ID、作者名以及收藏备注',
@@ -123,17 +123,24 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
     var sort = await showSortMethodDialogForSorting(
       context: context,
       title: '漫画作者排序方式',
-      defaultValue: _sortMethod,
+      currValue: _sortMethod,
       idTitle: '作者ID',
       nameTitle: '作者名',
       timeTitle: '收藏时间',
       orderTitle: null,
+      defaultMethod: SortMethod.byTimeDesc,
     );
     if (sort != null && sort != _sortMethod) {
       _sortMethod = sort;
       if (mounted) setState(() {});
       _pdvKey.currentState?.refresh();
     }
+  }
+
+  void _exitSort() {
+    _sortMethod = SortMethod.byTimeDesc; // 默认排序方式
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   void _showPopupMenu({required int authorId}) {
@@ -276,9 +283,14 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                     onTap: () => _exitSearch(),
                   ),
                 PopupMenuItem(
-                  child: IconTextMenuItem(Icons.sort, '作者排序方式'),
+                  child: IconTextMenuItem(MdiIcons.sort, '作者排序方式'),
                   onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
                 ),
+                if (_sortMethod != SortMethod.byTimeDesc)
+                  PopupMenuItem(
+                    child: IconTextMenuItem(MdiIcons.sortCalendarDescending, '恢复默认排序'),
+                    onTap: () => _exitSort(),
+                  ),
               ],
             ),
           ],
@@ -332,6 +344,18 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (_sortMethod != SortMethod.byTimeDesc)
+                        HelpIconView.asButton(
+                          iconData: _sortMethod.toIcon(),
+                          tooltip: '漫画排序方式',
+                          onPressed: () => _toSort(),
+                        ),
+                      if (_sortMethod != SortMethod.byTimeDesc)
+                        Container(
+                          color: Theme.of(context).dividerColor,
+                          child: SizedBox(height: 20, width: 1),
+                          margin: EdgeInsets.only(left: 5, right: 5 + 3),
+                        ),
                       Text('共 $_total 位'),
                       SizedBox(width: 5),
                       HelpIconView.forListHint(
@@ -351,21 +375,25 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
           onCounterPressed: () {
             var authorIds = _msController.selectedItems.map((e) => e.value).toList();
             var titles = _data.where((el) => authorIds.contains(el.authorId)).map((m) => '"${m.authorName}"').toList();
-            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+            var allKeys = _data.map((el) => ValueKey(el.authorId)).toList();
+            MultiSelectionFabContainer.showCounterDialog(context, controller: _msController, selected: titles, allKeys: allKeys);
           },
           fabForMultiSelection: [
             MultiSelectionFabOption(
               child: Icon(Icons.more_horiz),
+              tooltip: '查看更多选项',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _showPopupMenu(authorId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(MdiIcons.commentBookmark),
+              tooltip: '修改收藏备注',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _updateFavoriteRemark(authorId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
+              tooltip: '取消本地收藏',
               onPressed: () => _deleteAuthors(authorIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
           ],

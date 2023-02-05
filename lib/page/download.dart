@@ -106,7 +106,7 @@ class _DownloadPageState extends State<DownloadPage> {
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索漫画下载列表',
-      defaultText: _searchKeyword,
+      currText: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID以及漫画标题',
@@ -179,7 +179,7 @@ class _DownloadPageState extends State<DownloadPage> {
       }
       var newTasks = await Future.wait(prepareFutures);
 
-      // 3. 按照下载时间降序，将新的已准备好的下载任务一起入队
+      // 3. 按照下载时间逆序，将新的已准备好的下载任务一起入队
       var newTaskMap = <int, DownloadMangaQueueTask>{};
       for (var task in newTasks) {
         if (task != null) {
@@ -446,17 +446,19 @@ class _DownloadPageState extends State<DownloadPage> {
           onCounterPressed: () {
             var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
             var titles = _data.where((el) => mangaIds.contains(el.mangaId)).map((m) => '《${m.mangaTitle}》').toList();
-            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+            var allKeys = _data.map((el) => ValueKey(el.mangaId)).toList();
+            MultiSelectionFabContainer.showCounterDialog(context, controller: _msController, selected: titles, allKeys: allKeys);
           },
           fabForMultiSelection: [
             MultiSelectionFabOption(
-              // TODO add tooltip
               child: Icon(Icons.more_horiz),
+              tooltip: '查看更多选项',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.play_arrow),
+              tooltip: '开始下载',
               onPressed: () {
                 var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
                 print(mangaIds);
@@ -466,6 +468,7 @@ class _DownloadPageState extends State<DownloadPage> {
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.pause),
+              tooltip: '暂停下载',
               onPressed: () {
                 var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
                 print(mangaIds);
@@ -475,6 +478,7 @@ class _DownloadPageState extends State<DownloadPage> {
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
+              tooltip: '删除下载漫画',
               onPressed: () => _deleteMangas(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
           ],

@@ -106,7 +106,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索漫画阅读历史',
-      defaultText: _searchKeyword,
+      currText: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID以及漫画标题',
@@ -292,7 +292,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  padding: EdgeInsets.fromLTRB(10, 5, 6, 5), // for popup btn
+                  padding: EdgeInsets.fromLTRB(10, 5, 10 - 3, 5), // for popup btn
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的阅读历史' : '未登录用户的阅读历史') + //
                       (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
@@ -354,16 +354,19 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           onCounterPressed: () {
             var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
             var titles = _data.where((el) => mangaIds.contains(el.mangaId)).map((m) => '《${m.mangaTitle}》').toList();
-            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+            var allKeys = _data.map((el) => ValueKey(el.mangaId)).toList();
+            MultiSelectionFabContainer.showCounterDialog(context, controller: _msController, selected: titles, allKeys: allKeys);
           },
           fabForMultiSelection: [
             MultiSelectionFabOption(
               child: Icon(Icons.more_horiz),
+              tooltip: '查看更多选项',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
+              tooltip: '删除漫画历史',
               onPressed: () => _deleteHistories(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
           ],

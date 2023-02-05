@@ -58,7 +58,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           title: '漫画章节下载顺序',
           value: _invertDownloadOrder,
           values: const [false, true],
-          textBuilder: (s) => !s ? '升序 (旧到新)' : '降序 (新到旧)',
+          textBuilder: (s) => !s ? '正序 (旧到新)' : '逆序 (新到旧)',
           onChanged: (c) {
             _invertDownloadOrder = c;
             widget.onSettingChanged.call(_newestSetting);

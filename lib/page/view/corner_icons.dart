@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -8,7 +9,6 @@ import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 构建用于各类漫画行和作者行的 Corner 图标列表，在各个列表和列表项使用
 
@@ -36,7 +36,7 @@ class MangaCornerFlags {
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
       if (inHistory && AppSetting.instance.other.showMangaReadIcon) ...[
-        if (!historyRead) MdiIcons.notebook,
+        if (!historyRead) CustomIcons.mdi_filled_notebook, // MdiIcons.notebook
         if (historyRead) Icons.import_contacts,
       ],
     ];

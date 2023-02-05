@@ -435,14 +435,14 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
   required BuildContext context,
   required String title,
   String textFieldLabel = '搜索关键词',
-  String defaultText = '',
+  String currText = '',
   String optionTitle = '仅搜索漫画标题',
   bool optionValue = true,
   String Function(bool)? optionHint,
   String emptyToast = '输入的搜索关键词为空',
   String sameToast = '输入的搜索关键词没有变更',
 }) async {
-  var controller = TextEditingController()..text = defaultText;
+  var controller = TextEditingController()..text = currText;
   var ok = await showDialog(
     context: context,
     builder: (c) => StatefulBuilder(
@@ -495,7 +495,7 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
             onPressed: () {
               if (controller.text.trim().isEmpty) {
                 Fluttertoast.showToast(msg: emptyToast);
-              } else if (controller.text.trim() == defaultText) {
+              } else if (controller.text.trim() == currText) {
                 Fluttertoast.showToast(msg: sameToast);
               } else {
                 Navigator.of(c).pop(true);
@@ -522,14 +522,15 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
 Future<SortMethod?> showSortMethodDialogForSorting({
   required BuildContext context,
   required String title,
-  SortMethod defaultValue = SortMethod.byTimeDesc,
+  SortMethod currValue = SortMethod.byTimeDesc,
   required String? idTitle,
   required String? nameTitle,
   required String? timeTitle,
   required String? orderTitle,
+  required SortMethod defaultMethod,
 }) async {
-  var value = defaultValue.toAsc();
-  var desc = defaultValue.isDesc();
+  var value = currValue.toAsc();
+  var desc = currValue.isDesc();
   var ok = await showDialog(
     context: context,
     builder: (c) => StatefulBuilder(
@@ -548,7 +549,7 @@ Future<SortMethod?> showSortMethodDialogForSorting({
               Padding(
                 padding: EdgeInsets.only(bottom: 4),
                 child: RadioListTile<SortMethod>(
-                  title: Text('按${tuple.item1}${desc ? '降序' : '升序'}排序'),
+                  title: Text('按${tuple.item1}${desc ? '逆序' : '正序'}排序'),
                   value: tuple.item2,
                   groupValue: value,
                   onChanged: (v) => v?.let((v) => _setState(() => value = v)),
@@ -558,7 +559,7 @@ Future<SortMethod?> showSortMethodDialogForSorting({
                 ),
               ),
             CheckboxListTile(
-              title: Text('降序排序'),
+              title: Text('逆序排序'),
               value: desc,
               onChanged: (v) => _setState(() => desc = v ?? false),
               visualDensity: VisualDensity(horizontal: -4, vertical: -4),
@@ -567,9 +568,23 @@ Future<SortMethod?> showSortMethodDialogForSorting({
             ),
           ],
         ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         actions: [
-          TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
-          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+          TextButton(
+            child: Text('默认'),
+            onPressed: () {
+              desc = defaultMethod.isDesc();
+              value = defaultMethod.toAsc();
+              Navigator.of(c).pop(true);
+            },
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+            ],
+          ),
         ],
       ),
     ),
@@ -578,6 +593,29 @@ Future<SortMethod?> showSortMethodDialogForSorting({
     return null;
   }
   return !desc ? value.toAsc() : value.toDesc();
+}
+
+extension SortMethodExtension on SortMethod {
+  IconData toIcon() {
+    switch (this) {
+      case SortMethod.byIdAsc:
+        return MdiIcons.sortBoolAscending;
+      case SortMethod.byIdDesc:
+        return MdiIcons.sortBoolDescending;
+      case SortMethod.byNameAsc:
+        return MdiIcons.sortAlphabeticalAscending;
+      case SortMethod.byNameDesc:
+        return MdiIcons.sortAlphabeticalDescending;
+      case SortMethod.byTimeAsc:
+        return MdiIcons.sortCalendarAscending;
+      case SortMethod.byTimeDesc:
+        return MdiIcons.sortCalendarDescending;
+      case SortMethod.byOrderAsc:
+        return MdiIcons.sortNumericAscending;
+      case SortMethod.byOrderDesc:
+        return MdiIcons.sortNumericDescending;
+    }
+  }
 }
 
 class _DialogHelper {
@@ -1056,9 +1094,9 @@ class _DialogHelper {
 
     // 更新数据库、(更新界面)、弹出提示、发送通知
     if (addToTop) {
-      oldFavorites.sort((i, j) => j.order.compareTo(i.order)); // 移至顶部 => 降序一个一个移动
+      oldFavorites.sort((i, j) => j.order.compareTo(i.order)); // 移至顶部 => 逆序一个一个移动
     } else {
-      oldFavorites.sort((i, j) => i.order.compareTo(j.order)); // 移至底部 => 升序一个一个移动
+      oldFavorites.sort((i, j) => i.order.compareTo(j.order)); // 移至底部 => 正序一个一个移动
     }
     var oldNewFavorites = <Tuple2<FavoriteManga, FavoriteManga>>[];
     for (var oldFavorite in oldFavorites) {

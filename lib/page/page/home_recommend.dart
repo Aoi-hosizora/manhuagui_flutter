@@ -185,8 +185,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       child: MangaCollectionView(
         type: type,
         ranking: type == MangaCollectionType.rankings ? _data!.daily : null,
-        updates: type == MangaCollectionType.updates ? _updates : null,
-        histories: type == MangaCollectionType.histories ? _histories : null,
+        updates: type == MangaCollectionType.updates ? _updates : null /* TODO 添加刷新入口 */,
+        histories: type == MangaCollectionType.histories ? _histories : null /* TODO 添加刷新入口 */,
         shelves: type == MangaCollectionType.shelves ? _shelves : null,
         favorites: type == MangaCollectionType.favorites ? _favorites : null,
         downloads: type == MangaCollectionType.downloads ? _downloads : null,
@@ -288,6 +288,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     ],
                   ),
                 ),
+                // TODO 添加排行榜与最新更新列表，全部漫画|少年漫画|少女漫画
                 _buildCollection('', MangaCollectionType.rankings), // 日排行榜
                 _buildCollection(_updatesError, MangaCollectionType.updates), // 最近更新
                 _buildCollection('', MangaCollectionType.histories), // 阅读历史

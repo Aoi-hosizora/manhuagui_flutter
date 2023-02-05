@@ -125,7 +125,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索已收藏的漫画',
-      defaultText: _searchKeyword,
+      currText: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID、漫画标题以及收藏备注',
@@ -148,17 +148,24 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     var sort = await showSortMethodDialogForSorting(
       context: context,
       title: '漫画排序方式',
-      defaultValue: _sortMethod,
+      currValue: _sortMethod,
       idTitle: '漫画ID',
       nameTitle: '漫画标题',
       timeTitle: '收藏时间',
       orderTitle: '收藏顺序',
+      defaultMethod: SortMethod.byOrderAsc,
     );
     if (sort != null && sort != _sortMethod) {
       _sortMethod = sort;
       if (mounted) setState(() {});
       _pdvKey.currentState?.refresh();
     }
+  }
+
+  void _exitSort() {
+    _sortMethod = SortMethod.byOrderAsc; // 默认排序方式
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   void _showPopupMenu({required int mangaId}) {
@@ -505,24 +512,36 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  padding: EdgeInsets.fromLTRB(10, 5, 6, 5), // for popup btn
+                  padding: EdgeInsets.fromLTRB(10, 5, 10 - 3, 5), // for popup btn
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的本地收藏' : '未登录用户的本地收藏') + //
                       (_currentGroup == '' ? '' : ' - $_currentGroup') + //
                       (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('共 $_total 部'),
-                      SizedBox(width: 5),
                       if (_searchKeyword.isNotEmpty)
                         HelpIconView.asButton(
                           iconData: Icons.search_off,
                           tooltip: '退出搜索',
                           onPressed: () => _exitSearch(),
                         ),
+                      if (_sortMethod != SortMethod.byOrderAsc)
+                        HelpIconView.asButton(
+                          iconData: _sortMethod.toIcon(),
+                          tooltip: '漫画排序方式',
+                          onPressed: () => _toSort(),
+                        ),
+                      if (_searchKeyword.isNotEmpty || _sortMethod != SortMethod.byOrderAsc)
+                        Container(
+                          color: Theme.of(context).dividerColor,
+                          child: SizedBox(height: 20, width: 1),
+                          margin: EdgeInsets.only(left: 5, right: 5 + 3),
+                        ),
+                      Text('共 $_total 部'),
+                      SizedBox(width: 5),
                       HelpIconView.forListHint(
                         title: '"我的书架"与"本地收藏"的区别',
-                        hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的降序显示。\n\n'
+                        hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的逆序显示。\n\n'
                             '"本地收藏"仅记录在移动端本地，不显示章节更新情况，但"本地收藏"支持分组管理漫画，且列表顺序可自由调整。',
                         tooltip: '提示',
                       ),
@@ -545,9 +564,14 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                               onTap: () => _exitSearch(),
                             ),
                           PopupMenuItem(
-                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                            child: IconTextMenuItem(MdiIcons.sort, '漫画排序方式'),
                             onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
                           ),
+                          if (_sortMethod != SortMethod.byOrderAsc)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(MdiIcons.sortNumericAscending, '恢复默认排序'),
+                              onTap: () => _exitSort(),
+                            ),
                         ],
                       ),
                     ],
@@ -562,25 +586,30 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           onCounterPressed: () {
             var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
             var titles = _data.where((el) => mangaIds.contains(el.mangaId)).map((m) => '《${m.mangaTitle}》').toList();
-            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+            var allKeys = _data.map((el) => ValueKey(el.mangaId)).toList();
+            MultiSelectionFabContainer.showCounterDialog(context, controller: _msController, selected: titles, allKeys: allKeys);
           },
           fabForMultiSelection: [
             MultiSelectionFabOption(
               child: Icon(Icons.more_horiz),
+              tooltip: '查看更多选项',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(MdiIcons.commentBookmark),
+              tooltip: '修改收藏备注',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _updateFavoriteRemark(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.drive_file_move),
+              tooltip: '移动收藏至分组',
               onPressed: () => _moveFavoritesTo(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
+              tooltip: '取消本地收藏',
               onPressed: () => _deleteFavorites(mangaIds: _msController.selectedItems.map((e) => e.value).toList()),
             ),
           ],

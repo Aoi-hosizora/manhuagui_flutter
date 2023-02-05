@@ -261,7 +261,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
                   SizedBox(width: 5),
                   HelpIconView.forListHint(
                     title: '我的书架',
-                    hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的降序显示。\n\n'
+                    hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的逆序显示。\n\n'
                         '提示：当前书架上显示的阅读记录来源于${AppSetting.instance.other.useLocalDataInShelf ? '本地' : '在线'}的阅读历史，'
                         '该显示方式可在【设置-其他设置-书架上显示本地阅读历史】修改。',
                     tooltip: '提示',

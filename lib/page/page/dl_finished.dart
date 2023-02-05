@@ -144,14 +144,16 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
         floatingActionButton: MultiSelectionFabContainer(
           multiSelectableController: _msController,
           onCounterPressed: () {
-            var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
             var allEntities = widget.invertOrder ? widget.mangaEntity.downloadedChapters.reversed : widget.mangaEntity.downloadedChapters; // chapters are in cid asc order
+            var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
             var titles = allEntities.where((el) => chapterIds.contains(el.chapterId)).map((m) => '《${m.chapterTitle}》').toList();
-            MultiSelectionFabContainer.showSelectedItemsDialogForCounter(context, titles);
+            var allKeys = chapters.map((el) => ValueKey(el.item2.cid)).toList();
+            MultiSelectionFabContainer.showCounterDialog(context, controller: _msController, selected: titles, allKeys: allKeys);
           },
           fabForMultiSelection: [
             MultiSelectionFabOption(
               child: Icon(Icons.more_horiz),
+              tooltip: '查看更多选项',
               show: _msController.selectedItems.length == 1,
               onPressed: () => chapters.where((el) => el.item2.cid == _msController.selectedItems.first.value).firstOrNull?.let((chapter) {
                 _msController.exitMultiSelectionMode();
@@ -160,6 +162,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),
+              tooltip: '删除下载章节',
               onPressed: () => widget.toDeleteChapters.call(chapterIds: _msController.selectedItems.map((k) => k.value).toList()),
             ),
           ],

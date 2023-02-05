@@ -11,6 +11,7 @@ class HelpIconView extends StatelessWidget {
     this.tooltip,
     required this.rectangle,
     required this.padding,
+    this.margin,
     this.enable = true,
     this.iconData,
     required this.iconSize,
@@ -25,6 +26,7 @@ class HelpIconView extends StatelessWidget {
     this.tooltip,
     this.rectangle = false,
     this.padding = const EdgeInsets.all(5),
+    this.margin,
     this.enable = true,
     this.iconData,
     this.iconSize = 20,
@@ -39,6 +41,7 @@ class HelpIconView extends StatelessWidget {
     this.tooltip,
     this.rectangle = true,
     this.padding = const EdgeInsets.all(3),
+    this.margin,
     this.enable = true,
     this.iconData,
     this.iconSize = 20,
@@ -51,6 +54,7 @@ class HelpIconView extends StatelessWidget {
     this.tooltip,
     this.rectangle = true,
     this.padding = const EdgeInsets.all(3),
+    this.margin,
     this.enable = true,
     required this.iconData,
     this.iconSize = 20,
@@ -65,6 +69,7 @@ class HelpIconView extends StatelessWidget {
   final String? tooltip;
   final bool rectangle;
   final EdgeInsets padding;
+  final EdgeInsets? margin;
   final bool enable;
   final IconData? iconData;
   final double iconSize;
@@ -102,14 +107,17 @@ class HelpIconView extends StatelessWidget {
                     ),
                   ),
     );
-    return Material(
-      color: Colors.transparent,
-      child: tooltip == null
-          ? view
-          : Tooltip(
-              message: tooltip!,
-              child: view,
-            ),
+    return Padding(
+      padding: margin ?? EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: tooltip == null
+            ? view
+            : Tooltip(
+                message: tooltip!,
+                child: view,
+              ),
+      ),
     );
   }
 }
