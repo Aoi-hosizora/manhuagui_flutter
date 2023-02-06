@@ -60,18 +60,52 @@ const _channelName = 'com.aoihosizora.manhuagui';
 const _channel = MethodChannel(_channelName);
 const _restartAppMethodName = 'restartApp';
 const _insertMediaMethodName = 'insertMedia';
+const _shareTextMethodName = 'shareText';
+const _shareFileMethodName = 'shareFile';
 
 Future<void> restartApp() async {
   if (Platform.isAndroid) {
-    await _channel.invokeMethod(_restartAppMethodName);
+    try {
+      await _channel.invokeMethod(_restartAppMethodName);
+    } catch (_) {}
   }
 }
 
 Future<void> addToGallery(File file) async {
   if (Platform.isAndroid) {
-    // Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
-    await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
-      'filepath': file.path,
-    });
+    try {
+      // Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
+      await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
+        'filepath': file.path,
+      });
+    } catch (_) {}
+  }
+}
+
+Future<void> shareText({required String title, required String text}) async {
+  if (Platform.isAndroid) {
+    try {
+      // ShareCompat.IntentBuilder().startChooser()
+      await _channel.invokeMethod(_shareTextMethodName, <String, dynamic>{
+        'shareSubject': title,
+        'shareText': text,
+        'chooserTitle': '',
+      });
+    } catch (_) {}
+  }
+}
+
+Future<void> shareFile({required String filepath, required String type, String title = '', String text = ''}) async {
+  if (Platform.isAndroid) {
+    try {
+      // ShareCompat.IntentBuilder().startChooser()
+      await _channel.invokeMethod(_shareFileMethodName, <String, dynamic>{
+        'shareSubject': title,
+        'shareText': text,
+        'chooserTitle': '',
+        'filepath': filepath,
+        'fileType': type,
+      });
+    } catch (_) {}
   }
 }

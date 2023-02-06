@@ -4,8 +4,11 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
+import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
+import 'package:manhuagui_flutter/service/storage/storage.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 
 class ImageViewerPage extends StatefulWidget {
@@ -80,7 +83,18 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
               tooltip: '下載图片',
               onPressed: () => _download(url),
             ),
-            // TODO 分享图片
+            AppBarActionButton(
+              icon: Icon(MdiIcons.imageMove),
+              tooltip: '分享图片',
+              onPressed: () async {
+                var filepath = await getCachedOrDownloadedFilepath(url: url);
+                if (filepath == null) {
+                  Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
+                } else {
+                  await shareFile(title: '漫画柜分享', filepath: filepath, type: 'image/*');
+                }
+              },
+            ),
           ],
         ),
         backgroundColor: Colors.black,

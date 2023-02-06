@@ -34,10 +34,10 @@ class ShelfMangaLineView extends StatelessWidget {
           ? Icons.import_contacts
           : (history == null || !history!.read ? MdiIcons.notebookOutline : Icons.import_contacts),
       text2: !AppSetting.instance.other.useLocalDataInShelf //
-          ? '最近阅读至 ${manga.lastChapter.isEmpty ? '未知章节' : manga.lastChapter} (${manga.formattedLastTimeForShelfLine})'
+          ? '最近阅读至 ${manga.lastChapter.isEmpty ? '未知章节' : manga.lastChapter} (${manga.formattedLastDurationOrTime})'
           : ((history == null || !history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle}') + ' (${history?.formattedLastTimeOrDuration ?? '未知时间'})'),
       icon3: Icons.update,
-      text3: '更新于 ${manga.formattedNewestTimeForShelfLine}',
+      text3: '更新于 ${manga.formattedNewestTimeWithDuration}',
       cornerIcons: flags?.buildIcons(),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(

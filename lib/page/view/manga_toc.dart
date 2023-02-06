@@ -20,6 +20,7 @@ class MangaTocView extends StatefulWidget {
     required this.onChapterPressed,
     this.onMoreChaptersPressed,
     this.onChapterLongPressed,
+    this.onMoreChaptersLongPressed,
   }) : super(key: key);
 
   final List<MangaChapterGroup> groups;
@@ -34,6 +35,7 @@ class MangaTocView extends StatefulWidget {
   final void Function(int cid) onChapterPressed;
   final void Function()? onMoreChaptersPressed;
   final void Function(int cid)? onChapterLongPressed;
+  final void Function()? onMoreChaptersLongPressed;
 
   @override
   _MangaTocViewState createState() => _MangaTocViewState();
@@ -124,7 +126,9 @@ class _MangaTocViewState extends State<MangaTocView> {
       onChapterLongPressed: widget.onChapterLongPressed == null
           ? null
           : (chapter) {
-              if (chapter != null) {
+              if (chapter == null) {
+                widget.onMoreChaptersLongPressed?.call();
+              } else {
                 widget.onChapterLongPressed!.call(chapter.cid);
               }
             },

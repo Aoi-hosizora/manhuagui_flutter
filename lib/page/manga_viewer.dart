@@ -33,9 +33,9 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
-import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
+import 'package:manhuagui_flutter/service/storage/storage.dart';
 import 'package:wakelock/wakelock.dart';
 
 /// 漫画章节阅读页
@@ -806,11 +806,19 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     initialImageIndex: _initialPage ?? 1,
                     onPageChanged: _onPageChanged,
                     onSaveImage: (imageIndex) => _download(imageIndex, _data!.pages[imageIndex - 1] /* maybe invalid when offline */),
-                    onShareImage: (imageIndex) => shareText(
+                    onShareUrl: (imageIndex) => shareText(
                       title: '漫画柜分享',
                       text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第$imageIndex页' + //
                           _data!.pages[imageIndex - 1].let((url) => isPageUrlValidInMetadata(url) ? ' $url' : ' ${_data!.mangaUrl}'),
                     ),
+                    onShareImage: (imageIndex) async {
+                      var filepath = await getCachedOrDownloadedFilepath(url: await _urlFutures![imageIndex - 1], file: await _fileFutures![imageIndex - 1]);
+                      if (filepath == null) {
+                        Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
+                      } else {
+                        await shareFile(title: '漫画柜分享', filepath: filepath, type: 'image/*');
+                      }
+                    },
                     onCenterAreaTapped: () {
                       _ScreenHelper.toggleAppBarVisibility(show: !_ScreenHelper.showAppBar, fullscreen: _setting.fullscreen);
                       if (mounted) setState(() {});

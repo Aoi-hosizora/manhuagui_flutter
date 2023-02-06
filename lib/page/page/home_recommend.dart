@@ -15,6 +15,7 @@ import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
 import 'package:manhuagui_flutter/page/view/manga_collection.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
+import 'package:manhuagui_flutter/page/view/manga_ranking_tab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -80,6 +81,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     // 1. 异步获取各种数据
     _loadCollections(MangaCollectionType.values);
+    _loadRankings();
 
     // 2. 同步获取漫画分组数据
     final client = RestClient(DioManager.instance.dio);
@@ -130,8 +132,10 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     if (types.contains(MangaCollectionType.histories)) {
       Future.microtask(() async {
         _histories = null; // loading
+        if (mounted) setState(() {});
         var includeUnread = AppSetting.instance.other.includeUnreadInHome;
         var result = await HistoryDao.getHistories(username: AuthManager.instance.username, includeUnread: includeUnread, page: 1, limit: 50); // #=50
+        await Future.delayed(kFakeRefreshDuration);
         _histories = result ?? [];
         if (mounted) setState(() {});
       });
@@ -163,7 +167,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     if (types.contains(MangaCollectionType.favorites)) {
       Future.microtask(() async {
         _favorites = null; // loading
+        if (mounted) setState(() {});
         var result = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: '', page: 1, limit: 20); // #=20
+        await Future.delayed(kFakeRefreshDuration);
         _favorites = result ?? [];
         if (mounted) setState(() {});
       });
@@ -172,10 +178,55 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     if (types.contains(MangaCollectionType.downloads)) {
       Future.microtask(() async {
         _downloads = null; // loading
+        if (mounted) setState(() {});
         var result = await DownloadDao.getMangas();
+        await Future.delayed(kFakeRefreshDuration);
         _downloads = result?.sublist(0, result.length.clamp(0, 20)) ?? []; // #=20
         if (mounted) setState(() {});
       });
+    }
+  }
+
+  List<MangaRanking>? _shouNenRankings;
+  List<MangaRanking>? _shouJoRankings;
+  var _rankingsError = '';
+
+  Future<void> _loadRankings() async {
+    final client = RestClient(DioManager.instance.dio);
+
+    _shouNenRankings = null; // loading
+    _shouJoRankings = null; // loading
+    _rankingsError = '';
+    if (mounted) setState(() {});
+
+    var shouNenFuture = Future<TaskResult<List<MangaRanking>, Object>>.microtask(() async {
+      try {
+        var result = await client.getDayRanking(type: 'shaonian'); // #=50
+        return Ok(result.data.data);
+      } catch (e) {
+        return Err(e); // ignore stack trace
+      }
+    });
+
+    var shouJoFuture = Future<TaskResult<List<MangaRanking>, Object>>.microtask(() async {
+      try {
+        var result = await client.getDayRanking(type: 'shaonv'); // #=50
+        return Ok(result.data.data);
+      } catch (e) {
+        return Err(e); // ignore stack trace
+      }
+    });
+
+    var results = await Future.wait([shouNenFuture, shouJoFuture]);
+    try {
+      _shouNenRankings = results[0].unwrap();
+      _shouJoRankings = results[1].unwrap();
+    } catch (e, s) {
+      _shouNenRankings = []; // loaded but error
+      _shouJoRankings = []; // loaded but error
+      _rankingsError = wrapError(e, s).text;
+    } finally {
+      if (mounted) setState(() {});
     }
   }
 
@@ -185,13 +236,35 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       child: MangaCollectionView(
         type: type,
         ranking: type == MangaCollectionType.rankings ? _data!.daily : null,
-        updates: type == MangaCollectionType.updates ? _updates : null /* TODO 添加刷新入口 */,
-        histories: type == MangaCollectionType.histories ? _histories : null /* TODO 添加刷新入口 */,
+        updates: type == MangaCollectionType.updates ? _updates : null,
+        histories: type == MangaCollectionType.histories ? _histories : null,
         shelves: type == MangaCollectionType.shelves ? _shelves : null,
         favorites: type == MangaCollectionType.favorites ? _favorites : null,
         downloads: type == MangaCollectionType.downloads ? _downloads : null,
         error: error,
         username: !AuthManager.instance.logined ? null : AuthManager.instance.username,
+        onRefreshPressed: type == MangaCollectionType.updates
+            ? () => _loadCollections([MangaCollectionType.updates])
+            : type == MangaCollectionType.histories
+                ? () => _loadCollections([MangaCollectionType.histories])
+                : type == MangaCollectionType.shelves
+                    ? () => _loadCollections([MangaCollectionType.shelves])
+                    : type == MangaCollectionType.favorites
+                        ? () => _loadCollections([MangaCollectionType.favorites])
+                        : type == MangaCollectionType.downloads
+                            ? () => _loadCollections([MangaCollectionType.downloads])
+                            : null,
+        disableRefresh: type == MangaCollectionType.updates
+            ? _updates == null
+            : type == MangaCollectionType.histories
+                ? _histories == null
+                : type == MangaCollectionType.shelves
+                    ? _shelves == null
+                    : type == MangaCollectionType.favorites
+                        ? _favorites == null
+                        : type == MangaCollectionType.downloads
+                            ? _downloads == null
+                            : false,
         onMorePressed: () {
           switch (type) {
             case MangaCollectionType.rankings:
@@ -288,10 +361,19 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     ],
                   ),
                 ),
-                // TODO 添加排行榜与最新更新列表，全部漫画|少年漫画|少女漫画
                 _buildCollection('', MangaCollectionType.rankings), // 日排行榜
                 _buildCollection(_updatesError, MangaCollectionType.updates), // 最近更新
                 _buildCollection('', MangaCollectionType.histories), // 阅读历史
+                Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: MangaRankingTabView(
+                    rankings: _data!.daily,
+                    shouNenRankings: _shouNenRankings,
+                    shouJoRankings: _shouJoRankings,
+                    error: _rankingsError,
+                    mangaCount: Tuple1(5), // keep state in tricky way
+                  ),
+                ), // 综合排行
                 _buildCollection(_shelvesError, MangaCollectionType.shelves), // 我的书架
                 _buildCollection('', MangaCollectionType.favorites), // 本地收藏
                 _buildCollection('', MangaCollectionType.downloads), // 下载列表
@@ -307,7 +389,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       ),
                     ),
                   ),
-                ),
+                ), // 剧情类别
                 SizedBox(height: 12),
                 WarningTextView(
                   text: '由于漫画柜官方主页的推荐已有很长一段时间没有更新，因此以下推荐列表也一直保持不变。',

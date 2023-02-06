@@ -6,6 +6,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 
 /// 漫画画廊展示，在 [MangaViewerPage] 使用
@@ -30,6 +31,7 @@ class MangaGalleryView extends StatefulWidget {
     required this.firstPageBuilder, // always the first
     required this.lastPageBuilder, // always the last
     required this.onSaveImage, // exclude extra pages, starts from 1
+    required this.onShareUrl, // exclude extra pages, starts from 1
     required this.onShareImage, // exclude extra pages, starts from 1
   }) : super(key: key);
 
@@ -51,6 +53,7 @@ class MangaGalleryView extends StatefulWidget {
   final Widget Function(BuildContext) firstPageBuilder;
   final Widget Function(BuildContext) lastPageBuilder;
   final void Function(int imageIndex) onSaveImage;
+  final void Function(int imageIndex) onShareUrl;
   final void Function(int imageIndex) onShareImage;
 
   @override
@@ -152,13 +155,20 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
           IconTextDialogOption(
             icon: Icon(Icons.share),
-            text: Text('分享该页'),
+            text: Text('分享该页链接'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              widget.onShareUrl.call(index + 1);
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.imageMove),
+            text: Text('分享该页图片'),
             onPressed: () {
               Navigator.of(c).pop();
               widget.onShareImage.call(index + 1);
             },
           ),
-          // TODO 分享图片
         ],
       ),
     );

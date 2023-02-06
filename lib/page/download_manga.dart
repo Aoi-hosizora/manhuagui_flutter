@@ -204,14 +204,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   Future<void> _startOrPauseChapter(int chapterId, {required bool start}) async {
     if (!start) {
       // 暂停 => 获取最新的任务，并取消
-      print('_startOrPauseChapter 暂停下载章节 $chapterId');
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       _task?.cancelChapter(chapterId);
       return;
     }
 
     // 开始 => 构造任务、同步准备、入队
-    print('_startOrPauseChapter 下载章节 $chapterId');
     await quickBuildDownloadMangaQueueTask(
       mangaId: _data!.mangaId,
       mangaTitle: _data!.mangaTitle,
@@ -428,7 +426,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 ),
                 onTap: () => mountedSetState(() => _showAllChapters = !_showAllChapters),
               ),
-              if (_data != null && !_data!.error && _data!.allChaptersSucceeded)
+              if (_data != null && !_data!.error && _data!.allChaptersEitherSucceededOrNeedUpdate)
                 PopupMenuItem(
                   child: IconTextMenuItem(
                     !_data!.needUpdate ? Icons.update : Icons.update_disabled,
@@ -520,7 +518,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         ),
                         action3: ActionItem.simple(
                           _invertOrder ? '逆序显示' : '正序显示',
-                          _invertOrder ? MdiIcons.sortNumericDescending : MdiIcons.sortNumericAscending,
+                          _invertOrder ? MdiIcons.sortDescending : MdiIcons.sortAscending,
                           () => mountedSetState(() => _invertOrder = !_invertOrder),
                         ),
                         action4: ActionItem.simple(

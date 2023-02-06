@@ -257,6 +257,11 @@ class MangaRanking {
     return '${result.duration} (${result.date})';
   }
 
+  String get formattedNewestDurationOrDate {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    return result.duration ?? result.date;
+  }
+
   TinyBlockManga toTinyBlock() {
     return TinyBlockManga(
       mid: mid,
@@ -286,12 +291,17 @@ class ShelfManga {
 
   Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
 
-  String get formattedLastTimeForShelfLine {
+  String get formattedLastDurationOrTime {
     var result = parseDurationOrDateString(lastDuration);
     return result.duration ?? result.date; // "xxx天前" or "2023/02/02"
   }
 
-  String get formattedNewestTimeForShelfLine {
+  String get formattedNewestDurationOrTime {
+    var result = parseDurationOrDateString(newestDuration);
+    return result.duration ?? result.date; // "xxx天前" or "2023/02/02"
+  }
+
+  String get formattedNewestTimeWithDuration {
     var result = parseDurationOrDateString(newestDuration);
     if (result.duration == null) {
       return result.date;

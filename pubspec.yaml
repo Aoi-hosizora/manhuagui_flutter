@@ -24,7 +24,6 @@ dependencies:
 
   # assists
   flutter_web_browser: ^0.17.1
-  flutter_share: ^2.0.0
   wakelock: ^0.6.2
   device_info_plus: 4.0.0
   battery_info: ^1.1.1

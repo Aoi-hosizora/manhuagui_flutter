@@ -223,8 +223,8 @@ class _DownloadPageState extends State<DownloadPage> {
   }
 
   void _showPopupMenu({required int mangaId}) {
-    var history = _data.where((el) => el.mangaId == mangaId).firstOrNull;
-    if (history == null) {
+    var manga = _data.where((el) => el.mangaId == mangaId).firstOrNull;
+    if (manga == null) {
       return;
     }
 
@@ -232,10 +232,10 @@ class _DownloadPageState extends State<DownloadPage> {
     _msController.exitMultiSelectionMode();
     showPopupMenuForMangaList(
       context: context,
-      mangaId: history.mangaId,
-      mangaTitle: history.mangaTitle,
-      mangaCover: history.mangaCover,
-      mangaUrl: history.mangaUrl,
+      mangaId: manga.mangaId,
+      mangaTitle: manga.mangaTitle,
+      mangaCover: manga.mangaCover,
+      mangaUrl: manga.mangaUrl,
     );
   }
 
@@ -461,7 +461,6 @@ class _DownloadPageState extends State<DownloadPage> {
               tooltip: '开始下载',
               onPressed: () {
                 var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
-                print(mangaIds);
                 _msController.exitMultiSelectionMode();
                 _allStartOrPause(allStart: true, condition: (id) => mangaIds.contains(id));
               },
@@ -471,7 +470,6 @@ class _DownloadPageState extends State<DownloadPage> {
               tooltip: '暂停下载',
               onPressed: () {
                 var mangaIds = _msController.selectedItems.map((e) => e.value).toList();
-                print(mangaIds);
                 _msController.exitMultiSelectionMode();
                 _allStartOrPause(allStart: false, condition: (id) => mangaIds.contains(id));
               },

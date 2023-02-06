@@ -26,8 +26,8 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
+import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
-import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画作者页，网络请求并展示 [Author] 信息

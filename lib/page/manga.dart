@@ -10,6 +10,7 @@ import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
+import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
@@ -34,9 +35,9 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
-import 'package:manhuagui_flutter/service/native/share.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -381,20 +382,64 @@ class _MangaPageState extends State<MangaPage> {
     );
   }
 
-  void _showDownloadActionDialog() {
-    var noChapter = _downloadEntity == null || _downloadEntity!.triedChapterIds.isEmpty;
+  void _showAuthor() {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('查看作者'),
+        children: [
+          for (var author in _data!.authors)
+            IconTextDialogOption(
+              icon: Icon(Icons.person),
+              text: Text(author.name),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => AuthorPage(
+                      id: author.aid,
+                      name: author.name,
+                      url: author.url,
+                    ),
+                  ),
+                );
+              },
+            ),
+          IconTextDialogOption(
+            icon: Icon(Icons.people),
+            text: Text('查看已收藏的作者'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => FavoriteAuthorPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDownloadDetailDialog() {
+    var noChapter = _downloadEntity == null || _downloadEntity!.triedChaptersCount == 0;
     var success = !noChapter && _downloadEntity!.allChaptersSucceeded;
     var paused = QueueManager.instance.getDownloadMangaQueueTask(_data!.mid) == null;
+    var downloading = QueueManager.instance.getDownloadMangaQueueTask(_data!.mid)?.cancelRequested == false;
 
     String text;
     if (noChapter) {
       text = '尚未下载任何章节。';
     } else if (success) {
-      text = '${_downloadEntity!.totalChapterIds.length} 个章节已全部下载完成。';
+      text = '${_downloadEntity!.totalChaptersCount} 个章节已全部下载完成。';
     } else {
-      var suc = _downloadEntity!.successChapterIds.length;
-      var tot = _downloadEntity!.totalChapterIds.length;
-      text = (paused ? '下载已暂停' : '正在下载中') + '，已成功下载 $suc 个章节，共有 $tot 个章节在下载任务中。';
+      var started = _downloadEntity!.triedChaptersCount;
+      var success = _downloadEntity!.successChaptersCount;
+      var tot = _downloadEntity!.totalChaptersCount;
+      text = (paused ? '下载已暂停' : '漫画正在下载') + '，已开始下载 $started/$tot 个章节，其中共 $success/$tot 个章节已下载完成。';
     }
 
     showDialog(
@@ -441,7 +486,7 @@ class _MangaPageState extends State<MangaPage> {
                 );
               },
             ),
-          if (!noChapter && !success && !paused)
+          if (!noChapter && !success && downloading)
             TextButton(
               child: Text('暂停下载'),
               onPressed: () {
@@ -740,7 +785,7 @@ class _MangaPageState extends State<MangaPage> {
                             ),
                             IconText(
                               icon: Icon(Icons.stars, size: 20, color: Colors.orange),
-                              text: Text('排名 ${_data!.mangaRank} / 订阅 ${_subscribeCount ?? '未知'}'),
+                              text: Text('排名 ${_data!.mangaRank} / 订阅 ${_subscribeCount?.let((c) => '$c人') ?? '未知'}'),
                               space: 8,
                               iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
@@ -788,34 +833,8 @@ class _MangaPageState extends State<MangaPage> {
                     action2: ActionItem(
                       text: '查看作者',
                       icon: Icons.person,
-                      action: _data!.authors.length == 1
-                          ? () => Navigator.of(context).push(
-                                CustomPageRoute(
-                                  context: context,
-                                  builder: (c) => AuthorPage(id: _data!.authors.first.aid, name: _data!.authors.first.name, url: _data!.authors.first.url),
-                                ),
-                              )
-                          : () => showDialog(
-                                context: context,
-                                builder: (c) => SimpleDialog(
-                                  title: Text('查看作者'),
-                                  children: [
-                                    for (var author in _data!.authors)
-                                      TextDialogOption(
-                                        text: Text(author.name),
-                                        onPressed: () {
-                                          Navigator.of(c).pop();
-                                          Navigator.of(context).push(
-                                            CustomPageRoute(
-                                              context: context,
-                                              builder: (c) => AuthorPage(id: author.aid, name: author.name, url: author.url),
-                                            ),
-                                          );
-                                        },
-                                      )
-                                  ],
-                                ),
-                              ),
+                      action: () => _showAuthor(),
+                      longPress: () => _showAuthor(),
                     ),
                     action3: ActionItem(
                       text: '下载漫画',
@@ -832,7 +851,7 @@ class _MangaPageState extends State<MangaPage> {
                           ),
                         ),
                       ),
-                      longPress: _showDownloadActionDialog,
+                      longPress: _showDownloadDetailDialog,
                     ),
                     action4: ActionItem(
                       text: '漫画详情',
@@ -1022,6 +1041,7 @@ class _MangaPageState extends State<MangaPage> {
                         ),
                       ),
                     ),
+                    onMoreChaptersLongPressed: () {},
                   ),
                 ),
                 Container(height: 12),

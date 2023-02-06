@@ -164,12 +164,6 @@ class _SettingPageState extends State<SettingPage> {
           // *******************************************************
           _spacer(),
           _item(
-            title: '反馈及联系作者',
-            icon: Icons.feedback,
-            action: () => launchInBrowser(context: context, url: FEEDBACK_URL),
-          ),
-          _divider(),
-          _item(
             title: '检查更新',
             icon: Icons.update,
             action: () => showDialog(
@@ -190,6 +184,28 @@ class _SettingPageState extends State<SettingPage> {
                     onPressed: () => Navigator.of(c).pop(),
                   ),
                 ],
+              ),
+            ),
+          ),
+          _divider(),
+          _item(
+            title: '反馈及联系作者',
+            icon: Icons.feedback,
+            action: () => launchInBrowser(context: context, url: FEEDBACK_URL),
+          ),
+          _divider(),
+          _item(
+            title: '相关开源协议',
+            icon: MdiIcons.license,
+            action: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => LicensePage(
+                  applicationName: APP_NAME,
+                  applicationVersion: APP_VERSION,
+                  applicationLegalese: APP_LEGALESE,
+                  applicationIcon: Image.asset('${ASSETS_PREFIX}logo_xxhdpi.png', height: 60, width: 60),
+                ),
               ),
             ),
           ),

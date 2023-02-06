@@ -17,7 +17,7 @@ enum MangaCollectionType {
   downloads,
 }
 
-/// 漫画集合，针对每日排行、最近更新、阅读历史、我的书架、本地收藏、下载列表，在 [RecommendSubPage] 使用
+/// 漫画集合，针对日排行榜、最近更新、阅读历史、我的书架、本地收藏、下载列表，在 [RecommendSubPage] 使用
 class MangaCollectionView extends StatefulWidget {
   const MangaCollectionView({
     Key? key,
@@ -30,6 +30,8 @@ class MangaCollectionView extends StatefulWidget {
     this.downloads,
     this.error,
     required this.username,
+    this.onRefreshPressed,
+    this.disableRefresh = false,
     this.onMorePressed,
   }) : super(key: key);
 
@@ -42,6 +44,8 @@ class MangaCollectionView extends StatefulWidget {
   final List<DownloadedManga>? downloads;
   final String? error;
   final String? username;
+  final void Function()? onRefreshPressed;
+  final bool disableRefresh;
   final void Function()? onMorePressed;
 
   @override
@@ -185,7 +189,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           width: width,
           padding: EdgeInsets.only(top: 2),
           child: Text(
-            !manga.read ? '未开始阅读' : manga.chapterTitle,
+            !manga.read ? '未阅读' : manga.chapterTitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
@@ -216,7 +220,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                '${manga.newestChapter}・${manga.newestDuration}',
+                '${manga.newestChapter}・${manga.formattedNewestDurationOrTime}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),
@@ -272,8 +276,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
               ),
               Text(
                 manga.allChaptersSucceeded
-                    ? '已完成 (共 ${manga.totalChapterIds.length} 章节)' //
-                    : '未完成 (${manga.triedChapterIds.length}/${manga.totalChapterIds.length})',
+                    ? '已完成 (共 ${manga.totalChaptersCount} 章节)' //
+                    : '未完成 (${manga.successChaptersCount}/${manga.totalChaptersCount} 章节)',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),
@@ -336,6 +340,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return HomepageColumnView(
       title: title,
       icon: icon,
+      onRefreshPressed: widget.onRefreshPressed,
+      disableRefresh: widget.disableRefresh,
       onMorePressed: widget.onMorePressed,
       padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       child: PlaceholderText.from(

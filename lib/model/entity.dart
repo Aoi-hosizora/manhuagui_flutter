@@ -300,12 +300,10 @@ class DownloadedManga {
   String get formattedUpdatedAtWithDuration => //
       formatDatetimeAndDuration(updatedAt, FormatPattern.durationDatetimeOrDateTime);
 
-  bool get allChaptersSucceeded => totalChapterIds.length == successChapterIds.length;
+  // chapter related
 
   DownloadedChapter? findChapter(int cid) => //
       downloadedChapters.where((chapter) => chapter.chapterId == cid).firstOrNull;
-
-  // chapter related
 
   List<int> get totalChapterIds => //
       downloadedChapters.map((el) => el.chapterId).toList();
@@ -314,24 +312,43 @@ class DownloadedManga {
       downloadedChapters.where((el) => el.tried).map((el) => el.chapterId).toList();
 
   List<int> get successChapterIds => //
-      downloadedChapters.where((el) => el.succeeded).map((el) => el.chapterId).toList();
+      downloadedChapters.where((el) => el.succeeded && !el.needUpdate).map((el) => el.chapterId).toList();
 
-  int get failedChapterCount => //
-      downloadedChapters.where((el) => !el.succeeded).length;
+  List<int> get notFinishedChapterIds => //
+      downloadedChapters.where((el) => !el.succeeded || el.needUpdate).map((el) => el.chapterId).toList();
+
+  int get totalChaptersCount => totalChapterIds.length;
+
+  int get triedChaptersCount => triedChapterIds.length;
+
+  int get successChaptersCount => successChapterIds.length;
+
+  int get notFinishedChaptersCount => notFinishedChapterIds.length;
+
+  // success checking related
+
+  bool get allChaptersSucceeded => //
+      totalChaptersCount == successChaptersCount;
+
+  bool get allChaptersEitherSucceededOrNeedUpdate => //
+      totalChaptersCount == downloadedChapters.where((el) => el.succeeded).map((el) => el.chapterId).toList().length;
 
   // page related
 
+  int _sumCount(Iterable<int> it) => //
+      it.isEmpty ? 0 : it.reduce((val, el) => val + el);
+
   int get totalPageCountInAll => //
-      downloadedChapters.map((el) => el.totalPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
+      downloadedChapters.map((el) => el.totalPageCount).let(_sumCount);
 
   int get triedPageCountInAll => //
-      downloadedChapters.map((el) => el.triedPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
+      downloadedChapters.map((el) => el.triedPageCount).let(_sumCount);
 
   int get successPageCountInAll => //
-      downloadedChapters.map((el) => el.successPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
+      downloadedChapters.map((el) => el.successPageCount).let(_sumCount);
 
-  int get failedPageCountInAll => //
-      downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).let((it) => it.isEmpty ? 0 : it.reduce((val, el) => val + el));
+  int get notFinishedPageCountInAll => //
+      downloadedChapters.map((el) => el.totalPageCount - el.successPageCount).let(_sumCount);
 
   DownloadedManga copyWith({
     int? mangaId,

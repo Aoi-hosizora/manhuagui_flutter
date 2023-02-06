@@ -5,9 +5,10 @@ const APP_VERSION = '1.2.2';
 const APP_LEGALESE = 'Copyright © 2020-2023 AoiHosizora';
 const APP_DESCRIPTION = //
     '第三方漫画柜 ($WEB_HOMEPAGE_URL) 安卓客户端，使用 Flutter 开发。\n'
-    '作者：GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>\n'
     '\n'
-    '该客户端仅供学习使用，仅供非商业用途。\n'
+    '开发者: GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>\n'
+    '\n'
+    '本应用仅供学习使用，客户端代码完全开源，仅供非商业用途。\n'
     '\n'
     '本应用与漫画柜内容提供方无任何关系，若有问题，请发邮件或 Issue 联系。';
 
