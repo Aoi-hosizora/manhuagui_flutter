@@ -421,10 +421,7 @@ class _AuthorPageState extends State<AuthorPage> {
                     action4: ActionItem(
                       text: '分享作者',
                       icon: Icons.share,
-                      action: () => shareText(
-                        title: '漫画柜分享',
-                        text: '【${_data!.name}】${_data!.url}',
-                      ),
+                      action: () => shareText(text: '【${_data!.name}】${_data!.url}'),
                     ),
                   ),
                 ),

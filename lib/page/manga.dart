@@ -866,10 +866,7 @@ class _MangaPageState extends State<MangaPage> {
                     action5: ActionItem(
                       text: '分享漫画',
                       icon: Icons.share,
-                      action: () => shareText(
-                        title: '漫画柜分享',
-                        text: '【${_data!.title}】${_data!.url}',
-                      ),
+                      action: () => shareText(text: '【${_data!.title}】${_data!.url}'),
                     ),
                   ),
                 ),

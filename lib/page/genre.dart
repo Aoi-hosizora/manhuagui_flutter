@@ -23,6 +23,7 @@ class _GenrePageState extends State<GenrePage> {
       appBar: AppBar(
         title: Text('漫画类别'),
         leading: AppBarActionButton.leading(context: context),
+        // TODO add search action
       ),
       body: GenreSubPage(
         defaultGenre: widget.genre,

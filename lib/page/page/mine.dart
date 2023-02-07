@@ -270,6 +270,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   child: HelpIconView(
                     title: title,
                     hint: hint,
+                    tooltip: '提示',
                     rectangle: false,
                     padding: EdgeInsets.all(6),
                     iconSize: 22,
@@ -468,7 +469,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildInfoLines(
                 icon: Icons.poll,
                 title: '登录统计',
-                hint: '提醒："当前登录时间"仅记录在移动端本地，跨设备不同步。\n\n提醒："登录IP"并非指本设备的IP地址，而是指本第三方应用使用的服务器的IP地址。',
+                hint: '提示："当前登录时间"仅记录在移动端本地，跨设备不同步。\n\n提示："登录IP"并非指本设备的IP地址，而是指本第三方应用使用的服务器的IP地址。',
                 lines: [
                   '当前登录时间：${_data!.formattedCurrLoginTimeWithDuration(_currLoginDateTime)}', // XXXX-XX-XX XX:XX:XX (X天前)
                   '上回登录时间：${_data!.formattedLastLoginTimeWithDuration}', // XXXX-XX-XX XX:XX:XX (X天前)

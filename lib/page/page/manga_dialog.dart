@@ -29,6 +29,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 漫画页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
 /// 部分漫画/作者列表页-搜索关键词对话框 [showKeywordDialogForSearching]
+/// 部分漫画/作者列表页-排序对话框 [showSortMethodDialogForSorting]
 
 // => called by pages which contains manga line view (tiny / shelf / favorite / history / download / shelf cache)
 void showPopupMenuForMangaList({

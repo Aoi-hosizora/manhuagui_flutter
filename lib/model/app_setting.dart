@@ -194,6 +194,7 @@ class OtherSetting {
     required this.timeoutBehavior,
     required this.dlTimeoutBehavior,
     required this.enableLogger,
+    required this.useNativeShareSheet,
     required this.usingDownloadedPage,
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
@@ -209,6 +210,7 @@ class OtherSetting {
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
   final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
   final bool enableLogger; // 记录调试日志
+  final bool useNativeShareSheet; // 使用安卓原生的分享菜单
   final bool usingDownloadedPage; // 阅读时载入已下载的页面
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
@@ -224,6 +226,7 @@ class OtherSetting {
     timeoutBehavior: TimeoutBehavior.normal,
     dlTimeoutBehavior: TimeoutBehavior.normal,
     enableLogger: false,
+    useNativeShareSheet: true,
     usingDownloadedPage: true,
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
@@ -240,6 +243,7 @@ class OtherSetting {
     TimeoutBehavior? timeoutBehavior,
     TimeoutBehavior? dlTimeoutBehavior,
     bool? enableLogger,
+    bool? useNativeShareSheet,
     bool? usingDownloadedPage,
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
@@ -255,6 +259,7 @@ class OtherSetting {
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
       dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
       enableLogger: enableLogger ?? this.enableLogger,
+      useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
       usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,

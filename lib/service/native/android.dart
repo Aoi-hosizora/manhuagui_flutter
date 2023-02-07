@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:manhuagui_flutter/model/app_setting.dart';
 
 // =======
 // version
@@ -82,29 +83,29 @@ Future<void> addToGallery(File file) async {
   }
 }
 
-Future<void> shareText({required String title, required String text}) async {
+Future<void> shareText({required String text, String? title}) async {
   if (Platform.isAndroid) {
     try {
-      // ShareCompat.IntentBuilder().startChooser()
+      // Intent.ACTION_SEND, Intent.ACTION_CHOOSER
       await _channel.invokeMethod(_shareTextMethodName, <String, dynamic>{
-        'shareSubject': title,
         'shareText': text,
-        'chooserTitle': '',
+        'shareTitle': title,
+        'chooserTitle': AppSetting.instance.other.useNativeShareSheet ? null : '',
       });
     } catch (_) {}
   }
 }
 
-Future<void> shareFile({required String filepath, required String type, String title = '', String text = ''}) async {
+Future<void> shareFile({required String filepath, String type = '*/*', String? text, String? title}) async {
   if (Platform.isAndroid) {
     try {
-      // ShareCompat.IntentBuilder().startChooser()
+      // Intent.ACTION_SEND, Intent.ACTION_CHOOSER
       await _channel.invokeMethod(_shareFileMethodName, <String, dynamic>{
-        'shareSubject': title,
-        'shareText': text,
-        'chooserTitle': '',
         'filepath': filepath,
         'fileType': type,
+        'shareText': text,
+        'shareTitle': title,
+        'chooserTitle': AppSetting.instance.other.useNativeShareSheet ? null : '',
       });
     } catch (_) {}
   }

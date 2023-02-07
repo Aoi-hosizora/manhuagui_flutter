@@ -28,6 +28,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _timeoutBehavior = widget.setting.timeoutBehavior;
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
+  late var _useNativeShareSheet = widget.setting.useNativeShareSheet;
   late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
@@ -43,6 +44,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         timeoutBehavior: _timeoutBehavior,
         dlTimeoutBehavior: _dlTimeoutBehavior,
         enableLogger: _enableLogger,
+        useNativeShareSheet: _useNativeShareSheet,
         usingDownloadedPage: _usingDownloadedPage,
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
@@ -94,6 +96,16 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _enableLogger,
           onChanged: (b) {
             _enableLogger = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '使用安卓原生的分享菜单',
+          hint: '该选项仅针对安卓第三方ROM，由于一些系统不支持手动启用或禁用原生的分享菜单，所以该选项在部分安卓系统中可能不起作用。',
+          value: _useNativeShareSheet,
+          onChanged: (b) {
+            _useNativeShareSheet = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

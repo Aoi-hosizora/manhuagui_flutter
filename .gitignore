@@ -50,3 +50,4 @@ app.*.map.json
 _*.png
 _origin/
 lib/assets/icons/custom_icons_icons.dart
+dependencies/

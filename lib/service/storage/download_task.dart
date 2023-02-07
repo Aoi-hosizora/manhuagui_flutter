@@ -367,7 +367,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       );
       MangaChapter chapter;
       try {
-        await Future.delayed(Duration(milliseconds: 1000)); // 手动延迟，防止后端连续请求而被BAN
+        await Future.delayed(Duration(milliseconds: 800)); // 额外等待，防止后端连续请求而被BAN
         chapter = (await client.getMangaChapter(mid: mangaId, cid: chapterId)).data;
       } catch (e, s) {
         // 请求错误 => 更新章节下载表，并跳过当前章节

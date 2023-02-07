@@ -45,7 +45,7 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await Future.delayed(Duration(milliseconds: 300)); // faster than transitionDuration 400ms
+      await Future.delayed(Duration(milliseconds: 300)); // open delay, faster than route's transitionDuration, which equals to 400ms
       _searchController.open();
     });
   }

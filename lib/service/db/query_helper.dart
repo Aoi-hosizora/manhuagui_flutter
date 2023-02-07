@@ -41,7 +41,7 @@ class QueryHelper {
       return null;
     }
 
-    var statement = '`$column`' + (byName ? ' COLLATE LOCALIZED' : '') + (!desc ? ' ASC' : ' DESC'); // TODO 拼音排序
+    var statement = '`$column`' + (byName ? ' COLLATE LOCALIZED' : '') + (!desc ? ' ASC' : ' DESC');
     statement = (includeORDERBY ? ' ORDER BY ' : '') + statement;
     return statement;
   }

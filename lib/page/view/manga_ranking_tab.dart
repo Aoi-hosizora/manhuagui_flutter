@@ -68,7 +68,7 @@ class MangaRankingTabView extends StatelessWidget {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: manga.order == 1 ? Colors.red : (manga.order == 2 ? Colors.orange[600] : (manga.order == 3 ? Colors.yellow[700] : Colors.grey[400])),
+                          color: manga.order == 1 ? Colors.red : (manga.order == 2 ? Colors.orange : (manga.order == 3 ? Colors.yellow[600] : Colors.grey[400])),
                           borderRadius: BorderRadius.circular(2),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 8.5, vertical: 1),
@@ -137,10 +137,8 @@ class MangaRankingTabView extends StatelessWidget {
     return HomepageColumnView(
       title: '漫画综合排行榜',
       icon: Icons.emoji_events,
-      // onMorePressed: () => EventBusManager.instance.fire(ToRankingRequestedEvent()),
       rightText: '${formatDatetimeAndDuration(DateTime.now(), FormatPattern.date)} 更新',
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-      headerChildSpace: 6,
+      headerPadding: EdgeInsets.only(left: 15, right: 15, bottom: 8),
       child: PlaceholderText.from(
         isLoading: rankings == null || shouNenRankings == null || shouJoRankings == null,
         isEmpty: rankings == null || shouNenRankings == null || shouJoRankings == null,
@@ -175,7 +173,7 @@ class MangaRankingTabView extends StatelessWidget {
                         [Icons.male, '少年漫画'],
                       ])
                         Tab(
-                          height: 42,
+                          height: 40,
                           child: IconText(
                             mainAxisSize: MainAxisSize.min,
                             icon: Icon(kv[0] as IconData, size: 22),
@@ -187,7 +185,8 @@ class MangaRankingTabView extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(
+                Container(
+                  margin: EdgeInsets.only(top: 4),
                   height: (82.0 + 6 * 2) * mangaCount.item,
                   child: TabBarView(
                     physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(), // for scrolling in recommend page

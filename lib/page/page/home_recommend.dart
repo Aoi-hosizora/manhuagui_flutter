@@ -80,8 +80,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     if (mounted) setState(() {});
 
     // 1. 异步获取各种数据
-    _loadCollections(MangaCollectionType.values);
-    _loadRankings();
+    Future.microtask(() async {
+      await Future.delayed(Duration(milliseconds: 500)); // 额外等待
+      await _loadCollections(MangaCollectionType.values);
+    });
+    Future.microtask(() async {
+      await Future.delayed(Duration(milliseconds: 1000)); // 额外等待
+      await _loadRankings();
+    });
 
     // 2. 同步获取漫画分组数据
     final client = RestClient(DioManager.instance.dio);

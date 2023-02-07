@@ -60,7 +60,7 @@ class MangaShelfCachePage extends StatefulWidget {
                   }
                   currPage++;
                   _setState(() {});
-                  await Future.delayed(Duration(milliseconds: 500)); // 额外等待 0.5s
+                  await Future.delayed(Duration(milliseconds: 800)); // 额外等待，防止后端连续请求而被BAN
                   continue;
                 }
               } catch (e, s) {

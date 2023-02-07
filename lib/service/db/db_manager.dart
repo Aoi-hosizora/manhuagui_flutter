@@ -38,6 +38,7 @@ class DBManager {
     return await openDatabase(
       filepath,
       version: _newestVersion,
+      onConfigure: (db) async => await db.androidSetLocale('zh-CN'),
       onCreate: (db, _) async => await _onUpgrade(db, 0),
       onUpgrade: (db, oldVersion, _) async => _onUpgrade(db, oldVersion),
     );

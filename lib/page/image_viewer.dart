@@ -91,7 +91,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                 if (filepath == null) {
                   Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
                 } else {
-                  await shareFile(title: '漫画柜分享', filepath: filepath, type: 'image/*');
+                  await shareFile(filepath: filepath, type: 'image/*');
                 }
               },
             ),

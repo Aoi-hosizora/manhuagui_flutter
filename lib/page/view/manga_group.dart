@@ -52,10 +52,10 @@ class _MangaGroupViewState extends State<MangaGroupView> {
 
   Widget _buildTabs() {
     // HomepageColumnView
-    // padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12)
-    // headerChildSpace: 8 /* 12 <= 8 + 4 */
+    // padding: EdgeInsets.symmetric(horizontal: 0, vertical: 12)
+    // headerPadding: EdgeInsets.only(left: 15, right: 15, bottom: 8) /* 12 <= 8 (this) + 4 (scroll vPadding) */
     return Padding(
-      padding: EdgeInsets.only(bottom: 8 /* 12 <= 8 + 4 */),
+      padding: EdgeInsets.only(bottom: 8 /* 12 <= 8 (this) + 4 (scroll vPadding) */),
       child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 6 /* 15 (hPadding) <= 6 (this) + 9 (item) */, vertical: 4 /* 12 (vPadding) <= 4 (this) + 8 (space) */),
         physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(), // for scrolling in recommend page
@@ -191,8 +191,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     return HomepageColumnView(
       title: widget.groupList.title + (_currentSelectedName.isEmpty ? '' : '・$_currentSelectedName'),
       icon: widget.groupList.isSerial ? Icons.whatshot : (widget.groupList.isFinish ? Icons.check_circle : Icons.fiber_new),
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-      headerChildSpace: 8,
+      headerPadding: EdgeInsets.only(left: 15, right: 15, bottom: 8),
       onMorePressed: widget.onMorePressed,
       child: Column(
         children: [

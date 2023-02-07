@@ -807,7 +807,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     onPageChanged: _onPageChanged,
                     onSaveImage: (imageIndex) => _download(imageIndex, _data!.pages[imageIndex - 1] /* maybe invalid when offline */),
                     onShareUrl: (imageIndex) => shareText(
-                      title: '漫画柜分享',
                       text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第$imageIndex页' + //
                           _data!.pages[imageIndex - 1].let((url) => isPageUrlValidInMetadata(url) ? ' $url' : ' ${_data!.mangaUrl}'),
                     ),
@@ -816,7 +815,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       if (filepath == null) {
                         Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
                       } else {
-                        await shareFile(title: '漫画柜分享', filepath: filepath, type: 'image/*');
+                        await shareFile(filepath: filepath, type: 'image/*');
                       }
                     },
                     onCenterAreaTapped: () {

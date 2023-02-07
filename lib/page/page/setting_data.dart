@@ -300,5 +300,5 @@ Future<void> _showFakeProgressDialog(BuildContext context, String text) async {
       ),
     ),
   );
-  await Future.delayed(Duration(milliseconds: 300));
+  await Future.delayed(Duration(milliseconds: 300)); // showing fake progress dialog
 }

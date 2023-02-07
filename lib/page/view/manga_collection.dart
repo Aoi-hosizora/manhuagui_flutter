@@ -343,7 +343,6 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       onRefreshPressed: widget.onRefreshPressed,
       disableRefresh: widget.disableRefresh,
       onMorePressed: widget.onMorePressed,
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       child: PlaceholderText.from(
         isLoading: widgets == null,
         isEmpty: widgets?.isNotEmpty != true,
