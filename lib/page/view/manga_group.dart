@@ -191,7 +191,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
     return HomepageColumnView(
       title: widget.groupList.title + (_currentSelectedName.isEmpty ? '' : '・$_currentSelectedName'),
       icon: widget.groupList.isSerial ? Icons.whatshot : (widget.groupList.isFinish ? Icons.check_circle : Icons.fiber_new),
-      headerPadding: EdgeInsets.only(left: 15, right: 15, bottom: 8),
+      headerPadding: EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 8),
       onMorePressed: widget.onMorePressed,
       child: Column(
         children: [

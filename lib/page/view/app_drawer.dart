@@ -3,6 +3,12 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/login.dart';
+import 'package:manhuagui_flutter/page/message.dart';
+import 'package:manhuagui_flutter/page/page/home_ranking.dart';
+import 'package:manhuagui_flutter/page/page/home_recent.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_favorite.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_history.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -12,10 +18,14 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 enum DrawerSelection {
-  none, // MangaPage / MangaGroupPage / MangaTocPage / CommentsPage / DownloadMangaPage / MangaShelfCachePage / AuthorPage / FavoriteAuthorPage / MessagePage
+  none,
+  // none => MangaPage / MangaTocPage / CommentsPage / DownloadMangaPage / MangaShelfCachePage /
+  //         AuthorPage / FavoriteAuthorPage / MangaGroupPage / MangaAudRankingPage / GenrePage
+
   home, // IndexPage
   search, // SearchPage
   download, // DownloadPage
+  message, // MessagePage
   setting, // SettingPage
 }
 
@@ -33,6 +43,7 @@ class AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<AppDrawer> {
   VoidCallback? _cancelHandler;
+  late var _routeTheme = CustomPageRouteTheme.of(context);
 
   @override
   void initState() {
@@ -48,9 +59,44 @@ class _AppDrawerState extends State<AppDrawer> {
     super.dispose();
   }
 
-  late CustomPageRouteThemeData? _routeTheme = CustomPageRouteTheme.of(context);
+  Future<void> _popUntilFirst() async {
+    await Future.delayed(kDrawerBaseSettleDuration);
+    Navigator.of(context).popUntil((r) => r.isFirst);
+  }
 
-  void _gotoPage(Widget page) async {
+  void _gotoPage(Widget page) {
+    if (widget.currentSelection != DrawerSelection.home) {
+      if (page is ShelfSubPage) {
+        // _navigateToPage(page); // TODO create new page and wrap sub page
+      } else if (page is FavoriteSubPage) {
+        // _navigateToPage(page);
+      } else if (page is HistorySubPage) {
+        // _navigateToPage(page);
+      } else if (page is RecentSubPage) {
+        // _navigateToPage(page);
+      } else if (page is RankingSubPage) {
+        // _navigateToPage(page);
+      } else {
+        _navigateToPage(page);
+      }
+    } else {
+      if (page is ShelfSubPage) {
+        EventBusManager.instance.fire(ToShelfRequestedEvent());
+      } else if (page is FavoriteSubPage) {
+        EventBusManager.instance.fire(ToFavoriteRequestedEvent());
+      } else if (page is HistorySubPage) {
+        EventBusManager.instance.fire(ToHistoryRequestedEvent());
+      } else if (page is RecentSubPage) {
+        EventBusManager.instance.fire(ToRecentRequestedEvent());
+      } else if (page is RankingSubPage) {
+        EventBusManager.instance.fire(ToRankingRequestedEvent());
+      } else {
+        _navigateToPage(page);
+      }
+    }
+  }
+
+  void _navigateToPage(Widget page) {
     var isFirst = false;
     Navigator.of(context).popUntil((route) {
       isFirst = route.isFirst;
@@ -73,16 +119,6 @@ class _AppDrawerState extends State<AppDrawer> {
     } else {
       Navigator.of(context).pushReplacement(route);
     }
-  }
-
-  Future<void> _popUntilFirst() async {
-    await Future.delayed(kDrawerBaseSettleDuration);
-    Navigator.of(context).popUntil((r) => r.isFirst);
-  }
-
-  Future<void> _gotoTabByEvent(dynamic event) async {
-    await _popUntilFirst();
-    EventBusManager.instance.fire(event);
   }
 
   Widget _buildItem(String text, IconData icon, DrawerSelection? selection, void Function() action) {
@@ -173,13 +209,14 @@ class _AppDrawerState extends State<AppDrawer> {
           _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
           _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage())),
           Divider(thickness: 1),
-          _buildItem('我的书架', MdiIcons.bookshelf, null, () => _gotoTabByEvent(ToShelfRequestedEvent())), // TODO 打开新页面 ???
-          _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, null, () => _gotoTabByEvent(ToFavoriteRequestedEvent())),
-          _buildItem('阅读历史', Icons.history, null, () => _gotoTabByEvent(ToHistoryRequestedEvent())),
-          _buildItem('最近更新', Icons.cached, null, () => _gotoTabByEvent(ToRecentRequestedEvent())),
-          _buildItem('漫画排行', Icons.trending_up, null, () => _gotoTabByEvent(ToRankingRequestedEvent())),
+          _buildItem('我的书架', MdiIcons.bookshelf, null, () => _gotoPage(ShelfSubPage())),
+          _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, null, () => _gotoPage(FavoriteSubPage())),
+          _buildItem('阅读历史', Icons.history, null, () => _gotoPage(HistorySubPage())),
+          _buildItem('最近更新', Icons.cached, null, () => _gotoPage(RecentSubPage())),
+          _buildItem('漫画排行', Icons.trending_up, null, () => _gotoPage(RankingSubPage())),
           Divider(thickness: 1),
           _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
+          _buildItem('应用消息', Icons.notifications, DrawerSelection.message, () => _gotoPage(MessagePage())),
           _buildItem('设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(SettingPage())),
         ],
       ),

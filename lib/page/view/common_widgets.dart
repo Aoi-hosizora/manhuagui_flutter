@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem]
+/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem] / [OverflowClipBox]
 
 class HelpIconView extends StatelessWidget {
   const HelpIconView({
@@ -295,6 +295,59 @@ class IconTextMenuItem extends StatelessWidget {
       text: Text(text, style: Theme.of(context).textTheme.subtitle1),
       space: space ?? 12.0,
       mainAxisSize: MainAxisSize.min,
+    );
+  }
+}
+
+enum OverflowDirection {
+  horizontal,
+  vertical,
+}
+
+class OverflowClipBox extends StatelessWidget {
+  const OverflowClipBox({
+    Key? key,
+    required this.direction,
+    required this.child,
+    this.clip = true,
+    this.alignment = Alignment.topCenter,
+    this.width,
+    this.height,
+    this.margin = EdgeInsets.zero,
+    this.padding = EdgeInsets.zero,
+  }) : super(key: key);
+
+  final OverflowDirection direction;
+  final Widget child;
+  final bool clip;
+  final Alignment alignment;
+  final double? width;
+  final double? height;
+  final EdgeInsets margin;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget view = OverflowBox(
+      child: Padding(
+        padding: padding,
+        child: child,
+      ),
+      alignment: alignment,
+      minHeight: direction == OverflowDirection.vertical ? 0 : null,
+      maxHeight: direction == OverflowDirection.vertical ? double.infinity : null,
+      minWidth: direction == OverflowDirection.horizontal ? 0 : null,
+      maxWidth: direction == OverflowDirection.horizontal ? double.infinity : null,
+    );
+    return view = Padding(
+      padding: margin,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: clip //
+            ? ClipRect(child: view)
+            : view,
+      ),
     );
   }
 }

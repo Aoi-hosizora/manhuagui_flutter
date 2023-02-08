@@ -34,6 +34,8 @@ class MangaShelfCachePage extends StatefulWidget {
     var canceled = false;
     String? error;
 
+    // !!!
+    // 弹出进度框、网络请求
     var ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -130,6 +132,7 @@ class MangaShelfCachePage extends StatefulWidget {
       }
     }
 
+    // !!!
     var newCaches = caches.toList(); // 拷贝一份，防止在更新数据库中途，列表被修改
     showDialog(
       context: context,
@@ -148,6 +151,7 @@ class MangaShelfCachePage extends StatefulWidget {
     );
 
     // !!!
+    // 更新数据库、发送通知、(更新界面)、结束进度框
     for (var i = newCaches.length - 1; i >= 0; i--) {
       newCaches[i] = newCaches[i].copyWith(cachedAt: DateTime.now()); // reversed, 书架上越老更新的漫画同步时间设置得越先
     }
@@ -167,7 +171,7 @@ class MangaShelfCachePage extends StatefulWidget {
       EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: true, fromShelfCachePage: fromShelfCachePage));
     }
     Navigator.of(context).pop(); // 关闭"正在处理"对话框
-    onFinish?.call();
+    onFinish?.call(); // 更新界面
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
@@ -429,6 +433,11 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
             child: Text('同步'),
             onPressed: () {
               Navigator.of(c).pop();
+
+              // 退出多选模式、(网络请求)、(更新数据库)、(发送通知)、更新界面[↴]
+              // 本页引起的新增 => 刷新列表
+              // 本页引起的删除 => 刷新列表
+              _msController.exitMultiSelectionMode();
               MangaShelfCachePage.syncShelfCaches(
                 context,
                 onFinish: () => _pdvKey.currentState?.refresh(),

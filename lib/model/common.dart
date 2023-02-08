@@ -60,6 +60,7 @@ ParseResult parseDurationOrDateString(String text) {
 // =====================================
 
 enum FormatPattern {
+  dateNoYear, // "02/02"
   date, // "2023/02/02"
   datetimeNoSec, // "2023/02/02 17:53"
   datetime, // "2023/02/02 17:53:15"
@@ -75,6 +76,7 @@ enum FormatPattern {
 }
 
 String formatDatetimeAndDuration(DateTime datetime, FormatPattern pattern) {
+  var md = DateFormat('MM/dd');
   var ymd = DateFormat('yyyy/MM/dd');
   var hms = DateFormat('HH:mm:ss');
   var mdhms = DateFormat('MM/dd HH:mm:ss');
@@ -95,6 +97,8 @@ String formatDatetimeAndDuration(DateTime datetime, FormatPattern pattern) {
   }
 
   switch (pattern) {
+    case FormatPattern.dateNoYear:
+      return md.format(datetime); // "2023/02/02"
     case FormatPattern.date:
       return ymd.format(datetime); // "2023/02/02"
     case FormatPattern.datetimeNoSec:

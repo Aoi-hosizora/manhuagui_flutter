@@ -77,17 +77,19 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
 
     _authData = AuthManager.instance.authData;
     _authError = event.error?.text ?? '';
-    if (_authError.isEmpty) {
-      if (!AuthManager.instance.logined) {
-        _data.clear();
-        _total = 0;
-        _isUpdated = false;
-      } else {
-        // 登录状态变更，刷新列表
-        WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh()); // TODO use _loadData or _pdvKey when auth changed
-      }
-      if (mounted) setState(() {});
+    if (_authError.isNotEmpty) {
+      return;
     }
+
+    if (!AuthManager.instance.logined) {
+      _data.clear();
+      _total = 0;
+      _isUpdated = false;
+    } else {
+      // 登录状态变更，刷新列表
+      WidgetsBinding.instance?.addPostFrameCallback((_) => _pdvKey.currentState?.refresh());
+    }
+    if (mounted) setState(() {});
   }
 
   final _data = <ShelfManga>[];
@@ -144,7 +146,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       fromShelfList: true,
       inShelfSetter: (inShelf) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
+        // 本页引起的新增 => 显示有更新[↑]
+        // 本页引起的删除 => 更新列表显示[→]
         if (!inShelf) {
           _data.removeWhere((el) => el.mid == manga.mid);
           _total--; // no "removed++"

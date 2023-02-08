@@ -132,7 +132,7 @@ class _MessagePageState extends State<MessagePage> {
         ],
       ),
       drawer: AppDrawer(
-        currentSelection: DrawerSelection.none,
+        currentSelection: DrawerSelection.message,
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshableListView<Message>(

@@ -84,13 +84,13 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
-      // 非本页引起的删除 => 显示有更新
+    if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
+      // 非本页引起的更新 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
-      // 非本页引起的更新 => 显示有更新
+    if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
+      // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
@@ -161,7 +161,9 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       fromFavoriteList: true,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
+        // 本页引起的新增 => 显示有更新[↑]
+        // 本页引起的更新 => 此处不会出现[x]
+        // 本页引起的删除 => 更新列表显示[→]
         if (!inFavorite) {
           _data.removeWhere((el) => el.authorId == author.authorId);
           _total--;

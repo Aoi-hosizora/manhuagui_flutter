@@ -48,7 +48,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
         _searchKeyword = ''; // 清空搜索关键词
         if (mounted) setState(() {});
-        _pdvKey.currentState?.refresh(); // TODO use _getData or _pdvKey when auth changed
+        _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
     });
@@ -109,13 +109,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
-      // 非本页引起的删除 => 显示有更新
+    if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
+      // 非本页引起的更新 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
-      // 非本页引起的更新 => 显示有更新
+    if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
+      // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
@@ -185,7 +185,9 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       fromFavoriteList: true,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 新增 => 显示有更新, 本页引起的更新删除 => 更新列表显示
+        // 本页引起的新增 => 显示有更新[↑]
+        // 本页引起的更新 => 此处不会出现[x]
+        // 本页引起的删除 => 更新列表显示[→]
         if (!inFavorite) {
           _data.removeWhere((el) => el.mangaId == favorite.mangaId);
           _total--;

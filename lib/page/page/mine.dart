@@ -73,16 +73,18 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
 
     _authData = AuthManager.instance.authData;
     _authError = event.error?.text ?? '';
-    if (_authError.isEmpty) {
-      if (!AuthManager.instance.logined) {
-        _data = null;
-        _error = '';
-      } else {
-        // 登录状态变更，刷新用户信息
-        WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show()); // TODO use _loadData or _refreshIndicatorKey when auth changed
-      }
-      if (mounted) setState(() {});
+    if (_authError.isNotEmpty) {
+      return;
     }
+
+    if (!AuthManager.instance.logined) {
+      _data = null;
+      _error = '';
+    } else {
+      // 登录状态变更，刷新用户信息
+      WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+    }
+    if (mounted) setState(() {});
   }
 
   var _loading = true; // initialize to true
@@ -304,8 +306,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    // TODO show something when not logined or logining or loading or error
 
     Widget _buildScaffold({required Widget body, Text? title}) {
       final showBackground = _controller.hasClients && _controller.offset >= 180 - Theme.of(context).appBarTheme.toolbarHeight!;

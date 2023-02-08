@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
@@ -298,6 +299,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
 
     String title;
     IconData icon;
+    String? right;
     List<Widget>? widgets;
     bool twoLine = false;
 
@@ -305,6 +307,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       case MangaCollectionType.rankings:
         title = '今日漫画排行榜';
         icon = Icons.trending_up;
+        right = '更新于 ${formatDatetimeAndDuration(DateTime.now(), FormatPattern.date)}';
         widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList(); // # = 50 => 20
         break;
       case MangaCollectionType.updates:
@@ -342,6 +345,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       icon: icon,
       onRefreshPressed: widget.onRefreshPressed,
       disableRefresh: widget.disableRefresh,
+      rightText: right,
       onMorePressed: widget.onMorePressed,
       child: PlaceholderText.from(
         isLoading: widgets == null,
