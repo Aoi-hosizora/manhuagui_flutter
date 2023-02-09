@@ -101,8 +101,8 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '使用安卓原生的分享菜单',
-          hint: '该选项仅针对安卓第三方ROM，由于一些系统不支持手动启用或禁用原生的分享菜单，所以该选项在部分安卓系统中可能不起作用。',
+          title: '使用原生的分享菜单',
+          hint: '该选项仅针对第三方安卓ROM。由于部分安卓系统不支持手动启用或禁用原生的分享菜单，所以该选项在一些系统中可能不起作用。',
           value: _useNativeShareSheet,
           onChanged: (b) {
             _useNativeShareSheet = b;
@@ -238,6 +238,7 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
         onSettingChanged: (s) => setting = s,
       ),
       actions: [
+        // TODO 恢复默认
         TextButton(
           child: Text('确定'),
           onPressed: () async {

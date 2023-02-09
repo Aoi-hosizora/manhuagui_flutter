@@ -22,12 +22,12 @@ class MangaRankingLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.cover,
       title: manga.title,
-      icon1: Icons.edit,
-      text1: manga.finished ? '已完结' : '连载中',
+      icon1: Icons.person,
+      text1: manga.authors.map((a) => a.name).join('/'),
       icon2: Icons.notes,
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,
-      text3: '更新于 ${manga.formattedNewestDateWithDuration}',
+      text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       cornerIcons: flags?.buildIcons(),
       extraRightPaddingForTitle: 28 - 14 + 5 /* badge width - line horizontal padding + extra space */,
       extrasInStack: [

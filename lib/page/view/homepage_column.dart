@@ -35,40 +35,52 @@ class HomepageColumnView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // header
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // left
-                Padding(
-                  padding: EdgeInsets.only(left: headerPadding.left, top: headerPadding.top, bottom: headerPadding.bottom), // <= headerPadding left & vertical
-                  child: IconText(
-                    icon: Icon(icon, size: 26, color: Colors.orange),
-                    text: Text(title, style: Theme.of(context).textTheme.subtitle1),
-                    textPadding: EdgeInsets.only(bottom: 1),
-                    space: 8,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Padding(
+                          padding: EdgeInsets.only(left: headerPadding.left, top: headerPadding.top, bottom: headerPadding.bottom), // <= headerPadding left & vertical
+                          child: IconText(
+                            icon: Icon(icon, size: 26, color: Colors.orange),
+                            text: Flexible(
+                              child: Padding(
+                                padding: EdgeInsets.only(bottom: 1),
+                                child: Text(title, style: Theme.of(context).textTheme.subtitle1, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ),
+                            ),
+                            mainAxisSize: MainAxisSize.min,
+                            space: 8,
+                          ),
+                        ),
+                      ),
+                      if (onRefreshPressed != null)
+                        Padding(
+                          padding: EdgeInsets.only(left: 2, top: headerPadding.top - 3, bottom: headerPadding.bottom - 3), // <= headerPadding vertical
+                          child: InkWell(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                              child: Icon(Icons.refresh, size: 23, color: !disableRefresh ? Colors.orange : Colors.orange[100]),
+                            ),
+                            onTap: disableRefresh ? null : onRefreshPressed,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                if (onRefreshPressed != null)
-                  Padding(
-                    padding: EdgeInsets.only(left: 3, top: headerPadding.top - 3, bottom: headerPadding.bottom - 3), // <= headerPadding vertical
-                    child: InkWell(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-                        child: Icon(Icons.refresh, size: 22, color: !disableRefresh ? Colors.orange : Colors.orange[100]),
-                      ),
-                      onTap: disableRefresh ? null : onRefreshPressed,
-                    ),
-                  ),
-
-                Spacer(),
 
                 // right
                 if (onMorePressed != null)
                   Padding(
-                    padding: EdgeInsets.only(top: headerPadding.top - 3, bottom: headerPadding.bottom - 3, right: headerPadding.right - 5), // <= headerPadding right & vertical
+                    padding: EdgeInsets.only(top: headerPadding.top - 4.5, bottom: headerPadding.bottom - 4.5, right: headerPadding.right - 6), // <= headerPadding right & vertical
                     child: InkWell(
                       child: Padding(
-                        padding: EdgeInsets.only(left: 8, right: 5, top: 3, bottom: 3),
+                        padding: EdgeInsets.only(left: 8, right: 6, top: 4.5, bottom: 4.5),
                         child: IconText(
                           text: Text(
                             '查看更多',
@@ -85,7 +97,7 @@ class HomepageColumnView extends StatelessWidget {
                   ),
                 if (onMorePressed == null && rightText != null)
                   Padding(
-                    padding: EdgeInsets.only(top: headerPadding.top, bottom: headerPadding.bottom, left: 8, right: headerPadding.right), // <= headerPadding right & vertical
+                    padding: EdgeInsets.only(left: 12, top: headerPadding.top, bottom: headerPadding.bottom, right: headerPadding.right), // <= headerPadding right & vertical
                     child: Text(
                       rightText!,
                       style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 14, color: Colors.grey[600]),
@@ -95,6 +107,8 @@ class HomepageColumnView extends StatelessWidget {
                   SizedBox(width: headerPadding.right), // <= headerPadding right
               ],
             ),
+
+            // child
             child,
           ],
         ),

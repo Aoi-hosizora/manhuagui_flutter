@@ -205,7 +205,7 @@ class _DialogHelper {
               autofocus: true,
               decoration: InputDecoration(
                 contentPadding: EdgeInsets.symmetric(vertical: 5),
-                labelText: '漫画备注',
+                labelText: '作者备注',
                 icon: Icon(MdiIcons.commentBookmarkOutline),
               ),
             ),
@@ -242,7 +242,7 @@ class _DialogHelper {
             autofocus: true,
             decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(vertical: 5),
-              labelText: '漫画备注',
+              labelText: '作者备注',
               icon: Icon(MdiIcons.commentBookmarkOutline),
             ),
           ),

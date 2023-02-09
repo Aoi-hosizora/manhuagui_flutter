@@ -309,8 +309,10 @@ class OverflowClipBox extends StatelessWidget {
     Key? key,
     required this.direction,
     required this.child,
-    this.clip = true,
+    this.useOverflowBox = true,
     this.alignment = Alignment.topCenter,
+    this.useClipRect = true,
+    this.clipBehavior = Clip.hardEdge,
     this.width,
     this.height,
     this.margin = EdgeInsets.zero,
@@ -319,8 +321,10 @@ class OverflowClipBox extends StatelessWidget {
 
   final OverflowDirection direction;
   final Widget child;
-  final bool clip;
+  final bool useOverflowBox;
   final Alignment alignment;
+  final bool useClipRect;
+  final Clip clipBehavior;
   final double? width;
   final double? height;
   final EdgeInsets margin;
@@ -328,25 +332,34 @@ class OverflowClipBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget view = OverflowBox(
-      child: Padding(
-        padding: padding,
-        child: child,
-      ),
-      alignment: alignment,
-      minHeight: direction == OverflowDirection.vertical ? 0 : null,
-      maxHeight: direction == OverflowDirection.vertical ? double.infinity : null,
-      minWidth: direction == OverflowDirection.horizontal ? 0 : null,
-      maxWidth: direction == OverflowDirection.horizontal ? double.infinity : null,
+    // https://github.com/Limbou/expandable_page_view/blob/main/lib/src/expandable_page_view.dart
+    // https://github.com/Limbou/expandable_page_view/blob/main/lib/src/size_reporting_widget.dart
+    Widget view = Padding(
+      padding: padding,
+      child: child,
     );
+    if (useOverflowBox) {
+      view = OverflowBox(
+        child: view,
+        alignment: alignment,
+        minHeight: direction == OverflowDirection.vertical ? 0 : null,
+        maxHeight: direction == OverflowDirection.vertical ? double.infinity : null,
+        minWidth: direction == OverflowDirection.horizontal ? 0 : null,
+        maxWidth: direction == OverflowDirection.horizontal ? double.infinity : null,
+      );
+    }
+    if (useClipRect) {
+      view = ClipRect(
+        child: view,
+        clipBehavior: clipBehavior,
+      );
+    }
     return view = Padding(
       padding: margin,
       child: SizedBox(
         width: width,
         height: height,
-        child: clip //
-            ? ClipRect(child: view)
-            : view,
+        child: view,
       ),
     );
   }

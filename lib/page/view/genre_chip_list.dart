@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/category.dart';
-import 'package:manhuagui_flutter/page/genre.dart';
+import 'package:manhuagui_flutter/page/sep_genre.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 
 /// 漫画类别列表，在 [RecommendSubPage] 使用
@@ -44,7 +44,7 @@ class GenreChipListView extends StatelessWidget {
                 onTap: () => Navigator.of(context).push(
                   CustomPageRoute(
                     context: context,
-                    builder: (c) => GenrePage(
+                    builder: (c) => SepGenrePage(
                       genre: genre.toTiny(),
                     ),
                   ),

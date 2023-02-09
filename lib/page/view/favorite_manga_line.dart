@@ -3,8 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 收藏漫画行，在 [FavoriteSubPage] 使用
 class FavoriteMangaLineView extends StatelessWidget {
@@ -30,7 +30,7 @@ class FavoriteMangaLineView extends StatelessWidget {
       title: manga.mangaTitle,
       icon1: Icons.folder_open,
       text1: '${manga.checkedGroupName}${manga.remark.trim().isEmpty ? '' : '・备注 ${manga.remark.trim()}'}',
-      icon2: history == null || !history!.read ? MdiIcons.notebookOutline : Icons.import_contacts,
+      icon2: history == null || !history!.read ? CustomIcons.opened_left_star_book : Icons.import_contacts,
       text2: (history == null || !history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle}') + ' (${history?.formattedLastTimeOrDuration ?? '未知时间'})',
       icon3: Icons.access_time,
       text3: '收藏于 ${manga.formattedCreatedAtWithDuration}',

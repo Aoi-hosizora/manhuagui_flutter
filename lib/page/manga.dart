@@ -11,13 +11,14 @@ import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
-import 'package:manhuagui_flutter/page/genre.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
+import 'package:manhuagui_flutter/page/sep_genre.dart';
 import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -504,6 +505,8 @@ class _MangaPageState extends State<MangaPage> {
   }
 
   void _showHistoryPopupMenu() {
+    // 显示对话框、更新数据库、更新界面[↴]、发送通知
+    // 本页引起的更新 => 更新历史相关的界面
     showDialog(
       context: context,
       builder: (c) => SimpleDialog(
@@ -518,8 +521,8 @@ class _MangaPageState extends State<MangaPage> {
                 var newHistory = _history!.copyWith(chapterId: 0 /* 未开始阅读 */, chapterTitle: '', chapterPage: 1, lastTime: DateTime.now());
                 await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
                 _history = newHistory;
-                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.updated, fromMangaPage: true));
                 if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.updated, fromMangaPage: true));
               },
             ),
           if (_history != null)
@@ -530,8 +533,8 @@ class _MangaPageState extends State<MangaPage> {
                 Navigator.of(c).pop();
                 _history = null;
                 await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: _data!.mid);
-                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.deleted, fromMangaPage: true));
                 if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.deleted, fromMangaPage: true));
               },
             ),
           if (_history == null)
@@ -551,8 +554,8 @@ class _MangaPageState extends State<MangaPage> {
                   lastTime: DateTime.now(),
                 );
                 await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
-                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.added, fromMangaPage: true));
                 if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.added, fromMangaPage: true));
               },
             ),
         ],
@@ -630,6 +633,49 @@ class _MangaPageState extends State<MangaPage> {
     );
   }
 
+  void _gotoTocPage() {
+    // 直接打开 MangaTocPage (阅读历史和下载情况等数据由该页自行通过 EventBus 处理)
+    Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => MangaTocPage(
+          mangaId: _data!.mid,
+          mangaTitle: _data!.title,
+          groups: _data!.chapterGroups,
+          onChapterPressed: (cid) => _read(chapterId: cid),
+          onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: false),
+        ),
+      ),
+    );
+  }
+
+  void _showMoreChaptersPopupMenu() {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text(_data!.title),
+        children: [
+          IconTextDialogOption(
+            icon: Icon(Icons.notes),
+            text: Text('查看更多漫画章节'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              _gotoTocPage();
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.settings),
+            text: Text('设置分组章节显示行数'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              showOtherSettingDialog(context: context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -669,6 +715,7 @@ class _MangaPageState extends State<MangaPage> {
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
+              cacheExtent: 999999 /* <<< keep states in ListView */,
               children: [
                 // ****************************************************************
                 // 头部框
@@ -764,7 +811,7 @@ class _MangaPageState extends State<MangaPage> {
                                       onTap: () => Navigator.of(context).push(
                                         CustomPageRoute(
                                           context: context,
-                                          builder: (c) => GenrePage(
+                                          builder: (c) => SepGenrePage(
                                             genre: _data!.genres[i].toTiny(),
                                           ),
                                         ),
@@ -897,10 +944,10 @@ class _MangaPageState extends State<MangaPage> {
                               right: 0,
                               top: 0,
                               child: Container(
-                                height: 10.5,
-                                width: 10.5,
+                                height: 11,
+                                width: 11,
                                 decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                child: _history != null ? null : Icon(Icons.remove, size: 10.5, color: Colors.white),
+                                child: _history != null ? null : Icon(Icons.close, size: 10, color: Colors.white),
                               ),
                             ),
                         ],
@@ -1026,19 +1073,8 @@ class _MangaPageState extends State<MangaPage> {
                     ),
                     onChapterPressed: (cid) => _read(chapterId: cid),
                     onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: true),
-                    onMoreChaptersPressed: () => Navigator.of(context).push(
-                      CustomPageRoute(
-                        context: context,
-                        builder: (c) => MangaTocPage(
-                          mangaId: _data!.mid,
-                          mangaTitle: _data!.title,
-                          groups: _data!.chapterGroups,
-                          onChapterPressed: (cid) => _read(chapterId: cid),
-                          onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: false),
-                        ),
-                      ),
-                    ),
-                    onMoreChaptersLongPressed: () {},
+                    onMoreChaptersPressed: () => _gotoTocPage(),
+                    onMoreChaptersLongPressed: () => _showMoreChaptersPopupMenu(),
                   ),
                 ),
                 Container(height: 12),

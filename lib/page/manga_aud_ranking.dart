@@ -5,16 +5,17 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
+import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
 
 /// 漫画受众排行榜页，展示所给单个 [MangaRanking] 列表信息
 class MangaAudRankingPage extends StatefulWidget {
   const MangaAudRankingPage({
     Key? key,
-    required this.columnTitle,
+    required this.type,
     required this.rankings,
   }) : super(key: key);
 
-  final String columnTitle;
+  final MangaAudRankingType type;
   final List<MangaRanking> rankings;
 
   @override
@@ -52,7 +53,14 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
           physics: AlwaysScrollableScrollPhysics(),
           children: [
             HomepageColumnView(
-              title: widget.columnTitle,
+              title: '日排行榜 - ' +
+                  (widget.type == MangaAudRankingType.all
+                      ? '全部漫画'
+                      : widget.type == MangaAudRankingType.qingnian
+                          ? '青年漫画'
+                          : widget.type == MangaAudRankingType.shaonian
+                              ? '少年漫画'
+                              : '少女漫画'),
               icon: Icons.emoji_events,
               rightText: '更新于 ${formatDatetimeAndDuration(DateTime.now(), FormatPattern.date)}',
               padding: EdgeInsets.zero,
@@ -61,7 +69,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
                   for (var manga in widget.rankings) ...[
                     if (manga.mid != widget.rankings.first.mid) //
                       Divider(height: 0, thickness: 1),
-                    MangaAudRankingLineView(manga: manga),
+                    MangaRankingLineView(manga: manga),
                   ],
                 ],
               ),

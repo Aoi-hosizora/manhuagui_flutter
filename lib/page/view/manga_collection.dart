@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/common.dart';
@@ -318,7 +319,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       case MangaCollectionType.histories:
         title = widget.username == null ? '本地阅读历史' : '${widget.username} 的阅读历史';
         icon = Icons.history;
-        widgets = widget.histories?.map((el) => _buildHistoryItem(context, el)).toList(); // # = 50
+        widgets = widget.histories?.sublist(0, widget.histories!.length.clamp(0, 30)).map((el) => _buildHistoryItem(context, el)).toList(); // # = 50 => 30
         twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.shelves:
@@ -336,7 +337,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       case MangaCollectionType.downloads:
         title = '漫画下载列表';
         icon = Icons.download;
-        widgets = widget.downloads?.sublist(0, widget.downloads!.length.clamp(0, 20)).map((el) => _buildDownloadItem(context, el)).toList(); // # = 20
+        widgets = widget.downloads?.sublist(0, widget.downloads!.length.clamp(0, 10)).map((el) => _buildDownloadItem(context, el)).toList(); // # = 10
         break;
     }
 
@@ -385,10 +386,11 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                         child: Column(
                           children: [
                             widgets[i],
-                            if (i + 1 < widgets.length) ...[
-                              SizedBox(height: 10),
-                              widgets[i + 1],
-                            ],
+                            if (i + 1 < widgets.length)
+                              Padding(
+                                padding: EdgeInsets.only(top: 10),
+                                child: widgets[i + 1],
+                              ),
                           ],
                         ),
                       ),

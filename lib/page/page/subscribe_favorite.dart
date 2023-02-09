@@ -23,9 +23,11 @@ class FavoriteSubPage extends StatefulWidget {
   const FavoriteSubPage({
     Key? key,
     this.action,
+    this.isSepPage = false,
   }) : super(key: key);
 
   final ActionController? action;
+  final bool isSepPage;
 
   @override
   _FavoriteSubPageState createState() => _FavoriteSubPageState();
@@ -53,6 +55,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       await AuthManager.instance.check();
     });
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) => _updateByEvent(ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteOrderUpdatedEvent>((ev) => _updateOrderByEvent(ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteGroupUpdatedEvent>((ev) => _updateGroupsByEvent(ev)));
   }
 
   @override
@@ -116,6 +120,11 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     }
     if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
       // 非本页引起的删除 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (!widget.isSepPage && event.fromSepFavoritePage) {
+      // 单独页引起的变更 => 显示有更新 (仅限主页子页)
       _isUpdated = true;
       if (mounted) setState(() {});
     }
@@ -185,14 +194,17 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       fromFavoriteList: true,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的新增 => 显示有更新[↑]
-        // 本页引起的更新 => 此处不会出现[x]
-        // 本页引起的删除 => 更新列表显示[→]
+        // 本页引起的删除 => 更新列表显示
         if (!inFavorite) {
           _data.removeWhere((el) => el.mangaId == favorite.mangaId);
           _total--;
           _removed++;
           if (mounted) setState(() {});
+
+          // 独立页时发送额外通知，让主页子页显示有更新
+          if (widget.isSepPage) {
+            EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: favorite.groupName, reason: UpdateReason.deleted, fromFavoritePage: true, fromSepFavoritePage: true));
+          }
         }
       },
     );
@@ -212,12 +224,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
         _msController.exitMultiSelectionMode();
-        for (var i = 0; i < _data.length; i++) {
-          if (_data[i].mangaId == mangaId) {
-            _data[i] = newFavorite;
-          }
-        }
+        _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite);
         if (mounted) setState(() {});
+
+        // 独立页时发送额外通知，让主页子页显示有更新
+        if (widget.isSepPage) {
+          EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
+        }
       },
     );
   }
@@ -248,6 +261,15 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           }
         }
         if (mounted) setState(() {});
+
+        // 独立页时发送额外通知，让主页子页显示有更新
+        if (widget.isSepPage) {
+          for (var newFavorite in newFavorites) {
+            var oldGroupName = oldFavorites.where((f) => f.mangaId == newFavorite.mangaId).firstOrNull?.groupName;
+            EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: oldGroupName ?? newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
+            EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
+          }
+        }
       },
     );
   }
@@ -293,6 +315,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: _currentGroup, reason: UpdateReason.deleted, fromFavoritePage: true));
     }
+
+    // 独立页时发送额外通知，让主页子页显示有更新
+    if (widget.isSepPage) {
+      for (var mangaId in mangaIds) {
+        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: _currentGroup, reason: UpdateReason.deleted, fromFavoritePage: true, fromSepFavoritePage: true));
+      }
+    }
   }
 
   void _switchGroup(FavoriteGroup group) {
@@ -301,7 +330,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     }
 
     // switch and refresh
-    _currentGroup = group.groupName; // 切换分组
+    _currentGroup = group.groupName; // 切换分组 (包括默认分组和所有漫画分组)
     _searchKeyword = ''; // 清除搜索关键词
     if (mounted) setState(() {});
     Navigator.of(context).pop(); // close drawer
@@ -309,7 +338,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   }
 
   Future<void> _adjustOrder() async {
-    var ok = await Navigator.of(context).push<bool>(
+    await Navigator.of(context).push<bool>(
       CustomPageRoute(
         context: context,
         builder: (c) => FavoriteReorderPage(
@@ -317,12 +346,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         ),
       ),
     );
-    if (ok != true) {
-      return;
-    }
+  }
 
-    // 漫画顺序已调整 => 刷新列表
-    Navigator.of(context).pop(); // close drawer
+  void _updateOrderByEvent(FavoriteOrderUpdatedEvent ev) {
+    // 漫画顺序被调整 => 刷新列表
+    if (_scaffoldKey.currentState?.isEndDrawerOpen == true) {
+      Navigator.of(context).pop(); // close drawer
+    }
     _searchKeyword = ''; // 清除搜索关键词
     if (mounted) setState(() {});
     _pdvKey.currentState?.refresh();
@@ -330,39 +360,33 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
 
   Future<void> _manageGroups() async {
     _groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
-    if (_groups == null) {
-      return; // unreachable
-    }
-
-    String? mappedGroupName;
-    var ok = await Navigator.of(context).push<bool>(
-      CustomPageRoute(
-        context: context,
-        builder: (c) => FavoriteGroupPage(
-          groups: _groups!,
-          listenedGroupName: _currentGroup,
-          onGroupChanged: (n) => mappedGroupName = n, // null => 被删除; not_null => 未被删除，但可能被重命名
+    if (_groups != null) {
+      await Navigator.of(context).push<bool>(
+        CustomPageRoute(
+          context: context,
+          builder: (c) => FavoriteGroupPage(
+            groups: _groups!,
+          ),
         ),
-      ),
-    );
-    if (ok != true) {
-      return;
+      );
     }
+  }
 
-    // 修改可能被保存 => 获取最新分组并进一步处理
+  Future<void> _updateGroupsByEvent(FavoriteGroupUpdatedEvent ev) async {
+    // 收藏分组被调整 => 获取最新分组并进一步处理
     _groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
-    if (mappedGroupName == null) {
+    var newName = ev.changedGroups[_currentGroup];
+    if (newName == null) {
       // 被删除 => 转至默认分组并刷新列表
-      _currentGroup = ''; // 且华北分组
+      _currentGroup = ''; // 切换为默认分组
       _searchKeyword = ''; // 清除搜索关键词
-      if (mounted) setState(() {});
       _pdvKey.currentState?.refresh();
-    } else if (_currentGroup == mappedGroupName!) {
+    } else if (newName == _currentGroup) {
       // 未被重命名 => pass
     } else {
       // 被重命名 => 修改当前分组名
-      _currentGroup = mappedGroupName!;
-      var newData = _data.map((f) => f.copyWith(groupName: _currentGroup)).toList();
+      _currentGroup = newName;
+      var newData = _data.map((f) => f.copyWith(groupName: newName)).toList();
       _data.clear();
       _data.addAll(newData);
     }
@@ -452,6 +476,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                     textPadding: EdgeInsets.only(bottom: 2),
                   ),
                 ),
+                // TODO 所有已收藏的漫画
+                Divider(height: 0, thickness: 1),
                 for (var g in _groups ?? <FavoriteGroup>[]) ...[
                   ListTile(
                     title: Text(g.checkedGroupName),

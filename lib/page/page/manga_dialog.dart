@@ -31,7 +31,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 部分漫画/作者列表页-搜索关键词对话框 [showKeywordDialogForSearching]
 /// 部分漫画/作者列表页-排序对话框 [showSortMethodDialogForSorting]
 
-// => called by pages which contains manga line view (tiny / shelf / favorite / history / download / shelf cache)
+// => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / download)
 void showPopupMenuForMangaList({
   required BuildContext context,
   required int mangaId,
@@ -432,6 +432,7 @@ void showPopupMenuForSubscribing({
   );
 }
 
+// => called by pages which needs search items in list
 Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
   required BuildContext context,
   required String title,
@@ -520,6 +521,7 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
   );
 }
 
+// => called by pages which needs sort items in list
 Future<SortMethod?> showSortMethodDialogForSorting({
   required BuildContext context,
   required String title,
@@ -934,10 +936,10 @@ class _DialogHelper {
     if (added == true) {
       var cache = ShelfCache(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, cachedAt: DateTime.now());
       await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: true));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: true, fromShelfCachePage: false));
     } else if (added == false) {
       await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: mangaId);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, fromShelfCachePage: false));
     }
   }
 

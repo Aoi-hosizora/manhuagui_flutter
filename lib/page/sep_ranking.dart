@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/category.dart';
-import 'package:manhuagui_flutter/page/page/category_genre.dart';
+import 'package:manhuagui_flutter/page/page/home_ranking.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 
-/// 漫画类别页，同 [GenreSubPage]
-class GenrePage extends StatefulWidget {
-  const GenrePage({
+/// 漫画排行榜页，即 Separate [RankingSubPage]
+class SepRankingPage extends StatefulWidget {
+  const SepRankingPage({
     Key? key,
-    required this.genre,
   }) : super(key: key);
 
-  final TinyCategory genre;
-
   @override
-  _GenrePageState createState() => _GenrePageState();
+  _SepRankingPageState createState() => _SepRankingPageState();
 }
 
-class _GenrePageState extends State<GenrePage> {
+class _SepRankingPageState extends State<SepRankingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('漫画类别'),
+        title: Text('漫画排行榜'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
           AppBarActionButton(
@@ -39,12 +35,10 @@ class _GenrePageState extends State<GenrePage> {
         ],
       ),
       drawer: AppDrawer(
-        currentSelection: DrawerSelection.none,
+        currentSelection: DrawerSelection.ranking,
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
-      body: GenreSubPage(
-        defaultGenre: widget.genre,
-      ),
+      body: RankingSubPage(),
     );
   }
 }

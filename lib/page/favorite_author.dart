@@ -161,9 +161,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       fromFavoriteList: true,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的新增 => 显示有更新[↑]
-        // 本页引起的更新 => 此处不会出现[x]
-        // 本页引起的删除 => 更新列表显示[→]
+        // 本页引起的删除 => 更新列表显示
         if (!inFavorite) {
           _data.removeWhere((el) => el.authorId == author.authorId);
           _total--;
@@ -188,11 +186,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
         _msController.exitMultiSelectionMode();
-        for (var i = 0; i < _data.length; i++) {
-          if (_data[i].authorId == authorId) {
-            _data[i] = newFavorite;
-          }
-        }
+        _data.replaceWhere((el) => el.authorId == authorId, (_) => newFavorite);
         if (mounted) setState(() {});
       },
     );

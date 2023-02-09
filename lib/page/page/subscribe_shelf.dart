@@ -25,9 +25,11 @@ class ShelfSubPage extends StatefulWidget {
   const ShelfSubPage({
     Key? key,
     this.action,
+    this.isSepPage = false,
   }) : super(key: key);
 
   final ActionController? action;
+  final bool isSepPage;
 
   @override
   _ShelfSubPageState createState() => _ShelfSubPageState();
@@ -134,6 +136,11 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+    if (!widget.isSepPage && event.fromSepShelfPage) {
+      // 单独页引起的变更 => 显示有更新 (仅限主页子页)
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
   }
 
   void _showPopupMenu({required ShelfManga manga}) {
@@ -146,12 +153,16 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       fromShelfList: true,
       inShelfSetter: (inShelf) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的新增 => 显示有更新[↑]
-        // 本页引起的删除 => 更新列表显示[→]
+        // 本页引起的删除 => 更新列表显示
         if (!inShelf) {
           _data.removeWhere((el) => el.mid == manga.mid);
           _total--; // no "removed++"
           if (mounted) setState(() {});
+
+          // 独立页时发送额外通知，让主页子页显示有更新
+          if (widget.isSepPage) {
+            EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: manga.mid, added: false, fromShelfPage: true, fromSepShelfPage: true));
+          }
         }
       },
     );

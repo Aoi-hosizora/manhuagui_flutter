@@ -8,6 +8,8 @@ import 'package:manhuagui_flutter/page/view/favorite_reorder_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 调整收藏顺序页，根据所给分组名查询 [FavoriteManga] 列表并进行排序，以及保存到数据库
 class FavoriteReorderPage extends StatefulWidget {
@@ -62,7 +64,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
     }
   }
 
-  Future<void> _save() async {
+  Future<void> _saveData() async {
     _saving = true;
     if (mounted) setState(() {});
 
@@ -71,11 +73,12 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
         var favorite = _favorites[i].copyWith(order: i + 1);
         await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: favorite);
       }
-      // 无需任何通知，变化的仅是 order，由 FavoriteSubPage 自行刷新列表
-      Navigator.of(context).pop(true);
+      // 无需发送 FavoriteUpdatedEvent 通知，变化的仅是 order
+      EventBusManager.instance.fire(FavoriteOrderUpdatedEvent(groupName: widget.groupName));
+      Navigator.of(context).pop();
     } catch (e, s) {
       // unreachable
-      globalLogger.e('_saveGroup', e, s);
+      globalLogger.e('_saveData (FavoriteReorderPage)', e, s);
       Fluttertoast.showToast(msg: '无法保存对收藏漫画的修改');
     } finally {
       _saving = false;
@@ -119,7 +122,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
             AppBarActionButton(
               icon: Icon(Icons.check),
               tooltip: '保存修改',
-              onPressed: _saving ? null : () => _save(),
+              onPressed: _saving ? null : () => _saveData(),
             ),
           ],
         ),
@@ -138,7 +141,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
                 setting: PlaceholderSetting().copyWithChinese(),
                 childBuilder: (c) => ExtendedScrollbar(
                   controller: _controller,
-                  interactive: false /* <<< */,
+                  interactive: false /* <<< be helpful for reorder dragging */,
                   mainAxisMargin: 2,
                   crossAxisMargin: 2,
                   child: ReorderableListView.builder(

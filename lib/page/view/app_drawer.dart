@@ -4,12 +4,12 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
-import 'package:manhuagui_flutter/page/page/home_ranking.dart';
-import 'package:manhuagui_flutter/page/page/home_recent.dart';
-import 'package:manhuagui_flutter/page/page/subscribe_favorite.dart';
-import 'package:manhuagui_flutter/page/page/subscribe_history.dart';
-import 'package:manhuagui_flutter/page/page/subscribe_shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
+import 'package:manhuagui_flutter/page/sep_favorite.dart';
+import 'package:manhuagui_flutter/page/sep_history.dart';
+import 'package:manhuagui_flutter/page/sep_ranking.dart';
+import 'package:manhuagui_flutter/page/sep_recent.dart';
+import 'package:manhuagui_flutter/page/sep_shelf.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -24,9 +24,28 @@ enum DrawerSelection {
 
   home, // IndexPage
   search, // SearchPage
+
+  shelf, // ShelfPage
+  favorite, // FavoritePage
+  history, // HistoryPage
   download, // DownloadPage
+  recent, // RecentPage
+  ranking, // RankingPage
+
   message, // MessagePage
   setting, // SettingPage
+}
+
+extension DrawerSelectionExtension on DrawerSelection {
+  bool canBeReplaced() {
+    // only list page can be replaced
+    return this == DrawerSelection.shelf || //
+        this == DrawerSelection.favorite ||
+        this == DrawerSelection.history ||
+        this == DrawerSelection.download ||
+        this == DrawerSelection.recent ||
+        this == DrawerSelection.ranking;
+  }
 }
 
 class AppDrawer extends StatefulWidget {
@@ -42,20 +61,20 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
-  VoidCallback? _cancelHandler;
+  final _cancelHandlers = <VoidCallback>[];
   late var _routeTheme = CustomPageRouteTheme.of(context);
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _cancelHandler = AuthManager.instance.listen((_) => mountedSetState(() {}));
+      _cancelHandlers.add(AuthManager.instance.listen((_) => mountedSetState(() {})));
     });
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     super.dispose();
   }
 
@@ -64,39 +83,27 @@ class _AppDrawerState extends State<AppDrawer> {
     Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
-  void _gotoPage(Widget page) {
+  void _gotoPage(Widget page, {bool canReplace = false}) {
     if (widget.currentSelection != DrawerSelection.home) {
-      if (page is ShelfSubPage) {
-        // _navigateToPage(page); // TODO create new page and wrap sub page
-      } else if (page is FavoriteSubPage) {
-        // _navigateToPage(page);
-      } else if (page is HistorySubPage) {
-        // _navigateToPage(page);
-      } else if (page is RecentSubPage) {
-        // _navigateToPage(page);
-      } else if (page is RankingSubPage) {
-        // _navigateToPage(page);
-      } else {
-        _navigateToPage(page);
-      }
+      _navigateToPage(page, canReplace: canReplace);
     } else {
-      if (page is ShelfSubPage) {
+      if (page is SepShelfPage) {
         EventBusManager.instance.fire(ToShelfRequestedEvent());
-      } else if (page is FavoriteSubPage) {
+      } else if (page is SepFavoritePage) {
         EventBusManager.instance.fire(ToFavoriteRequestedEvent());
-      } else if (page is HistorySubPage) {
+      } else if (page is SepHistoryPage) {
         EventBusManager.instance.fire(ToHistoryRequestedEvent());
-      } else if (page is RecentSubPage) {
+      } else if (page is SepRecentPage) {
         EventBusManager.instance.fire(ToRecentRequestedEvent());
-      } else if (page is RankingSubPage) {
+      } else if (page is SepRankingPage) {
         EventBusManager.instance.fire(ToRankingRequestedEvent());
       } else {
-        _navigateToPage(page);
+        _navigateToPage(page, canReplace: canReplace);
       }
     }
   }
 
-  void _navigateToPage(Widget page) {
+  void _navigateToPage(Widget page, {bool canReplace = false}) {
     var isFirst = false;
     Navigator.of(context).popUntil((route) {
       isFirst = route.isFirst;
@@ -114,10 +121,10 @@ class _AppDrawerState extends State<AppDrawer> {
       disableCanTransitionFrom: _routeTheme?.disableCanTransitionFrom,
       transitionsBuilder: _routeTheme?.transitionsBuilder,
     );
-    if (isFirst || widget.currentSelection == DrawerSelection.none) {
-      Navigator.of(context).push(route);
-    } else {
+    if (!isFirst && canReplace && widget.currentSelection.canBeReplaced()) {
       Navigator.of(context).pushReplacement(route);
+    } else {
+      Navigator.of(context).push(route);
     }
   }
 
@@ -207,13 +214,13 @@ class _AppDrawerState extends State<AppDrawer> {
           _buildItem('主页', Icons.home, DrawerSelection.home, () => _popUntilFirst()),
           if (!AuthManager.instance.loading && !AuthManager.instance.logined) _buildItem('登录', Icons.login, null, () => _gotoPage(LoginPage())),
           _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
-          _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage())),
           Divider(thickness: 1),
-          _buildItem('我的书架', MdiIcons.bookshelf, null, () => _gotoPage(ShelfSubPage())),
-          _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, null, () => _gotoPage(FavoriteSubPage())),
-          _buildItem('阅读历史', Icons.history, null, () => _gotoPage(HistorySubPage())),
-          _buildItem('最近更新', Icons.cached, null, () => _gotoPage(RecentSubPage())),
-          _buildItem('漫画排行', Icons.trending_up, null, () => _gotoPage(RankingSubPage())),
+          _buildItem('我的书架', MdiIcons.bookshelf, DrawerSelection.shelf, () => _gotoPage(SepShelfPage(), canReplace: true)),
+          _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, DrawerSelection.favorite, () => _gotoPage(SepFavoritePage(), canReplace: true)),
+          _buildItem('阅读历史', Icons.history, DrawerSelection.history, () => _gotoPage(SepHistoryPage(), canReplace: true)),
+          _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage(), canReplace: true)),
+          _buildItem('最近更新', Icons.cached, DrawerSelection.recent, () => _gotoPage(SepRecentPage(), canReplace: true)),
+          _buildItem('漫画排行', Icons.trending_up, DrawerSelection.ranking, () => _gotoPage(SepRankingPage(), canReplace: true)),
           Divider(thickness: 1),
           _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
           _buildItem('应用消息', Icons.notifications, DrawerSelection.message, () => _gotoPage(MessagePage())),

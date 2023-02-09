@@ -5,8 +5,8 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 书架漫画行，在 [ShelfSubPage] 使用
 class ShelfMangaLineView extends StatelessWidget {
@@ -32,7 +32,7 @@ class ShelfMangaLineView extends StatelessWidget {
       text1: '最新章节 ' + manga.newestChapter,
       icon2: !AppSetting.instance.other.useLocalDataInShelf //
           ? Icons.import_contacts
-          : (history == null || !history!.read ? MdiIcons.notebookOutline : Icons.import_contacts),
+          : (history == null || !history!.read ? CustomIcons.opened_left_star_book : Icons.import_contacts),
       text2: !AppSetting.instance.other.useLocalDataInShelf //
           ? '最近阅读至 ${manga.lastChapter.isEmpty ? '未知章节' : manga.lastChapter} (${manga.formattedLastDurationOrTime})'
           : ((history == null || !history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle}') + ' (${history?.formattedLastTimeOrDuration ?? '未知时间'})'),
