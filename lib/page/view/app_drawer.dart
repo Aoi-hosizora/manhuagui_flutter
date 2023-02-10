@@ -19,8 +19,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 enum DrawerSelection {
   none,
-  // none => MangaPage / MangaTocPage / CommentsPage / DownloadMangaPage / MangaShelfCachePage /
-  //         AuthorPage / FavoriteAuthorPage / MangaGroupPage / MangaAudRankingPage / GenrePage
+  // none => MangaPage / MangaTocPage / CommentsPage / DownloadMangaPage / MangaShelfCachePage / FavoriteAllPage
+  //         AuthorPage / FavoriteAuthorPage / MangaGroupPage / MangaAudRankingPage / SepGenrePage
 
   home, // IndexPage
   search, // SearchPage

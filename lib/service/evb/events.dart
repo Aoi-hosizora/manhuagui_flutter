@@ -49,10 +49,11 @@ class ShelfUpdatedEvent {
 }
 
 class FavoriteUpdatedEvent {
-  const FavoriteUpdatedEvent({required this.mangaId, required this.group, required this.reason, this.fromFavoritePage = false, this.fromSepFavoritePage = false, this.fromMangaPage = false});
+  const FavoriteUpdatedEvent({required this.mangaId, required this.group, this.oldGroup, required this.reason, this.fromFavoritePage = false, this.fromSepFavoritePage = false, this.fromMangaPage = false});
 
   final int mangaId;
   final String group;
+  final String? oldGroup; // means move to group
   final UpdateReason reason;
   final bool fromFavoritePage;
   final bool fromSepFavoritePage;

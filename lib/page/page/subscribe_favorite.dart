@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/favorite_all.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/favorite_group.dart';
 import 'package:manhuagui_flutter/page/favorite_reorder.dart';
@@ -72,6 +73,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   }
 
   List<FavoriteGroup>? _groups;
+  Map<String, int>? _groupsLengths;
+  int? _allMangasCount;
   var _currentGroup = '';
 
   final _data = <FavoriteManga>[];
@@ -87,14 +90,18 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   Future<PagedList<FavoriteManga>> _getData({required int page}) async {
     if (page == 1) {
       // refresh
+      _groups = null;
+      _groupsLengths = null;
+      _allMangasCount = null;
       _removed = 0;
       _isUpdated = false;
-      _groups = null;
     }
     var username = AuthManager.instance.username;
     var data = await FavoriteDao.getFavorites(username: username, groupName: _currentGroup, keyword: _searchKeyword, pureSearch: _searchTitleOnly, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
     _total = await FavoriteDao.getFavoriteCount(username: username, groupName: _currentGroup, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
-    _groups ??= await FavoriteDao.getGroups(username: AuthManager.instance.username);
+    _groups ??= await FavoriteDao.getGroups(username: username);
+    _groupsLengths ??= await FavoriteDao.getGroupsLengths(username: username);
+    _allMangasCount ??= await FavoriteDao.getFavoriteCount(username: username, groupName: null) ?? 0;
     for (var item in data) {
       _histories[item.mangaId] = await HistoryDao.getHistory(username: username, mid: item.mangaId);
     }
@@ -104,8 +111,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   }
 
   void _updateByEvent(FavoriteUpdatedEvent event) async {
-    if (event.group != _currentGroup) {
-      return; // 非当前分组 => 忽略
+    if (_currentGroup != event.group && _currentGroup != event.oldGroup /* not null only when manga's group is updated */) {
+      return; // 未影响当前分组 => 忽略
     }
 
     if (event.reason == UpdateReason.added) {
@@ -220,6 +227,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     showUpdateFavoriteMangaRemarkDialog(
       context: context,
       favorite: oldFavorite,
+      fromFavoriteList: true,
       onUpdated: (newFavorite) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -246,6 +254,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       context: context,
       favorites: oldFavorites,
       selectedGroupName: _currentGroup,
+      fromFavoriteList: true,
       onUpdated: (newFavorites, addToTop) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -266,8 +275,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         if (widget.isSepPage) {
           for (var newFavorite in newFavorites) {
             var oldGroupName = oldFavorites.where((f) => f.mangaId == newFavorite.mangaId).firstOrNull?.groupName;
-            EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: oldGroupName ?? newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
-            EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
+            EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: newFavorite.groupName, oldGroup: oldGroupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
           }
         }
       },
@@ -375,6 +383,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   Future<void> _updateGroupsByEvent(FavoriteGroupUpdatedEvent ev) async {
     // 收藏分组被调整 => 获取最新分组并进一步处理
     _groups = await FavoriteDao.getGroups(username: AuthManager.instance.username);
+    _groupsLengths = await FavoriteDao.getGroupsLengths(username: AuthManager.instance.username);
     var newName = ev.changedGroups[_currentGroup];
     if (newName == null) {
       // 被删除 => 转至默认分组并刷新列表
@@ -461,6 +470,17 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                     ),
                   ),
                 ),
+                ListTile(
+                  title: Text('浏览所有已收藏的漫画'),
+                  leading: Icon(MdiIcons.bookmarkBoxMultipleOutline),
+                  trailing: Text((_allMangasCount ?? 0).toString()),
+                  onTap: () => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => FavoriteAllPage(),
+                    ),
+                  ),
+                ),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
@@ -476,12 +496,11 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                     textPadding: EdgeInsets.only(bottom: 2),
                   ),
                 ),
-                // TODO 所有已收藏的漫画
-                Divider(height: 0, thickness: 1),
                 for (var g in _groups ?? <FavoriteGroup>[]) ...[
                   ListTile(
-                    title: Text(g.checkedGroupName),
+                    title: Text(g.checkedGroupName, maxLines: 2, overflow: TextOverflow.ellipsis),
                     leading: _currentGroup == g.groupName ? Icon(Icons.radio_button_checked) : Icon(Icons.radio_button_unchecked),
+                    trailing: Text((_groupsLengths?[g.groupName] ?? 0).toString()),
                     selected: _currentGroup == g.groupName,
                     onTap: () => _switchGroup(g),
                   ),

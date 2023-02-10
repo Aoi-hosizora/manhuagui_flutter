@@ -15,10 +15,12 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class DlSettingSubPage extends StatefulWidget {
   const DlSettingSubPage({
     Key? key,
+    required this.action,
     required this.setting,
     required this.onSettingChanged,
   }) : super(key: key);
 
+  final ActionController action;
   final DlSetting setting;
   final void Function(DlSetting) onSettingChanged;
 
@@ -27,6 +29,24 @@ class DlSettingSubPage extends StatefulWidget {
 }
 
 class _DlSettingSubPageState extends State<DlSettingSubPage> {
+  bool? _lowerThanAndroidR;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _lowerThanAndroidR = await lowerThanAndroidR();
+      if (mounted) setState(() {});
+    });
+    widget.action.addAction(_setToDefault);
+  }
+
+  @override
+  void dispose() {
+    widget.action.removeAction();
+    super.dispose();
+  }
+
   late var _invertDownloadOrder = widget.setting.invertDownloadOrder;
   late var _defaultToDeleteFiles = widget.setting.defaultToDeleteFiles;
   late var _downloadPagesTogether = widget.setting.downloadPagesTogether;
@@ -39,15 +59,14 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
         defaultToOnlineMode: _defaultToOnlineMode,
       );
 
-  bool? _lowerThanAndroidR;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _lowerThanAndroidR = await lowerThanAndroidR();
-      if (mounted) setState(() {});
-    });
+  void _setToDefault() {
+    var setting = DlSetting.defaultSetting;
+    _invertDownloadOrder = setting.invertDownloadOrder;
+    _defaultToDeleteFiles = setting.defaultToDeleteFiles;
+    _downloadPagesTogether = setting.downloadPagesTogether;
+    _defaultToOnlineMode = setting.defaultToOnlineMode;
+    widget.onSettingChanged.call(_newestSetting);
+    if (mounted) setState(() {});
   }
 
   @override
@@ -134,6 +153,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
 }
 
 Future<bool> showDlSettingDialog({required BuildContext context}) async {
+  var action = ActionController();
   var setting = AppSetting.instance.dl;
   var ok = await showDialog<bool>(
     context: context,
@@ -145,22 +165,33 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
       ),
       scrollable: true,
       content: DlSettingSubPage(
+        action: action,
         setting: setting,
         onSettingChanged: (s) => setting = s,
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
         TextButton(
-          child: Text('确定'),
-          onPressed: () async {
-            AppSetting.instance.update(dl: setting);
-            await AppSettingPrefs.saveDlSetting();
-            EventBusManager.instance.fire(AppSettingChangedEvent());
-            Navigator.of(c).pop(true);
-          },
+          child: Text('恢复默认'),
+          onPressed: () => action.invoke(),
         ),
-        TextButton(
-          child: Text('取消'),
-          onPressed: () => Navigator.of(c).pop(false),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              child: Text('确定'),
+              onPressed: () async {
+                AppSetting.instance.update(dl: setting);
+                await AppSettingPrefs.saveDlSetting();
+                EventBusManager.instance.fire(AppSettingChangedEvent());
+                Navigator.of(c).pop(true);
+              },
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).pop(false),
+            ),
+          ],
         ),
       ],
     ),

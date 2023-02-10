@@ -33,18 +33,14 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
     super.dispose();
   }
 
-  late var _groups = widget.groups.toList();
+  late var _groups = widget.groups.map((g) => _FavoriteGroupWithOrigin(group: g, origin: g)).toList();
   final _operations = <_GroupOperation>[];
-  final _newToOlds = <String, String>{};
-  final _oldToNews = <String, String?>{}; // TODO 逻辑有问题，待修复
   var _reordered = false;
   var _saving = false;
 
   void _restore() {
-    _groups = widget.groups.toList();
+    _groups = widget.groups.map((g) => _FavoriteGroupWithOrigin(group: g, origin: g)).toList();
     _operations.clear();
-    _newToOlds.clear();
-    _oldToNews.clear();
     _reordered = false;
     if (mounted) setState(() {});
   }
@@ -56,21 +52,17 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
         Fluttertoast.showToast(msg: '分组名不能为空');
         return false;
       }
-      if (FavoriteGroup.isDefaultName(newGroupName)) {
-        Fluttertoast.showToast(msg: '不可创建默认分组');
+      if (!FavoriteGroup.isValidName(newGroupName)) {
+        Fluttertoast.showToast(msg: '不允许使用 "$newGroupName" 作为分组名');
         return false;
       }
-      if (_groups.where((g) => g.groupName == newGroupName).isNotEmpty) {
+      if (_groups.where((g) => g.group.groupName == newGroupName).isNotEmpty) {
         Fluttertoast.showToast(msg: '"$newGroupName" 已存在');
         return false;
       }
 
-      var group = FavoriteGroup(
-        groupName: newGroupName,
-        order: -1, // 最后再统一修改
-        createdAt: DateTime.now(),
-      );
-      _groups.add(group);
+      var group = FavoriteGroup(groupName: newGroupName, order: -1, createdAt: DateTime.now()); // 最后再统一修改顺序
+      _groups.add(_FavoriteGroupWithOrigin(group: group, origin: null /* 新增的分组没有原始分组 */));
       _operations.add(_CreateGroupOp(group));
       if (mounted) setState(() {});
       return true;
@@ -109,15 +101,15 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
     );
   }
 
-  Future<void> _renameGroup(FavoriteGroup group, int index) async {
-    if (group.groupName == '') {
+  Future<void> _renameGroup(_FavoriteGroupWithOrigin group, int index) async {
+    if (group.group.groupName == '') {
       Fluttertoast.showToast(msg: '不可编辑默认分组');
       return;
     }
 
     bool rename(String newGroupName) {
       newGroupName = newGroupName.trim();
-      if (newGroupName == group.groupName) {
+      if (newGroupName == group.group.groupName) {
         Fluttertoast.showToast(msg: '分组名没有变更');
         return false;
       }
@@ -125,32 +117,29 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
         Fluttertoast.showToast(msg: '分组名不能为空');
         return false;
       }
-      if (FavoriteGroup.isDefaultName(newGroupName)) {
-        Fluttertoast.showToast(msg: '不可重命名为默认分组');
+      if (!FavoriteGroup.isValidName(newGroupName)) {
+        Fluttertoast.showToast(msg: '不允许使用 "$newGroupName" 作为分组名');
         return false;
       }
-      if (_groups.where((g) => g.groupName == newGroupName).isNotEmpty) {
+      if (_groups.where((g) => g.group.groupName == newGroupName).isNotEmpty) {
         Fluttertoast.showToast(msg: '"$newGroupName" 已存在');
         return false;
       }
 
-      var oldGroupName = group.groupName;
-      var newGroup = group.copyWith(groupName: newGroupName, order: -1); // 最后再统一修改顺序
-      _groups[index] = newGroup;
+      var oldGroupName = group.group.groupName;
+      var newGroup = group.group.copyWith(groupName: newGroupName, order: -1); // 最后再统一修改顺序
+      _groups[index] = _FavoriteGroupWithOrigin(group: newGroup, origin: group.origin /* 被重命名的分组需要记录原始分组 */);
       _operations.add(_RenameGroupOp(oldGroupName, newGroup));
-      var originGroupName = _newToOlds[oldGroupName] ?? oldGroupName; // 溯源找到初始分组名
-      _newToOlds[newGroupName] = originGroupName; // 更新映射
-      _oldToNews[originGroupName] = newGroupName; // 更新映射
       if (mounted) setState(() {});
       return true;
     }
 
     var controller = TextEditingController();
-    controller.text = group.groupName;
+    controller.text = group.group.groupName;
     await showDialog(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('重命名 "${group.groupName}" 分组'),
+        title: Text('重命名 "${group.group.groupName}" 分组'),
         content: SizedBox(
           width: getDialogContentMaxWidth(context),
           child: TextField(
@@ -179,21 +168,24 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
     );
   }
 
-  Future<void> _deleteGroup(FavoriteGroup group, int index) async {
-    if (group.groupName == '') {
+  Future<void> _deleteGroup(_FavoriteGroupWithOrigin group, int index) async {
+    if (group.group.groupName == '') {
       return; // 不可删除默认分组
     }
 
+    int? mangaCount;
+    if (group.origin != null) {
+      mangaCount = await FavoriteDao.getFavoriteCount(username: AuthManager.instance.username, groupName: group.origin!.groupName); // 查询原始分组的漫画数量
+    }
+
     bool? ok;
-    var originGroupName = _newToOlds[group.groupName] ?? group.groupName; // 溯源找到初始分组名
-    var cnt = await FavoriteDao.getFavoriteCount(username: AuthManager.instance.username, groupName: originGroupName);
     ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('删除分组'),
-        content: cnt == null || cnt == 0
-            ? Text('是否删除 "${group.groupName}" 分组') //
-            : Text('"${group.groupName}" 分组内仍存有 $cnt 部漫画，这些漫画将被移至默认分组，确定继续删除该分组？') /* 实际由 FavoriteDao.deleteGroup 处理 */,
+        content: mangaCount == null || mangaCount == 0
+            ? Text('是否删除 "${group.group.groupName}" 分组？') //
+            : Text('"${group.group.groupName}" 分组 (原为 "${group.origin!.groupName}" 分组) 内仍存有 $mangaCount 部漫画，这些漫画将被移至默认分组，确定继续删除该分组？'),
         actions: [
           TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
           TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
@@ -204,10 +196,8 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
       return;
     }
 
-    _groups.removeAt(index);
-    _operations.add(_DeleteGroupOp(group.groupName));
-    _newToOlds.removeWhere((key, value) => key == group.groupName); // 更新映射
-    _oldToNews[originGroupName] = null; // 更新映射
+    _groups.removeAt(index); // 记录着的原始分组随着分组被删除而删除
+    _operations.add(_DeleteGroupOp(group.group.groupName));
     if (mounted) setState(() {});
   }
 
@@ -229,37 +219,38 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
 
       // 2. 保存新的分组顺序到数据库
       for (var i = 0; i < _groups.length; i++) {
-        var group = _groups[i].copyWith(order: i + 1);
+        var group = _groups[i].group.copyWith(order: i + 1);
         await FavoriteDao.addOrUpdateGroup(username: AuthManager.instance.username, group: group, testGroupName: group.groupName);
       }
 
       // 3. 将老分组名映射到新分组名
-      var nameMap = <String, String?>{}; // 包括被重命名和被删除的分组
+      var oldToNewGroupMap = <String, String>{}; // 并非所有的原始分组都包含在这个映射中，原始分组被删除则不包含在该映射中
+      for (var group in _groups) {
+        if (group.origin != null) {
+          oldToNewGroupMap[group.origin!.groupName] = group.group.groupName;
+        }
+      }
+      var changedNames = <String, String?>{}; // <<< 所有原始分组的变更记录 (老到新)，包括被重命名和被删除的分组
       for (var oldGroup in widget.groups) {
         var oldGroupName = oldGroup.groupName;
-        var newGroupName = _oldToNews[oldGroupName];
+        var newGroupName = oldToNewGroupMap[oldGroupName];
         if (newGroupName != null) {
-          nameMap[oldGroupName] = newGroupName; // 被重命名过 (可能相同)
-        } else if (!_oldToNews.containsKey(oldGroupName)) {
-          nameMap[oldGroupName] = oldGroupName; // 未被重命名 (未被修改)
+          changedNames[oldGroupName] = newGroupName; // 分组未被删除 (可能被重命名过)
         } else {
-          nameMap[oldGroupName] = null; // 分组被删除
+          changedNames[oldGroupName] = null; // 分组被删除
         }
       }
-      globalLogger.i('nameMap: ${nameMap.entries.map((i) => '"${i.key}" => "${i.value}"').join(', ')}');
 
       // 4. 记录新增分组的分组名
-      var newNames = <String>[]; // 仅包括新增的分组
-      var oldTargetNames = nameMap.values.toList();
+      var newNames = <String>[]; // <<< 所有新增分组的最新分组名
       for (var g in _groups) {
-        if (!oldTargetNames.contains(g.groupName)) {
-          newNames.add(g.groupName); // 新增的分组
+        if (g.origin == null) {
+          newNames.add(g.group.groupName); // 新增的分组
         }
       }
-      globalLogger.i('newNames: ${newNames.map((i) => '"$i"').join(', ')}');
 
       // 5. 发送通知
-      EventBusManager.instance.fire(FavoriteGroupUpdatedEvent(changedGroups: nameMap, newGroups: newNames));
+      EventBusManager.instance.fire(FavoriteGroupUpdatedEvent(changedGroups: changedNames, newGroups: newNames));
       Navigator.of(context).pop();
     } catch (e, s) {
       // unreachable
@@ -336,9 +327,10 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
                 ),
               ),
               child: FavoriteGroupReorderLineView(
-                group: _groups[i],
-                canDelete: _groups[i].groupName != '',
-                dragger: _groups[i].groupName == ''
+                group: _groups[i].group,
+                originGroup: _groups[i].origin,
+                canDelete: _groups[i].group.groupName != '',
+                dragger: _groups[i].group.groupName == ''
                     ? null
                     : ReorderableDragStartListener(
                         index: i,
@@ -403,6 +395,13 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
       ),
     );
   }
+}
+
+class _FavoriteGroupWithOrigin {
+  const _FavoriteGroupWithOrigin({required this.group, required this.origin});
+
+  final FavoriteGroup group;
+  final FavoriteGroup? origin; // 记录原始分组用于溯源
 }
 
 abstract class _GroupOperation {

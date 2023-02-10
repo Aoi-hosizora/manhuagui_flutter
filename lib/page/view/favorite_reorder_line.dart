@@ -55,6 +55,7 @@ class FavoriteGroupReorderLineView extends StatelessWidget {
   const FavoriteGroupReorderLineView({
     Key? key,
     required this.group,
+    required this.originGroup,
     required this.dragger,
     this.canDelete = true,
     required this.onDeletePressed,
@@ -62,6 +63,7 @@ class FavoriteGroupReorderLineView extends StatelessWidget {
   }) : super(key: key);
 
   final FavoriteGroup group;
+  final FavoriteGroup? originGroup;
   final Widget? dragger;
   final bool canDelete;
   final VoidCallback? onDeletePressed;
@@ -71,7 +73,16 @@ class FavoriteGroupReorderLineView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(group.checkedGroupName, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text('创建于 ${group.formattedCreatedAt}', maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        (group.groupName == ''
+                ? '不可修改'
+                : originGroup == null
+                    ? '新增的分组'
+                    : (originGroup!.groupName == group.groupName ? '未变更' : '原为 "${originGroup!.checkedGroupName}"')) + //
+            '・创建于 ${group.formattedCreatedAt}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       leading: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

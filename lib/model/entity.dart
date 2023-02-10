@@ -190,7 +190,7 @@ class FavoriteGroup {
 
   String get checkedGroupName => groupName.trim().isEmpty ? '默认分组' : groupName.trim();
 
-  static bool isDefaultName(String s) => s.trim() == '默认' || s.trim() == '默认分组';
+  static bool isValidName(String s) => s.trim().isNotEmpty && s.trim() != '默认' && s.trim() != '默认分组';
 
   String get formattedCreatedAt => //
       formatDatetimeAndDuration(createdAt, FormatPattern.datetime);

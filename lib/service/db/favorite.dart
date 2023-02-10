@@ -208,13 +208,28 @@ class FavoriteDao {
     );
   }
 
-  static Future<List<FavoriteManga>?> getFavorites({required String username, required String groupName, String? keyword, bool pureSearch = false, SortMethod sortMethod = SortMethod.byOrderAsc, required int? page, int limit = 20, int offset = 0}) async {
+  static Future<List<FavoriteManga>?> getFavorites({required String username, required String? groupName, String? keyword, bool pureSearch = false, SortMethod sortMethod = SortMethod.byOrderAsc, required int? page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
     var like = _buildFavoriteLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var orderBy = _buildFavoriteOrderByStatement(sortMethod: sortMethod, includeORDERBY: false);
     List<Map<String, Object?>>? results;
-    if (page != null && page > 0) {
-      // return in pagination
+    if (groupName == null) {
+      // return in pagination (all groups)
+      page ??= 1 /* unreachable */;
+      offset = limit * (page - 1) - offset;
+      if (offset < 0) {
+        offset = 0;
+      }
+      results = await db.safeRawQuery(
+        '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colRemark, $_colGroupName, $_colListOrder, $_colCreatedAt 
+           FROM $_tblFavorite
+           WHERE $_colUsername = ? ${like?.item1 ?? ''}
+           ORDER BY $orderBy, $_colCreatedAt DESC
+           LIMIT $limit OFFSET $offset''',
+        [username, ...(like?.item2 ?? [])],
+      );
+    } else if (page != null && page > 0) {
+      // return in pagination (single group)
       offset = limit * (page - 1) - offset;
       if (offset < 0) {
         offset = 0;
@@ -248,7 +263,7 @@ class FavoriteDao {
         mangaCover: r[_colMangaCover]! as String,
         mangaUrl: r[_colMangaUrl]! as String,
         remark: r[_colRemark]! as String,
-        groupName: groupName,
+        groupName: groupName ?? r[_colGroupName]! as String,
         order: r[_colListOrder]! as int,
         createdAt: DateTime.parse(r[_colCreatedAt]! as String),
       ));
@@ -321,6 +336,28 @@ class FavoriteDao {
         order: r[_colGGroupOrder]! as int,
         createdAt: DateTime.parse(r[_colGCreatedAt]! as String),
       ));
+    }
+    return out;
+  }
+
+  static Future<Map<String, int>?> getGroupsLengths({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*) AS count, $_colGroupName
+           FROM $_tblFavorite
+           WHERE $_colUsername = ?
+           GROUP BY $_colGroupName''',
+      [username],
+    );
+    if (results == null) {
+      return null;
+    }
+
+    var out = <String, int>{};
+    for (var r in results) {
+      var groupName = r[_colGroupName]! as String;
+      var count = r['count']! as int;
+      out[groupName] = count;
     }
     return out;
   }

@@ -13,10 +13,12 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class OtherSettingSubPage extends StatefulWidget {
   const OtherSettingSubPage({
     Key? key,
+    required this.action,
     required this.setting,
     required this.onSettingChanged,
   }) : super(key: key);
 
+  final ActionController action;
   final OtherSetting setting;
   final void Function(OtherSetting) onSettingChanged;
 
@@ -25,6 +27,18 @@ class OtherSettingSubPage extends StatefulWidget {
 }
 
 class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.action.addAction(_setToDefault);
+  }
+
+  @override
+  void dispose() {
+    widget.action.removeAction();
+    super.dispose();
+  }
+
   late var _timeoutBehavior = widget.setting.timeoutBehavior;
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
@@ -56,6 +70,26 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         useLocalDataInShelf: _useLocalDataInShelf,
         includeUnreadInHome: _includeUnreadInHome,
       );
+
+  void _setToDefault() {
+    var setting = OtherSetting.defaultSetting;
+    _timeoutBehavior = setting.timeoutBehavior;
+    _dlTimeoutBehavior = setting.dlTimeoutBehavior;
+    _enableLogger = setting.enableLogger;
+    _useNativeShareSheet = setting.useNativeShareSheet;
+    _usingDownloadedPage = setting.usingDownloadedPage;
+    _defaultMangaOrder = setting.defaultMangaOrder;
+    _defaultAuthorOrder = setting.defaultAuthorOrder;
+    _clickToSearch = setting.clickToSearch;
+    _enableCornerIcons = setting.enableCornerIcons;
+    _showMangaReadIcon = setting.showMangaReadIcon;
+    _regularGroupRows = setting.regularGroupRows;
+    _otherGroupRows = setting.otherGroupRows;
+    _useLocalDataInShelf = setting.useLocalDataInShelf;
+    _includeUnreadInHome = setting.includeUnreadInHome;
+    widget.onSettingChanged.call(_newestSetting);
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +257,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
 }
 
 Future<bool> showOtherSettingDialog({required BuildContext context}) async {
+  var action = ActionController();
   var setting = AppSetting.instance.other;
   var ok = await showDialog<bool>(
     context: context,
@@ -234,23 +269,33 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
       ),
       scrollable: true,
       content: OtherSettingSubPage(
+        action: action,
         setting: setting,
         onSettingChanged: (s) => setting = s,
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        // TODO 恢复默认
         TextButton(
-          child: Text('确定'),
-          onPressed: () async {
-            AppSetting.instance.update(other: setting);
-            await AppSettingPrefs.saveOtherSetting();
-            EventBusManager.instance.fire(AppSettingChangedEvent());
-            Navigator.of(c).pop(true);
-          },
+          child: Text('恢复默认'),
+          onPressed: () => action.invoke(),
         ),
-        TextButton(
-          child: Text('取消'),
-          onPressed: () => Navigator.of(c).pop(false),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              child: Text('确定'),
+              onPressed: () async {
+                AppSetting.instance.update(other: setting);
+                await AppSettingPrefs.saveOtherSetting();
+                EventBusManager.instance.fire(AppSettingChangedEvent());
+                Navigator.of(c).pop(true);
+              },
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).pop(false),
+            ),
+          ],
         ),
       ],
     ),

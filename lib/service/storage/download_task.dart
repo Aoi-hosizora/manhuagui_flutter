@@ -80,7 +80,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
     Future.delayed(Duration(seconds: 1), () {
       if (_canceled) {
-        // TODO 下载时当所有页面都被 cache，且部分页已开始完，就会出现下载已完成但通知仍存在的问题
+        // TODO 下载时当所有页面都被 cache，且部分页已开始完，就会出现下载已完成但通知仍存在的问题 (可能已解决，待测试)
         DownloadNotificationHelper.cancelNotification(mangaId); // 以防万一，等待1s后再取消系统通知一次
       }
     });
@@ -91,16 +91,16 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   DownloadMangaProgress get progress => _progress;
 
-  void _updateProgress(DownloadMangaProgress progress, {bool alsoNotify = false}) {
+  Future<void> _updateProgress(DownloadMangaProgress progress, {bool alsoNotify = false}) async {
     _progress = progress;
+    EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: false));
     if (alsoNotify) {
       if (!_canceled) {
-        DownloadNotificationHelper.showProgressNotification(mangaId, mangaTitle, _progress);
+        await DownloadNotificationHelper.showProgressNotification(mangaId, mangaTitle, _progress);
       } else {
-        DownloadNotificationHelper.cancelNotification(mangaId);
+        await DownloadNotificationHelper.cancelNotification(mangaId);
       }
     }
-    EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: false));
   }
 
   Queue _pageQueue; // 用于下载章节页面的队列，可能会被 cancel
@@ -237,7 +237,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       // 当前所有章节均已成功下载完成，并且漫画和所有章节的数据都不需要更新 => 直接结束，返回成功
       return true;
     }
-    _updateProgress(
+    await _updateProgress(
       DownloadMangaProgress.gettingManga(),
       alsoNotify: true,
     );
@@ -284,7 +284,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     var startedChapterIds = <int>[];
     for (var curr in chapterIdsWhenInit /* 使用最开头记录的章节列表，防止"漫画数据获取途中新增的章节"也在此处被处理 */) {
       // 4.1. 判断请求是否被取消
-      var chapterId = curr.chapterId; // 忽略章节的 canceled
+      var chapterId = curr.chapterId; // 此处忽略章节的取消下载标记
       if (canceled) {
         return false; // 被取消 => 直接结束
       }
@@ -316,7 +316,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       // 4.4. 更新完章节下载表后，再更新"已开始下载的章节"列表
       startedChapters.add(null); // 空占位，章节已完成下载
       startedChapterIds.add(chapterId);
-      _updateProgress(
+      await _updateProgress(
         DownloadMangaProgress.gettingChapter(
           manga: manga,
           startedChapterIds: startedChapterIds,
@@ -356,7 +356,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       // 5.3. 获取章节数据，并记录至"已开始下载的章节"列表
       startedChapters.add(null); // 占位，章节已开始下载
       startedChapterIds.add(chapterId);
-      _updateProgress(
+      await _updateProgress(
         DownloadMangaProgress.gettingChapter(
           manga: manga,
           startedChapterIds: startedChapterIds,
@@ -385,7 +385,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         continue;
       }
       startedChapters[startedChapters.length - 1] = chapter; // 更新占位的章节数据
-      _updateProgress(
+      await _updateProgress(
         DownloadMangaProgress.gotChapter(
           manga: manga,
           startedChapterIds: startedChapterIds,
@@ -452,7 +452,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           }
 
           // 5.5.4. 通知页面下载进度
-          _updateProgress(
+          await _updateProgress(
             DownloadMangaProgress.gotPage(
               manga: manga,
               startedChapterIds: startedChapterIds,
@@ -463,7 +463,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
               successChapterPageCount: successChapterPageCount,
             ),
             alsoNotify: true,
-          );
+          ); // 此处需要 await，等待系统通知发送或更新完成
         }).onError((e, s) {
           if (e is! QueueCancelledException) {
             var we = wrapError(e, s);

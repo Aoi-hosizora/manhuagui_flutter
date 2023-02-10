@@ -167,11 +167,12 @@ void showPopupMenuForMangaList({
   );
 }
 
-// => called in FavoriteSubPage
+// => called in FavoriteSubPage and FavoriteAllPage
 void showUpdateFavoriteMangasGroupDialog({
   required BuildContext context,
   required List<FavoriteManga> favorites,
-  required String selectedGroupName,
+  required String? selectedGroupName,
+  bool fromFavoriteList = false,
   required void Function(List<FavoriteManga> newFavorites, bool addToTop) onUpdated,
 }) async {
   var helper = _DialogHelper(
@@ -186,15 +187,16 @@ void showUpdateFavoriteMangasGroupDialog({
     selectedGroupName: selectedGroupName,
     onUpdated: onUpdated,
     showToast: true,
-    fromFavoriteList: true /* <<< only for favorite list */,
+    fromFavoriteList: fromFavoriteList,
     fromMangaPage: false,
   );
 }
 
-// => called in FavoriteSubPage
+// => called in FavoriteSubPage and FavoriteAllPage
 void showUpdateFavoriteMangaRemarkDialog({
   required BuildContext context,
   required FavoriteManga favorite,
+  bool fromFavoriteList = false,
   required void Function(FavoriteManga newFavorite) onUpdated,
 }) async {
   var helper = _DialogHelper(
@@ -208,7 +210,7 @@ void showUpdateFavoriteMangaRemarkDialog({
     oldFavorite: favorite,
     onUpdated: onUpdated,
     showSnackBar: false,
-    fromFavoriteList: true /* <<< only for favorite list */,
+    fromFavoriteList: fromFavoriteList,
     fromMangaPage: false,
   );
 }
@@ -725,7 +727,7 @@ class _DialogHelper {
   static Future<Tuple2<FavoriteGroup, bool>?> showChooseFavoriteGroupDialog({
     required BuildContext context,
     required List<FavoriteGroup> groups,
-    required String selectedGroupName,
+    required String? selectedGroupName,
   }) async {
     var addToTop = false; // order, 默认添加到末尾
     var group = await showDialog<FavoriteGroup>(
@@ -743,7 +745,7 @@ class _DialogHelper {
             TextDialogOption(
               text: Text(
                 group.checkedGroupName,
-                style: group.groupName != selectedGroupName //
+                style: selectedGroupName == null || group.groupName != selectedGroupName //
                     ? null
                     : TextStyle(color: Theme.of(context).primaryColor),
               ),
@@ -1071,14 +1073,13 @@ class _DialogHelper {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画收藏于 "${group.checkedGroupName}"')));
     }
-    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: oldFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
-    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, oldGroup: oldFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
   }
 
   // => called by showUpdateFavoritesGroupDialog
   Future<void> updateFavoritesGroup({
     required List<FavoriteManga> oldFavorites, // 按照收藏列表从上到下的顺序
-    required String selectedGroupName,
+    required String? selectedGroupName,
     required void Function(List<FavoriteManga> newFavorites, bool addToTop) onUpdated,
     required bool showToast,
     required bool fromFavoriteList,
@@ -1116,9 +1117,7 @@ class _DialogHelper {
     for (var tuple in oldNewFavorites) {
       var oldFavorite = tuple.item1;
       var newFavorite = tuple.item2;
-      var mangaId = newFavorite.mangaId;
-      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: oldFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
-      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: newFavorite.groupName, oldGroup: oldFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
     }
   }
 

@@ -11,10 +11,12 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class ViewSettingSubPage extends StatefulWidget {
   const ViewSettingSubPage({
     Key? key,
+    required this.action,
     required this.setting,
     required this.onSettingChanged,
   }) : super(key: key);
 
+  final ActionController action;
   final ViewSetting setting;
   final void Function(ViewSetting) onSettingChanged;
 
@@ -23,6 +25,18 @@ class ViewSettingSubPage extends StatefulWidget {
 }
 
 class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.action.addAction(_setToDefault);
+  }
+
+  @override
+  void dispose() {
+    widget.action.removeAction();
+    super.dispose();
+  }
+
   late var _viewDirection = widget.setting.viewDirection;
   late var _showPageHint = widget.setting.showPageHint;
   late var _showClock = widget.setting.showClock;
@@ -44,6 +58,21 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         fullscreen: _fullscreen,
         preloadCount: _preloadCount,
       );
+
+  void _setToDefault() {
+    var setting = ViewSetting.defaultSetting;
+    _viewDirection = setting.viewDirection;
+    _showPageHint = setting.showPageHint;
+    _showClock = setting.showClock;
+    _showNetwork = setting.showNetwork;
+    _showBattery = setting.showBattery;
+    _enablePageSpace = setting.enablePageSpace;
+    _keepScreenOn = setting.keepScreenOn;
+    _fullscreen = setting.fullscreen;
+    _preloadCount = setting.preloadCount;
+    widget.onSettingChanged.call(_newestSetting);
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +172,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
 }
 
 Future<bool> showViewSettingDialog({required BuildContext context, Widget Function(BuildContext)? anotherButtonBuilder}) async {
+  var action = ActionController();
   var setting = AppSetting.instance.view;
   var ok = await showDialog<bool>(
     context: context,
@@ -154,12 +184,23 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
       ),
       scrollable: true,
       content: ViewSettingSubPage(
+        action: action,
         setting: setting,
         onSettingChanged: (s) => setting = s,
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        anotherButtonBuilder?.call(c) ?? SizedBox.shrink(),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (anotherButtonBuilder != null) //
+              anotherButtonBuilder.call(c),
+            TextButton(
+              child: Text('恢复默认'),
+              onPressed: () => action.invoke(),
+            ),
+          ],
+        ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
