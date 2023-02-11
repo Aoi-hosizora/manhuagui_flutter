@@ -191,6 +191,7 @@ class DlSetting {
 
 class OtherSetting {
   const OtherSetting({
+    required this.showDebugErrorMsg,
     required this.timeoutBehavior,
     required this.dlTimeoutBehavior,
     required this.enableLogger,
@@ -210,7 +211,8 @@ class OtherSetting {
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
   final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
   final bool enableLogger; // 记录调试日志
-  final bool useNativeShareSheet; // 使用安卓原生的分享菜单
+  final bool showDebugErrorMsg; // 显示更详细的错误信息
+  final bool useNativeShareSheet; // 使用原生的分享菜单
   final bool usingDownloadedPage; // 阅读时载入已下载的页面
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
@@ -226,6 +228,7 @@ class OtherSetting {
     timeoutBehavior: TimeoutBehavior.normal,
     dlTimeoutBehavior: TimeoutBehavior.normal,
     enableLogger: false,
+    showDebugErrorMsg: false,
     useNativeShareSheet: true,
     usingDownloadedPage: true,
     defaultMangaOrder: MangaOrder.byPopular,
@@ -243,6 +246,7 @@ class OtherSetting {
     TimeoutBehavior? timeoutBehavior,
     TimeoutBehavior? dlTimeoutBehavior,
     bool? enableLogger,
+    bool? showDebugErrorMsg,
     bool? useNativeShareSheet,
     bool? usingDownloadedPage,
     MangaOrder? defaultMangaOrder,
@@ -259,6 +263,7 @@ class OtherSetting {
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
       dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
       enableLogger: enableLogger ?? this.enableLogger,
+      showDebugErrorMsg: showDebugErrorMsg ?? this.showDebugErrorMsg,
       useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
       usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,

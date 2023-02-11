@@ -108,15 +108,6 @@ class _LogConsolePageState extends State<LogConsolePage> {
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
-            icon: const Icon(Icons.delete),
-            tooltip: '清空日志',
-            onPressed: () {
-              _filteredBuffer.clear();
-              LogConsolePage._eventBuffer.clear();
-              if (mounted) setState(() {});
-            },
-          ),
-          AppBarActionButton(
             icon: const Icon(Icons.ios_share),
             tooltip: '导出日志',
             onPressed: () => showDialog(
@@ -146,6 +137,15 @@ class _LogConsolePageState extends State<LogConsolePage> {
               ),
             ),
           ),
+          AppBarActionButton(
+            icon: const Icon(Icons.delete),
+            tooltip: '清空日志',
+            onPressed: () {
+              _filteredBuffer.clear();
+              LogConsolePage._eventBuffer.clear();
+              if (mounted) setState(() {});
+            },
+          ),
         ],
       ),
       body: Column(
@@ -162,7 +162,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     mainAxisMargin: 2,
                     crossAxisMargin: 2,
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.only(bottom: 150),
+                      padding: EdgeInsets.only(bottom: 50),
                       controller: _scrollController,
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
@@ -172,7 +172,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                           width: 2000,
                           child: SelectableText(
                             _filteredBuffer.map((el) => el.plainText).join('\n'),
-                            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontFamily: 'monospace'),
+                            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12.5, fontFamily: 'monospace'),
                           ),
                         ),
                       ),

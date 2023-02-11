@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/page/author.dart';
-import 'package:manhuagui_flutter/page/page/author_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 

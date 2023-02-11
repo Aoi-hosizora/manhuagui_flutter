@@ -7,7 +7,7 @@ import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 /// 漫画章节阅读页-额外页
-class ViewExtraSubPage extends StatelessWidget {
+class ViewExtraSubPage extends StatefulWidget {
   const ViewExtraSubPage({
     Key? key,
     required this.isHeader,
@@ -41,8 +41,13 @@ class ViewExtraSubPage extends StatelessWidget {
   final void Function(String url, String title) toShowImage;
   final void Function() toPop;
 
+  @override
+  State<ViewExtraSubPage> createState() => _ViewExtraSubPageState();
+}
+
+class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
   Widget _buildChapters(BuildContext context) {
-    if (data.prevChapterId == null || data.nextChapterId == null) {
+    if (widget.data.prevChapterId == null || widget.data.nextChapterId == null) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 6),
         child: Center(
@@ -103,32 +108,32 @@ class ViewExtraSubPage extends StatelessWidget {
 
     var prev = Expanded(
       child: _buildAction(
-        text: data.prevChapterId! != 0 ? '阅读上一章节' : '暂无上一章节',
-        subText: data.prevChapterTitle!,
-        left: !reverseScroll ? true : false,
-        disable: data.prevChapterId == 0,
-        action: () => toGotoChapter.call(true),
+        text: widget.data.prevChapterId! != 0 ? '阅读上一章节' : '暂无上一章节',
+        subText: widget.data.prevChapterTitle!,
+        left: !widget.reverseScroll ? true : false,
+        disable: widget.data.prevChapterId == 0,
+        action: () => widget.toGotoChapter.call(true),
       ),
     );
 
     var next = Expanded(
       child: _buildAction(
-        text: data.nextChapterId! != 0 ? '阅读下一章节' : '暂无下一章节',
-        subText: data.nextChapterTitle!,
-        left: !reverseScroll ? false : true,
-        disable: data.nextChapterId == 0,
-        action: () => toGotoChapter.call(false),
+        text: widget.data.nextChapterId! != 0 ? '阅读下一章节' : '暂无下一章节',
+        subText: widget.data.nextChapterTitle!,
+        left: !widget.reverseScroll ? false : true,
+        disable: widget.data.nextChapterId == 0,
+        action: () => widget.toGotoChapter.call(false),
       ),
     );
 
     return IntrinsicHeight(
       child: Row(
         children: [
-          if (!reverseScroll) prev, // 上一章
-          if (reverseScroll) next, // 下一章(反)
+          if (!widget.reverseScroll) prev, // 上一章
+          if (widget.reverseScroll) next, // 下一章(反)
           VerticalDivider(width: 36, thickness: 2),
-          if (!reverseScroll) next, // 下一章(反)
-          if (reverseScroll) prev, // 上一章
+          if (!widget.reverseScroll) next, // 下一章(反)
+          if (widget.reverseScroll) prev, // 上一章
         ],
       ),
     );
@@ -153,34 +158,34 @@ class ViewExtraSubPage extends StatelessWidget {
       action1: ActionItem(
         text: '结束阅读',
         icon: Icons.arrow_back,
-        action: () => toPop.call(),
+        action: () => widget.toPop.call(),
       ),
       action2: ActionItem(
-        text: !inShelf && !inFavorite
+        text: !widget.inShelf && !widget.inFavorite
             ? '订阅漫画'
-            : inShelf && !inFavorite
+            : widget.inShelf && !widget.inFavorite
                 ? '已放书架'
-                : !inShelf && inFavorite
+                : !widget.inShelf && widget.inFavorite
                     ? '已加收藏'
                     : '取消订阅',
-        icon: !inShelf && !inFavorite ? Icons.sell : Icons.loyalty,
-        action: subscribing ? null : () => toSubscribe.call(),
-        enable: !subscribing,
+        icon: !widget.inShelf && !widget.inFavorite ? Icons.sell : Icons.loyalty,
+        action: widget.subscribing ? null : () => widget.toSubscribe.call(),
+        enable: !widget.subscribing,
       ),
       action3: ActionItem(
         text: '漫画目录',
         icon: Icons.menu,
-        action: () => toShowToc.call(),
+        action: () => widget.toShowToc.call(),
       ),
       action4: ActionItem(
         text: '下载漫画',
         icon: Icons.download,
-        action: () => toDownload.call(),
+        action: () => widget.toDownload.call(),
       ),
       action5: ActionItem(
         text: '查看评论',
         icon: Icons.forum,
-        action: () => toShowComments.call(),
+        action: () => widget.toShowComments.call(),
       ),
     );
   }
@@ -198,7 +203,7 @@ class ViewExtraSubPage extends StatelessWidget {
             // ****************************************************************
             // 额外页首页-头部框
             // ****************************************************************
-            if (isHeader)
+            if (widget.isHeader)
               Container(
                 color: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
@@ -210,7 +215,7 @@ class ViewExtraSubPage extends StatelessWidget {
                       children: [
                         FullRippleWidget(
                           child: NetworkImageView(
-                            url: data.mangaCover,
+                            url: widget.data.mangaCover,
                             height: 200,
                             width: 150,
                             border: Border.all(
@@ -218,7 +223,7 @@ class ViewExtraSubPage extends StatelessWidget {
                               color: Colors.grey[400]!,
                             ),
                           ),
-                          onTap: () => toShowImage(data.mangaCover, '漫画封面'),
+                          onTap: () => widget.toShowImage(widget.data.mangaCover, '漫画封面'),
                         ),
                         SizedBox(width: 18),
                         Container(
@@ -229,7 +234,7 @@ class ViewExtraSubPage extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  data.mangaTitle,
+                                  widget.data.mangaTitle,
                                   style: Theme.of(context).textTheme.headline6,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
@@ -238,7 +243,7 @@ class ViewExtraSubPage extends StatelessWidget {
                               SizedBox(height: 10),
                               Flexible(
                                 child: Text(
-                                  data.chapterTitle,
+                                  widget.data.chapterTitle,
                                   style: Theme.of(context).textTheme.subtitle1?.copyWith(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w500,
@@ -259,7 +264,7 @@ class ViewExtraSubPage extends StatelessWidget {
                       width: 200,
                       child: ElevatedButton(
                         child: Text('开始阅读'),
-                        onPressed: () => toJumpToImage.call(1, true),
+                        onPressed: () => widget.toJumpToImage.call(1, true),
                       ),
                     ),
                   ],
@@ -268,7 +273,7 @@ class ViewExtraSubPage extends StatelessWidget {
             // ****************************************************************
             // 额外页尾页-头部框
             // ****************************************************************
-            if (!isHeader)
+            if (!widget.isHeader)
               Container(
                 color: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
@@ -276,7 +281,7 @@ class ViewExtraSubPage extends StatelessWidget {
                   children: [
                     FullRippleWidget(
                       child: NetworkImageView(
-                        url: data.chapterCover,
+                        url: widget.data.chapterCover,
                         height: 150,
                         width: 150 / 0.618,
                         fit: BoxFit.cover,
@@ -285,7 +290,7 @@ class ViewExtraSubPage extends StatelessWidget {
                           color: Colors.grey[400]!,
                         ),
                       ),
-                      onTap: () => toShowImage(data.chapterCover, '章节封面'),
+                      onTap: () => widget.toShowImage(widget.data.chapterCover, '章节封面'),
                     ),
                     SizedBox(height: 18),
                     Row(
@@ -293,7 +298,7 @@ class ViewExtraSubPage extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            '- ${data.chapterTitle} -',
+                            '- ${widget.data.chapterTitle} -',
                             style: Theme.of(context).textTheme.headline6?.copyWith(
                                   fontWeight: FontWeight.w500,
                                   color: Theme.of(context).primaryColor,
@@ -313,7 +318,7 @@ class ViewExtraSubPage extends StatelessWidget {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('重新阅读'),
-                            onPressed: () => toJumpToImage.call(1, false),
+                            onPressed: () => widget.toJumpToImage.call(1, false),
                           ),
                         ),
                         SizedBox(width: 18),
@@ -322,7 +327,7 @@ class ViewExtraSubPage extends StatelessWidget {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('返回上一页'),
-                            onPressed: () => toJumpToImage.call(data.pageCount, true),
+                            onPressed: () => widget.toJumpToImage.call(widget.data.pageCount, true),
                           ),
                         ),
                       ],

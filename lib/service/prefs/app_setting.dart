@@ -121,6 +121,7 @@ class AppSettingPrefs {
   static const _timeoutBehaviorKey = IntKey('AppSettingPrefs_timeoutBehavior');
   static const _dlTimeoutBehaviorKey = IntKey('AppSettingPrefs_dlTimeoutBehavior');
   static const _enableLoggerKey = BoolKey('AppSettingPrefs_enableLogger');
+  static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
   static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
   static const _usingDownloadedPageKey = BoolKey('AppSettingPrefs_usingDownloadedPage');
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
@@ -137,6 +138,7 @@ class AppSettingPrefs {
         _timeoutBehaviorKey,
         _dlTimeoutBehaviorKey,
         _enableLoggerKey,
+        _showDebugErrorMsgKey,
         _useNativeShareSheetKey,
         _usingDownloadedPageKey,
         _defaultMangaOrderKey,
@@ -157,6 +159,7 @@ class AppSettingPrefs {
       timeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_timeoutBehaviorKey) ?? def.timeoutBehavior.toInt()),
       dlTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_dlTimeoutBehaviorKey) ?? def.dlTimeoutBehavior.toInt()),
       enableLogger: prefs.safeGet<bool>(_enableLoggerKey) ?? def.enableLogger,
+      showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
       useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
       usingDownloadedPage: prefs.safeGet<bool>(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
@@ -178,6 +181,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_timeoutBehaviorKey, setting.timeoutBehavior.toInt());
     await prefs.safeSet<int>(_dlTimeoutBehaviorKey, setting.dlTimeoutBehavior.toInt());
     await prefs.safeSet<bool>(_enableLoggerKey, setting.enableLogger);
+    await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
     await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);
     await prefs.safeSet<bool>(_usingDownloadedPageKey, setting.usingDownloadedPage);
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());

@@ -8,6 +8,8 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_other_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
@@ -17,8 +19,6 @@ import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/sep_genre.dart';
-import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -947,7 +947,7 @@ class _MangaPageState extends State<MangaPage> {
                                 height: 11,
                                 width: 11,
                                 decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                child: _history != null ? null : Icon(Icons.close, size: 10, color: Colors.white),
+                                child: _history != null ? null : Icon(Icons.close, size: 9.5, color: Colors.white),
                               ),
                             ),
                         ],

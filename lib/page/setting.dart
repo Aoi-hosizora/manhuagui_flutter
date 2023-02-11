@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_data_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_other_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
-import 'package:manhuagui_flutter/page/page/dl_setting.dart';
-import 'package:manhuagui_flutter/page/page/setting_data.dart';
-import 'package:manhuagui_flutter/page/page/setting_other.dart';
-import 'package:manhuagui_flutter/page/page/view_setting.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';

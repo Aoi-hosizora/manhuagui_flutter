@@ -9,7 +9,8 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 设置页-其他设置
+/// 设置页-其他设置 [showOtherSettingDialog], [OtherSettingSubPage]
+
 class OtherSettingSubPage extends StatefulWidget {
   const OtherSettingSubPage({
     Key? key,
@@ -42,6 +43,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _timeoutBehavior = widget.setting.timeoutBehavior;
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
+  late var _showDebugErrorMsg = widget.setting.showDebugErrorMsg;
   late var _useNativeShareSheet = widget.setting.useNativeShareSheet;
   late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
@@ -58,6 +60,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         timeoutBehavior: _timeoutBehavior,
         dlTimeoutBehavior: _dlTimeoutBehavior,
         enableLogger: _enableLogger,
+        showDebugErrorMsg: _showDebugErrorMsg,
         useNativeShareSheet: _useNativeShareSheet,
         usingDownloadedPage: _usingDownloadedPage,
         defaultMangaOrder: _defaultMangaOrder,
@@ -76,6 +79,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
     _timeoutBehavior = setting.timeoutBehavior;
     _dlTimeoutBehavior = setting.dlTimeoutBehavior;
     _enableLogger = setting.enableLogger;
+    _showDebugErrorMsg = setting.showDebugErrorMsg;
     _useNativeShareSheet = setting.useNativeShareSheet;
     _usingDownloadedPage = setting.usingDownloadedPage;
     _defaultMangaOrder = setting.defaultMangaOrder;
@@ -130,6 +134,17 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _enableLogger,
           onChanged: (b) {
             _enableLogger = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '显示更详细的错误信息',
+          hint: '该选项所指的更详细的错误信息包括 "未格式化的异常信息" 以及 "首个有效的 trace frame 信息"。\n\n'
+              '此外，一些 "服务器错误" 会附带错误细节，可以在调试日志中的 "WrapError" 块内查看。',
+          value: _showDebugErrorMsg,
+          onChanged: (b) {
+            _showDebugErrorMsg = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

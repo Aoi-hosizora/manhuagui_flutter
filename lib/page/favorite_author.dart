@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/page/author_dialog.dart';
-import 'package:manhuagui_flutter/page/page/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';

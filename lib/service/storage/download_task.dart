@@ -78,10 +78,16 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   Future<void> doDefer() {
     EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: true)); // finished means task is removed from queue
     EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
-    Future.delayed(Duration(seconds: 1), () {
-      if (_canceled) {
-        // TODO 下载时当所有页面都被 cache，且部分页已开始完，就会出现下载已完成但通知仍存在的问题 (可能已解决，待测试)
-        DownloadNotificationHelper.cancelNotification(mangaId); // 以防万一，等待1s后再取消系统通知一次
+    Future.microtask(() async {
+      for (var i = 0; i < 2; i++) {
+        // 以防万一，等待 1s/2s 后再更新系统通知一次
+        await Future.delayed(Duration(seconds: 1));
+        if (!_canceled) {
+          // TODO 下载时当所有页面都被 cache，且部分页已开始完，就会出现下载已完成但通知仍存在的问题 (可能已解决，待测试)
+          await DownloadNotificationHelper.showProgressNotification(mangaId, mangaTitle, _progress);
+        } else {
+          await DownloadNotificationHelper.cancelNotification(mangaId);
+        }
       }
     });
     return Future.value(null);
@@ -139,7 +145,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   }) async {
     // 1. 更新任务状态
     _status = _TaskStatus.waiting;
-    _updateProgress(
+    await _updateProgress(
       DownloadMangaProgress.waiting(),
     );
 

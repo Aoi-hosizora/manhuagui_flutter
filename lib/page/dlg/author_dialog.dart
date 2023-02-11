@@ -71,8 +71,8 @@ void showPopupMenuForAuthorList({
           onPressed: () => pop(
             c,
             () => !nowInFavorite //
-                ? helper.addToFavorite(onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
-                : helper.removeFromFavorite(onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
+                ? helper.addFavorite(onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
+                : helper.removeFavorite(onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
           ),
         ),
       ],
@@ -94,7 +94,7 @@ void showUpdateFavoriteAuthorRemarkDialog({
     authorUrl: favoriteAuthor.authorUrl,
     authorZone: favoriteAuthor.authorZone,
   );
-  await helper.updateFavoriteRemark(
+  await helper.updateFavRemark(
     oldFavorite: favoriteAuthor,
     onUpdated: onUpdated,
     showSnackBar: false,
@@ -137,13 +137,19 @@ void showPopupMenuForAuthorFavorite({
           IconTextDialogOption(
             icon: Icon(Icons.bookmark_border),
             text: Text('添加本地收藏'),
-            onPressed: () => pop(c, () => helper.addToFavorite(onAdded: favoriteSetter, fromFavoriteList: false, fromAuthorPage: true)),
+            onPressed: () => pop(
+              c,
+              () => helper.addFavorite(onAdded: favoriteSetter, fromFavoriteList: false, fromAuthorPage: true),
+            ),
           ),
         if (favoriteAuthor != null)
           IconTextDialogOption(
             icon: Icon(Icons.bookmark),
             text: Text('取消本地收藏'),
-            onPressed: () => pop(c, () => helper.removeFromFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true)),
+            onPressed: () => pop(
+              c,
+              () => helper.removeFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true),
+            ),
           ),
         Divider(thickness: 1),
 
@@ -159,7 +165,10 @@ void showPopupMenuForAuthorFavorite({
             text: Flexible(
               child: Text('当前收藏备注：${favoriteAuthor.remark.trim().isEmpty ? '暂无' : favoriteAuthor.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
-            onPressed: () => pop(c, () => helper.updateFavoriteRemark(oldFavorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: false, fromAuthorPage: true)),
+            onPressed: () => pop(
+              c,
+              () => helper.updateFavRemark(oldFavorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: false, fromAuthorPage: true),
+            ),
           ),
       ],
     ),
@@ -308,7 +317,7 @@ class _DialogHelper {
   // ===================================
 
   // => called by showPopupMenuForAuthorList, showPopupMenuForAuthorFavorite
-  Future<void> addToFavorite({
+  Future<void> addFavorite({
     required void Function(FavoriteAuthor newFavorite)? onAdded,
     required bool fromFavoriteList,
     required bool fromAuthorPage,
@@ -336,7 +345,7 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForAuthorList, showPopupMenuForAuthorFavorite
-  Future<void> removeFromFavorite({
+  Future<void> removeFavorite({
     required void Function()? onRemoved,
     required bool fromFavoriteList,
     required bool fromAuthorPage,
@@ -350,7 +359,7 @@ class _DialogHelper {
   }
 
   // => called by showUpdateFavoriteAuthorRemarkDialog, showPopupMenuForAuthorFavorite
-  Future<void> updateFavoriteRemark({
+  Future<void> updateFavRemark({
     required FavoriteAuthor oldFavorite,
     required void Function(FavoriteAuthor newFavorite) onUpdated,
     required bool showSnackBar,

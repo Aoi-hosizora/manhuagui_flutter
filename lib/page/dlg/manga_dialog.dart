@@ -10,7 +10,6 @@ import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
-import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -28,8 +27,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 漫画收藏页-修改备注对话框 [showUpdateFavoriteMangaRemarkDialog]
 /// 漫画页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
-/// 部分漫画/作者列表页-搜索关键词对话框 [showKeywordDialogForSearching]
-/// 部分漫画/作者列表页-排序对话框 [showSortMethodDialogForSorting]
 
 // => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / download)
 void showPopupMenuForMangaList({
@@ -99,7 +96,10 @@ void showPopupMenuForMangaList({
             IconTextDialogOption(
               icon: Icon(MdiIcons.starMinus),
               text: Text('移出我的书架'),
-              onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
+              onPressed: () => pop(
+                c,
+                () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+              ),
             ),
           if (AuthManager.instance.logined && !fromShelfList) ...[
             if (!expandShelfOptions)
@@ -128,13 +128,19 @@ void showPopupMenuForMangaList({
                         icon: Icon(MdiIcons.starPlus),
                         text: Text('放入我的书架'),
                         padding: optionPadding,
-                        onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
+                        onPressed: () => pop(
+                          c,
+                          () => helper.addOrRemoveShelf(toAdd: true, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+                        ),
                       ),
                       IconTextDialogOption(
                         icon: Icon(MdiIcons.starMinus),
                         text: Text('移出我的书架'),
                         padding: optionPadding,
-                        onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false)),
+                        onPressed: () => pop(
+                          c,
+                          () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+                        ),
                       ),
                     ],
                   ),
@@ -149,8 +155,8 @@ void showPopupMenuForMangaList({
             onPressed: () => pop(
               c,
               () => !nowInFavorite //
-                  ? helper.addToFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromMangaPage: false)
-                  : helper.removeFromFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
+                  ? helper.addFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromMangaPage: false)
+                  : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
             ),
           ),
 
@@ -159,7 +165,10 @@ void showPopupMenuForMangaList({
             IconTextDialogOption(
               icon: Icon(MdiIcons.deleteClock), // use MdiIcons.deleteClock rather than Icons.auto_delete to align icons
               text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读历史'),
-              onPressed: () => pop(c, () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false)),
+              onPressed: () => pop(
+                c,
+                () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false),
+              ),
             ),
         ],
       ),
@@ -182,7 +191,7 @@ void showUpdateFavoriteMangasGroupDialog({
     mangaCover: '',
     mangaUrl: '',
   );
-  await helper.updateFavoritesGroup(
+  await helper.updateFavsGroup(
     oldFavorites: favorites,
     selectedGroupName: selectedGroupName,
     onUpdated: onUpdated,
@@ -206,7 +215,7 @@ void showUpdateFavoriteMangaRemarkDialog({
     mangaCover: favorite.mangaCover,
     mangaUrl: favorite.mangaUrl,
   );
-  await helper.updateFavoriteRemark(
+  await helper.updateFavRemark(
     oldFavorite: favorite,
     onUpdated: onUpdated,
     showSnackBar: false,
@@ -288,7 +297,10 @@ void showPopupMenuForMangaToc({
             IconTextDialogOption(
               icon: Icon(MdiIcons.deleteClock),
               text: Text('删除阅读历史'),
-              onPressed: () => pop(c, () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage)),
+              onPressed: () => pop(
+                c,
+                () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage),
+              ),
             ),
 
           /// 查看信息
@@ -380,13 +392,19 @@ void showPopupMenuForSubscribing({
           IconTextDialogOption(
             icon: Icon(MdiIcons.starPlus),
             text: Text('放入我的书架'),
-            onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: true, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage)),
+            onPressed: () => pop(
+              c,
+              () => helper.addOrRemoveShelf(toAdd: true, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage),
+            ),
           ),
         if (AuthManager.instance.logined && nowInShelf)
           IconTextDialogOption(
             icon: Icon(MdiIcons.starMinus),
             text: Text('移出我的书架'),
-            onPressed: () => pop(c, () => helper.addToOrRemoveFromShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage)),
+            onPressed: () => pop(
+              c,
+              () => helper.addOrRemoveShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage),
+            ),
           ),
 
         /// 收藏
@@ -394,13 +412,19 @@ void showPopupMenuForSubscribing({
           IconTextDialogOption(
             icon: Icon(MdiIcons.bookmarkPlus),
             text: Text('添加本地收藏'),
-            onPressed: () => pop(c, () => helper.addToFavorite(subscribing: subscribing, onAdded: inFavoriteSetter, fromFavoriteList: false, fromMangaPage: fromMangaPage)),
+            onPressed: () => pop(
+              c,
+              () => helper.addFavorite(subscribing: subscribing, onAdded: inFavoriteSetter, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+            ),
           ),
         if (nowInFavorite)
           IconTextDialogOption(
             icon: Icon(MdiIcons.bookmarkMinus),
             text: Text('取消本地收藏'),
-            onPressed: () => pop(c, () => helper.removeFromFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage)),
+            onPressed: () => pop(
+              c,
+              () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage),
+            ),
           ),
 
         /// 额外选项
@@ -418,7 +442,10 @@ void showPopupMenuForSubscribing({
               text: Flexible(
                 child: Text('当前收藏分组：${favoriteManga.checkedGroupName}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
-              onPressed: () => pop(c, () => helper.updateFavoriteGroup(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage)),
+              onPressed: () => pop(
+                c,
+                () => helper.updateFavGroup(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+              ),
             ),
           if (favoriteManga != null)
             IconTextDialogOption(
@@ -426,201 +453,15 @@ void showPopupMenuForSubscribing({
               text: Flexible(
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
-              onPressed: () => pop(c, () => helper.updateFavoriteRemark(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage)),
+              onPressed: () => pop(
+                c,
+                () => helper.updateFavRemark(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+              ),
             ),
         ],
       ],
     ),
   );
-}
-
-// => called by pages which needs search items in list
-Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
-  required BuildContext context,
-  required String title,
-  String textFieldLabel = '搜索关键词',
-  String currText = '',
-  String optionTitle = '仅搜索漫画标题',
-  bool optionValue = true,
-  String Function(bool)? optionHint,
-  String emptyToast = '输入的搜索关键词为空',
-  String sameToast = '输入的搜索关键词没有变更',
-}) async {
-  var controller = TextEditingController()..text = currText;
-  var ok = await showDialog(
-    context: context,
-    builder: (c) => StatefulBuilder(
-      builder: (_, _setState) => AlertDialog(
-        title: Text(title),
-        scrollable: true,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: getDialogContentMaxWidth(context),
-              padding: EdgeInsets.only(left: 8, right: 12, bottom: 12),
-              child: TextField(
-                controller: controller,
-                maxLines: 1,
-                autofocus: true,
-                decoration: InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(vertical: 5),
-                  labelText: textFieldLabel,
-                  icon: Icon(Icons.search),
-                ),
-              ),
-            ),
-            Container(
-              width: getDialogContentMaxWidth(context),
-              padding: EdgeInsets.only(top: 3),
-              child: CheckboxListTile(
-                title: Text(optionTitle),
-                value: optionValue,
-                onChanged: (v) => _setState(() => optionValue = v ?? false),
-                visualDensity: VisualDensity(horizontal: -4, vertical: -4),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            if (optionHint != null)
-              Container(
-                width: getDialogContentMaxWidth(context),
-                padding: EdgeInsets.only(left: 8, right: 8, top: 8),
-                child: Text(
-                  '(提示: ${optionHint.call(optionValue)})',
-                  style: Theme.of(context).textTheme.bodyText2,
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            child: Text('确定'),
-            onPressed: () {
-              if (controller.text.trim().isEmpty) {
-                Fluttertoast.showToast(msg: emptyToast);
-              } else if (controller.text.trim() == currText) {
-                Fluttertoast.showToast(msg: sameToast);
-              } else {
-                Navigator.of(c).pop(true);
-              }
-            },
-          ),
-          TextButton(
-            child: Text('取消'),
-            onPressed: () => Navigator.of(c).pop(false),
-          ),
-        ],
-      ),
-    ),
-  );
-  if (ok != true) {
-    return null;
-  }
-  return Tuple2(
-    controller.text.trim(), // search keyword, must be not empty
-    optionValue, // option value
-  );
-}
-
-// => called by pages which needs sort items in list
-Future<SortMethod?> showSortMethodDialogForSorting({
-  required BuildContext context,
-  required String title,
-  SortMethod currValue = SortMethod.byTimeDesc,
-  required String? idTitle,
-  required String? nameTitle,
-  required String? timeTitle,
-  required String? orderTitle,
-  required SortMethod defaultMethod,
-}) async {
-  var value = currValue.toAsc();
-  var desc = currValue.isDesc();
-  var ok = await showDialog(
-    context: context,
-    builder: (c) => StatefulBuilder(
-      builder: (_, _setState) => AlertDialog(
-        title: Text(title),
-        scrollable: true,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var tuple in [
-              if (idTitle != null) Tuple2(idTitle, SortMethod.byIdAsc),
-              if (nameTitle != null) Tuple2(nameTitle, SortMethod.byNameAsc),
-              if (timeTitle != null) Tuple2(timeTitle, SortMethod.byTimeAsc),
-              if (orderTitle != null) Tuple2(orderTitle, SortMethod.byOrderAsc),
-            ])
-              Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: RadioListTile<SortMethod>(
-                  title: Text('按${tuple.item1}${desc ? '逆序' : '正序'}排序'),
-                  value: tuple.item2,
-                  groupValue: value,
-                  onChanged: (v) => v?.let((v) => _setState(() => value = v)),
-                  visualDensity: VisualDensity(horizontal: -4, vertical: -4),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            CheckboxListTile(
-              title: Text('逆序排序'),
-              value: desc,
-              onChanged: (v) => _setState(() => desc = v ?? false),
-              visualDensity: VisualDensity(horizontal: -4, vertical: -4),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-        actions: [
-          TextButton(
-            child: Text('默认'),
-            onPressed: () {
-              desc = defaultMethod.isDesc();
-              value = defaultMethod.toAsc();
-              Navigator.of(c).pop(true);
-            },
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
-              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-  if (ok != true) {
-    return null;
-  }
-  return !desc ? value.toAsc() : value.toDesc();
-}
-
-extension SortMethodExtension on SortMethod {
-  IconData toIcon() {
-    switch (this) {
-      case SortMethod.byIdAsc:
-        return MdiIcons.sortBoolAscending;
-      case SortMethod.byIdDesc:
-        return MdiIcons.sortBoolDescending;
-      case SortMethod.byNameAsc:
-        return MdiIcons.sortAlphabeticalAscending;
-      case SortMethod.byNameDesc:
-        return MdiIcons.sortAlphabeticalDescending;
-      case SortMethod.byTimeAsc:
-        return MdiIcons.sortCalendarAscending;
-      case SortMethod.byTimeDesc:
-        return MdiIcons.sortCalendarDescending;
-      case SortMethod.byOrderAsc:
-        return MdiIcons.sortNumericAscending;
-      case SortMethod.byOrderDesc:
-        return MdiIcons.sortNumericDescending;
-    }
-  }
 }
 
 class _DialogHelper {
@@ -898,7 +739,7 @@ class _DialogHelper {
   // ========================
 
   // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
-  Future<void> addToOrRemoveFromShelf({
+  Future<void> addOrRemoveShelf({
     required bool toAdd,
     required void Function(bool subscribing)? subscribing,
     required void Function(bool inShelf)? onUpdated,
@@ -946,7 +787,7 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
-  Future<void> addToFavorite({
+  Future<void> addFavorite({
     required void Function(bool subscribing)? subscribing,
     required void Function(FavoriteManga newFavorite)? onAdded,
     required bool fromFavoriteList,
@@ -989,7 +830,7 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
-  Future<void> removeFromFavorite({
+  Future<void> removeFavorite({
     required void Function(bool subscribing)? subscribing,
     required void Function()? onRemoved,
     required bool fromFavoriteList,
@@ -1046,7 +887,7 @@ class _DialogHelper {
   // =========================
 
   // => called by showPopupMenuForSubscribing
-  Future<void> updateFavoriteGroup({
+  Future<void> updateFavGroup({
     required FavoriteManga oldFavorite,
     required void Function(FavoriteManga newFavorite)? onUpdated,
     required bool showSnackBar,
@@ -1077,7 +918,7 @@ class _DialogHelper {
   }
 
   // => called by showUpdateFavoritesGroupDialog
-  Future<void> updateFavoritesGroup({
+  Future<void> updateFavsGroup({
     required List<FavoriteManga> oldFavorites, // 按照收藏列表从上到下的顺序
     required String? selectedGroupName,
     required void Function(List<FavoriteManga> newFavorites, bool addToTop) onUpdated,
@@ -1122,7 +963,7 @@ class _DialogHelper {
   }
 
   // => called by showUpdateFavoriteRemarkDialog, showPopupMenuForSubscribing
-  Future<void> updateFavoriteRemark({
+  Future<void> updateFavRemark({
     required FavoriteManga oldFavorite,
     required void Function(FavoriteManga newFavorite) onUpdated,
     required bool showSnackBar,

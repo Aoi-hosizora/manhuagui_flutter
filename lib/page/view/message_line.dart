@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/message.dart';
-import 'package:manhuagui_flutter/page/page/message_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/message_dialog.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 

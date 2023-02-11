@@ -7,7 +7,8 @@ import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 漫画章节阅读页-阅读设置
+/// 设置页-阅读设置 [showViewSettingDialog], [ViewSettingSubPage]
+
 class ViewSettingSubPage extends StatefulWidget {
   const ViewSettingSubPage({
     Key? key,

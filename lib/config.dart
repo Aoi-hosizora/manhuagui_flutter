@@ -19,7 +19,6 @@ const DL_NTFC_NAME = '漫画下载通知';
 const DL_NTFC_DESCRIPTION = '显示当前的漫画下载进度';
 const LOG_CONSOLE_BUFFER = 200;
 
-const DEBUG_ERROR = true;
 const CONNECT_TIMEOUT = 8000; // 8.0s (local -> my server)
 const SEND_TIMEOUT = 8000; // 8.0s (local -> my server)
 const RECEIVE_TIMEOUT = 10000; // 10.0s (my server -> manhuagui server -> my server -> local)

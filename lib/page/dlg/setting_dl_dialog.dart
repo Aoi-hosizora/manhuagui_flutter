@@ -11,7 +11,8 @@ import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 下载列表页-下载设置
+/// 设置页-下载设置 [showDlSettingDialog], [DlSettingSubPage]
+
 class DlSettingSubPage extends StatefulWidget {
   const DlSettingSubPage({
     Key? key,
