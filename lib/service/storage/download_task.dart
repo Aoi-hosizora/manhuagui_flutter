@@ -34,9 +34,9 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
   _TaskStatus _status;
 
-  bool get startDoing => _status == _TaskStatus.doing || _status == _TaskStatus.done;
+  bool get isStarted => _status != _TaskStatus.waiting;
 
-  bool get hasDone => _status == _TaskStatus.done;
+  bool get hasDone => _status == _TaskStatus.succeeded || _status == _TaskStatus.failed;
 
   @override
   Future<void> doTask() async {
@@ -45,7 +45,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     try {
       succeeded = await _coreDoTask();
     } catch (_) {}
-    _status = _TaskStatus.done;
+    _status = succeeded ? _TaskStatus.succeeded : _TaskStatus.failed;
+    await Future.delayed(Duration(milliseconds: 1000)); // 等待 1s，让先前的通知都发送完后再更新通知
     if (!_canceled) {
       await DownloadNotificationHelper.showDoneNotification(mangaId, mangaTitle, succeeded);
     } else {
@@ -67,24 +68,24 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     _canceled = true;
     DownloadNotificationHelper.cancelNotification(mangaId);
     if (_status == _TaskStatus.waiting) {
-      QueueManager.instance.tasks.remove(this); // if task is not running, remove it and call defer immediately
+      QueueManager.instance.tasks.remove(this); // if task is not running, remove it directly and call defer manually
       doDefer();
     } else {
-      EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: false));
+      EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: false)); // task is requested to be canceled
     }
   }
 
   @override
   Future<void> doDefer() {
-    EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: true)); // finished means task is removed from queue
+    EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: true)); // finished means task has been removed from queue
     EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
     Future.microtask(() async {
       for (var i = 0; i < 2; i++) {
-        // 以防万一，等待 1s/2s 后再更新系统通知一次
+        // 以防万一，等待 1s/2s 后再分别更新系统通知一次
         await Future.delayed(Duration(seconds: 1));
         if (!_canceled) {
           // TODO 下载时当所有页面都被 cache，且部分页已开始完，就会出现下载已完成但通知仍存在的问题 (可能已解决，待测试)
-          await DownloadNotificationHelper.showProgressNotification(mangaId, mangaTitle, _progress);
+          await DownloadNotificationHelper.showDoneNotification(mangaId, mangaTitle, _status == _TaskStatus.succeeded);
         } else {
           await DownloadNotificationHelper.cancelNotification(mangaId);
         }
@@ -458,6 +459,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           }
 
           // 5.5.4. 通知页面下载进度
+          await Future.delayed(Duration(milliseconds: 200)); // 尽量等待之前的通知更新完成
           await _updateProgress(
             DownloadMangaProgress.gotPage(
               manga: manga,
@@ -526,7 +528,8 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 enum _TaskStatus {
   waiting,
   doing,
-  done,
+  succeeded, // done
+  failed, // done
 }
 
 class _ChapterId {
@@ -660,6 +663,10 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
   List<DownloadedChapter>? throughChapterList,
 }) async {
   // 1. 构造漫画下载任务
+  if (chapterIds.isEmpty) {
+    Fluttertoast.showToast(msg: '该漫画没有需要下载的章节');
+    return null;
+  }
   if (!AppSetting.instance.dl.invertDownloadOrder) {
     chapterIds.sort((i, j) => i.compareTo(j)); // compare through chapterId
   } else {

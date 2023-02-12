@@ -5,7 +5,7 @@ import 'package:manhuagui_flutter/page/dlg/message_dialog.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 历史消息行，在 [MessagePage] 使用
+/// 应用消息行，在 [MessagePage] 使用
 class MessageLineView extends StatelessWidget {
   const MessageLineView({
     Key? key,

@@ -99,6 +99,29 @@ class _CommentsPageState extends State<CommentsPage> {
               ),
             ),
           ),
+          onLongPressed: () => showDialog(
+            context: context,
+            builder: (c) => SimpleDialog(
+              title: Text(item.content, maxLines: 2, overflow: TextOverflow.ellipsis),
+              children: [
+                IconTextDialogOption(
+                  icon: Icon(Icons.comment_outlined),
+                  text: Text('查看评论详情'),
+                  onPressed: () {
+                    Navigator.of(c).pop();
+                    Navigator.of(context).push(
+                      CustomPageRoute(
+                        context: context,
+                        builder: (c) => CommentPage(
+                          comment: item,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

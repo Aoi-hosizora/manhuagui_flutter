@@ -86,7 +86,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索已收藏的漫画',
-      currText: _searchKeyword,
+      textValue: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID、漫画标题以及收藏备注',
@@ -179,7 +179,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
   }
 
   void _moveFavoritesTo({required List<int> mangaIds}) {
-    var oldFavorites = _data.where((el) => mangaIds.contains(el.mangaId)).toList();
+    var oldFavorites = _data.where((el) => mangaIds.contains(el.mangaId)).toList(); // 不考虑多个收藏时 order 的顺序
     if (oldFavorites.isEmpty) {
       return;
     }
@@ -292,12 +292,12 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
                     onTap: () => _exitSearch(),
                   ),
                 PopupMenuItem(
-                  child: IconTextMenuItem(MdiIcons.sort, '漫画排序方式'),
+                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
                   onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
                 ),
                 if (_sortMethod != SortMethod.byTimeDesc)
                   PopupMenuItem(
-                    child: IconTextMenuItem(MdiIcons.sortCalendarDescending, '恢复默认排序'),
+                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                     onTap: () => _exitSort(),
                   ),
               ],

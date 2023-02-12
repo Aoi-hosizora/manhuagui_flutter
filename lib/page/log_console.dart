@@ -128,7 +128,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     text: const Text('仅复制过滤后的日志'),
                     onPressed: () async {
                       Navigator.of(c).pop();
-                      var logs = _filteredBuffer.map((e) => e.plainText).join('\n');
+                      var logs = _filteredBuffer.map((e) => e.plainText).join('\n').trim();
                       await copyText(logs, showToast: false);
                       Fluttertoast.showToast(msg: '调试日志已复制');
                     },
@@ -162,7 +162,6 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     mainAxisMargin: 2,
                     crossAxisMargin: 2,
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.only(bottom: 50),
                       controller: _scrollController,
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
@@ -171,7 +170,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                         child: SizedBox(
                           width: 2000,
                           child: SelectableText(
-                            _filteredBuffer.map((el) => el.plainText).join('\n'),
+                            _filteredBuffer.map((el) => el.plainText).join('\n') + '\n\n\n',
                             style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12.5, fontFamily: 'monospace'),
                           ),
                         ),

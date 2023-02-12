@@ -373,7 +373,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     // file future 列表
     _fileFutures = [
       for (int idx = 0; idx < _data!.pageCount; idx++)
-        isPageUrlValidInMetadata(_data!.pages[idx]) && !AppSetting.instance.other.usingDownloadedPage // 仅当链接有效时才可禁用载入页面文件
+        isPageUrlValidInMetadata(_data!.pages[idx]) && !AppSetting.instance.dl.usingDownloadedPage // 仅当链接有效时才可禁用载入页面文件
             ? Future<File?>.value(null) // 阅读时不载入已下载的页面
             : getDownloadedChapterPageFile(
                 mangaId: widget.mangaId,

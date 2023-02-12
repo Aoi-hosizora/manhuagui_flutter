@@ -199,7 +199,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       context: context,
       builder: (c) => AlertDialog(
         title: Text('退出登录'),
-        content: Text('确定要退出登录吗？'),
+        content: Text('确定退出登录吗？'),
         actions: [
           TextButton(
             child: Text('确定'),
@@ -321,7 +321,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               actions: [
                 AppBarActionButton(
                   icon: Icon(Icons.notifications, color: showBackground ? null : Colors.black54),
-                  tooltip: '历史消息',
+                  tooltip: '应用消息',
                   onPressed: () => Navigator.of(context).push(
                     CustomPageRoute(
                       context: context,

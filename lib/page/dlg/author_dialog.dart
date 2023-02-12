@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -66,7 +67,7 @@ void showPopupMenuForAuthorList({
 
         /// 收藏
         IconTextDialogOption(
-          icon: Icon(!nowInFavorite ? MdiIcons.bookmarkPlus : MdiIcons.bookmarkMinus),
+          icon: Icon(!nowInFavorite ? CustomIcons.bookmark_plus : CustomIcons.bookmark_minus),
           text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
           onPressed: () => pop(
             c,

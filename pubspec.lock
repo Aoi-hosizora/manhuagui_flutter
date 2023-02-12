@@ -352,11 +352,9 @@ packages:
   flutter_ahlib:
     dependency: "direct main"
     description:
-      path: "."
-      ref: aaa541d54931030046eabef0c0508547018f7aee
-      resolved-ref: aaa541d54931030046eabef0c0508547018f7aee
-      url: "https://github.com/Aoi-hosizora/flutter_ahlib"
-    source: git
+      path: "../flutter_ahlib"
+      relative: true
+    source: path
     version: "1.2.0"
   flutter_blurhash:
     dependency: transitive
@@ -948,14 +946,14 @@ packages:
   sqflite:
     dependency: "direct main"
     description:
-      path: "dependencies/sqflite/sqflite"
+      path: "deps/sqflite/sqflite"
       relative: true
     source: path
     version: "2.2.5-0"
   sqflite_common:
     dependency: transitive
     description:
-      path: "dependencies/sqflite/sqflite_common"
+      path: "deps/sqflite/sqflite_common"
       relative: true
     source: path
     version: "2.4.2+2"

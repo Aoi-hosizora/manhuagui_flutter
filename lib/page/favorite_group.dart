@@ -185,7 +185,9 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
         title: Text('删除分组'),
         content: mangaCount == null || mangaCount == 0
             ? Text('是否删除 "${group.group.groupName}" 分组？') //
-            : Text('"${group.group.groupName}" 分组 (原为 "${group.origin!.groupName}" 分组) 内仍存有 $mangaCount 部漫画，这些漫画将被移至默认分组，确定继续删除该分组？'),
+            : Text('"${group.group.groupName}" 分组' + //
+                (group.group.groupName == group.origin!.groupName ? '' : ' (原为 "${group.origin!.groupName}" 分组) ') +
+                '内仍存有 $mangaCount 部漫画，这些漫画将被移至默认分组，确定继续删除该分组？'),
         actions: [
           TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
           TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),

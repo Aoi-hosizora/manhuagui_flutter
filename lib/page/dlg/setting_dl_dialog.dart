@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -9,7 +10,6 @@ import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页-下载设置 [showDlSettingDialog], [DlSettingSubPage]
 
@@ -52,12 +52,14 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
   late var _defaultToDeleteFiles = widget.setting.defaultToDeleteFiles;
   late var _downloadPagesTogether = widget.setting.downloadPagesTogether;
   late var _defaultToOnlineMode = widget.setting.defaultToOnlineMode;
+  late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
 
   DlSetting get _newestSetting => DlSetting(
         invertDownloadOrder: _invertDownloadOrder,
         defaultToDeleteFiles: _defaultToDeleteFiles,
         downloadPagesTogether: _downloadPagesTogether,
         defaultToOnlineMode: _defaultToOnlineMode,
+        usingDownloadedPage: _usingDownloadedPage,
       );
 
   void _setToDefault() {
@@ -66,6 +68,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
     _defaultToDeleteFiles = setting.defaultToDeleteFiles;
     _downloadPagesTogether = setting.downloadPagesTogether;
     _defaultToOnlineMode = setting.defaultToOnlineMode;
+    _usingDownloadedPage = setting.usingDownloadedPage;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -117,6 +120,16 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingSwitcherView(
+          title: '在线阅读载入已下载页面',
+          hint: '处于在线模式阅读已下载的章节时，部分安卓系统可能会因没有文件访问权限而出现无法阅读漫画的问题。\n\n若存在该问题，请将此选项关闭，从而在阅读漫画时禁止载入已下载的页面文件。',
+          value: _usingDownloadedPage,
+          onChanged: (b) {
+            _usingDownloadedPage = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
         SettingButtonView(
           title: '漫画下载存储路径',
           hint: _lowerThanAndroidR == null || _lowerThanAndroidR == true
@@ -160,7 +173,7 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
     context: context,
     builder: (c) => AlertDialog(
       title: IconText(
-        icon: Icon(MdiIcons.contentSaveCogOutline, size: 26),
+        icon: Icon(CustomIcons.download_cog, size: 26),
         text: Text('漫画下载设置'),
         space: 12,
       ),

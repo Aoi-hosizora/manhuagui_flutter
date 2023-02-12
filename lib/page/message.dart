@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 历史消息页，网络请求并展示 [Message] 信息
+/// 应用消息页，网络请求并展示 [Message] 信息
 class MessagePage extends StatefulWidget {
   const MessagePage({Key? key}) : super(key: key);
 
@@ -116,7 +116,7 @@ class _MessagePageState extends State<MessagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('历史消息'),
+        title: Text('应用消息'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
@@ -132,7 +132,7 @@ class _MessagePageState extends State<MessagePage> {
         ],
       ),
       drawer: AppDrawer(
-        currentSelection: DrawerSelection.message,
+        currentSelection: DrawerSelection.none,
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshableListView<Message>(

@@ -4,7 +4,7 @@ const APP_NAME = 'Manhuagui';
 const APP_VERSION = '1.2.2';
 const APP_LEGALESE = 'Copyright © 2020-2023 AoiHosizora';
 const APP_DESCRIPTION = //
-    '第三方漫画柜 ($WEB_HOMEPAGE_URL) 安卓客户端，使用 Flutter 开发。\n'
+    '第三方漫画柜 ($WEB_HOMEPAGE_URL) 安卓客户端，使用 Flutter 开发，当前版本为 $APP_VERSION。\n'
     '\n'
     '开发者: GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>\n'
     '\n'

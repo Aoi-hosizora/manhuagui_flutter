@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show Directory, File;
+import 'dart:io' show Directory, File, FileSystemEntity, FileSystemEntityType;
 
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
@@ -250,5 +251,70 @@ Future<bool> deleteDownloadedChapter({required int mangaId, required int chapter
   } catch (e, s) {
     globalLogger.e('deleteDownloadedChapter', e, s);
     return false;
+  }
+}
+
+Future<Tuple3<int, int, bool /* all checked */ >> deleteUnusedFilesInDownloadDirectory() async {
+  var successChapters = 0;
+  var failedChapters = 0;
+  Future<int?> getDirectoryNumericName(FileSystemEntity entity) async {
+    if ((await entity.stat()).type != FileSystemEntityType.directory) {
+      return null; // not directory
+    }
+    return int.tryParse(PathUtils.getBasename(entity.path));
+  }
+
+  try {
+    var downloadPath = await _getDownloadMangaDirectoryPath();
+    await for (var entity in Directory(downloadPath).list(recursive: false, followLinks: false)) {
+      var mangaId = await getDirectoryNumericName(entity);
+      if (mangaId == null) {
+        continue; // not a directory or not a valid id
+      }
+
+      // 1. check manga
+      var directory = Directory(entity.path);
+      var existed = await DownloadDao.checkMangaExistence(mid: mangaId) ?? true;
+      if (!existed) {
+        // manga is not in task => delete this directory
+        var mangaChapters = 0;
+        await for (var entity in directory.list(recursive: false, followLinks: false)) {
+          var chapterId = await getDirectoryNumericName(entity);
+          if (chapterId != null) {
+            mangaChapters++; // is a directory, and is a valid chapter id
+          }
+        }
+        try {
+          await entity.delete(recursive: true);
+          successChapters += mangaChapters;
+        } catch (e, s) {
+          globalLogger.e('deleteUnusedFilesInDownloadDirectory (delete manga)', e, s);
+          failedChapters += mangaChapters;
+        }
+      }
+
+      // 2. check chapter
+      await for (var entity in directory.list(recursive: false, followLinks: false)) {
+        var chapterId = await getDirectoryNumericName(entity);
+        if (chapterId == null) {
+          continue; // not a directory or not a valid id
+        }
+        var existed = await DownloadDao.checkChapterExistence(mid: mangaId, cid: chapterId) ?? true;
+        if (!existed) {
+          // chapter is not in task => delete this directory
+          try {
+            await entity.delete(recursive: true);
+            successChapters++;
+          } catch (e, s) {
+            globalLogger.e('deleteUnusedFilesInDownloadDirectory (delete chapter)', e, s);
+            failedChapters++;
+          }
+        }
+      }
+    }
+    return Tuple3(successChapters, failedChapters, true);
+  } catch (e, s) {
+    globalLogger.e('deleteUnusedFilesInDownloadDirectory', e, s);
+    return Tuple3(successChapters, failedChapters, false);
   }
 }

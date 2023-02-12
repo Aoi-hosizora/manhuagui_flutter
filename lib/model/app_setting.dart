@@ -2,6 +2,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
@@ -48,6 +50,10 @@ class AppSetting {
       } else {
         LogConsolePage.finalize();
       }
+    }
+
+    if (view != null || dl != null || other != null) {
+      EventBusManager.instance.fire(AppSettingChangedEvent()); // TODO
     }
   }
 }
@@ -101,10 +107,10 @@ class ViewSetting {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
       showPageHint: showPageHint ?? this.showPageHint,
-      enablePageSpace: enablePageSpace ?? this.enablePageSpace,
       showClock: showClock ?? this.showClock,
       showNetwork: showNetwork ?? this.showNetwork,
       showBattery: showBattery ?? this.showBattery,
+      enablePageSpace: enablePageSpace ?? this.enablePageSpace,
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
@@ -160,18 +166,21 @@ class DlSetting {
     required this.defaultToDeleteFiles,
     required this.downloadPagesTogether,
     required this.defaultToOnlineMode,
+    required this.usingDownloadedPage,
   });
 
   final bool invertDownloadOrder; // 漫画章节下载顺序
   final bool defaultToDeleteFiles; // 默认删除已下载的文件
   final int downloadPagesTogether; // 同时下载的页面数量
   final bool defaultToOnlineMode; // 默认以在线模式阅读
+  final bool usingDownloadedPage; // 在线阅读载入已下载页面
 
   static const defaultSetting = DlSetting(
     invertDownloadOrder: false,
     defaultToDeleteFiles: false,
     downloadPagesTogether: 3,
     defaultToOnlineMode: true,
+    usingDownloadedPage: true,
   );
 
   DlSetting copyWith({
@@ -179,24 +188,25 @@ class DlSetting {
     bool? defaultToDeleteFiles,
     int? downloadPagesTogether,
     bool? defaultToOnlineMode,
+    bool? usingDownloadedPage,
   }) {
     return DlSetting(
       invertDownloadOrder: invertDownloadOrder ?? this.invertDownloadOrder,
       defaultToDeleteFiles: defaultToDeleteFiles ?? this.defaultToDeleteFiles,
       downloadPagesTogether: downloadPagesTogether ?? this.downloadPagesTogether,
       defaultToOnlineMode: defaultToOnlineMode ?? this.defaultToOnlineMode,
+      usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
     );
   }
 }
 
 class OtherSetting {
   const OtherSetting({
-    required this.showDebugErrorMsg,
     required this.timeoutBehavior,
     required this.dlTimeoutBehavior,
     required this.enableLogger,
+    required this.showDebugErrorMsg,
     required this.useNativeShareSheet,
-    required this.usingDownloadedPage,
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
     required this.clickToSearch,
@@ -206,14 +216,14 @@ class OtherSetting {
     required this.otherGroupRows,
     required this.useLocalDataInShelf,
     required this.includeUnreadInHome,
+    required this.audienceRankingRows,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
   final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
   final bool enableLogger; // 记录调试日志
-  final bool showDebugErrorMsg; // 显示更详细的错误信息
+  final bool showDebugErrorMsg; // 使用更详细的错误信息
   final bool useNativeShareSheet; // 使用原生的分享菜单
-  final bool usingDownloadedPage; // 阅读时载入已下载的页面
   final MangaOrder defaultMangaOrder; // 漫画默认排序方式
   final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
@@ -223,6 +233,7 @@ class OtherSetting {
   final int otherGroupRows; // 其他分组章节显示行数
   final bool useLocalDataInShelf; // 书架上显示本地阅读历史
   final bool includeUnreadInHome; // 首页历史显示未阅读漫画
+  final int audienceRankingRows; // 首页受众排行榜显示行数
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
@@ -230,7 +241,6 @@ class OtherSetting {
     enableLogger: false,
     showDebugErrorMsg: false,
     useNativeShareSheet: true,
-    usingDownloadedPage: true,
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
     clickToSearch: false,
@@ -240,6 +250,7 @@ class OtherSetting {
     otherGroupRows: 1,
     useLocalDataInShelf: false,
     includeUnreadInHome: true,
+    audienceRankingRows: 5,
   );
 
   OtherSetting copyWith({
@@ -248,7 +259,6 @@ class OtherSetting {
     bool? enableLogger,
     bool? showDebugErrorMsg,
     bool? useNativeShareSheet,
-    bool? usingDownloadedPage,
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
     bool? clickToSearch,
@@ -258,6 +268,7 @@ class OtherSetting {
     int? otherGroupRows,
     bool? useLocalDataInShelf,
     bool? includeUnreadInHome,
+    int? audienceRankingRows,
   }) {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
@@ -265,7 +276,6 @@ class OtherSetting {
       enableLogger: enableLogger ?? this.enableLogger,
       showDebugErrorMsg: showDebugErrorMsg ?? this.showDebugErrorMsg,
       useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
-      usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       clickToSearch: clickToSearch ?? this.clickToSearch,
@@ -275,6 +285,7 @@ class OtherSetting {
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
       useLocalDataInShelf: useLocalDataInShelf ?? this.useLocalDataInShelf,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
+      audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
     );
   }
 }

@@ -261,7 +261,7 @@ class CommentLineView extends StatelessWidget {
                             Text(comment.likeCount.toString()),
                             SizedBox(width: 10),
                             Icon(
-                              Icons.chat_bubble,
+                              Icons.mode_comment,
                               color: Colors.grey[400],
                               size: 16,
                             ),

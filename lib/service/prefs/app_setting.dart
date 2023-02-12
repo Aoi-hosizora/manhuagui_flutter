@@ -85,12 +85,14 @@ class AppSettingPrefs {
   static const _defaultToDeleteFilesKey = BoolKey('AppSettingPrefs_defaultToDeleteFiles');
   static const _downloadPagesTogetherKey = IntKey('AppSettingPrefs_downloadPagesTogether');
   static const _defaultToOnlineModeKey = BoolKey('AppSettingPrefs_defaultToOnlineMode');
+  static const _usingDownloadedPageKey = BoolKey('AppSettingPrefs_usingDownloadedPage');
 
   static List<TypedKey> get dlSettingKeys => [
         _invertDownloadOrderKey,
         _defaultToDeleteFilesKey,
         _downloadPagesTogetherKey,
         _defaultToOnlineModeKey,
+        _usingDownloadedPageKey,
       ];
 
   static Future<void> loadDlSetting() async {
@@ -101,6 +103,7 @@ class AppSettingPrefs {
       defaultToDeleteFiles: prefs.safeGet<bool>(_defaultToDeleteFilesKey) ?? def.defaultToDeleteFiles,
       downloadPagesTogether: prefs.safeGet<int>(_downloadPagesTogetherKey) ?? def.downloadPagesTogether,
       defaultToOnlineMode: prefs.safeGet<bool>(_defaultToOnlineModeKey) ?? def.defaultToOnlineMode,
+      usingDownloadedPage: prefs.safeGet<bool>(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
     );
     AppSetting.instance.update(dl: setting);
   }
@@ -112,6 +115,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_defaultToDeleteFilesKey, setting.defaultToDeleteFiles);
     await prefs.safeSet<int>(_downloadPagesTogetherKey, setting.downloadPagesTogether);
     await prefs.safeSet<bool>(_defaultToOnlineModeKey, setting.defaultToOnlineMode);
+    await prefs.safeSet<bool>(_usingDownloadedPageKey, setting.usingDownloadedPage);
   }
 
   // =============
@@ -123,7 +127,6 @@ class AppSettingPrefs {
   static const _enableLoggerKey = BoolKey('AppSettingPrefs_enableLogger');
   static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
   static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
-  static const _usingDownloadedPageKey = BoolKey('AppSettingPrefs_usingDownloadedPage');
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
@@ -133,6 +136,7 @@ class AppSettingPrefs {
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
   static const _useLocalDataInShelfKey = BoolKey('AppSettingPrefs_useLocalDataInShelf');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
+  static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
 
   static List<TypedKey> get otherSettingKeys => [
         _timeoutBehaviorKey,
@@ -140,7 +144,6 @@ class AppSettingPrefs {
         _enableLoggerKey,
         _showDebugErrorMsgKey,
         _useNativeShareSheetKey,
-        _usingDownloadedPageKey,
         _defaultMangaOrderKey,
         _defaultAuthorOrderKey,
         _clickToSearchKey,
@@ -150,6 +153,7 @@ class AppSettingPrefs {
         _otherGroupRowsKey,
         _useLocalDataInShelfKey,
         _includeUnreadInHomeKey,
+        _audienceMangaRowsKey,
       ];
 
   static Future<void> loadOtherSetting() async {
@@ -161,7 +165,6 @@ class AppSettingPrefs {
       enableLogger: prefs.safeGet<bool>(_enableLoggerKey) ?? def.enableLogger,
       showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
       useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
-      usingDownloadedPage: prefs.safeGet<bool>(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
@@ -171,6 +174,7 @@ class AppSettingPrefs {
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
       useLocalDataInShelf: prefs.safeGet<bool>(_useLocalDataInShelfKey) ?? def.useLocalDataInShelf,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
+      audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
     );
     AppSetting.instance.update(other: setting);
   }
@@ -183,7 +187,6 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_enableLoggerKey, setting.enableLogger);
     await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
     await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);
-    await prefs.safeSet<bool>(_usingDownloadedPageKey, setting.usingDownloadedPage);
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
@@ -193,6 +196,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
     await prefs.safeSet<bool>(_useLocalDataInShelfKey, setting.useLocalDataInShelf);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
+    await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
   }
 
   // ===
@@ -226,11 +230,11 @@ class AppSettingPrefs {
     await prefs.safeMigrate<bool>('DlSettingPrefs_invertDownloadOrder', _invertDownloadOrderKey, defaultValue: dlDef.invertDownloadOrder);
     await prefs.safeMigrate<bool>('DlSettingPrefs_defaultToDeleteFiles', _defaultToDeleteFilesKey, defaultValue: dlDef.defaultToDeleteFiles);
     await prefs.safeMigrate<int>('DlSettingPrefs_downloadPagesTogether', _downloadPagesTogetherKey, defaultValue: dlDef.downloadPagesTogether);
+    await prefs.safeMigrate<bool>('GlbSetting_usingDownloadedPage', _usingDownloadedPageKey, defaultValue: dlDef.usingDownloadedPage);
 
     var otherDef = OtherSetting.defaultSetting;
     await prefs.safeMigrate<int>('GlbSetting_timeoutBehavior', _timeoutBehaviorKey, defaultValue: otherDef.timeoutBehavior.toInt());
     await prefs.safeMigrate<int>('GlbSetting_dlTimeoutBehavior', _dlTimeoutBehaviorKey, defaultValue: otherDef.dlTimeoutBehavior.toInt());
     await prefs.safeMigrate<bool>('GlbSetting_enableLogger', _enableLoggerKey, defaultValue: otherDef.enableLogger);
-    await prefs.safeMigrate<bool>('GlbSetting_usingDownloadedPage', _usingDownloadedPageKey, defaultValue: otherDef.usingDownloadedPage);
   }
 }

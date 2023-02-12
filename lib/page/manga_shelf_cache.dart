@@ -256,7 +256,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索书架同步记录',
-      currText: _searchKeyword,
+      textValue: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID以及漫画标题',
@@ -502,12 +502,12 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
                     onTap: () => _exitSearch(),
                   ),
                 PopupMenuItem(
-                  child: IconTextMenuItem(MdiIcons.sort, '漫画排序方式'),
+                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
                   onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
                 ),
                 if (_sortMethod != SortMethod.byTimeDesc)
                   PopupMenuItem(
-                    child: IconTextMenuItem(MdiIcons.sortCalendarDescending, '恢复默认排序'),
+                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                     onTap: () => _exitSort(),
                   ),
               ],

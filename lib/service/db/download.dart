@@ -189,6 +189,20 @@ class DownloadDao {
     return firstIntValue(results)! > 0;
   }
 
+  static Future<bool?> checkChapterExistence({required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colDcChapterId)
+         FROM $_tblDownloadChapter
+         WHERE $_colDcMangaId = ? AND $_colDcChapterId = ?''',
+      [mid, cid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
+  }
+
   static Future<DownloadedManga?> getManga({required int mid}) async {
     final db = await DBManager.instance.getDB();
     var mangaResults = await db.safeRawQuery(

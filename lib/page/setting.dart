@@ -6,8 +6,15 @@ import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_other_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
+import 'package:manhuagui_flutter/page/login.dart';
+import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页
@@ -19,6 +26,21 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
+  final _cancelHandlers = <VoidCallback>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
+    _cancelHandlers.add(EventBusManager.instance.listen<AuthChangedEvent>((_) => mountedSetState(() {})));
+  }
+
+  @override
+  void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
+    super.dispose();
+  }
+
   Widget _item({required String title, required IconData icon, required void Function() action}) {
     return Material(
       color: Colors.white,
@@ -91,14 +113,60 @@ class _SettingPageState extends State<SettingPage> {
           ),
           // *******************************************************
           _spacer(),
+          if (!AuthManager.instance.logined)
+            _item(
+              icon: Icons.login,
+              title: '登录漫画柜',
+              action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LoginPage())),
+            ),
+          if (AuthManager.instance.logined)
+            _item(
+              icon: Icons.logout,
+              title: '退出登录',
+              action: () => showDialog(
+                context: context,
+                builder: (c) => AlertDialog(
+                  title: Text('退出登录'),
+                  content: Text('确定退出登录吗？'),
+                  actions: [
+                    TextButton(
+                      child: Text('确定'),
+                      onPressed: () async {
+                        Navigator.of(c).pop();
+                        await AuthPrefs.setToken('');
+                        AuthManager.instance.record(username: '', token: '');
+                        AuthManager.instance.notify(logined: false);
+                      },
+                    ),
+                    TextButton(
+                      child: Text('取消'),
+                      onPressed: () => Navigator.of(c).pop(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          _divider(),
           _item(
-            icon: MdiIcons.bookCogOutline,
+            icon: Icons.notifications,
+            title: '查看应用消息',
+            action: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => MessagePage(),
+              ),
+            ),
+          ),
+          // *******************************************************
+          _spacer(),
+          _item(
+            icon: CustomIcons.opened_book_cog,
             title: '漫画阅读设置',
             action: () => showViewSettingDialog(context: context),
           ),
           _divider(),
           _item(
-            icon: MdiIcons.contentSaveCogOutline,
+            icon: CustomIcons.download_cog,
             title: '漫画下载设置',
             action: () => showDlSettingDialog(context: context),
           ),
@@ -106,12 +174,7 @@ class _SettingPageState extends State<SettingPage> {
           _item(
             title: '其他设置',
             icon: MdiIcons.cogs,
-            action: () async {
-              var ok = await showOtherSettingDialog(context: context);
-              if (ok) {
-                if (mounted) setState(() {});
-              }
-            },
+            action: () => showOtherSettingDialog(context: context),
           ),
           // *******************************************************
           _spacer(),
@@ -124,16 +187,19 @@ class _SettingPageState extends State<SettingPage> {
           _item(
             title: '从外部存储导入数据',
             icon: MdiIcons.databaseImport,
-            action: () async {
-              await showImportDataDialog(context: context);
-              if (mounted) setState(() {});
-            },
+            action: () => showImportDataDialog(context: context),
           ),
           _divider(),
           _item(
             title: '清除图像缓存',
             icon: MdiIcons.imageRemove,
             action: () => showClearCacheDialog(context: context),
+          ),
+          _divider(),
+          _item(
+            title: '清理无用的下载文件',
+            icon: MdiIcons.fileRemove,
+            action: () => showClearUnusedDlDialog(context: context),
           ),
           if (LogConsolePage.initialized) ...[
             _divider(),
@@ -151,13 +217,13 @@ class _SettingPageState extends State<SettingPage> {
           // *******************************************************
           _spacer(),
           _item(
-            title: '漫画柜/看漫画官网',
+            title: '打开漫画柜官网',
             icon: Icons.open_in_browser,
             action: () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL),
           ),
           _divider(),
           _item(
-            title: '本应用源代码',
+            title: '查看客户端源代码',
             icon: Icons.code,
             action: () => launchInBrowser(context: context, url: SOURCE_CODE_URL),
           ),
@@ -195,8 +261,8 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '相关开源协议',
-            icon: MdiIcons.license,
+            title: '查看相关开源协议',
+            icon: MdiIcons.packageCheck,
             action: () => Navigator.of(context).push(
               CustomPageRoute(
                 context: context,

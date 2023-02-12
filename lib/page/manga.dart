@@ -947,7 +947,7 @@ class _MangaPageState extends State<MangaPage> {
                                 height: 11,
                                 width: 11,
                                 decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                child: _history != null ? null : Icon(Icons.close, size: 9.5, color: Colors.white),
+                                child: _history != null ? null : Icon(Icons.close, size: 9.0, color: Colors.white),
                               ),
                             ),
                         ],
@@ -1159,6 +1159,29 @@ class _MangaPageState extends State<MangaPage> {
                                 builder: (c) => CommentPage(
                                   comment: _comments[i],
                                 ),
+                              ),
+                            ),
+                            onLongPressed: () => showDialog(
+                              context: context,
+                              builder: (c) => SimpleDialog(
+                                title: Text(_comments[i].content, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                children: [
+                                  IconTextDialogOption(
+                                    icon: Icon(Icons.comment_outlined),
+                                    text: Text('查看评论详情'),
+                                    onPressed: () {
+                                      Navigator.of(c).pop();
+                                      Navigator.of(context).push(
+                                        CustomPageRoute(
+                                          context: context,
+                                          builder: (c) => CommentPage(
+                                            comment: _comments[i],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ),

@@ -163,11 +163,9 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
       action2: ActionItem(
         text: !widget.inShelf && !widget.inFavorite
             ? '订阅漫画'
-            : widget.inShelf && !widget.inFavorite
-                ? '已放书架'
-                : !widget.inShelf && widget.inFavorite
-                    ? '已加收藏'
-                    : '取消订阅',
+            : widget.inShelf && widget.inFavorite
+                ? '查看订阅'
+                : (widget.inShelf && !widget.inFavorite ? '已放书架' : '已加收藏'),
         icon: !widget.inShelf && !widget.inFavorite ? Icons.sell : Icons.loyalty,
         action: widget.subscribing ? null : () => widget.toSubscribe.call(),
         enable: !widget.subscribing,

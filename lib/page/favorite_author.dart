@@ -100,7 +100,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索已收藏的漫画作者',
-      currText: _searchKeyword,
+      textValue: _searchKeyword,
       optionTitle: '仅搜索作者名',
       optionValue: _searchNameOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索作者名' : '当前选项使得本次将搜索作者ID、作者名以及收藏备注',
@@ -279,12 +279,12 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                     onTap: () => _exitSearch(),
                   ),
                 PopupMenuItem(
-                  child: IconTextMenuItem(MdiIcons.sort, '作者排序方式'),
+                  child: IconTextMenuItem(Icons.sort, '作者排序方式'),
                   onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
                 ),
                 if (_sortMethod != SortMethod.byTimeDesc)
                   PopupMenuItem(
-                    child: IconTextMenuItem(MdiIcons.sortCalendarDescending, '恢复默认排序'),
+                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                     onTap: () => _exitSort(),
                   ),
               ],

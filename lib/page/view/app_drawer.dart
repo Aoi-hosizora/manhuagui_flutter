@@ -3,7 +3,6 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/login.dart';
-import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/sep_favorite.dart';
 import 'package:manhuagui_flutter/page/sep_history.dart';
@@ -32,7 +31,6 @@ enum DrawerSelection {
   recent, // RecentPage
   ranking, // RankingPage
 
-  message, // MessagePage
   setting, // SettingPage
 }
 
@@ -103,25 +101,27 @@ class _AppDrawerState extends State<AppDrawer> {
     }
   }
 
-  void _navigateToPage(Widget page, {bool canReplace = false}) {
+  Future<void> _navigateToPage(Widget page, {bool canReplace = false}) async {
     var isFirst = false;
     Navigator.of(context).popUntil((route) {
       isFirst = route.isFirst;
       return true;
     });
 
+    var toReplace = !isFirst && canReplace && widget.currentSelection.canBeReplaced();
     var route = CustomPageRoute(
       context: null,
       builder: (_) => page,
       transitionDuration: _routeTheme?.transitionDuration,
-      reverseTransitionDuration: _routeTheme?.reverseTransitionDuration,
+      reverseTransitionDuration: _routeTheme?.transitionDuration,
       barrierColor: _routeTheme?.barrierColor,
       barrierCurve: _routeTheme?.barrierCurve,
       disableCanTransitionTo: _routeTheme?.disableCanTransitionTo,
       disableCanTransitionFrom: _routeTheme?.disableCanTransitionFrom,
-      transitionsBuilder: _routeTheme?.transitionsBuilder,
+      transitionsBuilder: !toReplace ? _routeTheme?.transitionsBuilder : ReplacementTransitionsBuilder(),
     );
-    if (!isFirst && canReplace && widget.currentSelection.canBeReplaced()) {
+    if (toReplace) {
+      await Future.delayed(kDrawerBaseSettleDuration * 0.7);
       Navigator.of(context).pushReplacement(route);
     } else {
       Navigator.of(context).push(route);
@@ -223,10 +223,33 @@ class _AppDrawerState extends State<AppDrawer> {
           _buildItem('漫画排行', Icons.trending_up, DrawerSelection.ranking, () => _gotoPage(SepRankingPage(), canReplace: true)),
           Divider(thickness: 1),
           _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
-          _buildItem('应用消息', Icons.notifications, DrawerSelection.message, () => _gotoPage(MessagePage())),
           _buildItem('设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(SettingPage())),
         ],
       ),
+    );
+  }
+}
+
+class ReplacementTransitionsBuilder extends PageTransitionsBuilder {
+  const ReplacementTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return DualTransitionBuilder(
+      animation: animation,
+      forwardBuilder: (context, animation, child) => FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Interval(0.0, 0.7)),
+        child: child,
+      ),
+      reverseBuilder: (context, animation, child) => NoPopGestureCupertinoPageTransitionsBuilder() //
+          .buildTransitions(route, context, ReverseAnimation(animation), secondaryAnimation, child!),
+      child: child,
     );
   }
 }

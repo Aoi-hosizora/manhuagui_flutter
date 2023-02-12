@@ -271,7 +271,7 @@ class DownloadMangaLineProgress {
     DownloadMangaLineStatus status;
     if (task != null) {
       if (!task.cancelRequested) {
-        if (!task.startDoing) {
+        if (!task.isStarted) {
           status = DownloadMangaLineStatus.waiting; // whenStopped
         } else if (task.progress.manga == null || task.progress.currentChapter == null) {
           status = DownloadMangaLineStatus.preparing; // whenPreparing
@@ -299,7 +299,7 @@ class DownloadMangaLineProgress {
       }
     }
 
-    if (task == null || (!task.cancelRequested && !task.startDoing)) {
+    if (task == null || (!task.cancelRequested && !task.isStarted)) {
       // waiting / paused / succeeded / update / failed => from entity
       assert(
         status != DownloadMangaLineStatus.preparing && status != DownloadMangaLineStatus.downloading && status != DownloadMangaLineStatus.pausing,

@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -150,7 +151,7 @@ void showPopupMenuForMangaList({
 
           /// 收藏
           IconTextDialogOption(
-            icon: Icon(!nowInFavorite ? MdiIcons.bookmarkPlus : MdiIcons.bookmarkMinus),
+            icon: Icon(!nowInFavorite ? CustomIcons.bookmark_plus : CustomIcons.bookmark_minus),
             text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
             onPressed: () => pop(
               c,
@@ -410,7 +411,7 @@ void showPopupMenuForSubscribing({
         /// 收藏
         if (!nowInFavorite)
           IconTextDialogOption(
-            icon: Icon(MdiIcons.bookmarkPlus),
+            icon: Icon(CustomIcons.bookmark_plus),
             text: Text('添加本地收藏'),
             onPressed: () => pop(
               c,
@@ -419,7 +420,7 @@ void showPopupMenuForSubscribing({
           ),
         if (nowInFavorite)
           IconTextDialogOption(
-            icon: Icon(MdiIcons.bookmarkMinus),
+            icon: Icon(CustomIcons.bookmark_minus),
             text: Text('取消本地收藏'),
             onPressed: () => pop(
               c,

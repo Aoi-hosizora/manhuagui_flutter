@@ -16,6 +16,7 @@ class SepFavoritePage extends StatefulWidget {
 
 class _SepFavoritePageState extends State<SepFavoritePage> {
   final _action = ActionController();
+  final _physicsController = CustomScrollPhysicsController();
 
   @override
   void dispose() {
@@ -51,11 +52,16 @@ class _SepFavoritePageState extends State<SepFavoritePage> {
         currentSelection: DrawerSelection.favorite,
       ),
       drawerEdgeDragWidth: null,
-      physicsController: null,
+      physicsController: _physicsController /* shared physics controller */,
+      checkPhysicsControllerForOverscroll: true,
       implicitlyOverscrollableScaffold: true,
-      body: FavoriteSubPage(
-        action: _action,
-        isSepPage: true,
+      implicitPageViewScrollPhysics: CustomScrollPhysics(controller: _physicsController),
+      body: DefaultScrollPhysics(
+        physics: CustomScrollPhysics(controller: _physicsController),
+        child: FavoriteSubPage(
+          action: _action,
+          isSepPage: true,
+        ),
       ),
     );
   }

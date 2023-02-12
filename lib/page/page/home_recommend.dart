@@ -332,7 +332,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         qingnianRankingsError: _qingnianRankingsError,
         shaonianRankingsError: _shaonianRankingsError,
         shaonvRankingsError: _shaonvRankingsError,
-        mangaCount: 5,
+        mangaCount: AppSetting.instance.other.audienceRankingRows,
         onRetryPressed: (t) => _loadRankings([t]),
         onFullPressed: (t) => Navigator.of(context).push(
           CustomPageRoute(

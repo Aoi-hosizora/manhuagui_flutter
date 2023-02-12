@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页-阅读设置 [showViewSettingDialog], [ViewSettingSubPage]
 
@@ -179,7 +179,7 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
     context: context,
     builder: (c) => AlertDialog(
       title: IconText(
-        icon: Icon(MdiIcons.bookCogOutline, size: 26),
+        icon: Icon(CustomIcons.opened_book_cog, size: 26),
         text: Text('漫画阅读设置'),
         space: 12,
       ),

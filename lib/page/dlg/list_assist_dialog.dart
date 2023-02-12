@@ -11,15 +11,16 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
   required BuildContext context,
   required String title,
-  String textFieldLabel = '搜索关键词',
-  String currText = '',
+  String textLabel = '搜索关键词',
+  String textValue = '',
   String optionTitle = '仅搜索漫画标题',
   bool optionValue = true,
   String Function(bool)? optionHint,
   String emptyToast = '输入的搜索关键词为空',
   String sameToast = '输入的搜索关键词没有变更',
 }) async {
-  var controller = TextEditingController()..text = currText;
+  var controller = TextEditingController()..text = textValue;
+  var shownOptionValue = optionValue;
   var ok = await showDialog(
     context: context,
     builder: (c) => StatefulBuilder(
@@ -38,7 +39,7 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
                 autofocus: true,
                 decoration: InputDecoration(
                   contentPadding: EdgeInsets.symmetric(vertical: 5),
-                  labelText: textFieldLabel,
+                  labelText: textLabel,
                   icon: Icon(Icons.search),
                 ),
               ),
@@ -48,8 +49,8 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
               padding: EdgeInsets.only(top: 3),
               child: CheckboxListTile(
                 title: Text(optionTitle),
-                value: optionValue,
-                onChanged: (v) => _setState(() => optionValue = v ?? false),
+                value: shownOptionValue,
+                onChanged: (v) => _setState(() => shownOptionValue = v ?? false),
                 visualDensity: VisualDensity(horizontal: -4, vertical: -4),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
@@ -60,7 +61,7 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
                 width: getDialogContentMaxWidth(context),
                 padding: EdgeInsets.only(left: 8, right: 8, top: 8),
                 child: Text(
-                  '(提示: ${optionHint.call(optionValue)})',
+                  '(提示: ${optionHint.call(shownOptionValue)})',
                   style: Theme.of(context).textTheme.bodyText2,
                 ),
               ),
@@ -72,7 +73,7 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
             onPressed: () {
               if (controller.text.trim().isEmpty) {
                 Fluttertoast.showToast(msg: emptyToast);
-              } else if (controller.text.trim() == currText) {
+              } else if (controller.text.trim() == textValue && shownOptionValue == optionValue) {
                 Fluttertoast.showToast(msg: sameToast);
               } else {
                 Navigator.of(c).pop(true);
@@ -92,7 +93,7 @@ Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
   }
   return Tuple2(
     controller.text.trim(), // search keyword, must be not empty
-    optionValue, // option value
+    shownOptionValue, // option value
   );
 }
 

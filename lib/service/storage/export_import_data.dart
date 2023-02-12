@@ -278,9 +278,12 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
   }();
 
   if (ok) {
-    // notify histories and favorites are changed
+    // notify that related entities have been changed
     if (counter.readHistories > 0) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
+    }
+    if (counter.favoriteMangas > 0) {
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: -1));
     }
     if (counter.favoriteMangas > 0) {
       EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added));
@@ -323,9 +326,10 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
   }();
 
   if (ok) {
-    // apply data to AppSetting
+    // reload AppSetting, and notify that settings have been changed
     if (counter.appSetting > 0) {
       await AppSettingPrefs.loadAllSettings();
+      EventBusManager.instance.fire(AppSettingChangedEvent());
     }
   }
   return ok;

@@ -5,12 +5,14 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/export_import_data.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
 
 /// 设置页-导出数据 [showExportDataDialog], [ExportDataSubPage]
 /// 设置页-导入数据 [showImportDataDialog]
 /// 设置页-清除缓存 [showClearCacheDialog]
+/// 设置页-清理下载 [showClearUnusedDlDialog]
 
 class ExportDataSubPage extends StatefulWidget {
   const ExportDataSubPage({
@@ -268,7 +270,7 @@ Future<void> showClearCacheDialog({required BuildContext context}) async {
     context: context,
     builder: (c) => AlertDialog(
       title: Text('清除图像缓存'),
-      content: Text('当前图像缓存共占用 ${filesize(cachedBytes)} 空间，是否清除？\n\n注意：该操作仅清除图像缓存，并不影响阅读历史、搜索历史等数据。'),
+      content: Text('当前图像缓存共占用 ${filesize(cachedBytes)} 空间，是否清除？\n\n注意：该操作仅清除图像缓存，不会对阅读历史、搜索历史等数据造成影响。'),
       actions: [
         TextButton(child: Text('清除'), onPressed: () => Navigator.of(c).pop(true)),
         TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
@@ -283,6 +285,36 @@ Future<void> showClearCacheDialog({required BuildContext context}) async {
   await DefaultCacheManager().store.emptyCache();
   Navigator.of(context).pop(); // dismiss progress dialog
   Fluttertoast.showToast(msg: '已清除所有图像缓存');
+}
+
+Future<void> showClearUnusedDlDialog({required BuildContext context}) async {
+  var ok = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text('清理无用的下载文件'),
+      content: Text('是否清理下载目录中不需要的文件？\n\n注意：该操作仅删除不下载任务中的漫画和章节文件，不会对下载目录中的其他文件造成影响。'),
+      actions: [
+        TextButton(child: Text('清理'), onPressed: () => Navigator.of(c).pop(true)),
+        TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+      ],
+    ),
+  );
+  if (ok != true) {
+    return;
+  }
+
+  await _showFakeProgressDialog(context, '清除图像缓存...');
+  var result = await deleteUnusedFilesInDownloadDirectory();
+  Navigator.of(context).pop(); // dismiss progress dialog
+
+  var successChapters = result.item1, failedChapters = result.item2, allChecked = result.item3;
+  if (!allChecked) {
+    Fluttertoast.showToast(msg: '清理文件时出错，已清理 $successChapters 个章节，剩余部分章节未检查');
+  } else if (failedChapters == 0) {
+    Fluttertoast.showToast(msg: '已成功清理 $successChapters 个章节');
+  } else {
+    Fluttertoast.showToast(msg: '已清理 $successChapters 个章节，有 $failedChapters 个章节清理失败');
+  }
 }
 
 Future<void> _showFakeProgressDialog(BuildContext context, String text) async {

@@ -45,7 +45,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _enableLogger = widget.setting.enableLogger;
   late var _showDebugErrorMsg = widget.setting.showDebugErrorMsg;
   late var _useNativeShareSheet = widget.setting.useNativeShareSheet;
-  late var _usingDownloadedPage = widget.setting.usingDownloadedPage;
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _clickToSearch = widget.setting.clickToSearch;
@@ -55,6 +54,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _otherGroupRows = widget.setting.otherGroupRows;
   late var _useLocalDataInShelf = widget.setting.useLocalDataInShelf;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
+  late var _audienceMangaRows = widget.setting.audienceRankingRows;
 
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
@@ -62,7 +62,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         enableLogger: _enableLogger,
         showDebugErrorMsg: _showDebugErrorMsg,
         useNativeShareSheet: _useNativeShareSheet,
-        usingDownloadedPage: _usingDownloadedPage,
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
         clickToSearch: _clickToSearch,
@@ -72,6 +71,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         otherGroupRows: _otherGroupRows,
         useLocalDataInShelf: _useLocalDataInShelf,
         includeUnreadInHome: _includeUnreadInHome,
+        audienceRankingRows: _audienceMangaRows,
       );
 
   void _setToDefault() {
@@ -81,7 +81,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
     _enableLogger = setting.enableLogger;
     _showDebugErrorMsg = setting.showDebugErrorMsg;
     _useNativeShareSheet = setting.useNativeShareSheet;
-    _usingDownloadedPage = setting.usingDownloadedPage;
     _defaultMangaOrder = setting.defaultMangaOrder;
     _defaultAuthorOrder = setting.defaultAuthorOrder;
     _clickToSearch = setting.clickToSearch;
@@ -91,6 +90,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
     _otherGroupRows = setting.otherGroupRows;
     _useLocalDataInShelf = setting.useLocalDataInShelf;
     _includeUnreadInHome = setting.includeUnreadInHome;
+    _audienceMangaRows = setting.audienceRankingRows;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -139,8 +139,8 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '显示更详细的错误信息',
-          hint: '该选项所指的更详细的错误信息包括 "未格式化的异常信息" 以及 "首个有效的 trace frame 信息"。\n\n'
+          title: '使用更详细的错误信息',
+          hint: '该选项所指的更详细的错误信息包括 "未格式化的异常信息" 以及 "出错的源代码信息"。\n\n'
               '此外，一些 "服务器错误" 会附带错误细节，可以在调试日志中的 "WrapError" 块内查看。',
           value: _showDebugErrorMsg,
           onChanged: (b) {
@@ -155,16 +155,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _useNativeShareSheet,
           onChanged: (b) {
             _useNativeShareSheet = b;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          title: '阅读时载入已下载的页面',
-          hint: '部分安卓系统可能会因为文件访问权限的问题而出现无法阅读漫画的情况。\n\n若存在上述问题，请将此选项关闭，从而在阅读漫画时禁用文件访问。',
-          value: _usingDownloadedPage,
-          onChanged: (b) {
-            _usingDownloadedPage = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -262,6 +252,18 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _includeUnreadInHome,
           onChanged: (b) {
             _includeUnreadInHome = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingComboBoxView<int>(
+          title: '首页受众排行榜显示行数',
+          width: 75,
+          value: _audienceMangaRows.clamp(4, 10),
+          values: const [4, 5, 6, 7, 8, 9, 10],
+          textBuilder: (s) => '$s行',
+          onChanged: (c) {
+            _audienceMangaRows = c.clamp(4, 10);
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

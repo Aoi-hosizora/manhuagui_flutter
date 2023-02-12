@@ -36,7 +36,7 @@ class FavoriteSubPage extends StatefulWidget {
 }
 
 class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAliveClientMixin {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _scaffoldKey = GlobalKey<DrawerScaffoldState>();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -142,7 +142,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     var result = await showKeywordDialogForSearching(
       context: context,
       title: '搜索已收藏的漫画',
-      currText: _searchKeyword,
+      textValue: _searchKeyword,
       optionTitle: '仅搜索漫画标题',
       optionValue: _searchTitleOnly,
       optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID、漫画标题以及收藏备注',
@@ -245,7 +245,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   }
 
   void _moveFavoritesTo({required List<int> mangaIds}) {
-    var oldFavorites = _data.where((el) => mangaIds.contains(el.mangaId)).toList();
+    var oldFavorites = _data.where((el) => mangaIds.contains(el.mangaId)).toList()..sort((i, j) => i.order.compareTo(j.order));
     if (oldFavorites.isEmpty) {
       return;
     }
@@ -342,7 +342,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     _currentGroup = group.groupName; // 切换分组 (包括默认分组和所有漫画分组)
     _searchKeyword = ''; // 清除搜索关键词
     if (mounted) setState(() {});
-    Navigator.of(context).pop(); // close drawer
+    _scaffoldKey.currentState?.closeEndDrawer();
     _pdvKey.currentState?.refresh();
   }
 
@@ -360,7 +360,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   void _updateOrderByEvent(FavoriteOrderUpdatedEvent ev) {
     // 漫画顺序被调整 => 刷新列表
     if (_scaffoldKey.currentState?.isEndDrawerOpen == true) {
-      Navigator.of(context).pop(); // close drawer
+      _scaffoldKey.currentState?.closeEndDrawer();
     }
     _searchKeyword = ''; // 清除搜索关键词
     if (mounted) setState(() {});
@@ -412,7 +412,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     return WillPopScope(
       onWillPop: () async {
         if (_scaffoldKey.currentState?.isEndDrawerOpen == true) {
-          Navigator.of(context).pop(); // close drawer
+          _scaffoldKey.currentState?.closeEndDrawer();
           return false;
         }
         if (_msController.multiSelecting) {
@@ -425,8 +425,12 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         }
         return true;
       },
-      child: Scaffold(
+      child: DrawerScaffold(
         key: _scaffoldKey,
+        endDrawerEdgeDragWidth: !widget.isSepPage ? 40 : null,
+        physicsController: !widget.isSepPage ? null : DefaultScrollPhysics.of(context)?.asIf<CustomScrollPhysics>()?.controller /* shared physics controller */,
+        checkPhysicsControllerForOverscroll: !widget.isSepPage ? false : true,
+        implicitlyOverscrollableScaffold: !widget.isSepPage ? false : true,
         endDrawer: Drawer(
           child: Theme(
             data: Theme.of(context).copyWith(
@@ -612,12 +616,12 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                               onTap: () => _exitSearch(),
                             ),
                           PopupMenuItem(
-                            child: IconTextMenuItem(MdiIcons.sort, '漫画排序方式'),
+                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
                             onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
                           ),
                           if (_sortMethod != SortMethod.byOrderAsc)
                             PopupMenuItem(
-                              child: IconTextMenuItem(MdiIcons.sortNumericAscending, '恢复默认排序'),
+                              child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                               onTap: () => _exitSort(),
                             ),
                         ],
