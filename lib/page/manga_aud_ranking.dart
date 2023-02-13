@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
@@ -26,9 +27,22 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
   final _controller = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
+    _flagStorage.dispose();
     super.dispose();
+  }
+
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+
+  Future<void> _loadData() async {
+    _flagStorage.queryAndStoreFlags(mangaIds: widget.rankings.map((e) => e.mid)).then((_) => mountedSetState(() {}));
   }
 
   @override
@@ -69,7 +83,10 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
                   for (var manga in widget.rankings) ...[
                     if (manga.mid != widget.rankings.first.mid) //
                       Divider(height: 0, thickness: 1),
-                    MangaRankingLineView(manga: manga),
+                    MangaRankingLineView(
+                      manga: manga,
+                      flags: _flagStorage.getFlags(mangaId: manga.mid),
+                    ),
                   ],
                 ],
               ),

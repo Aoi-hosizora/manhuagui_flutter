@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 用于主页推荐页面的分栏，在 [MangaGroupView] / [MangaCollectionView] / [MangaRankingListView] / [RecommendSubPage] 使用
+/// 用于主页推荐页面的分栏，在 [RecommendSubPage] / [MangaGroupView] / [MangaCollectionView] / [MangaRankingListView] / [MangaAudRankingPage] 使用
 class HomepageColumnView extends StatelessWidget {
   const HomepageColumnView({
     Key? key,

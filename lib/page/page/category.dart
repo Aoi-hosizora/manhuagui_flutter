@@ -27,12 +27,14 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
     Tuple2('类别', GenreSubPage(key: _keys[0], action: _actions[0])),
     Tuple2('漫画作者', AuthorSubPage(key: _keys[1], action: _actions[1])),
   ];
+  var _currentPageIndex = 0; // for app bar actions only
   final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
+    _actions[0].addAction('updateSubPage', () => mountedSetState(() {})); // for genre page
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
@@ -74,6 +76,12 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
+          if (_currentPageIndex == 0 && _actions[0].invoke('ifNeedBack') == true)
+            AppBarActionButton(
+              icon: Icon(Icons.apps),
+              tooltip: '返回类别列表',
+              onPressed: () => _actions[0].invoke('back'),
+            ),
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索漫画',
@@ -86,10 +94,19 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
           ),
         ],
       ),
-      body: TabBarView(
-        controller: _controller,
-        physics: DefaultScrollPhysics.of(context),
-        children: _tabs.map((t) => t.item2).toList(),
+      body: PageChangedListener(
+        callPageChangedAtEnd: false,
+        onPageChanged: (i) {
+          if (!_controller.indexIsChanging /* for `swipe manually` */ || i == _controller.index /* for `select tabBar` */) {
+            _currentPageIndex = i;
+            if (mounted) setState(() {});
+          }
+        },
+        child: TabBarView(
+          controller: _controller,
+          physics: DefaultScrollPhysics.of(context),
+          children: _tabs.map((t) => t.item2).toList(),
+        ),
       ),
     );
   }

@@ -44,8 +44,17 @@ abstract class RestClient {
   @GET('/list/updated')
   Future<Result<ResultPage<TinyManga>>> getRecentUpdatedMangas({@Query('page') required int page, @Query('limit') int limit = 42});
 
+  @GET('/category')
+  Future<Result<CategoryList>> getCategories();
+
   @GET('/category/genre')
   Future<Result<ResultPage<Category>>> getGenres();
+
+  @GET('/category/zones')
+  Future<Result<ResultPage<Category>>> getZones();
+
+  @GET('/category/ages')
+  Future<Result<ResultPage<Category>>> getAges();
 
   @GET('/category/genre/{genre}')
   Future<Result<ResultPage<TinyManga>>> getGenreMangas({@Path() required String genre, @Query('zone') required String zone, @Query('age') required String age, @Query('status') required String status, @Query('page') required int page, @Query('order') required MangaOrder order});

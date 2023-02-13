@@ -55,7 +55,13 @@ class MyApp extends StatelessWidget {
           data: AppBarActionButtonThemeData(
             splashRadius: 19,
           ),
-          child: child!,
+          child: PlaceholderTextTheme(
+            setting: PlaceholderSetting(
+              useAnimatedSwitcher: true,
+              switchDuration: Duration(milliseconds: 150),
+            ).copyWithChinese(),
+            child: child!,
+          ),
         ),
       ),
     );

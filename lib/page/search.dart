@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
-import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/small_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -212,8 +212,8 @@ class _SearchPageState extends State<SearchPage> {
                     },
                   ),
                   separator: Divider(height: 0, thickness: 1),
-                  itemBuilder: (c, _, item) => TinyMangaLineView(
-                    manga: item.toTiny(),
+                  itemBuilder: (c, _, item) => SmallMangaLineView(
+                    manga: item,
                     flags: _flagStorage.getFlags(mangaId: item.mid),
                   ),
                   extra: UpdatableDataViewExtraWidgets(

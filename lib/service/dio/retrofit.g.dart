@@ -201,6 +201,25 @@ class _RestClient implements RestClient {
   }
 
   @override
+  Future<Result<CategoryList>> getCategories() async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<CategoryList>>(
+            Options(method: 'GET', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/category',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<CategoryList>.fromJson(
+      _result.data!,
+      (json) => CategoryList.fromJson(json as Map<String, dynamic>),
+    );
+    return value;
+  }
+
+  @override
   Future<Result<ResultPage<Category>>> getGenres() async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -210,6 +229,50 @@ class _RestClient implements RestClient {
         _setStreamType<Result<ResultPage<Category>>>(
             Options(method: 'GET', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/category/genre',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<ResultPage<Category>>.fromJson(
+      _result.data!,
+      (json) => ResultPage<Category>.fromJson(
+        json as Map<String, dynamic>,
+        (json) => Category.fromJson(json as Map<String, dynamic>),
+      ),
+    );
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<Category>>> getZones() async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<ResultPage<Category>>>(
+            Options(method: 'GET', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/category/zones',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<ResultPage<Category>>.fromJson(
+      _result.data!,
+      (json) => ResultPage<Category>.fromJson(
+        json as Map<String, dynamic>,
+        (json) => Category.fromJson(json as Map<String, dynamic>),
+      ),
+    );
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<Category>>> getAges() async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<ResultPage<Category>>>(
+            Options(method: 'GET', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/category/ages',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = Result<ResultPage<Category>>.fromJson(

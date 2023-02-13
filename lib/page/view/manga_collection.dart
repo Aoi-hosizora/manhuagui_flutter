@@ -54,7 +54,7 @@ class MangaCollectionView extends StatefulWidget {
 }
 
 class _MangaCollectionViewState extends State<MangaCollectionView> with AutomaticKeepAliveClientMixin {
-  Widget _buildCover(BuildContext context, int mid, String title, String url, String cover, double width, double height, {bool gotoDownload = false}) {
+  Widget _buildCover(BuildContext context, int mid, String title, String url, String cover, double width, double height, {bool highQuality = false, bool gotoDownload = false}) {
     return FullRippleWidget(
       child: Container(
         width: width,
@@ -63,6 +63,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           url: cover,
           width: width,
           height: height,
+          quality: !highQuality ? FilterQuality.low : FilterQuality.high,
           radius: BorderRadius.circular(8),
           border: Border.all(width: 0.7, color: Colors.grey[400]!),
         ),
@@ -106,7 +107,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.url, manga.cover, width, height),
+        _buildCover(context, manga.mid, manga.title, manga.url, manga.cover, width, height, highQuality: true),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),

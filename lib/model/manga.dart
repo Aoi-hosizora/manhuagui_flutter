@@ -64,6 +64,14 @@ class SmallManga {
 
   String get formattedNewestDate => newestDate.replaceAll('-', '/');
 
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
+
   TinyManga toTiny() {
     return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
   }
@@ -197,9 +205,11 @@ class HomepageMangaGroupList {
   final MangaGroupList finish; // 经典完结
   final MangaGroupList latest; // 最新上架
   final List<MangaRanking> daily; // 日排行榜
-  final List<Category> genres; // 漫画类别
+  final List<Category> genres; // 漫画类别-剧情
+  final List<Category> ages; // 漫画类别-受众
+  final List<Category> zones; // 漫画类别-地区
 
-  const HomepageMangaGroupList({required this.serial, required this.finish, required this.latest, required this.daily, required this.genres});
+  const HomepageMangaGroupList({required this.serial, required this.finish, required this.latest, required this.daily, required this.genres, required this.ages, required this.zones});
 
   factory HomepageMangaGroupList.fromJson(Map<String, dynamic> json) => _$HomepageMangaGroupListFromJson(json);
 

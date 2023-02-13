@@ -101,7 +101,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
-      globalGenres ??= result.data.genres.map((e) => e.toTiny()).toList(); // 更新全局漫画类别
+      globalCategoryList ??= CategoryList(genres: result.data.genres, zones: result.data.zones, ages:result.data. ages); // 更新全局的漫画类别
     } catch (e, s) {
       _error = wrapError(e, s).text;
       if (_data != null) {
@@ -440,7 +440,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Center(
-                        child: GenreChipListView(genres: _data!.genres),
+                        child: GenreChipListView(genres: _data!.genres.map((g) => g.toTiny()).toList()),
                       ),
                     ),
                   ),

@@ -55,16 +55,16 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
 
     final client = RestClient(DioManager.instance.dio);
     try {
-      if (globalGenres == null) {
-        var result = await client.getGenres();
-        globalGenres ??= result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+      if (globalCategoryList == null) {
+        var result = await client.getCategories();
+        globalCategoryList ??= result.data; // 更新全局的漫画类别
       }
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
-      _genres.addAll(allRankingTypes);
-      _genres.addAll(globalGenres!);
+      _genres.add(allGenres[0]);
+      _genres.addAll(globalCategoryList!.genres.map((g) => g.toTiny()).toList());
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -110,7 +110,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         isLoading: _genreLoading,
         errorText: _genreError,
         isEmpty: _genres.isEmpty,
-        setting: PlaceholderSetting().copyWithChinese(),
+        setting: PlaceholderSetting(useAnimatedSwitcher: false).copyWithChinese(),
         onRefresh: () => _loadGenres(),
         onChanged: (_, __) => _fabController.hide(),
         childBuilder: (c) => RefreshableListView<MangaRanking>(

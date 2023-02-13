@@ -6,15 +6,15 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
-/// 漫画行，[TinyManga]，在 [RecentSubPage] / [OverallSubPage] / [GenreSubPage] / [AuthorPage] 使用
-class TinyMangaLineView extends StatelessWidget {
-  const TinyMangaLineView({
+/// 帶作者信息的漫画行，[SmallManga]，在 [SearchPage] 使用
+class SmallMangaLineView extends StatelessWidget {
+  const SmallMangaLineView({
     Key? key,
     required this.manga,
     this.flags,
   }) : super(key: key);
 
-  final TinyManga manga;
+  final SmallManga manga;
   final MangaCornerFlags? flags;
 
   @override
@@ -22,12 +22,12 @@ class TinyMangaLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.cover,
       title: manga.title,
-      icon1: Icons.edit,
-      text1: manga.finished ? '已完结' : '连载中',
+      icon1: Icons.person,
+      text1: manga.authors.map((a) => a.name).join('/'),
       icon2: Icons.notes,
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,
-      text3: '更新于 ${manga.formattedNewestDateWithDuration}',
+      text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       cornerIcons: flags?.buildIcons(),
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(

@@ -195,6 +195,12 @@ HomepageMangaGroupList _$HomepageMangaGroupListFromJson(
       genres: (json['genres'] as List<dynamic>)
           .map((e) => Category.fromJson(e as Map<String, dynamic>))
           .toList(),
+      ages: (json['ages'] as List<dynamic>)
+          .map((e) => Category.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      zones: (json['zones'] as List<dynamic>)
+          .map((e) => Category.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$HomepageMangaGroupListToJson(
@@ -205,6 +211,8 @@ Map<String, dynamic> _$HomepageMangaGroupListToJson(
       'latest': instance.latest,
       'daily': instance.daily,
       'genres': instance.genres,
+      'ages': instance.ages,
+      'zones': instance.zones,
     };
 
 MangaRanking _$MangaRankingFromJson(Map<String, dynamic> json) => MangaRanking(

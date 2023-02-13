@@ -772,6 +772,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             errorText: _error,
             onRefresh: () => _loadData(),
             setting: PlaceholderSetting(
+              useAnimatedSwitcher: false,
               showLoadingText: false,
               iconColor: Colors.grey[400]!,
               textStyle: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.grey[400]!),

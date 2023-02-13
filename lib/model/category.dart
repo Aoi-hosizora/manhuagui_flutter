@@ -9,8 +9,9 @@ class Category {
   final String name;
   final String title;
   final String url;
+  final String cover;
 
-  const Category({required this.name, required this.title, required this.url});
+  const Category({required this.name, required this.title, required this.url, required this.cover});
 
   factory Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
@@ -19,6 +20,19 @@ class Category {
   TinyCategory toTiny() {
     return TinyCategory(name: name, title: title);
   }
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class CategoryList {
+  final List<Category> genres;
+  final List<Category> ages;
+  final List<Category> zones;
+
+  const CategoryList({required this.genres, required this.ages, required this.zones});
+
+  factory CategoryList.fromJson(Map<String, dynamic> json) => _$CategoryListFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CategoryListToJson(this);
 }
 
 class TinyCategory {
@@ -35,6 +49,15 @@ class TinyCategory {
   @override
   int get hashCode => hashValues(name, title);
 
+  Category toCategory({String? cover}) {
+    return Category(
+      name: name,
+      title: title,
+      url: 'https://www.manhuagui.com/list/$name/',
+      cover: cover ?? '',
+    );
+  }
+
   bool isAll() {
     return name == 'all';
   }
@@ -50,8 +73,8 @@ class TinyCategory {
   ranking_type:      (all|...zones|...ages|...genres)
 */
 
-// 全局漫画类别
-List<TinyCategory>? globalGenres;
+// 全局的漫画类别，不包括 all
+CategoryList? globalCategoryList; // genres, ages, zones
 
 // 按剧情
 final allGenres = <TinyCategory>[
@@ -59,25 +82,25 @@ final allGenres = <TinyCategory>[
   // ...
 ];
 
-// 按受众
+// 按受众 (顺序已调整)
 final allAges = <TinyCategory>[
   const TinyCategory(title: '全部', name: 'all'),
-  const TinyCategory(title: '少女', name: 'shaonv'),
   const TinyCategory(title: '少年', name: 'shaonian'),
+  const TinyCategory(title: '少女', name: 'shaonv'),
   const TinyCategory(title: '青年', name: 'qingnian'),
   const TinyCategory(title: '儿童', name: 'ertong'),
   const TinyCategory(title: '通用', name: 'tongyong'),
 ];
 
-// 按地区
+// 按地区 (顺序已调整)
 final allZones = <TinyCategory>[
   const TinyCategory(title: '全部', name: 'all'),
   const TinyCategory(title: '日本', name: 'japan'),
-  const TinyCategory(title: '港台', name: 'hongkong'),
-  const TinyCategory(title: '其它', name: 'other'),
-  const TinyCategory(title: '欧美', name: 'europe'),
   const TinyCategory(title: '内地', name: 'china'),
+  const TinyCategory(title: '港台', name: 'hongkong'),
+  const TinyCategory(title: '欧美', name: 'europe'),
   const TinyCategory(title: '韩国', name: 'korea'),
+  const TinyCategory(title: '其它', name: 'other'),
 ];
 
 // 按进度

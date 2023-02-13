@@ -293,7 +293,7 @@ class _MangaPageState extends State<MangaPage> {
     final client = RestClient(DioManager.instance.dio);
     try {
       var result = await client.getMangaComments(mid: widget.id, page: 1);
-      _comments.addAll(result.data.data);
+      _comments.addAll(result.data.data.sublist(0, 20.clamp(0, result.data.data.length))); // # = 30 -> 20
       _commentError = '';
       _commentTotal = result.data.total;
     } catch (e, s) {
@@ -1140,6 +1140,7 @@ class _MangaPageState extends State<MangaPage> {
                     errorText: _commentError.isEmpty ? '' : '加载漫画评论失败\n$_commentError',
                     displayRule: PlaceholderDisplayRule.errorFirst,
                     setting: PlaceholderSetting(
+                      useAnimatedSwitcher: false,
                       progressPadding: EdgeInsets.all(25),
                       iconPadding: EdgeInsets.fromLTRB(5, 15, 5, 5),
                       buttonPadding: EdgeInsets.fromLTRB(5, 5, 5, 10),

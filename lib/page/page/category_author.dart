@@ -57,16 +57,16 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
 
     final client = RestClient(DioManager.instance.dio);
     try {
-      if (globalGenres == null) {
-        var result = await client.getGenres();
-        globalGenres ??= result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+      if (globalCategoryList == null) {
+        var result = await client.getCategories();
+        globalCategoryList ??= result.data; // 更新全局的漫画类别
       }
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _genres.add(allGenres[0]);
-      _genres.addAll(globalGenres!);
+      _genres.addAll(globalCategoryList!.genres.map((g) => g.toTiny()).toList());
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -119,8 +119,9 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
         isLoading: _genreLoading,
         errorText: _genreError,
         isEmpty: _genres.isEmpty,
-        setting: PlaceholderSetting().copyWithChinese(),
+        setting: PlaceholderSetting(useAnimatedSwitcher: false).copyWithChinese(),
         onRefresh: () => _loadGenres(),
+        onChanged: (_, __) => _fabController.hide(),
         childBuilder: (c) => PaginationListView<SmallAuthor>(
           key: _pdvKey,
           data: _data,
