@@ -59,6 +59,9 @@ class MyApp extends StatelessWidget {
             setting: PlaceholderSetting(
               useAnimatedSwitcher: true,
               switchDuration: Duration(milliseconds: 150),
+              buttonStyle: Theme.of(context).outlinedButtonTheme.style?.copyWith(
+                    minimumSize: MaterialStateProperty.all(Size(88, 36)),
+                  ),
             ).copyWithChinese(),
             child: child!,
           ),

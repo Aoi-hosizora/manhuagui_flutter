@@ -613,6 +613,7 @@ class _MangaPageState extends State<MangaPage> {
   void _showChapterPopupMenu({required int chapterId, required bool forMangaPage}) {
     var chapter = _data!.chapterGroups.findChapter(chapterId);
     if (chapter == null) {
+      Fluttertoast.showToast(msg: '未从章节目录中找到章节');
       return;
     }
 
@@ -625,6 +626,7 @@ class _MangaPageState extends State<MangaPage> {
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
       fromMangaPage: forMangaPage,
+      fromMangaViewerPage: false,
       chapter: chapter,
       chapterGroups: _data!.chapterGroups,
       onHistoryUpdated: forMangaPage //

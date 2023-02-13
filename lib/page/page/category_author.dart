@@ -5,6 +5,8 @@ import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -35,12 +37,14 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
+    widget.action?.addAction('find', () => _inputAndFind());
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
+    widget.action?.removeAction('find');
     _controller.dispose();
     _fabController.dispose();
     _flagStorage.dispose();
@@ -106,6 +110,23 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(authorIds: result.data.data.map((e) => e.aid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
+  }
+
+  Future<void> _inputAndFind() async {
+    var aid = await showInputDialogForFindingAuthor(context: context, title: '寻找作者');
+    if (aid == null) {
+      return;
+    }
+    Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => AuthorPage(
+          id: aid,
+          name: '漫画作者 aid: $aid',
+          url: 'https://www.manhuagui.com/author/$aid',
+        ),
+      ),
+    );
   }
 
   @override

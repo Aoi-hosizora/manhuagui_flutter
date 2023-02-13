@@ -279,7 +279,7 @@ class _SearchPageState extends State<SearchPage> {
                   transitionDuration: Duration(milliseconds: 400),
                   transitionCurve: Curves.easeInOut,
                   transition: CircularFloatingSearchBarTransition(),
-                  hint: '输入标题名称、标题拼音或漫画 mid 搜索漫画',
+                  hint: '输入漫画标题、漫画 mid、漫画作者名等搜索漫画',
                   hintStyle: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).hintColor),
                   queryStyle: Theme.of(context).textTheme.bodyText2,
                   textInputType: TextInputType.text,
@@ -348,50 +348,51 @@ class _SearchPageState extends State<SearchPage> {
                       child: Column(
                         children: [
                           // ===================================================================
-                          if (_text.isNotEmpty && _text != _q)
+                          if (_text.isNotEmpty && _text != _q) // 输入的关键词不为空，且和当前的关键词不同
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 child: IconText(
-                                  icon: Icon(Icons.search, color: Colors.black45),
+                                  icon: Icon(Icons.search, color: Colors.deepOrange),
                                   text: Flexible(
-                                    child: Text('搜索 "$_text"', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    child: Text('搜索 "$_text"', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.deepOrange)),
                                   ),
                                 ),
                               ),
                               onTap: () => _search(), // => 搜索
                             ),
-                          if (_text.isNotEmpty && (int.tryParse(_text) ?? 0) > 0)
+                          if (_text.isNotEmpty && (int.tryParse(_text) ?? 0) > 0) // 输入的关键词不为空，且是纯数字
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 child: IconText(
-                                  icon: Icon(Icons.arrow_forward, color: Colors.black45),
+                                  icon: Icon(Icons.arrow_forward, color: Colors.deepOrange),
                                   text: Flexible(
-                                    child: Text('访问漫画 "mid: $_text"', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    child: Text('查看漫画 "mid: $_text"', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.deepOrange)),
                                   ),
                                 ),
                               ),
                               onTap: () => Navigator.of(context).push(
                                 CustomPageRoute(
                                   context: context,
-                                  builder: (c) => MangaPage(id: int.tryParse(_text)!, title: '漫画 mid: $_text', url: ''),
+                                  builder: (c) => MangaPage(id: int.tryParse(_text)!, title: '漫画 mid: $_text', url: 'https://www.manhuagui.com/comic/$_text'),
                                 ),
-                              ), // => 访问
+                              ), // => 查看漫画
                             ),
-                          if (_q != null)
+                          if (_q != null) // 当前已搜索
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                child: IconText.texts(
-                                  icon: Icon(Icons.arrow_back, color: Colors.black45),
-                                  texts: [
-                                    Text('返回 "'),
-                                    Flexible(
-                                      child: Text(_q!, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                    ),
-                                    Text('" 的搜索结果'),
-                                  ],
+                                child: DefaultTextStyle(
+                                  style: TextStyle(color: Colors.deepOrange),
+                                  child: IconText.texts(
+                                    icon: Icon(Icons.arrow_back, color: Colors.deepOrange),
+                                    texts: [
+                                      Text('返回 "'),
+                                      Flexible(child: Text(_q!, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                      Text('" 的搜索结果'),
+                                    ],
+                                  ),
                                 ),
                               ),
                               onTap: () => Navigator.of(context).maybePop(), // => 返回
@@ -438,7 +439,7 @@ class _SearchPageState extends State<SearchPage> {
                               ), // => 删除
                             ),
                           // ===================================================================
-                          if (_histories.isEmpty)
+                          if (_histories.isEmpty && _q == null) // 历史为空且当前不在搜索
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
@@ -448,7 +449,7 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                               onTap: () {},
                             ),
-                          if (_histories.isNotEmpty && _text.isEmpty)
+                          if (_histories.isNotEmpty && _text.isEmpty) // 历史不为空且当前没有输入
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),

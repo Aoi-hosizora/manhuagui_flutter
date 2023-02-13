@@ -29,7 +29,7 @@ class TinyMangaChapter {
   final int cid;
   final String title;
   final int mid;
-  final String url; // useless
+  final String url;
   final int pageCount;
   final bool isNew;
   final int number;
@@ -85,6 +85,17 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
       for (var chapter in group.chapters) {
         if (chapter.cid == cid) {
           return chapter;
+        }
+      }
+    }
+    return null;
+  }
+
+  Tuple2<TinyMangaChapter, MangaChapterGroup>? findChapterAndGroup(int cid) {
+    for (var group in this) {
+      for (var chapter in group.chapters) {
+        if (chapter.cid == cid) {
+          return Tuple2(chapter, group);
         }
       }
     }

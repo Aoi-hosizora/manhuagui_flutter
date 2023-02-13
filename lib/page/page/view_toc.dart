@@ -16,6 +16,7 @@ class ViewTocSubPage extends StatefulWidget {
     required this.groups,
     required this.highlightedChapter,
     required this.onChapterPressed,
+    this.onChapterLongPressed,
   }) : super(key: key);
 
   final int mangaId;
@@ -23,6 +24,7 @@ class ViewTocSubPage extends StatefulWidget {
   final List<MangaChapterGroup> groups;
   final int highlightedChapter;
   final void Function(int cid) onChapterPressed;
+  final void Function(int cid)? onChapterLongPressed;
 
   @override
   State<ViewTocSubPage> createState() => _ViewTocSubPageState();
@@ -99,6 +101,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),
                   onChapterPressed: widget.onChapterPressed,
+                  onChapterLongPressed: widget.onChapterLongPressed,
                 ),
               ],
             ),

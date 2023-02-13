@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
@@ -16,6 +17,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 作者列表页-作者弹出菜单 [showPopupMenuForAuthorList]
 /// 作者收藏页-修改备注对话框 [showUpdateFavoriteAuthorRemarkDialog]
 /// 作者页-作者收藏对话框 [showPopupMenuForAuthorFavorite]
+/// 作者列表页-寻找作者对话框 [showInputDialogForFindingAuthor]
 
 // => called by pages which contains author line view (tiny / favorite)
 void showPopupMenuForAuthorList({
@@ -174,6 +176,60 @@ void showPopupMenuForAuthorFavorite({
       ],
     ),
   );
+}
+
+// => called in AuthorSubPage
+Future<int?> showInputDialogForFindingAuthor({
+  required BuildContext context,
+  required String title,
+  String? labelText,
+}) async {
+  var controller = TextEditingController();
+  var ok = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (c) => AlertDialog(
+      title: Text(title),
+      content: SizedBox(
+        width: getDialogContentMaxWidth(context),
+        child: TextField(
+          controller: controller,
+          maxLines: 1,
+          autofocus: true,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(vertical: 5),
+            labelText: labelText ?? '漫画作者 aid',
+            icon: Icon(Icons.person_search),
+          ),
+          keyboardType: TextInputType.numberWithOptions(signed: false, decimal: false),
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: Text('确定'),
+          onPressed: () async {
+            var text = controller.text.trim();
+            if (text.isEmpty) {
+              Fluttertoast.showToast(msg: '请输入作者 aid');
+            } else if (int.tryParse(text) == null) {
+              Fluttertoast.showToast(msg: '输入的作者 aid 有误');
+            } else {
+              Navigator.of(c).pop(true);
+            }
+          },
+        ),
+        TextButton(
+          child: Text('取消'),
+          onPressed: () => Navigator.of(c).pop(false),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) {
+    return null;
+  }
+  return int.tryParse(controller.text.trim());
 }
 
 class _DialogHelper {

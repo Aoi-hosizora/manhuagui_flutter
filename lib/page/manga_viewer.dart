@@ -13,6 +13,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/chapter_detail.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
@@ -605,11 +606,64 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 );
               }
             },
+            onChapterLongPressed: (cid) {
+              var chapter = _data!.chapterGroups!.findChapter(cid);
+              if (chapter == null) {
+                Fluttertoast.showToast(msg: '未从章节目录中找到章节');
+                return;
+              }
+
+              // (更新数据库)、~~更新界面~~、(弹出提示)、(发送通知)
+              showPopupMenuForMangaToc(
+                context: context,
+                mangaId: widget.mangaId,
+                mangaTitle: _data!.mangaTitle,
+                mangaCover: _data!.mangaCover,
+                mangaUrl: _data!.mangaUrl,
+                fromMangaPage: false,
+                fromMangaViewerPage: true /* => 不显示阅读章节和删除历史 */,
+                chapter: chapter,
+                chapterGroups: _data!.chapterGroups!,
+                onHistoryUpdated: null,
+              );
+            },
           ),
         ),
       ),
     );
     await Future.delayed(kBottomSheetExitDuration + Duration(milliseconds: 10));
+    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+  }
+
+  Future<void> _showDetails() async {
+    var tocLoaded = _data!.chapterGroups != null; // 是否成功获取漫画数据
+    var tuple = _data!.chapterGroups?.findChapterAndGroup(widget.chapterId); // null 原因 => 漫画数据未加载完成、未从目录中找到章节
+    var group = tuple?.item2;
+    var chapter = tuple?.item1 ??
+        TinyMangaChapter(
+          cid: widget.chapterId,
+          title: _data!.chapterTitle,
+          mid: widget.mangaId,
+          url: 'https://www.manhuagui.com/comic/${widget.mangaId}/${widget.chapterId}.html',
+          pageCount: _data!.pageCount,
+          isNew: false /* 未知 */,
+          number: 1 /* 未知 */,
+        );
+
+    await _ScreenHelper.restoreSystemUI();
+    await Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => ChapterDetailsPage(
+          data: chapter,
+          group: group?.title,
+          groupLength: group?.chapters.length,
+          mangaTitle: _data!.mangaTitle,
+          mangaUrl: _data!.mangaUrl,
+          tocLoaded: tocLoaded,
+        ),
+      ),
+    );
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
@@ -962,6 +1016,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                     text: '漫画目录',
                                     icon: Icons.menu,
                                     action: () => _showToc(),
+                                    longPress: () => _showDetails(),
                                   ),
                                 ),
                               ],

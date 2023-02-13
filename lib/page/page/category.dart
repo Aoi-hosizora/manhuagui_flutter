@@ -82,6 +82,12 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
               tooltip: '返回类别列表',
               onPressed: () => _actions[0].invoke('back'),
             ),
+          if (_currentPageIndex == 1)
+            AppBarActionButton(
+              icon: Icon(Icons.person_search),
+              tooltip: '寻找作者',
+              onPressed: () => _actions[1].invoke('find'),
+            ),
           AppBarActionButton(
             icon: Icon(Icons.search),
             tooltip: '搜索漫画',

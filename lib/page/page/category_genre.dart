@@ -155,10 +155,11 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
         isEmpty: _genres.isEmpty,
         onRefresh: () => _loadGenres(),
         setting: PlaceholderSetting(
+          useAnimatedSwitcher: widget.defaultGenre == null ? true /* for sub page */ : false /* for sep page */,
           customNormalStateBuilder: (c, childBuilder) => _chosen
               ? childBuilder.call(c)
               : Column(
-                  key: ValueKey('GenreSubPage_CategoryGridView_Column'),
+                  key: PageStorageKey<String>('GenreSubPage_CategoryGridView_Column'),
                   children: [
                     ListHintView.textText(
                       leftText: '选择一个类别筛选漫画',
