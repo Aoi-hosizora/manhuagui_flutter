@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -56,7 +56,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       _loadData(); // 获取首页漫画分组数据
       Future.delayed(Duration(milliseconds: 1500)).then((_) => _loadCollections(MangaCollectionType.values)); // 额外等待，获取各种漫画集合数据
-      Future.delayed(Duration(milliseconds: 3000)).then((_) => _loadRankings(MangaAudRankingType.values)); // 额外等待，获取一些受众排行榜数据
+      Future.delayed(Duration(milliseconds: 4000)).then((_) => _loadRankings(MangaAudRankingType.values)); // 额外等待，获取一些受众排行榜数据
     });
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
@@ -152,7 +152,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       Future.microtask(() async {
         _histories = null; // loading
         if (mounted) setState(() {});
-        var includeUnread = AppSetting.instance.other.includeUnreadInHome;
+        var includeUnread = AppSetting.instance.ui.includeUnreadInHome;
         var result = await HistoryDao.getHistories(username: AuthManager.instance.username, includeUnread: includeUnread, page: 1, limit: 50); // #=50
         await Future.delayed(kFakeRefreshDuration);
         _histories = result ?? [];
@@ -332,7 +332,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         qingnianRankingsError: _qingnianRankingsError,
         shaonianRankingsError: _shaonianRankingsError,
         shaonvRankingsError: _shaonvRankingsError,
-        mangaCount: AppSetting.instance.other.audienceRankingRows,
+        mangaCount: AppSetting.instance.ui.audienceRankingRows,
         onRetryPressed: (t) => _loadRankings([t]),
         onFullPressed: (t) => Navigator.of(context).push(
           CustomPageRoute(

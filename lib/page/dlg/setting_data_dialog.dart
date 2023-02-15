@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
@@ -183,7 +183,7 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
                   context: context,
                   builder: (c) => AlertDialog(
                     title: Text('导入数据'),
-                    content: Text('确定导入数据 "$name"，并' + (mergeData ? '与现有数据合并？' : '覆盖现有数据？')),
+                    content: Text('是否导入数据 "$name"，并' + (mergeData ? '与现有数据合并？' : '覆盖现有数据？')),
                     actions: [
                       TextButton(child: Text('导入'), onPressed: () => Navigator.of(c).pop(true)),
                       TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),

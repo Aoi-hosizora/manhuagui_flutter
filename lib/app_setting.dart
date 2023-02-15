@@ -19,15 +19,18 @@ class AppSetting {
 
   var _viewSetting = ViewSetting.defaultSetting;
   var _dlSetting = DlSetting.defaultSetting;
+  var _uiSetting = UiSetting.defaultSetting;
   var _otherSetting = OtherSetting.defaultSetting;
 
   ViewSetting get view => _viewSetting;
 
   DlSetting get dl => _dlSetting;
 
+  UiSetting get ui => _uiSetting;
+
   OtherSetting get other => _otherSetting;
 
-  void update({ViewSetting? view, DlSetting? dl, OtherSetting? other}) {
+  void update({ViewSetting? view, DlSetting? dl, UiSetting? ui, OtherSetting? other, bool alsoFireEvent = true}) {
     if (view != null) {
       _viewSetting = view;
     }
@@ -41,6 +44,10 @@ class AppSetting {
       }
     }
 
+    if (ui != null) {
+      _uiSetting = ui;
+    }
+
     if (other != null) {
       _otherSetting = other;
 
@@ -52,8 +59,8 @@ class AppSetting {
       }
     }
 
-    if (view != null || dl != null || other != null) {
-      EventBusManager.instance.fire(AppSettingChangedEvent()); // TODO
+    if (alsoFireEvent && (view != null || dl != null || ui != null || other != null)) {
+      EventBusManager.instance.fire(AppSettingChangedEvent());
     }
   }
 }
@@ -73,9 +80,9 @@ class ViewSetting {
 
   final ViewDirection viewDirection; // 阅读方向
   final bool showPageHint; // 显示阅读页面提示
-  final bool showClock; // 显示当前时间
-  final bool showNetwork; // 显示网络状态
-  final bool showBattery; // 显示电源余量
+  final bool showClock; // 显示当前时间提示
+  final bool showNetwork; // 显示网络状态提示
+  final bool showBattery; // 显示电源余量提示
   final bool enablePageSpace; // 显示页面间空白
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
@@ -200,13 +207,8 @@ class DlSetting {
   }
 }
 
-class OtherSetting {
-  const OtherSetting({
-    required this.timeoutBehavior,
-    required this.dlTimeoutBehavior,
-    required this.enableLogger,
-    required this.showDebugErrorMsg,
-    required this.useNativeShareSheet,
+class UiSetting {
+  const UiSetting({
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
     required this.clickToSearch,
@@ -219,28 +221,18 @@ class OtherSetting {
     required this.audienceRankingRows,
   });
 
-  final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
-  final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
-  final bool enableLogger; // 记录调试日志
-  final bool showDebugErrorMsg; // 使用更详细的错误信息
-  final bool useNativeShareSheet; // 使用原生的分享菜单
-  final MangaOrder defaultMangaOrder; // 漫画默认排序方式
-  final AuthorOrder defaultAuthorOrder; // 漫画作者默认排序方式
+  final MangaOrder defaultMangaOrder; // 漫画列表默认排序方式
+  final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool clickToSearch; // 点击搜索历史执行搜索
   final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final int regularGroupRows; // 单话分组章节显示行数
   final int otherGroupRows; // 其他分组章节显示行数
-  final bool useLocalDataInShelf; // 书架上显示本地阅读历史
+  final bool useLocalDataInShelf; // 书架显示本地阅读历史
   final bool includeUnreadInHome; // 首页历史显示未阅读漫画
   final int audienceRankingRows; // 首页受众排行榜显示行数
 
-  static const defaultSetting = OtherSetting(
-    timeoutBehavior: TimeoutBehavior.normal,
-    dlTimeoutBehavior: TimeoutBehavior.normal,
-    enableLogger: false,
-    showDebugErrorMsg: false,
-    useNativeShareSheet: true,
+  static const defaultSetting = UiSetting(
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
     clickToSearch: false,
@@ -253,12 +245,7 @@ class OtherSetting {
     audienceRankingRows: 5,
   );
 
-  OtherSetting copyWith({
-    TimeoutBehavior? timeoutBehavior,
-    TimeoutBehavior? dlTimeoutBehavior,
-    bool? enableLogger,
-    bool? showDebugErrorMsg,
-    bool? useNativeShareSheet,
+  UiSetting copyWith({
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
     bool? clickToSearch,
@@ -270,12 +257,7 @@ class OtherSetting {
     bool? includeUnreadInHome,
     int? audienceRankingRows,
   }) {
-    return OtherSetting(
-      timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
-      dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
-      enableLogger: enableLogger ?? this.enableLogger,
-      showDebugErrorMsg: showDebugErrorMsg ?? this.showDebugErrorMsg,
-      useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
+    return UiSetting(
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       clickToSearch: clickToSearch ?? this.clickToSearch,
@@ -286,6 +268,47 @@ class OtherSetting {
       useLocalDataInShelf: useLocalDataInShelf ?? this.useLocalDataInShelf,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
+    );
+  }
+}
+
+class OtherSetting {
+  const OtherSetting({
+    required this.timeoutBehavior,
+    required this.dlTimeoutBehavior,
+    required this.enableLogger,
+    required this.showDebugErrorMsg,
+    required this.useNativeShareSheet,
+  });
+
+  final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
+  final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
+  final bool enableLogger; // 记录调试日志
+  final bool showDebugErrorMsg; // 使用更详细的错误信息
+  final bool useNativeShareSheet; // 使用原生的分享菜单
+
+  static const defaultSetting = OtherSetting(
+    timeoutBehavior: TimeoutBehavior.normal,
+    dlTimeoutBehavior: TimeoutBehavior.normal,
+    enableLogger: false,
+    showDebugErrorMsg: false,
+    useNativeShareSheet: true,
+  );
+
+  OtherSetting copyWith({
+    TimeoutBehavior? timeoutBehavior,
+    TimeoutBehavior? dlTimeoutBehavior,
+    bool? enableLogger,
+    bool? showDebugErrorMsg,
+    bool? useNativeShareSheet,
+    bool? reverseDialogActions,
+  }) {
+    return OtherSetting(
+      timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
+      dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
+      enableLogger: enableLogger ?? this.enableLogger,
+      showDebugErrorMsg: showDebugErrorMsg ?? this.showDebugErrorMsg,
+      useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
     );
   }
 }

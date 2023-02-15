@@ -216,6 +216,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                             url: widget.data.mangaCover,
                             height: 200,
                             width: 150,
+                            quality: FilterQuality.high,
                             border: Border.all(
                               width: 1.0,
                               color: Colors.grey[400]!,
@@ -283,6 +284,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                         height: 150,
                         width: 150 / 0.618,
                         fit: BoxFit.cover,
+                        quality: FilterQuality.high,
                         border: Border.all(
                           width: 1.0,
                           color: Colors.grey[400]!,

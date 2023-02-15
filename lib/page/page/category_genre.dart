@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -83,8 +83,8 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _getting = false;
 
-  var _currOrder = AppSetting.instance.other.defaultMangaOrder;
-  var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
+  var _currOrder = AppSetting.instance.ui.defaultMangaOrder;
+  var _lastOrder = AppSetting.instance.ui.defaultMangaOrder;
   late var _currGenre = widget.defaultGenre ?? allGenres[0];
   late var _lastGenre = widget.defaultGenre ?? allGenres[0];
   var _currAge = allAges[0];

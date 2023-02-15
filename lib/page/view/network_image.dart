@@ -10,6 +10,7 @@ class NetworkImageView extends StatelessWidget {
     required this.width,
     required this.height,
     this.fit = BoxFit.cover,
+    this.quality = FilterQuality.low,
     this.border,
     this.radius,
   }) : super(key: key);
@@ -18,6 +19,7 @@ class NetworkImageView extends StatelessWidget {
   final double width;
   final double height;
   final BoxFit fit;
+  final FilterQuality quality;
   final BoxBorder? border;
   final BorderRadius? radius;
 
@@ -44,6 +46,7 @@ class NetworkImageView extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
+          filterQuality: quality,
           httpHeaders: const {
             'User-Agent': USER_AGENT,
             'Referer': REFERER,

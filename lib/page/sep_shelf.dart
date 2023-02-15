@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 我的书架页，即 Separate [ShelfSubPage]
 class SepShelfPage extends StatefulWidget {
@@ -16,10 +18,18 @@ class SepShelfPage extends StatefulWidget {
 
 class _SepShelfPageState extends State<SepShelfPage> {
   final _action = ActionController();
+  final _cancelHandlers = <VoidCallback>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
+  }
 
   @override
   void dispose() {
     _action.dispose();
+    _cancelHandlers.forEach((c) => c.call());
     super.dispose();
   }
 

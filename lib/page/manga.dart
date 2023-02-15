@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
@@ -9,7 +9,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/setting_other_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
@@ -668,7 +668,7 @@ class _MangaPageState extends State<MangaPage> {
             text: Text('设置分组章节显示行数'),
             onPressed: () {
               Navigator.of(c).pop();
-              showOtherSettingDialog(context: context);
+              showUiSettingDialog(context: context);
             },
           ),
         ],
@@ -747,6 +747,7 @@ class _MangaPageState extends State<MangaPage> {
                             url: _data!.cover,
                             height: 160,
                             width: 120,
+                            quality: FilterQuality.high,
                           ),
                           onTap: () => Navigator.of(context).push(
                             CustomPageRoute(
@@ -1064,8 +1065,8 @@ class _MangaPageState extends State<MangaPage> {
                   child: MangaTocView(
                     groups: _data!.chapterGroups,
                     full: false,
-                    firstGroupRowsIfNotFull: AppSetting.instance.other.regularGroupRows,
-                    otherGroupsRowsIfNotFull: AppSetting.instance.other.otherGroupRows,
+                    firstGroupRowsIfNotFull: AppSetting.instance.ui.regularGroupRows,
+                    otherGroupsRowsIfNotFull: AppSetting.instance.ui.otherGroupRows,
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(

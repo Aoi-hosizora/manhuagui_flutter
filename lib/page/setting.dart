@@ -4,6 +4,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_data_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_other_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/login.dart';
@@ -127,7 +128,7 @@ class _SettingPageState extends State<SettingPage> {
                 context: context,
                 builder: (c) => AlertDialog(
                   title: Text('退出登录'),
-                  content: Text('确定退出登录吗？'),
+                  content: Text('确定要退出登录吗？'),
                   actions: [
                     TextButton(
                       child: Text('确定'),
@@ -169,6 +170,12 @@ class _SettingPageState extends State<SettingPage> {
             icon: CustomIcons.download_cog,
             title: '漫画下载设置',
             action: () => showDlSettingDialog(context: context),
+          ),
+          _divider(),
+          _item(
+            title: '界面显示设置',
+            icon: CustomIcons.application_star_cog,
+            action: () => showUiSettingDialog(context: context),
           ),
           _divider(),
           _item(

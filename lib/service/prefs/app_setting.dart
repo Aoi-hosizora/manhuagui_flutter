@@ -1,4 +1,4 @@
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,17 +6,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppSettingPrefs {
   AppSettingPrefs._();
 
-  static List<TypedKey> get keys => [...viewSettingKeys, ...dlSettingKeys, ...otherSettingKeys];
+  static List<TypedKey> get keys => [...viewSettingKeys, ...dlSettingKeys, ...uiSettingKeys, ...otherSettingKeys];
 
-  static Future<void> loadAllSettings() async {
-    await loadViewSetting();
-    await loadDlSetting();
-    await loadOtherSetting();
+  static Future<void> loadAllSettings({bool alsoFireEvent = true}) async {
+    var view = await _loadViewSetting();
+    var dl = await _loadDlSetting();
+    var ui = await _loadUiSetting();
+    var other = await _loadOtherSetting();
+    AppSetting.instance.update(view: view, dl: dl, ui: ui, other: other, alsoFireEvent: alsoFireEvent);
   }
 
   static Future<void> saveAllSettings() async {
     await saveViewSetting();
     await saveDlSetting();
+    await saveUiSetting();
     await saveOtherSetting();
   }
 
@@ -46,10 +49,10 @@ class AppSettingPrefs {
         _preloadCountKey,
       ];
 
-  static Future<void> loadViewSetting() async {
+  static Future<ViewSetting> _loadViewSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var def = ViewSetting.defaultSetting;
-    var setting = ViewSetting(
+    return ViewSetting(
       viewDirection: ViewDirectionExtension.fromInt(prefs.safeGet<int>(_viewDirectionKey) ?? def.viewDirection.toInt()),
       showPageHint: prefs.safeGet<bool>(_showPageHintKey) ?? def.showPageHint,
       showClock: prefs.safeGet<bool>(_showClockKey) ?? def.showClock,
@@ -60,7 +63,6 @@ class AppSettingPrefs {
       fullscreen: prefs.safeGet<bool>(_fullscreenKey) ?? def.fullscreen,
       preloadCount: prefs.safeGet<int>(_preloadCountKey) ?? def.preloadCount,
     );
-    AppSetting.instance.update(view: setting);
   }
 
   static Future<void> saveViewSetting() async {
@@ -95,17 +97,16 @@ class AppSettingPrefs {
         _usingDownloadedPageKey,
       ];
 
-  static Future<void> loadDlSetting() async {
+  static Future<DlSetting> _loadDlSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var def = DlSetting.defaultSetting;
-    var setting = DlSetting(
+    return DlSetting(
       invertDownloadOrder: prefs.safeGet<bool>(_invertDownloadOrderKey) ?? def.invertDownloadOrder,
       defaultToDeleteFiles: prefs.safeGet<bool>(_defaultToDeleteFilesKey) ?? def.defaultToDeleteFiles,
       downloadPagesTogether: prefs.safeGet<int>(_downloadPagesTogetherKey) ?? def.downloadPagesTogether,
       defaultToOnlineMode: prefs.safeGet<bool>(_defaultToOnlineModeKey) ?? def.defaultToOnlineMode,
       usingDownloadedPage: prefs.safeGet<bool>(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
     );
-    AppSetting.instance.update(dl: setting);
   }
 
   static Future<void> saveDlSetting() async {
@@ -118,15 +119,10 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_usingDownloadedPageKey, setting.usingDownloadedPage);
   }
 
-  // =============
-  // other setting
-  // =============
+  // ==========
+  // ui setting
+  // ==========
 
-  static const _timeoutBehaviorKey = IntKey('AppSettingPrefs_timeoutBehavior');
-  static const _dlTimeoutBehaviorKey = IntKey('AppSettingPrefs_dlTimeoutBehavior');
-  static const _enableLoggerKey = BoolKey('AppSettingPrefs_enableLogger');
-  static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
-  static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
@@ -138,12 +134,7 @@ class AppSettingPrefs {
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
   static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
 
-  static List<TypedKey> get otherSettingKeys => [
-        _timeoutBehaviorKey,
-        _dlTimeoutBehaviorKey,
-        _enableLoggerKey,
-        _showDebugErrorMsgKey,
-        _useNativeShareSheetKey,
+  static List<TypedKey> get uiSettingKeys => [
         _defaultMangaOrderKey,
         _defaultAuthorOrderKey,
         _clickToSearchKey,
@@ -156,15 +147,10 @@ class AppSettingPrefs {
         _audienceMangaRowsKey,
       ];
 
-  static Future<void> loadOtherSetting() async {
+  static Future<UiSetting> _loadUiSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    var def = OtherSetting.defaultSetting;
-    var setting = OtherSetting(
-      timeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_timeoutBehaviorKey) ?? def.timeoutBehavior.toInt()),
-      dlTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_dlTimeoutBehaviorKey) ?? def.dlTimeoutBehavior.toInt()),
-      enableLogger: prefs.safeGet<bool>(_enableLoggerKey) ?? def.enableLogger,
-      showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
-      useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
+    var def = UiSetting.defaultSetting;
+    return UiSetting(
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
@@ -176,17 +162,11 @@ class AppSettingPrefs {
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
       audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
     );
-    AppSetting.instance.update(other: setting);
   }
 
-  static Future<void> saveOtherSetting() async {
+  static Future<void> saveUiSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
-    var setting = AppSetting.instance.other;
-    await prefs.safeSet<int>(_timeoutBehaviorKey, setting.timeoutBehavior.toInt());
-    await prefs.safeSet<int>(_dlTimeoutBehaviorKey, setting.dlTimeoutBehavior.toInt());
-    await prefs.safeSet<bool>(_enableLoggerKey, setting.enableLogger);
-    await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
-    await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);
+    var setting = AppSetting.instance.ui;
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
@@ -197,6 +177,46 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_useLocalDataInShelfKey, setting.useLocalDataInShelf);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
     await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
+  }
+
+  // =============
+  // other setting
+  // =============
+
+  static const _timeoutBehaviorKey = IntKey('AppSettingPrefs_timeoutBehavior');
+  static const _dlTimeoutBehaviorKey = IntKey('AppSettingPrefs_dlTimeoutBehavior');
+  static const _enableLoggerKey = BoolKey('AppSettingPrefs_enableLogger');
+  static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
+  static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
+
+  static List<TypedKey> get otherSettingKeys => [
+        _timeoutBehaviorKey,
+        _dlTimeoutBehaviorKey,
+        _enableLoggerKey,
+        _showDebugErrorMsgKey,
+        _useNativeShareSheetKey,
+      ];
+
+  static Future<OtherSetting> _loadOtherSetting() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    var def = OtherSetting.defaultSetting;
+    return OtherSetting(
+      timeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_timeoutBehaviorKey) ?? def.timeoutBehavior.toInt()),
+      dlTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_dlTimeoutBehaviorKey) ?? def.dlTimeoutBehavior.toInt()),
+      enableLogger: prefs.safeGet<bool>(_enableLoggerKey) ?? def.enableLogger,
+      showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
+      useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
+    );
+  }
+
+  static Future<void> saveOtherSetting() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    var setting = AppSetting.instance.other;
+    await prefs.safeSet<int>(_timeoutBehaviorKey, setting.timeoutBehavior.toInt());
+    await prefs.safeSet<int>(_dlTimeoutBehaviorKey, setting.dlTimeoutBehavior.toInt());
+    await prefs.safeSet<bool>(_enableLoggerKey, setting.enableLogger);
+    await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
+    await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);
   }
 
   // ===

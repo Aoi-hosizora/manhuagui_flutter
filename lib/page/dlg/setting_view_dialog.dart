@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
-import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 
 /// 设置页-阅读设置 [showViewSettingDialog], [ViewSettingSubPage]
@@ -100,7 +98,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '显示当前时间',
+          title: '显示当前时间提示',
           value: _showClock,
           enable: _showPageHint,
           onChanged: (b) {
@@ -110,7 +108,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '显示网络状态',
+          title: '显示网络状态提示',
           value: _showNetwork,
           enable: _showPageHint,
           onChanged: (b) {
@@ -120,7 +118,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '显示电源余量',
+          title: '显示电源余量提示',
           value: _showBattery,
           enable: _showPageHint,
           onChanged: (b) {
@@ -208,9 +206,8 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
             TextButton(
               child: Text('确定'),
               onPressed: () async {
-                AppSetting.instance.update(view: setting);
+                AppSetting.instance.update(view: setting, alsoFireEvent: true);
                 await AppSettingPrefs.saveViewSetting();
-                EventBusManager.instance.fire(AppSettingChangedEvent());
                 Navigator.of(c).pop(true);
               },
             ),

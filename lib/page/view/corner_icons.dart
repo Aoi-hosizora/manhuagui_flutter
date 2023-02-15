@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -28,14 +28,14 @@ class MangaCornerFlags {
   final bool historyRead;
 
   List<IconData> buildIcons() {
-    if (!AppSetting.instance.other.enableCornerIcons) {
+    if (!AppSetting.instance.ui.enableCornerIcons) {
       return [];
     }
     return [
       if (inDownload) Icons.download,
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
-      if (inHistory && AppSetting.instance.other.showMangaReadIcon) ...[
+      if (inHistory && AppSetting.instance.ui.showMangaReadIcon) ...[
         if (!historyRead) CustomIcons.opened_left_star_book,
         if (historyRead) Icons.import_contacts,
       ],
@@ -161,7 +161,7 @@ class AuthorCornerFlags {
   final bool inFavorite;
 
   List<IconData> buildIcons() {
-    if (!AppSetting.instance.other.enableCornerIcons) {
+    if (!AppSetting.instance.ui.enableCornerIcons) {
       return [];
     }
     return [

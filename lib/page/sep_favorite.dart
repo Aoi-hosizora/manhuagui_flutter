@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_favorite.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 本地收藏页，即 Separate [FavoriteSubPage]
 class SepFavoritePage extends StatefulWidget {
@@ -17,10 +19,18 @@ class SepFavoritePage extends StatefulWidget {
 class _SepFavoritePageState extends State<SepFavoritePage> {
   final _action = ActionController();
   final _physicsController = CustomScrollPhysicsController();
+  final _cancelHandlers = <VoidCallback>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
+  }
 
   @override
   void dispose() {
     _action.dispose();
+    _cancelHandlers.forEach((c) => c.call());
     super.dispose();
   }
 

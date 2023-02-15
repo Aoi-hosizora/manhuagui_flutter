@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
-import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
-import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
@@ -152,7 +150,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
                       onPressed: () => copyText(directoryPath, showToast: true),
                     ),
                     TextButton(
-                      child: Text('确定'),
+                      child: Text('关闭'),
                       onPressed: () => Navigator.of(c).pop(),
                     ),
                   ],
@@ -195,9 +193,8 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
             TextButton(
               child: Text('确定'),
               onPressed: () async {
-                AppSetting.instance.update(dl: setting);
+                AppSetting.instance.update(dl: setting, alsoFireEvent: true);
                 await AppSettingPrefs.saveDlSetting();
-                EventBusManager.instance.fire(AppSettingChangedEvent());
                 Navigator.of(c).pop(true);
               },
             ),
@@ -216,15 +213,13 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
 Future<void> updateDlSettingDefaultToDeleteFiles(bool alsoDeleteFile) async {
   var setting = AppSetting.instance.dl;
   var newSetting = setting.copyWith(defaultToDeleteFiles: alsoDeleteFile);
-  AppSetting.instance.update(dl: newSetting);
+  AppSetting.instance.update(dl: newSetting, alsoFireEvent: true);
   await AppSettingPrefs.saveDlSetting();
-  EventBusManager.instance.fire(AppSettingChangedEvent());
 }
 
 Future<void> updateDlSettingDefaultToOnlineMode(bool onlineMode) async {
   var setting = AppSetting.instance.dl;
   var newSetting = setting.copyWith(defaultToOnlineMode: onlineMode);
-  AppSetting.instance.update(dl: newSetting);
+  AppSetting.instance.update(dl: newSetting, alsoFireEvent: true);
   await AppSettingPrefs.saveDlSetting();
-  EventBusManager.instance.fire(AppSettingChangedEvent());
 }

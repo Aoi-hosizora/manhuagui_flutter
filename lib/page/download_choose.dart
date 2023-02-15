@@ -93,7 +93,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
       context: context,
       builder: (c) => AlertDialog(
         title: Text('下载确认'),
-        content: Text('确定下载所选的 ${chapterIds.length} 个章节吗？'),
+        content: Text('是否下载所选的 ${chapterIds.length} 个章节？'),
         actions: [
           TextButton(child: Text('下载'), onPressed: () => Navigator.of(c).pop(true)),
           TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),

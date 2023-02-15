@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
 
 class DioManager {
   DioManager._();

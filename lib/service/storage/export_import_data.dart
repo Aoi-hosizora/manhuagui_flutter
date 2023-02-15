@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io' show File, Directory;
 
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -328,8 +328,7 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
   if (ok) {
     // reload AppSetting, and notify that settings have been changed
     if (counter.appSetting > 0) {
-      await AppSettingPrefs.loadAllSettings();
-      EventBusManager.instance.fire(AppSettingChangedEvent());
+      await AppSettingPrefs.loadAllSettings(alsoFireEvent: true);
     }
   }
   return ok;

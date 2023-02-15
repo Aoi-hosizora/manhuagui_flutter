@@ -194,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                       context: context,
                       builder: (c) => AlertDialog(
                         title: Text('删除登录记录'),
-                        content: Text('确定要删除 $username 吗？'),
+                        content: Text('是否删除 "$username" 的登录记录？'),
                         actions: [
                           TextButton(
                             child: Text('删除'),

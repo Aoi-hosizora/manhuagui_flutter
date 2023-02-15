@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_history.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 阅读历史页，即 Separate [HistorySubPage]
 class SepHistoryPage extends StatefulWidget {
@@ -16,10 +18,18 @@ class SepHistoryPage extends StatefulWidget {
 
 class _SepHistoryPageState extends State<SepHistoryPage> {
   final _action = ActionController();
+  final _cancelHandlers = <VoidCallback>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
+  }
 
   @override
   void dispose() {
     _action.dispose();
+    _cancelHandlers.forEach((c) => c.call());
     super.dispose();
   }
 

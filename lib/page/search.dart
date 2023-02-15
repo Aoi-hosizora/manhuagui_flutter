@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
@@ -66,8 +66,8 @@ class _SearchPageState extends State<SearchPage> {
   final _histories = <String>[]; // search history
   var _getting = false;
 
-  var _currOrder = AppSetting.instance.other.defaultMangaOrder;
-  var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
+  var _currOrder = AppSetting.instance.ui.defaultMangaOrder;
+  var _lastOrder = AppSetting.instance.ui.defaultMangaOrder;
 
   Future<PagedList<SmallManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -410,15 +410,15 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                               onTap: () {
                                 _text = h; // => 候选
-                                if (AppSetting.instance.other.clickToSearch) {
+                                if (AppSetting.instance.ui.clickToSearch) {
                                   _search(); // => 搜索
                                 }
                               },
                               onLongPress: () => showDialog(
                                 context: context,
                                 builder: (c) => AlertDialog(
-                                  title: Text('删除搜索记录'),
-                                  content: Text('确定要删除 "$h" 吗？'),
+                                  title: Text('删除搜索历史'),
+                                  content: Text('是否删除 "$h" 搜索历史？'),
                                   actions: [
                                     TextButton(
                                       child: Text('删除'),

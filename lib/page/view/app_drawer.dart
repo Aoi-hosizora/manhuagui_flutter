@@ -18,18 +18,19 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 enum DrawerSelection {
   none,
-  // none => MangaPage / MangaTocPage / CommentsPage / DownloadMangaPage / MangaShelfCachePage / FavoriteAllPage
-  //         AuthorPage / FavoriteAuthorPage / MangaGroupPage / MangaAudRankingPage / SepGenrePage
+  // none => MangaPage / AuthorPage / MessagePage / CommentsPage / CommentPage
+  //         MangaTocPage / DownloadMangaPage / MangaShelfCachePage / FavoriteAllPage / FavoriteAuthorPage
+  //         MangaGroupPage / MangaAudRankingPage / SepGenrePage
 
   home, // IndexPage
   search, // SearchPage
 
-  shelf, // ShelfPage
-  favorite, // FavoritePage
-  history, // HistoryPage
-  download, // DownloadPage
-  recent, // RecentPage
-  ranking, // RankingPage
+  shelf, // SepShelfPage
+  favorite, // SepFavoritePage
+  history, // SepHistoryPage
+  download, // SepDownloadPage
+  recent, // SepRecentPage
+  ranking, // SepRankingPage
 
   setting, // SettingPage
 }

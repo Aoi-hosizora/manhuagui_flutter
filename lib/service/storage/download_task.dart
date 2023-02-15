@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
@@ -46,7 +46,6 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       succeeded = await _coreDoTask();
     } catch (_) {}
     _status = succeeded ? _TaskStatus.succeeded : _TaskStatus.failed;
-    await Future.delayed(Duration(milliseconds: 1000)); // 等待 1s，让先前的通知都发送完后再更新通知
     if (!_canceled) {
       await DownloadNotificationHelper.showDoneNotification(mangaId, mangaTitle, succeeded);
     } else {
@@ -80,15 +79,15 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: true)); // finished means task has been removed from queue
     EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
     Future.microtask(() async {
-      for (var i = 0; i < 2; i++) {
-        // 以防万一，等待 1s/2s 后再分别更新系统通知一次
-        await Future.delayed(Duration(seconds: 1));
+      // 以防万一，等待 2s/3s/4s/5s 后再分别更新系统通知一次
+      await Future.delayed(Duration(seconds: 2));
+      for (var i = 0; i < 4; i++) {
         if (!_canceled) {
-          // TODO 下载时当所有页面都被 cache，且部分页已开始完，就会出现下载已完成但通知仍存在的问题 (可能已解决，待测试)
           await DownloadNotificationHelper.showDoneNotification(mangaId, mangaTitle, _status == _TaskStatus.succeeded);
         } else {
           await DownloadNotificationHelper.cancelNotification(mangaId);
         }
+        await Future.delayed(Duration(seconds: 1));
       }
     });
     return Future.value(null);
@@ -374,7 +373,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       );
       MangaChapter chapter;
       try {
-        await Future.delayed(Duration(milliseconds: 800)); // 额外等待，防止后端连续请求而被BAN
+        await Future.delayed(Duration(milliseconds: 1000)); // 额外等待，防止后端连续请求而被BAN
         chapter = (await client.getMangaChapter(mid: mangaId, cid: chapterId)).data;
       } catch (e, s) {
         // 请求错误 => 更新章节下载表，并跳过当前章节
@@ -459,7 +458,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           }
 
           // 5.5.4. 通知页面下载进度
-          await Future.delayed(Duration(milliseconds: 200)); // 尽量等待之前的通知更新完成
+          await Future.delayed(Duration(milliseconds: 200)); // 额外等待，防BAN，且尽量等待之前的通知更新完成
           await _updateProgress(
             DownloadMangaProgress.gotPage(
               manga: manga,

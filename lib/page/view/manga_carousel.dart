@@ -104,6 +104,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
                       url: widget.mangas[i].cover, // 3:4
                       height: widget.height,
                       width: widget.imageWidth,
+                      quality: FilterQuality.high,
                     ),
                   ),
                 ),

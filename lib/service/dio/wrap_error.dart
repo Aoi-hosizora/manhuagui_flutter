@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:basic_utils/basic_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/result.dart';
 import 'package:stack_trace/stack_trace.dart';
 
@@ -125,7 +125,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       }
     }
     if (AppSetting.instance.other.showDebugErrorMsg) {
-      return '网络连接异常: [DEBUG] $runtimeType: $s';
+      return '网络连接异常: [DEBUG] $runtimeType: $s'; // Network error
     }
     return '网络连接异常 ($runtimeType)\n如果该错误反复出现，请向开发者反馈'; // Unknown network error
   }
@@ -342,7 +342,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     text = '应用发生错误: [DEBUG] $readable' + (special ? '' : ', ${function ?? '<line: ?>'}'); // Application error
   } else {
     readable ??= e.runtimeType.toString();
-    text = '应用发生错误 ($readable)\n如果该错误反复出现，请向开发者反馈';
+    text = '应用发生错误 ($readable)\n如果该错误反复出现，请向开发者反馈'; // Application error
   }
   print('===> type: ${ErrorType.otherError}');
   print('===> text: $text');
