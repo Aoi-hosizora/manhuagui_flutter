@@ -81,7 +81,7 @@ class MangaShelfCachePage extends StatefulWidget {
               width: getDialogMaxWidth(context),
               child: CircularProgressDialogOption(
                 progress: CircularProgressIndicator(),
-                child: Text('正在处理第 $currPage/${totalPages ?? '?'} 页 (已获得 ${caches.length} 部漫画)...'),
+                child: Text('正在处理第 $currPage/${totalPages ?? '?'} 页...\n(当前已获得 ${caches.length} 部漫画)'),
               ),
             ),
             actions: [
@@ -313,7 +313,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
         title: Text(cache.mangaTitle),
         children: [
           IconTextDialogOption(
-            icon: Icon(Icons.description_outlined),
+            icon: Icon(MdiIcons.bookOutline),
             text: Text('查看该漫画'),
             onPressed: () {
               Navigator.of(c).pop();
@@ -395,7 +395,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
     if (_data.isEmpty) {
       return;
     }
-    var ok = await showDialog(
+    var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('清空确认'),

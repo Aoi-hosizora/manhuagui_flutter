@@ -40,15 +40,14 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
         color: Colors.white,
         width: MediaQuery.of(context).size.width,
         height: widget.height,
-        child: PlaceholderText(
-          state: PlaceholderState.nothing,
-          childBuilder: (_) => SizedBox.shrink(),
-          setting: PlaceholderSetting(
-            showNothingRetry: false,
-            iconSize: 42,
-            textStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.grey[600]),
-          ).copyWithChinese(
-            nothingText: '漫画推荐列表为空',
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.clear_all, size: 42, color: Colors.grey),
+              SizedBox(height: 10),
+              Text('暂无漫画推荐', style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.grey[600])),
+            ],
           ),
         ),
       );

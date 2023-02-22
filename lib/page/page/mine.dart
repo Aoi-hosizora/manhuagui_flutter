@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
+import 'package:manhuagui_flutter/page/sep_favorite.dart';
+import 'package:manhuagui_flutter/page/sep_history.dart';
+import 'package:manhuagui_flutter/page/sep_shelf.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
@@ -443,18 +447,40 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 child: ActionRowView.four(
                   action1: ActionItem.simple('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
                   action2: ActionItem.simple('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
-                  action3: ActionItem.simple('登录签到', Icons.event_available, () => _checkin(), enable: !_checkining),
+                  action3: ActionItem.simple('登录签到', !_checkining ? Icons.event_available : null, () => _checkin(), enable: !_checkining),
                   action4: ActionItem.simple('退出登录', Icons.logout, () => _logout(sure: false)),
                 ),
               ),
               SizedBox(height: 12),
-              _buildActionLine(text: '我的书架', icon: MdiIcons.bookshelf, action: () => EventBusManager.instance.fire(ToShelfRequestedEvent())),
+              _buildActionLine(
+                text: '我的书架',
+                icon: MdiIcons.bookshelf,
+                action: !AppSetting.instance.ui.alwaysOpenNewListPage //
+                    ? () => EventBusManager.instance.fire(ToShelfRequestedEvent())
+                    : () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepShelfPage())),
+              ),
               _buildDivider(),
-              _buildActionLine(text: '本地收藏', icon: MdiIcons.bookmarkBoxMultipleOutline, action: () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())),
+              _buildActionLine(
+                text: '本地收藏',
+                icon: MdiIcons.bookmarkBoxMultipleOutline,
+                action: !AppSetting.instance.ui.alwaysOpenNewListPage //
+                    ? () => EventBusManager.instance.fire(ToFavoriteRequestedEvent())
+                    : () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepFavoritePage())),
+              ),
               _buildDivider(),
-              _buildActionLine(text: '阅读历史', icon: Icons.history, action: () => EventBusManager.instance.fire(ToHistoryRequestedEvent())),
+              _buildActionLine(
+                text: '阅读历史',
+                icon: Icons.history,
+                action: !AppSetting.instance.ui.alwaysOpenNewListPage //
+                    ? () => EventBusManager.instance.fire(ToHistoryRequestedEvent())
+                    : () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepHistoryPage())),
+              ),
               _buildDivider(),
-              _buildActionLine(text: '下载列表', icon: Icons.download, action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
+              _buildActionLine(
+                text: '下载列表',
+                icon: Icons.download,
+                action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage())),
+              ),
               SizedBox(height: 12),
               _buildInfoLines(
                 icon: Icons.account_box,

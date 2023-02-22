@@ -394,6 +394,8 @@ class DownloadedChapter {
   final int successPageCount;
   final bool needUpdate;
 
+  String get chapterUrl => 'https://www.manhuagui.com/comic/$mangaId/$chapterId.html';
+
   bool get tried => triedPageCount > 0;
 
   bool get succeeded => successPageCount == totalPageCount;

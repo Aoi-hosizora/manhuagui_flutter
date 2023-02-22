@@ -279,7 +279,7 @@ class _SearchPageState extends State<SearchPage> {
                   transitionDuration: Duration(milliseconds: 400),
                   transitionCurve: Curves.easeInOut,
                   transition: CircularFloatingSearchBarTransition(),
-                  hint: '输入漫画标题、漫画 mid、漫画作者名等搜索漫画',
+                  hint: '输入漫画标题、作者名、mid 等搜索漫画',
                   hintStyle: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).hintColor),
                   queryStyle: Theme.of(context).textTheme.bodyText2,
                   textInputType: TextInputType.text,

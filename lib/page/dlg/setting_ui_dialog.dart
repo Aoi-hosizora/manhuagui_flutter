@@ -39,40 +39,40 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
 
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
-  late var _clickToSearch = widget.setting.clickToSearch;
   late var _enableCornerIcons = widget.setting.enableCornerIcons;
   late var _showMangaReadIcon = widget.setting.showMangaReadIcon;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
-  late var _useLocalDataInShelf = widget.setting.useLocalDataInShelf;
+  late var _clickToSearch = widget.setting.clickToSearch;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
   late var _audienceMangaRows = widget.setting.audienceRankingRows;
+  late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
 
   UiSetting get _newestSetting => UiSetting(
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
-        clickToSearch: _clickToSearch,
         enableCornerIcons: _enableCornerIcons,
         showMangaReadIcon: _showMangaReadIcon,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
-        useLocalDataInShelf: _useLocalDataInShelf,
+        clickToSearch: _clickToSearch,
         includeUnreadInHome: _includeUnreadInHome,
         audienceRankingRows: _audienceMangaRows,
+        alwaysOpenNewListPage: _alwaysOpenNewListPage,
       );
 
   void _setToDefault() {
     var setting = UiSetting.defaultSetting;
     _defaultMangaOrder = setting.defaultMangaOrder;
     _defaultAuthorOrder = setting.defaultAuthorOrder;
-    _clickToSearch = setting.clickToSearch;
     _enableCornerIcons = setting.enableCornerIcons;
     _showMangaReadIcon = setting.showMangaReadIcon;
     _regularGroupRows = setting.regularGroupRows;
     _otherGroupRows = setting.otherGroupRows;
-    _useLocalDataInShelf = setting.useLocalDataInShelf;
+    _clickToSearch = setting.clickToSearch;
     _includeUnreadInHome = setting.includeUnreadInHome;
     _audienceMangaRows = setting.audienceRankingRows;
+    _alwaysOpenNewListPage = setting.alwaysOpenNewListPage;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -99,15 +99,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => s.toTitle(),
           onChanged: (s) {
             _defaultAuthorOrder = s;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          title: '点击搜索历史执行搜索',
-          value: _clickToSearch,
-          onChanged: (b) {
-            _clickToSearch = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -160,11 +151,10 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '书架显示本地阅读历史',
-          hint: '该选项默认关闭，即书架上默认显示在线的阅读记录 (跨设备同步)，开启该选项可使得书架上显示本地的阅读记录 (跨设备不同步)。',
-          value: _useLocalDataInShelf,
+          title: '点击搜索历史执行搜索',
+          value: _clickToSearch,
           onChanged: (b) {
-            _useLocalDataInShelf = b;
+            _clickToSearch = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -186,6 +176,16 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => '$s行',
           onChanged: (c) {
             _audienceMangaRows = c.clamp(4, 10);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '始终在新页面显示列表',
+          hint: '该选项默认关闭，启用该选项后，将在 "推荐页面"、"用户页面"、"左侧菜单" 等地方点击查看漫画列表时，始终打开新页面显示这些列表。',
+          value: _alwaysOpenNewListPage,
+          onChanged: (b) {
+            _alwaysOpenNewListPage = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

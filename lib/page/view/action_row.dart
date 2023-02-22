@@ -7,7 +7,7 @@ class ActionItem {
   const ActionItem.simple(this.text, this.icon, this.action, {this.longPress, this.enable = true, this.rotateAngle = 0});
 
   final String text;
-  final IconData icon;
+  final IconData? icon;
   final void Function()? action;
   final void Function()? longPress;
   final bool enable;
@@ -102,12 +102,18 @@ class ActionRowView extends StatelessWidget {
           icon: iconBuilder?.call(action) ??
               Transform.rotate(
                 angle: action.rotateAngle,
-                child: Icon(
-                  action.icon,
-                  color: action.enable
-                      ? (iconColor ?? Colors.black54) // enabled
-                      : (disabledIconColor ?? Colors.grey) /* disabled */,
-                ),
+                child: action.icon != null
+                    ? Icon(
+                        action.icon,
+                        color: action.enable
+                            ? (iconColor ?? Colors.black54) // enabled
+                            : (disabledIconColor ?? Colors.grey) /* disabled */,
+                      )
+                    : SizedBox(
+                        height: 22, // just smaller than icon
+                        width: 22,
+                        child: CircularProgressIndicator(),
+                      ),
               ),
           text: Text(
             action.text,
@@ -148,6 +154,8 @@ class ActionRowView extends StatelessWidget {
         ),
       );
     }
+
+    // following is not be used currently
 
     double getTextWidth(String text, TextStyle style) => //
         (TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, textScaleFactor: MediaQuery.of(context).textScaleFactor)..layout()).width;

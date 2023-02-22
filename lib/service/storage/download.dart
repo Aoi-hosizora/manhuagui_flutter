@@ -64,6 +64,16 @@ Future<File?> getDownloadedChapterPageFile({required int mangaId, required int c
   }
 }
 
+Future<String?> getCachedOrDownloadedChapterPageFilepath({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
+  try {
+    var file = await getDownloadedChapterPageFile(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url);
+    return await getCachedOrDownloadedFilepath(url: url, file: file);
+  } catch (e, s) {
+    globalLogger.e('getCachedOrDownloadedChapterPageFilepath', e, s);
+    return null;
+  }
+}
+
 // ==============
 // download image
 // ==============
@@ -85,10 +95,12 @@ Future<File?> downloadImageToGallery(String url) async {
         headTimeout: AppSetting.instance.other.dlTimeoutBehavior.determineValue(
           normal: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
           long: Duration(milliseconds: DOWNLOAD_HEAD_LTIMEOUT),
+          longLong: Duration(milliseconds: DOWNLOAD_HEAD_LLTIMEOUT),
         ),
         downloadTimeout: AppSetting.instance.other.dlTimeoutBehavior.determineValue(
           normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
           long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
+          longLong: Duration(milliseconds: DOWNLOAD_IMAGE_LLTIMEOUT),
         ),
       ),
     );
@@ -195,7 +207,7 @@ Future<Tuple3<List<String>, int?, int?>> readMetadataFile({required int mangaId,
   return Tuple3(pages, nextCid, prevCid);
 }
 
-bool isPageUrlValidInMetadata(String url) {
+bool isValidPageUrlForMetadata(String url) {
   return url.isNotEmpty && !url.startsWith('<placeholder_');
 }
 

@@ -422,7 +422,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
               PopupMenuItem(
                 child: IconTextMenuItem(
                   _showAllChapters ? Icons.check_box_outlined : Icons.check_box_outline_blank,
-                  '显示所有章节的下载情况',
+                  '显示所有章节的下载状态',
                 ),
                 onTap: () => mountedSetState(() => _showAllChapters = !_showAllChapters),
               ),
@@ -487,7 +487,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                       child: ActionRowView.five(
                         action1: ActionItem.simple(
                           '查看漫画',
-                          Icons.description_outlined,
+                          MdiIcons.bookOutline,
                           () => Navigator.of(context).push(
                             CustomPageRoute(
                               context: context,

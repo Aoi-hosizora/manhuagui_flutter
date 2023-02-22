@@ -74,7 +74,7 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
       return null;
     }
     var group = regularGroup;
-    if (group == null || group.chapters.isNotEmpty) {
+    if (group?.chapters.isNotEmpty == true) {
       return group;
     }
     return where((g) => g.chapters.isNotEmpty).firstOrNull;

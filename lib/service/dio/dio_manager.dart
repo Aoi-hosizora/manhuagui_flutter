@@ -15,6 +15,7 @@ class DioManager {
   // global Dio instances
   Dio? _dio;
   Dio? _longDio;
+  Dio? _longLongDio;
   Dio? _noTimeoutDio;
 
   Dio get dio {
@@ -32,6 +33,13 @@ class DioManager {
       _longDio!.options.receiveTimeout = RECEIVE_LTIMEOUT;
       _longDio!.interceptors.add(LogInterceptor());
     }
+    if (_longLongDio == null) {
+      _longLongDio = Dio();
+      _longLongDio!.options.connectTimeout = CONNECT_LLTIMEOUT;
+      _longLongDio!.options.sendTimeout = SEND_LLTIMEOUT;
+      _longLongDio!.options.receiveTimeout = RECEIVE_LLTIMEOUT;
+      _longLongDio!.interceptors.add(LogInterceptor());
+    }
     if (_noTimeoutDio == null) {
       _noTimeoutDio = Dio();
       _noTimeoutDio!.interceptors.add(LogInterceptor());
@@ -39,6 +47,7 @@ class DioManager {
     return AppSetting.instance.other.timeoutBehavior.determineValue(
       normal: _dio!,
       long: _longDio!,
+      longLong: _longLongDio!,
       disable: _noTimeoutDio!,
     )!;
   }

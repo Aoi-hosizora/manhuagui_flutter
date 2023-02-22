@@ -211,63 +211,63 @@ class UiSetting {
   const UiSetting({
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
-    required this.clickToSearch,
     required this.enableCornerIcons,
     required this.showMangaReadIcon,
     required this.regularGroupRows,
     required this.otherGroupRows,
-    required this.useLocalDataInShelf,
+    required this.clickToSearch,
     required this.includeUnreadInHome,
     required this.audienceRankingRows,
+    required this.alwaysOpenNewListPage,
   });
 
   final MangaOrder defaultMangaOrder; // 漫画列表默认排序方式
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
-  final bool clickToSearch; // 点击搜索历史执行搜索
   final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final int regularGroupRows; // 单话分组章节显示行数
   final int otherGroupRows; // 其他分组章节显示行数
-  final bool useLocalDataInShelf; // 书架显示本地阅读历史
+  final bool clickToSearch; // 点击搜索历史执行搜索
   final bool includeUnreadInHome; // 首页历史显示未阅读漫画
   final int audienceRankingRows; // 首页受众排行榜显示行数
+  final bool alwaysOpenNewListPage; // 始终在新页面显示列表
 
   static const defaultSetting = UiSetting(
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
-    clickToSearch: false,
     enableCornerIcons: true,
     showMangaReadIcon: true,
     regularGroupRows: 3,
     otherGroupRows: 1,
-    useLocalDataInShelf: false,
+    clickToSearch: false,
     includeUnreadInHome: true,
     audienceRankingRows: 5,
+    alwaysOpenNewListPage: false,
   );
 
   UiSetting copyWith({
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
-    bool? clickToSearch,
     bool? enableCornerIcons,
     bool? showMangaReadIcon,
     int? regularGroupRows,
     int? otherGroupRows,
-    bool? useLocalDataInShelf,
+    bool? clickToSearch,
     bool? includeUnreadInHome,
     int? audienceRankingRows,
+    bool? alwaysOpenNewListPage,
   }) {
     return UiSetting(
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
-      clickToSearch: clickToSearch ?? this.clickToSearch,
       enableCornerIcons: enableCornerIcons ?? this.enableCornerIcons,
       showMangaReadIcon: showMangaReadIcon ?? this.showMangaReadIcon,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
-      useLocalDataInShelf: useLocalDataInShelf ?? this.useLocalDataInShelf,
+      clickToSearch: clickToSearch ?? this.clickToSearch,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
+      alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
     );
   }
 }
@@ -276,6 +276,7 @@ class OtherSetting {
   const OtherSetting({
     required this.timeoutBehavior,
     required this.dlTimeoutBehavior,
+    required this.imgTimeoutBehavior,
     required this.enableLogger,
     required this.showDebugErrorMsg,
     required this.useNativeShareSheet,
@@ -283,6 +284,7 @@ class OtherSetting {
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
   final TimeoutBehavior dlTimeoutBehavior; // 漫画下载超时时间
+  final TimeoutBehavior imgTimeoutBehavior; // 图片浏览超时时间
   final bool enableLogger; // 记录调试日志
   final bool showDebugErrorMsg; // 使用更详细的错误信息
   final bool useNativeShareSheet; // 使用原生的分享菜单
@@ -290,6 +292,7 @@ class OtherSetting {
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
     dlTimeoutBehavior: TimeoutBehavior.normal,
+    imgTimeoutBehavior: TimeoutBehavior.normal,
     enableLogger: false,
     showDebugErrorMsg: false,
     useNativeShareSheet: true,
@@ -298,6 +301,7 @@ class OtherSetting {
   OtherSetting copyWith({
     TimeoutBehavior? timeoutBehavior,
     TimeoutBehavior? dlTimeoutBehavior,
+    TimeoutBehavior? imgTimeoutBehavior,
     bool? enableLogger,
     bool? showDebugErrorMsg,
     bool? useNativeShareSheet,
@@ -306,6 +310,7 @@ class OtherSetting {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
       dlTimeoutBehavior: dlTimeoutBehavior ?? this.dlTimeoutBehavior,
+      imgTimeoutBehavior: imgTimeoutBehavior ?? this.imgTimeoutBehavior,
       enableLogger: enableLogger ?? this.enableLogger,
       showDebugErrorMsg: showDebugErrorMsg ?? this.showDebugErrorMsg,
       useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
@@ -316,6 +321,7 @@ class OtherSetting {
 enum TimeoutBehavior {
   normal,
   long,
+  longLong,
   disable,
 }
 
@@ -326,6 +332,8 @@ extension TimeoutBehaviorExtension on TimeoutBehavior {
         return '正常';
       case TimeoutBehavior.long:
         return '较长';
+      case TimeoutBehavior.longLong:
+        return '长';
       case TimeoutBehavior.disable:
         return '禁用';
     }
@@ -337,6 +345,8 @@ extension TimeoutBehaviorExtension on TimeoutBehavior {
         return 0;
       case TimeoutBehavior.long:
         return 1;
+      case TimeoutBehavior.longLong:
+        return 3;
       case TimeoutBehavior.disable:
         return 2;
     }
@@ -348,85 +358,24 @@ extension TimeoutBehaviorExtension on TimeoutBehavior {
         return TimeoutBehavior.normal;
       case 1:
         return TimeoutBehavior.long;
+      case 3:
+        return TimeoutBehavior.longLong;
       case 2:
         return TimeoutBehavior.disable;
     }
     return TimeoutBehavior.normal;
   }
 
-  T? determineValue<T>({required T normal, required T long, T? disable}) {
+  T? determineValue<T>({required T normal, required T long, required T longLong, T? disable}) {
     switch (this) {
       case TimeoutBehavior.normal:
         return normal;
       case TimeoutBehavior.long:
         return long;
+      case TimeoutBehavior.longLong:
+        return longLong;
       case TimeoutBehavior.disable:
         return disable;
     }
-  }
-}
-
-enum ExportDataType {
-  // from db
-  readHistories, // 漫画阅读历史
-  downloadRecords, // 漫画下载记录
-  favoriteMangas, // 本地收藏漫画
-  favoriteAuthors, // 本地收藏作者
-
-  // from prefs
-  searchHistories, // 漫画搜索历史
-  appSetting, // 所有设置项
-}
-
-extension ExportDataTypeExtension on ExportDataType {
-  String toTypeTitle() {
-    switch (this) {
-      case ExportDataType.readHistories:
-        return '漫画阅读历史';
-      case ExportDataType.downloadRecords:
-        return '漫画下载记录';
-      case ExportDataType.favoriteMangas:
-        return '本地收藏漫画';
-      case ExportDataType.favoriteAuthors:
-        return '本地收藏作者';
-      case ExportDataType.searchHistories:
-        return '漫画搜索历史';
-      case ExportDataType.appSetting:
-        return '所有设置项';
-    }
-  }
-}
-
-class ExportDataTypeCounter {
-  ExportDataTypeCounter();
-
-  int readHistories = 0;
-  int downloadRecords = 0;
-  int favoriteMangas = 0;
-  int favoriteAuthors = 0;
-  int searchHistories = 0;
-  int appSetting = 0;
-
-  bool get isEmpty =>
-      readHistories == 0 && //
-      downloadRecords == 0 &&
-      favoriteMangas == 0 &&
-      favoriteAuthors == 0 &&
-      searchHistories == 0 &&
-      appSetting == 0;
-
-  String formatToString({required bool includeZero, required List<ExportDataType> includeTypes}) {
-    bool include(int count, ExportDataType type) => //
-        (includeZero || count != 0) && includeTypes.contains(type);
-
-    var titles = [
-      if (include(readHistories, ExportDataType.readHistories)) '$readHistories 条漫画阅读历史',
-      if (include(downloadRecords, ExportDataType.downloadRecords)) '$downloadRecords 条漫画下载记录',
-      if (include(favoriteMangas, ExportDataType.favoriteMangas)) '$favoriteMangas 部本地收藏漫画',
-      if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',
-      if (include(searchHistories, ExportDataType.searchHistories)) '$searchHistories 条漫画搜索历史',
-      if (include(appSetting, ExportDataType.appSetting)) '$appSetting 条设置项',
-    ];
-    return titles.join('、');
   }
 }

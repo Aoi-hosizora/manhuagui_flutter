@@ -78,17 +78,20 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
         actions: [
           if (_currentPageIndex == 0 && _actions[0].invoke('ifNeedBack') == true)
             AppBarActionButton(
+              key: ValueKey('CategorySubPage_AppBarActionButton_Back'),
               icon: Icon(Icons.apps),
               tooltip: '返回类别列表',
               onPressed: () => _actions[0].invoke('back'),
             ),
           if (_currentPageIndex == 1)
             AppBarActionButton(
+              key: ValueKey('CategorySubPage_AppBarActionButton_Find'),
               icon: Icon(Icons.person_search),
               tooltip: '寻找作者',
               onPressed: () => _actions[1].invoke('find'),
             ),
           AppBarActionButton(
+            key: ValueKey('CategorySubPage_AppBarActionButton_Search'),
             icon: Icon(Icons.search),
             tooltip: '搜索漫画',
             onPressed: () => Navigator.of(context).push(

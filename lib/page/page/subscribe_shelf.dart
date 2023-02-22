@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
@@ -97,6 +96,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   final _data = <ShelfManga>[];
   var _total = 0;
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreShelves: true);
+  var _useLocalHistory = false;
   final _histories = <int, MangaHistory?>{};
   var _isUpdated = false;
 
@@ -261,12 +261,14 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         itemBuilder: (c, _, item) => ShelfMangaLineView(
           manga: item,
           history: _histories[item.mid],
+          useLocalHistory: _useLocalHistory,
           flags: _flagStorage.getFlags(mangaId: item.mid, forceInShelf: true),
           onLongPressed: () => _showPopupMenu(manga: item),
         ),
         extra: UpdatableDataViewExtraWidgets(
           outerTopWidgets: [
             ListHintView.textWidget(
+              padding: EdgeInsets.fromLTRB(10, 5, 10 - 3, 5), // for popup btn
               leftText: '${AuthManager.instance.username} 的书架' + (_isUpdated ? ' (有更新)' : ''),
               rightWidget: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -276,9 +278,35 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
                   HelpIconView.forListHint(
                     title: '我的书架',
                     hint: '"我的书架"与漫画柜网页端保持同步，但受限于网页端功能，"我的书架"只能按照漫画更新时间的逆序显示。\n\n'
-                        '提示：本页书架列表上显示的阅读记录来源于${AppSetting.instance.ui.useLocalDataInShelf ? '本地' : '在线'}的阅读历史，'
-                        '该显示方式可在【设置-界面显示设置-书架上显示本地阅读历史】修改。',
+                        '提示：本页书架列表上显示的阅读记录来源于${_useLocalHistory ? '本地' : '在线'}的阅读历史，该数据${_useLocalHistory ? '跨设备不同步' : '跨设备同步'}。',
                     tooltip: '提示',
+                  ),
+                  PopupMenuButton(
+                    child: Builder(
+                      builder: (c) => HelpIconView.asButton(
+                        iconData: Icons.more_vert,
+                        tooltip: '更多选项',
+                        onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                      ),
+                    ),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        child: IconTextMenuItem(
+                          _useLocalHistory ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                          '使用本地的阅读历史',
+                        ),
+                        onTap: () {
+                          _useLocalHistory = !_useLocalHistory;
+                          if (mounted) setState(() {});
+                          // _pdvKey.currentState?.refresh();
+                        },
+                      ),
+                      PopupMenuItem(
+                        enabled: false,
+                        child: IconTextMenuItem(Icons.search, '无法搜索书架上的漫画', color: Colors.grey),
+                        onTap: () {},
+                      ),
+                    ],
                   ),
                 ],
               ),

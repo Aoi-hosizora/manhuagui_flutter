@@ -11,7 +11,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 enum MangaCollectionType {
   rankings,
-  updates,
+  recents,
   histories,
   shelves,
   favorites,
@@ -311,7 +311,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
         right = '更新于 ${formatDatetimeAndDuration(DateTime.now(), FormatPattern.date)}';
         widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList(); // # = 50 => 20
         break;
-      case MangaCollectionType.updates:
+      case MangaCollectionType.recents:
         title = '最近更新的漫画';
         icon = Icons.cached;
         widgets = widget.updates?.sublist(0, widget.updates!.length.clamp(0, 30)).map((el) => _buildUpdateItem(context, el)).toList(); // # = 42 => 30
@@ -356,10 +356,10 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           showLoadingText: false,
           showNothingRetry: false,
           showErrorRetry: false,
-          progressPadding: const EdgeInsets.all(15),
+          progressPadding: const EdgeInsets.all(12),
           iconPadding: const EdgeInsets.all(5),
           textPadding: const EdgeInsets.all(5),
-          progressSize: 40,
+          progressSize: 42,
           iconSize: 42,
           textStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.grey[600]),
         ).copyWithChinese(),

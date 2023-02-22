@@ -63,7 +63,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
-      _genres.add(allGenres[0]);
+      _genres.addAll(allRankingTypes);
       _genres.addAll(globalCategoryList!.genres.map((g) => g.toTiny()).toList());
     } catch (e, s) {
       _genres.clear();

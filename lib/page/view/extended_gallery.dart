@@ -3,32 +3,33 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 使用 [ExtendedPhotoGallery] 和 [ReloadablePhotoView] 扩展的横向/纵向画廊展示，在 [MangaGalleryView] 使用
+/// 使用 [ExtendedPhotoGallery] 和 [ReloadablePhotoView] 扩展的横向/纵向画廊，在 [MangaGalleryView] 使用
+/// (带首页和末页的 GalleryView，允许传入一些界面风格的参数)
 
 class HorizontalGalleryView extends StatefulWidget {
   const HorizontalGalleryView({
     Key? key,
-    required this.imageCount /* <<< */,
-    required this.imagePageBuilder /* <<< */,
-    required this.firstPageBuilder /* <<< */,
-    required this.lastPageBuilder /* <<< */,
-    this.onImageLongPressed /* <<< */,
+    required this.imageCount, // <<<
+    required this.imagePageBuilder, // <<<
+    required this.firstPageBuilder, // <<<
+    required this.lastPageBuilder, // <<<
+    this.onImageLongPressed, // <<< // exclude extra pages, start from 0
     this.fallbackOptions,
-    this.onPageChanged,
+    this.onPageChanged, // include extra pages, start from 0
     this.reverse = false,
     this.preloadPagesCount = 0,
-    this.initialPage = 0 /* <<< */,
-    this.viewportFraction = 1.0 /* <<< */,
+    this.initialPage = 0, // <<<
+    this.viewportFraction = 1.0, // <<<
   }) : super(key: key);
 
   final int imageCount;
-  final ExtendedPhotoGalleryPageOptions Function(BuildContext, int) imagePageBuilder;
+  final ExtendedPhotoGalleryPageOptions Function(BuildContext context, int imageIndex) imagePageBuilder;
   final Widget Function(BuildContext context) firstPageBuilder;
   final Widget Function(BuildContext context) lastPageBuilder;
-  final void Function(int index)? onImageLongPressed;
+  final void Function(int imageIndex)? onImageLongPressed;
 
   final PhotoViewOptions? fallbackOptions;
-  final void Function(int index)? onPageChanged;
+  final void Function(int pageIndex)? onPageChanged;
   final bool reverse;
   final int preloadPagesCount;
 
@@ -60,15 +61,19 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
     }
   }
 
-  void reload(int page) {
-    _key.currentState?.reloadPhoto(page);
+  /// reload, exclude extra pages, start from 0
+  void reload(int imageIndex) {
+    if (imageIndex >= 0 && imageIndex < widget.imageCount) {
+      _key.currentState?.reloadPhoto(imageIndex);
+    }
   }
 
-  void jumpToPage(int page, {bool animated = false}) {
+  /// jumpToPage, include extra pages, start from 0
+  void jumpToPage(int pageIndex, {bool animated = false}) {
     if (animated) {
-      _controller.defaultAnimateToPage(page);
+      _controller.defaultAnimateToPage(pageIndex);
     } else {
-      _controller.jumpToPage(page);
+      _controller.jumpToPage(pageIndex);
     }
   }
 
@@ -115,30 +120,30 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
 class VerticalGalleryView extends StatefulWidget {
   const VerticalGalleryView({
     Key? key,
-    required this.imageCount /* <<< */,
-    required this.imagePageBuilder /* <<< */,
-    required this.firstPageBuilder /* <<< */,
-    required this.lastPageBuilder /* <<< */,
-    this.onImageTapDown /* <<< */,
-    this.onImageTapUp /* <<< */,
-    this.onImageLongPressed /* <<< */,
+    required this.imageCount, // <<<
+    required this.imagePageBuilder, // <<<
+    required this.firstPageBuilder, // <<<
+    required this.lastPageBuilder, // <<<
+    this.onImageTapDown, // <<<
+    this.onImageTapUp, // <<<
+    this.onImageLongPressed, // <<< // exclude extra pages, start from 0
     this.fallbackOptions,
-    this.onPageChanged,
+    this.onPageChanged, // include extra pages, start from 0
     this.preloadPagesCount = 0,
-    this.initialPage = 0 /* <<< */,
-    this.viewportPageSpace = 0.0 /* <<< */,
+    this.initialPage = 0, // <<<
+    this.viewportPageSpace = 0.0, // <<<
   }) : super(key: key);
 
   final int imageCount;
-  final ExtendedPhotoGalleryPageOptions Function(BuildContext, int) imagePageBuilder;
+  final ExtendedPhotoGalleryPageOptions Function(BuildContext context, int imageIndex) imagePageBuilder;
   final Widget Function(BuildContext context) firstPageBuilder;
   final Widget Function(BuildContext context) lastPageBuilder;
   final void Function(TapDownDetails details)? onImageTapDown;
   final void Function(TapUpDetails details)? onImageTapUp;
-  final void Function(int index)? onImageLongPressed;
+  final void Function(int imageIndex)? onImageLongPressed;
 
   final PhotoViewOptions? fallbackOptions;
-  final void Function(int)? onPageChanged;
+  final void Function(int pageIndex)? onPageChanged;
   final int preloadPagesCount;
 
   final int initialPage;
@@ -152,10 +157,9 @@ const _kMaskAnimDuration = Duration(milliseconds: 150);
 
 class VerticalGalleryViewState extends State<VerticalGalleryView> {
   late final _controller = ScrollController()..addListener(_onScrollChanged);
-  late var _photoViewKeys = List.generate(widget.imageCount, (index) => GlobalKey<ReloadablePhotoViewState>());
-
+  late var _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<ReloadablePhotoViewState>());
   final _listKey = GlobalKey<State<StatefulWidget>>();
-  late List<GlobalKey<State<StatefulWidget>>> _itemKeys = List.generate(widget.imageCount + 2, (index) => GlobalKey<State<StatefulWidget>>());
+  late var _itemKeys = List.generate(widget.imageCount + 2, (_) => GlobalKey<State<StatefulWidget>>());
 
   @override
   void initState() {
@@ -181,14 +185,39 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   void didUpdateWidget(covariant VerticalGalleryView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.imageCount != oldWidget.imageCount) {
-      _photoViewKeys = List.generate(widget.imageCount, (index) => GlobalKey<ReloadablePhotoViewState>());
-      _itemKeys = List.generate(widget.imageCount + 2, (index) => GlobalKey<State<StatefulWidget>>());
+      _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<ReloadablePhotoViewState>());
+      _itemKeys = List.generate(widget.imageCount + 2, (_) => GlobalKey<State<StatefulWidget>>());
     }
   }
 
-  void reload(int index) {
-    if (index >= 0 && index < widget.imageCount) {
-      _photoViewKeys[index].currentState?.reload();
+  /// reload, excludes extra page, start from 0
+  void reload(int imageIndex) {
+    if (imageIndex >= 0 && imageIndex < widget.imageCount) {
+      _photoViewKeys[imageIndex].currentState?.reload();
+    }
+  }
+
+  var _jumping = false;
+  var _masking = false;
+
+  /// jumpToPage, include extra pages, start from 0
+  Future<void> jumpToPage(int pageIndex, {bool masked = true}) async {
+    var scrollRect = _ScrollHelper.getScrollViewRect(_listKey);
+    if (scrollRect == null) {
+      return;
+    }
+
+    _jumping = true;
+    _masking = masked; // actually this is almost set to true
+    if (mounted) setState(() {});
+    await Future.delayed(_kMaskAnimDuration);
+
+    var ok = await _ScrollHelper.scrollToIndex(_controller, pageIndex, _itemKeys, scrollRect, widget.viewportPageSpace);
+    _jumping = false;
+    _masking = false;
+    if (mounted) setState(() {});
+    if (ok) {
+      widget.onPageChanged?.call(pageIndex);
     }
   }
 
@@ -211,29 +240,6 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     }
   }
 
-  var _jumping = false;
-  var _masking = false;
-
-  Future<void> jumpToPage(int page, {bool masked = false}) async {
-    var scrollRect = _ScrollHelper.getScrollViewRect(_listKey);
-    if (scrollRect == null) {
-      return;
-    }
-
-    _jumping = true;
-    _masking = masked;
-    if (mounted) setState(() {});
-    await Future.delayed(_kMaskAnimDuration);
-
-    var ok = await _ScrollHelper.scrollToIndex(_controller, page, _itemKeys, scrollRect, widget.viewportPageSpace);
-    _jumping = false;
-    _masking = false;
-    if (mounted) setState(() {});
-    if (ok) {
-      widget.onPageChanged?.call(page);
-    }
-  }
-
   // PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState s) {
   //   switch (s) {
   //     case PhotoViewScaleState.initial:
@@ -246,12 +252,12 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   //   }
   // }
 
-  Widget _buildPhotoItem(BuildContext context, int index) {
-    final pageOptions = widget.imagePageBuilder(context, index); // index excludes non-PhotoView pages
+  Widget _buildPhotoItem(BuildContext context, int imageIndex) {
+    final pageOptions = widget.imagePageBuilder(context, imageIndex); // index excludes non-PhotoView pages
     final options = PhotoViewOptions.merge(pageOptions, widget.fallbackOptions);
     return ClipRect(
       child: ReloadablePhotoView(
-        key: _photoViewKeys[index],
+        key: _photoViewKeys[imageIndex],
         imageProviderBuilder: pageOptions.imageProviderBuilder,
         initialScale: options.initialScale,
         minScale: options.minScale,

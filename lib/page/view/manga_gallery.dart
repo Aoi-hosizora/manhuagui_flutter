@@ -6,15 +6,14 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 
-/// 漫画画廊展示，在 [MangaViewerPage] 使用
+/// 使用 [HorizontalGalleryView] 和 [VerticalGalleryView] 构建的漫画画廊，在 [MangaViewerPage] 使用
+/// (实现部分页面交互逻辑，业务逻辑不在此处实现)
 class MangaGalleryView extends StatefulWidget {
   const MangaGalleryView({
     Key? key,
     required this.imageCount,
-    required this.imageUrls,
     required this.imageUrlFutures,
     required this.imageFileFutures,
     required this.networkTimeout,
@@ -25,18 +24,15 @@ class MangaGalleryView extends StatefulWidget {
     required this.verticalViewportPageSpace,
     required this.slideWidthRatio,
     required this.slideHeightRatio,
-    required this.onPageChanged, // exclude extra pages, starts from 1
-    this.initialImageIndex = 1, // exclude extra pages, starts from 1
-    this.onCenterAreaTapped,
-    required this.firstPageBuilder, // always the first
-    required this.lastPageBuilder, // always the last
-    required this.onSaveImage, // exclude extra pages, starts from 1
-    required this.onShareUrl, // exclude extra pages, starts from 1
-    required this.onShareImage, // exclude extra pages, starts from 1
+    required this.onPageChanged, // exclude extra pages, start from 0
+    this.initialImageIndex = 0, // exclude extra pages, start from 0
+    required this.onLongPressed, // exclude extra pages, start from 0
+    required this.onCenterAreaTapped, // exclude extra pages, start from 0
+    required this.firstPageBuilder,
+    required this.lastPageBuilder,
   }) : super(key: key);
 
   final int imageCount;
-  final List<String>? imageUrls;
   final List<Future<String?>> imageUrlFutures;
   final List<Future<File?>> imageFileFutures;
   final Duration? networkTimeout;
@@ -49,12 +45,10 @@ class MangaGalleryView extends StatefulWidget {
   final double slideHeightRatio;
   final void Function(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) onPageChanged;
   final int initialImageIndex;
-  final void Function()? onCenterAreaTapped;
+  final void Function(int imageIndex) onLongPressed;
+  final void Function(int imageIndex) onCenterAreaTapped;
   final Widget Function(BuildContext) firstPageBuilder;
   final Widget Function(BuildContext) lastPageBuilder;
-  final void Function(int imageIndex) onSaveImage;
-  final void Function(int imageIndex) onShareUrl;
-  final void Function(int imageIndex) onShareImage;
 
   @override
   State<MangaGalleryView> createState() => MangaGalleryViewState();
@@ -65,10 +59,10 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   final _horizontalGalleryKey = GlobalKey<HorizontalGalleryViewState>();
   final _verticalGalleryKey = GlobalKey<VerticalGalleryViewState>();
 
-  // current page index, include extra pages, starts from 0.
-  late var _currentPageIndex = widget.initialImageIndex - 1 + 1;
+  // current page index, include extra pages, start from 0.
+  late var _currentPageIndex = widget.initialImageIndex + 1;
 
-  // current image index, exclude extra pages, starts from 0.
+  // current image index, exclude extra pages, start from 0.
   int get _currentImageIndex => (_currentPageIndex - 1).clamp(0, widget.imageCount - 1);
 
   Offset? _pointerDownPosition;
@@ -82,40 +76,29 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       if (!widget.verticalScroll) {
         var width = MediaQuery.of(context).size.width;
         if (pos.dx < width * widget.slideWidthRatio) {
-          _jumpToPage(!widget.horizontalReverseScroll ? _currentPageIndex - 1 : _currentPageIndex + 1); // 上一页 / 下一页(反)
+          jumpToPage(!widget.horizontalReverseScroll ? _currentPageIndex - 1 : _currentPageIndex + 1); // 上一页 / 下一页(反)
         } else if (pos.dx > width * (1 - widget.slideWidthRatio)) {
-          _jumpToPage(!widget.horizontalReverseScroll ? _currentPageIndex + 1 : _currentPageIndex - 1); // 下一页 / 上一页(反)
+          jumpToPage(!widget.horizontalReverseScroll ? _currentPageIndex + 1 : _currentPageIndex - 1); // 下一页 / 上一页(反)
         } else {
-          widget.onCenterAreaTapped?.call();
+          widget.onCenterAreaTapped.call(_currentImageIndex);
         }
       } else {
         var height = MediaQuery.of(context).size.height;
         if (pos.dy < height * widget.slideHeightRatio) {
-          _jumpToPage(_currentPageIndex - 1); // 上一页
+          jumpToPage(_currentPageIndex - 1); // 上一页
         } else if (pos.dy > height * (1 - widget.slideHeightRatio)) {
-          _jumpToPage(_currentPageIndex + 1); // 下一页
+          jumpToPage(_currentPageIndex + 1); // 下一页
         } else {
-          widget.onCenterAreaTapped?.call();
+          widget.onCenterAreaTapped.call(_currentImageIndex);
         }
       }
     }
     _pointerDownPosition = null;
   }
 
-  void _jumpToPage(int pageIndex) {
+  /// jumpToPage, include extra pages, start from 0
+  void jumpToPage(int pageIndex, {bool animated = false}) {
     if (pageIndex >= 0 && pageIndex <= widget.imageCount + 1) {
-      if (!widget.verticalScroll) {
-        _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: false);
-      } else {
-        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: false);
-      }
-    }
-  }
-
-  // jump to image page, exclude extra pages, starts from 1.
-  void jumpToImage(int imageIndex, {bool animated = false}) {
-    if (imageIndex >= 1 && imageIndex <= widget.imageCount) {
-      var pageIndex = imageIndex + 1 - 1; // include extra pages, starts from 0
       if (!widget.verticalScroll) {
         _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated);
       } else {
@@ -124,54 +107,30 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     }
   }
 
-  Future<void> _onLongPressed(int index) async {
-    await showDialog(
-      context: context,
-      builder: (c) => SimpleDialog(
-        title: Text('第${index + 1}页'),
-        children: [
-          IconTextDialogOption(
-            icon: Icon(Icons.refresh),
-            text: Text('重新加载'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              if (widget.imageUrls != null) {
-                await _cache.removeFile(widget.imageUrls![index]);
-              }
-              if (!widget.verticalScroll) {
-                _horizontalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
-              } else {
-                _verticalGalleryKey.currentState?.reload(index); // exclude extra pages, starts from 0
-              }
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(Icons.download),
-            text: Text('保存该页'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              widget.onSaveImage.call(index + 1);
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(Icons.share),
-            text: Text('分享该页链接'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              widget.onShareUrl.call(index + 1);
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(MdiIcons.imageMove),
-            text: Text('分享该页图片'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              widget.onShareImage.call(index + 1);
-            },
-          ),
-        ],
-      ),
-    );
+  /// jumpToImage, exclude extra pages, start from 0.
+  void jumpToImage(int imageIndex, {bool animated = false}) {
+    if (imageIndex >= 0 && imageIndex < widget.imageCount) {
+      var pageIndex = imageIndex + 1; // include extra pages, start from 0
+      if (!widget.verticalScroll) {
+        _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated);
+      } else {
+        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: !animated);
+      }
+    }
+  }
+
+  /// reloadImage, exclude extra pages, start from 0.
+  void reloadImage(int imageIndex) async {
+    if (imageIndex >= 0 && imageIndex < widget.imageCount) {
+      await (await widget.imageUrlFutures[imageIndex])?.let((url) async {
+        await _cache.removeFile(url);
+      });
+      if (!widget.verticalScroll) {
+        _horizontalGalleryKey.currentState?.reload(imageIndex);
+      } else {
+        _verticalGalleryKey.currentState?.reload(imageIndex);
+      }
+    }
   }
 
   @override
@@ -181,17 +140,21 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         key: _horizontalGalleryKey,
         imageCount: widget.imageCount,
         preloadPagesCount: widget.preloadPagesCount,
-        initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
+        initialPage: widget.initialImageIndex + 1 /* include extra pages, start from 0 */,
         viewportFraction: widget.horizontalViewportFraction,
         reverse: widget.horizontalReverseScroll,
-        onPageChanged: (idx) {
-          _currentPageIndex = idx;
-          widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
+        onPageChanged: (pageIndex) {
+          _currentPageIndex = pageIndex; // include extra pages, start from 0
+          widget.onPageChanged.call(
+            _currentImageIndex, // exclude extra pages, start from 0
+            pageIndex == 0,
+            pageIndex == widget.imageCount + 1,
+          );
         },
         // ****************************************************************
         // 漫画页
         // ****************************************************************
-        imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
+        imagePageBuilder: (c, imageIndex) => ExtendedPhotoGalleryPageOptions(
           initialScale: PhotoViewComputedScale.contained,
           minScale: PhotoViewComputedScale.contained / 2,
           maxScale: 1.5,
@@ -201,33 +164,33 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onTapUp: (c, d, v) => _onPointerUp(d.globalPosition),
           imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
             key: key,
-            urlFuture: widget.imageUrlFutures[idx],
+            urlFuture: widget.imageUrlFutures[imageIndex],
             headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
             cacheManager: _cache,
             networkTimeout: widget.networkTimeout,
-            fileFuture: widget.imageFileFutures[idx],
+            fileFuture: widget.imageFileFutures[imageIndex],
             fileMustExist: false, // <<<
           ),
           loadingBuilder: (_, ev) => GestureDetector(
             onTapDown: (d) => _onPointerDown(d.globalPosition),
             onTapUp: (d) => _onPointerUp(d.globalPosition),
-            onLongPress: () => _onLongPressed(idx),
+            onLongPress: () => widget.onLongPressed.call(imageIndex),
             child: ImageLoadingView(
-              title: (idx + 1).toString(),
+              title: (imageIndex + 1).toString(),
               event: ev,
             ),
           ),
           errorBuilder: (_, err, __) => GestureDetector(
             onTapDown: (d) => _onPointerDown(d.globalPosition),
             onTapUp: (d) => _onPointerUp(d.globalPosition),
-            onLongPress: () => _onLongPressed(idx),
+            onLongPress: () => widget.onLongPressed.call(imageIndex),
             child: ImageLoadFailedView(
-              title: (idx + 1).toString(),
-              error: err,
+              title: (imageIndex + 1).toString(),
+              error: err, // include【该页尚未下载，且未获取到该页的链接】
             ),
           ),
         ),
-        onImageLongPressed: (idx) => _onLongPressed(idx),
+        onImageLongPressed: (imageIndex) => widget.onLongPressed.call(imageIndex),
         // ****************************************************************
         // 额外页
         // ****************************************************************
@@ -254,16 +217,20 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       key: _verticalGalleryKey,
       imageCount: widget.imageCount,
       preloadPagesCount: widget.preloadPagesCount,
-      initialPage: _currentPageIndex /* initial to `initialPage - 1 + 1` */,
+      initialPage: widget.initialImageIndex + 1 /* include extra pages, start from 0 */,
       viewportPageSpace: widget.verticalViewportPageSpace,
-      onPageChanged: (idx) {
-        _currentPageIndex = idx;
-        widget.onPageChanged.call(_currentImageIndex + 1, idx == 0, idx == widget.imageCount + 1);
+      onPageChanged: (pageIndex) {
+        _currentPageIndex = pageIndex; // include extra pages, start from 0
+        widget.onPageChanged.call(
+          _currentImageIndex, // exclude extra pages, start from 0
+          pageIndex == 0,
+          pageIndex == widget.imageCount + 1,
+        );
       },
       // ****************************************************************
       // 漫画页
       // ****************************************************************
-      imagePageBuilder: (c, idx) => ExtendedPhotoGalleryPageOptions(
+      imagePageBuilder: (c, imageIndex) => ExtendedPhotoGalleryPageOptions(
         initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained / 2,
         maxScale: 1.5,
@@ -273,35 +240,35 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         onTapUp: null /* >>> */,
         imageProviderBuilder: (key) => LocalOrCachedNetworkImageProvider.fromFutures(
           key: key,
-          urlFuture: widget.imageUrlFutures[idx],
+          urlFuture: widget.imageUrlFutures[imageIndex],
           headers: {'User-Agent': USER_AGENT, 'Referer': REFERER},
           cacheManager: _cache,
           networkTimeout: widget.networkTimeout,
-          fileFuture: widget.imageFileFutures[idx],
+          fileFuture: widget.imageFileFutures[imageIndex],
           fileMustExist: false,
         ),
         loadingBuilder: (_, ev) => GestureDetector(
           onTapDown: (d) => _onPointerDown(d.globalPosition),
           onTapUp: (d) => _onPointerUp(d.globalPosition),
-          onLongPress: () => _onLongPressed(idx),
+          onLongPress: () => widget.onLongPressed.call(imageIndex),
           child: ImageLoadingView(
-            title: (idx + 1).toString(),
+            title: (imageIndex + 1).toString(),
             event: ev,
           ),
         ),
         errorBuilder: (_, err, ___) => GestureDetector(
           onTapDown: (d) => _onPointerDown(d.globalPosition),
           onTapUp: (d) => _onPointerUp(d.globalPosition),
-          onLongPress: () => _onLongPressed(idx),
+          onLongPress: () => widget.onLongPressed.call(imageIndex),
           child: ImageLoadFailedView(
-            title: (idx + 1).toString(),
-            error: err,
+            title: (imageIndex + 1).toString(),
+            error: err, // include【该页尚未下载，且未获取到该页的链接】
           ),
         ),
       ),
       onImageTapDown: (d) => _onPointerDown(d.globalPosition) /* <<< */,
       onImageTapUp: (d) => _onPointerUp(d.globalPosition) /* <<< */,
-      onImageLongPressed: (idx) => _onLongPressed(idx),
+      onImageLongPressed: (imageIndex) => widget.onLongPressed.call(imageIndex),
       // ****************************************************************
       // 额外页
       // ****************************************************************

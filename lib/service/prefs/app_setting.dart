@@ -125,26 +125,26 @@ class AppSettingPrefs {
 
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
-  static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
   static const _enableCornerIconsKey = BoolKey('AppSettingPrefs_enableCornerIcons');
   static const _showMangaReadIconKey = BoolKey('AppSettingPrefs_showMangaReadIcon');
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
-  static const _useLocalDataInShelfKey = BoolKey('AppSettingPrefs_useLocalDataInShelf');
+  static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
   static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
+  static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
 
   static List<TypedKey> get uiSettingKeys => [
         _defaultMangaOrderKey,
         _defaultAuthorOrderKey,
-        _clickToSearchKey,
         _enableCornerIconsKey,
         _showMangaReadIconKey,
         _regularGroupRowsKey,
         _otherGroupRowsKey,
-        _useLocalDataInShelfKey,
+        _clickToSearchKey,
         _includeUnreadInHomeKey,
         _audienceMangaRowsKey,
+        _alwaysOpenNewListPageKey,
       ];
 
   static Future<UiSetting> _loadUiSetting() async {
@@ -153,14 +153,14 @@ class AppSettingPrefs {
     return UiSetting(
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
-      clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
       enableCornerIcons: prefs.safeGet<bool>(_enableCornerIconsKey) ?? def.enableCornerIcons,
       showMangaReadIcon: prefs.safeGet<bool>(_showMangaReadIconKey) ?? def.showMangaReadIcon,
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
-      useLocalDataInShelf: prefs.safeGet<bool>(_useLocalDataInShelfKey) ?? def.useLocalDataInShelf,
+      clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
       audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
+      alwaysOpenNewListPage: prefs.safeGet<bool>(_alwaysOpenNewListPageKey) ?? def.alwaysOpenNewListPage,
     );
   }
 
@@ -169,14 +169,14 @@ class AppSettingPrefs {
     var setting = AppSetting.instance.ui;
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
-    await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
     await prefs.safeSet<bool>(_enableCornerIconsKey, setting.enableCornerIcons);
     await prefs.safeSet<bool>(_showMangaReadIconKey, setting.showMangaReadIcon);
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
-    await prefs.safeSet<bool>(_useLocalDataInShelfKey, setting.useLocalDataInShelf);
+    await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
     await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
+    await prefs.safeSet<bool>(_alwaysOpenNewListPageKey, setting.alwaysOpenNewListPage);
   }
 
   // =============
@@ -185,6 +185,7 @@ class AppSettingPrefs {
 
   static const _timeoutBehaviorKey = IntKey('AppSettingPrefs_timeoutBehavior');
   static const _dlTimeoutBehaviorKey = IntKey('AppSettingPrefs_dlTimeoutBehavior');
+  static const _imgTimeoutBehaviorKey = IntKey('AppSettingPrefs_imgTimeoutBehavior');
   static const _enableLoggerKey = BoolKey('AppSettingPrefs_enableLogger');
   static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
   static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
@@ -192,6 +193,7 @@ class AppSettingPrefs {
   static List<TypedKey> get otherSettingKeys => [
         _timeoutBehaviorKey,
         _dlTimeoutBehaviorKey,
+        _imgTimeoutBehaviorKey,
         _enableLoggerKey,
         _showDebugErrorMsgKey,
         _useNativeShareSheetKey,
@@ -203,6 +205,7 @@ class AppSettingPrefs {
     return OtherSetting(
       timeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_timeoutBehaviorKey) ?? def.timeoutBehavior.toInt()),
       dlTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_dlTimeoutBehaviorKey) ?? def.dlTimeoutBehavior.toInt()),
+      imgTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_imgTimeoutBehaviorKey) ?? def.imgTimeoutBehavior.toInt()),
       enableLogger: prefs.safeGet<bool>(_enableLoggerKey) ?? def.enableLogger,
       showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
       useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
@@ -214,6 +217,7 @@ class AppSettingPrefs {
     var setting = AppSetting.instance.other;
     await prefs.safeSet<int>(_timeoutBehaviorKey, setting.timeoutBehavior.toInt());
     await prefs.safeSet<int>(_dlTimeoutBehaviorKey, setting.dlTimeoutBehavior.toInt());
+    await prefs.safeSet<int>(_imgTimeoutBehaviorKey, setting.imgTimeoutBehavior.toInt());
     await prefs.safeSet<bool>(_enableLoggerKey, setting.enableLogger);
     await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
     await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);

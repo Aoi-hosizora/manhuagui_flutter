@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io' show File, Directory;
 
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -65,6 +64,75 @@ Future<bool> deleteImportData(String name) async {
   } catch (e, s) {
     globalLogger.e('deleteImportData', e, s);
     return false;
+  }
+}
+
+// ================
+// type and counter
+// ================
+
+enum ExportDataType {
+  // from db
+  readHistories, // 漫画阅读历史
+  downloadRecords, // 漫画下载记录
+  favoriteMangas, // 本地收藏漫画
+  favoriteAuthors, // 本地收藏作者
+
+  // from prefs
+  searchHistories, // 漫画搜索历史
+  appSetting, // 所有设置项
+}
+
+extension ExportDataTypeExtension on ExportDataType {
+  String toTypeTitle() {
+    switch (this) {
+      case ExportDataType.readHistories:
+        return '漫画阅读历史';
+      case ExportDataType.downloadRecords:
+        return '漫画下载记录';
+      case ExportDataType.favoriteMangas:
+        return '本地收藏漫画';
+      case ExportDataType.favoriteAuthors:
+        return '本地收藏作者';
+      case ExportDataType.searchHistories:
+        return '漫画搜索历史';
+      case ExportDataType.appSetting:
+        return '所有设置项';
+    }
+  }
+}
+
+class ExportDataTypeCounter {
+  ExportDataTypeCounter();
+
+  int readHistories = 0;
+  int downloadRecords = 0;
+  int favoriteMangas = 0;
+  int favoriteAuthors = 0;
+  int searchHistories = 0;
+  int appSetting = 0;
+
+  bool get isEmpty =>
+      readHistories == 0 && //
+      downloadRecords == 0 &&
+      favoriteMangas == 0 &&
+      favoriteAuthors == 0 &&
+      searchHistories == 0 &&
+      appSetting == 0;
+
+  String formatToString({required bool includeZero, required List<ExportDataType> includeTypes}) {
+    bool include(int count, ExportDataType type) => //
+        (includeZero || count != 0) && includeTypes.contains(type);
+
+    var titles = [
+      if (include(readHistories, ExportDataType.readHistories)) '$readHistories 条漫画阅读历史',
+      if (include(downloadRecords, ExportDataType.downloadRecords)) '$downloadRecords 条漫画下载记录',
+      if (include(favoriteMangas, ExportDataType.favoriteMangas)) '$favoriteMangas 部本地收藏漫画',
+      if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',
+      if (include(searchHistories, ExportDataType.searchHistories)) '$searchHistories 条漫画搜索历史',
+      if (include(appSetting, ExportDataType.appSetting)) '$appSetting 条设置项',
+    ];
+    return titles.join('、');
   }
 }
 

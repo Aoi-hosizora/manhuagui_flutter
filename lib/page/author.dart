@@ -236,7 +236,7 @@ class _AuthorPageState extends State<AuthorPage> {
         title: Text(title),
         children: [
           IconTextDialogOption(
-            icon: Icon(Icons.description_outlined),
+            icon: Icon(MdiIcons.bookOutline),
             text: Text('查看该漫画'),
             onPressed: () {
               Navigator.of(c).pop();
@@ -423,6 +423,7 @@ class _AuthorPageState extends State<AuthorPage> {
                       text: '分享作者',
                       icon: Icons.share,
                       action: () => shareText(text: '【${_data!.name}】${_data!.url}'),
+                      longPress: () => shareText(text: _data!.url),
                     ),
                   ),
                 ),
@@ -448,7 +449,7 @@ class _AuthorPageState extends State<AuthorPage> {
                               child: IconText(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 9), // | ▢ ▢▢ |
                                 space: 8,
-                                icon: Icon(Icons.description_outlined, size: 26, color: Colors.black54),
+                                icon: Icon(MdiIcons.bookOutline, size: 26, color: Colors.black54),
                                 text: Flexible(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,

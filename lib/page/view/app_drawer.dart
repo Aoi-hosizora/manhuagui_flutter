@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/login.dart';
@@ -83,7 +84,7 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   void _gotoPage(Widget page, {bool canReplace = false}) {
-    if (widget.currentSelection != DrawerSelection.home) {
+    if (widget.currentSelection != DrawerSelection.home || AppSetting.instance.ui.alwaysOpenNewListPage) {
       _navigateToPage(page, canReplace: canReplace);
     } else {
       if (page is SepShelfPage) {

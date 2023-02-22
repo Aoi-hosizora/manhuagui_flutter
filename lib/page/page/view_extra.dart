@@ -32,7 +32,7 @@ class ViewExtraSubPage extends StatefulWidget {
   final bool subscribing;
   final bool inShelf;
   final bool inFavorite;
-  final void Function(int imageIndex, bool animated) toJumpToImage;
+  final void Function(int imageIndex /* start from 0 */, bool animated) toJumpToImage;
   final void Function(bool gotoPrevious) toGotoChapter;
   final void Function() toSubscribe;
   final void Function() toDownload;
@@ -263,7 +263,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       width: 200,
                       child: ElevatedButton(
                         child: Text('开始阅读'),
-                        onPressed: () => widget.toJumpToImage.call(1, true),
+                        onPressed: () => widget.toJumpToImage.call(0, true),
                       ),
                     ),
                   ],
@@ -318,7 +318,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('重新阅读'),
-                            onPressed: () => widget.toJumpToImage.call(1, false),
+                            onPressed: () => widget.toJumpToImage.call(0, false),
                           ),
                         ),
                         SizedBox(width: 18),
@@ -327,7 +327,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('返回上一页'),
-                            onPressed: () => widget.toJumpToImage.call(widget.data.pageCount, true),
+                            onPressed: () => widget.toJumpToImage.call(widget.data.pageCount - 1, true),
                           ),
                         ),
                       ],

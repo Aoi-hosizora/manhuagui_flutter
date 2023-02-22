@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
     }
-    var ok = await showDialog(
+    var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('登录状态'),

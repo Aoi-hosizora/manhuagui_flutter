@@ -93,12 +93,16 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
       return;
     }
 
+    _currOrder = AppSetting.instance.ui.defaultMangaOrder;
+    _lastOrder = AppSetting.instance.ui.defaultMangaOrder;
     _currGenre = genre ?? allGenres[0];
     _lastGenre = allGenres[0];
     _currAge = age ?? allAges[0];
     _lastAge = allAges[0];
     _currZone = zone ?? allZones[0];
     _lastZone = allZones[0];
+    _currStatus = allStatuses[0];
+    _lastStatus = allStatuses[0];
 
     _chosen = toChoose;
     _data.clear();

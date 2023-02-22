@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
@@ -17,7 +16,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 作者列表页-作者弹出菜单 [showPopupMenuForAuthorList]
 /// 作者收藏页-修改备注对话框 [showUpdateFavoriteAuthorRemarkDialog]
 /// 作者页-作者收藏对话框 [showPopupMenuForAuthorFavorite]
-/// 作者列表页-寻找作者对话框 [showInputDialogForFindingAuthor]
 
 // => called by pages which contains author line view (tiny / favorite)
 void showPopupMenuForAuthorList({
@@ -39,10 +37,6 @@ void showPopupMenuForAuthorList({
     authorUrl: authorUrl,
     authorZone: authorZone,
   );
-  void pop(BuildContext context, VoidCallback callback) {
-    Navigator.of(context).pop();
-    callback();
-  }
 
   showDialog(
     context: context,
@@ -53,7 +47,8 @@ void showPopupMenuForAuthorList({
         IconTextDialogOption(
           icon: Icon(Icons.person),
           text: Text('查看该作者'),
-          onPressed: () => pop(c, () => helper.gotoAuthorPage()),
+          popWhenPress: c,
+          onPressed: () => helper.gotoAuthorPage(),
         ),
         IconTextDialogOption(
           icon: Icon(Icons.copy),
@@ -63,7 +58,7 @@ void showPopupMenuForAuthorList({
         IconTextDialogOption(
           icon: Icon(Icons.open_in_browser),
           text: Text('用浏览器打开'),
-          onPressed: () => pop(c, () => launchInBrowser(context: context, url: authorUrl)),
+          onPressed: () => launchInBrowser(context: context, url: authorUrl),
         ),
         Divider(height: 16, thickness: 1),
 
@@ -71,12 +66,9 @@ void showPopupMenuForAuthorList({
         IconTextDialogOption(
           icon: Icon(!nowInFavorite ? CustomIcons.bookmark_plus : CustomIcons.bookmark_minus),
           text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
-          onPressed: () => pop(
-            c,
-            () => !nowInFavorite //
-                ? helper.addFavorite(onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
-                : helper.removeFavorite(onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
-          ),
+          onPressed: () => !nowInFavorite //
+              ? helper.addFavorite(onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
+              : helper.removeFavorite(onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
         ),
       ],
     ),
@@ -125,10 +117,6 @@ void showPopupMenuForAuthorFavorite({
     authorUrl: authorUrl,
     authorZone: authorZone,
   );
-  void pop(BuildContext context, VoidCallback callback) {
-    Navigator.of(context).pop();
-    callback();
-  }
 
   showDialog(
     context: context,
@@ -140,96 +128,37 @@ void showPopupMenuForAuthorFavorite({
           IconTextDialogOption(
             icon: Icon(Icons.bookmark_border),
             text: Text('添加本地收藏'),
-            onPressed: () => pop(
-              c,
-              () => helper.addFavorite(onAdded: favoriteSetter, fromFavoriteList: false, fromAuthorPage: true),
-            ),
+            popWhenPress: c,
+            onPressed: () => helper.addFavorite(onAdded: favoriteSetter, fromFavoriteList: false, fromAuthorPage: true),
           ),
         if (favoriteAuthor != null)
           IconTextDialogOption(
             icon: Icon(Icons.bookmark),
             text: Text('取消本地收藏'),
-            onPressed: () => pop(
-              c,
-              () => helper.removeFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true),
-            ),
+            popWhenPress: c,
+            onPressed: () => helper.removeFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true),
           ),
         Divider(thickness: 1),
 
         /// 额外选项
-        IconTextDialogOption(
-          icon: Icon(Icons.people),
-          text: Text('查看已收藏的作者'),
-          onPressed: () => pop(c, () => helper.gotoFavoritesPage()),
-        ),
         if (favoriteAuthor != null)
           IconTextDialogOption(
             icon: Icon(MdiIcons.commentBookmark),
             text: Flexible(
               child: Text('当前收藏备注：${favoriteAuthor.remark.trim().isEmpty ? '暂无' : favoriteAuthor.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
-            onPressed: () => pop(
-              c,
-              () => helper.updateFavRemark(oldFavorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: false, fromAuthorPage: true),
-            ),
+            popWhenPress: c,
+            onPressed: () => helper.updateFavRemark(oldFavorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: false, fromAuthorPage: true),
           ),
-      ],
-    ),
-  );
-}
-
-// => called in AuthorSubPage
-Future<int?> showInputDialogForFindingAuthor({
-  required BuildContext context,
-  required String title,
-  String? labelText,
-}) async {
-  var controller = TextEditingController();
-  var ok = await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (c) => AlertDialog(
-      title: Text(title),
-      content: SizedBox(
-        width: getDialogContentMaxWidth(context),
-        child: TextField(
-          controller: controller,
-          maxLines: 1,
-          autofocus: true,
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(vertical: 5),
-            labelText: labelText ?? '漫画作者 aid',
-            icon: Icon(Icons.person_search),
-          ),
-          keyboardType: TextInputType.numberWithOptions(signed: false, decimal: false),
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: Text('确定'),
-          onPressed: () async {
-            var text = controller.text.trim();
-            if (text.isEmpty) {
-              Fluttertoast.showToast(msg: '请输入作者 aid');
-            } else if (int.tryParse(text) == null) {
-              Fluttertoast.showToast(msg: '输入的作者 aid 有误');
-            } else {
-              Navigator.of(c).pop(true);
-            }
-          },
-        ),
-        TextButton(
-          child: Text('取消'),
-          onPressed: () => Navigator.of(c).pop(false),
+        IconTextDialogOption(
+          icon: Icon(Icons.people),
+          text: Text('查看已收藏的作者'),
+          popWhenPress: c,
+          onPressed: () => helper.gotoFavoritesPage(),
         ),
       ],
     ),
   );
-  if (ok != true) {
-    return null;
-  }
-  return int.tryParse(controller.text.trim());
 }
 
 class _DialogHelper {
@@ -259,27 +188,42 @@ class _DialogHelper {
     var controller = TextEditingController(); // remark
     var ok = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
-      builder: (c) => StatefulBuilder(
-        builder: (_, _setState) => AlertDialog(
-          title: Text('收藏漫画作者'),
-          content: SizedBox(
-            width: getDialogContentMaxWidth(context),
-            child: TextField(
-              controller: controller,
-              maxLines: 1,
-              autofocus: true,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(vertical: 5),
-                labelText: '作者备注',
-                icon: Icon(MdiIcons.commentBookmarkOutline),
+      builder: (c) => WillPopScope(
+        onWillPop: () async {
+          if (controller.text.trim().isEmpty) {
+            return true;
+          }
+          var ok = await showYesNoAlertDialog(
+            context: context,
+            title: Text('收藏漫画作者'),
+            content: Text('是否放弃当前的输入并不做任何变更？'),
+            yesText: Text('放弃'),
+            noText: Text('继续编辑'),
+            reverseYesNoOrder: true,
+          );
+          return ok == true;
+        },
+        child: StatefulBuilder(
+          builder: (c, _setState) => AlertDialog(
+            title: Text('收藏漫画作者'),
+            content: SizedBox(
+              width: getDialogContentMaxWidth(context),
+              child: TextField(
+                controller: controller,
+                maxLines: 1,
+                autofocus: true,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(vertical: 5),
+                  labelText: '作者备注',
+                  icon: Icon(MdiIcons.commentBookmarkOutline),
+                ),
               ),
             ),
+            actions: [
+              TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).maybePop(true)),
+              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+            ],
           ),
-          actions: [
-            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
-            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
-          ],
         ),
       ),
     );
@@ -297,43 +241,58 @@ class _DialogHelper {
     var controller = TextEditingController()..text = remark; // remark
     var ok = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
-      builder: (c) => AlertDialog(
-        title: Text('修改收藏备注'),
-        content: SizedBox(
-          width: getDialogContentMaxWidth(context),
-          child: TextField(
-            controller: controller,
-            maxLines: 1,
-            autofocus: true,
-            decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(vertical: 5),
-              labelText: '作者备注',
-              icon: Icon(MdiIcons.commentBookmarkOutline),
+      builder: (c) => WillPopScope(
+        onWillPop: () async {
+          if (controller.text.trim() == remark) {
+            return true;
+          }
+          var ok = await showYesNoAlertDialog(
+            context: context,
+            title: Text('修改收藏备注'),
+            content: Text('是否放弃当前的输入并不做任何变更？'),
+            yesText: Text('放弃'),
+            noText: Text('继续编辑'),
+            reverseYesNoOrder: true,
+          );
+          return ok == true;
+        },
+        child: AlertDialog(
+          title: Text('修改收藏备注'),
+          content: SizedBox(
+            width: getDialogContentMaxWidth(context),
+            child: TextField(
+              controller: controller,
+              maxLines: 1,
+              autofocus: true,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(vertical: 5),
+                labelText: '作者备注',
+                icon: Icon(MdiIcons.commentBookmarkOutline),
+              ),
             ),
           ),
-        ),
-        actions: [
-          if (remark.isNotEmpty)
+          actions: [
+            if (remark.isNotEmpty)
+              TextButton(
+                child: Text('复制原备注'),
+                onPressed: () => copyText(remark, showToast: true),
+              ),
             TextButton(
-              child: Text('复制原备注'),
-              onPressed: () => copyText(remark, showToast: true),
+              child: Text('确定'),
+              onPressed: () async {
+                if (controller.text.trim() == remark) {
+                  Fluttertoast.showToast(msg: '备注没有变更');
+                } else {
+                  Navigator.of(c).pop(true);
+                }
+              },
             ),
-          TextButton(
-            child: Text('确定'),
-            onPressed: () async {
-              if (controller.text.trim() == remark) {
-                Fluttertoast.showToast(msg: '备注没有变更');
-              } else {
-                Navigator.of(c).pop(true);
-              }
-            },
-          ),
-          TextButton(
-            child: Text('取消'),
-            onPressed: () => Navigator.of(c).pop(false),
-          ),
-        ],
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).maybePop(false),
+            ),
+          ],
+        ),
       ),
     );
     if (ok != true) {

@@ -626,7 +626,6 @@ class _MangaPageState extends State<MangaPage> {
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
       fromMangaPage: forMangaPage,
-      fromMangaViewerPage: false,
       chapter: chapter,
       chapterGroups: _data!.chapterGroups,
       onHistoryUpdated: forMangaPage //
@@ -917,6 +916,7 @@ class _MangaPageState extends State<MangaPage> {
                       text: '分享漫画',
                       icon: Icons.share,
                       action: () => shareText(text: '【${_data!.title}】${_data!.url}'),
+                      longPress: () => shareText(text: _data!.url),
                     ),
                   ),
                 ),
@@ -1143,9 +1143,7 @@ class _MangaPageState extends State<MangaPage> {
                     displayRule: PlaceholderDisplayRule.errorFirst,
                     setting: PlaceholderSetting(
                       useAnimatedSwitcher: false,
-                      progressPadding: EdgeInsets.all(25),
-                      iconPadding: EdgeInsets.fromLTRB(5, 15, 5, 5),
-                      buttonPadding: EdgeInsets.fromLTRB(5, 5, 5, 10),
+                      wholePaddingUnlessNormal: EdgeInsets.symmetric(vertical: 15),
                     ).copyWithChinese(
                       loadingText: '评论加载中...',
                       nothingText: '暂无评论',

@@ -282,17 +282,19 @@ class IconTextMenuItem extends StatelessWidget {
     this.text, {
     Key? key,
     this.space = 12.0,
+    this.color,
   }) : super(key: key);
 
   final IconData icon;
   final String text;
   final double? space;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     return IconText(
-      icon: Icon(icon, color: Colors.black),
-      text: Text(text, style: Theme.of(context).textTheme.subtitle1),
+      icon: Icon(icon, color: color ?? kIconTextDialogOptionIconColor),
+      text: Text(text, style: Theme.of(context).textTheme.subtitle1?.copyWith(color: color ?? Colors.black)),
       space: space ?? 12.0,
       mainAxisSize: MainAxisSize.min,
     );

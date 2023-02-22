@@ -39,6 +39,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
 
   late var _timeoutBehavior = widget.setting.timeoutBehavior;
   late var _dlTimeoutBehavior = widget.setting.dlTimeoutBehavior;
+  late var _imgTimeoutBehavior = widget.setting.imgTimeoutBehavior;
   late var _enableLogger = widget.setting.enableLogger;
   late var _showDebugErrorMsg = widget.setting.showDebugErrorMsg;
   late var _useNativeShareSheet = widget.setting.useNativeShareSheet;
@@ -46,6 +47,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
         dlTimeoutBehavior: _dlTimeoutBehavior,
+        imgTimeoutBehavior: _imgTimeoutBehavior,
         enableLogger: _enableLogger,
         showDebugErrorMsg: _showDebugErrorMsg,
         useNativeShareSheet: _useNativeShareSheet,
@@ -55,6 +57,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
     var setting = OtherSetting.defaultSetting;
     _timeoutBehavior = setting.timeoutBehavior;
     _dlTimeoutBehavior = setting.dlTimeoutBehavior;
+    _imgTimeoutBehavior = setting.imgTimeoutBehavior;
     _enableLogger = setting.enableLogger;
     _showDebugErrorMsg = setting.showDebugErrorMsg;
     _useNativeShareSheet = setting.useNativeShareSheet;
@@ -69,11 +72,15 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         SettingComboBoxView<TimeoutBehavior>(
           title: '网络请求超时时间',
           hint: '当前设置对应的网络连接、发送请求、获取响应的超时时间为：' + //
-              (_timeoutBehavior.determineValue(normal: [CONNECT_TIMEOUT, SEND_TIMEOUT, RECEIVE_TIMEOUT], long: [CONNECT_LTIMEOUT, SEND_LTIMEOUT, RECEIVE_LTIMEOUT])?.let((l) => //
-                  '${l[0] / 1000}s + ${l[1] / 1000}s + ${l[2] / 1000}s') ?? '无超时时间设置'),
+              (_timeoutBehavior.determineValue(
+                    normal: [CONNECT_TIMEOUT, SEND_TIMEOUT, RECEIVE_TIMEOUT],
+                    long: [CONNECT_LTIMEOUT, SEND_LTIMEOUT, RECEIVE_LTIMEOUT],
+                    longLong: [CONNECT_LLTIMEOUT, SEND_LLTIMEOUT, RECEIVE_LLTIMEOUT],
+                  )?.let((l) => '${l[0] / 1000}s + ${l[1] / 1000}s + ${l[2] / 1000}s') ??
+                  '无超时时间设置'),
           width: 75,
           value: _timeoutBehavior,
-          values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
+          values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.longLong, TimeoutBehavior.disable],
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _timeoutBehavior = s;
@@ -84,11 +91,15 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         SettingComboBoxView<TimeoutBehavior>(
           title: '漫画下载超时时间',
           hint: '当前设置对应的漫画下载超时时间为：' + //
-              (_dlTimeoutBehavior.determineValue(normal: [DOWNLOAD_HEAD_TIMEOUT, DOWNLOAD_IMAGE_TIMEOUT], long: [DOWNLOAD_HEAD_LTIMEOUT, DOWNLOAD_IMAGE_LTIMEOUT])?.let((l) => //
-                  '${l[0] / 1000}s + ${l[1] / 1000}s') ?? '无超时时间设置'),
+              (_dlTimeoutBehavior.determineValue(
+                    normal: [DOWNLOAD_HEAD_TIMEOUT, DOWNLOAD_IMAGE_TIMEOUT],
+                    long: [DOWNLOAD_HEAD_LTIMEOUT, DOWNLOAD_IMAGE_LTIMEOUT],
+                    longLong: [DOWNLOAD_HEAD_LLTIMEOUT, DOWNLOAD_IMAGE_LLTIMEOUT],
+                  )?.let((l) => '${l[0] / 1000}s + ${l[1] / 1000}s') ??
+                  '无超时时间设置'),
           width: 75,
           value: _dlTimeoutBehavior,
-          values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.disable],
+          values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.longLong, TimeoutBehavior.disable],
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _dlTimeoutBehavior = s;
@@ -96,8 +107,30 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingComboBoxView<TimeoutBehavior>(
+          title: '图片浏览超时时间',
+          hint: '当前设置对应的图片浏览 (即浏览章节页面) 超时时间为：' + //
+              (_imgTimeoutBehavior
+                      .determineValue(
+                        normal: GALLERY_IMAGE_TIMEOUT,
+                        long: GALLERY_IMAGE_LTIMEOUT,
+                        longLong: GALLERY_IMAGE_LLTIMEOUT,
+                      )
+                      ?.let((l) => '${l / 1000}s') ??
+                  '无超时时间设置'),
+          width: 75,
+          value: _imgTimeoutBehavior,
+          values: const [TimeoutBehavior.normal, TimeoutBehavior.long, TimeoutBehavior.longLong, TimeoutBehavior.disable],
+          textBuilder: (s) => s.toOptionTitle(),
+          onChanged: (s) {
+            _imgTimeoutBehavior = s;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
         SettingSwitcherView(
           title: '记录调试日志',
+          hint: '启用该选项会在出现网络异常等错误时记录日志，可在【设置-查看调试日志】查看，目前应用最多仅保留 $LOG_CONSOLE_BUFFER 条调试日志。',
           value: _enableLogger,
           onChanged: (b) {
             _enableLogger = b;
