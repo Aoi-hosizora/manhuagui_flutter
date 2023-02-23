@@ -161,7 +161,7 @@ class CheckboxForSelectableItem extends StatelessWidget {
   const CheckboxForSelectableItem({
     Key? key,
     required this.tip,
-    required this.backgroundColor,
+    this.backgroundColor = Colors.transparent,
     this.scale,
     this.scaleAlignment = Alignment.bottomRight,
   }) : super(key: key);

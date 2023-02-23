@@ -1,6 +1,7 @@
 package com.example.manhuagui_flutter
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
@@ -18,6 +19,7 @@ class MainActivity : FlutterActivity(), MethodCallHandler {
         private const val INSERT_MEDIA_METHOD = "insertMedia"
         private const val SHARE_TEXT_METHOD = "shareText"
         private const val SHARE_FILE_METHOD = "shareFile"
+        private const val SHARE_FILES_METHOD = "shareFiles"
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -31,6 +33,7 @@ class MainActivity : FlutterActivity(), MethodCallHandler {
             INSERT_MEDIA_METHOD -> insertMedia(call, result)
             SHARE_TEXT_METHOD -> shareText(call, result)
             SHARE_FILE_METHOD -> shareFile(call, result)
+            SHARE_FILES_METHOD -> shareFiles(call, result)
             else -> result.notImplemented()
         }
     }
@@ -99,9 +102,55 @@ class MainActivity : FlutterActivity(), MethodCallHandler {
             putExtra(Intent.EXTRA_STREAM, fileUri)
         }
         val chooserIntent = Intent.createChooser(intent, chooserTitle)
-        // context.packageManager.queryIntentActivities(chooserIntent, PackageManager.MATCH_DEFAULT_ONLY).forEach { resolveInfo ->
-        //     context.grantUriPermission(resolveInfo.activityInfo.packageName, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        // }
+        @Suppress("DEPRECATION")
+        context.packageManager.queryIntentActivities(chooserIntent, PackageManager.MATCH_DEFAULT_ONLY).forEach { resolveInfo ->
+            context.grantUriPermission(resolveInfo.activityInfo.packageName, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(chooserIntent)
+        result.success(true)
+    }
+
+    private fun shareFiles(call: MethodCall, result: MethodResult) {
+        // https://github.com/fluttercommunity/plus_plugins/blob/main/packages/share_plus/share_plus/android/src/main/kotlin/dev/fluttercommunity/plus/share/Share.kt#L85
+        val filepaths: List<String> = call.argument<List<String>>("filepaths") ?: listOf()
+        val fileType: String = call.argument<Any>("fileType")?.toString() ?: "*/*"
+        val shareText: String? = call.argument<Any>("shareText")?.toString() // nullable
+        val shareTitle: String? = call.argument<Any>("shareTitle")?.toString() // nullable
+        val chooserTitle: String? = call.argument<Any>("chooserTitle")?.toString() // nullable
+
+        if (filepaths.isEmpty()) {
+            result.success(true)
+            return
+        }
+        val fileUris = arrayListOf<Uri>()
+        filepaths.forEach { filepath ->
+            fileUris.add(FileProvider.getUriForFile(context, context.applicationContext.packageName + ".provider", File(filepath)))
+        }
+
+        val intent = if (fileUris.size == 1) {
+            Intent(Intent.ACTION_SEND).apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                setDataAndType(fileUris.first(), fileType)
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                putExtra(Intent.EXTRA_TITLE, shareTitle) // maybe useless
+                putExtra(Intent.EXTRA_STREAM, fileUris.first())
+            }
+        } else {
+            Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                type = fileType
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                putExtra(Intent.EXTRA_TITLE, shareTitle) // maybe useless
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, fileUris)
+            }
+        }
+        val chooserIntent = Intent.createChooser(intent, chooserTitle)
+        @Suppress("DEPRECATION")
+        context.packageManager.queryIntentActivities(chooserIntent, PackageManager.MATCH_DEFAULT_ONLY).forEach { resolveInfo ->
+            fileUris.forEach { fileUri -> context.grantUriPermission(resolveInfo.activityInfo.packageName, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        }
         context.startActivity(chooserIntent)
         result.success(true)
     }

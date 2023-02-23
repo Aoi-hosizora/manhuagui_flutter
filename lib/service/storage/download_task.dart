@@ -254,6 +254,9 @@ class DownloadMangaQueueTask extends QueueTask<void> {
     try {
       manga = (await client.getManga(mid: mangaId)).data;
       if (manga.title == '') {
+        if (!manga.copyright) {
+          throw SpecialException('该漫画暂无版权');
+        }
         throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
       }
     } catch (e, s) {

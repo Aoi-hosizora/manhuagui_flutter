@@ -157,10 +157,8 @@ class ActionRowView extends StatelessWidget {
 
     // following is not be used currently
 
-    double getTextWidth(String text, TextStyle style) => //
-        (TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr, textScaleFactor: MediaQuery.of(context).textScaleFactor)..layout()).width;
     var screenWidth = MediaQuery.of(context).size.width;
-    var itemWidth = getTextWidth('　　　　', Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16)) + 8 * 2;
+    var itemWidth = TextSpan(text: '　　　　', style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 16)).layoutSize(context).height + 8 * 2;
     var hPadding = (screenWidth - itemWidth * 5) / 6; // | ▢ ▢ ▢ ▢ ▢ |
     var hSpace = (screenWidth - hPadding - itemWidth * 5.5) / 5; // | ▢ ▢ ▢ ▢ ▢ ▢|
     if (hSpace < 0) {

@@ -1,7 +1,12 @@
+import 'dart:io' show File;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
+
+final _nullStringFuture = Future<String?>.value(null);
 
 class NetworkImageView extends StatelessWidget {
   const NetworkImageView({
@@ -13,15 +18,60 @@ class NetworkImageView extends StatelessWidget {
     this.quality = FilterQuality.low,
     this.border,
     this.radius,
-  }) : super(key: key);
+    this.errorBuilder,
+  })  : fileFuture = null,
+        super(key: key);
+
+  const NetworkImageView.butForLocal({
+    Key? key,
+    required Future<File?> this.fileFuture,
+    required this.width,
+    required this.height,
+    this.fit = BoxFit.cover,
+    this.quality = FilterQuality.low,
+    this.border,
+    this.radius,
+    this.errorBuilder,
+  })  : url = '',
+        super(key: key);
 
   final String url;
+  final Future<File?>? fileFuture;
   final double width;
   final double height;
   final BoxFit fit;
   final FilterQuality quality;
   final BoxBorder? border;
   final BorderRadius? radius;
+  final Widget Function(BuildContext, Object?)? errorBuilder;
+
+  Widget _buildPlaceholderWidget(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.orange[50],
+      child: Center(
+        child: Icon(
+          Icons.more_horiz,
+          color: Colors.grey,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(BuildContext context, Object? error) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.orange[50],
+      child: Center(
+        child: Icon(
+          Icons.broken_image,
+          color: Colors.grey,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,44 +91,44 @@ class NetworkImageView extends StatelessWidget {
       height: height,
       child: ClipRRect(
         borderRadius: radius ?? BorderRadius.zero,
-        child: CachedNetworkImage(
-          imageUrl: url,
-          width: width,
-          height: height,
-          fit: fit,
-          filterQuality: quality,
-          httpHeaders: const {
-            'User-Agent': USER_AGENT,
-            'Referer': REFERER,
-          },
-          placeholder: (context, url) => Container(
-            width: width,
-            height: height,
-            color: Colors.orange[50],
-            child: Center(
-              child: Icon(
-                Icons.more_horiz,
-                color: Colors.grey,
+        child: fileFuture == null
+            ? CachedNetworkImage(
+                imageUrl: url,
+                width: width,
+                height: height,
+                fit: fit,
+                alignment: Alignment.center,
+                filterQuality: quality,
+                httpHeaders: const {
+                  'User-Agent': USER_AGENT,
+                  'Referer': REFERER,
+                },
+                cacheManager: DefaultCacheManager(),
+                fadeOutDuration: Duration(milliseconds: 1000),
+                fadeOutCurve: Curves.easeOut,
+                fadeInDuration: Duration(milliseconds: 500),
+                fadeInCurve: Curves.easeIn,
+                placeholder: (c, _) => _buildPlaceholderWidget(c),
+                errorWidget: (c, _, err) => errorBuilder?.call(c, err) ?? _buildErrorWidget(c, err),
+              )
+            : LocalOrCachedNetworkImage(
+                provider: LocalOrCachedNetworkImageProvider.fromFutures(
+                  fileFuture: fileFuture!,
+                  urlFuture: _nullStringFuture,
+                  fileMustExist: true,
+                ),
+                width: width,
+                height: height,
+                fit: fit,
+                alignment: Alignment.center,
+                filterQuality: quality,
+                fadeOutDuration: Duration(milliseconds: 1000),
+                fadeOutCurve: Curves.easeOut,
+                fadeInDuration: Duration(milliseconds: 500),
+                fadeInCurve: Curves.easeIn,
+                placeholderBuilder: (c) => _buildPlaceholderWidget(c),
+                errorWidgetBuilder: (c, err, _) => errorBuilder?.call(c, err) ?? _buildErrorWidget(c, err),
               ),
-            ),
-          ),
-          errorWidget: (_, url, __) => Container(
-            width: width,
-            height: height,
-            color: Colors.orange[50],
-            child: Center(
-              child: Icon(
-                Icons.broken_image,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          cacheManager: DefaultCacheManager(),
-          fadeOutDuration: Duration(milliseconds: 1000),
-          fadeOutCurve: Curves.easeOut,
-          fadeInDuration: Duration(milliseconds: 500),
-          fadeInCurve: Curves.easeIn,
-        ),
       ),
     );
   }

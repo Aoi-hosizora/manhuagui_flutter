@@ -36,6 +36,7 @@ class AppSettingPrefs {
   static const _keepScreenOnKey = BoolKey('AppSettingPrefs_keepScreenOn');
   static const _fullscreenKey = BoolKey('AppSettingPrefs_fullscreen');
   static const _preloadCountKey = IntKey('AppSettingPrefs_preloadCount');
+  static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
 
   static List<TypedKey> get viewSettingKeys => [
         _viewDirectionKey,
@@ -47,6 +48,7 @@ class AppSettingPrefs {
         _keepScreenOnKey,
         _fullscreenKey,
         _preloadCountKey,
+        _overviewLoadAllKey,
       ];
 
   static Future<ViewSetting> _loadViewSetting() async {
@@ -62,6 +64,7 @@ class AppSettingPrefs {
       keepScreenOn: prefs.safeGet<bool>(_keepScreenOnKey) ?? def.keepScreenOn,
       fullscreen: prefs.safeGet<bool>(_fullscreenKey) ?? def.fullscreen,
       preloadCount: prefs.safeGet<int>(_preloadCountKey) ?? def.preloadCount,
+      overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
     );
   }
 
@@ -77,6 +80,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_keepScreenOnKey, setting.keepScreenOn);
     await prefs.safeSet<bool>(_fullscreenKey, setting.fullscreen);
     await prefs.safeSet<int>(_preloadCountKey, setting.preloadCount);
+    await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
   }
 
   // ==========

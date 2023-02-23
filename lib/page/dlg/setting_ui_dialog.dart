@@ -182,7 +182,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingSwitcherView(
           title: '始终在新页面显示列表',
-          hint: '该选项默认关闭，启用该选项后，将在 "推荐页面"、"用户页面"、"左侧菜单" 等地方点击查看漫画列表时，始终打开新页面显示这些列表。',
+          hint: '该选项默认关闭，启用该选项后，当在 "推荐页面"、"用户页面"、"左侧菜单" 等地方点击查看漫画列表时，始终打开新页面显示。',
           value: _alwaysOpenNewListPage,
           onChanged: (b) {
             _alwaysOpenNewListPage = b;

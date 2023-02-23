@@ -126,9 +126,9 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         await _cache.removeFile(url);
       });
       if (!widget.verticalScroll) {
-        _horizontalGalleryKey.currentState?.reload(imageIndex);
+        _horizontalGalleryKey.currentState?.reload(imageIndex, alsoEvict: true);
       } else {
-        _verticalGalleryKey.currentState?.reload(imageIndex);
+        _verticalGalleryKey.currentState?.reload(imageIndex, alsoEvict: true);
       }
     }
   }

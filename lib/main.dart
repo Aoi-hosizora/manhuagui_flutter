@@ -58,6 +58,7 @@ class MyApp extends StatelessWidget {
           child: PlaceholderTextTheme(
             setting: PlaceholderSetting(
               useAnimatedSwitcher: true,
+              switchDuration: Duration(milliseconds: 200),
             ).copyWithChinese(),
             child: child!,
           ),

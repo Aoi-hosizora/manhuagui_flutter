@@ -215,9 +215,10 @@ class _AuthorPageState extends State<AuthorPage> {
           IconTextDialogOption(
             icon: Icon(Icons.copy),
             text: Text('复制作者介绍'),
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(c).pop();
               copyText(_data!.introduction, showToast: false);
+              await Fluttertoast.cancel();
               Fluttertoast.showToast(msg: '作者介绍已经复制到剪贴板');
             },
           ),
@@ -617,7 +618,7 @@ class _AuthorPageState extends State<AuthorPage> {
                   nothingIndicator: 0,
                 ),
                 setting: UpdatableDataViewSetting(
-                  padding: EdgeInsets.zero,
+                  padding: EdgeInsets.symmetric(vertical: 0),
                   interactiveScrollbar: true,
                   scrollbarMainAxisMargin: 2,
                   scrollbarCrossAxisMargin: 2,

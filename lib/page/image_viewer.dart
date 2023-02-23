@@ -89,16 +89,16 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
               ),
               itemBuilder: (_) => [
                 PopupMenuItem(
-                  child: IconTextMenuItem(Icons.refresh, '重新加载图片　　'),
-                  onTap: () => _photoViewKey.currentState?.reload(),
+                  child: IconTextMenuItem(Icons.refresh, '重新加载图片'),
+                  onTap: () => _photoViewKey.currentState?.reload(alsoEvict: true),
                 ),
                 PopupMenuItem(
                   child: GestureDetector(
-                    child: IconTextMenuItem(Icons.share, '分享图片链接'),
+                    child: IconTextMenuItem(Icons.share, '分享图片链接　　'), // 　 for width and long press
                     onLongPress: () {
                       Navigator.of(context).pop(); // hide button menu
                       shareText(text: url);
-                    }
+                    },
                   ),
                   onTap: () => shareText(text: '【${widget.title}】$url'),
                 ),

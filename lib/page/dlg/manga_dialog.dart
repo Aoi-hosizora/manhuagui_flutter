@@ -109,11 +109,11 @@ void showPopupMenuForMangaList({
               ),
             if (expandShelfOptions)
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 10),
+                margin: EdgeInsets.symmetric(horizontal: 10 /* <<< */),
                 decoration: BoxDecoration(
                   border: Border.all(color: Theme.of(context).dividerColor, width: 1),
                 ),
-                child: EdgeInsets.symmetric(horizontal: 24.0 - 10, vertical: 10.0) /* _kIconTextDialogOptionPadding */ .let(
+                child: (kIconTextDialogOptionPadding - EdgeInsets.symmetric(horizontal: 10 /* <<< */)).let(
                   (optionPadding) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -664,7 +664,6 @@ class _DialogHelper {
       CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
-          parentContext: context,
           mangaId: mangaId,
           chapterId: chapterId,
           mangaCover: mangaCover,
@@ -706,7 +705,7 @@ class _DialogHelper {
     await Navigator.of(context).push(
       CustomPageRoute(
         context: context,
-        builder: (c) => ChapterDetailsPage(
+        builder: (c) => ChapterDetailPage(
           data: chapter,
           group: group?.title,
           groupLength: group?.chapters.length,

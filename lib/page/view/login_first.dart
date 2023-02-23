@@ -8,13 +8,11 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 class LoginFirstView extends StatelessWidget {
   const LoginFirstView({
     Key? key,
-    required this.parentContext,
     required this.checking,
     this.error = '',
     this.onErrorRetry,
   }) : super(key: key);
 
-  final BuildContext parentContext;
   final bool checking;
   final String error;
   final void Function()? onErrorRetry;
@@ -35,9 +33,9 @@ class LoginFirstView extends StatelessWidget {
       ),
       onRetryForNothing: () {
         if (!AuthManager.instance.logined) {
-          Navigator.of(parentContext).push(
-            CustomPageRoute(
-              context: parentContext,
+          Navigator.of(context).push(
+            CustomPageRoute.fromTheme(
+              themeData: CustomPageRouteTheme.of(context),
               builder: (c) => LoginPage(),
             ),
           );

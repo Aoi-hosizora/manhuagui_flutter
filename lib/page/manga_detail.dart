@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/service/native/clipboard.dart';
+import 'package:manhuagui_flutter/page/view/detail_table.dart';
 
 /// 漫画详情页，展示所给 [Manga] 信息
 class MangaDetailPage extends StatefulWidget {
@@ -18,32 +18,6 @@ class MangaDetailPage extends StatefulWidget {
 
 class _MangaDetailPageState extends State<MangaDetailPage> {
   final _controller = ScrollController();
-  late final _details = [
-    Tuple2('mid', widget.data.mid.toString()),
-    Tuple2('标题', '《${widget.data.title}》'),
-    Tuple2('标题别名', widget.data.aliases.isEmpty ? '暂无' : widget.data.aliases.map((a) => '《$a》').join('\n')),
-    Tuple2('封面链接', widget.data.cover),
-    Tuple2('网页链接', widget.data.url),
-    Tuple2('状态', widget.data.finished ? '已完结' : '连载中'),
-    Tuple2('出版年份', widget.data.publishYear),
-    Tuple2('漫画地区', widget.data.mangaZone),
-    Tuple2('漫画类别', widget.data.genres.map((g) => g.title).join(', ')),
-    Tuple2('漫画作者', widget.data.authors.map((a) => a.name).join(', ')),
-    Tuple2('最新章节', widget.data.newestChapter),
-    Tuple2('更新时间', widget.data.formattedNewestDate),
-    Tuple2('总章节数', widget.data.chapterGroups.expand((g) => g.chapters).length.toString()),
-    Tuple2('章节分组数', widget.data.chapterGroups.length.toString()),
-    for (var group in widget.data.chapterGroups) Tuple2('【${group.title}】章节数', group.chapters.length.toString()),
-    Tuple2('包含色情暴力', widget.data.banned ? '是' : '否'),
-    Tuple2('拥有版权', widget.data.copyright ? '是' : '否'),
-    Tuple2('漫画排名', widget.data.mangaRank),
-    Tuple2('平均得分', widget.data.averageScore.toStringAsFixed(1)),
-    Tuple2('评分人数', widget.data.scoreCount.toString()),
-    for (var num in [5, 4, 3, 2, 1]) Tuple2('评 $num 星比例', widget.data.perScores[num]),
-    Tuple2('简要介绍', widget.data.briefIntroduction),
-    Tuple2('详细介绍', widget.data.introduction),
-  ];
-  late final _helper = TableCellHelper(_details.length, 2);
 
   @override
   void dispose() {
@@ -53,8 +27,6 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    var tableWidth = MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal - 40;
-
     return Scaffold(
       appBar: AppBar(
         title: Text('漫画详情'),
@@ -70,63 +42,40 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           physics: AlwaysScrollableScrollPhysics(),
           children: [
-            StatefulWidgetWithCallback(
-              postFrameCallbackForBuild: _helper.hasSearched()
-                  ? null
-                  : (_, __) {
-                      if (_helper.searchForHighestCells()) {
-                        if (mounted) setState(() {});
-                      }
-                    },
-              child: Table(
-                columnWidths: const {
-                  0: FractionColumnWidth(0.3),
-                },
-                border: TableBorder(
-                  horizontalInside: BorderSide(width: 1, color: Colors.grey),
+            DetailTableView(
+              rows: [
+                DetailRow('mid', widget.data.mid.toString()),
+                DetailRow('标题', '《${widget.data.title}》', textForCopy: widget.data.title),
+                DetailRow(
+                  '标题别名',
+                  widget.data.aliases.isEmpty ? '暂无' : widget.data.aliases.map((a) => '《$a》').join('\n'),
+                  textForCopy: widget.data.aliases.join('\n'),
+                  canCopy: widget.data.aliases.isNotEmpty,
                 ),
-                children: [
-                  TableRow(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        child: Text('键', style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.grey)),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        child: Text('值', style: Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.grey)),
-                      ),
-                    ],
-                  ),
-                  for (var i = 0; i < _details.length; i++)
-                    TableRow(
-                      children: [
-                        TableCell(
-                          key: _helper.getCellKey(i, 0),
-                          verticalAlignment: _helper.determineCellAlignment(i, 0, TableCellVerticalAlignment.top),
-                          child: TableWholeRowInkWell.preferred(
-                            child: Text('${_details[i].item1}　', style: Theme.of(context).textTheme.bodyText2),
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            onTap: () => copyText(_details[i].item2, showToast: true),
-                            tableWidth: tableWidth,
-                            accumulativeWidthRatio: 0,
-                          ),
-                        ),
-                        TableCell(
-                          key: _helper.getCellKey(i, 1),
-                          verticalAlignment: _helper.determineCellAlignment(i, 1, TableCellVerticalAlignment.top),
-                          child: TableWholeRowInkWell.preferred(
-                            child: Text('${_details[i].item2}　', style: Theme.of(context).textTheme.bodyText2),
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            onTap: () => copyText(_details[i].item2, showToast: true),
-                            tableWidth: tableWidth,
-                            accumulativeWidthRatio: 0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+                DetailRow('封面链接', widget.data.cover),
+                DetailRow('网页链接', widget.data.url),
+                DetailRow('状态', widget.data.finished ? '已完结' : '连载中'),
+                DetailRow('出版年份', widget.data.publishYear),
+                DetailRow('漫画地区', widget.data.mangaZone),
+                DetailRow('漫画类别', widget.data.genres.map((g) => g.title).join(', ')),
+                DetailRow('漫画作者', widget.data.authors.map((a) => a.name).join(', ')),
+                DetailRow('最新章节', widget.data.newestChapter),
+                DetailRow('更新时间', widget.data.formattedNewestDate),
+                DetailRow('总章节数', widget.data.chapterGroups.expand((g) => g.chapters).length.toString()),
+                DetailRow('章节分组数', widget.data.chapterGroups.length.toString()),
+                for (var group in widget.data.chapterGroups) //
+                  DetailRow('【${group.title}】章节数', group.chapters.length.toString()),
+                DetailRow('包含色情暴力', widget.data.banned ? '是' : '否', canCopy: false),
+                DetailRow('拥有版权', widget.data.copyright ? '是' : '否', canCopy: false),
+                DetailRow('漫画排名', widget.data.mangaRank),
+                DetailRow('平均得分', widget.data.averageScore.toStringAsFixed(1)),
+                DetailRow('评分人数', widget.data.scoreCount.toString()),
+                for (var num in [5, 4, 3, 2, 1]) //
+                  DetailRow('评 $num 星比例', widget.data.perScores[num]),
+                DetailRow('简要介绍', widget.data.briefIntroduction),
+                DetailRow('详细介绍', widget.data.introduction),
+              ],
+              tableWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal - 40,
             ),
           ],
         ),

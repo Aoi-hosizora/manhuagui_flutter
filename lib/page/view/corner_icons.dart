@@ -37,7 +37,7 @@ class MangaCornerFlags {
       if (inFavorite) Icons.bookmark,
       if (inHistory && AppSetting.instance.ui.showMangaReadIcon) ...[
         if (!historyRead) CustomIcons.opened_left_star_book,
-        if (historyRead) Icons.import_contacts,
+        if (historyRead) CustomIcons.opened_blank_book, // higher than origin Icons.import_contacts
       ],
     ];
   }

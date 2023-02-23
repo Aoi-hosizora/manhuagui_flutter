@@ -62,9 +62,9 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
   }
 
   /// reload, exclude extra pages, start from 0
-  void reload(int imageIndex) {
+  void reload(int imageIndex, {bool alsoEvict = true}) {
     if (imageIndex >= 0 && imageIndex < widget.imageCount) {
-      _key.currentState?.reloadPhoto(imageIndex);
+      _key.currentState?.reloadPhoto(imageIndex, alsoEvict: alsoEvict);
     }
   }
 
@@ -191,9 +191,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   }
 
   /// reload, excludes extra page, start from 0
-  void reload(int imageIndex) {
+  void reload(int imageIndex, {bool alsoEvict = true}) {
     if (imageIndex >= 0 && imageIndex < widget.imageCount) {
-      _photoViewKeys[imageIndex].currentState?.reload();
+      _photoViewKeys[imageIndex].currentState?.reload(alsoEvict: alsoEvict);
     }
   }
 
@@ -299,7 +299,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
             physics: AlwaysScrollableScrollPhysics(),
             cacheExtent: widget.preloadPagesCount < 1
                 ? 0 //
-                : MediaQuery.of(context).size.height * widget.preloadPagesCount - 1 /* using this height is inaccuracy */,
+                : (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * (2 / 3) * widget.preloadPagesCount /* inaccuracy */,
             children: [
               // 1
               Padding(

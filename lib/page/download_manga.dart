@@ -300,7 +300,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
-          parentContext: context,
           mangaId: widget.mangaId,
           chapterId: chapterId,
           mangaCover: _data!.mangaCover,

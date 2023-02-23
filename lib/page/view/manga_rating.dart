@@ -52,20 +52,11 @@ class MangaRatingDetailView extends StatelessWidget {
   final int scoreCount;
   final List<String> perScores;
 
-  double _textWidth(BuildContext context, String text, TextStyle style) {
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: TextDirection.ltr,
-      textScaleFactor: MediaQuery.of(context).textScaleFactor,
-    )..layout(minWidth: 0, maxWidth: double.infinity);
-    return textPainter.width;
-  }
-
   @override
   Widget build(BuildContext context) {
     var scores = [for (var i = 0; i < 5; i++) (double.tryParse(perScores[i + 1].replaceAll('%', '')) ?? 0) / 100]; // [0,1,2,3,4] => star_1,2,3,4,5
     var maxScore = scores.reduce((value, element) => value > element ? value : element);
-    var maxWidth = getDialogContentMaxWidth(context) - (18 * 5 + 6 + 8 + _textWidth(context, '88.8%', Theme.of(context).textTheme.bodyText2!));
+    var maxWidth = getDialogContentMaxWidth(context) - (18 * 5 + 6 + 8 + TextSpan(text: '88.8%', style: Theme.of(context).textTheme.bodyText2!).layoutSize(context).width);
     var scoreWidths = [for (var i = 0; i < 5; i++) maxScore == 0 ? 1.0 : (maxWidth / maxScore * scores[i]).clamp(1.0, maxWidth)];
     var scoreTexts = [for (var i = 0; i < 5; i++) perScores[i + 1]];
 

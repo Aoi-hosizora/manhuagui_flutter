@@ -443,7 +443,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       ActionRowView.four(
                         action1: ActionItem.simple('最近更新', Icons.cached, () => _openSepPage(SepRecentPage())),
                         action2: ActionItem.simple('漫画排行', Icons.trending_up, () => _openSepPage(SepRankingPage())),
-                        action3: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaRandomPage(parentContext: context)))),
+                        action3: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaRandomPage()))),
                         action4: ActionItem.simple('外部浏览', Icons.open_in_browser, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
                       ),
                     ],

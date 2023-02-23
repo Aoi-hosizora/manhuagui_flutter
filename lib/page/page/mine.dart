@@ -362,7 +362,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       _error = '';
       return _buildScaffold(
         body: LoginFirstView(
-          parentContext: context,
           checking: _authChecking,
           error: _authError,
           onErrorRetry: () async {

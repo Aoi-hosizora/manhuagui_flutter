@@ -76,6 +76,7 @@ class ViewSetting {
     required this.keepScreenOn,
     required this.fullscreen,
     required this.preloadCount,
+    required this.overviewLoadAll,
   });
 
   final ViewDirection viewDirection; // 阅读方向
@@ -87,6 +88,7 @@ class ViewSetting {
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
   final int preloadCount; // 预加载页数
+  final bool overviewLoadAll; // 一览加载所有图片
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -98,6 +100,7 @@ class ViewSetting {
     keepScreenOn: true,
     fullscreen: false,
     preloadCount: 3,
+    overviewLoadAll: false,
   );
 
   ViewSetting copyWith({
@@ -110,6 +113,7 @@ class ViewSetting {
     bool? keepScreenOn,
     bool? fullscreen,
     int? preloadCount,
+    bool? overviewLoadAll,
   }) {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
@@ -121,6 +125,7 @@ class ViewSetting {
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
+      overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
     );
   }
 }

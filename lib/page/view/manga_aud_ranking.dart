@@ -77,15 +77,6 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
         (index == 3 && widget.shaonvRankings == null);
   }
 
-  double _getTextHeight(String text, TextStyle style) {
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: TextDirection.ltr,
-      textScaleFactor: MediaQuery.of(context).textScaleFactor,
-    )..layout(minWidth: 0, maxWidth: double.infinity);
-    return textPainter.height;
-  }
-
   MangaAudRankingType _indexToType(int index) {
     return index == 0
         ? MangaAudRankingType.all
@@ -271,7 +262,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                   ? ((85.0 + 6 * 2) * widget.mangaCount)
                   : _isPageLoading(_currentPageIndex)
                       ? (40 + 12 + 15 * 2)
-                      : (42 + 12 + 5 * 4 + _getTextHeight('　', Theme.of(context).textTheme.subtitle1!)),
+                      : (42 + 12 + 5 * 4 + TextSpan(text: '　', style: Theme.of(context).textTheme.subtitle1!).layoutSize(context).height),
               child: TabBarView(
                 controller: _controller,
                 physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(),

@@ -171,6 +171,9 @@ class _MangaPageState extends State<MangaPage> {
       // 4. 获取漫画信息
       var result = await client.getManga(mid: widget.id);
       if (result.data.title == '') {
+        if (!result.data.copyright) {
+          throw SpecialException('该漫画暂无版权');
+        }
         throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
       }
       _data = null;
@@ -334,7 +337,6 @@ class _MangaPageState extends State<MangaPage> {
         CustomPageRoute(
           context: context,
           builder: (c) => MangaViewerPage(
-            parentContext: context,
             mangaId: _data!.mid,
             chapterId: chapterId,
             mangaCover: _data!.cover,
@@ -371,7 +373,6 @@ class _MangaPageState extends State<MangaPage> {
       CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
-          parentContext: context,
           mangaId: _data!.mid,
           chapterId: cid,
           mangaCover: _data!.cover,
@@ -590,18 +591,20 @@ class _MangaPageState extends State<MangaPage> {
           IconTextDialogOption(
             icon: Icon(Icons.copy),
             text: Text('复制简要介绍'),
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(c).pop();
               copyText(_data!.briefIntroduction, showToast: false);
+              await Fluttertoast.cancel();
               Fluttertoast.showToast(msg: '漫画简要介绍已经复制到剪贴板');
             },
           ),
           IconTextDialogOption(
             icon: Icon(Icons.copy),
             text: Text('复制详细介绍'),
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(c).pop();
               copyText(_data!.introduction, showToast: false);
+              await Fluttertoast.cancel();
               Fluttertoast.showToast(msg: '漫画详细介绍已经复制到剪贴板');
             },
           ),

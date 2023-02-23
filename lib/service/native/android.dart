@@ -63,6 +63,7 @@ const _restartAppMethodName = 'restartApp';
 const _insertMediaMethodName = 'insertMedia';
 const _shareTextMethodName = 'shareText';
 const _shareFileMethodName = 'shareFile';
+const _shareFilesMethodName = 'shareFiles';
 
 Future<void> restartApp() async {
   if (Platform.isAndroid) {
@@ -86,7 +87,7 @@ Future<void> addToGallery(File file) async {
 Future<void> shareText({required String text, String? title}) async {
   if (Platform.isAndroid) {
     try {
-      // Intent.ACTION_SEND, Intent.ACTION_CHOOSER
+      // Intent.ACTION_SEND
       await _channel.invokeMethod(_shareTextMethodName, <String, dynamic>{
         'shareText': text,
         'shareTitle': title,
@@ -99,9 +100,24 @@ Future<void> shareText({required String text, String? title}) async {
 Future<void> shareFile({required String filepath, String type = '*/*', String? text, String? title}) async {
   if (Platform.isAndroid) {
     try {
-      // Intent.ACTION_SEND, Intent.ACTION_CHOOSER
+      // Intent.ACTION_SEND
       await _channel.invokeMethod(_shareFileMethodName, <String, dynamic>{
         'filepath': filepath,
+        'fileType': type,
+        'shareText': text,
+        'shareTitle': title,
+        'chooserTitle': AppSetting.instance.other.useNativeShareSheet ? null : '',
+      });
+    } catch (_) {}
+  }
+}
+
+Future<void> shareFiles({required List<String> filepaths, String type = '*/*', String? text, String? title}) async {
+  if (Platform.isAndroid) {
+    try {
+      // Intent.ACTION_SEND_MULTIPLE
+      await _channel.invokeMethod(_shareFilesMethodName, <String, dynamic>{
+        'filepaths': filepaths,
         'fileType': type,
         'shareText': text,
         'shareTitle': title,

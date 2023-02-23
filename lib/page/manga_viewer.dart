@@ -1,6 +1,7 @@
 import 'dart:async' show Timer;
 import 'dart:io' show File;
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:battery_info/battery_info_plugin.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -20,6 +21,7 @@ import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/manga_overview.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
@@ -43,7 +45,6 @@ import 'package:wakelock/wakelock.dart';
 class MangaViewerPage extends StatefulWidget {
   const MangaViewerPage({
     Key? key,
-    required this.parentContext,
     required this.mangaId,
     required this.chapterId,
     required this.mangaCover,
@@ -53,7 +54,6 @@ class MangaViewerPage extends StatefulWidget {
     this.onMangaGot, // for download manga page
   }) : super(key: key);
 
-  final BuildContext parentContext;
   final int mangaId;
   final int chapterId;
   final String mangaCover;
@@ -79,6 +79,7 @@ class MangaViewerPageData {
     required this.nextChapterId,
     required this.prevChapterId,
     required this.chapterGroups,
+    required this.getMangaFailed,
   });
 
   final String mangaTitle;
@@ -91,6 +92,7 @@ class MangaViewerPageData {
   final int? nextChapterId;
   final int? prevChapterId;
   final List<MangaChapterGroup>? chapterGroups;
+  final bool? getMangaFailed;
 
   String get chapterCover => pages.isNotEmpty ? pages.first : '';
 
@@ -100,7 +102,7 @@ class MangaViewerPageData {
 
   String chapterPageHtmlUrl(int imageIndex /* start from 0 */) => '$chapterUrl#p=${imageIndex + 1}';
 
-  MangaViewerPageData updateChapterGroups(List<MangaChapterGroup> chapterGroups) {
+  MangaViewerPageData updateChapterGroups({required List<MangaChapterGroup>? chapterGroups, required bool? getMangaFailed}) {
     return MangaViewerPageData(
       mangaTitle: mangaTitle,
       mangaCover: mangaCover,
@@ -112,6 +114,7 @@ class MangaViewerPageData {
       nextChapterId: nextChapterId,
       prevChapterId: prevChapterId,
       chapterGroups: chapterGroups,
+      getMangaFailed: getMangaFailed,
     );
   }
 }
@@ -213,8 +216,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   MangaViewerPageData? _data;
   var _error = '';
 
-  // these three fields are only used to construct MangaGalleryView
+  // these fields are only used for MangaGalleryView
   int? _initialPage; // start from 1
+  List<String?>? _pageUrls; // also used to share link, share image, and open grid view
   List<Future<String?>>? _urlFutures;
   List<Future<File?>>? _fileFutures;
 
@@ -230,9 +234,25 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _loading = true;
     if (mounted) setState(() {});
 
+    // 1. 先获取各种数据库信息 (收藏、下载)
+    _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
+    _inFavorite = _favoriteManga != null;
+    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
+
+    // 2. 在网络请求前，先判断当前是否处于离线模式，以及章节是否下载
+    if (!widget.onlineMode && (_downloadEntity == null || _downloadChapter == null)) {
+      await Future.delayed(Duration(milliseconds: 300)); // fake loading
+      _data = null;
+      _error = '当前处于离线模式，但该章节尚未下载\n请先切换成在线模式再阅读';
+      _loading = false;
+      if (mounted) setState(() {});
+      return;
+    }
+
     final client = RestClient(DioManager.instance.dio);
     if (AuthManager.instance.logined) {
-      // 1. 异步更新章节阅读记录
+      // 3. 异步更新章节阅读记录
       Future.microtask(() async {
         try {
           await client.recordManga(token: AuthManager.instance.token, mid: widget.mangaId, cid: widget.chapterId);
@@ -242,7 +262,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
       });
 
-      // 2. 异步获取漫画书架信息
+      // 4. 异步获取漫画书架信息
       Future.microtask(() async {
         try {
           var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.mangaId);
@@ -257,16 +277,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       });
     }
 
-    // 3. 获取各种数据库信息 (收藏、下载)
-    _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
-    _inFavorite = _favoriteManga != null;
-    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-    _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
-
     try {
       if (widget.onlineMode) {
-        // => (I) 在线模式，通过网络获取章节数据
-        // I.4. 异步请求章节目录
+        // => (I) 在线模式，通过网络获取章节数据 (同步获取漫画数据)
+        // I.5. 异步请求章节目录
         Future<TaskResult<List<MangaChapterGroup>, Object>> groupsFuture;
         if (widget.chapterGroups != null) {
           groupsFuture = Future.value(Ok(widget.chapterGroups!));
@@ -275,6 +289,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             try {
               var result = await client.getManga(mid: widget.mangaId);
               if (result.data.title == '') {
+                if (!result.data.copyright) {
+                  throw SpecialException('该漫画暂无版权');
+                }
                 throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
               }
               widget.onMangaGot?.call(result.data); // 将漫画数据保存至 DownloadMangaPage
@@ -285,7 +302,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           });
         }
 
-        // I.5. 获取章节数据并整合至 page data
+        // I.6. 获取章节数据并整合至 page data
         var result = await client.getMangaChapter(mid: widget.mangaId, cid: widget.chapterId);
         var data = result.data;
         var groups = (await groupsFuture).unwrap(); // 等待成功获取章节目录
@@ -301,15 +318,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           nextChapterId: data.nextCid,
           prevChapterId: data.prevCid,
           chapterGroups: groups,
+          getMangaFailed: false,
         );
         _preparePageValues(); // 初始化页码和页面列表
       } else {
-        // => (II) 离线模式，使用已下载的漫画章节数据
+        // => (II) 离线模式，使用已下载的漫画章节数据 (异步获取漫画数据)
         var manga = _downloadEntity, chapter = _downloadChapter;
         if (manga == null || chapter == null) {
-          _error = '当前处于离线模式，但该章节尚未下载\n请先切换成在线模式再阅读';
+          _error = '当前处于离线模式，但该章节尚未下载\n请先切换成在线模式再阅读'; // 再次判断
         } else {
-          // II.4. 将下载漫画时记录的数据整合至 page data
+          // II.5. 将下载漫画时记录的数据整合至 page data
           var metadata = await readMetadataFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageCount: chapter.totalPageCount);
           _error = '';
           _data = MangaViewerPageData(
@@ -323,22 +341,27 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             nextChapterId: metadata.item2,
             prevChapterId: metadata.item3,
             chapterGroups: widget.chapterGroups /* maybe null */,
+            getMangaFailed: null /* getting manga */,
           );
           _preparePageValues(); // 初始化页码和页面列表
 
-          // II.5. 异步请求章节目录
+          // II.6. 异步请求章节目录
           if (widget.chapterGroups == null) {
             Future.microtask(() async {
               try {
                 var result = await client.getManga(mid: widget.mangaId);
                 if (result.data.title == '') {
+                  if (!result.data.copyright) {
+                    throw SpecialException('该漫画暂无版权');
+                  }
                   throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
                 }
                 widget.onMangaGot?.call(result.data); // 将漫画数据保存至 DownloadMangaPage
-                _data = _data?.updateChapterGroups(result.data.chapterGroups); // no need to setState
+                _data = _data?.updateChapterGroups(chapterGroups: result.data.chapterGroups, getMangaFailed: false); // no need to setState
               } catch (e, s) {
                 var we = wrapError(e, s);
                 globalLogger.e('MangaViewerPage._loadData getManga (offline): ${we.text}', e, s);
+                _data = _data?.updateChapterGroups(chapterGroups: null, getMangaFailed: true); // failed to get manga
                 Fluttertoast.showToast(msg: we.text);
               }
             });
@@ -346,7 +369,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         }
       }
 
-      // 6. 异步更新阅读历史
+      // 7. 异步更新阅读历史
       _updateHistory();
     } catch (e, s) {
       _data = null;
@@ -368,16 +391,15 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _progressValue = _initialPage!;
 
     // url future 列表
-    _urlFutures = [
+    _pageUrls = [
       for (int idx = 0; idx < _data!.pageCount; idx++)
-        !isValidPageUrlForMetadata(_data!.pages[idx])
-            ? Future<String?>.value(null) // 如果 metadata 内不包含有效链接 (仅针对漫画下载和离线模式) 则显示提示信息【该页尚未下载，且未获取到该页的链接】
-            : Future<String?>.value(
-                _data!.pages[idx].let(
-                  (url) => url.startsWith('//') ? 'https:$url' : url,
-                ),
+        !isValidPageUrlForMetadata(_data!.pages[idx]) // 离线模式下页面链接可能无效，只出现在 metadata 丢失的情况下
+            ? null // 如果 metadata 内不包含有效链接 (仅针对漫画下载和离线模式) 则显示提示信息【该页尚未下载，且未获取到该页的链接】
+            : _data!.pages[idx].let(
+                (url) => url.startsWith('//') ? 'https:$url' : url,
               ),
     ];
+    _urlFutures = _pageUrls!.map((url) => Future.value(url)).toList();
 
     // file future 列表
     _fileFutures = [
@@ -388,7 +410,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 mangaId: widget.mangaId,
                 chapterId: widget.chapterId,
                 pageIndex: idx,
-                url: _data!.pages[idx], // only for getting extension
+                url: _data!.pages[idx], // url is only used to get extension (webp) and construct file path
               ),
     ];
   }
@@ -430,7 +452,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   void _onSliderChanged(int value /* start from 1 */) {
     _progressValue = value; // start from 1
-    _mangaGalleryViewKey.currentState?.jumpToImage /* start from 0 */ (value - 1);
+    if (_currentPage == _progressValue) {
+      return; // same page, ignore jump
+    }
+    _mangaGalleryViewKey.currentState?.jumpToImage(value - 1, animated: false); // start from 0
     if (mounted) setState(() {});
   }
 
@@ -458,16 +483,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     _updateHistory();
     Navigator.of(context).pushReplacement(
-      CustomPageRoute(
-        context: widget.parentContext,
+      CustomPageRoute.fromTheme(
+        themeData: CustomPageRouteTheme.of(context),
         builder: (c) => MangaViewerPage(
-          parentContext: widget.parentContext,
           mangaId: widget.mangaId,
           chapterId: gotoPrevious ? _data!.prevChapterId! : _data!.nextChapterId!,
           mangaCover: _data!.mangaCover,
           chapterGroups: _data!.chapterGroups,
-          initialPage: 1,
-          // always turn to the first page
+          initialPage: 1 /* always turn to the first page */,
           onlineMode: widget.onlineMode,
         ),
       ),
@@ -522,7 +545,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   Future<void> _downloadManga() async {
     if (_data!.chapterGroups == null) {
-      Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
+      if (_data!.getMangaFailed != true) {
+        Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
+      } else {
+        Fluttertoast.showToast(msg: '当前处于离线模式，但漫画章节列表获取失败');
+      }
       return;
     }
     await _ScreenHelper.restoreSystemUI();
@@ -560,7 +587,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   Future<void> _showToc() async {
     if (_data!.chapterGroups == null) {
-      Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
+      if (_data!.getMangaFailed != true) {
+        Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
+      } else {
+        Fluttertoast.showToast(msg: '当前处于离线模式，但漫画章节列表获取失败');
+      }
       return;
     }
 
@@ -571,10 +602,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         Navigator.of(c).pop(); // close bottom sheet
         _updateHistory();
         Navigator.of(context).pushReplacement(
-          CustomPageRoute(
-            context: widget.parentContext,
+          CustomPageRoute.fromTheme(
+            themeData: CustomPageRouteTheme.of(context),
             builder: (c) => MangaViewerPage(
-              parentContext: widget.parentContext,
               mangaId: widget.mangaId,
               chapterId: cid,
               mangaCover: _data!.mangaCover,
@@ -657,7 +687,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await Navigator.of(context).push(
       CustomPageRoute(
         context: context,
-        builder: (c) => ChapterDetailsPage(
+        builder: (c) => ChapterDetailPage(
           data: chapter,
           group: group?.title,
           groupLength: group?.chapters.length,
@@ -707,6 +737,45 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
+  Future<void> _openGridViewer() async {
+    if (_pageUrls!.any((el) => el == null)) {
+      // some page urls maybe invalid when offline => null
+      Fluttertoast.showToast(msg: '当前处于离线模式，但未能获取到部分页面的链接');
+      return;
+    }
+
+    await _ScreenHelper.restoreSystemUI();
+    var pushReplaced = await Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => MangaOverviewPage(
+          mangaId: widget.mangaId,
+          mangaTitle: _data!.mangaTitle,
+          chapterId: widget.chapterId,
+          chapterTitle: _data!.chapterTitle,
+          chapterUrl: _data!.chapterUrl,
+          imageUrls: _pageUrls!.map((u) => u!).toList(),
+          currentIndex: _currentPage - 1 /* start from 0 */,
+          loadAllImages: AppSetting.instance.view.overviewLoadAll,
+          onJumpRequested: (pageContext, imageIndex) {
+            Navigator.of(pageContext).pop();
+            _progressValue = imageIndex + 1; // start from 1
+            if (mounted) setState(() {});
+            _mangaGalleryViewKey.currentState?.jumpToImage(imageIndex, animated: false); // start from 0
+          },
+          replaceNavigateWrapper: (navigate) async {
+            await _ScreenHelper.restoreSystemUI();
+            await navigate(routeResult: true); // pushReplaced => true
+            await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+          },
+        ),
+      ),
+    );
+    if (pushReplaced != true) {
+      await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+    }
+  }
+
   void _showPopupMenu(int imageIndex /* start from 0 */) {
     var imageIndexP1 = imageIndex + 1; // start from 1
     showDialog(
@@ -719,7 +788,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             text: Text('重新加载'),
             onPressed: () async {
               Navigator.of(c).pop();
-              _mangaGalleryViewKey.currentState?.reloadImage /* start from 0 */ (imageIndex);
+              _mangaGalleryViewKey.currentState?.reloadImage(imageIndex); // start from 0
             },
           ),
           IconTextDialogOption(
@@ -727,8 +796,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             text: Text('保存该页'),
             onPressed: () async {
               Navigator.of(c).pop();
-              var url = _data!.pages[imageIndex]; // maybe invalid when offline
-              if (!isValidPageUrlForMetadata(url)) {
+              var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
+              if (url == null) {
                 Fluttertoast.showToast(msg: '当前处于离线模式，但未在下载列表中获取到第$imageIndexP1页链接');
               } else {
                 var f = await downloadImageToGallery(url);
@@ -755,15 +824,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           ),
           IconTextDialogOption(
             icon: Icon(MdiIcons.imageMove),
-            text: Text('分享该页图片'), // TODO share multiple images
+            text: Text('分享该页图片'),
             onPressed: () async {
               Navigator.of(c).pop();
-              var filepath = await getCachedOrDownloadedChapterPageFilepath(
-                mangaId: widget.mangaId,
-                chapterId: widget.chapterId,
-                pageIndex: imageIndex,
-                url: _data!.pages[imageIndex],
-              );
+              var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
+              var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
               if (filepath == null) {
                 Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
               } else {
@@ -832,10 +897,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                     onPressed: () {
                                       Navigator.of(c).pop(); // close dialog first
                                       Navigator.of(context).pushReplacement(
-                                        CustomPageRoute(
-                                          context: widget.parentContext,
+                                        CustomPageRoute.fromTheme(
+                                          themeData: CustomPageRouteTheme.of(context),
                                           builder: (c) => MangaViewerPage(
-                                            parentContext: widget.parentContext,
                                             mangaId: widget.mangaId,
                                             chapterId: widget.chapterId,
                                             mangaCover: widget.mangaCover,
@@ -944,7 +1008,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       subscribing: _subscribing,
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
-                      toJumpToImage: (idx /* start from 0 */, anim) => _mangaGalleryViewKey.currentState?.jumpToImage /* start from 0 */ (idx, animated: anim),
+                      toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
                       toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       toSubscribe: _subscribe,
                       toDownload: _downloadManga,
@@ -960,7 +1024,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       subscribing: _subscribing,
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
-                      toJumpToImage: (idx /* start from 0 */, anim) => _mangaGalleryViewKey.currentState?.jumpToImage /* start from 0 */ (idx, animated: anim),
+                      toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
                       toGotoChapter: (prev) => _gotoChapter(gotoPrevious: prev),
                       toSubscribe: _subscribe,
                       toDownload: _downloadManga,
@@ -1038,10 +1102,26 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                       ),
                                     ),
                                     Padding(
-                                      padding: EdgeInsets.only(left: 4, right: 18),
-                                      child: Text(
-                                        '$_progressValue/${_data!.pageCount}页',
-                                        style: TextStyle(color: Colors.white),
+                                      padding: EdgeInsets.only(right: 5),
+                                      child: Tooltip(
+                                        message: '查看章节页面一览',
+                                        preferBelow: false,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            child: Padding(
+                                              padding: EdgeInsets.only(left: 10, right: 10, top: 4.5, bottom: 4.5),
+                                              child: Text(
+                                                '$_progressValue/${_data!.pageCount}页',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontFeatures: const [FontFeature.tabularFigures()],
+                                                ),
+                                              ),
+                                            ),
+                                            onTap: _openGridViewer,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],

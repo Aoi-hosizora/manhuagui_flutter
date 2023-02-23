@@ -9,6 +9,7 @@ Future<void> copyText(
   try {
     await Clipboard.setData(data);
     if (showToast) {
+      await Fluttertoast.cancel();
       Fluttertoast.showToast(msg: '"$text" 已经复制到剪贴板');
     }
   } catch (_) {}

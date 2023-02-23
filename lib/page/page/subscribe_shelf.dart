@@ -217,7 +217,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       _isUpdated = false;
       return Scaffold(
         body: LoginFirstView(
-          parentContext: context,
           checking: _authChecking,
           error: _authError,
           onErrorRetry: () async {

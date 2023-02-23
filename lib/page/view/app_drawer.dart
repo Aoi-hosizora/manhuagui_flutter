@@ -62,7 +62,6 @@ class AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<AppDrawer> {
   final _cancelHandlers = <VoidCallback>[];
-  late var _routeTheme = CustomPageRouteTheme.of(context);
 
   @override
   void initState() {
@@ -111,16 +110,10 @@ class _AppDrawerState extends State<AppDrawer> {
     });
 
     var toReplace = !isFirst && canReplace && widget.currentSelection.canBeReplaced();
-    var route = CustomPageRoute(
-      context: null,
+    var route = CustomPageRoute.fromTheme(
+      themeData: CustomPageRouteTheme.of(context),
       builder: (_) => page,
-      transitionDuration: _routeTheme?.transitionDuration,
-      reverseTransitionDuration: _routeTheme?.transitionDuration,
-      barrierColor: _routeTheme?.barrierColor,
-      barrierCurve: _routeTheme?.barrierCurve,
-      disableCanTransitionTo: _routeTheme?.disableCanTransitionTo,
-      disableCanTransitionFrom: _routeTheme?.disableCanTransitionFrom,
-      transitionsBuilder: !toReplace ? _routeTheme?.transitionsBuilder : ReplacementTransitionsBuilder(),
+      transitionsBuilder: !toReplace ? null : ReplacementTransitionsBuilder(),
     );
     if (toReplace) {
       await Future.delayed(kDrawerBaseSettleDuration * 0.7);
@@ -146,7 +139,6 @@ class _AppDrawerState extends State<AppDrawer> {
           if (widget.currentSelection == selection) {
             return;
           }
-          _routeTheme = CustomPageRouteTheme.of(context); // get theme data before pop
           if (Scaffold.maybeOf(context)?.isDrawerOpen == true || DrawerScaffold.of(context)?.isDrawerOpen == true) {
             Navigator.of(context).pop();
           }

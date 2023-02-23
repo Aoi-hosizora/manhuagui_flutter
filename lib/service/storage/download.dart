@@ -38,9 +38,9 @@ Future<String> _getDownloadMangaDirectoryPath([int? mangaId, int? chapterId]) as
   return PathUtils.joinPath([directoryPath, 'manhuagui_download', mangaId.toString(), chapterId.toString()]);
 }
 
-Future<String> _getDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
+Future<String> _getDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String? url}) async {
   var basename = (pageIndex + 1).toString().padLeft(4, '0');
-  var extension = PathUtils.getExtension(url.split('?')[0]); // include "."
+  var extension = PathUtils.getExtension((url ?? 'xxx.webp').split('?')[0]); // include "."
   var filename = '$basename$extension';
   return PathUtils.joinPath([await _getDownloadMangaDirectoryPath(mangaId, chapterId), filename]);
 }
@@ -54,9 +54,9 @@ Future<String?> getDownloadedMangaDirectoryPath() async {
   }
 }
 
-Future<File?> getDownloadedChapterPageFile({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
+Future<File?> getDownloadedChapterPageFile({required int mangaId, required int chapterId, required int pageIndex, required String? url}) async {
   try {
-    var filepath = await _getDownloadedChapterPageFilePath(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url);
+    var filepath = await _getDownloadedChapterPageFilePath(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url); // url is used only to get extension
     return File(filepath);
   } catch (e, s) {
     globalLogger.e('getDownloadedChapterPageFile', e, s);
@@ -64,10 +64,10 @@ Future<File?> getDownloadedChapterPageFile({required int mangaId, required int c
   }
 }
 
-Future<String?> getCachedOrDownloadedChapterPageFilepath({required int mangaId, required int chapterId, required int pageIndex, required String url}) async {
+Future<String?> getCachedOrDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String? url}) async {
   try {
-    var file = await getDownloadedChapterPageFile(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url);
-    return await getCachedOrDownloadedFilepath(url: url, file: file);
+    var filepath = await _getDownloadedChapterPageFilePath(mangaId: mangaId, chapterId: chapterId, pageIndex: pageIndex, url: url); // url is used only to get extension
+    return await getCachedOrDownloadedFilepath(url: url, file: File(filepath));
   } catch (e, s) {
     globalLogger.e('getCachedOrDownloadedChapterPageFilepath', e, s);
     return null;
