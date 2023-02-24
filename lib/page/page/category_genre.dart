@@ -161,7 +161,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
         setting: PlaceholderSetting(
           useAnimatedSwitcher: widget.defaultGenre == null ? true /* for sub page */ : false /* for sep page */,
           customNormalStateBuilder: (c, childBuilder) => _chosen
-              ? childBuilder.call(c)
+              ? childBuilder.call(c) // normal state
               : Column(
                   key: PageStorageKey<String>('GenreSubPage_CategoryGridView_Column'),
                   children: [

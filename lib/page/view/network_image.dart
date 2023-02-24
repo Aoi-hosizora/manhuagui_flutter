@@ -6,8 +6,6 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/config.dart';
 
-final _nullStringFuture = Future<String?>.value(null);
-
 class NetworkImageView extends StatelessWidget {
   const NetworkImageView({
     Key? key,
@@ -112,9 +110,8 @@ class NetworkImageView extends StatelessWidget {
                 errorWidget: (c, _, err) => errorBuilder?.call(c, err) ?? _buildErrorWidget(c, err),
               )
             : LocalOrCachedNetworkImage(
-                provider: LocalOrCachedNetworkImageProvider.fromFutures(
+                provider: LocalOrCachedNetworkImageProvider.fromLocalWithFuture(
                   fileFuture: fileFuture!,
-                  urlFuture: _nullStringFuture,
                   fileMustExist: true,
                 ),
                 width: width,
@@ -127,7 +124,7 @@ class NetworkImageView extends StatelessWidget {
                 fadeInDuration: Duration(milliseconds: 500),
                 fadeInCurve: Curves.easeIn,
                 placeholderBuilder: (c) => _buildPlaceholderWidget(c),
-                errorWidgetBuilder: (c, err, _) => errorBuilder?.call(c, err) ?? _buildErrorWidget(c, err),
+                errorBuilder: (c, err, _) => errorBuilder?.call(c, err) ?? _buildErrorWidget(c, err),
               ),
       ),
     );

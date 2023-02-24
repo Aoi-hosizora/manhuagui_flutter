@@ -26,6 +26,7 @@ class MangaGalleryView extends StatefulWidget {
     required this.slideHeightRatio,
     required this.onPageChanged, // exclude extra pages, start from 0
     this.initialImageIndex = 0, // exclude extra pages, start from 0
+    required this.fileAndUrlNotFoundMessage,
     required this.onLongPressed, // exclude extra pages, start from 0
     required this.onCenterAreaTapped, // exclude extra pages, start from 0
     required this.firstPageBuilder,
@@ -45,6 +46,7 @@ class MangaGalleryView extends StatefulWidget {
   final double slideHeightRatio;
   final void Function(int imageIndex, bool inFirstExtraPage, bool inLastExtraPage) onPageChanged;
   final int initialImageIndex;
+  final String fileAndUrlNotFoundMessage;
   final void Function(int imageIndex) onLongPressed;
   final void Function(int imageIndex) onCenterAreaTapped;
   final Widget Function(BuildContext) firstPageBuilder;
@@ -133,6 +135,15 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     }
   }
 
+  // for ImageErrorView
+  String? _imageErrorFormatter(dynamic error) {
+    // Image file "/storage/emulated/0/Manhuagui/manhuagui_download/39793/620266/0005.webp" is not found while given url is null.
+    if (error is LoadImageException && error.type == LoadImageExceptionType.notExistedFileNullUrl) {
+      return widget.fileAndUrlNotFoundMessage; // 该页尚未下载，且未获取到该页的链接
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.verticalScroll) {
@@ -186,7 +197,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             onLongPress: () => widget.onLongPressed.call(imageIndex),
             child: ImageLoadFailedView(
               title: (imageIndex + 1).toString(),
-              error: err, // include【该页尚未下载，且未获取到该页的链接】
+              error: err,
+              errorFormatter: _imageErrorFormatter,
             ),
           ),
         ),
@@ -262,7 +274,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onLongPress: () => widget.onLongPressed.call(imageIndex),
           child: ImageLoadFailedView(
             title: (imageIndex + 1).toString(),
-            error: err, // include【该页尚未下载，且未获取到该页的链接】
+            error: err,
+            errorFormatter: _imageErrorFormatter,
           ),
         ),
       ),

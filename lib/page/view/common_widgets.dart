@@ -189,50 +189,38 @@ class CustomCombobox<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        DropdownButton<T>(
-          value: value,
-          selectedItemBuilder: (c) => [
-            for (var i in items)
-              DropdownMenuItem<T>(
-                value: i.value,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 2),
-                  child: Text(i.text, style: textStyle ?? Theme.of(context).textTheme.bodyText2),
-                ),
-              )
-          ],
-          items: [
-            for (var i in items)
-              DropdownMenuItem<T>(
-                value: i.value,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 2),
-                  child: Text(
-                    i.text,
-                    style: (textStyle ?? Theme.of(context).textTheme.bodyText2)?.copyWith(
-                      color: value == i.value ? Theme.of(context).primaryColor : null,
-                    ),
-                  ),
-                ),
-              )
-          ],
-          isExpanded: true,
-          underline: Container(),
-          onChanged: onChanged,
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 6,
-          child: Container(
-            height: 0.8,
-            margin: EdgeInsets.only(right: 3),
-            color: Theme.of(context).primaryColor,
+    DropdownMenuItem<T> _buildItem(CustomComboboxItem<T> item, {Color? textColor}) {
+      return DropdownMenuItem<T>(
+        value: item.value,
+        child: Padding(
+          padding: EdgeInsets.only(left: 2),
+          child: Text(
+            item.text,
+            style: (textStyle ?? Theme.of(context).textTheme.bodyText2)?.copyWith(color: textColor),
           ),
         ),
+      );
+    }
+
+    return ExtendedDropdownButton<T>(
+      value: value,
+      selectedItemBuilder: (c) => [
+        for (var item in items) _buildItem(item),
       ],
+      items: [
+        for (var item in items) _buildItem(item, textColor: value == item.value ? Colors.deepOrange : null),
+      ],
+      isExpanded: true,
+      onChanged: onChanged,
+      underlinePosition: PositionArgument.fromLTRB(0, null, 0, 6),
+      underline: Container(
+        height: 0.8,
+        margin: EdgeInsets.only(right: 3),
+        color: Theme.of(context).primaryColor,
+      ),
+      adjustRectToAvoidBottomInset: true /* !!! deal with popup menu layout when dismissing keyboard */,
+      bottomViewInsetGetter: null /* <<< use default behavior */,
+      adjustButtonRect: null /* <<< use default behavior */,
     );
   }
 }

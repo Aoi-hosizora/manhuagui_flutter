@@ -995,6 +995,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     slideWidthRatio: _kSlideWidthRatio,
                     slideHeightRatio: _kSlideHeightRatio,
                     initialImageIndex: (_initialPage ?? 1) - 1 /* start from 0 */,
+                    fileAndUrlNotFoundMessage: '该页尚未下载，且未获取到该页的链接\n请重新下载该章节、或切换成在线模式再阅读',
                     onPageChanged: _onPageChanged,
                     onLongPressed: _showPopupMenu,
                     onCenterAreaTapped: (_) {

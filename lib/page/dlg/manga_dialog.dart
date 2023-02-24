@@ -30,7 +30,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 漫画页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
 
-// => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / download)
+// => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / download) and DownloadMangaPage
 void showPopupMenuForMangaList({
   required BuildContext context,
   required int mangaId,
@@ -40,6 +40,7 @@ void showPopupMenuForMangaList({
   bool fromShelfList = false,
   bool fromFavoriteList = false,
   bool fromHistoryList = false,
+  bool fromDownloadList = false,
   void Function(bool inShelf)? inShelfSetter,
   void Function(bool inFavorite)? inFavoriteSetter,
   void Function(bool inHistory)? inHistorySetter,
@@ -84,7 +85,7 @@ void showPopupMenuForMangaList({
           Divider(height: 16, thickness: 1),
 
           /// 下载
-          if (nowInDownload)
+          if (nowInDownload && !fromDownloadList)
             IconTextDialogOption(
               icon: Icon(Icons.download),
               text: Text('查看下载详情'),
@@ -457,7 +458,7 @@ class _DialogHelper {
                   child: CustomCombobox<String>(
                     value: groupName,
                     items: [
-                      for (var group in groups) // TODO hide keyboard first, https://github.com/flutter/flutter/issues/22075
+                      for (var group in groups)
                         CustomComboboxItem(
                           value: group.groupName,
                           text: group.checkedGroupName,

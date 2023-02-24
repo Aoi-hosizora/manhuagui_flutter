@@ -2,6 +2,10 @@
 // To XXX Requested Event
 // ======================
 
+class ToRecommendRequestedEvent {
+  const ToRecommendRequestedEvent();
+}
+
 class ToShelfRequestedEvent {
   const ToShelfRequestedEvent();
 }

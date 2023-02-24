@@ -183,7 +183,7 @@ class _SearchPageState extends State<SearchPage> {
                     nothingIndicator: 0,
                   ),
                   setting: UpdatableDataViewSetting(
-                    padding: EdgeInsets.zero,
+                    padding: EdgeInsets.symmetric(vertical: 0),
                     interactiveScrollbar: true,
                     scrollbarMainAxisMargin: 2,
                     scrollbarCrossAxisMargin: 2,

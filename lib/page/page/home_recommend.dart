@@ -103,6 +103,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     try {
       var result = await client.getHomepageMangas();
       _data = null;
+      _error = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;

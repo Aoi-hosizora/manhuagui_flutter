@@ -143,7 +143,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
       mangaTitle: favorite.mangaTitle,
       mangaCover: favorite.mangaCover,
       mangaUrl: favorite.mangaUrl,
-      fromFavoriteList: false,
+      fromFavoriteList: false /* <<< */,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
@@ -167,7 +167,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
     showUpdateFavoriteMangaRemarkDialog(
       context: context,
       favorite: oldFavorite,
-      fromFavoriteList: false,
+      fromFavoriteList: false /* <<< */,
       onUpdated: (newFavorite) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -189,7 +189,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
       context: context,
       favorites: oldFavorites,
       selectedGroupName: null,
-      fromFavoriteList: false,
+      fromFavoriteList: false /* <<< */,
       onUpdated: (newFavorites, addToTop) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示

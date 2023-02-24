@@ -59,6 +59,7 @@ class MyApp extends StatelessWidget {
             setting: PlaceholderSetting(
               useAnimatedSwitcher: true,
               switchDuration: Duration(milliseconds: 200),
+              switchLayoutBuilder: switchLayoutBuilderWithSwitchedFlag,
             ).copyWithChinese(),
             child: child!,
           ),

@@ -2,6 +2,7 @@ import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -43,6 +44,7 @@ class MangaOverviewPage extends StatefulWidget {
 class _MangaOverviewPageState extends State<MangaOverviewPage> {
   final _controller = ScrollController();
   final _msController = MultiSelectableController<ValueKey<int>>();
+  var _columns = 3; // default to three columns
 
   @override
   void dispose() {
@@ -65,7 +67,10 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
     var ok = await showYesNoAlertDialog(
       context: context,
       title: Text('加载所有图片'),
-      content: Text('是否在章节页面一览页加载全部页面图片？\n\n提示：如果加载所有图片，有可能会出现在短时间内频繁发出大量请求的情况，有一定概率会导致当前IP被漫画柜封禁'),
+      content: Text(
+        '当前章节页面一览页中显示的图片来自本地缓存或章节下载，是否在线加载全部页面图片？\n\n'
+        '提示：如果加载所有图片，可能会出现在短时间内发出大量请求的情况，有一定概率会导致当前IP被漫画柜封禁。',
+      ),
       yesText: Text('确定'),
       noText: Text('取消'),
     );
@@ -91,6 +96,16 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
         ),
       );
     }
+  }
+
+  void _showHintForLoadingAllImages() {
+    showYesNoAlertDialog(
+      context: context,
+      title: Text('加载所有图片'),
+      content: Text('当前章节页面一览页中显示的所有图片均来自本地缓存、章节下载、或网络在线加载。\n\n提醒：当前模式下可忽略页数限制进行页面预加载。'),
+      yesText: Text('确定'),
+      noText: null,
+    );
   }
 
   void _onPressed(int index) {
@@ -186,7 +201,15 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
     shareFiles(filepaths: filepaths, type: 'image/*');
   }
 
-  Widget _buildItem({required int index, required double width, required double imgHeight, required void Function() onPressed, required void Function()? onLongPressed}) {
+  Widget _buildItem({
+    required int index,
+    required double width,
+    required double imgWidth,
+    required double imgHeight,
+    required double padding,
+    required void Function() onPressed,
+    required void Function()? onLongPressed,
+  }) {
     return SizedBox(
       width: width,
       child: FullRippleWidget(
@@ -198,16 +221,16 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
             ? null
             : BoxDecoration(
                 border: Border.all(color: Colors.red, width: 1.0),
-                color: Colors.orange[50],
+                // color: Colors.orange[50],
               ),
         child: Padding(
-          padding: EdgeInsets.all(1.5),
+          padding: EdgeInsets.all(padding), // 1.5
           child: Column(
             children: [
               if (widget.loadAllImages)
                 NetworkImageView(
                   url: widget.imageUrls[index],
-                  width: width,
+                  width: imgWidth,
                   height: imgHeight,
                   fit: BoxFit.contain,
                   quality: FilterQuality.low,
@@ -215,12 +238,12 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
               if (!widget.loadAllImages)
                 NetworkImageView.butForLocal(
                   fileFuture: _imageFileFutures[index],
-                  width: width,
+                  width: imgWidth,
                   height: imgHeight,
                   fit: BoxFit.contain,
                   quality: FilterQuality.low,
                   errorBuilder: (_, __) => Container(
-                    width: width,
+                    width: imgWidth,
                     height: imgHeight,
                     color: Colors.orange[50],
                     child: Center(
@@ -255,9 +278,14 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
   Widget build(BuildContext context) {
     const hPadding = 18.0;
     const vPadding = 12.0;
-    const hSpace = 8.0;
+    const hSpace = 6.0;
     const vSpace = 10.0;
-    var width = (MediaQuery.of(context).size.width - hPadding * 2 - hSpace * 2) / 3; // |  ▢ ▢ ▢  |
+    var width = _columns == 2
+        ? (MediaQuery.of(context).size.width - hPadding * 2 - hSpace * 1) / 2 // |  ▢ ▢  |
+        : _columns == 3
+            ? (MediaQuery.of(context).size.width - hPadding * 2 - hSpace * 2) / 3 // |  ▢ ▢ ▢  |
+            : (MediaQuery.of(context).size.width - hPadding * 2 - hSpace * 3) / 4; // |  ▢ ▢ ▢ ▢  |
+    final numHeight = TextSpan(text: '0', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height + 4;
 
     return WillPopScope(
       onWillPop: () async {
@@ -278,6 +306,31 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
                 tooltip: '加载所有图片',
                 onPressed: _toLoadAllImages,
               ),
+            if (widget.loadAllImages)
+              AppBarActionButton(
+                icon: Icon(Icons.travel_explore),
+                tooltip: '加载所有图片',
+                onPressed: _showHintForLoadingAllImages,
+              ),
+            PopupMenuButton(
+              child: Builder(
+                builder: (c) => AppBarActionButton(
+                  icon: Icon(Icons.more_vert),
+                  tooltip: '更多选项',
+                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                ),
+              ),
+              itemBuilder: (_) => [
+                for (var column in [2, 3, 4])
+                  PopupMenuItem(
+                    child: IconTextMenuItem(
+                      _columns == column ? Icons.radio_button_on : Icons.radio_button_off,
+                      '显示$column列',
+                    ),
+                    onTap: () => mountedSetState(() => _columns = column),
+                  ),
+              ],
+            ),
           ],
         ),
         body: Column(
@@ -305,40 +358,40 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
                 interactive: true,
                 mainAxisMargin: 2,
                 crossAxisMargin: 2,
-                child: ListView(
-                  controller: _controller,
-                  padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
-                  physics: AlwaysScrollableScrollPhysics(),
-                  children: [
-                    MultiSelectable<ValueKey<int>>(
-                      controller: _msController,
-                      stateSetter: () => mountedSetState(() {}),
-                      onModeChanged: (_) => mountedSetState(() {}),
-                      child: Wrap(
-                        spacing: hSpace,
-                        runSpacing: vSpace,
-                        children: [
-                          for (var i = 0; i < widget.imageUrls.length; i++)
-                            SelectableCheckboxItem<ValueKey<int>>(
-                              key: ValueKey<int>(i),
-                              checkboxPosition: PositionArgument.fill(
-                                bottom: TextSpan(text: '0', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height + 4 /* bypass bottom index */,
-                              ),
-                              checkboxBuilder: (_, __, tip) => tip.isSelected //
-                                  ? CheckboxForSelectableItem(tip: tip, scale: 1.4, scaleAlignment: Alignment.center)
-                                  : SizedBox.shrink(),
-                              itemBuilder: (c, key, tip) => _buildItem(
-                                index: i,
-                                width: width,
-                                imgHeight: width,
-                                onPressed: () => _onPressed(i),
-                                onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
-                              ),
-                            ),
-                        ],
-                      ),
+                child: MultiSelectable<ValueKey<int>>(
+                  controller: _msController,
+                  stateSetter: () => mountedSetState(() {}),
+                  onModeChanged: (_) => mountedSetState(() {}),
+                  child: GridView(
+                    controller: _controller,
+                    padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
+                    physics: AlwaysScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _columns,
+                      crossAxisSpacing: hSpace,
+                      mainAxisSpacing: vSpace,
+                      childAspectRatio: width / ((width - 1.5 * 2) + numHeight + 1.5 * 2),
                     ),
-                  ],
+                    children: [
+                      for (var i = 0; i < widget.imageUrls.length; i++)
+                        SelectableCheckboxItem<ValueKey<int>>(
+                          key: ValueKey<int>(i),
+                          checkboxPosition: PositionArgument.fill(bottom: numHeight), // bypass bottom index
+                          checkboxBuilder: (_, __, tip) => tip.isSelected //
+                              ? CheckboxForSelectableItem(tip: tip, scale: 1.5, scaleAlignment: Alignment.center)
+                              : SizedBox.shrink(),
+                          itemBuilder: (c, key, tip) => _buildItem(
+                            index: i,
+                            width: width,
+                            imgWidth: width - 1.5 * 2,
+                            imgHeight: width - 1.5 * 2,
+                            padding: 1.5,
+                            onPressed: () => _onPressed(i),
+                            onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

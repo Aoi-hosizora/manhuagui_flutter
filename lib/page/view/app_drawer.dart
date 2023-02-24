@@ -77,9 +77,12 @@ class _AppDrawerState extends State<AppDrawer> {
     super.dispose();
   }
 
-  Future<void> _popUntilFirst() async {
+  Future<void> _popUntilFirst({Object? alsoFire}) async {
     await Future.delayed(kDrawerBaseSettleDuration);
     Navigator.of(context).popUntil((r) => r.isFirst);
+    if (alsoFire != null) {
+      EventBusManager.instance.fire(alsoFire);
+    }
   }
 
   void _gotoPage(Widget page, {bool canReplace = false}) {
@@ -123,7 +126,7 @@ class _AppDrawerState extends State<AppDrawer> {
     }
   }
 
-  Widget _buildItem(String text, IconData icon, DrawerSelection? selection, void Function() action) {
+  Widget _buildItem(String text, IconData icon, DrawerSelection? selection, void Function() action, {void Function()? onLongPressed}) {
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.copyWith(
@@ -144,6 +147,14 @@ class _AppDrawerState extends State<AppDrawer> {
           }
           action.call();
         },
+        onLongPress: onLongPressed == null
+            ? null
+            : () {
+                if (Scaffold.maybeOf(context)?.isDrawerOpen == true || DrawerScaffold.of(context)?.isDrawerOpen == true) {
+                  Navigator.of(context).pop();
+                }
+                onLongPressed.call();
+              },
       ),
     );
   }
@@ -205,7 +216,7 @@ class _AppDrawerState extends State<AppDrawer> {
               ],
             ),
           ),
-          _buildItem('主页', Icons.home, DrawerSelection.home, () => _popUntilFirst()),
+          _buildItem('主页', Icons.home, DrawerSelection.home, () => _popUntilFirst(), onLongPressed: () => _popUntilFirst(alsoFire: ToRecommendRequestedEvent())),
           if (!AuthManager.instance.loading && !AuthManager.instance.logined) _buildItem('登录', Icons.login, null, () => _gotoPage(LoginPage())),
           _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
           Divider(thickness: 1),

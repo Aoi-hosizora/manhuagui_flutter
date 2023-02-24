@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
@@ -121,6 +122,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     // 获取漫画下载记录，并更新下载任务等数据
     var data = await DownloadDao.getManga(mid: widget.mangaId);
     if (data != null) {
+      _data = null;
       _error = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
@@ -496,6 +498,14 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                                 url: _data!.mangaUrl,
                               ),
                             ),
+                          ),
+                          longPress: () => showPopupMenuForMangaList(
+                            context: context,
+                            mangaId: widget.mangaId,
+                            mangaTitle: _data!.mangaTitle,
+                            mangaCover: _data!.mangaCover,
+                            mangaUrl: _data!.mangaUrl,
+                            fromDownloadList: true,
                           ),
                         ),
                         action2: ActionItem.simple(

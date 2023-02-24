@@ -41,6 +41,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
     }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToRecommendRequestedEvent>((_) => _controller.animateTo(0)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((_) => _controller.animateTo(1)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((_) => _controller.animateTo(3)));
   }
