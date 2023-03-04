@@ -54,6 +54,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
 
   var _loading = true; // initialize to true, fake loading flag
   DownloadedManga? _downloadEntity;
+  var _columns = 4; // default to four columns
   final _selected = <int>[];
 
   Future<void> _loadData() async {
@@ -180,7 +181,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
             tooltip: !_isAllSelected ? '全选' : '取消全选',
             onPressed: _selectAllOrUnselectAll,
           ),
-          PopupMenuButton(
+          PopupMenuButton<dynamic>(
             child: Builder(
               builder: (c) => AppBarActionButton(
                 icon: Icon(Icons.more_vert),
@@ -222,6 +223,15 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                   ),
                 ),
               ),
+              PopupMenuDivider(),
+              for (var column in [2, 3, 4])
+                PopupMenuItem(
+                  child: IconTextMenuItem(
+                    _columns == column ? Icons.radio_button_on : Icons.radio_button_off,
+                    '显示$column列',
+                  ),
+                  onTap: () => mountedSetState(() => _columns = column),
+                ),
             ],
           ),
         ],
@@ -248,6 +258,8 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                 MangaTocView(
                   groups: widget.groups,
                   full: true,
+                  showPageCount: true,
+                  columns: _columns,
                   highlightColor: Theme.of(context).primaryColor.withOpacity(0.5),
                   highlightedChapters: _selected,
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(

@@ -152,7 +152,7 @@ class _MangaPageState extends State<MangaPage> {
         } catch (e, s) {
           var we = wrapError(e, s);
           globalLogger.e('MangaPage._loadData checkShelfManga', e, s);
-          Fluttertoast.showToast(msg: we.text);
+          Fluttertoast.showToast(msg: '无法获取书架订阅信息：${we.text}');
         }
         if (_data != null && _subscribeCount != null) {
           // 在获取到书架情况时，如果漫画数据已获得，则随即更新书架缓存
@@ -181,7 +181,7 @@ class _MangaPageState extends State<MangaPage> {
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
-      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // get last chapter
+      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // get first chapter
 
       // 5. 更新数据库的各种信息
       await _updateDatabaseAfterGot(/* update all */);
@@ -200,7 +200,7 @@ class _MangaPageState extends State<MangaPage> {
     bool updateShelfCache = true,
     bool updateFavorite = true,
   }) async {
-    // => 获取到所有漫画数据后更新数据库
+    // => 获取到漫画数据后更新数据库
     if (_data == null) {
       return;
     }
@@ -367,6 +367,44 @@ class _MangaPageState extends State<MangaPage> {
       // 继续阅读
       cid = _history!.chapterId;
       page = _history!.chapterPage;
+      if (_data!.chapterGroups.findChapter(cid)?.pageCount == page) {
+        // 该章节已阅读完，寻找下一章节
+        var nextChapter = _data!.chapterGroups.findNextChapter(cid); // 从全部分组的章节中选取，尽量达到和 MangaViewerPage 阅读上/下一章节 一样的效果
+        if (nextChapter == null) {
+          // 未找到下一个章节
+          var ok = await showYesNoAlertDialog(
+            context: context,
+            title: Text('继续阅读'),
+            content: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，且暂无下一章节，是否继续阅读该章节？'),
+            yesText: Text('阅读'),
+            noText: Text('取消'),
+          );
+          if (ok != true) {
+            return;
+          }
+        } else {
+          // 已找到下一个章节
+          var readNew = await showDialog<bool>(
+            context: context,
+            builder: (c) => AlertDialog(
+              title: Text('继续阅读'),
+              content: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否选择阅读下一章节 (${nextChapter.title})？'),
+              actions: [
+                TextButton(child: Text('开始阅读新章节'), onPressed: () => Navigator.of(c).pop(true)),
+                TextButton(child: Text('继续阅读该章节'), onPressed: () => Navigator.of(c).pop(false)),
+                TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop()),
+              ],
+            ),
+          );
+          if (readNew == null) {
+            return;
+          }
+          if (readNew == true) {
+            cid = nextChapter.cid;
+            page = 1; // 从头阅读新章节
+          }
+        }
+      }
     }
 
     Navigator.of(context).push(
@@ -515,7 +553,7 @@ class _MangaPageState extends State<MangaPage> {
         children: [
           if (_history != null && _history!.read)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.fileClock),
+              icon: Icon(MdiIcons.bookClock),
               text: Text('仅保留浏览历史'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -540,7 +578,7 @@ class _MangaPageState extends State<MangaPage> {
             ),
           if (_history == null)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.fileClock),
+              icon: Icon(MdiIcons.bookClock),
               text: Text('保留浏览历史'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -616,7 +654,7 @@ class _MangaPageState extends State<MangaPage> {
   void _showChapterPopupMenu({required int chapterId, required bool forMangaPage}) {
     var chapter = _data!.chapterGroups.findChapter(chapterId);
     if (chapter == null) {
-      Fluttertoast.showToast(msg: '未从章节目录中找到章节');
+      Fluttertoast.showToast(msg: '未从漫画章节列表中找到章节'); // almost unreachable
       return;
     }
 
@@ -661,7 +699,7 @@ class _MangaPageState extends State<MangaPage> {
         children: [
           IconTextDialogOption(
             icon: Icon(Icons.notes),
-            text: Text('查看更多漫画章节'),
+            text: Text('查看全部漫画章节'),
             onPressed: () {
               Navigator.of(c).pop();
               _gotoTocPage();
@@ -669,7 +707,7 @@ class _MangaPageState extends State<MangaPage> {
           ),
           IconTextDialogOption(
             icon: Icon(Icons.settings),
-            text: Text('设置分组章节显示行数'),
+            text: Text('漫画章节列表显示设置'),
             onPressed: () {
               Navigator.of(c).pop();
               showUiSettingDialog(context: context);
@@ -965,7 +1003,9 @@ class _MangaPageState extends State<MangaPage> {
                             Text(
                               _history == null || !_history!.read //
                                   ? '开始阅读该漫画 (${_firstChapter?.title ?? '未知话'})'
-                                  : '继续阅读该漫画 (${_history!.chapterTitle} 第${_history!.chapterPage}页)',
+                                  : (_data!.chapterGroups.findChapter(_history!.chapterId)?.pageCount == _history!.chapterPage).let(
+                                      (fin) => '继续阅读该漫画 (${_history!.chapterTitle} 第${_history!.chapterPage}页${fin ? ' 完' : ''})',
+                                    ),
                               style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1070,6 +1110,7 @@ class _MangaPageState extends State<MangaPage> {
                   child: MangaTocView(
                     groups: _data!.chapterGroups,
                     full: false,
+                    showPageCount: AppSetting.instance.ui.showChapterCounter,
                     firstGroupRowsIfNotFull: AppSetting.instance.ui.regularGroupRows,
                     otherGroupsRowsIfNotFull: AppSetting.instance.ui.otherGroupRows,
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
@@ -1089,7 +1130,7 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 Container(
                   color: Colors.white,
-                  padding: EdgeInsets.fromLTRB(12, 6, 4, 6),
+                  padding: EdgeInsets.fromLTRB(12, 6, 6, 6),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1101,7 +1142,7 @@ class _MangaPageState extends State<MangaPage> {
                         color: Colors.transparent,
                         child: InkWell(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             child: Text(
                               '发表评论',
                               style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Theme.of(context).primaryColor),

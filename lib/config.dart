@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
+// app metadata
 const APP_NAME = 'Manhuagui';
 const APP_VERSION = '1.2.2';
 const APP_LEGALESE = 'Copyright © 2020-2023 AoiHosizora';
@@ -12,6 +13,7 @@ const APP_DESCRIPTION = //
     '\n'
     '本应用与漫画柜内容提供方无任何关系，若有问题，请发邮件或 Issue 联系。';
 
+// data and related
 const ASSETS_PREFIX = 'lib/assets/';
 const DB_NAME = 'db_manhuagui';
 const DL_NTFC_ID = 'com.aoihosizora.manhuagui:download';
@@ -19,6 +21,7 @@ const DL_NTFC_NAME = '漫画下载通知';
 const DL_NTFC_DESCRIPTION = '显示当前的漫画下载进度';
 const LOG_CONSOLE_BUFFER = 200;
 
+// network timeout
 const CONNECT_TIMEOUT = 8000; // 8.0s (local -> my server)
 const SEND_TIMEOUT = 8000; // 8.0s (local -> my server)
 const RECEIVE_TIMEOUT = 10000; // 10.0s (my server -> manhuagui server -> my server -> local)
@@ -40,10 +43,12 @@ const DOWNLOAD_HEAD_LLTIMEOUT = DOWNLOAD_HEAD_TIMEOUT * 2;
 const DOWNLOAD_IMAGE_LLTIMEOUT = DOWNLOAD_IMAGE_TIMEOUT * 2;
 const GALLERY_IMAGE_LLTIMEOUT = GALLERY_IMAGE_TIMEOUT * 2;
 
+// api related
 const BASE_API_URL = 'https://api-manhuagui.aoihosizora.top/v1/';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';
 
+// website urls
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';
 const USER_CENTER_URL = 'https://www.manhuagui.com/user/center/index';
 const MESSAGE_URL = 'https://www.manhuagui.com/user/message/system';

@@ -69,7 +69,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
       title: Text('加载所有图片'),
       content: Text(
         '当前章节页面一览页中显示的图片来自本地缓存或章节下载，是否在线加载全部页面图片？\n\n'
-        '提示：如果加载所有图片，可能会出现在短时间内发出大量请求的情况，有一定概率会导致当前IP被漫画柜封禁。',
+        '提示：如果加载所有图片，可能会让本应用在短时间内发出大量请求，有较低概率会导致当前IP被漫画柜封禁。',
       ),
       yesText: Text('确定'),
       noText: Text('取消'),
@@ -102,7 +102,10 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
     showYesNoAlertDialog(
       context: context,
       title: Text('加载所有图片'),
-      content: Text('当前章节页面一览页中显示的所有图片均来自本地缓存、章节下载、或网络在线加载。\n\n提醒：当前模式下可忽略页数限制进行页面预加载。'),
+      content: Text(
+        '当前章节页面一览页中显示的所有图片均来自本地缓存、章节下载、或网络在线加载。\n\n'
+        '提示：当前模式下可忽略页数限制进行页面预加载。',
+      ),
       yesText: Text('确定'),
       noText: null,
     );

@@ -24,6 +24,7 @@ class MangaCollectionView extends StatefulWidget {
     Key? key,
     required this.type,
     this.ranking,
+    this.rankingDateTime,
     this.updates,
     this.histories,
     this.shelves,
@@ -38,6 +39,7 @@ class MangaCollectionView extends StatefulWidget {
 
   final MangaCollectionType type;
   final List<MangaRanking>? ranking;
+  final DateTime? rankingDateTime;
   final List<TinyManga>? updates;
   final List<MangaHistory>? histories;
   final List<ShelfManga>? shelves;
@@ -308,7 +310,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       case MangaCollectionType.rankings:
         title = '今日漫画排行榜';
         icon = Icons.trending_up;
-        right = '更新于 ${formatDatetimeAndDuration(DateTime.now(), FormatPattern.date)}';
+        right = '更新于 ${formatDatetimeAndDuration(widget.rankingDateTime ?? DateTime.now(), FormatPattern.date)}';
         widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList(); // # = 50 => 20
         break;
       case MangaCollectionType.recents:
@@ -319,7 +321,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       case MangaCollectionType.histories:
         title = widget.username == null ? '本地阅读历史' : '${widget.username} 的阅读历史';
         icon = Icons.history;
-        widgets = widget.histories?.sublist(0, widget.histories!.length.clamp(0, 30)).map((el) => _buildHistoryItem(context, el)).toList(); // # = 50 => 30
+        widgets = widget.histories?.sublist(0, widget.histories!.length.clamp(0, 30)).map((el) => _buildHistoryItem(context, el)).toList(); // # = 30
         twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.shelves:

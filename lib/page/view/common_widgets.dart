@@ -197,6 +197,8 @@ class CustomCombobox<T> extends StatelessWidget {
           child: Text(
             item.text,
             style: (textStyle ?? Theme.of(context).textTheme.bodyText2)?.copyWith(color: textColor),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       );

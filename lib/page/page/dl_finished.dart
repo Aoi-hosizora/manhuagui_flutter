@@ -15,6 +15,7 @@ class DlFinishedSubPage extends StatefulWidget {
     required this.actionController,
     required this.injectorHandler,
     required this.mangaEntity,
+    required this.showPageCount,
     required this.invertOrder,
     required this.history,
     required this.toReadChapter,
@@ -27,6 +28,7 @@ class DlFinishedSubPage extends StatefulWidget {
   final ActionController actionController;
   final SliverOverlapAbsorberHandle injectorHandler;
   final DownloadedManga mangaEntity;
+  final bool showPageCount;
   final bool invertOrder;
   final MangaHistory? history;
   final void Function(int cid) toReadChapter;
@@ -102,6 +104,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                     onModeChanged: (_) => mountedSetState(() {}),
                     child: MangaSimpleTocView(
                       chapters: chapters,
+                      showPageCount: widget.showPageCount,
                       invertOrder: widget.invertOrder,
                       showNewBadge: false,
                       highlightedChapters: [widget.history?.chapterId ?? 0],

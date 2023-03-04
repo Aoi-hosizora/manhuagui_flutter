@@ -5,8 +5,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/model/chapter.dart';
-import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
@@ -152,7 +151,7 @@ Future<void> createNomediaFile() async {
   }
 }
 
-Future<bool> writeMetadataFile({required int mangaId, required int chapterId, required Manga manga, required MangaChapter chapter}) async {
+Future<bool> writeMetadataFile({required int mangaId, required int chapterId, required DownloadChapterMetadata metadata}) async {
   try {
     var metadataPath = PathUtils.joinPath([await _getDownloadMangaDirectoryPath(mangaId, chapterId), 'metadata.json']);
     var metadataFile = File(metadataPath);
@@ -164,9 +163,10 @@ Future<bool> writeMetadataFile({required int mangaId, required int chapterId, re
       'version': 1,
       'manga_id': mangaId,
       'chapter_id': chapterId,
-      'next_cid': chapter.nextCid,
-      'prev_cid': chapter.prevCid,
-      'pages': chapter.pages,
+      'next_cid': metadata.nextCid,
+      'prev_cid': metadata.prevCid,
+      'pages': metadata.pages,
+      'updated_at': (metadata.updatedAt ?? DateTime.now()).toIso8601String(),
     };
     var encoder = JsonEncoder.withIndent('  ');
     var content = encoder.convert(obj);
@@ -178,10 +178,11 @@ Future<bool> writeMetadataFile({required int mangaId, required int chapterId, re
   }
 }
 
-Future<Tuple3<List<String>, int?, int?>> readMetadataFile({required int mangaId, required int chapterId, required int pageCount}) async {
+Future<DownloadChapterMetadata> readMetadataFile({required int mangaId, required int chapterId, required int pageCount}) async {
   List<String>? pages;
   int? nextCid;
   int? prevCid;
+  DateTime? updatedAt;
   try {
     var metadataPath = PathUtils.joinPath([await _getDownloadMangaDirectoryPath(mangaId, chapterId), 'metadata.json']);
     var metadataFile = File(metadataPath);
@@ -191,6 +192,7 @@ Future<Tuple3<List<String>, int?, int?>> readMetadataFile({required int mangaId,
       pages = (obj['pages'] as List<dynamic>?)?.map((e) => e.toString()).toList();
       nextCid = obj['next_cid'] as int?;
       prevCid = obj['prev_cid'] as int?;
+      updatedAt = DateTime.tryParse((obj['updated_at'] as String?) ?? ''); // maybe null
     } else {
       globalLogger.w('readMetadataFile "$metadataPath" not found');
     }
@@ -204,7 +206,7 @@ Future<Tuple3<List<String>, int?, int?>> readMetadataFile({required int mangaId,
   } else if (pages.length > pageCount) {
     pages = pages.sublist(0, pageCount);
   }
-  return Tuple3(pages, nextCid, prevCid);
+  return DownloadChapterMetadata(pages: pages, nextCid: nextCid, prevCid: prevCid, updatedAt: updatedAt);
 }
 
 bool isValidPageUrlForMetadata(String url) {

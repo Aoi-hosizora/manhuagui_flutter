@@ -8,19 +8,17 @@ class ChapterDetailPage extends StatefulWidget {
   const ChapterDetailPage({
     Key? key,
     required this.data,
-    required this.group,
     required this.groupLength,
     required this.mangaTitle,
     required this.mangaUrl,
-    this.tocLoaded = true,
+    required this.isTocLoaded,
   }) : super(key: key);
 
   final TinyMangaChapter data;
-  final String? group;
   final int? groupLength;
   final String mangaTitle;
   final String mangaUrl;
-  final bool tocLoaded;
+  final bool isTocLoaded;
 
   @override
   _ChapterDetailPageState createState() => _ChapterDetailPageState();
@@ -61,12 +59,12 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
                 DetailRow('漫画标题', '《${widget.mangaTitle}》', textForCopy: widget.mangaTitle),
                 DetailRow('漫画网页链接', widget.mangaUrl),
                 DetailRow('章节页数', widget.data.pageCount.toString()),
-                if (widget.tocLoaded) ...[
+                if (widget.isTocLoaded) ...[
                   DetailRow('最近上传', widget.data.isNew ? '是' : '否', canCopy: false),
-                  DetailRow('章节所属分组', widget.group ?? '未知', canCopy: widget.group != null),
-                  DetailRow('分组内顺序', '正序 ${widget.data.number} (总数 ${widget.groupLength ?? '未知'})'),
+                  DetailRow('章节所属分组', widget.data.group.isEmpty ? '未知' : widget.data.group, canCopy: widget.data.group.isNotEmpty),
+                  DetailRow('分组内顺序', '正序 ${widget.data.number <= 0 ? '未知' : widget.data.number} (总数 ${widget.groupLength ?? '未知'})'),
                 ],
-                if (!widget.tocLoaded) ...[
+                if (!widget.isTocLoaded) ...[
                   DetailRow('最近上传', '未知', canCopy: false),
                   DetailRow('章节所属分组', '未知', canCopy: false),
                   DetailRow('分组内顺序', '未知', canCopy: false),

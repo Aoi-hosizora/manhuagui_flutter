@@ -14,10 +14,12 @@ class MangaAudRankingPage extends StatefulWidget {
     Key? key,
     required this.type,
     required this.rankings,
+    required this.rankingDatetime,
   }) : super(key: key);
 
   final MangaAudRankingType type;
   final List<MangaRanking> rankings;
+  final DateTime? rankingDatetime;
 
   @override
   State<MangaAudRankingPage> createState() => _MangaAudRankingPageState();
@@ -72,11 +74,9 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
                       ? '全部漫画'
                       : widget.type == MangaAudRankingType.qingnian
                           ? '青年漫画'
-                          : widget.type == MangaAudRankingType.shaonian
-                              ? '少年漫画'
-                              : '少女漫画'),
+                          : '少女漫画'),
               icon: Icons.emoji_events,
-              rightText: '更新于 ${formatDatetimeAndDuration(DateTime.now(), FormatPattern.date)}',
+              rightText: '更新于 ${formatDatetimeAndDuration(widget.rankingDatetime ?? DateTime.now(), FormatPattern.date)}',
               padding: EdgeInsets.zero,
               child: Column(
                 children: [

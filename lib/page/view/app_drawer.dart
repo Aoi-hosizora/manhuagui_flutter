@@ -216,7 +216,7 @@ class _AppDrawerState extends State<AppDrawer> {
               ],
             ),
           ),
-          _buildItem('主页', Icons.home, DrawerSelection.home, () => _popUntilFirst(), onLongPressed: () => _popUntilFirst(alsoFire: ToRecommendRequestedEvent())),
+          _buildItem('首页', Icons.home, DrawerSelection.home, () => _popUntilFirst(), onLongPressed: () => _popUntilFirst(alsoFire: ToRecommendRequestedEvent())),
           if (!AuthManager.instance.loading && !AuthManager.instance.logined) _buildItem('登录', Icons.login, null, () => _gotoPage(LoginPage())),
           _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
           Divider(thickness: 1),

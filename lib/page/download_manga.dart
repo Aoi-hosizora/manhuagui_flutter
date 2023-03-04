@@ -102,6 +102,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   Manga? _mangaData; // loaded in background
   var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
   var _showAllChapters = false;
+  var _showPageCount = AppSetting.instance.ui.showChapterCounter;
   var _invertOrder = true;
 
   Future<void> _loadData() async {
@@ -410,7 +411,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 ),
               ),
               PopupMenuItem(
-                child: IconTextMenuItem(Icons.format_list_bulleted, '查看下载列表'),
+                child: IconTextMenuItem(Icons.format_list_bulleted, '查看漫画下载列表'),
                 onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
                   (_) => Navigator.of(context).push(
                     CustomPageRoute(
@@ -419,6 +420,13 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     ),
                   ),
                 ),
+              ),
+              PopupMenuItem(
+                child: IconTextMenuItem(
+                  _showPageCount ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                  '显示已完成章节的页数',
+                ),
+                onTap: () => mountedSetState(() => _showPageCount = !_showPageCount),
               ),
               PopupMenuItem(
                 child: IconTextMenuItem(
@@ -505,7 +513,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaTitle: _data!.mangaTitle,
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
-                            fromDownloadList: true,
+                            fromDownloadPage: true,
                           ),
                         ),
                         action2: ActionItem.simple(
@@ -593,6 +601,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   actionController: _actionControllers[0],
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
                   mangaEntity: _data!,
+                  showPageCount: _showPageCount,
                   invertOrder: _invertOrder,
                   history: _history,
                   toReadChapter: _readChapter,

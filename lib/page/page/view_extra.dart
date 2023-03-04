@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -13,6 +14,7 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.isHeader,
     required this.reverseScroll,
     required this.data,
+    required this.onlineMode,
     required this.subscribing,
     required this.inShelf,
     required this.inFavorite,
@@ -23,12 +25,14 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.toShowToc,
     required this.toShowComments,
     required this.toShowImage,
+    required this.toOnlineMode,
     required this.toPop,
   }) : super(key: key);
 
   final bool isHeader;
   final bool reverseScroll;
   final MangaViewerPageData data;
+  final bool onlineMode;
   final bool subscribing;
   final bool inShelf;
   final bool inFavorite;
@@ -39,6 +43,7 @@ class ViewExtraSubPage extends StatefulWidget {
   final void Function() toShowToc;
   final void Function() toShowComments;
   final void Function(String url, String title) toShowImage;
+  final void Function() toOnlineMode;
   final void Function() toPop;
 
   @override
@@ -46,7 +51,7 @@ class ViewExtraSubPage extends StatefulWidget {
 }
 
 class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
-  Widget _buildChapters(BuildContext context) {
+  Widget _buildChapters() {
     if (widget.data.prevChapterId == null || widget.data.nextChapterId == null) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 6),
@@ -97,6 +102,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                     SizedBox(height: 6),
                     Text(
                       subText,
+                      style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -139,7 +145,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
     );
   }
 
-  Widget _buildActions(BuildContext context) {
+  Widget _buildActions() {
     return ActionRowView.five(
       iconBuilder: (action) => Container(
         height: 45,
@@ -171,7 +177,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
         enable: !widget.subscribing,
       ),
       action3: ActionItem(
-        text: '漫画目录',
+        text: '章节列表',
         icon: Icons.menu,
         action: () => widget.toShowToc.call(),
       ),
@@ -259,7 +265,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                     ),
                     SizedBox(height: 18),
                     SizedBox(
-                      height: 42,
+                      height: 45,
                       width: 200,
                       child: ElevatedButton(
                         child: Text('开始阅读'),
@@ -314,7 +320,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          height: 42,
+                          height: 45,
                           width: 150,
                           child: ElevatedButton(
                             child: Text('重新阅读'),
@@ -323,7 +329,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                         ),
                         SizedBox(width: 18),
                         SizedBox(
-                          height: 42,
+                          height: 45,
                           width: 150,
                           child: ElevatedButton(
                             child: Text('返回上一页'),
@@ -336,6 +342,55 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                 ),
               ),
             // ****************************************************************
+            // 离线模式提醒
+            // ****************************************************************
+            if (!widget.onlineMode)
+              Container(
+                color: Colors.white,
+                margin: EdgeInsets.only(top: 18),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    child: IconText(
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12), // hPadding_18 <= 15, vPadding_12 <= 18
+                      icon: Icon(Icons.public_off, size: 26, color: Colors.black54),
+                      space: 18,
+                      text: Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '当前正以离线模式阅读漫画章节',
+                              style: Theme.of(context).textTheme.subtitle1!.copyWith(fontSize: 18),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              '下载数据更新于 ${widget.data.formattedMetadataUpdatedAt}',
+                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    onTap: () => showYesNoAlertDialog(
+                      context: context,
+                      title: Text('离线模式'),
+                      content: Text('当前正以离线模式阅读漫画章节，如果漫画章节已更新，可切换至在线模式更新下载数据。'),
+                      yesText: Text('切换'),
+                      noText: Text('关闭'),
+                      yesOnPressed: (c) {
+                        Navigator.of(c).pop();
+                        widget.toOnlineMode.call();
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            // ****************************************************************
             // 上下章节 / 五个按钮
             // ****************************************************************
             SizedBox(height: 18),
@@ -344,7 +399,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6),
               child: Material(
                 color: Colors.transparent,
-                child: _buildChapters(context), // InkWell vertical padding: 6
+                child: _buildChapters(), // InkWell vertical padding: 6
               ),
             ),
             SizedBox(height: 18),
@@ -353,7 +408,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6 - 8),
               child: Material(
                 color: Colors.transparent,
-                child: _buildActions(context), // InkWell vertical padding: 6, ActionRowView vertical padding: 8
+                child: _buildActions(), // InkWell vertical padding: 6, ActionRowView vertical padding: 8
               ),
             ),
           ],

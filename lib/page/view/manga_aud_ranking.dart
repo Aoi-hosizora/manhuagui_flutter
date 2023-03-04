@@ -11,7 +11,6 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 enum MangaAudRankingType {
   all,
   qingnian,
-  shaonian,
   shaonv,
 }
 
@@ -21,11 +20,12 @@ class MangaAudRankingView extends StatefulWidget {
     Key? key,
     required this.allRankings,
     required this.qingnianRankings,
-    required this.shaonianRankings,
     required this.shaonvRankings,
+    this.allRankingsDateTime,
+    this.qingnianRankingsDateTime,
+    this.shaonvRankingsDateTime,
     this.allRankingsError = '',
     this.qingnianRankingsError = '',
-    this.shaonianRankingsError = '',
     this.shaonvRankingsError = '',
     required this.mangaCount,
     this.onRetryPressed,
@@ -35,11 +35,12 @@ class MangaAudRankingView extends StatefulWidget {
 
   final List<MangaRanking>? allRankings;
   final List<MangaRanking>? qingnianRankings;
-  final List<MangaRanking>? shaonianRankings;
   final List<MangaRanking>? shaonvRankings;
+  final DateTime? allRankingsDateTime;
+  final DateTime? qingnianRankingsDateTime;
+  final DateTime? shaonvRankingsDateTime;
   final String allRankingsError;
   final String qingnianRankingsError;
-  final String shaonianRankingsError;
   final String shaonvRankingsError;
   final int mangaCount;
   final void Function(MangaAudRankingType)? onRetryPressed;
@@ -51,7 +52,7 @@ class MangaAudRankingView extends StatefulWidget {
 }
 
 class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late final _controller = TabController(length: 4, vsync: this)
+  late final _controller = TabController(length: MangaAudRankingType.values.length, vsync: this)
     ..addListener(() {
       if (mounted) setState(() {});
     });
@@ -66,15 +67,13 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
   bool _isPageValid(int index) {
     return (index == 0 && widget.allRankings?.isNotEmpty == true) || //
         (index == 1 && widget.qingnianRankings?.isNotEmpty == true) ||
-        (index == 2 && widget.shaonianRankings?.isNotEmpty == true) ||
-        (index == 3 && widget.shaonvRankings?.isNotEmpty == true);
+        (index == 2 && widget.shaonvRankings?.isNotEmpty == true);
   }
 
   bool _isPageLoading(int index) {
     return (index == 0 && widget.allRankings == null) || //
         (index == 1 && widget.qingnianRankings == null) || //
-        (index == 2 && widget.shaonianRankings == null) || //
-        (index == 3 && widget.shaonvRankings == null);
+        (index == 2 && widget.shaonvRankings == null);
   }
 
   MangaAudRankingType _indexToType(int index) {
@@ -82,9 +81,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
         ? MangaAudRankingType.all
         : index == 1
             ? MangaAudRankingType.qingnian
-            : index == 2
-                ? MangaAudRankingType.shaonian
-                : MangaAudRankingType.shaonv;
+            : MangaAudRankingType.shaonv;
   }
 
   Widget _buildLine(MangaRanking manga) {
@@ -208,15 +205,29 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
     super.build(context);
 
     return HomepageColumnView(
-      title: '漫画受众排行榜 (${formatDatetimeAndDuration(DateTime.now(), FormatPattern.dateNoYear)} 更新)',
+      title: '漫画受众排行榜 (${formatDatetimeAndDuration( //
+          (_currentPageIndex == 0 //
+                  ? widget.allRankingsDateTime //
+                  : _currentPageIndex == 1 //
+                      ? widget.qingnianRankingsDateTime //
+                      : widget.shaonvRankingsDateTime //
+              ) ?? DateTime.now(), FormatPattern.dateNoYear)} 更新)',
       icon: Icons.emoji_events,
       onRefreshPressed: _currentPageIndex == 0
           ? null // 全部漫画则隐藏刷新
           : () => widget.onRetryPressed?.call(_indexToType(_currentPageIndex)),
-      disableRefresh: (_currentPageIndex == 0 && widget.allRankings == null) || //
+      disableRefresh: (_currentPageIndex == 0) || //
           (_currentPageIndex == 1 && widget.qingnianRankings == null) ||
-          (_currentPageIndex == 2 && widget.shaonianRankings == null) ||
-          (_currentPageIndex == 3 && widget.shaonvRankings == null),
+          (_currentPageIndex == 2 && widget.shaonvRankings == null),
+      onHintPressed: _currentPageIndex != 0
+          ? null // 全部漫画则显示提示
+          : () => showYesNoAlertDialog(
+                context: context,
+                title: Text('漫画排行榜提示'),
+                content: Text('提示：漫画柜中少年漫画排行榜与全部漫画排行榜基本一致，主页不单独显示少年漫画。'),
+                yesText: Text('确定'),
+                noText: null,
+              ),
       onMorePressed: widget.onMorePressed,
       headerPadding: EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 8),
       child: Column(
@@ -231,10 +242,9 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
               unselectedLabelStyle: Theme.of(context).textTheme.subtitle1?.copyWith(fontSize: 16),
               tabs: [
                 for (var t in [
-                  Tuple2(Icons.whatshot, '全部'),
-                  Tuple2(Icons.wc, '青年'),
-                  Tuple2(Icons.male, '少年'),
-                  Tuple2(Icons.female, '少女'),
+                  Tuple2(Icons.whatshot, '全部/少年'),
+                  Tuple2(Icons.wc, '青年漫画'),
+                  Tuple2(Icons.female, '少女漫画'),
                 ])
                   Tab(
                     height: 40,
@@ -242,7 +252,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                       mainAxisSize: MainAxisSize.min,
                       icon: Icon(t.item1, size: 22),
                       text: Text(t.item2),
-                      textPadding: EdgeInsets.only(right: 4, bottom: 1),
+                      textPadding: EdgeInsets.only(right: 3, bottom: 1),
                       space: 5,
                     ),
                   ),
@@ -270,7 +280,6 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                   for (var t in [
                     Tuple2(widget.allRankings, widget.allRankingsError),
                     Tuple2(widget.qingnianRankings, widget.qingnianRankingsError),
-                    Tuple2(widget.shaonianRankings, widget.shaonianRankingsError),
                     Tuple2(widget.shaonvRankings, widget.shaonvRankingsError),
                   ])
                     OverflowClipBox(

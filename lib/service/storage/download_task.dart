@@ -305,15 +305,15 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       }
 
       // 4.3. 根据最新获得的漫画数据更新章节下载表
-      var chapterTuple = manga.chapterGroups.findChapterAndGroupName(chapterId);
-      if (chapterTuple != null) {
-        var totalPageCount = chapterTuple.item1.pageCount;
+      var tocChapter = manga.chapterGroups.findChapter(chapterId);
+      if (tocChapter != null) {
+        var totalPageCount = tocChapter.pageCount;
         await DownloadDao.addOrUpdateChapter(
           chapter: DownloadedChapter(
             mangaId: mangaId,
             chapterId: chapterId,
-            chapterTitle: chapterTuple.item1.title,
-            chapterGroup: chapterTuple.item2,
+            chapterTitle: tocChapter.title,
+            chapterGroup: tocChapter.group,
             totalPageCount: totalPageCount /* 已下载完的章节，total == tried == success */,
             triedPageCount: totalPageCount,
             successPageCount: totalPageCount,
@@ -406,13 +406,13 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       );
 
       // 5.4. 更新章节下载表并写入 metadata 文件
-      var chapterGroup = manga.chapterGroups.findChapterAndGroupName(chapterId)?.item2 ?? '';
+      var groupName = manga.chapterGroups.findChapter(chapterId)?.group ?? '';
       await DownloadDao.addOrUpdateChapter(
         chapter: DownloadedChapter(
           mangaId: chapter.mid,
           chapterId: chapter.cid,
           chapterTitle: chapter.title,
-          chapterGroup: chapterGroup,
+          chapterGroup: groupName,
           totalPageCount: chapter.pageCount,
           triedPageCount: 0 /* 从零开始 */,
           successPageCount: 0 /* 从零开始 */,
@@ -422,8 +422,12 @@ class DownloadMangaQueueTask extends QueueTask<void> {
       await writeMetadataFile(
         mangaId: mangaId,
         chapterId: chapterId,
-        manga: manga /* 暂不写入漫画数据 */,
-        chapter: chapter /* 目前仅写入跳转章节数据和所有页面链接 */,
+        metadata: DownloadChapterMetadata(
+          pages: chapter.pages,
+          nextCid: chapter.nextCid,
+          prevCid: chapter.prevCid,
+          updatedAt: DateTime.now(),
+        ), // => 目前仅写入跳转章节数据和所有页面链接
       ); // 忽略错误
 
       // 5.5. 按顺序处理章节每一页
@@ -508,7 +512,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
             mangaId: chapter.mid,
             chapterId: chapter.cid,
             chapterTitle: chapter.title,
-            chapterGroup: chapterGroup,
+            chapterGroup: groupName,
             totalPageCount: chapter.pages.length,
             triedPageCount: successChapterPageCount + failedChapterPageCount /* 真实的尝试下载页数 */,
             successPageCount: successChapterPageCount,
@@ -661,8 +665,8 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
   required String mangaUrl,
   required List<int> chapterIds,
   required bool alsoAddTask,
-  List<MangaChapterGroup>? throughGroupList,
-  List<DownloadedChapter>? throughChapterList,
+  required List<MangaChapterGroup>? throughGroupList,
+  required List<DownloadedChapter>? throughChapterList,
 }) async {
   // 1. 构造漫画下载任务
   if (chapterIds.isEmpty) {
@@ -690,25 +694,25 @@ Future<DownloadMangaQueueTask?> quickBuildDownloadMangaQueueTask({
       getChapterTitleGroupPages: (cid) {
         // => DownloadChoosePage
         if (throughGroupList != null) {
-          var tuple = throughGroupList.findChapterAndGroupName(cid);
-          if (tuple == null) {
+          var tocChapter = throughGroupList.findChapter(cid);
+          if (tocChapter == null) {
             return null; // almost unreachable
           }
-          var chapterTitle = tuple.item1.title;
-          var groupName = tuple.item2;
-          var pageCount = tuple.item1.pageCount;
+          var chapterTitle = tocChapter.title;
+          var groupName = tocChapter.group;
+          var pageCount = tocChapter.pageCount;
           return Tuple3(chapterTitle, groupName, pageCount);
         }
 
         // => DownloadPage / DownloadMangaPage
         if (throughChapterList != null) {
-          var chapter = throughChapterList.where((el) => el.chapterId == cid).firstOrNull;
-          if (chapter == null) {
+          var dlChapter = throughChapterList.where((el) => el.chapterId == cid).firstOrNull;
+          if (dlChapter == null) {
             return null; // almost unreachable
           }
-          var chapterTitle = chapter.chapterTitle;
-          var groupName = chapter.chapterGroup;
-          var pageCount = chapter.totalPageCount;
+          var chapterTitle = dlChapter.chapterTitle;
+          var groupName = dlChapter.chapterGroup;
+          var pageCount = dlChapter.totalPageCount;
           return Tuple3(chapterTitle, groupName, pageCount);
         }
 

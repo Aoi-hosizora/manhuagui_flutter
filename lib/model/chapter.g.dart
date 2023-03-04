@@ -39,6 +39,7 @@ TinyMangaChapter _$TinyMangaChapterFromJson(Map<String, dynamic> json) =>
       url: json['url'] as String,
       pageCount: json['page_count'] as int,
       isNew: json['is_new'] as bool,
+      group: json['group'] as String,
       number: json['number'] as int,
     );
 
@@ -50,6 +51,7 @@ Map<String, dynamic> _$TinyMangaChapterToJson(TinyMangaChapter instance) =>
       'url': instance.url,
       'page_count': instance.pageCount,
       'is_new': instance.isNew,
+      'group': instance.group,
       'number': instance.number,
     };
 

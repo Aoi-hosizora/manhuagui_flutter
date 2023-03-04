@@ -159,7 +159,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
         isEmpty: _genres.isEmpty,
         onRefresh: () => _loadGenres(),
         setting: PlaceholderSetting(
-          useAnimatedSwitcher: widget.defaultGenre == null ? true /* for sub page */ : false /* for sep page */,
+          useAnimatedSwitcher: widget.defaultGenre == null /* only animate when no default genre */,
           customNormalStateBuilder: (c, childBuilder) => _chosen
               ? childBuilder.call(c) // normal state
               : Column(
@@ -182,7 +182,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                           cacheExtent: 999999 /* <<< keep states in ListView */,
                           children: [
                             Padding(
-                              padding: EdgeInsets.only(top: 8, bottom: 9),
+                              padding: EdgeInsets.only(top: 9, bottom: 10),
                               child: Text('・漫画剧情・', textAlign: TextAlign.center, style: Theme.of(context).textTheme.subtitle1),
                             ),
                             CategoryGridView(
@@ -191,7 +191,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                               style: CategoryGridViewStyle.threeColumns,
                             ),
                             Padding(
-                              padding: EdgeInsets.only(top: 15, bottom: 9),
+                              padding: EdgeInsets.only(top: 9, bottom: 10),
                               child: Text('・漫画受众・', textAlign: TextAlign.center, style: Theme.of(context).textTheme.subtitle1),
                             ),
                             CategoryGridView(
@@ -200,7 +200,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                               style: CategoryGridViewStyle.fourColumns,
                             ),
                             Padding(
-                              padding: EdgeInsets.only(top: 15, bottom: 9),
+                              padding: EdgeInsets.only(top: 9, bottom: 10),
                               child: Text('・漫画地区・', textAlign: TextAlign.center, style: Theme.of(context).textTheme.subtitle1),
                             ),
                             CategoryGridView(

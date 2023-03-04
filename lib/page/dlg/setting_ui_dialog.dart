@@ -43,9 +43,13 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _showMangaReadIcon = widget.setting.showMangaReadIcon;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
-  late var _clickToSearch = widget.setting.clickToSearch;
+  late var _showChapterCounter = widget.setting.showChapterCounter;
+  late var _overviewLoadAll = widget.setting.overviewLoadAll;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
   late var _audienceMangaRows = widget.setting.audienceRankingRows;
+  late var _homepageFavorite = widget.setting.homepageFavorite;
+  late var _homepageRefreshBehavior = widget.setting.homepageRefreshBehavior;
+  late var _clickToSearch = widget.setting.clickToSearch;
   late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
 
   UiSetting get _newestSetting => UiSetting(
@@ -55,9 +59,13 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         showMangaReadIcon: _showMangaReadIcon,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
-        clickToSearch: _clickToSearch,
+        showChapterCounter: _showChapterCounter,
+        overviewLoadAll: _overviewLoadAll,
         includeUnreadInHome: _includeUnreadInHome,
         audienceRankingRows: _audienceMangaRows,
+        homepageFavorite: _homepageFavorite,
+        homepageRefreshBehavior: _homepageRefreshBehavior,
+        clickToSearch: _clickToSearch,
         alwaysOpenNewListPage: _alwaysOpenNewListPage,
       );
 
@@ -69,9 +77,13 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _showMangaReadIcon = setting.showMangaReadIcon;
     _regularGroupRows = setting.regularGroupRows;
     _otherGroupRows = setting.otherGroupRows;
-    _clickToSearch = setting.clickToSearch;
+    _showChapterCounter = setting.showChapterCounter;
+    _overviewLoadAll = setting.overviewLoadAll;
     _includeUnreadInHome = setting.includeUnreadInHome;
     _audienceMangaRows = setting.audienceRankingRows;
+    _homepageFavorite = setting.homepageFavorite;
+    _homepageRefreshBehavior = setting.homepageRefreshBehavior;
+    _clickToSearch = setting.clickToSearch;
     _alwaysOpenNewListPage = setting.alwaysOpenNewListPage;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
@@ -81,6 +93,9 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   Widget build(BuildContext context) {
     return SettingDialogView(
       children: [
+        SettingGroupTitleView(
+          title: '列表显示设置',
+        ),
         SettingComboBoxView<MangaOrder>(
           title: '漫画列表默认排序方式',
           value: _defaultMangaOrder,
@@ -106,7 +121,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         SettingSwitcherView(
           title: '列表内显示右下角图标',
           hint: '该选项影响漫画列表与漫画作者列表，其中：\n\n'
-              '1. 漫画列表右下角图标含义分别为："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"；\n'
+              '1. 漫画列表右下角图标含义为："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"；\n'
               '2. 漫画作者列表右下角图标含义为："在本地收藏中"。\n\n'
               '提示：上述信息都来源于本地记录或同步的数据，显示这些图标并不会增加网络请求次数。',
           value: _enableCornerIcons,
@@ -126,8 +141,11 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingGroupTitleView(
+          title: '漫画显示设置',
+        ),
         SettingComboBoxView<int>(
-          title: '单话分组章节显示行数',
+          title: '单话章节分组显示行数',
           width: 75,
           value: _regularGroupRows.clamp(1, 8),
           values: const [1, 2, 3, 4, 5, 6, 7, 8],
@@ -139,7 +157,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingComboBoxView<int>(
-          title: '其他分组章节显示行数',
+          title: '其他章节分组显示行数',
           width: 75,
           value: _otherGroupRows.clamp(1, 5),
           values: const [1, 2, 3, 4, 5],
@@ -151,16 +169,32 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '点击搜索历史执行搜索',
-          value: _clickToSearch,
+          title: '漫画页章节列表显示页数',
+          value: _showChapterCounter,
           onChanged: (b) {
-            _clickToSearch = b;
+            _showChapterCounter = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
         SettingSwitcherView(
-          title: '首页历史显示未阅读漫画',
+          title: '章节一览页加载所有图片',
+          hint: !_overviewLoadAll //
+              ? '章节页面一览页将仅加载本地已缓存或已下载的图片，不会额外访问网络。'
+              : ('章节页面一览页将加载所有页面图片，本地未缓存或未下载的图片会通过网络在线加载。\n\n'
+                  '提示：如果加载所有图片，可能会让本应用在短时间内发出大量请求，有较低概率会导致当前IP被漫画柜封禁。'),
+          value: _overviewLoadAll,
+          onChanged: (b) {
+            _overviewLoadAll = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingGroupTitleView(
+          title: '首页显示设置',
+        ),
+        SettingSwitcherView(
+          title: '首页显示未阅读漫画历史',
           value: _includeUnreadInHome,
           onChanged: (b) {
             _includeUnreadInHome = b;
@@ -180,9 +214,45 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingComboBoxView<HomepageFavorite>(
+          title: '首页收藏列表显示内容',
+          width: 175,
+          value: _homepageFavorite,
+          values: HomepageFavorite.values,
+          textBuilder: (s) => s.toOptionTitle(),
+          onChanged: (s) {
+            _homepageFavorite = s;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingComboBoxView<HomepageRefreshBehavior>(
+          title: '首页刷新方式',
+          width: 175,
+          value: _homepageRefreshBehavior,
+          values: HomepageRefreshBehavior.values,
+          textBuilder: (s) => s.toOptionTitle(),
+          onChanged: (s) {
+            _homepageRefreshBehavior = s;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingGroupTitleView(
+          title: '其他界面显示/交互设置',
+        ),
         SettingSwitcherView(
-          title: '始终在新页面显示列表',
-          hint: '该选项默认关闭，启用该选项后，当在 "推荐页面"、"用户页面"、"左侧菜单" 等地方点击查看漫画列表时，始终打开新页面显示。',
+          title: '点击搜索历史立即搜索',
+          value: _clickToSearch,
+          onChanged: (b) {
+            _clickToSearch = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '始终在新页面打开列表',
+          hint: '该选项默认关闭，启用该选项后，当在 "推荐页"、"用户页"、"左侧菜单" 等地方点击查看各种漫画列表时，始终打开新页面显示。',
           value: _alwaysOpenNewListPage,
           onChanged: (b) {
             _alwaysOpenNewListPage = b;

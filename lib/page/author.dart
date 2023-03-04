@@ -409,6 +409,7 @@ class _AuthorPageState extends State<AuthorPage> {
                       text: '相关作者',
                       icon: Icons.people,
                       action: () => _showRelatedAuthorsPopupMenu(),
+                      longPress: () => _showRelatedAuthorsPopupMenu(),
                     ),
                     action3: ActionItem(
                       text: '作者详情',

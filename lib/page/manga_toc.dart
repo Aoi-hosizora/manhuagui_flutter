@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -10,7 +11,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 
-/// 漫画章节目录页，展示所给 [MangaChapterGroup] 信息
+/// 漫画章节列表页，展示所给 [MangaChapterGroup] 信息
 class MangaTocPage extends StatefulWidget {
   const MangaTocPage({
     Key? key,
@@ -53,6 +54,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
   var _loading = true; // initialize to true, fake loading flag
   MangaHistory? _history;
   DownloadedManga? _downloadEntity;
+  var _columns = 4; // default to four columns
 
   Future<void> _loadData() async {
     _loading = true;
@@ -85,6 +87,27 @@ class _MangaTocPageState extends State<MangaTocPage> {
       appBar: AppBar(
         title: Text(widget.mangaTitle),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
+        actions: [
+          PopupMenuButton(
+            child: Builder(
+              builder: (c) => AppBarActionButton(
+                icon: Icon(Icons.more_vert),
+                tooltip: '更多选项',
+                onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+              ),
+            ),
+            itemBuilder: (_) => [
+              for (var column in [2, 3, 4])
+                PopupMenuItem(
+                  child: IconTextMenuItem(
+                    _columns == column ? Icons.radio_button_on : Icons.radio_button_off,
+                    '显示$column列',
+                  ),
+                  onTap: () => mountedSetState(() => _columns = column),
+                ),
+            ],
+          ),
+        ],
       ),
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
@@ -108,6 +131,8 @@ class _MangaTocPageState extends State<MangaTocPage> {
                 MangaTocView(
                   groups: widget.groups,
                   full: true,
+                  showPageCount: true,
+                  columns: _columns,
                   highlightedChapters: [_history?.chapterId ?? 0],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,

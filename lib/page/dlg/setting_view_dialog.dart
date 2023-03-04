@@ -45,7 +45,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _keepScreenOn = widget.setting.keepScreenOn;
   late var _fullscreen = widget.setting.fullscreen;
   late var _preloadCount = widget.setting.preloadCount;
-  late var _overviewLoadAll = widget.setting.overviewLoadAll;
 
   ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
@@ -57,7 +56,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         keepScreenOn: _keepScreenOn,
         fullscreen: _fullscreen,
         preloadCount: _preloadCount,
-        overviewLoadAll: _overviewLoadAll,
       );
 
   void _setToDefault() {
@@ -71,7 +69,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _keepScreenOn = setting.keepScreenOn;
     _fullscreen = setting.fullscreen;
     _preloadCount = setting.preloadCount;
-    _overviewLoadAll = setting.overviewLoadAll;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -164,16 +161,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           textBuilder: (s) => s == 0 ? '禁用预加载' : '前后$s页',
           onChanged: (c) {
             _preloadCount = c.clamp(0, 6);
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          title: '一览加载所有图片',
-          hint: '提示：如果在章节页面一览页加载所有页面图片，可能会出现在短时间内发出大量请求的情况，有一定概率会导致当前IP被漫画柜封禁。',
-          value: _overviewLoadAll,
-          onChanged: (b) {
-            _overviewLoadAll = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

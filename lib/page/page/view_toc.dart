@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 
-/// 漫画章节阅读页-章节目录
+/// 漫画章节阅读页-章节列表
 class ViewTocSubPage extends StatefulWidget {
   const ViewTocSubPage({
     Key? key,
@@ -50,6 +51,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
 
   var _loading = true; // initialize to true, fake loading flag
   DownloadedManga? _downloadEntity;
+  var _columns = 4; // default to four columns
 
   Future<void> _loadData() async {
     _loading = true;
@@ -77,6 +79,27 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
       appBar: AppBar(
         title: Text(widget.mangaTitle),
         leading: AppBarActionButton.leading(context: context),
+        actions: [
+          PopupMenuButton(
+            child: Builder(
+              builder: (c) => AppBarActionButton(
+                icon: Icon(Icons.more_vert),
+                tooltip: '更多选项',
+                onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+              ),
+            ),
+            itemBuilder: (_) => [
+              for (var column in [2, 3, 4])
+                PopupMenuItem(
+                  child: IconTextMenuItem(
+                    _columns == column ? Icons.radio_button_on : Icons.radio_button_off,
+                    '显示$column列',
+                  ),
+                  onTap: () => mountedSetState(() => _columns = column),
+                ),
+            ],
+          ),
+        ],
       ),
       body: PlaceholderText(
         state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
@@ -96,6 +119,8 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
                 MangaTocView(
                   groups: widget.groups,
                   full: true,
+                  showPageCount: true,
+                  columns: _columns,
                   highlightedChapters: [widget.highlightedChapter],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,

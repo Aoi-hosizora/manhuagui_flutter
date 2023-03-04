@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 用于主页推荐页面的分栏，在 [RecommendSubPage] / [MangaGroupView] / [MangaCollectionView] / [MangaRankingListView] / [MangaAudRankingPage] 使用
+/// 用于首页推荐页面的分栏，在 [RecommendSubPage] / [MangaGroupView] / [MangaCollectionView] / [MangaRankingListView] / [MangaAudRankingPage] 使用
 class HomepageColumnView extends StatelessWidget {
   const HomepageColumnView({
     Key? key,
@@ -10,6 +10,7 @@ class HomepageColumnView extends StatelessWidget {
     required this.child,
     this.onRefreshPressed,
     this.disableRefresh = false,
+    this.onHintPressed,
     this.onMorePressed,
     this.rightText,
     this.padding = const EdgeInsets.only(bottom: 12),
@@ -21,6 +22,7 @@ class HomepageColumnView extends StatelessWidget {
   final Widget child;
   final void Function()? onRefreshPressed;
   final bool disableRefresh;
+  final void Function()? onHintPressed;
   final void Function()? onMorePressed;
   final String? rightText; // ignored when onMorePressed is not null
   final EdgeInsets padding;
@@ -68,6 +70,17 @@ class HomepageColumnView extends StatelessWidget {
                               child: Icon(Icons.refresh, size: 23, color: !disableRefresh ? Colors.orange : Colors.orange[100]),
                             ),
                             onTap: disableRefresh ? null : onRefreshPressed,
+                          ),
+                        ),
+                      if (onHintPressed != null)
+                        Padding(
+                          padding: EdgeInsets.only(left: 2, top: headerPadding.top - 3, bottom: headerPadding.bottom - 3), // <= headerPadding vertical
+                          child: InkWell(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                              child: Icon(Icons.help_outline, size: 23, color: Colors.orange),
+                            ),
+                            onTap: onHintPressed,
                           ),
                         ),
                     ],

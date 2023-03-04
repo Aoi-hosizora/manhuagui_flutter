@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 
-/// 与设置相关的 [SettingDialogView] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [OtherSettingSubPage] 使用
+/// 与设置相关的 [SettingDialogView] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [UiSettingSubPage] / [OtherSettingSubPage] 使用
 class SettingDialogView extends StatelessWidget {
   const SettingDialogView({
     Key? key,
@@ -14,8 +14,7 @@ class SettingDialogView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width - //
-          (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
+      width: getDialogContentMaxWidth(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -172,4 +171,30 @@ class SettingButtonView extends _SettingView {
           onPressed: enable ? onPressed : null,
         ),
       );
+}
+
+class SettingGroupTitleView extends StatelessWidget {
+  const SettingGroupTitleView({
+    Key? key,
+    required this.title,
+    this.padding = const EdgeInsets.symmetric(vertical: 4),
+  }) : super(key: key);
+
+  final String title;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: padding,
+      child: Center(
+        child: Text(
+          '・$title・',
+          style: Theme.of(context).textTheme.bodyText1,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
 }

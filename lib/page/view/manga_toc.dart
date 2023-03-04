@@ -4,14 +4,16 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 
-/// 漫画章节目录（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadChoosePage] 使用
+/// 漫画章节列表（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadChoosePage] 使用
 class MangaTocView extends StatefulWidget {
   const MangaTocView({
     Key? key,
     required this.groups,
     required this.full,
+    this.showPageCount = false,
     this.firstGroupRowsIfNotFull = 3,
     this.otherGroupsRowsIfNotFull = 1,
+    this.columns = 4,
     this.gridPadding,
     this.highlightColor,
     this.highlightedChapters = const [],
@@ -25,8 +27,10 @@ class MangaTocView extends StatefulWidget {
 
   final List<MangaChapterGroup> groups;
   final bool full;
+  final bool showPageCount;
   final int firstGroupRowsIfNotFull;
   final int otherGroupsRowsIfNotFull;
+  final int columns;
   final EdgeInsets? gridPadding;
   final Color? highlightColor;
   final List<int> highlightedChapters;
@@ -60,7 +64,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       );
     }
 
-    // padding: EdgeInsets.fromLTRB(12, 6, 4, 6)
+    // padding: EdgeInsets.fromLTRB(12, 6, 6, 6)
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -72,18 +76,37 @@ class _MangaTocViewState extends State<MangaTocView> {
           color: Colors.transparent,
           child: Row(
             children: [
+              if (widget.onMoreChaptersPressed != null) ...[
+                InkWell(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      '查看全部',
+                      style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Theme.of(context).primaryColor),
+                    ),
+                  ),
+                  onTap: widget.onMoreChaptersPressed!,
+                  onLongPress: widget.onMoreChaptersLongPressed,
+                ),
+                Container(
+                  margin: EdgeInsets.only(left: 4, right: 5),
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
+                  height: TextSpan(text: '　', style: Theme.of(context).textTheme.subtitle1).layoutSize(context).height,
+                ),
+              ],
               button(
                 icon: Icons.keyboard_arrow_up,
                 text: '正序',
                 selected: !_invertOrder,
-                padding: EdgeInsets.fromLTRB(5, 4, 10, 4),
+                padding: EdgeInsets.fromLTRB(5, 4, 8, 4),
                 onPressed: () => mountedSetState(() => _invertOrder = false),
               ),
               button(
                 icon: Icons.keyboard_arrow_down,
                 text: '逆序',
                 selected: _invertOrder,
-                padding: EdgeInsets.fromLTRB(5, 4, 10, 4),
+                padding: EdgeInsets.fromLTRB(5, 4, 8, 4),
                 onPressed: () => mountedSetState(() => _invertOrder = true),
               ),
             ],
@@ -97,12 +120,14 @@ class _MangaTocViewState extends State<MangaTocView> {
     return ChapterGridView(
       chapters: chapters,
       padding: widget.gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
+      showPageCount: widget.showPageCount,
       invertOrder: _invertOrder,
       maxLines: widget.full
           ? -1 // show all chapters
           : idx == 0
               ? widget.firstGroupRowsIfNotFull // first line => show the first three lines in default
               : widget.otherGroupsRowsIfNotFull /* following lines => show the first line in default */,
+      columns: widget.columns,
       highlightColor: widget.highlightColor,
       highlightedChapters: widget.highlightedChapters,
       extrasInStack: (chapter) {
@@ -154,7 +179,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       children: [
         Container(
           color: Colors.white,
-          padding: EdgeInsets.fromLTRB(12, 6, 4, 6),
+          padding: EdgeInsets.fromLTRB(12, 6, 6, 6),
           child: _buildHeader(),
         ),
         Container(

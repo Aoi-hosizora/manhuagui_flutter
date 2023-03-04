@@ -454,7 +454,40 @@ class DownloadedChapter {
       url: 'https://www.manhuagui.com/comic/$mangaId/$chapterId.html',
       pageCount: totalPageCount,
       isNew: false,
+      group: chapterGroup,
       number: chapterId, // <<< use chapterId as number
     );
+  }
+}
+
+class DownloadChapterMetadata {
+  const DownloadChapterMetadata({required this.pages, required this.nextCid, required this.prevCid, required this.updatedAt});
+
+  // version: 1
+  final List<String> pages;
+  final int? nextCid;
+  final int? prevCid;
+  final DateTime? updatedAt;
+
+  DownloadChapterMetadata copyWith({
+    List<String>? pages,
+    int? nextCid,
+    int? prevCid,
+    DateTime? updatedAt,
+  }) {
+    return DownloadChapterMetadata(
+      pages: pages ?? this.pages,
+      nextCid: nextCid ?? this.nextCid,
+      prevCid: prevCid ?? this.prevCid,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  bool equals(DownloadChapterMetadata o) {
+    return o.nextCid == nextCid && //
+        o.prevCid == prevCid &&
+        // o.updatedAt == updatedAt &&
+        o.pages.length == pages.length &&
+        o.pages.join(',,,') == pages.join(',,,');
   }
 }

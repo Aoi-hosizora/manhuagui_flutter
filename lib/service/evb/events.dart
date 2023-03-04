@@ -65,11 +65,12 @@ class FavoriteUpdatedEvent {
 }
 
 class DownloadUpdatedEvent {
-  const DownloadUpdatedEvent({required this.mangaId, this.fromDownloadPage = false, this.fromMangaPage = false, this.fromDownloadMangaPage = false});
+  const DownloadUpdatedEvent({required this.mangaId, this.fromDownloadPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromDownloadMangaPage = false});
 
   final int mangaId;
   final bool fromDownloadPage;
   final bool fromMangaPage;
+  final bool fromMangaViewerPage;
   final bool fromDownloadMangaPage;
 }
 

@@ -26,6 +26,7 @@ import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -58,11 +59,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _loadData(); // 获取首页漫画分组数据
-      Future.delayed(Duration(milliseconds: 2000)).then((_) => _loadCollections(MangaCollectionType.values)); // 额外等待，获取各种漫画集合数据
-      Future.delayed(Duration(milliseconds: 5000)).then((_) => _loadRankings(MangaAudRankingType.values)); // 额外等待，获取一些受众排行榜数据
-    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadDataWhenInit());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
         if (mounted) setState(() {});
@@ -82,9 +79,22 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
   var _loading = true; // initialize to true
   HomepageMangaGroupList? _data;
+  DateTime? _dataDateTime;
   var _error = '';
 
-  Future<void> _loadData() async {
+  void _loadDataWhenInit() {
+    _loadData(considerOtherData: false); // 获取首页漫画分组数据 (共两次请求)
+    Future.microtask(() async {
+      await Future.delayed(Duration(milliseconds: 2500)); // 额外等待，获取各种漫画集合数据 (共两次请求)
+      await _loadCollections(MangaCollectionType.values, onlyIfEmpty: false, needDelay: true);
+    });
+    Future.microtask(() async {
+      await Future.delayed(Duration(milliseconds: 5000)); // 额外等待，获取一些受众排行榜数据 (共两次请求)
+      await _loadRankings(MangaAudRankingType.values, onlyIfEmpty: false, needDelay: true);
+    });
+  }
+
+  Future<void> _loadData({bool considerOtherData = true}) async {
     _loading = true;
     _error = '';
     if (mounted) setState(() {});
@@ -94,9 +104,19 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       AuthManager.instance.check();
     }
 
-    // 针对除漫画分组以外的数据，在刷新时仅获取空数据
-    _loadCollections(MangaCollectionType.values, onlyIfEmpty: true);
-    _loadRankings(MangaAudRankingType.values, onlyIfEmpty: true);
+    // 针对除漫画分组以外的数据 (下拉刷新)
+    var refreshBehavior = AppSetting.instance.ui.homepageRefreshBehavior;
+    if (considerOtherData && refreshBehavior != HomepageRefreshBehavior.onlyRecommend) {
+      var onlyIfEmpty = refreshBehavior == HomepageRefreshBehavior.includeListIfEmpty;
+      Future.microtask(() async {
+        await Future.delayed(Duration(milliseconds: 1500));
+        await _loadCollections(MangaCollectionType.values, onlyIfEmpty: onlyIfEmpty, needDelay: true);
+      });
+      Future.microtask(() async {
+        await Future.delayed(Duration(milliseconds: 3000));
+        await _loadRankings(MangaAudRankingType.values, onlyIfEmpty: onlyIfEmpty, needDelay: true);
+      });
+    }
 
     // 同步获取漫画分组数据
     final client = RestClient(DioManager.instance.dio);
@@ -107,6 +127,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
+      _dataDateTime = DateTime.now();
       globalCategoryList ??= CategoryList(genres: result.data.genres, zones: result.data.zones, ages: result.data.ages); // 更新全局的漫画类别
     } catch (e, s) {
       _error = wrapError(e, s).text;
@@ -127,7 +148,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   var _updatesError = '';
   var _shelvesError = '';
 
-  Future<void> _loadCollections(List<MangaCollectionType> types, {bool onlyIfEmpty = false} /* default to request */) async {
+  Future<void> _loadCollections(List<MangaCollectionType> types, {bool onlyIfEmpty = false, bool needDelay = false}) async {
     final client = RestClient(DioManager.instance.dio);
 
     if (types.contains(MangaCollectionType.rankings)) {
@@ -159,8 +180,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         _histories = null; // loading
         if (mounted) setState(() {});
         var includeUnread = AppSetting.instance.ui.includeUnreadInHome;
-        var result = await HistoryDao.getHistories(username: AuthManager.instance.username, includeUnread: includeUnread, page: 1, limit: 50); // #=50
-        await Future.delayed(kFakeRefreshDuration);
+        var result = await HistoryDao.getHistories(username: AuthManager.instance.username, includeUnread: includeUnread, page: 1, limit: 30); // #=30
+        await Future.delayed(kFakeRefreshDuration * 1.5);
         _histories = result ?? [];
         if (mounted) setState(() {});
       });
@@ -176,6 +197,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         if (mounted) setState(() {});
         if (AuthManager.instance.logined) {
           try {
+            if (needDelay) {
+              await Future.delayed(Duration(milliseconds: 1000)); // 额外等待，我的书架
+            }
             var result = await client.getShelfMangas(token: AuthManager.instance.token, page: 1); // #=20
             _shelves = result.data.data;
           } catch (e, s) {
@@ -196,8 +220,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       Future.microtask(() async {
         _favorites = null; // loading
         if (mounted) setState(() {});
-        var result = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: '', page: 1, limit: 20); // #=20
-        await Future.delayed(kFakeRefreshDuration);
+        var condition = AppSetting.instance.ui.homepageFavorite.determineQueryCondition();
+        var result = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: condition.item1, sortMethod: condition.item2, page: 1, limit: 20); // #=20
+        await Future.delayed(kFakeRefreshDuration * 1.5);
         _favorites = result ?? [];
         if (mounted) setState(() {});
       });
@@ -208,7 +233,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         _downloads = null; // loading
         if (mounted) setState(() {});
         var result = await DownloadDao.getMangas();
-        await Future.delayed(kFakeRefreshDuration);
+        await Future.delayed(kFakeRefreshDuration * 1.5);
         _downloads = result?.sublist(0, result.length.clamp(0, 20)) ?? []; // #=20
         if (mounted) setState(() {});
       });
@@ -216,13 +241,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   }
 
   List<MangaRanking>? _qingnianRankings;
-  List<MangaRanking>? _shaonianRankings;
   List<MangaRanking>? _shaonvRankings;
+  DateTime? _qingnianRankingDateTime;
+  DateTime? _shaonvRankingDateTime;
   var _qingnianRankingsError = '';
-  var _shaonianRankingsError = '';
   var _shaonvRankingsError = '';
 
-  Future<void> _loadRankings(List<MangaAudRankingType> types, {bool onlyIfEmpty = false} /* default to request */) async {
+  Future<void> _loadRankings(List<MangaAudRankingType> types, {bool onlyIfEmpty = false, bool needDelay = false}) async {
     final client = RestClient(DioManager.instance.dio);
 
     if (types.contains(MangaAudRankingType.all)) {
@@ -240,30 +265,10 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         try {
           var result = await client.getDayRanking(type: 'qingnian'); // #=50
           _qingnianRankings = result.data.data;
+          _qingnianRankingDateTime = DateTime.now();
         } catch (e, s) {
           _qingnianRankings = []; // loaded but error
           _qingnianRankingsError = wrapError(e, s).text;
-        } finally {
-          if (mounted) setState(() {});
-        }
-      });
-    }
-
-    if (types.contains(MangaAudRankingType.shaonian)) {
-      Future.microtask(() async {
-        if (onlyIfEmpty && (_shaonianRankings == null || _shaonianRankings!.isNotEmpty)) {
-          return; // loading or not empty => ignore
-        }
-        _shaonianRankings = null; // loading
-        _shaonianRankingsError = '';
-        if (mounted) setState(() {});
-        try {
-          await Future.delayed(Duration(milliseconds: 1500)); // 额外等待，少年漫画日排行榜基本与全部漫画一致
-          var result = await client.getDayRanking(type: 'shaonian'); // #=50
-          _shaonianRankings = result.data.data;
-        } catch (e, s) {
-          _shaonianRankings = []; // loaded but error
-          _shaonianRankingsError = wrapError(e, s).text;
         } finally {
           if (mounted) setState(() {});
         }
@@ -279,9 +284,12 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         _shaonvRankingsError = '';
         if (mounted) setState(() {});
         try {
-          await Future.delayed(Duration(milliseconds: 1500)); // 额外等待
+          if (needDelay) {
+            await Future.delayed(Duration(milliseconds: 1000)); // 额外等待，我的书架
+          }
           var result = await client.getDayRanking(type: 'shaonv'); // #=50
           _shaonvRankings = result.data.data;
+          _shaonvRankingDateTime = DateTime.now();
         } catch (e, s) {
           _shaonvRankings = []; // loaded but error
           _shaonvRankingsError = wrapError(e, s).text;
@@ -316,6 +324,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       child: MangaCollectionView(
         type: type,
         ranking: type == MangaCollectionType.rankings ? _data!.daily : null,
+        rankingDateTime: _dataDateTime,
         updates: type == MangaCollectionType.recents ? _updates : null,
         histories: type == MangaCollectionType.histories ? _histories : null,
         shelves: type == MangaCollectionType.shelves ? _shelves : null,
@@ -331,7 +340,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             (type == MangaCollectionType.downloads && _downloads == null),
         onRefreshPressed: type == MangaCollectionType.rankings
             ? null // don't show refresh button for ranking collection
-            : () => _loadCollections([type]),
+            : () => _loadCollections([type], onlyIfEmpty: false, needDelay: false),
         onMorePressed: type == MangaCollectionType.rankings
             ? null // show right text rather than more button for ranking collection
             : () {
@@ -351,14 +360,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       child: MangaAudRankingView(
         allRankings: _data!.daily,
         qingnianRankings: _qingnianRankings,
-        shaonianRankings: _shaonianRankings,
         shaonvRankings: _shaonvRankings,
+        allRankingsDateTime: _dataDateTime,
+        qingnianRankingsDateTime: _qingnianRankingDateTime,
+        shaonvRankingsDateTime: _shaonvRankingDateTime,
         allRankingsError: '',
         qingnianRankingsError: _qingnianRankingsError,
-        shaonianRankingsError: _shaonianRankingsError,
         shaonvRankingsError: _shaonvRankingsError,
         mangaCount: AppSetting.instance.ui.audienceRankingRows,
-        onRetryPressed: (t) => _loadRankings([t]),
+        onRetryPressed: (t) => _loadRankings([t], onlyIfEmpty: false, needDelay: false),
         onFullPressed: (t) => Navigator.of(context).push(
           CustomPageRoute(
             context: context,
@@ -368,9 +378,12 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   ? _data!.daily
                   : t == MangaAudRankingType.qingnian
                       ? _qingnianRankings!
-                      : t == MangaAudRankingType.shaonian
-                          ? _shaonianRankings!
-                          : _shaonvRankings!,
+                      : _shaonvRankings!,
+              rankingDatetime: t == MangaAudRankingType.all
+                  ? _dataDateTime
+                  : t == MangaAudRankingType.qingnian
+                      ? _qingnianRankingDateTime
+                      : _shaonvRankingDateTime,
             ),
           ),
         ),
@@ -406,13 +419,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     return Scaffold(
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
-        onRefresh: () => _loadData(),
+        onRefresh: () => _loadData(considerOtherData: true),
         child: PlaceholderText.from(
           isLoading: _loading,
           errorText: _error,
           isEmpty: _data == null,
           setting: PlaceholderSetting().copyWithChinese(),
-          onRefresh: () => _loadData(),
+          onRefresh: () => _loadData(considerOtherData: true),
           onChanged: (_, __) => _fabController.hide(),
           childBuilder: (c) => ExtendedScrollbar(
             controller: _controller,

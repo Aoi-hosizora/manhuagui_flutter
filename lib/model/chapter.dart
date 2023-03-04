@@ -32,9 +32,10 @@ class TinyMangaChapter {
   final String url;
   final int pageCount;
   final bool isNew;
+  final String group;
   final int number;
 
-  const TinyMangaChapter({required this.cid, required this.title, required this.mid, required this.url, required this.pageCount, required this.isNew, required this.number});
+  const TinyMangaChapter({required this.cid, required this.title, required this.mid, required this.url, required this.pageCount, required this.isNew, required this.group, required this.number});
 
   factory TinyMangaChapter.fromJson(Map<String, dynamic> json) => _$TinyMangaChapterFromJson(json);
 
@@ -91,25 +92,36 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
     return null;
   }
 
-  Tuple2<TinyMangaChapter, MangaChapterGroup>? findChapterAndGroup(int cid) {
+  List<TinyMangaChapter> get allChapters {
+    var out = <TinyMangaChapter>[];
     for (var group in this) {
-      for (var chapter in group.chapters) {
-        if (chapter.cid == cid) {
-          return Tuple2(chapter, group);
-        }
-      }
+      out.addAll(group.chapters);
     }
-    return null;
+    out.sort((a, b) => a.cid.compareTo(b.cid)); // sort through comparing with cid rather than number
+    return out;
   }
 
-  Tuple2<TinyMangaChapter, String>? findChapterAndGroupName(int cid) {
-    for (var group in this) {
-      for (var chapter in group.chapters) {
-        if (chapter.cid == cid) {
-          return Tuple2(chapter, group.title);
-        }
-      }
+  TinyMangaChapter? findNextChapter(int cid) {
+    var chapter = findChapter(cid);
+    if (chapter == null) {
+      return null;
     }
+
+    // 从**所有分组**中找下一个章节
+    var nextChapters = allChapters.where((el) => el.cid > cid).toList()..sort((a, b) => a.cid.compareTo(b.cid)); // cid 从小到大排序
+    for (var nextChapter in nextChapters) {
+      if (nextChapter.group != chapter.group) {
+        return nextChapter; // 找到的章节不属于同一分组
+      }
+      if (nextChapter.number > chapter.number) {
+        return nextChapter; // 找到的章节属于同一分组，且分组内顺序大于当前顺序
+      }
+
+      // 找到的章节属于同一分组，且分组内顺序小于等于当前顺序 (很少见，当章节列表内的章节顺序被调整时可能会出现)
+      continue; // 继续检查
+    }
+
+    // 未找到合适的章节作为下一个章节 (即 cid 最大或 number 最大)
     return null;
   }
 }

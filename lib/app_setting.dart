@@ -2,6 +2,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
@@ -76,7 +77,6 @@ class ViewSetting {
     required this.keepScreenOn,
     required this.fullscreen,
     required this.preloadCount,
-    required this.overviewLoadAll,
   });
 
   final ViewDirection viewDirection; // 阅读方向
@@ -88,7 +88,6 @@ class ViewSetting {
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
   final int preloadCount; // 预加载页数
-  final bool overviewLoadAll; // 一览加载所有图片
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -100,7 +99,6 @@ class ViewSetting {
     keepScreenOn: true,
     fullscreen: false,
     preloadCount: 3,
-    overviewLoadAll: false,
   );
 
   ViewSetting copyWith({
@@ -113,7 +111,6 @@ class ViewSetting {
     bool? keepScreenOn,
     bool? fullscreen,
     int? preloadCount,
-    bool? overviewLoadAll,
   }) {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
@@ -125,7 +122,6 @@ class ViewSetting {
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
-      overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
     );
   }
 }
@@ -220,9 +216,13 @@ class UiSetting {
     required this.showMangaReadIcon,
     required this.regularGroupRows,
     required this.otherGroupRows,
-    required this.clickToSearch,
+    required this.showChapterCounter,
+    required this.overviewLoadAll,
     required this.includeUnreadInHome,
     required this.audienceRankingRows,
+    required this.homepageFavorite,
+    required this.homepageRefreshBehavior,
+    required this.clickToSearch,
     required this.alwaysOpenNewListPage,
   });
 
@@ -230,12 +230,16 @@ class UiSetting {
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
-  final int regularGroupRows; // 单话分组章节显示行数
-  final int otherGroupRows; // 其他分组章节显示行数
-  final bool clickToSearch; // 点击搜索历史执行搜索
-  final bool includeUnreadInHome; // 首页历史显示未阅读漫画
+  final int regularGroupRows; // 单话章节分组显示行数
+  final int otherGroupRows; // 其他章节分组显示行数
+  final bool showChapterCounter; // 漫画页章节列表显示页数
+  final bool overviewLoadAll; // 章节一览页加载所有图片
+  final bool includeUnreadInHome; // 首页显示未阅读漫画历史
   final int audienceRankingRows; // 首页受众排行榜显示行数
-  final bool alwaysOpenNewListPage; // 始终在新页面显示列表
+  final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
+  final HomepageRefreshBehavior homepageRefreshBehavior; // 首页刷新方式
+  final bool clickToSearch; // 点击搜索历史立即搜索
+  final bool alwaysOpenNewListPage; // 始终在新页面打开列表
 
   static const defaultSetting = UiSetting(
     defaultMangaOrder: MangaOrder.byPopular,
@@ -244,9 +248,13 @@ class UiSetting {
     showMangaReadIcon: true,
     regularGroupRows: 3,
     otherGroupRows: 1,
-    clickToSearch: false,
+    showChapterCounter: false,
+    overviewLoadAll: false,
     includeUnreadInHome: true,
     audienceRankingRows: 5,
+    homepageFavorite: HomepageFavorite.defaultAscOrder,
+    homepageRefreshBehavior: HomepageRefreshBehavior.includeListIfEmpty,
+    clickToSearch: false,
     alwaysOpenNewListPage: false,
   );
 
@@ -257,9 +265,13 @@ class UiSetting {
     bool? showMangaReadIcon,
     int? regularGroupRows,
     int? otherGroupRows,
-    bool? clickToSearch,
+    bool? showChapterCounter,
+    bool? overviewLoadAll,
     bool? includeUnreadInHome,
     int? audienceRankingRows,
+    HomepageFavorite? homepageFavorite,
+    HomepageRefreshBehavior? homepageRefreshBehavior,
+    bool? clickToSearch,
     bool? alwaysOpenNewListPage,
   }) {
     return UiSetting(
@@ -269,11 +281,137 @@ class UiSetting {
       showMangaReadIcon: showMangaReadIcon ?? this.showMangaReadIcon,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
-      clickToSearch: clickToSearch ?? this.clickToSearch,
+      showChapterCounter: showChapterCounter ?? this.showChapterCounter,
+      overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
+      homepageFavorite: homepageFavorite ?? this.homepageFavorite,
+      homepageRefreshBehavior: homepageRefreshBehavior ?? this.homepageRefreshBehavior,
+      clickToSearch: clickToSearch ?? this.clickToSearch,
       alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
     );
+  }
+}
+
+enum HomepageFavorite {
+  defaultAscOrder,
+  defaultDescOrder,
+  defaultAscTime,
+  defaultDescTime,
+  allAscTime,
+  allDescTime,
+}
+
+extension HomepageFavoriteExtension on HomepageFavorite {
+  String toOptionTitle() {
+    switch (this) {
+      case HomepageFavorite.defaultAscOrder:
+        return '默认分组 (收藏正序)';
+      case HomepageFavorite.defaultDescOrder:
+        return '默认分组 (收藏逆序)';
+      case HomepageFavorite.defaultAscTime:
+        return '默认分组 (时间正序)';
+      case HomepageFavorite.defaultDescTime:
+        return '默认分组 (时间逆序)';
+      case HomepageFavorite.allAscTime:
+        return '所有收藏 (时间正序)';
+      case HomepageFavorite.allDescTime:
+        return '所有收藏 (时间逆序)';
+    }
+  }
+
+  int toInt() {
+    switch (this) {
+      case HomepageFavorite.defaultAscOrder:
+        return 0;
+      case HomepageFavorite.defaultDescOrder:
+        return 1;
+      case HomepageFavorite.defaultAscTime:
+        return 2;
+      case HomepageFavorite.defaultDescTime:
+        return 3;
+      case HomepageFavorite.allAscTime:
+        return 4;
+      case HomepageFavorite.allDescTime:
+        return 5;
+    }
+  }
+
+  static HomepageFavorite fromInt(int i) {
+    switch (i) {
+      case 0:
+        return HomepageFavorite.defaultAscOrder;
+      case 1:
+        return HomepageFavorite.defaultDescOrder;
+      case 2:
+        return HomepageFavorite.defaultAscTime;
+      case 3:
+        return HomepageFavorite.defaultDescTime;
+      case 4:
+        return HomepageFavorite.allAscTime;
+      case 5:
+        return HomepageFavorite.allDescTime;
+    }
+    return HomepageFavorite.defaultAscOrder;
+  }
+
+  Tuple2<String?, SortMethod> determineQueryCondition() {
+    switch (this) {
+      case HomepageFavorite.defaultAscOrder:
+        return Tuple2('', SortMethod.byOrderAsc);
+      case HomepageFavorite.defaultDescOrder:
+        return Tuple2('', SortMethod.byOrderDesc);
+      case HomepageFavorite.defaultAscTime:
+        return Tuple2('', SortMethod.byTimeAsc);
+      case HomepageFavorite.defaultDescTime:
+        return Tuple2('', SortMethod.byTimeDesc);
+      case HomepageFavorite.allAscTime:
+        return Tuple2(null, SortMethod.byTimeAsc);
+      case HomepageFavorite.allDescTime:
+        return Tuple2(null, SortMethod.byTimeDesc);
+    }
+  }
+}
+
+enum HomepageRefreshBehavior {
+  onlyRecommend,
+  includeListIfEmpty,
+  allData,
+}
+
+extension HomepageRefreshBehaviorExtension on HomepageRefreshBehavior {
+  String toOptionTitle() {
+    switch (this) {
+      case HomepageRefreshBehavior.onlyRecommend:
+        return '仅日排行和推荐';
+      case HomepageRefreshBehavior.includeListIfEmpty:
+        return '日排行、推荐和空列表';
+      case HomepageRefreshBehavior.allData:
+        return '首页所有数据';
+    }
+  }
+
+  int toInt() {
+    switch (this) {
+      case HomepageRefreshBehavior.onlyRecommend:
+        return 0;
+      case HomepageRefreshBehavior.includeListIfEmpty:
+        return 1;
+      case HomepageRefreshBehavior.allData:
+        return 2;
+    }
+  }
+
+  static HomepageRefreshBehavior fromInt(int i) {
+    switch (i) {
+      case 0:
+        return HomepageRefreshBehavior.onlyRecommend;
+      case 1:
+        return HomepageRefreshBehavior.includeListIfEmpty;
+      case 2:
+        return HomepageRefreshBehavior.allData;
+    }
+    return HomepageRefreshBehavior.onlyRecommend;
   }
 }
 
@@ -351,7 +489,7 @@ extension TimeoutBehaviorExtension on TimeoutBehavior {
       case TimeoutBehavior.long:
         return 1;
       case TimeoutBehavior.longLong:
-        return 3;
+        return 3; // <<<
       case TimeoutBehavior.disable:
         return 2;
     }
@@ -363,7 +501,7 @@ extension TimeoutBehaviorExtension on TimeoutBehavior {
         return TimeoutBehavior.normal;
       case 1:
         return TimeoutBehavior.long;
-      case 3:
+      case 3: // <<<
         return TimeoutBehavior.longLong;
       case 2:
         return TimeoutBehavior.disable;

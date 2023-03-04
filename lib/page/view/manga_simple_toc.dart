@@ -4,11 +4,12 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 
-/// 漫画章节目录（给定章节列表），在 [DlFinishedSubPage] 使用
+/// 漫画章节列表（给定章节列表），在 [DlFinishedSubPage] 使用
 class MangaSimpleTocView extends StatelessWidget {
   const MangaSimpleTocView({
     Key? key,
     required this.chapters,
+    this.showPageCount = false,
     this.gridPadding,
     this.invertOrder = true,
     this.highlightColor,
@@ -21,6 +22,7 @@ class MangaSimpleTocView extends StatelessWidget {
   }) : super(key: key);
 
   final List<Tuple2<String, TinyMangaChapter>> chapters;
+  final bool showPageCount;
   final EdgeInsets? gridPadding;
   final bool invertOrder;
   final Color? highlightColor;
@@ -35,6 +37,7 @@ class MangaSimpleTocView extends StatelessWidget {
     return ChapterGridView(
       chapters: chapters,
       padding: gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
+      showPageCount: showPageCount,
       invertOrder: invertOrder /* true means desc */,
       maxLines: -1 /* show all chapters */,
       highlightColor: highlightColor,

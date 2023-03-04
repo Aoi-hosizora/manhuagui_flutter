@@ -40,7 +40,7 @@ void showPopupMenuForMangaList({
   bool fromShelfList = false,
   bool fromFavoriteList = false,
   bool fromHistoryList = false,
-  bool fromDownloadList = false,
+  bool fromDownloadPage = false,
   void Function(bool inShelf)? inShelfSetter,
   void Function(bool inFavorite)? inFavoriteSetter,
   void Function(bool inHistory)? inHistorySetter,
@@ -85,7 +85,7 @@ void showPopupMenuForMangaList({
           Divider(height: 16, thickness: 1),
 
           /// 下载
-          if (nowInDownload && !fromDownloadList)
+          if (nowInDownload && !fromDownloadPage)
             IconTextDialogOption(
               icon: Icon(Icons.download),
               text: Text('查看下载详情'),
@@ -702,16 +702,16 @@ class _DialogHelper {
   }
 
   Future<void> gotoChapterDetailsPage({required TinyMangaChapter chapter, required List<MangaChapterGroup> chapterGroups, required String mangaTitle, required String mangaUrl}) async {
-    var group = chapterGroups.findChapterAndGroup(chapter.cid)?.item2;
+    var groupLength = chapterGroups.where((el) => el.title == chapter.group).firstOrNull?.chapters.length;
     await Navigator.of(context).push(
       CustomPageRoute(
         context: context,
         builder: (c) => ChapterDetailPage(
           data: chapter,
-          group: group?.title,
-          groupLength: group?.chapters.length,
+          groupLength: groupLength /* almost non-null */,
           mangaTitle: mangaTitle,
           mangaUrl: mangaUrl,
+          isTocLoaded: true,
         ),
       ),
     );
