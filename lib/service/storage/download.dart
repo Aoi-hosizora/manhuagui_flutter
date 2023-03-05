@@ -77,9 +77,15 @@ Future<String?> getCachedOrDownloadedChapterPageFilePath({required int mangaId, 
 // download image
 // ==============
 
-Future<File?> downloadImageToGallery(String url) async {
+Future<File?> downloadImageToGallery(String url, {File? precheck}) async {
   try {
     var filepath = await _getDownloadImageFilePath(url);
+    if (precheck != null && await precheck.exists()) {
+      // copy given file directly
+      return await precheck.copy(filepath);
+    }
+
+    // download from network
     var f = await downloadFile(
       url: url,
       filepath: filepath,

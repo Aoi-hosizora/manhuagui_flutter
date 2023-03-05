@@ -55,14 +55,14 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
     super.dispose();
   }
 
-  List<Tuple2<String, TinyMangaChapter>> _getData() {
-    var chapters = widget.mangaEntity.downloadedChapters
+  Tuple2<List<TinyMangaChapter>, List<MangaChapterGroup>> _getData() {
+    var dlChapters = widget.mangaEntity.downloadedChapters
         .where((el) => el.succeeded && !el.needUpdate) // 仅包括下载成功且不需要更新的章节
-        .map((el) => Tuple2(el.chapterGroup, el.toTiny()))
-        .toList();
+        .toList(); // no need to sort in this sub page, it will be sorted in chapter grid view
 
-    // no need to sort in this sub page, it will be sorted in toc view
-    return chapters;
+    var chapters = dlChapters.map((el) => el.toTiny()).toList();
+    var groups = dlChapters.toChapterGroup();
+    return Tuple2(chapters, groups);
   }
 
   @override
@@ -71,7 +71,9 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    var chapters = _getData();
+    var tuple = _getData();
+    var chapters = tuple.item1;
+    var groups = tuple.item2;
 
     return WillPopScope(
       onWillPop: () async {
@@ -103,7 +105,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                     stateSetter: () => mountedSetState(() {}),
                     onModeChanged: (_) => mountedSetState(() {}),
                     child: MangaSimpleTocView(
-                      chapters: chapters,
+                      groups: groups,
                       showPageCount: widget.showPageCount,
                       invertOrder: widget.invertOrder,
                       showNewBadge: false,
@@ -150,7 +152,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
             var allEntities = widget.invertOrder ? widget.mangaEntity.downloadedChapters.reversed : widget.mangaEntity.downloadedChapters; // chapters are in cid asc order
             var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
             var titles = allEntities.where((el) => chapterIds.contains(el.chapterId)).map((m) => '《${m.chapterTitle}》').toList();
-            var allKeys = chapters.map((el) => ValueKey(el.item2.cid)).toList();
+            var allKeys = chapters.map((el) => ValueKey(el.cid)).toList();
             MultiSelectionFabContainer.showCounterDialog(context, controller: _msController, selected: titles, allKeys: allKeys);
           },
           fabForMultiSelection: [
@@ -158,9 +160,9 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
               child: Icon(Icons.more_horiz),
               tooltip: '查看更多选项',
               show: _msController.selectedItems.length == 1,
-              onPressed: () => chapters.where((el) => el.item2.cid == _msController.selectedItems.first.value).firstOrNull?.let((chapter) {
+              onPressed: () => chapters.where((el) => el.cid == _msController.selectedItems.first.value).firstOrNull?.let((chapter) {
                 _msController.exitMultiSelectionMode();
-                widget.toAdjustChapter(chapter.item2.cid);
+                widget.toAdjustChapter(chapter.cid);
               }),
             ),
             MultiSelectionFabOption(

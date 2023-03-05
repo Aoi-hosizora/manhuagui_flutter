@@ -44,11 +44,12 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
   late var _showChapterCounter = widget.setting.showChapterCounter;
+  late var _allowErrorToast = widget.setting.allowErrorToast;
   late var _overviewLoadAll = widget.setting.overviewLoadAll;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
   late var _audienceMangaRows = widget.setting.audienceRankingRows;
   late var _homepageFavorite = widget.setting.homepageFavorite;
-  late var _homepageRefreshBehavior = widget.setting.homepageRefreshBehavior;
+  late var _homepageRefreshData = widget.setting.homepageRefreshData;
   late var _clickToSearch = widget.setting.clickToSearch;
   late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
 
@@ -60,11 +61,12 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
         showChapterCounter: _showChapterCounter,
+        allowErrorToast: _allowErrorToast,
         overviewLoadAll: _overviewLoadAll,
         includeUnreadInHome: _includeUnreadInHome,
         audienceRankingRows: _audienceMangaRows,
         homepageFavorite: _homepageFavorite,
-        homepageRefreshBehavior: _homepageRefreshBehavior,
+        homepageRefreshData: _homepageRefreshData,
         clickToSearch: _clickToSearch,
         alwaysOpenNewListPage: _alwaysOpenNewListPage,
       );
@@ -78,11 +80,12 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _regularGroupRows = setting.regularGroupRows;
     _otherGroupRows = setting.otherGroupRows;
     _showChapterCounter = setting.showChapterCounter;
+    _allowErrorToast = setting.allowErrorToast;
     _overviewLoadAll = setting.overviewLoadAll;
     _includeUnreadInHome = setting.includeUnreadInHome;
     _audienceMangaRows = setting.audienceRankingRows;
     _homepageFavorite = setting.homepageFavorite;
-    _homepageRefreshBehavior = setting.homepageRefreshBehavior;
+    _homepageRefreshData = setting.homepageRefreshData;
     _clickToSearch = setting.clickToSearch;
     _alwaysOpenNewListPage = setting.alwaysOpenNewListPage;
     widget.onSettingChanged.call(_newestSetting);
@@ -178,6 +181,16 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingSwitcherView(
+          title: '允许弹出漫画错误提示',
+          hint: '漫画错误信息包括："无法获取书架订阅情况"、"无法获取漫画章节列表"。',
+          value: _allowErrorToast,
+          onChanged: (b) {
+            _allowErrorToast = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
           title: '章节一览页加载所有图片',
           hint: !_overviewLoadAll //
               ? '章节页面一览页将仅加载本地已缓存或已下载的图片，不会额外访问网络。'
@@ -226,14 +239,14 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
-        SettingComboBoxView<HomepageRefreshBehavior>(
-          title: '首页刷新方式',
+        SettingComboBoxView<HomepageRefreshData>(
+          title: '首页需刷新的数据',
           width: 175,
-          value: _homepageRefreshBehavior,
-          values: HomepageRefreshBehavior.values,
+          value: _homepageRefreshData,
+          values: HomepageRefreshData.values,
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
-            _homepageRefreshBehavior = s;
+            _homepageRefreshData = s;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

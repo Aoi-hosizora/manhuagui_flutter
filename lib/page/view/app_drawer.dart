@@ -126,7 +126,7 @@ class _AppDrawerState extends State<AppDrawer> {
     }
   }
 
-  Widget _buildItem(String text, IconData icon, DrawerSelection? selection, void Function() action, {void Function()? onLongPressed}) {
+  Widget _buildItem(String text, IconData icon, DrawerSelection? selection, void Function() action, {void Function()? longPress, bool ignoreSelectionForLongPress = false}) {
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: Theme.of(context).textTheme.copyWith(
@@ -147,13 +147,13 @@ class _AppDrawerState extends State<AppDrawer> {
           }
           action.call();
         },
-        onLongPress: onLongPressed == null
+        onLongPress: longPress == null || (!ignoreSelectionForLongPress && widget.currentSelection == selection)
             ? null
             : () {
                 if (Scaffold.maybeOf(context)?.isDrawerOpen == true || DrawerScaffold.of(context)?.isDrawerOpen == true) {
                   Navigator.of(context).pop();
                 }
-                onLongPressed.call();
+                longPress.call();
               },
       ),
     );
@@ -216,16 +216,16 @@ class _AppDrawerState extends State<AppDrawer> {
               ],
             ),
           ),
-          _buildItem('首页', Icons.home, DrawerSelection.home, () => _popUntilFirst(), onLongPressed: () => _popUntilFirst(alsoFire: ToRecommendRequestedEvent())),
+          _buildItem('首页', Icons.home, DrawerSelection.home, () => _popUntilFirst(), longPress: () => _popUntilFirst(alsoFire: ToRecommendRequestedEvent()), ignoreSelectionForLongPress: true),
           if (!AuthManager.instance.loading && !AuthManager.instance.logined) _buildItem('登录', Icons.login, null, () => _gotoPage(LoginPage())),
           _buildItem('搜索漫画', Icons.search, DrawerSelection.search, () => _gotoPage(SearchPage())),
           Divider(thickness: 1),
-          _buildItem('我的书架', MdiIcons.bookshelf, DrawerSelection.shelf, () => _gotoPage(SepShelfPage(), canReplace: true)),
-          _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, DrawerSelection.favorite, () => _gotoPage(SepFavoritePage(), canReplace: true)),
-          _buildItem('阅读历史', Icons.history, DrawerSelection.history, () => _gotoPage(SepHistoryPage(), canReplace: true)),
-          _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage(), canReplace: true)),
-          _buildItem('最近更新', Icons.cached, DrawerSelection.recent, () => _gotoPage(SepRecentPage(), canReplace: true)),
-          _buildItem('漫画排行', Icons.trending_up, DrawerSelection.ranking, () => _gotoPage(SepRankingPage(), canReplace: true)),
+          _buildItem('我的书架', MdiIcons.bookshelf, DrawerSelection.shelf, () => _gotoPage(SepShelfPage(), canReplace: true), longPress: () => _gotoPage(SepShelfPage())),
+          _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, DrawerSelection.favorite, () => _gotoPage(SepFavoritePage(), canReplace: true), longPress: () => _gotoPage(SepFavoritePage())),
+          _buildItem('阅读历史', Icons.history, DrawerSelection.history, () => _gotoPage(SepHistoryPage(), canReplace: true), longPress: () => _gotoPage(SepHistoryPage())),
+          _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage(), canReplace: true), longPress: () => _gotoPage(DownloadPage())),
+          _buildItem('最近更新', Icons.cached, DrawerSelection.recent, () => _gotoPage(SepRecentPage(), canReplace: true), longPress: () => _gotoPage(SepRecentPage())),
+          _buildItem('漫画排行', Icons.trending_up, DrawerSelection.ranking, () => _gotoPage(SepRankingPage(), canReplace: true), longPress: () => _gotoPage(SepRankingPage())),
           Divider(thickness: 1),
           _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
           _buildItem('设置', Icons.settings, DrawerSelection.setting, () => _gotoPage(SettingPage())),

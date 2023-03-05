@@ -8,15 +8,19 @@ class ChapterDetailPage extends StatefulWidget {
   const ChapterDetailPage({
     Key? key,
     required this.data,
+    required this.chapterCover,
     required this.groupLength,
     required this.mangaTitle,
+    required this.mangaCover,
     required this.mangaUrl,
     required this.isTocLoaded,
   }) : super(key: key);
 
   final TinyMangaChapter data;
+  final String? chapterCover;
   final int? groupLength;
   final String mangaTitle;
+  final String mangaCover;
   final String mangaUrl;
   final bool isTocLoaded;
 
@@ -54,11 +58,13 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
               rows: [
                 DetailRow('cid', widget.data.cid.toString()),
                 DetailRow('章节标题', '《${widget.data.title}》', textForCopy: widget.data.title),
+                DetailRow('章节封面', widget.chapterCover == null ? '未知' : widget.chapterCover!, canCopy: widget.chapterCover != null),
                 DetailRow('章节网页链接', widget.data.url),
-                DetailRow('mid', widget.data.mid.toString()),
-                DetailRow('漫画标题', '《${widget.mangaTitle}》', textForCopy: widget.mangaTitle),
-                DetailRow('漫画网页链接', widget.mangaUrl),
                 DetailRow('章节页数', widget.data.pageCount.toString()),
+                DetailRow('(mid)', widget.data.mid.toString()),
+                DetailRow('(漫画标题)', '《${widget.mangaTitle}》', textForCopy: widget.mangaTitle),
+                DetailRow('(漫画封面)', widget.mangaCover),
+                DetailRow('(漫画网页链接)', widget.mangaUrl),
                 if (widget.isTocLoaded) ...[
                   DetailRow('最近上传', widget.data.isNew ? '是' : '否', canCopy: false),
                   DetailRow('章节所属分组', widget.data.group.isEmpty ? '未知' : widget.data.group, canCopy: widget.data.group.isNotEmpty),

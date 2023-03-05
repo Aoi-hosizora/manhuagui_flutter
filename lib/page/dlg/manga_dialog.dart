@@ -667,7 +667,9 @@ class _DialogHelper {
         builder: (c) => MangaViewerPage(
           mangaId: mangaId,
           chapterId: chapterId,
+          mangaTitle: mangaTitle,
           mangaCover: mangaCover,
+          mangaUrl: mangaUrl,
           chapterGroups: chapterGroups,
           initialPage: history?.chapterId == chapterId
               ? history?.chapterPage ?? 1 // have read
@@ -708,8 +710,10 @@ class _DialogHelper {
         context: context,
         builder: (c) => ChapterDetailPage(
           data: chapter,
+          chapterCover: null,
           groupLength: groupLength /* almost non-null */,
           mangaTitle: mangaTitle,
+          mangaCover: mangaCover,
           mangaUrl: mangaUrl,
           isTocLoaded: true,
         ),

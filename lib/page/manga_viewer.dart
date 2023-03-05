@@ -48,20 +48,26 @@ class MangaViewerPage extends StatefulWidget {
     Key? key,
     required this.mangaId,
     required this.chapterId,
+    required this.mangaTitle,
     required this.mangaCover,
+    required this.mangaUrl,
     required this.chapterGroups,
     required this.onlineMode,
     required this.initialPage, // start from 1
     this.onMangaGot, // for download manga page
+    this.replacing = false,
   }) : super(key: key);
 
   final int mangaId;
   final int chapterId;
+  final String mangaTitle;
   final String mangaCover;
+  final String mangaUrl;
   final List<MangaChapterGroup>? chapterGroups;
   final bool onlineMode;
   final int initialPage;
   final void Function(Manga)? onMangaGot;
+  final bool replacing;
 
   @override
   _MangaViewerPageState createState() => _MangaViewerPageState();
@@ -126,8 +132,8 @@ class MangaViewerPageData {
   }
 }
 
-const _kSlideWidthRatio = 0.2; // 点击跳转页面的区域比例
-const _kSlideHeightRatio = 0.2; // 点击跳转页面的区域比例
+const _kSlideWidthRatio = 0.18; // 点击跳转页面的区域比例
+const _kSlideHeightRatio = 0.18; // 点击跳转页面的区域比例
 const _kViewportFraction = 1.08; // 页面间隔
 const _kViewportPageSpace = 25.0; // 页面间隔
 const _kAnimationDuration = Duration(milliseconds: 150); // 动画时长
@@ -177,9 +183,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }));
 
     // setting and screen related
+    _ScreenHelper.initialize(
+      context: context,
+      setState: () => mountedSetState(() {}),
+      showAppBar: (!widget.replacing || !_setting.keepAppBarWhenReplace) ? !_setting.hideAppBarWhenEnter : null,
+    );
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      // initialize in async manner
-      _ScreenHelper.initialize(context: context, setState: () => mountedSetState(() {}));
       // apply settings to screen
       await _ScreenHelper.toggleWakelock(enable: _setting.keepScreenOn);
       await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
@@ -222,6 +231,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _loading = true; // initialize to true
   MangaViewerPageData? _data;
   var _error = '';
+  var _offlineError = false;
 
   // these fields are only used for MangaGalleryView
   int? _initialPage; // start from 1
@@ -241,6 +251,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _loading = true;
     _data = null;
     _error = '';
+    _offlineError = false;
     if (mounted) setState(() {});
 
     // 1. 先获取各种数据库信息 (收藏、下载)
@@ -252,7 +263,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     // 2. 在网络请求前，先判断当前是否处于离线模式，以及章节是否下载
     if (!widget.onlineMode && (_downloadEntity == null || _downloadChapter == null)) {
       await Future.delayed(Duration(milliseconds: 300)); // fake loading
-      _error = '当前处于离线模式，但该章节尚未下载\n请先切换成在线模式再阅读';
+      _error = '当前处于离线模式，但该章节尚未下载\n请切换至在线模式、或另选章节阅读';
+      _offlineError = true;
       _loading = false;
       if (mounted) setState(() {});
       return;
@@ -280,7 +292,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         } catch (e, s) {
           var we = wrapError(e, s);
           globalLogger.e('MangaViewerPage._loadData checkShelfManga: ${we.text}', e, s);
-          Fluttertoast.showToast(msg: '无法获取书架订阅信息：${we.text}');
+          if (AppSetting.instance.ui.allowErrorToast) {
+            Fluttertoast.showToast(msg: '无法获取书架订阅情况：${we.text}');
+          }
         }
       });
     }
@@ -317,7 +331,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         _error = '';
         _data = MangaViewerPageData(
           mangaTitle: data.mangaTitle,
-          mangaCover: widget.mangaCover,
+          mangaCover: data.mangaCover,
           mangaUrl: data.mangaUrl,
           chapterTitle: data.title,
           chapterUrl: data.url,
@@ -374,7 +388,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 var we = wrapError(e, s);
                 globalLogger.e('MangaViewerPage._loadData getManga (offline): ${we.text}', e, s);
                 _data = _data?.updateChapterGroups(chapterGroups: null, getMangaFailed: true); // failed to get manga
-                Fluttertoast.showToast(msg: '无法获取漫画章节列表：${we.text}');
+                if (AppSetting.instance.ui.allowErrorToast) {
+                  Fluttertoast.showToast(msg: '无法获取漫画章节列表：${we.text}');
+                }
               }
             });
           }
@@ -533,10 +549,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           builder: (c) => MangaViewerPage(
             mangaId: widget.mangaId,
             chapterId: widget.chapterId,
-            mangaCover: widget.mangaCover,
-            chapterGroups: widget.chapterGroups,
+            mangaTitle: _data?.mangaTitle ?? widget.mangaTitle,
+            mangaCover: _data?.mangaCover ?? widget.mangaCover,
+            mangaUrl: _data?.mangaUrl ?? widget.mangaUrl,
+            chapterGroups: _data?.chapterGroups ?? widget.chapterGroups,
             initialPage: _currentPage /* start from 1 */,
             onlineMode: true,
+            replacing: true,
           ),
         ),
       );
@@ -572,10 +591,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         builder: (c) => MangaViewerPage(
           mangaId: widget.mangaId,
           chapterId: gotoPrevious ? _data!.prevChapterId! : _data!.nextChapterId!,
+          mangaTitle: _data!.mangaTitle,
           mangaCover: _data!.mangaCover,
+          mangaUrl: _data!.mangaUrl,
           chapterGroups: _data!.chapterGroups,
           initialPage: 1 /* always turn to the first page */,
           onlineMode: widget.onlineMode,
+          replacing: true,
         ),
       ),
     );
@@ -601,7 +623,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     if (ok) {
       if (mounted) setState(() {});
       await _ScreenHelper.toggleWakelock(enable: _setting.keepScreenOn);
-      await _ScreenHelper.setSystemUIWhenSettingChanged(fullscreen: _setting.fullscreen);
+      await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
     }
   }
 
@@ -670,18 +692,36 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   }
 
   Future<void> _showToc() async {
-    if (_data!.chapterGroups == null) {
-      if (_data!.getMangaFailed != true) {
-        Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
-      } else {
-        Fluttertoast.showToast(msg: '当前处于离线模式，但漫画章节列表获取失败');
+    // 由于 _showToc 有可能在 _offlineError 时被调用，所以方法内不使用 _data 来获取这些数据
+    String mangaTitle, mangaCover, mangaUrl;
+    List<MangaChapterGroup>? chapterGroups;
+    if (!_offlineError) {
+      mangaTitle = _data!.mangaTitle;
+      mangaCover = _data!.mangaCover;
+      mangaUrl = _data!.mangaUrl;
+      chapterGroups = _data!.chapterGroups;
+      if (chapterGroups == null) {
+        if (_data!.getMangaFailed != true) {
+          Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
+        } else {
+          Fluttertoast.showToast(msg: '当前处于离线模式，但漫画章节列表获取失败');
+        }
+        return;
       }
-      return;
+    } else {
+      mangaTitle = widget.mangaTitle;
+      mangaCover = widget.mangaCover;
+      mangaUrl = widget.mangaUrl;
+      chapterGroups = widget.chapterGroups;
+      if (chapterGroups == null) {
+        Fluttertoast.showToast(msg: '当前处于离线模式，但未获取到漫画章节列表'); // <<< for _offlineError
+        return;
+      }
     }
 
     void switchChapter(BuildContext c, int cid) {
       if (cid == widget.chapterId) {
-        Fluttertoast.showToast(msg: '当前正在阅读 ${_data!.chapterTitle}');
+        Fluttertoast.showToast(msg: '当前正在阅读 ${chapterGroups?.findChapter(cid)?.title ?? '该章节'}');
       } else {
         Navigator.of(c).pop(); // close bottom sheet
         _updateHistory();
@@ -691,10 +731,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             builder: (c) => MangaViewerPage(
               mangaId: widget.mangaId,
               chapterId: cid,
-              mangaCover: _data!.mangaCover,
-              chapterGroups: _data!.chapterGroups,
+              mangaTitle: mangaTitle,
+              mangaCover: mangaCover,
+              mangaUrl: mangaUrl,
+              chapterGroups: chapterGroups,
               initialPage: 1 /* always turn to the first page */,
               onlineMode: widget.onlineMode,
+              replacing: true,
             ),
           ),
         );
@@ -713,12 +756,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           child: ViewTocSubPage(
             mangaId: widget.mangaId,
-            mangaTitle: _data!.mangaTitle,
-            groups: _data!.chapterGroups!,
+            mangaTitle: mangaTitle,
+            groups: chapterGroups!,
             highlightedChapter: widget.chapterId,
             onChapterPressed: (cid) => switchChapter(c, cid),
             onChapterLongPressed: (cid) {
-              var chapter = _data!.chapterGroups!.findChapter(cid);
+              var chapter = chapterGroups!.findChapter(cid);
               if (chapter == null) {
                 Fluttertoast.showToast(msg: '未在漫画章节列表中找到章节'); // almost unreachable
                 return;
@@ -728,12 +771,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
               showPopupMenuForMangaToc(
                 context: context,
                 mangaId: widget.mangaId,
-                mangaTitle: _data!.mangaTitle,
-                mangaCover: _data!.mangaCover,
-                mangaUrl: _data!.mangaUrl,
+                mangaTitle: mangaTitle,
+                mangaCover: mangaCover,
+                mangaUrl: mangaUrl,
                 fromMangaPage: false,
                 chapter: chapter,
-                chapterGroups: _data!.chapterGroups!,
+                chapterGroups: chapterGroups,
                 onHistoryUpdated: null,
                 allowDeletingHistory: false /* => 不显示删除历史 */,
                 onReadChapterPressed: () => switchChapter(c, cid),
@@ -776,8 +819,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         context: context,
         builder: (c) => ChapterDetailPage(
           data: chapter,
+          chapterCover: _data!.pages.firstOrNull,
           groupLength: chapterGroup?.chapters.length,
           mangaTitle: _data!.mangaTitle,
+          mangaCover: _data!.mangaCover,
           mangaUrl: _data!.mangaUrl,
           isTocLoaded: tocLoaded,
         ),
@@ -883,10 +928,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             onPressed: () async {
               Navigator.of(c).pop();
               var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
+              var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
               if (url == null) {
                 Fluttertoast.showToast(msg: '当前处于离线模式，但未在下载列表中获取到第$imageIndexP1页链接');
               } else {
-                var f = await downloadImageToGallery(url);
+                var f = await downloadImageToGallery(url, precheck: filepath == null ? null : File(filepath));
                 if (f != null) {
                   Fluttertoast.showToast(msg: '第$imageIndexP1页已保存至 ${f.path}');
                 } else {
@@ -1024,6 +1070,25 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
               buttonTextStyle: TextStyle(color: Colors.grey[400]!),
               buttonStyle: ButtonStyle(
                 side: MaterialStateProperty.all(BorderSide(color: Colors.grey[400]!)),
+              ),
+              customErrorRetryBuilder: (c, setting, callback) => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton(
+                    child: Text(setting.errorRetryText!, style: setting.buttonTextStyle!),
+                    style: setting.buttonStyle,
+                    onPressed: callback,
+                  ),
+                  if (_offlineError)
+                    Padding(
+                      padding: EdgeInsets.only(left: 15),
+                      child: OutlinedButton(
+                        child: Text('另选章节', style: setting.buttonTextStyle!),
+                        style: setting.buttonStyle,
+                        onPressed: () => _showToc() /* _data maybe null here */,
+                      ),
+                    ),
+                ],
               ),
             ).copyWithChinese(),
             childBuilder: (c) => Stack(
@@ -1300,10 +1365,22 @@ class _ScreenHelper {
   static late BuildContext _context;
   static void Function() _setState = () {};
 
-  static void initialize({required BuildContext context, required void Function() setState}) {
+  static void initialize({required BuildContext context, required void Function() setState, bool? showAppBar}) {
+    // initialize global context and setState field for current MangaViewerPage
     _context = context;
     _setState = setState;
+
+    // initialize global show app bar field, and do not call `setState` here
+    if (showAppBar != null) {
+      _showAppBar = showAppBar;
+    }
+
+    // do not initialize global system ui fields here, just to call `setSystemUIWhenEnter`
   }
+
+  // ========
+  // wakelock
+  // ========
 
   static Future<void> toggleWakelock({required bool enable}) {
     return Wakelock.toggle(enable: enable);
@@ -1312,6 +1389,10 @@ class _ScreenHelper {
   static Future<void> restoreWakelock() {
     return Wakelock.toggle(enable: false);
   }
+
+  // =======
+  // app bar
+  // =======
 
   static bool _showAppBar = false; // default to hide
 
@@ -1343,6 +1424,10 @@ class _ScreenHelper {
     // no setState
   }
 
+  // =========
+  // system ui
+  // =========
+
   static bool _safeAreaTop = true; // defaults to non-fullscreen
 
   static bool get safeAreaTop => _safeAreaTop;
@@ -1361,11 +1446,7 @@ class _ScreenHelper {
     await setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: _showAppBar);
   }
 
-  static Future<void> setSystemUIWhenSettingChanged({required bool fullscreen}) async {
-    await setSystemUIWhenEnter(fullscreen: fullscreen);
-  }
-
-  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool isAppbarShown}) async {
+  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool isAppbarShown /* explicit */}) async {
     // https://hiyoko-programming.com/953/
     if (!fullscreen) {
       // 不全屏 => 全部显示，不透明 (manual)

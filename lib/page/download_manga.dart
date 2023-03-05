@@ -305,7 +305,9 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
         builder: (c) => MangaViewerPage(
           mangaId: widget.mangaId,
           chapterId: chapterId,
+          mangaTitle: _data!.mangaTitle,
           mangaCover: _data!.mangaCover,
+          mangaUrl: _data!.mangaUrl,
           chapterGroups: _mangaData?.chapterGroups /* nullable */,
           initialPage: _history?.chapterId == chapterId
               ? _history?.chapterPage ?? 1 // have read

@@ -45,6 +45,8 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _keepScreenOn = widget.setting.keepScreenOn;
   late var _fullscreen = widget.setting.fullscreen;
   late var _preloadCount = widget.setting.preloadCount;
+  late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
+  late var _keepAppBarWhenReplace = widget.setting.keepAppBarWhenReplace;
 
   ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
@@ -56,6 +58,8 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         keepScreenOn: _keepScreenOn,
         fullscreen: _fullscreen,
         preloadCount: _preloadCount,
+        hideAppBarWhenEnter: _hideAppBarWhenEnter,
+        keepAppBarWhenReplace: _keepAppBarWhenReplace,
       );
 
   void _setToDefault() {
@@ -69,6 +73,8 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _keepScreenOn = setting.keepScreenOn;
     _fullscreen = setting.fullscreen;
     _preloadCount = setting.preloadCount;
+    _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
+    _keepAppBarWhenReplace = setting.keepAppBarWhenReplace;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -161,6 +167,24 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           textBuilder: (s) => s == 0 ? '禁用预加载' : '前后$s页',
           onChanged: (c) {
             _preloadCount = c.clamp(0, 6);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '进入时隐藏标题栏',
+          value: _hideAppBarWhenEnter,
+          onChanged: (b) {
+            _hideAppBarWhenEnter = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '切换章节时保持标题栏',
+          value: _keepAppBarWhenReplace,
+          onChanged: (b) {
+            _keepAppBarWhenReplace = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

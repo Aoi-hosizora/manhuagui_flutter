@@ -22,7 +22,7 @@ Future<void> showNewVersionDialog({
 
   var canceled = await showDialog<bool>(
     context: context,
-    barrierDismissible: false, // !needUpgrade || !cnt.mustUpgrade,
+    barrierDismissible: hasRead, // !needUpgrade || !cnt.mustUpgrade,
     builder: (c) => WillPopScope(
       onWillPop: () async => !needUpgrade || !cnt.mustUpgrade,
       child: AlertDialog(
@@ -108,7 +108,7 @@ Future<void> showNotificationDialog({
 
   var canceled = await showDialog<bool>(
     context: context,
-    barrierDismissible: false, // hasRead || cnt.dismissible,
+    barrierDismissible: hasRead, // hasRead || cnt.dismissible,
     builder: (c) => WillPopScope(
       onWillPop: () async => hasRead || cnt.dismissible,
       child: AlertDialog(

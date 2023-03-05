@@ -152,7 +152,9 @@ class _MangaPageState extends State<MangaPage> {
         } catch (e, s) {
           var we = wrapError(e, s);
           globalLogger.e('MangaPage._loadData checkShelfManga', e, s);
-          Fluttertoast.showToast(msg: '无法获取书架订阅信息：${we.text}');
+          if (AppSetting.instance.ui.allowErrorToast) {
+            Fluttertoast.showToast(msg: '无法获取书架订阅情况：${we.text}');
+          }
         }
         if (_data != null && _subscribeCount != null) {
           // 在获取到书架情况时，如果漫画数据已获得，则随即更新书架缓存
@@ -339,7 +341,9 @@ class _MangaPageState extends State<MangaPage> {
           builder: (c) => MangaViewerPage(
             mangaId: _data!.mid,
             chapterId: chapterId,
+            mangaTitle: _data!.title,
             mangaCover: _data!.cover,
+            mangaUrl: _data!.url,
             chapterGroups: _data!.chapterGroups,
             initialPage: _history?.chapterId == chapterId
                 ? _history?.chapterPage ?? 1 // have read
@@ -413,7 +417,9 @@ class _MangaPageState extends State<MangaPage> {
         builder: (c) => MangaViewerPage(
           mangaId: _data!.mid,
           chapterId: cid,
+          mangaTitle: _data!.title,
           mangaCover: _data!.cover,
+          mangaUrl: _data!.url,
           chapterGroups: _data!.chapterGroups,
           initialPage: page,
           onlineMode: true,

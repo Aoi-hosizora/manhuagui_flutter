@@ -77,6 +77,8 @@ class ViewSetting {
     required this.keepScreenOn,
     required this.fullscreen,
     required this.preloadCount,
+    required this.hideAppBarWhenEnter,
+    required this.keepAppBarWhenReplace,
   });
 
   final ViewDirection viewDirection; // 阅读方向
@@ -88,6 +90,8 @@ class ViewSetting {
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
   final int preloadCount; // 预加载页数
+  final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
+  final bool keepAppBarWhenReplace; // 切换章节时保持标题栏
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -99,6 +103,8 @@ class ViewSetting {
     keepScreenOn: true,
     fullscreen: false,
     preloadCount: 3,
+    hideAppBarWhenEnter: true,
+    keepAppBarWhenReplace: true,
   );
 
   ViewSetting copyWith({
@@ -111,6 +117,8 @@ class ViewSetting {
     bool? keepScreenOn,
     bool? fullscreen,
     int? preloadCount,
+    bool? hideAppBarWhenEnter,
+    bool? keepAppBarWhenReplace,
   }) {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
@@ -122,6 +130,8 @@ class ViewSetting {
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
+      hideAppBarWhenEnter: hideAppBarWhenEnter ?? this.hideAppBarWhenEnter,
+      keepAppBarWhenReplace: keepAppBarWhenReplace ?? this.keepAppBarWhenReplace,
     );
   }
 }
@@ -217,11 +227,12 @@ class UiSetting {
     required this.regularGroupRows,
     required this.otherGroupRows,
     required this.showChapterCounter,
+    required this.allowErrorToast,
     required this.overviewLoadAll,
     required this.includeUnreadInHome,
     required this.audienceRankingRows,
     required this.homepageFavorite,
-    required this.homepageRefreshBehavior,
+    required this.homepageRefreshData,
     required this.clickToSearch,
     required this.alwaysOpenNewListPage,
   });
@@ -233,11 +244,12 @@ class UiSetting {
   final int regularGroupRows; // 单话章节分组显示行数
   final int otherGroupRows; // 其他章节分组显示行数
   final bool showChapterCounter; // 漫画页章节列表显示页数
+  final bool allowErrorToast; // 允许弹出漫画错误提示
   final bool overviewLoadAll; // 章节一览页加载所有图片
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
   final int audienceRankingRows; // 首页受众排行榜显示行数
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
-  final HomepageRefreshBehavior homepageRefreshBehavior; // 首页刷新方式
+  final HomepageRefreshData homepageRefreshData; // 首页需刷新的数据
   final bool clickToSearch; // 点击搜索历史立即搜索
   final bool alwaysOpenNewListPage; // 始终在新页面打开列表
 
@@ -249,12 +261,13 @@ class UiSetting {
     regularGroupRows: 3,
     otherGroupRows: 1,
     showChapterCounter: false,
+    allowErrorToast: true,
     overviewLoadAll: false,
     includeUnreadInHome: true,
     audienceRankingRows: 5,
     homepageFavorite: HomepageFavorite.defaultAscOrder,
-    homepageRefreshBehavior: HomepageRefreshBehavior.includeListIfEmpty,
-    clickToSearch: false,
+    homepageRefreshData: HomepageRefreshData.includeListIfEmpty,
+    clickToSearch: true,
     alwaysOpenNewListPage: false,
   );
 
@@ -266,11 +279,12 @@ class UiSetting {
     int? regularGroupRows,
     int? otherGroupRows,
     bool? showChapterCounter,
+    bool? allowErrorToast,
     bool? overviewLoadAll,
     bool? includeUnreadInHome,
     int? audienceRankingRows,
     HomepageFavorite? homepageFavorite,
-    HomepageRefreshBehavior? homepageRefreshBehavior,
+    HomepageRefreshData? homepageRefreshData,
     bool? clickToSearch,
     bool? alwaysOpenNewListPage,
   }) {
@@ -282,11 +296,12 @@ class UiSetting {
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
       showChapterCounter: showChapterCounter ?? this.showChapterCounter,
+      allowErrorToast: allowErrorToast ?? this.allowErrorToast,
       overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
       homepageFavorite: homepageFavorite ?? this.homepageFavorite,
-      homepageRefreshBehavior: homepageRefreshBehavior ?? this.homepageRefreshBehavior,
+      homepageRefreshData: homepageRefreshData ?? this.homepageRefreshData,
       clickToSearch: clickToSearch ?? this.clickToSearch,
       alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
     );
@@ -373,45 +388,45 @@ extension HomepageFavoriteExtension on HomepageFavorite {
   }
 }
 
-enum HomepageRefreshBehavior {
+enum HomepageRefreshData {
   onlyRecommend,
   includeListIfEmpty,
   allData,
 }
 
-extension HomepageRefreshBehaviorExtension on HomepageRefreshBehavior {
+extension HomepageRefreshDatarExtension on HomepageRefreshData {
   String toOptionTitle() {
     switch (this) {
-      case HomepageRefreshBehavior.onlyRecommend:
+      case HomepageRefreshData.onlyRecommend:
         return '仅日排行和推荐';
-      case HomepageRefreshBehavior.includeListIfEmpty:
-        return '日排行、推荐和空列表';
-      case HomepageRefreshBehavior.allData:
+      case HomepageRefreshData.includeListIfEmpty:
+        return '日排行、空列表和推荐';
+      case HomepageRefreshData.allData:
         return '首页所有数据';
     }
   }
 
   int toInt() {
     switch (this) {
-      case HomepageRefreshBehavior.onlyRecommend:
+      case HomepageRefreshData.onlyRecommend:
         return 0;
-      case HomepageRefreshBehavior.includeListIfEmpty:
+      case HomepageRefreshData.includeListIfEmpty:
         return 1;
-      case HomepageRefreshBehavior.allData:
+      case HomepageRefreshData.allData:
         return 2;
     }
   }
 
-  static HomepageRefreshBehavior fromInt(int i) {
+  static HomepageRefreshData fromInt(int i) {
     switch (i) {
       case 0:
-        return HomepageRefreshBehavior.onlyRecommend;
+        return HomepageRefreshData.onlyRecommend;
       case 1:
-        return HomepageRefreshBehavior.includeListIfEmpty;
+        return HomepageRefreshData.includeListIfEmpty;
       case 2:
-        return HomepageRefreshBehavior.allData;
+        return HomepageRefreshData.allData;
     }
-    return HomepageRefreshBehavior.onlyRecommend;
+    return HomepageRefreshData.onlyRecommend;
   }
 }
 

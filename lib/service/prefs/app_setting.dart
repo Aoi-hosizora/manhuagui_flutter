@@ -36,6 +36,8 @@ class AppSettingPrefs {
   static const _keepScreenOnKey = BoolKey('AppSettingPrefs_keepScreenOn');
   static const _fullscreenKey = BoolKey('AppSettingPrefs_fullscreen');
   static const _preloadCountKey = IntKey('AppSettingPrefs_preloadCount');
+  static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
+  static const _keepAppBarWhenReplaceKey = BoolKey('AppSettingPrefs_keepAppBarWhenReplace');
 
   static List<TypedKey> get viewSettingKeys => [
         _viewDirectionKey,
@@ -47,6 +49,8 @@ class AppSettingPrefs {
         _keepScreenOnKey,
         _fullscreenKey,
         _preloadCountKey,
+        _hideAppBarWhenEnterKey,
+        _keepAppBarWhenReplaceKey,
       ];
 
   static Future<ViewSetting> _loadViewSetting() async {
@@ -62,6 +66,8 @@ class AppSettingPrefs {
       keepScreenOn: prefs.safeGet<bool>(_keepScreenOnKey) ?? def.keepScreenOn,
       fullscreen: prefs.safeGet<bool>(_fullscreenKey) ?? def.fullscreen,
       preloadCount: prefs.safeGet<int>(_preloadCountKey) ?? def.preloadCount,
+      hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
+      keepAppBarWhenReplace: prefs.safeGet<bool>(_keepAppBarWhenReplaceKey) ?? def.keepAppBarWhenReplace,
     );
   }
 
@@ -77,6 +83,8 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_keepScreenOnKey, setting.keepScreenOn);
     await prefs.safeSet<bool>(_fullscreenKey, setting.fullscreen);
     await prefs.safeSet<int>(_preloadCountKey, setting.preloadCount);
+    await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
+    await prefs.safeSet<bool>(_keepAppBarWhenReplaceKey, setting.keepAppBarWhenReplace);
   }
 
   // ==========
@@ -130,11 +138,12 @@ class AppSettingPrefs {
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
   static const _showChapterCounterKey = BoolKey('AppSettingPrefs_showChapterCounter');
+  static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
   static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
   static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
   static const _homepageFavoriteKey = IntKey('AppSettingPrefs_homepageFavorite');
-  static const _homepageRefreshBehaviorKey = IntKey('AppSettingPrefs_homepageRefreshBehavior');
+  static const _homepageRefreshDataKey = IntKey('AppSettingPrefs_homepageRefreshData');
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
   static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
 
@@ -146,11 +155,12 @@ class AppSettingPrefs {
         _regularGroupRowsKey,
         _otherGroupRowsKey,
         _showChapterCounterKey,
+        _allowErrorToastKey,
         _overviewLoadAllKey,
         _includeUnreadInHomeKey,
         _audienceMangaRowsKey,
         _homepageFavoriteKey,
-        _homepageRefreshBehaviorKey,
+        _homepageRefreshDataKey,
         _clickToSearchKey,
         _alwaysOpenNewListPageKey,
       ];
@@ -166,11 +176,12 @@ class AppSettingPrefs {
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
       showChapterCounter: prefs.safeGet<bool>(_showChapterCounterKey) ?? def.showChapterCounter,
+      allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
       overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
       audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
       homepageFavorite: HomepageFavoriteExtension.fromInt(prefs.safeGet<int>(_homepageFavoriteKey) ?? def.homepageFavorite.toInt()),
-      homepageRefreshBehavior: HomepageRefreshBehaviorExtension.fromInt(prefs.safeGet<int>(_homepageRefreshBehaviorKey) ?? def.homepageRefreshBehavior.toInt()),
+      homepageRefreshData: HomepageRefreshDatarExtension.fromInt(prefs.safeGet<int>(_homepageRefreshDataKey) ?? def.homepageRefreshData.toInt()),
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
       alwaysOpenNewListPage: prefs.safeGet<bool>(_alwaysOpenNewListPageKey) ?? def.alwaysOpenNewListPage,
     );
@@ -186,11 +197,12 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
     await prefs.safeSet<bool>(_showChapterCounterKey, setting.showChapterCounter);
+    await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
     await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
     await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
     await prefs.safeSet<int>(_homepageFavoriteKey, setting.homepageFavorite.toInt());
-    await prefs.safeSet<int>(_homepageRefreshBehaviorKey, setting.homepageRefreshBehavior.toInt());
+    await prefs.safeSet<int>(_homepageRefreshDataKey, setting.homepageRefreshData.toInt());
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
     await prefs.safeSet<bool>(_alwaysOpenNewListPageKey, setting.alwaysOpenNewListPage);
   }

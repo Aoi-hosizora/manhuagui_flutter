@@ -26,7 +26,6 @@ import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
-import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -101,13 +100,18 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
     // 如果未登录，刷新时异步检查登录状态
     if (!AuthManager.instance.logined) {
-      AuthManager.instance.check();
+      Future.microtask(() async {
+        var r = await AuthManager.instance.check();
+        if (!r.logined && r.error != null) {
+          Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');
+        }
+      });
     }
 
     // 针对除漫画分组以外的数据 (下拉刷新)
-    var refreshBehavior = AppSetting.instance.ui.homepageRefreshBehavior;
-    if (considerOtherData && refreshBehavior != HomepageRefreshBehavior.onlyRecommend) {
-      var onlyIfEmpty = refreshBehavior == HomepageRefreshBehavior.includeListIfEmpty;
+    var refreshData = AppSetting.instance.ui.homepageRefreshData;
+    if (considerOtherData && refreshData != HomepageRefreshData.onlyRecommend) {
+      var onlyIfEmpty = refreshData == HomepageRefreshData.includeListIfEmpty;
       Future.microtask(() async {
         await Future.delayed(Duration(milliseconds: 1500));
         await _loadCollections(MangaCollectionType.values, onlyIfEmpty: onlyIfEmpty, needDelay: true);

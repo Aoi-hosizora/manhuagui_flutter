@@ -120,11 +120,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
-        builder: (c) => AuthorPage(
-          id: aid,
-          name: '漫画作者 aid: $aid',
-          url: 'https://www.manhuagui.com/author/$aid',
-        ),
+        builder: (c) => AuthorPage(id: aid, name: '漫画作者 aid: $aid', url: 'https://www.manhuagui.com/author/$aid'),
       ),
     );
   }

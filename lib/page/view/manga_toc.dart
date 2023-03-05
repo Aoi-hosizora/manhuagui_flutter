@@ -4,12 +4,13 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 
-/// 漫画章节列表（给定章节分组列表），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadChoosePage] 使用
+/// 漫画章节列表（给定章节分组列表，包括正逆序等按钮），在 [MangaPage] / [MangaTocPage] / [ViewTocSubPage] / [DownloadChoosePage] 使用
 class MangaTocView extends StatefulWidget {
   const MangaTocView({
     Key? key,
     required this.groups,
     required this.full,
+    this.tocTitle,
     this.showPageCount = false,
     this.firstGroupRowsIfNotFull = 3,
     this.otherGroupsRowsIfNotFull = 1,
@@ -27,6 +28,7 @@ class MangaTocView extends StatefulWidget {
 
   final List<MangaChapterGroup> groups;
   final bool full;
+  final String? tocTitle;
   final bool showPageCount;
   final int firstGroupRowsIfNotFull;
   final int otherGroupsRowsIfNotFull;
@@ -69,7 +71,7 @@ class _MangaTocViewState extends State<MangaTocView> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          '章节列表',
+          widget.tocTitle ?? '章节列表',
           style: Theme.of(context).textTheme.subtitle1,
         ),
         Material(
@@ -162,18 +164,7 @@ class _MangaTocViewState extends State<MangaTocView> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.groups.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-        child: Center(
-          child: Text(
-            '暂无章节',
-            style: Theme.of(context).textTheme.subtitle1,
-          ),
-        ),
-      );
-    }
-
+    var isEmpty = widget.groups.isEmpty || widget.groups.allChapters.isEmpty;
     var groups = widget.groups.makeSureRegularGroupIsFirst(); // 保证【单话】为首个章节分组
     return Column(
       children: [
@@ -187,25 +178,33 @@ class _MangaTocViewState extends State<MangaTocView> {
           color: Colors.white,
           child: Divider(height: 0, thickness: 1),
         ),
-        SizedBox(height: 10),
-        for (var i = 0; i < groups.length; i++) ...[
+        if (isEmpty)
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              '・${groups[i].title}・',
-              style: Theme.of(context).textTheme.subtitle1,
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Center(
+              child: Text('暂无章节', style: Theme.of(context).textTheme.subtitle1),
             ),
           ),
-          SizedBox(height: 10),
-          SizedBox(
-            width: MediaQuery.of(context).size.width,
-            child: _buildGrid(
-              idx: i,
-              chapters: groups[i].chapters,
+        if (!isEmpty) SizedBox(height: 10),
+        if (!isEmpty)
+          for (var i = 0; i < groups.length; i++) ...[
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                '・${groups[i].title}・',
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
             ),
-          ),
-          SizedBox(height: 10),
-        ],
+            SizedBox(height: 10),
+            SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: _buildGrid(
+                idx: i,
+                chapters: groups[i].chapters,
+              ),
+            ),
+            SizedBox(height: 10),
+          ],
       ],
     );
   }

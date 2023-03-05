@@ -10,6 +10,7 @@ import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画章节列表页，展示所给 [MangaChapterGroup] 信息
 class MangaTocPage extends StatefulWidget {
@@ -54,6 +55,8 @@ class _MangaTocPageState extends State<MangaTocPage> {
   var _loading = true; // initialize to true, fake loading flag
   MangaHistory? _history;
   DownloadedManga? _downloadEntity;
+  List<MangaChapterGroup>? _downloadedChapters;
+  var _downloadOnly = false;
   var _columns = 4; // default to four columns
 
   Future<void> _loadData() async {
@@ -64,6 +67,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
       await Future.delayed(Duration(milliseconds: 400)); // fake loading
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
     } finally {
       _loading = false;
       if (mounted) setState(() {});
@@ -77,6 +81,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
     }
     if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
       if (mounted) setState(() {});
     }
   }
@@ -88,6 +93,11 @@ class _MangaTocPageState extends State<MangaTocPage> {
         title: Text(widget.mangaTitle),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
+          AppBarActionButton(
+            icon: Icon(!_downloadOnly ? MdiIcons.downloadOutline : MdiIcons.downloadOffOutline),
+            tooltip: !_downloadOnly ? '仅显示下载章节' : '显示全部章节',
+            onPressed: () => mountedSetState(() => _downloadOnly = !_downloadOnly),
+          ),
           PopupMenuButton(
             child: Builder(
               builder: (c) => AppBarActionButton(
@@ -129,8 +139,9 @@ class _MangaTocPageState extends State<MangaTocPage> {
               physics: AlwaysScrollableScrollPhysics(),
               children: [
                 MangaTocView(
-                  groups: widget.groups,
+                  groups: !_downloadOnly ? widget.groups : (_downloadedChapters ?? []),
                   full: true,
+                  tocTitle: !_downloadOnly ? '章节列表' : '章节列表 (仅下载)',
                   showPageCount: true,
                   columns: _columns,
                   highlightedChapters: [_history?.chapterId ?? 0],

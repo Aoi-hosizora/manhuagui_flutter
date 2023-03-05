@@ -68,7 +68,9 @@ class _MangaRandomPageState extends State<MangaRandomPage> {
         child: SizedBox(
           height: 50,
           width: 50,
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            strokeWidth: 4.5,
+          ),
         ),
       ),
     );

@@ -446,17 +446,65 @@ class DownloadedChapter {
         needUpdate == o.needUpdate;
   }
 
-  TinyMangaChapter toTiny() {
+  TinyMangaChapter toTiny({bool? isNew, int? number}) {
     return TinyMangaChapter(
       cid: chapterId,
       title: chapterTitle,
       mid: mangaId,
-      url: 'https://www.manhuagui.com/comic/$mangaId/$chapterId.html',
+      url: chapterUrl,
       pageCount: totalPageCount,
-      isNew: false,
+      isNew: isNew ?? false,
       group: chapterGroup,
-      number: chapterId, // <<< use chapterId as number
+      number: number ?? chapterId, // <<< use chapterId as number
     );
+  }
+}
+
+extension DownloadedChapterListExtension on List<DownloadedChapter> {
+  List<MangaChapterGroup> toChapterGroup({List<MangaChapterGroup>? origin}) {
+    // build origin chapter map
+    origin ??= <MangaChapterGroup>[];
+    var originChapterMap = <int, TinyMangaChapter>{
+      for (var c in origin.allChapters) c.cid: c,
+    };
+
+    // extract chapter groups to list
+    var groupMap = <String, List<TinyMangaChapter>>{
+      for (var g in origin) g.title: [],
+    };
+    for (var chapter in this) {
+      if (!groupMap.containsKey(chapter.chapterGroup)) {
+        groupMap[chapter.chapterGroup] = [];
+      }
+      groupMap[chapter.chapterGroup]?.add(
+        chapter.toTiny(
+          isNew: originChapterMap[chapter.chapterId]?.isNew,
+          number: originChapterMap[chapter.chapterId]?.number,
+        ),
+      );
+    }
+
+    // find all group names in order
+    var groupNames = <String>[];
+    for (var originGroup in origin) {
+      groupNames.add(originGroup.title);
+    }
+    for (var title in groupMap.keys) {
+      if (!groupNames.contains(title)) {
+        groupNames.add(title);
+      }
+    }
+
+    // combine chapter groups to map
+    var groups = <MangaChapterGroup>[];
+    for (var groupName in groupNames) {
+      var group = groupMap[groupName] ?? [];
+      if (group.isNotEmpty) {
+        groups.add(MangaChapterGroup(title: groupName, chapters: group));
+      }
+    }
+    groups = groups.makeSureRegularGroupIsFirst();
+    return groups;
   }
 }
 

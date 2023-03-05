@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画章节阅读页-章节列表
 class ViewTocSubPage extends StatefulWidget {
@@ -51,6 +52,8 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
 
   var _loading = true; // initialize to true, fake loading flag
   DownloadedManga? _downloadEntity;
+  List<MangaChapterGroup>? _downloadedChapters;
+  var _downloadOnly = false;
   var _columns = 4; // default to four columns
 
   Future<void> _loadData() async {
@@ -60,6 +63,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
     try {
       await Future.delayed(Duration(milliseconds: 400)); // fake loading
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
     } finally {
       _loading = false;
       if (mounted) setState(() {});
@@ -69,6 +73,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
   Future<void> _updateByEvent(DownloadUpdatedEvent ev) async {
     if (ev.mangaId == widget.mangaId) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
       if (mounted) setState(() {});
     }
   }
@@ -80,6 +85,11 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
         title: Text(widget.mangaTitle),
         leading: AppBarActionButton.leading(context: context),
         actions: [
+          AppBarActionButton(
+            icon: Icon(!_downloadOnly ? MdiIcons.downloadOutline : MdiIcons.downloadOffOutline),
+            tooltip: !_downloadOnly ? '仅显示下载章节' : '显示全部章节',
+            onPressed: () => mountedSetState(() => _downloadOnly = !_downloadOnly),
+          ),
           PopupMenuButton(
             child: Builder(
               builder: (c) => AppBarActionButton(
@@ -117,8 +127,9 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
               physics: AlwaysScrollableScrollPhysics(),
               children: [
                 MangaTocView(
-                  groups: widget.groups,
+                  groups: !_downloadOnly ? widget.groups : (_downloadedChapters ?? []),
                   full: true,
+                  tocTitle: !_downloadOnly ? '章节列表' : '章节列表 (仅下载)',
                   showPageCount: true,
                   columns: _columns,
                   highlightedChapters: [widget.highlightedChapter],
