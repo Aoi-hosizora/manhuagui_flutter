@@ -43,7 +43,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _showMangaReadIcon = widget.setting.showMangaReadIcon;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
-  late var _showChapterCounter = widget.setting.showChapterCounter;
   late var _allowErrorToast = widget.setting.allowErrorToast;
   late var _overviewLoadAll = widget.setting.overviewLoadAll;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
@@ -60,7 +59,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         showMangaReadIcon: _showMangaReadIcon,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
-        showChapterCounter: _showChapterCounter,
         allowErrorToast: _allowErrorToast,
         overviewLoadAll: _overviewLoadAll,
         includeUnreadInHome: _includeUnreadInHome,
@@ -79,7 +77,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _showMangaReadIcon = setting.showMangaReadIcon;
     _regularGroupRows = setting.regularGroupRows;
     _otherGroupRows = setting.otherGroupRows;
-    _showChapterCounter = setting.showChapterCounter;
     _allowErrorToast = setting.allowErrorToast;
     _overviewLoadAll = setting.overviewLoadAll;
     _includeUnreadInHome = setting.includeUnreadInHome;
@@ -167,15 +164,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => '$s行',
           onChanged: (c) {
             _otherGroupRows = c.clamp(1, 5);
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          title: '漫画页章节列表显示页数',
-          value: _showChapterCounter,
-          onChanged: (b) {
-            _showChapterCounter = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

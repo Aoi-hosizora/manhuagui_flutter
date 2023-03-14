@@ -15,7 +15,6 @@ class DlFinishedSubPage extends StatefulWidget {
     required this.actionController,
     required this.injectorHandler,
     required this.mangaEntity,
-    required this.showPageCount,
     required this.invertOrder,
     required this.history,
     required this.toReadChapter,
@@ -28,7 +27,6 @@ class DlFinishedSubPage extends StatefulWidget {
   final ActionController actionController;
   final SliverOverlapAbsorberHandle injectorHandler;
   final DownloadedManga mangaEntity;
-  final bool showPageCount;
   final bool invertOrder;
   final MangaHistory? history;
   final void Function(int cid) toReadChapter;
@@ -106,7 +104,6 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                     onModeChanged: (_) => mountedSetState(() {}),
                     child: MangaSimpleTocView(
                       groups: groups,
-                      showPageCount: widget.showPageCount,
                       invertOrder: widget.invertOrder,
                       showNewBadge: false,
                       highlightedChapters: [widget.history?.chapterId ?? 0],
@@ -120,16 +117,9 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                               checkboxPosition: PositionArgument.fromLTRB(null, null, 0.9, 1),
                               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(
                                 tip: tip,
-                                backgroundColor: chapterId != widget.history?.chapterId
-                                    ? Colors.white // white background when not highlighted
-                                    : Theme.of(context).primaryColorLight.let(
-                                          (c) => Color.fromRGBO(
-                                            (255 - 0.6 * (255 - c.red)).toInt(),
-                                            (255 - 0.6 * (255 - c.green)).toInt(),
-                                            (255 - 0.6 * (255 - c.blue)).toInt(),
-                                            1.0,
-                                          ),
-                                        ), // primaryColorLight.withOpacity(0.6) background when highlighted
+                                backgroundColor: chapterId != widget.history?.chapterId //
+                                    ? Colors.white
+                                    : Theme.of(context).primaryColorLight.applyOpacity(0.6),
                                 scale: 0.7,
                                 scaleAlignment: Alignment.bottomRight,
                               ),

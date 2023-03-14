@@ -27,4 +27,6 @@ class CustomIcons {
   static const IconData opened_book_cog = IconData(0xe807, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData download_cog = IconData(0xe808, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData application_star_cog = IconData(0xe809, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData eye_menu = IconData(0xe80a, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData eye_download = IconData(0xe80b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

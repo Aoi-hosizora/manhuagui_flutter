@@ -102,7 +102,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   Manga? _mangaData; // loaded in background
   var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
   var _showAllChapters = false;
-  var _showPageCount = AppSetting.instance.ui.showChapterCounter;
   var _invertOrder = true;
 
   Future<void> _loadData() async {
@@ -425,13 +424,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
               ),
               PopupMenuItem(
                 child: IconTextMenuItem(
-                  _showPageCount ? Icons.check_box_outlined : Icons.check_box_outline_blank,
-                  '显示已完成章节的页数',
-                ),
-                onTap: () => mountedSetState(() => _showPageCount = !_showPageCount),
-              ),
-              PopupMenuItem(
-                child: IconTextMenuItem(
                   _showAllChapters ? Icons.check_box_outlined : Icons.check_box_outline_blank,
                   '显示所有章节的下载状态',
                 ),
@@ -603,7 +595,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   actionController: _actionControllers[0],
                   injectorHandler: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(c),
                   mangaEntity: _data!,
-                  showPageCount: _showPageCount,
                   invertOrder: _invertOrder,
                   history: _history,
                   toReadChapter: _readChapter,

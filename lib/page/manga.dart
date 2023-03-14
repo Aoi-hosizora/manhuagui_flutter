@@ -1116,7 +1116,6 @@ class _MangaPageState extends State<MangaPage> {
                   child: MangaTocView(
                     groups: _data!.chapterGroups,
                     full: false,
-                    showPageCount: AppSetting.instance.ui.showChapterCounter,
                     firstGroupRowsIfNotFull: AppSetting.instance.ui.regularGroupRows,
                     otherGroupsRowsIfNotFull: AppSetting.instance.ui.otherGroupRows,
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),

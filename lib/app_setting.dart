@@ -66,6 +66,10 @@ class AppSetting {
   }
 }
 
+// ===========
+// ViewSetting
+// ===========
+
 class ViewSetting {
   const ViewSetting({
     required this.viewDirection,
@@ -178,6 +182,10 @@ extension ViewDirectionExtension on ViewDirection {
   }
 }
 
+// =========
+// DlSetting
+// =========
+
 class DlSetting {
   const DlSetting({
     required this.invertDownloadOrder,
@@ -218,6 +226,10 @@ class DlSetting {
   }
 }
 
+// =========
+// UiSetting
+// =========
+
 class UiSetting {
   const UiSetting({
     required this.defaultMangaOrder,
@@ -226,7 +238,6 @@ class UiSetting {
     required this.showMangaReadIcon,
     required this.regularGroupRows,
     required this.otherGroupRows,
-    required this.showChapterCounter,
     required this.allowErrorToast,
     required this.overviewLoadAll,
     required this.includeUnreadInHome,
@@ -243,7 +254,6 @@ class UiSetting {
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final int regularGroupRows; // 单话章节分组显示行数
   final int otherGroupRows; // 其他章节分组显示行数
-  final bool showChapterCounter; // 漫画页章节列表显示页数
   final bool allowErrorToast; // 允许弹出漫画错误提示
   final bool overviewLoadAll; // 章节一览页加载所有图片
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
@@ -260,7 +270,6 @@ class UiSetting {
     showMangaReadIcon: true,
     regularGroupRows: 3,
     otherGroupRows: 1,
-    showChapterCounter: false,
     allowErrorToast: true,
     overviewLoadAll: false,
     includeUnreadInHome: true,
@@ -278,7 +287,6 @@ class UiSetting {
     bool? showMangaReadIcon,
     int? regularGroupRows,
     int? otherGroupRows,
-    bool? showChapterCounter,
     bool? allowErrorToast,
     bool? overviewLoadAll,
     bool? includeUnreadInHome,
@@ -295,7 +303,6 @@ class UiSetting {
       showMangaReadIcon: showMangaReadIcon ?? this.showMangaReadIcon,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
-      showChapterCounter: showChapterCounter ?? this.showChapterCounter,
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
       overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
@@ -429,6 +436,10 @@ extension HomepageRefreshDatarExtension on HomepageRefreshData {
     return HomepageRefreshData.onlyRecommend;
   }
 }
+
+// ============
+// OtherSetting
+// ============
 
 class OtherSetting {
   const OtherSetting({

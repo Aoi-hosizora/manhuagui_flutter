@@ -4,13 +4,13 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画章节列表页，展示所给 [MangaChapterGroup] 信息
 class MangaTocPage extends StatefulWidget {
@@ -94,8 +94,8 @@ class _MangaTocPageState extends State<MangaTocPage> {
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
-            icon: Icon(!_downloadOnly ? MdiIcons.downloadOutline : MdiIcons.downloadOffOutline),
-            tooltip: !_downloadOnly ? '仅显示下载章节' : '显示全部章节',
+            icon: Icon(_downloadOnly ? CustomIcons.eye_download : CustomIcons.eye_menu),
+            tooltip: _downloadOnly ? '当前仅显示下载章节' : '当前显示着全部章节',
             onPressed: () => mountedSetState(() => _downloadOnly = !_downloadOnly),
           ),
           PopupMenuButton(
@@ -142,7 +142,6 @@ class _MangaTocPageState extends State<MangaTocPage> {
                   groups: !_downloadOnly ? widget.groups : (_downloadedChapters ?? []),
                   full: true,
                   tocTitle: !_downloadOnly ? '章节列表' : '章节列表 (仅下载)',
-                  showPageCount: true,
                   columns: _columns,
                   highlightedChapters: [_history?.chapterId ?? 0],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(

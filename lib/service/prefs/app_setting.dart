@@ -137,7 +137,6 @@ class AppSettingPrefs {
   static const _showMangaReadIconKey = BoolKey('AppSettingPrefs_showMangaReadIcon');
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
-  static const _showChapterCounterKey = BoolKey('AppSettingPrefs_showChapterCounter');
   static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
   static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
@@ -154,7 +153,6 @@ class AppSettingPrefs {
         _showMangaReadIconKey,
         _regularGroupRowsKey,
         _otherGroupRowsKey,
-        _showChapterCounterKey,
         _allowErrorToastKey,
         _overviewLoadAllKey,
         _includeUnreadInHomeKey,
@@ -175,7 +173,6 @@ class AppSettingPrefs {
       showMangaReadIcon: prefs.safeGet<bool>(_showMangaReadIconKey) ?? def.showMangaReadIcon,
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
-      showChapterCounter: prefs.safeGet<bool>(_showChapterCounterKey) ?? def.showChapterCounter,
       allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
       overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
@@ -196,7 +193,6 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_showMangaReadIconKey, setting.showMangaReadIcon);
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
-    await prefs.safeSet<bool>(_showChapterCounterKey, setting.showChapterCounter);
     await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
     await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);

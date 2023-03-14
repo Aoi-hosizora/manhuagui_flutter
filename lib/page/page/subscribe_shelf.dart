@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/manga_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
@@ -198,6 +199,14 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
                   builder: (c) => MangaShelfCachePage(),
                 ),
               );
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(CustomIcons.bookmark_plus),
+            text: Text('全部添加至本地收藏'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              MangaShelfCachePage.addAllToFavorite(context);
             },
           ),
         ],

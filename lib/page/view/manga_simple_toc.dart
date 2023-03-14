@@ -8,7 +8,6 @@ class MangaSimpleTocView extends StatelessWidget {
   const MangaSimpleTocView({
     Key? key,
     required this.groups,
-    this.showPageCount = false,
     this.columns = 4,
     this.gridPadding,
     this.invertOrder = true,
@@ -22,7 +21,6 @@ class MangaSimpleTocView extends StatelessWidget {
   }) : super(key: key);
 
   final List<MangaChapterGroup> groups;
-  final bool showPageCount;
   final int columns;
   final EdgeInsets? gridPadding;
   final bool invertOrder;
@@ -38,7 +36,7 @@ class MangaSimpleTocView extends StatelessWidget {
     return ChapterGridView(
       chapters: chapters,
       padding: gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
-      showPageCount: showPageCount,
+      showPageCount: true,
       invertOrder: invertOrder /* true means desc */,
       maxLines: -1 /* show all chapters */,
       columns: columns,

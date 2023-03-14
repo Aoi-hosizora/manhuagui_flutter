@@ -8,7 +8,10 @@ import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
@@ -36,26 +39,29 @@ class DownloadChoosePage extends StatefulWidget {
 
 class _DownloadChoosePageState extends State<DownloadChoosePage> {
   final _controller = ScrollController();
+  final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
   }
 
   @override
   void dispose() {
     _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
+    _msController.dispose();
     super.dispose();
   }
 
   var _loading = true; // initialize to true, fake loading flag
+  MangaHistory? _history;
   DownloadedManga? _downloadEntity;
   var _columns = 4; // default to four columns
-  final _selected = <int>[];
 
   Future<void> _loadData() async {
     _loading = true;
@@ -63,15 +69,21 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
 
     try {
       await Future.delayed(Duration(milliseconds: 400)); // fake loading
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
     } finally {
       _loading = false;
+      _msController.enterMultiSelectionMode(); // 默认进入多选模式
       if (mounted) setState(() {});
     }
   }
 
-  Future<void> _updateByEvent(DownloadUpdatedEvent ev) async {
-    if (ev.mangaId == widget.mangaId) {
+  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent}) async {
+    if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+    if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
       if (mounted) setState(() {});
     }
@@ -79,11 +91,12 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
 
   Future<void> _downloadManga() async {
     // 1. 获取需要下载的章节
-    if (_selected.isEmpty) {
+    var selected = _msController.selectedItems.map((el) => el.value).toList();
+    if (selected.isEmpty) {
       Fluttertoast.showToast(msg: '请选择需要下载的章节');
       return;
     }
-    var chapterIds = filterNeedDownloadChapterIds(chapterIds: _selected, downloadedChapters: _downloadEntity?.downloadedChapters ?? []);
+    var chapterIds = filterNeedDownloadChapterIds(chapterIds: selected, downloadedChapters: _downloadEntity?.downloadedChapters ?? []);
     if (chapterIds.isEmpty) {
       Fluttertoast.showToast(msg: '所选章节均已下载完毕');
       return;
@@ -119,7 +132,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
 
     // 4. 更新界面，并显示提示
     // await _loadDownloadedChapters(); => 由事件通知更新章节信息
-    _selected.clear();
+    selected.clear();
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -146,24 +159,18 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
 
   var _isAllSelected = false;
 
-  void _selectChapter(int cid) {
-    if (!_selected.contains(cid)) {
-      _selected.add(cid);
-    } else {
-      _selected.remove(cid);
-    }
-    _isAllSelected = _selected.length == widget.groups.expand((group) => group.chapters.map((chapter) => chapter.cid)).length;
+  void _onSelectChanged() {
+    _isAllSelected = _msController.selectedItems.length == widget.groups.allChapterIds.length;
     if (mounted) setState(() {});
   }
 
   void _selectAllOrUnselectAll() {
-    var allChapterIds = widget.groups.expand((group) => group.chapters.map((chapter) => chapter.cid));
-    if (_selected.length == allChapterIds.length) {
-      _selected.clear(); // unselect all
+    var allChapterIds = widget.groups.allChapterIds;
+    if (_msController.selectedItems.length == allChapterIds.length) {
+      _msController.unselectAll();
       _isAllSelected = false;
     } else {
-      _selected.clear();
-      _selected.addAll(allChapterIds); // select all
+      _msController.select(allChapterIds.map((el) => ValueKey(el)));
       _isAllSelected = true;
     }
     if (mounted) setState(() {});
@@ -255,17 +262,41 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                   text: '本应用为第三方漫画柜客户端，请不要连续下载过多章节，避免因短时间内的频繁访问而导致当前IP被漫画柜封禁。',
                   isWarning: true,
                 ),
-                MangaTocView(
-                  groups: widget.groups,
-                  full: true,
-                  showPageCount: true,
-                  columns: _columns,
-                  highlightColor: Theme.of(context).primaryColor.withOpacity(0.5),
-                  highlightedChapters: _selected,
-                  customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
-                    entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                MultiSelectable<ValueKey<int>>(
+                  controller: _msController,
+                  stateSetter: () {
+                    _onSelectChanged();
+                    mountedSetState(() {});
+                  },
+                  onModeChanged: (_) => mountedSetState(() {}),
+                  exitWhenNoSelect: false /* 不退出多选模式 */,
+                  child: MangaTocView(
+                    groups: widget.groups,
+                    full: true,
+                    columns: _columns,
+                    highlightedChapters: [_history?.chapterId ?? 0],
+                    customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
+                      entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
+                    ),
+                    itemBuilder: (_, chapterId, itemWidget) => chapterId == null
+                        ? itemWidget
+                        : SelectableCheckboxItem<ValueKey<int>>(
+                            key: ValueKey<int>(chapterId),
+                            checkboxPosition: PositionArgument.fromLTRB(null, null, 0.9, 1),
+                            checkboxBuilder: (_, __, tip) => tip.selected
+                                ? CheckboxForSelectableItem(
+                                    tip: tip,
+                                    backgroundColor: chapterId != _history?.chapterId //
+                                        ? Colors.white
+                                        : Theme.of(context).primaryColorLight.applyOpacity(0.6),
+                                    scale: 0.7,
+                                    scaleAlignment: Alignment.bottomRight,
+                                  )
+                                : SizedBox.shrink(),
+                            itemBuilder: (_, key, tip) => itemWidget /* single grid */,
+                          ),
+                    onChapterPressed: (_) {},
                   ),
-                  onChapterPressed: _selectChapter,
                 ),
               ],
             ),

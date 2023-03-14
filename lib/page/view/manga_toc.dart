@@ -11,7 +11,6 @@ class MangaTocView extends StatefulWidget {
     required this.groups,
     required this.full,
     this.tocTitle,
-    this.showPageCount = false,
     this.firstGroupRowsIfNotFull = 3,
     this.otherGroupsRowsIfNotFull = 1,
     this.columns = 4,
@@ -20,6 +19,7 @@ class MangaTocView extends StatefulWidget {
     this.highlightedChapters = const [],
     this.showNewBadge = true,
     this.customBadgeBuilder,
+    this.itemBuilder,
     required this.onChapterPressed,
     this.onMoreChaptersPressed,
     this.onChapterLongPressed,
@@ -29,7 +29,6 @@ class MangaTocView extends StatefulWidget {
   final List<MangaChapterGroup> groups;
   final bool full;
   final String? tocTitle;
-  final bool showPageCount;
   final int firstGroupRowsIfNotFull;
   final int otherGroupsRowsIfNotFull;
   final int columns;
@@ -38,6 +37,7 @@ class MangaTocView extends StatefulWidget {
   final List<int> highlightedChapters;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
+  final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
   final void Function(int cid) onChapterPressed;
   final void Function()? onMoreChaptersPressed;
   final void Function(int cid)? onChapterLongPressed;
@@ -91,7 +91,7 @@ class _MangaTocViewState extends State<MangaTocView> {
                   onLongPress: widget.onMoreChaptersLongPressed,
                 ),
                 Container(
-                  margin: EdgeInsets.only(left: 4, right: 5),
+                  margin: EdgeInsets.only(left: 5, right: 5),
                   color: Theme.of(context).dividerColor,
                   width: 1,
                   height: TextSpan(text: '　', style: Theme.of(context).textTheme.subtitle1).layoutSize(context).height,
@@ -122,7 +122,7 @@ class _MangaTocViewState extends State<MangaTocView> {
     return ChapterGridView(
       chapters: chapters,
       padding: widget.gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
-      showPageCount: widget.showPageCount,
+      showPageCount: true,
       invertOrder: _invertOrder,
       maxLines: widget.full
           ? -1 // show all chapters
@@ -143,6 +143,9 @@ class _MangaTocViewState extends State<MangaTocView> {
           if (customBadge != null) customBadge,
         ];
       },
+      itemBuilder: widget.itemBuilder == null
+          ? null //
+          : (ctx, chapter, itemWidget) => widget.itemBuilder!.call(ctx, chapter?.cid, itemWidget),
       onChapterPressed: (chapter) {
         if (chapter == null) {
           widget.onMoreChaptersPressed?.call();

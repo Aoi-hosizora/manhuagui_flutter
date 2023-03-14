@@ -290,6 +290,34 @@ class FavoriteDao {
     return order;
   }
 
+  static Future<int?> getGroupCount({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblFavoriteGroup
+         WHERE $_colGUsername = ?''',
+      [username],
+    );
+    if (results == null) {
+      return null;
+    }
+    return firstIntValue(results);
+  }
+
+  static Future<bool?> checkGroupExistence({required String username, required String groupName}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colGGroupName)
+         FROM $_tblFavoriteGroup
+         WHERE $_colGUsername = ? AND $_colGGroupName = ?''',
+      [username, groupName],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
+  }
+
   static Future<FavoriteGroup?> getGroup({required String username, required String groupName}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
@@ -338,6 +366,25 @@ class FavoriteDao {
       ));
     }
     return out;
+  }
+
+  static Future<int> getFavoriteGroupNewOrder({required String username, required bool addToTop}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT ${addToTop ? 'MIN' : 'MAX'}($_colGGroupOrder)
+         FROM $_tblFavoriteGroup
+         WHERE $_colGUsername = ?''',
+      [username],
+    );
+    var count = results == null ? null : firstIntValue(results);
+
+    int order; // default to 1
+    if (addToTop) {
+      order = (count ?? 2) - 1;
+    } else {
+      order = (count ?? 0) + 1;
+    }
+    return order;
   }
 
   static Future<Map<String, int>?> getGroupsLengths({required String username}) async {
@@ -579,12 +626,16 @@ class FavoriteDao {
     return rows != null && rows >= 1;
   }
 
-  static Future<bool> deleteGroup({required String username, required String groupName}) async {
+  static Future<bool> deleteGroup({required String username, required String groupName, bool moveMangasIfExisted = true}) async {
     if (groupName == '') {
       return false; // cannot delete the default group
     }
     final db = await DBManager.instance.getDB();
-    await updateMangasGroupName(username: username, oldName: groupName, newName: '', addToTop: false); // 移动分组，默认添加到末尾
+    if (moveMangasIfExisted) {
+      await updateMangasGroupName(username: username, oldName: groupName, newName: '', addToTop: false); // 移动分组，默认添加到末尾
+    } else {
+      await db.safeRawDelete('DELETE FROM $_tblFavorite WHERE $_colUsername = ? AND $_colGroupName = ?', [username, groupName]); // 删除漫画
+    }
     var rows = await db.safeRawDelete(
       '''DELETE FROM $_tblFavoriteGroup
          WHERE $_colGUsername = ? AND $_colGGroupName = ?''',

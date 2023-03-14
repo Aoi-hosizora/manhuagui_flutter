@@ -101,6 +101,12 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
     return out;
   }
 
+  List<int> get allChapterIds {
+    var out = expand((group) => group.chapters.map((chapter) => chapter.cid)).toList();
+    out.sort((a, b) => a.compareTo(b));
+    return out;
+  }
+
   TinyMangaChapter? findNextChapter(int cid) {
     var chapter = findChapter(cid);
     if (chapter == null) {

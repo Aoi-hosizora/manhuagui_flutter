@@ -6,9 +6,11 @@ import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/page/view/shelf_cache_line.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -99,7 +101,7 @@ class MangaShelfCachePage extends StatefulWidget {
                   Navigator.of(c).pop(false); // 操作被取消，同时结束处理循环
                 },
               ),
-            ]
+            ],
           ),
         ),
       ),
@@ -172,7 +174,7 @@ class MangaShelfCachePage extends StatefulWidget {
     }
     Navigator.of(context).pop(); // 关闭"正在处理"对话框
     onFinish?.call(); // 更新界面
-    showDialog(
+    await showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('同步我的书架'),
@@ -184,6 +186,86 @@ class MangaShelfCachePage extends StatefulWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// 全部添加本地收藏，在 [ShelfSubPage] 和 [MangaShelfCachePage] 使用
+  static Future<void> addAllToFavorite(BuildContext context) async {
+    var groupName = '来自我的书架';
+    var ok = await FavoriteDao.checkGroupExistence(username: AuthManager.instance.username, groupName: groupName) ?? false;
+    if (!ok) {
+      var order = await FavoriteDao.getFavoriteGroupNewOrder(username: AuthManager.instance.username, addToTop: false);
+      var group = FavoriteGroup(groupName: groupName, order: order, createdAt: DateTime.now());
+      var ok = await FavoriteDao.addOrUpdateGroup(username: AuthManager.instance.username, group: group, testGroupName: groupName);
+      if (ok) {
+        EventBusManager.instance.fire(FavoriteGroupUpdatedEvent(changedGroups: {}, newGroups: [groupName])); // 新增分组，发送通知
+      } else {
+        await showYesNoAlertDialog(context: context, title: Text('添加至本地收藏'), content: Text('无法将书架记录添加至本地收藏。'), yesText: Text(''), noText: null);
+        return;
+      }
+    }
+
+    var total = await ShelfCacheDao.getShelfCacheCount(username: AuthManager.instance.username) ?? 0;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          title: Text('添加至本地收藏'),
+          contentPadding: EdgeInsets.zero,
+          content: CircularProgressDialogOption(
+            progress: CircularProgressIndicator(),
+            child: Text('正在将所有书架记录 (共 $total 部) 添加至本地收藏...'),
+          ),
+        ),
+      ),
+    );
+
+    // !!!
+    var limit = 20;
+    var mangaIds = <int>[];
+    var alreadyIn = 0; // 已在收藏内的漫画
+    for (var p = 1; p <= (total / limit).ceil(); p++) {
+      var caches = await ShelfCacheDao.getShelfCaches(username: AuthManager.instance.username, page: p, limit: limit) ?? [];
+      var order = await FavoriteDao.getFavoriteNewOrder(username: AuthManager.instance.username, groupName: groupName, addToTop: false);
+      for (var cache in caches) {
+        var existed = await FavoriteDao.checkExistence(username: AuthManager.instance.username, mid: cache.mangaId) ?? false;
+        if (existed) {
+          mangaIds.add(cache.mangaId);
+          alreadyIn++;
+          continue; // 跳过已经添加至收藏的漫画
+        }
+        var favorite = FavoriteManga(
+          mangaId: cache.mangaId,
+          mangaTitle: cache.mangaTitle,
+          mangaCover: cache.mangaCover,
+          mangaUrl: cache.mangaUrl,
+          remark: '',
+          groupName: groupName,
+          order: order,
+          createdAt: DateTime.now(),
+        );
+        var ok = await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: favorite); // 添加至收藏
+        if (ok) {
+          mangaIds.add(cache.mangaId);
+          order++;
+        }
+      }
+    }
+
+    for (var mangaId in mangaIds) {
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.added, fromFavoritePage: false));
+    }
+    Navigator.of(context).pop(); // 关闭"正在处理"对话框
+    await showYesNoAlertDialog(
+      context: context,
+      title: Text('添加至本地收藏'),
+      content: total == alreadyIn //
+          ? Text('书架记录中的 $total 部漫画均已被收藏，未作任何变更。')
+          : Text('已将书架记录中的 ${total - alreadyIn} 部漫画添加至 "$groupName" 分组' + (alreadyIn == 0 ? '。' : '，此外未对 $alreadyIn 部已被收藏的漫画做任何变更。')),
+      yesText: Text('确定'),
+      noText: null,
     );
   }
 }
@@ -510,6 +592,10 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
                     child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                     onTap: () => _exitSort(),
                   ),
+                PopupMenuItem(
+                  child: IconTextMenuItem(CustomIcons.bookmark_plus, '全部添加至本地收藏'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => MangaShelfCachePage.addAllToFavorite(context)),
+                ),
               ],
             ),
           ],

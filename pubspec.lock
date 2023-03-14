@@ -353,8 +353,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: b240d4fc0d737665dc68f0b7c2f4994a6558c5d3
-      resolved-ref: b240d4fc0d737665dc68f0b7c2f4994a6558c5d3
+      ref: ab950e79b9b757b92733c273bbcd3d6ec7b818f2
+      resolved-ref: ab950e79b9b757b92733c273bbcd3d6ec7b818f2
       url: "https://github.com/Aoi-hosizora/flutter_ahlib"
     source: git
     version: "1.2.0"

@@ -80,35 +80,36 @@ Future<String?> getCachedOrDownloadedChapterPageFilePath({required int mangaId, 
 Future<File?> downloadImageToGallery(String url, {File? precheck}) async {
   try {
     var filepath = await _getDownloadImageFilePath(url);
+    File f;
     if (precheck != null && await precheck.exists()) {
       // copy given file directly
-      return await precheck.copy(filepath);
+      f = await precheck.copy(filepath);
+    } else {
+      // download from network
+      f = await downloadFile(
+        url: url,
+        filepath: filepath,
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Referer': REFERER,
+        },
+        cacheManager: DefaultCacheManager(),
+        option: DownloadOption(
+          behavior: DownloadBehavior.preferUsingCache,
+          conflictHandler: (_) async => DownloadConflictBehavior.addSuffix,
+          headTimeout: AppSetting.instance.other.dlTimeoutBehavior.determineValue(
+            normal: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
+            long: Duration(milliseconds: DOWNLOAD_HEAD_LTIMEOUT),
+            longLong: Duration(milliseconds: DOWNLOAD_HEAD_LLTIMEOUT),
+          ),
+          downloadTimeout: AppSetting.instance.other.dlTimeoutBehavior.determineValue(
+            normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
+            long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
+            longLong: Duration(milliseconds: DOWNLOAD_IMAGE_LLTIMEOUT),
+          ),
+        ),
+      );
     }
-
-    // download from network
-    var f = await downloadFile(
-      url: url,
-      filepath: filepath,
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Referer': REFERER,
-      },
-      cacheManager: DefaultCacheManager(),
-      option: DownloadOption(
-        behavior: DownloadBehavior.preferUsingCache,
-        conflictHandler: (_) async => DownloadConflictBehavior.addSuffix,
-        headTimeout: AppSetting.instance.other.dlTimeoutBehavior.determineValue(
-          normal: Duration(milliseconds: DOWNLOAD_HEAD_TIMEOUT),
-          long: Duration(milliseconds: DOWNLOAD_HEAD_LTIMEOUT),
-          longLong: Duration(milliseconds: DOWNLOAD_HEAD_LLTIMEOUT),
-        ),
-        downloadTimeout: AppSetting.instance.other.dlTimeoutBehavior.determineValue(
-          normal: Duration(milliseconds: DOWNLOAD_IMAGE_TIMEOUT),
-          long: Duration(milliseconds: DOWNLOAD_IMAGE_LTIMEOUT),
-          longLong: Duration(milliseconds: DOWNLOAD_IMAGE_LLTIMEOUT),
-        ),
-      ),
-    );
     await addToGallery(f); // <<<
     return f;
   } catch (e, s) {

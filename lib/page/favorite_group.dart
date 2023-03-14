@@ -177,19 +177,25 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
     if (group.origin != null) {
       mangaCount = await FavoriteDao.getFavoriteCount(username: AuthManager.instance.username, groupName: group.origin!.groupName); // 查询原始分组的漫画数量
     }
+    var isEmptyGroup = mangaCount == null || mangaCount == 0;
 
     bool? ok;
+    var moveMangas = true;
     ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
         title: Text('删除分组'),
-        content: mangaCount == null || mangaCount == 0
+        content: isEmptyGroup
             ? Text('是否删除 "${group.group.groupName}" 分组？') //
             : Text('"${group.group.groupName}" 分组' + //
                 (group.group.groupName == group.origin!.groupName ? '' : ' (原为 "${group.origin!.groupName}" 分组) ') +
-                '内仍存有 $mangaCount 部漫画，这些漫画将被移至默认分组，确定继续删除该分组？'),
+                '内仍存有 $mangaCount 部漫画，这些漫画将被移至默认分组或被删除，确定继续删除该分组？'),
         actions: [
-          TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+          if (isEmptyGroup) TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+          if (!isEmptyGroup) ...[
+            TextButton(child: Text('移动漫画后删除'), onPressed: () => callAll([() => moveMangas = true, () => Navigator.of(c).pop(true)])),
+            TextButton(child: Text('删除漫画后删除'), onPressed: () => callAll([() => moveMangas = false, () => Navigator.of(c).pop(true)])),
+          ],
           TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
         ],
       ),
@@ -199,7 +205,7 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
     }
 
     _groups.removeAt(index); // 记录着的原始分组随着分组被删除而删除
-    _operations.add(_DeleteGroupOp(group.group.groupName));
+    _operations.add(_DeleteGroupOp(group.group.groupName, moveMangas));
     if (mounted) setState(() {});
   }
 
@@ -215,7 +221,7 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
         } else if (op is _RenameGroupOp) {
           await FavoriteDao.addOrUpdateGroup(username: AuthManager.instance.username, group: op.group, testGroupName: op.oldName);
         } else if (op is _DeleteGroupOp) {
-          await FavoriteDao.deleteGroup(username: AuthManager.instance.username, groupName: op.deletedGroupName);
+          await FavoriteDao.deleteGroup(username: AuthManager.instance.username, groupName: op.deletedGroupName, moveMangasIfExisted: op.moveMangas);
         }
       }
 
@@ -424,7 +430,8 @@ class _RenameGroupOp extends _GroupOperation {
 }
 
 class _DeleteGroupOp extends _GroupOperation {
-  const _DeleteGroupOp(this.deletedGroupName) : super();
+  const _DeleteGroupOp(this.deletedGroupName, this.moveMangas) : super();
 
   final String deletedGroupName;
+  final bool moveMangas;
 }
