@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -305,14 +306,14 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
           actions: [
             if (!widget.loadAllImages)
               AppBarActionButton(
-                icon: Icon(Icons.visibility),
-                tooltip: '加载所有图片',
+                icon: Icon(CustomIcons.eye_sync),
+                tooltip: '当前仅加载已缓存和已下载的图片',
                 onPressed: _toLoadAllImages,
               ),
             if (widget.loadAllImages)
               AppBarActionButton(
-                icon: Icon(Icons.travel_explore),
-                tooltip: '加载所有图片',
+                icon: Icon(CustomIcons.eye_public),
+                tooltip: '当前加载着所有图片',
                 onPressed: _showHintForLoadingAllImages,
               ),
             PopupMenuButton(

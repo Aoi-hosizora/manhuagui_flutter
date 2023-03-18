@@ -49,4 +49,5 @@ app.*.map.json
 ### Project ###
 _*.png
 _origin/
-deps/
+deps/*
+!deps/.gitkeep

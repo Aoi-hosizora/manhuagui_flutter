@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
-import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -27,7 +27,7 @@ class MangaAudRankingView extends StatefulWidget {
     this.allRankingsError = '',
     this.qingnianRankingsError = '',
     this.shaonvRankingsError = '',
-    required this.mangaCount,
+    required this.mangaRows,
     this.onRetryPressed,
     this.onFullPressed,
     this.onMorePressed,
@@ -42,7 +42,7 @@ class MangaAudRankingView extends StatefulWidget {
   final String allRankingsError;
   final String qingnianRankingsError;
   final String shaonvRankingsError;
-  final int mangaCount;
+  final int mangaRows;
   final void Function(MangaAudRankingType)? onRetryPressed;
   final void Function(MangaAudRankingType)? onFullPressed;
   final void Function()? onMorePressed;
@@ -52,14 +52,26 @@ class MangaAudRankingView extends StatefulWidget {
 }
 
 class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  final _tabBarViewKey = GlobalKey<ExtendedTabBarViewState>();
   late final _controller = TabController(length: MangaAudRankingType.values.length, vsync: this)
     ..addListener(() {
       if (mounted) setState(() {});
     });
+  final _physicsController = CustomScrollPhysicsController();
+  var _animatingPage = false; // only used in _onPageChanged
   var _currentPageIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _tabBarViewKey.currentState?.pageController.addListener(_onPageChanged);
+    });
+  }
+
+  @override
   void dispose() {
+    _tabBarViewKey.currentState?.pageController.removeListener(_onPageChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -84,6 +96,60 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
             : MangaAudRankingType.shaonv;
   }
 
+  Future<void> _onPageChanged() async {
+    var pageController = _tabBarViewKey.currentState?.pageController;
+    if (pageController == null || pageController.page == null) {
+      return; // unreachable
+    }
+
+    var maxValidIndex = _controller.length - 1;
+    if (pageController.page! < maxValidIndex) {
+      // within the first n-1 pages
+      if (_physicsController.disableScrollMore == true) {
+        _physicsController.disableScrollMore = false;
+        if (mounted) setState(() {});
+      }
+    } else {
+      // reach the last page, or exceed valid page range !!!
+      if (_physicsController.disableScrollMore == false) {
+        _physicsController.disableScrollMore = true;
+        if (mounted) setState(() {});
+      }
+      if (!_animatingPage && pageController.page! > maxValidIndex + 0.01) {
+        _animatingPage = true;
+        await pageController.defaultAnimateToPage(maxValidIndex);
+        _animatingPage = false;
+      }
+    }
+  }
+
+  void _showFullButtonPopupMenu(MangaAudRankingType type) {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('漫画受众排行榜'),
+        children: [
+          IconTextDialogOption(
+            icon: Icon(Icons.whatshot),
+            text: Text('查看完整的排行榜'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              widget.onFullPressed?.call(type);
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.settings),
+            text: Text('受众排行榜显示设置'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              showUiSettingDialog(context: context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLine(MangaRanking manga) {
     return FullRippleWidget(
       highlightColor: null,
@@ -99,7 +165,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6), // | ▢ ▢▢ |
+        padding: EdgeInsets.symmetric(horizontal: 20 /* 15 */, vertical: 6), // | ▢ ▢▢ |
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -113,6 +179,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
             SizedBox(width: 12),
             Flexible(
               child: OverflowClipBox(
+                useOverflowBox: true,
                 direction: OverflowDirection.vertical,
                 useClipRect: true,
                 alignment: Alignment.center,
@@ -269,13 +336,21 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
             },
             child: SizedBox(
               height: _isPageValid(_currentPageIndex)
-                  ? ((85.0 + 6 * 2) * widget.mangaCount)
+                  ? (3 + (85.0 + 6 * 2) * widget.mangaRows)
                   : _isPageLoading(_currentPageIndex)
                       ? (40 + 12 + 15 * 2)
                       : (42 + 12 + 5 * 4 + TextSpan(text: '　', style: Theme.of(context).textTheme.subtitle1!).layoutSize(context).height),
-              child: TabBarView(
+              child: ExtendedTabBarView(
+                key: _tabBarViewKey,
                 controller: _controller,
-                physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(),
+                physics: CustomScrollPhysics(
+                  controller: _physicsController, // <<<
+                  parent: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(),
+                ),
+                viewportFraction: (MediaQuery.of(context).size.width - 20 - 85 / 2) / MediaQuery.of(context).size.width /* <<< */,
+                padEnds: false,
+                warpTabIndex: false,
+                assertForPages: false,
                 children: [
                   for (var t in [
                     Tuple2(widget.allRankings, widget.allRankingsError),
@@ -283,6 +358,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                     Tuple2(widget.shaonvRankings, widget.shaonvRankingsError),
                   ])
                     OverflowClipBox(
+                      useOverflowBox: true,
                       direction: OverflowDirection.vertical,
                       useClipRect: true,
                       alignment: Alignment.topCenter,
@@ -303,12 +379,16 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                         ).copyWithChinese(),
                         childBuilder: (_) => Column(
                           children: [
-                            for (var m in t.item1!.sublist(0, widget.mangaCount.clamp(0, t.item1!.length))) //
+                            SizedBox(height: 3),
+                            for (var m in t.item1!.sublist(0, widget.mangaRows.clamp(0, t.item1!.length))) //
                               _buildLine(m),
                           ],
                         ),
                       ),
                     ),
+
+                  // fake last page
+                  SizedBox.shrink(),
                 ],
               ),
             ),
@@ -319,8 +399,9 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
               child: Container(
                 height: 36,
                 child: OutlinedButton(
-                  child: Text('查看完整的排行榜'),
+                  child: Text('查看完整排行榜'),
                   onPressed: () => widget.onFullPressed?.call(_indexToType(_currentPageIndex)),
+                  onLongPress: () => _showFullButtonPopupMenu(_indexToType(_currentPageIndex)),
                 ),
               ),
             ),

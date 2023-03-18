@@ -371,7 +371,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         allRankingsError: '',
         qingnianRankingsError: _qingnianRankingsError,
         shaonvRankingsError: _shaonvRankingsError,
-        mangaCount: AppSetting.instance.ui.audienceRankingRows,
+        mangaRows: AppSetting.instance.ui.audienceRankingRows,
         onRetryPressed: (t) => _loadRankings([t], onlyIfEmpty: false, needDelay: false),
         onFullPressed: (t) => Navigator.of(context).push(
           CustomPageRoute(
@@ -451,6 +451,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 SizedBox(height: 12),
                 Container(
                   color: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 3),
                   child: Column(
                     children: [
                       ActionRowView.four(

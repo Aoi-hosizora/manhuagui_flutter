@@ -132,7 +132,8 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
 
     // 4. 更新界面，并显示提示
     // await _loadDownloadedChapters(); => 由事件通知更新章节信息
-    selected.clear();
+    _msController.unselectAll();
+    _isAllSelected = false;
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -289,11 +290,12 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                                     backgroundColor: chapterId != _history?.chapterId //
                                         ? Colors.white
                                         : Theme.of(context).primaryColorLight.applyOpacity(0.6),
-                                    scale: 0.7,
+                                    scale: 0.85,
                                     scaleAlignment: Alignment.bottomRight,
                                   )
                                 : SizedBox.shrink(),
                             itemBuilder: (_, key, tip) => itemWidget /* single grid */,
+                        onFullRippleLongPressed:(_, key, tip) => tip.toToggle?.call(),
                           ),
                     onChapterPressed: (_) {},
                   ),

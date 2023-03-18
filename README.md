@@ -1,12 +1,12 @@
 # manhuagui_flutter
 
-+ An unofficial application for manhuagui (https://www.manhuagui.com/), built in flutter.
-+ You can visit [Aoi-hosizora/manhuagui-backend](https://github.com/Aoi-hosizora/manhuagui-backend) for backend part, currently this repository is private.
++ An unofficial application for manhuagui (https://www.manhuagui.com/), powered by flutter.
++ Develop environment: `Flutter 2.10.5 channel stable / Dart 2.16.2`, visit [pubspec.yaml](./pubspec.yaml) for package dependencies.
 
-### Dependencies
+### Related repositories
 
-+ Develop environment: `Flutter 2.10.5 channel stable / Dart 2.16.2`
-+ Visit [pubspec.yaml](./pubspec.yaml) for dependent packages.
++ [Aoi-hosizora/manhuagui-backend](https://github.com/Aoi-hosizora/manhuagui-backend): Manhuagui backend for this project, currently this repository is private.
++ [Aoi-hosizora/flutter_ahlib](https://github.com/Aoi-hosizora/flutter_ahlib): A personal flutter widgets and utilities library, which is used in this project.
 
 ### Install
 

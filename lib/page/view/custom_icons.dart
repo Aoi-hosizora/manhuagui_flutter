@@ -29,4 +29,6 @@ class CustomIcons {
   static const IconData application_star_cog = IconData(0xe809, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData eye_menu = IconData(0xe80a, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData eye_download = IconData(0xe80b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData eye_sync = IconData(0xe80c, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData eye_public = IconData(0xe80d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

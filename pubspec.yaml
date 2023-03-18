@@ -36,7 +36,7 @@ dependencies:
     # path: ../flutter_ahlib
     git:
       url: https://github.com/Aoi-hosizora/flutter_ahlib
-      ref: ab950e79b9b757b92733c273bbcd3d6ec7b818f2
+      ref: a65c7792337a701335699967d113cb39ffae4a66
   flutter_cache_manager: ^3.3.0
   cached_network_image: ^3.2.0
   photo_view: ^0.14.0

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem] / [OverflowClipBox]
+/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem]
 
 class HelpIconView extends StatelessWidget {
   const HelpIconView({
@@ -291,68 +291,3 @@ class IconTextMenuItem extends StatelessWidget {
   }
 }
 
-enum OverflowDirection {
-  horizontal,
-  vertical,
-}
-
-class OverflowClipBox extends StatelessWidget {
-  const OverflowClipBox({
-    Key? key,
-    required this.direction,
-    required this.child,
-    this.useOverflowBox = true,
-    this.alignment = Alignment.topCenter,
-    this.useClipRect = true,
-    this.clipBehavior = Clip.hardEdge,
-    this.width,
-    this.height,
-    this.margin = EdgeInsets.zero,
-    this.padding = EdgeInsets.zero,
-  }) : super(key: key);
-
-  final OverflowDirection direction;
-  final Widget child;
-  final bool useOverflowBox;
-  final Alignment alignment;
-  final bool useClipRect;
-  final Clip clipBehavior;
-  final double? width;
-  final double? height;
-  final EdgeInsets margin;
-  final EdgeInsets padding;
-
-  @override
-  Widget build(BuildContext context) {
-    // https://github.com/Limbou/expandable_page_view/blob/main/lib/src/expandable_page_view.dart
-    // https://github.com/Limbou/expandable_page_view/blob/main/lib/src/size_reporting_widget.dart
-    Widget view = Padding(
-      padding: padding,
-      child: child,
-    );
-    if (useOverflowBox) {
-      view = OverflowBox(
-        child: view,
-        alignment: alignment,
-        minHeight: direction == OverflowDirection.vertical ? 0 : null,
-        maxHeight: direction == OverflowDirection.vertical ? double.infinity : null,
-        minWidth: direction == OverflowDirection.horizontal ? 0 : null,
-        maxWidth: direction == OverflowDirection.horizontal ? double.infinity : null,
-      );
-    }
-    if (useClipRect) {
-      view = ClipRect(
-        child: view,
-        clipBehavior: clipBehavior,
-      );
-    }
-    return view = Padding(
-      padding: margin,
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: view,
-      ),
-    );
-  }
-}

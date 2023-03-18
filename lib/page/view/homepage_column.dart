@@ -8,6 +8,8 @@ class HomepageColumnView extends StatelessWidget {
     required this.title,
     required this.icon,
     required this.child,
+    this.color = Colors.white,
+    this.childColor = Colors.white,
     this.onRefreshPressed,
     this.disableRefresh = false,
     this.onHintPressed,
@@ -20,6 +22,8 @@ class HomepageColumnView extends StatelessWidget {
   final String title;
   final IconData icon;
   final Widget child;
+  final Color color;
+  final Color childColor;
   final void Function()? onRefreshPressed;
   final bool disableRefresh;
   final void Function()? onHintPressed;
@@ -31,7 +35,7 @@ class HomepageColumnView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: color,
       child: Padding(
         padding: padding,
         child: Column(
@@ -74,11 +78,11 @@ class HomepageColumnView extends StatelessWidget {
                         ),
                       if (onHintPressed != null)
                         Padding(
-                          padding: EdgeInsets.only(left: 2, top: headerPadding.top - 3, bottom: headerPadding.bottom - 3), // <= headerPadding vertical
+                          padding: EdgeInsets.only(left: 3, top: headerPadding.top - 3, bottom: headerPadding.bottom - 3), // <= headerPadding vertical
                           child: InkWell(
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-                              child: Icon(Icons.help_outline, size: 23, color: Colors.orange),
+                              child: Icon(Icons.help_outline, size: 22 /* a little smaller */, color: Colors.orange),
                             ),
                             onTap: onHintPressed,
                           ),
@@ -122,7 +126,10 @@ class HomepageColumnView extends StatelessWidget {
             ),
 
             // child
-            child,
+            Material(
+              color: childColor,
+              child: child,
+            ),
           ],
         ),
       ),

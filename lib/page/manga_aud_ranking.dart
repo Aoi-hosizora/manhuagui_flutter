@@ -78,11 +78,11 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
               icon: Icons.emoji_events,
               rightText: '更新于 ${formatDatetimeAndDuration(widget.rankingDatetime ?? DateTime.now(), FormatPattern.date)}',
               padding: EdgeInsets.zero,
+              childColor: Theme.of(context).scaffoldBackgroundColor,
               child: Column(
                 children: [
                   for (var manga in widget.rankings) ...[
-                    if (manga.mid != widget.rankings.first.mid) //
-                      Divider(height: 0, thickness: 1),
+                    Divider(height: 0, thickness: 1),
                     MangaRankingLineView(
                       manga: manga,
                       flags: _flagStorage.getFlags(mangaId: manga.mid),
