@@ -44,6 +44,8 @@ class DBManager {
     );
   }
 
+  // TODO downgrade
+
   Future<void> _onUpgrade(Database db, int oldVersion) async {
     var version = oldVersion;
     if (version == 0) {

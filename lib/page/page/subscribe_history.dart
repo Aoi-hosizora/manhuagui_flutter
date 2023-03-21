@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
@@ -283,9 +284,10 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           controller: _msController,
           stateSetter: () => mountedSetState(() {}),
           onModeChanged: (_) => mountedSetState(() {}),
-          child: PaginationListView<MangaHistory>(
+          child: PaginationDataView<MangaHistory>(
             key: _pdvKey,
             data: _data,
+            style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.masonryGridView,
             getData: ({indicator}) => _getData(page: indicator),
             scrollController: _controller,
             paginationSetting: PaginationSetting(
@@ -306,6 +308,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
             ),
             separator: Divider(height: 0, thickness: 1),
+            crossAxisCount: 2,
+            mainAxisSpacing: 0.0,
+            crossAxisSpacing: 0.0,
             itemBuilder: (c, _, item) => SelectableCheckboxItem<ValueKey<int>>(
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
@@ -313,6 +318,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               itemBuilder: (c, key, tip) => MangaHistoryLineView(
                 history: item,
                 flags: _flagStorage.getFlags(mangaId: item.mangaId, forceInHistory: true),
+                twoColumns: AppSetting.instance.ui.showTwoColumns,
                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
               ),
             ),

@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 /// 漫画评论列表页，网络请求并展示 [Comment] 列表信息
 class CommentsPage extends StatefulWidget {
@@ -117,6 +118,14 @@ class _CommentsPageState extends State<CommentsPage> {
                         ),
                       ),
                     );
+                  },
+                ),
+                IconTextDialogOption(
+                  icon: Icon(Icons.copy),
+                  text: Text('复制评论内容'),
+                  onPressed: () {
+                    Navigator.of(c).pop();
+                    copyText(item.content, showToast: true);
                   },
                 ),
               ],

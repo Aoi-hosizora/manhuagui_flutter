@@ -14,6 +14,7 @@ class FavoriteMangaLineView extends StatelessWidget {
     required this.index,
     required this.history,
     this.flags,
+    this.twoColumns = false,
     required this.onLongPressed,
   }) : super(key: key);
 
@@ -21,6 +22,7 @@ class FavoriteMangaLineView extends StatelessWidget {
   final int? index;
   final MangaHistory? history;
   final MangaCornerFlags? flags;
+  final bool twoColumns;
   final void Function()? onLongPressed;
 
   @override
@@ -35,6 +37,7 @@ class FavoriteMangaLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '收藏于 ${manga.formattedCreatedAtWithDuration}',
       cornerIcons: flags?.buildIcons(),
+      twoColumns: twoColumns,
       extraRightPaddingForTitle: index != null
           ? 28 - 14 + 5 // badge width - line horizontal padding + extra space
           : null /* no extra padding */,

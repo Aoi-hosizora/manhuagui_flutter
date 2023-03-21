@@ -3,6 +3,7 @@ import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/extended_gallery.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
@@ -144,6 +145,57 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     return null;
   }
 
+  Widget _buildExtraPageNumber(BuildContext context, int imageIndex) {
+    var pos = AppSetting.instance.view.pageNoPosition;
+    double? left, right, top, bottom;
+    switch (pos) {
+      case PageNoPosition.hide:
+        return Positioned(left: 0, top: 0, child: SizedBox());
+      case PageNoPosition.topCenter:
+        left = 0.0;
+        right = 0.0;
+        top = 0.0;
+        break;
+      case PageNoPosition.topLeft:
+        left = 0.0;
+        top = 0.0;
+        break;
+      case PageNoPosition.topRight:
+        right = 0.0;
+        top = 0.0;
+        break;
+      case PageNoPosition.bottomCenter:
+        left = 0.0;
+        right = 0.0;
+        bottom = 0.0;
+        break;
+      case PageNoPosition.bottomLeft:
+        left = 0.0;
+        bottom = 0.0;
+        break;
+      case PageNoPosition.bottomRight:
+        right = 0.0;
+        bottom = 0.0;
+        break;
+    }
+    return Positioned(
+      left: left,
+      right: right,
+      top: top,
+      bottom: bottom,
+      child: Center(
+        child: Container(
+          color: Colors.black.withOpacity(0.5),
+          padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          child: Text(
+            '${imageIndex + 1}',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.verticalScroll) {
@@ -203,6 +255,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
         ),
         onImageLongPressed: (imageIndex) => widget.onLongPressed.call(imageIndex),
+        extraWidgetBuilder: _buildExtraPageNumber,
         // ****************************************************************
         // 额外页
         // ****************************************************************
@@ -282,6 +335,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       onImageTapDown: (d) => _onPointerDown(d.globalPosition) /* <<< */,
       onImageTapUp: (d) => _onPointerUp(d.globalPosition) /* <<< */,
       onImageLongPressed: (imageIndex) => widget.onLongPressed.call(imageIndex),
+      extraWidgetBuilder: _buildExtraPageNumber,
       // ****************************************************************
       // 额外页
       // ****************************************************************

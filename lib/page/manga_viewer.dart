@@ -37,6 +37,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -1054,6 +1055,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                               ),
                             ),
                           ),
+                        AppBarActionButton(
+                          icon: Icon(Icons.open_in_browser),
+                          tooltip: '用浏览器打开',
+                          onPressed: () => launchInBrowser(context: context, url: _data?.chapterUrl ?? widget.mangaUrl),
+                        ),
                       ],
                     ),
             ),
@@ -1172,7 +1178,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         ? const SizedBox.shrink()
                         : Container(
                             color: Colors.black.withOpacity(0.7),
-                            padding: EdgeInsets.only(left: 8, right: 8, top: 1.5, bottom: 1.5),
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
                             child: Text(
                               [
                                 _data!.chapterTitle,
@@ -1446,7 +1452,8 @@ class _ScreenHelper {
     await setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: _showAppBar);
   }
 
-  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool isAppbarShown /* explicit */}) async {
+  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool isAppbarShown /* explicit */
+      }) async {
     // https://hiyoko-programming.com/953/
     if (!fullscreen) {
       // 不全屏 => 全部显示，不透明 (manual)

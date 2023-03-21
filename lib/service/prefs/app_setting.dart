@@ -36,6 +36,7 @@ class AppSettingPrefs {
   static const _keepScreenOnKey = BoolKey('AppSettingPrefs_keepScreenOn');
   static const _fullscreenKey = BoolKey('AppSettingPrefs_fullscreen');
   static const _preloadCountKey = IntKey('AppSettingPrefs_preloadCount');
+  static const _pageNoPositionKey = IntKey('AppSettingPrefs_pageNoPosition');
   static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
   static const _keepAppBarWhenReplaceKey = BoolKey('AppSettingPrefs_keepAppBarWhenReplace');
 
@@ -49,6 +50,7 @@ class AppSettingPrefs {
         _keepScreenOnKey,
         _fullscreenKey,
         _preloadCountKey,
+        _pageNoPositionKey,
         _hideAppBarWhenEnterKey,
         _keepAppBarWhenReplaceKey,
       ];
@@ -66,6 +68,7 @@ class AppSettingPrefs {
       keepScreenOn: prefs.safeGet<bool>(_keepScreenOnKey) ?? def.keepScreenOn,
       fullscreen: prefs.safeGet<bool>(_fullscreenKey) ?? def.fullscreen,
       preloadCount: prefs.safeGet<int>(_preloadCountKey) ?? def.preloadCount,
+      pageNoPosition: PageNoPositionExtension.fromInt(prefs.safeGet<int>(_pageNoPositionKey) ?? def.pageNoPosition.toInt()),
       hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
       keepAppBarWhenReplace: prefs.safeGet<bool>(_keepAppBarWhenReplaceKey) ?? def.keepAppBarWhenReplace,
     );
@@ -83,6 +86,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_keepScreenOnKey, setting.keepScreenOn);
     await prefs.safeSet<bool>(_fullscreenKey, setting.fullscreen);
     await prefs.safeSet<int>(_preloadCountKey, setting.preloadCount);
+    await prefs.safeSet<int>(_pageNoPositionKey, setting.pageNoPosition.toInt());
     await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
     await prefs.safeSet<bool>(_keepAppBarWhenReplaceKey, setting.keepAppBarWhenReplace);
   }
@@ -131,6 +135,7 @@ class AppSettingPrefs {
   // ui setting
   // ==========
 
+  static const _showTwoColumnsKey = BoolKey('AppSettingPrefs_showTwoColumns');
   static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
   static const _enableCornerIconsKey = BoolKey('AppSettingPrefs_enableCornerIcons');
@@ -147,6 +152,7 @@ class AppSettingPrefs {
   static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
 
   static List<TypedKey> get uiSettingKeys => [
+        _showTwoColumnsKey,
         _defaultMangaOrderKey,
         _defaultAuthorOrderKey,
         _enableCornerIconsKey,
@@ -167,6 +173,7 @@ class AppSettingPrefs {
     final prefs = await PrefsManager.instance.loadPrefs();
     var def = UiSetting.defaultSetting;
     return UiSetting(
+      showTwoColumns: prefs.safeGet<bool>(_showTwoColumnsKey) ?? def.showTwoColumns,
       defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
       enableCornerIcons: prefs.safeGet<bool>(_enableCornerIconsKey) ?? def.enableCornerIcons,
@@ -187,6 +194,7 @@ class AppSettingPrefs {
   static Future<void> saveUiSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var setting = AppSetting.instance.ui;
+    await prefs.safeSet<bool>(_showTwoColumnsKey, setting.showTwoColumns);
     await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
     await prefs.safeSet<bool>(_enableCornerIconsKey, setting.enableCornerIcons);

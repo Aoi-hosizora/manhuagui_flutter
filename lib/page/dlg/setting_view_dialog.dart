@@ -45,6 +45,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _keepScreenOn = widget.setting.keepScreenOn;
   late var _fullscreen = widget.setting.fullscreen;
   late var _preloadCount = widget.setting.preloadCount;
+  late var _pageNoPosition = widget.setting.pageNoPosition;
   late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
   late var _keepAppBarWhenReplace = widget.setting.keepAppBarWhenReplace;
 
@@ -58,6 +59,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         keepScreenOn: _keepScreenOn,
         fullscreen: _fullscreen,
         preloadCount: _preloadCount,
+        pageNoPosition: _pageNoPosition,
         hideAppBarWhenEnter: _hideAppBarWhenEnter,
         keepAppBarWhenReplace: _keepAppBarWhenReplace,
       );
@@ -73,6 +75,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _keepScreenOn = setting.keepScreenOn;
     _fullscreen = setting.fullscreen;
     _preloadCount = setting.preloadCount;
+    _pageNoPosition = setting.pageNoPosition;
     _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
     _keepAppBarWhenReplace = setting.keepAppBarWhenReplace;
     widget.onSettingChanged.call(_newestSetting);
@@ -167,6 +170,17 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           textBuilder: (s) => s == 0 ? '禁用预加载' : '前后$s页',
           onChanged: (c) {
             _preloadCount = c.clamp(0, 6);
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingComboBoxView<PageNoPosition>(
+          title: '每页显示额外页码',
+          value: _pageNoPosition,
+          values: const [PageNoPosition.hide, PageNoPosition.topCenter, PageNoPosition.topLeft, PageNoPosition.topRight, PageNoPosition.bottomCenter, PageNoPosition.bottomLeft, PageNoPosition.bottomRight],
+          textBuilder: (s) => s.toOptionTitle(),
+          onChanged: (s) {
+            _pageNoPosition = s;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

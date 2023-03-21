@@ -20,6 +20,7 @@ class GeneralLineView extends StatelessWidget {
     this.extraRightPaddingForTitle,
     this.extrasInStack,
     this.topExtrasInStack,
+    this.twoColumns = false,
     required this.onPressed,
     this.onLongPressed,
   })  : customRows = null,
@@ -35,6 +36,7 @@ class GeneralLineView extends StatelessWidget {
     this.extraRightPaddingForTitle,
     this.extrasInStack,
     this.topExtrasInStack,
+    this.twoColumns = false,
     required this.onPressed,
     this.onLongPressed,
   })  : icon1 = null,
@@ -68,6 +70,7 @@ class GeneralLineView extends StatelessWidget {
   final double? extraRightPaddingForTitle;
   final List<Widget>? extrasInStack;
   final List<Widget>? topExtrasInStack;
+  final bool twoColumns;
 
   // callbacks
   final void Function() onPressed;
@@ -96,7 +99,7 @@ class GeneralLineView extends StatelessWidget {
             // 右边信息
             // ****************************************************************
             Container(
-              width: MediaQuery.of(context).size.width - 14 * 3 - 75 - (extraWidthInRow ?? 0), // | ▢ ▢▢ |
+              width: MediaQuery.of(context).size.width / (!twoColumns ? 1 : 2) - 14 * 3 - 75 - (extraWidthInRow ?? 0), // | ▢ ▢▢ |
               margin: EdgeInsets.only(top: 5, bottom: 5, right: 0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

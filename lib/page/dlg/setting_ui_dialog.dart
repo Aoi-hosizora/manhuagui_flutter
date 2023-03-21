@@ -37,6 +37,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     super.dispose();
   }
 
+  late var _showTwoColumns = widget.setting.showTwoColumns;
   late var _defaultMangaOrder = widget.setting.defaultMangaOrder;
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _enableCornerIcons = widget.setting.enableCornerIcons;
@@ -53,6 +54,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
 
   UiSetting get _newestSetting => UiSetting(
+        showTwoColumns: _showTwoColumns,
         defaultMangaOrder: _defaultMangaOrder,
         defaultAuthorOrder: _defaultAuthorOrder,
         enableCornerIcons: _enableCornerIcons,
@@ -71,6 +73,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
 
   void _setToDefault() {
     var setting = UiSetting.defaultSetting;
+    _showTwoColumns = setting.showTwoColumns;
     _defaultMangaOrder = setting.defaultMangaOrder;
     _defaultAuthorOrder = setting.defaultAuthorOrder;
     _enableCornerIcons = setting.enableCornerIcons;
@@ -95,6 +98,15 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
       children: [
         SettingGroupTitleView(
           title: '列表显示设置',
+        ),
+        SettingSwitcherView(
+          title: '双列显示列表',
+          value: _showTwoColumns,
+          onChanged: (b) {
+            _showTwoColumns = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
         ),
         SettingComboBoxView<MangaOrder>(
           title: '漫画列表默认排序方式',

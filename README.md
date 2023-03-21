@@ -18,7 +18,7 @@
 cd manhuagui_flutter
 
 # Process sqflite dependency
-mkdir -p dependencies
+mkdir -p deps
 git clone --depth 1 --branch v2.2.5-0 https://github.com/tekartik/sqflite deps/sqflite
 sed -i "s/sdk: '>=2.18.0 <3.0.0'/sdk: '>=2.16.2 <3.0.0' # sdk: '>=2.18.0 <3.0.0'/" deps/sqflite/sqflite/pubspec.yaml
 sed -i 's/flutter: ">=3.3.0"/# flutter: ">=3.3.0"/' deps/sqflite/sqflite/pubspec.yaml

@@ -32,6 +32,8 @@ class PrefsManager {
 
   static const _newestVersion = 3;
 
+  // TODO downgrade
+
   Future<void> upgradePrefs(SharedPreferences prefs) async {
     var version = prefs.getVersion();
     if (version == _newestVersion) {

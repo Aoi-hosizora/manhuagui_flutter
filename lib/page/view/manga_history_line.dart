@@ -12,11 +12,13 @@ class MangaHistoryLineView extends StatelessWidget {
     Key? key,
     required this.history,
     this.flags,
+    this.twoColumns = false,
     required this.onLongPressed,
   }) : super(key: key);
 
   final MangaHistory history;
   final MangaCornerFlags? flags;
+  final bool twoColumns;
   final void Function()? onLongPressed;
 
   @override
@@ -31,6 +33,7 @@ class MangaHistoryLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: (!history.read ? '浏览于 ' : '阅读于 ') + history.formattedLastTimeWithDuration,
       cornerIcons: flags?.buildIcons(),
+      twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

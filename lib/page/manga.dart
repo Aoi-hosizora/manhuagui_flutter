@@ -1232,6 +1232,14 @@ class _MangaPageState extends State<MangaPage> {
                                       );
                                     },
                                   ),
+                                  IconTextDialogOption(
+                                    icon: Icon(Icons.copy),
+                                    text: Text('复制评论内容'),
+                                    onPressed: () {
+                                      Navigator.of(c).pop();
+                                      copyText(_comments[i].content, showToast: true);
+                                    }
+                                  ),
                                 ],
                               ),
                             ),

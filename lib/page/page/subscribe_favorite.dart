@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
@@ -520,8 +521,9 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           controller: _msController,
           stateSetter: () => mountedSetState(() {}),
           onModeChanged: (_) => mountedSetState(() {}),
-          child: PaginationListView<FavoriteManga>(
+          child: PaginationDataView<FavoriteManga>(
             key: _pdvKey,
+            style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.masonryGridView,
             data: _data,
             getData: ({indicator}) => _getData(page: indicator),
             scrollController: _controller,
@@ -543,6 +545,9 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
             ),
             separator: Divider(height: 0, thickness: 1),
+            crossAxisCount: 2,
+            mainAxisSpacing: 0.0,
+            crossAxisSpacing: 0.0,
             itemBuilder: (c, idx, item) => SelectableCheckboxItem<ValueKey<int>>(
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
@@ -558,6 +563,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                             : null),
                 history: _histories[item.mangaId],
                 flags: _flagStorage.getFlags(mangaId: item.mangaId, forceInFavorite: true),
+                twoColumns: AppSetting.instance.ui.showTwoColumns,
                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
               ),
             ),

@@ -15,6 +15,7 @@ class ShelfMangaLineView extends StatelessWidget {
     required this.history,
     this.useLocalHistory = false,
     this.flags,
+    this.twoColumns = false,
     this.onLongPressed,
   }) : super(key: key);
 
@@ -22,6 +23,7 @@ class ShelfMangaLineView extends StatelessWidget {
   final MangaHistory? history;
   final bool useLocalHistory;
   final MangaCornerFlags? flags;
+  final bool twoColumns;
   final VoidCallback? onLongPressed;
 
   @override
@@ -40,6 +42,7 @@ class ShelfMangaLineView extends StatelessWidget {
       icon3: Icons.update,
       text3: '更新于 ${manga.formattedNewestTimeWithDuration}',
       cornerIcons: flags?.buildIcons(),
+      twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

@@ -73,6 +73,7 @@ class AppSetting {
 class ViewSetting {
   const ViewSetting({
     required this.viewDirection,
+    required this.pageNoPosition,
     required this.showPageHint,
     required this.showClock,
     required this.showNetwork,
@@ -94,6 +95,7 @@ class ViewSetting {
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
   final int preloadCount; // 预加载页数
+  final PageNoPosition pageNoPosition; // 每页显示额外页码
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
   final bool keepAppBarWhenReplace; // 切换章节时保持标题栏
 
@@ -107,6 +109,7 @@ class ViewSetting {
     keepScreenOn: true,
     fullscreen: false,
     preloadCount: 3,
+    pageNoPosition: PageNoPosition.hide,
     hideAppBarWhenEnter: true,
     keepAppBarWhenReplace: true,
   );
@@ -121,6 +124,7 @@ class ViewSetting {
     bool? keepScreenOn,
     bool? fullscreen,
     int? preloadCount,
+    PageNoPosition? pageNoPosition,
     bool? hideAppBarWhenEnter,
     bool? keepAppBarWhenReplace,
   }) {
@@ -134,6 +138,7 @@ class ViewSetting {
       keepScreenOn: keepScreenOn ?? this.keepScreenOn,
       fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
+      pageNoPosition: pageNoPosition ?? this.pageNoPosition,
       hideAppBarWhenEnter: hideAppBarWhenEnter ?? this.hideAppBarWhenEnter,
       keepAppBarWhenReplace: keepAppBarWhenReplace ?? this.keepAppBarWhenReplace,
     );
@@ -179,6 +184,76 @@ extension ViewDirectionExtension on ViewDirection {
         return ViewDirection.topToBottom;
     }
     return ViewDirection.leftToRight;
+  }
+}
+
+enum PageNoPosition {
+  hide,
+  topCenter,
+  topLeft,
+  topRight,
+  bottomCenter,
+  bottomLeft,
+  bottomRight,
+}
+
+extension PageNoPositionExtension on PageNoPosition {
+  String toOptionTitle() {
+    switch (this) {
+      case PageNoPosition.hide:
+        return '不显示';
+      case PageNoPosition.topCenter:
+        return '顶部居中';
+      case PageNoPosition.topLeft:
+        return '左上角';
+      case PageNoPosition.topRight:
+        return '右上角';
+      case PageNoPosition.bottomCenter:
+        return '底部居中';
+      case PageNoPosition.bottomLeft:
+        return '左下角';
+      case PageNoPosition.bottomRight:
+        return '右下角';
+    }
+  }
+
+  int toInt() {
+    switch (this) {
+      case PageNoPosition.hide:
+        return 0;
+      case PageNoPosition.topCenter:
+        return 1;
+      case PageNoPosition.topLeft:
+        return 2;
+      case PageNoPosition.topRight:
+        return 3;
+      case PageNoPosition.bottomCenter:
+        return 4;
+      case PageNoPosition.bottomLeft:
+        return 5;
+      case PageNoPosition.bottomRight:
+        return 6;
+    }
+  }
+
+  static PageNoPosition fromInt(int i) {
+    switch (i) {
+      case 0:
+        return PageNoPosition.hide;
+      case 1:
+        return PageNoPosition.topCenter;
+      case 2:
+        return PageNoPosition.topLeft;
+      case 3:
+        return PageNoPosition.topRight;
+      case 4:
+        return PageNoPosition.bottomCenter;
+      case 5:
+        return PageNoPosition.bottomLeft;
+      case 6:
+        return PageNoPosition.bottomRight;
+    }
+    return PageNoPosition.hide;
   }
 }
 
@@ -232,6 +307,7 @@ class DlSetting {
 
 class UiSetting {
   const UiSetting({
+    required this.showTwoColumns,
     required this.defaultMangaOrder,
     required this.defaultAuthorOrder,
     required this.enableCornerIcons,
@@ -248,6 +324,7 @@ class UiSetting {
     required this.alwaysOpenNewListPage,
   });
 
+  final bool showTwoColumns; // 双列显示列表
   final MangaOrder defaultMangaOrder; // 漫画列表默认排序方式
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool enableCornerIcons; // 列表内显示右下角图标
@@ -264,6 +341,7 @@ class UiSetting {
   final bool alwaysOpenNewListPage; // 始终在新页面打开列表
 
   static const defaultSetting = UiSetting(
+    showTwoColumns: false,
     defaultMangaOrder: MangaOrder.byPopular,
     defaultAuthorOrder: AuthorOrder.byPopular,
     enableCornerIcons: true,
@@ -281,6 +359,7 @@ class UiSetting {
   );
 
   UiSetting copyWith({
+    bool? showTwoColumns,
     MangaOrder? defaultMangaOrder,
     AuthorOrder? defaultAuthorOrder,
     bool? enableCornerIcons,
@@ -297,6 +376,7 @@ class UiSetting {
     bool? alwaysOpenNewListPage,
   }) {
     return UiSetting(
+      showTwoColumns: showTwoColumns ?? this.showTwoColumns,
       defaultMangaOrder: defaultMangaOrder ?? this.defaultMangaOrder,
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       enableCornerIcons: enableCornerIcons ?? this.enableCornerIcons,

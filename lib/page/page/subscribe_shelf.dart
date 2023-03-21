@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
@@ -203,7 +204,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           ),
           IconTextDialogOption(
             icon: Icon(CustomIcons.bookmark_plus),
-            text: Text('全部添加至本地收藏'),
+            text: Text('添加所有记录至本地收藏'),
             onPressed: () async {
               Navigator.of(c).pop();
               MangaShelfCachePage.addAllToFavorite(context);
@@ -239,8 +240,9 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     }
 
     return Scaffold(
-      body: PaginationListView<ShelfManga>(
+      body: PaginationDataView<ShelfManga>(
         key: _pdvKey,
+        style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.masonryGridView,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
@@ -266,11 +268,15 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           },
         ),
         separator: Divider(height: 0, thickness: 1),
+        crossAxisCount: 2,
+        mainAxisSpacing: 0.0,
+        crossAxisSpacing: 0.0,
         itemBuilder: (c, _, item) => ShelfMangaLineView(
           manga: item,
           history: _histories[item.mid],
           useLocalHistory: _useLocalHistory,
           flags: _flagStorage.getFlags(mangaId: item.mid, forceInShelf: true),
+          twoColumns: AppSetting.instance.ui.showTwoColumns,
           onLongPressed: () => _showPopupMenu(manga: item),
         ),
         extra: UpdatableDataViewExtraWidgets(

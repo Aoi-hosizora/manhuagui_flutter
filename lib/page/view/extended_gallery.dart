@@ -20,6 +20,7 @@ class HorizontalGalleryView extends StatefulWidget {
     this.preloadPagesCount = 0,
     this.initialPage = 0, // <<<
     this.viewportFraction = 1.0, // <<<
+    this.extraWidgetBuilder, // <<<
   }) : super(key: key);
 
   final int imageCount;
@@ -35,6 +36,7 @@ class HorizontalGalleryView extends StatefulWidget {
 
   final int initialPage;
   final double viewportFraction;
+  final Widget Function(BuildContext context, int imageIndex)? extraWidgetBuilder;
 
   @override
   State<HorizontalGalleryView> createState() => HorizontalGalleryViewState();
@@ -95,7 +97,15 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
         }
         return GestureDetector(
           onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(index - 1),
-          child: builder(c, index - 1),
+          child: Stack(
+            children: [
+              Center(
+                child: builder(c, index - 1),
+              ),
+              if (widget.extraWidgetBuilder != null) //
+                widget.extraWidgetBuilder!.call(c, index - 1), // TODO hide if loading
+            ],
+          ),
         );
       },
       fallbackOptions: widget.fallbackOptions,
@@ -132,6 +142,7 @@ class VerticalGalleryView extends StatefulWidget {
     this.preloadPagesCount = 0,
     this.initialPage = 0, // <<<
     this.viewportPageSpace = 0.0, // <<<
+    this.extraWidgetBuilder, // <<<
   }) : super(key: key);
 
   final int imageCount;
@@ -148,6 +159,7 @@ class VerticalGalleryView extends StatefulWidget {
 
   final int initialPage;
   final double viewportPageSpace;
+  final Widget Function(BuildContext context, int imageIndex)? extraWidgetBuilder;
 
   @override
   State<VerticalGalleryView> createState() => VerticalGalleryViewState();
@@ -322,7 +334,15 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                           ? math.max(widget.viewportPageSpace, 10) // for first page, space must be larger than 10
                           : widget.viewportPageSpace /* for remaining pages */,
                     ),
-                    child: _buildPhotoItem(context, i), // TODO 竖直滚动的 GalleryView 暂时无法缩放页面
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: _buildPhotoItem(context, i), // TODO 竖直滚动的 GalleryView 暂时无法缩放页面
+                        ),
+                        if (widget.extraWidgetBuilder != null) //
+                          widget.extraWidgetBuilder!.call(context, i), // TODO hide if loading
+                      ],
+                    ),
                   ),
                 ),
 

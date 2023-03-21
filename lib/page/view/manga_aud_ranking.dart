@@ -347,7 +347,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                   controller: _physicsController, // <<<
                   parent: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(),
                 ),
-                viewportFraction: (MediaQuery.of(context).size.width - 20 - 85 / 2) / MediaQuery.of(context).size.width /* <<< */,
+                viewportFraction: (MediaQuery.of(context).size.width - 20 - 85 / 2) / MediaQuery.of(context).size.width /* <<< */, // TODO set to 1 when loading
                 padEnds: false,
                 warpTabIndex: false,
                 assertForPages: false,
