@@ -23,11 +23,13 @@ class DetailTableView extends StatefulWidget {
     required this.rows,
     required this.tableWidth,
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    this.fractionColumnWidth = 0.3,
   }) : super(key: key);
 
   final List<DetailRow> rows;
   final double tableWidth;
   final EdgeInsets padding;
+  final double fractionColumnWidth;
 
   @override
   State<DetailTableView> createState() => _DetailTableViewState();
@@ -58,8 +60,8 @@ class _DetailTableViewState extends State<DetailTableView> {
     final textStyle = Theme.of(context).textTheme.bodyText2;
 
     return Table(
-      columnWidths: const {
-        0: FractionColumnWidth(0.3),
+      columnWidths: {
+        0: FractionColumnWidth(widget.fractionColumnWidth),
       },
       border: TableBorder(
         horizontalInside: BorderSide(width: 1, color: Colors.grey),
@@ -101,7 +103,7 @@ class _DetailTableViewState extends State<DetailTableView> {
                     }
                   },
                   tableWidth: widget.tableWidth,
-                  accumulativeWidthRatio: 0.3,
+                  accumulativeWidthRatio: widget.fractionColumnWidth,
                 ),
               ),
             ],

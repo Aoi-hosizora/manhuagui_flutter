@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 /// 漫画评论列表页，网络请求并展示 [Comment] 列表信息
@@ -27,6 +28,7 @@ class CommentsPage extends StatefulWidget {
 }
 
 class _CommentsPageState extends State<CommentsPage> {
+  final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -50,18 +52,120 @@ class _CommentsPageState extends State<CommentsPage> {
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
+  Future<void> _comment() async {
+    var controller = TextEditingController()..text;
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => WillPopScope(
+        onWillPop: () async {
+          if (controller.text.trim() == '') {
+            return true;
+          }
+          var ok = await showYesNoAlertDialog(
+            context: context,
+            title: Text('发表评论'),
+            content: Text('是否放弃当前的输入？'),
+            yesText: Text('放弃'),
+            noText: Text('继续编辑'),
+            reverseYesNoOrder: true,
+          );
+          return ok == true;
+        },
+        child: AlertDialog(
+          title: Text('发表评论'),
+          content: SizedBox(
+            width: getDialogContentMaxWidth(context),
+            child: TextField(
+              controller: controller,
+              maxLines: null,
+              autofocus: true,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(vertical: 5),
+                labelText: '评论',
+                icon: Icon(Icons.mode_comment_outlined),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('确定'),
+              onPressed: () async {
+                if (controller.text.trim().isEmpty) {
+                  Fluttertoast.showToast(msg: '不允许发表空评论');
+                } else {
+                  Navigator.of(c).pop(true);
+                }
+              },
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).maybePop(false),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) {
+      return;
+    }
+
+    var content = controller.text.trim();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          contentPadding: EdgeInsets.zero,
+          content: CircularProgressDialogOption(
+            progress: CircularProgressIndicator(),
+            child: Text('发表评论中...\n\n$content'),
+          ),
+        ),
+      ),
+    );
+
+    var client = RestClient(DioManager.instance.dio);
+    try {
+      await client.addComment(token: AuthManager.instance.token, mid: widget.mangaId, text: content);
+    } catch (e, s) {
+      var we = wrapError(e, s);
+      Fluttertoast.showToast(msg: '评论发表失败：${we.text}');
+    } finally {
+      Navigator.of(context).pop();
+      var ok = await showYesNoAlertDialog(
+        context: context,
+        title: Text('发表评论'),
+        content: Text('评论发表成功，是否刷新评论列表？'),
+        yesText: Text('刷新'),
+        noText: Text('取消'),
+      );
+      if (ok == true) {
+        _pdvKey.currentState?.refresh();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('漫画评论'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
+        actions: [
+          AppBarActionButton(
+            icon: Icon(Icons.add_comment),
+            tooltip: '发表评论',
+            onPressed: _comment,
+          ),
+        ],
       ),
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PaginationListView<Comment>(
+        key: _pdvKey,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,

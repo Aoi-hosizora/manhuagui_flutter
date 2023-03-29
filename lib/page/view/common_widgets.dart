@@ -242,7 +242,7 @@ class WarningTextView extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
       decoration: BoxDecoration(color: Colors.yellow),
-      alignment: Alignment.center,
+      alignment: Alignment.topLeft,
       child: TextGroup.normal(
         texts: [
           PlainTextItem(text: '【'),

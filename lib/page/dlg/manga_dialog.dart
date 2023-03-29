@@ -598,8 +598,15 @@ class _DialogHelper {
           actions: [
             if (remark.isNotEmpty)
               TextButton(
-                child: Text('复制原备注'),
-                onPressed: () => copyText(remark, showToast: true),
+                child: Text('查看原备注'),
+                onPressed: () => showYesNoAlertDialog(
+                  context: context,
+                  title: Text('收藏备注'),
+                  content: Text(remark),
+                  yesText: Text('复制'),
+                  noText: Text('关闭'),
+                  yesOnPressed: (c) => copyText(remark, showToast: true),
+                ),
               ),
             TextButton(
               child: Text('确定'),

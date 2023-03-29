@@ -189,11 +189,11 @@ extension ViewDirectionExtension on ViewDirection {
 
 enum PageNoPosition {
   hide,
-  topCenter,
   topLeft,
+  topCenter,
   topRight,
-  bottomCenter,
   bottomLeft,
+  bottomCenter,
   bottomRight,
 }
 
@@ -202,18 +202,18 @@ extension PageNoPositionExtension on PageNoPosition {
     switch (this) {
       case PageNoPosition.hide:
         return '不显示';
+      case PageNoPosition.topLeft:
+        return '顶部左侧';
       case PageNoPosition.topCenter:
         return '顶部居中';
-      case PageNoPosition.topLeft:
-        return '左上角';
       case PageNoPosition.topRight:
-        return '右上角';
+        return '顶部右侧';
+      case PageNoPosition.bottomLeft:
+        return '底部左侧';
       case PageNoPosition.bottomCenter:
         return '底部居中';
-      case PageNoPosition.bottomLeft:
-        return '左下角';
       case PageNoPosition.bottomRight:
-        return '右下角';
+        return '底部右侧';
     }
   }
 
@@ -221,15 +221,15 @@ extension PageNoPositionExtension on PageNoPosition {
     switch (this) {
       case PageNoPosition.hide:
         return 0;
-      case PageNoPosition.topCenter:
-        return 1;
       case PageNoPosition.topLeft:
+        return 1;
+      case PageNoPosition.topCenter:
         return 2;
       case PageNoPosition.topRight:
         return 3;
-      case PageNoPosition.bottomCenter:
-        return 4;
       case PageNoPosition.bottomLeft:
+        return 4;
+      case PageNoPosition.bottomCenter:
         return 5;
       case PageNoPosition.bottomRight:
         return 6;
@@ -241,15 +241,15 @@ extension PageNoPositionExtension on PageNoPosition {
       case 0:
         return PageNoPosition.hide;
       case 1:
-        return PageNoPosition.topCenter;
-      case 2:
         return PageNoPosition.topLeft;
+      case 2:
+        return PageNoPosition.topCenter;
       case 3:
         return PageNoPosition.topRight;
       case 4:
-        return PageNoPosition.bottomCenter;
-      case 5:
         return PageNoPosition.bottomLeft;
+      case 5:
+        return PageNoPosition.bottomCenter;
       case 6:
         return PageNoPosition.bottomRight;
     }

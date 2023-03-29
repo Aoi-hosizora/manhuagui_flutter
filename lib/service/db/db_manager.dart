@@ -41,10 +41,9 @@ class DBManager {
       onConfigure: (db) async => await db.androidSetLocale('zh-CN'),
       onCreate: (db, _) async => await _onUpgrade(db, 0),
       onUpgrade: (db, oldVersion, _) async => _onUpgrade(db, oldVersion),
+      onDowngrade: (db, oldVersion, newVersion) async => throw Exception('downgrade db from $oldVersion to $newVersion !!!'),
     );
   }
-
-  // TODO downgrade
 
   Future<void> _onUpgrade(Database db, int oldVersion) async {
     var version = oldVersion;

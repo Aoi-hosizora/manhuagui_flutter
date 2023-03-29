@@ -151,26 +151,26 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     switch (pos) {
       case PageNoPosition.hide:
         return Positioned(left: 0, top: 0, child: SizedBox());
+      case PageNoPosition.topLeft:
+        left = 0.0;
+        top = 0.0;
+        break;
       case PageNoPosition.topCenter:
         left = 0.0;
         right = 0.0;
-        top = 0.0;
-        break;
-      case PageNoPosition.topLeft:
-        left = 0.0;
         top = 0.0;
         break;
       case PageNoPosition.topRight:
         right = 0.0;
         top = 0.0;
         break;
+      case PageNoPosition.bottomLeft:
+        left = 0.0;
+        bottom = 0.0;
+        break;
       case PageNoPosition.bottomCenter:
         left = 0.0;
         right = 0.0;
-        bottom = 0.0;
-        break;
-      case PageNoPosition.bottomLeft:
-        left = 0.0;
         bottom = 0.0;
         break;
       case PageNoPosition.bottomRight:

@@ -370,7 +370,12 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                     child: SizedBox(
                       height: 50,
                       width: 50,
-                      child: CircularProgressIndicator(),
+                      child: Padding(
+                        padding: EdgeInsets.all(4.5 / 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 4.5,
+                        ),
+                      ),
                     ),
                   ),
           ),

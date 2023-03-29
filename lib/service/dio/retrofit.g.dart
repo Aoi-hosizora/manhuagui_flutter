@@ -18,12 +18,29 @@ class _RestClient implements RestClient {
   String? baseUrl;
 
   @override
+  Future<HttpResponse<dynamic>> ping() async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(
+        Options(method: 'GET', headers: _headers, extra: _extra)
+            .compose(_dio.options, '/',
+                queryParameters: queryParameters, data: _data)
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = _result.data;
+    final httpResponse = HttpResponse(value, _result);
+    return httpResponse;
+  }
+
+  @override
   Future<Result<ResultPage<TinyManga>>> getAllMangas(
-      {required page, required order}) async {
+      {required page, required order, allowCache = false}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'page': page,
-      r'order': order.toJson()
+      r'order': order.toJson(),
+      r'allow_cache': allowCache
     };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -44,9 +61,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<Manga>> getManga({required mid}) async {
+  Future<Result<Manga>> getManga({required mid, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -64,9 +81,9 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<MangaChapter>> getMangaChapter(
-      {required mid, required cid}) async {
+      {required mid, required cid, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -83,9 +100,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<RandomMangaInfo>> getRandomManga() async {
+  Future<Result<RandomMangaInfo>> getRandomManga({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -102,9 +119,10 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<MangaGroupList>> getHotSerialMangas() async {
+  Future<Result<MangaGroupList>> getHotSerialMangas(
+      {allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -121,9 +139,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<MangaGroupList>> getFinishedMangas() async {
+  Future<Result<MangaGroupList>> getFinishedMangas({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -140,9 +158,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<MangaGroupList>> getLatestMangas() async {
+  Future<Result<MangaGroupList>> getLatestMangas({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -159,9 +177,10 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<HomepageMangaGroupList>> getHomepageMangas() async {
+  Future<Result<HomepageMangaGroupList>> getHomepageMangas(
+      {allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -179,9 +198,13 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<TinyManga>>> getRecentUpdatedMangas(
-      {required page, limit = 42}) async {
+      {required page, limit = 42, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'page': page, r'limit': limit};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'limit': limit,
+      r'allow_cache': allowCache
+    };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -201,9 +224,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<CategoryList>> getCategories() async {
+  Future<Result<CategoryList>> getCategories({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -220,9 +243,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<Category>>> getGenres() async {
+  Future<Result<ResultPage<Category>>> getGenres({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -242,9 +265,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<Category>>> getZones() async {
+  Future<Result<ResultPage<Category>>> getZones({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -264,9 +287,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<Category>>> getAges() async {
+  Future<Result<ResultPage<Category>>> getAges({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -292,14 +315,16 @@ class _RestClient implements RestClient {
       required age,
       required status,
       required page,
-      required order}) async {
+      required order,
+      allowCache = false}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'zone': zone,
       r'age': age,
       r'status': status,
       r'page': page,
-      r'order': order.toJson()
+      r'order': order.toJson(),
+      r'allow_cache': allowCache
     };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -321,18 +346,23 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<SmallManga>>> searchMangas(
-      {required keyword, required page, required order}) async {
+      {required keyword,
+      required page,
+      required order,
+      allowCache = false}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
+      r'keyword': keyword,
       r'page': page,
-      r'order': order.toJson()
+      r'order': order.toJson(),
+      r'allow_cache': allowCache
     };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
         _setStreamType<Result<ResultPage<SmallManga>>>(
             Options(method: 'GET', headers: _headers, extra: _extra)
-                .compose(_dio.options, '/search/${keyword}',
+                .compose(_dio.options, '/search',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
     final value = Result<ResultPage<SmallManga>>.fromJson(
@@ -351,14 +381,16 @@ class _RestClient implements RestClient {
       required zone,
       required age,
       required page,
-      required order}) async {
+      required order,
+      allowCache = false}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'genre': genre,
       r'zone': zone,
       r'age': age,
       r'page': page,
-      r'order': order.toJson()
+      r'order': order.toJson(),
+      r'allow_cache': allowCache
     };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -379,9 +411,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<Author>> getAuthor({required aid}) async {
+  Future<Result<Author>> getAuthor({required aid, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -399,11 +431,12 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<SmallManga>>> getAuthorMangas(
-      {required aid, required page, required order}) async {
+      {required aid, required page, required order, allowCache = false}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'page': page,
-      r'order': order.toJson()
+      r'order': order.toJson(),
+      r'allow_cache': allowCache
     };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
@@ -425,9 +458,12 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<MangaRanking>>> getDayRanking(
-      {required type}) async {
+      {required type, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'type': type};
+    final queryParameters = <String, dynamic>{
+      r'type': type,
+      r'allow_cache': allowCache
+    };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -448,9 +484,12 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<MangaRanking>>> getWeekRanking(
-      {required type}) async {
+      {required type, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'type': type};
+    final queryParameters = <String, dynamic>{
+      r'type': type,
+      r'allow_cache': allowCache
+    };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -471,9 +510,12 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<MangaRanking>>> getMonthRanking(
-      {required type}) async {
+      {required type, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'type': type};
+    final queryParameters = <String, dynamic>{
+      r'type': type,
+      r'allow_cache': allowCache
+    };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -494,9 +536,12 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<MangaRanking>>> getTotalRanking(
-      {required type}) async {
+      {required type, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'type': type};
+    final queryParameters = <String, dynamic>{
+      r'type': type,
+      r'allow_cache': allowCache
+    };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -517,9 +562,12 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<Comment>>> getMangaComments(
-      {required mid, required page}) async {
+      {required mid, required page, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'page': page};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'allow_cache': allowCache
+    };
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -534,6 +582,67 @@ class _RestClient implements RestClient {
         json as Map<String, dynamic>,
         (json) => Comment.fromJson(json as Map<String, dynamic>),
       ),
+    );
+    return value;
+  }
+
+  @override
+  Future<Result<dynamic>> likeComment({required cid}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<dynamic>>(
+            Options(method: 'POST', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/comment/${cid}/like',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<dynamic>.fromJson(
+      _result.data!,
+      (json) => json as dynamic,
+    );
+    return value;
+  }
+
+  @override
+  Future<Result<dynamic>> addComment(
+      {required token, required mid, required text}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'text': text};
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<dynamic>>(
+            Options(method: 'POST', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/comment/manga/${mid}',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<dynamic>.fromJson(
+      _result.data!,
+      (json) => json as dynamic,
+    );
+    return value;
+  }
+
+  @override
+  Future<Result<dynamic>> replyComment(
+      {required token, required mid, required cid, required text}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'text': text};
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<dynamic>>(
+            Options(method: 'POST', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/comment/manga/${mid}/${cid}',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<dynamic>.fromJson(
+      _result.data!,
+      (json) => json as dynamic,
     );
     return value;
   }
@@ -559,9 +668,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<User>> getUserInfo({required token}) async {
+  Future<Result<User>> getUserInfo({required token, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{r'Authorization': token};
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
@@ -623,9 +732,12 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ResultPage<ShelfManga>>> getShelfMangas(
-      {required token, required page}) async {
+      {required token, required page, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'page': page};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'allow_cache': allowCache
+    };
     final _headers = <String, dynamic>{r'Authorization': token};
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
@@ -647,9 +759,9 @@ class _RestClient implements RestClient {
 
   @override
   Future<Result<ShelfStatus>> checkShelfManga(
-      {required token, required mid}) async {
+      {required token, required mid, allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{r'Authorization': token};
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
@@ -708,9 +820,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<ResultPage<Message>>> getMessages() async {
+  Future<Result<ResultPage<Message>>> getMessages({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
@@ -730,9 +842,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<LatestMessage>> getLatestMessage() async {
+  Future<Result<LatestMessage>> getLatestMessage({allowCache = false}) async {
     const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'allow_cache': allowCache};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(

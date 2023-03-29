@@ -65,13 +65,13 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _tabBarViewKey.currentState?.pageController.addListener(_onPageChanged);
+      _tabBarViewKey.currentState?.addListenerToPageController(_onPageChanged);
     });
   }
 
   @override
   void dispose() {
-    _tabBarViewKey.currentState?.pageController.removeListener(_onPageChanged);
+    _tabBarViewKey.currentState?.removeListenerFromPageController(_onPageChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -347,7 +347,14 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                   controller: _physicsController, // <<<
                   parent: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(),
                 ),
-                viewportFraction: (MediaQuery.of(context).size.width - 20 - 85 / 2) / MediaQuery.of(context).size.width /* <<< */, // TODO set to 1 when loading
+                viewportFraction: widget.allRankings?.isNotEmpty != true || //
+                        widget.qingnianRankings?.isNotEmpty != true ||
+                        widget.shaonvRankings?.isNotEmpty != true ||
+                        widget.allRankingsError != '' ||
+                        widget.qingnianRankingsError != '' ||
+                        widget.shaonvRankingsError != ''
+                    ? 1 // don't modify viewport fraction if loading or empty or error
+                    : (MediaQuery.of(context).size.width - 20 - 85 / 2) / MediaQuery.of(context).size.width /* <<< */,
                 padEnds: false,
                 warpTabIndex: false,
                 assertForPages: false,

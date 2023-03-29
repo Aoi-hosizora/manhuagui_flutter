@@ -371,6 +371,7 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
   var exportedPrefs = _SharedPreferencesMap.empty();
   var ok = await exportedPrefs.readFromFile(prefsFile);
   if (!ok) {
+    globalLogger.e('_importPrefs, readFromFile, !ok');
     return false;
   }
   await PrefsManager.instance.upgradePrefs(exportedPrefs); // upgrade prefs manually

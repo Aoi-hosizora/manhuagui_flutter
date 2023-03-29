@@ -34,13 +34,14 @@ class ImageLoadingView extends StatelessWidget {
             ),
           Padding(
             padding: EdgeInsets.all(30),
-            child: Container(
-              width: 50,
+            child: SizedBox(
               height: 50,
-              child: CircularProgressIndicator(
-                value: (event == null || (event.expectedTotalBytes ?? 0) == 0)
-                    ? null //
-                    : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+              width: 50,
+              child: Padding(
+                padding: EdgeInsets.all(4.5 / 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 4.5,
+                ),
               ),
             ),
           ),

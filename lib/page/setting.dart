@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
+import 'package:manhuagui_flutter/page/resource_detail.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -230,9 +231,20 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '查看客户端源代码',
+            title: '查看客户端/服务端源代码',
             icon: Icons.code,
             action: () => launchInBrowser(context: context, url: SOURCE_CODE_URL),
+          ),
+          _divider(),
+          _item(
+            title: '查看资源访问详情',
+            icon: Icons.bar_chart,
+            action: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => ResourceDetailPage(),
+              ),
+            ),
           ),
           // *******************************************************
           _spacer(),

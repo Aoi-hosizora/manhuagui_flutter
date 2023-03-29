@@ -9,7 +9,7 @@ const APP_DESCRIPTION = //
     '\n'
     '开发者: GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>\n'
     '\n'
-    '本应用仅供学习使用，客户端代码完全开源，仅供非商业用途。\n'
+    '本应用仅供学习使用，客户端和服务端代码完全开源，仅供非商业用途。\n'
     '\n'
     '本应用与漫画柜内容提供方无任何关系，若有问题，请发邮件或 Issue 联系。';
 
@@ -45,6 +45,7 @@ const GALLERY_IMAGE_LLTIMEOUT = GALLERY_IMAGE_TIMEOUT * 2;
 
 // api related
 const BASE_API_URL = 'https://api-manhuagui.aoihosizora.top/v1/';
+const BASE_API_PURE_URL = 'https://api-manhuagui.aoihosizora.top/';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';
 
