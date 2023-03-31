@@ -106,6 +106,7 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
               text: textBuilder(v),
             ),
         ],
+        enable: enable,
         onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
       );
 }

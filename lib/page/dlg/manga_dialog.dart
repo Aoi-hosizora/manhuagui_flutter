@@ -256,8 +256,17 @@ void showPopupMenuForMangaToc({
           icon: Icon(Icons.import_contacts),
           text: Text('阅读该章节'),
           popWhenPress: c,
-          onPressed: onReadChapterPressed ?? () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity),
+          onPressed: onReadChapterPressed ?? //
+              () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: false),
         ),
+        if (lastReadChapter)
+          IconTextDialogOption(
+            icon: Icon(Icons.import_contacts),
+            text: Text('从头阅读该章节'),
+            popWhenPress: c,
+            onPressed: onReadChapterPressed ?? // always turn to the first page here
+                () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: true),
+          ),
         IconTextDialogOption(
           icon: Icon(Icons.copy),
           text: Text('复制章节标题'),
@@ -667,7 +676,7 @@ class _DialogHelper {
     );
   }
 
-  void gotoChapterPage({required int chapterId, required List<MangaChapterGroup> chapterGroups, required MangaHistory? history}) {
+  void gotoChapterPage({required int chapterId, required List<MangaChapterGroup> chapterGroups, required MangaHistory? history, required bool readFirstPage}) {
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
@@ -678,9 +687,9 @@ class _DialogHelper {
           mangaCover: mangaCover,
           mangaUrl: mangaUrl,
           chapterGroups: chapterGroups,
-          initialPage: history?.chapterId == chapterId
+          initialPage: !readFirstPage && history?.chapterId == chapterId
               ? history?.chapterPage ?? 1 // have read
-              : 1 /* have not read */,
+              : 1 /* have not read, or readFirstPage == true */,
           onlineMode: true,
         ),
       ),

@@ -254,9 +254,10 @@ class MangaShelfCachePage extends StatefulWidget {
       }
     }
 
-    for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.added, fromFavoritePage: false));
-    }
+    EventBusManager.instance.fire(FavoriteGroupUpdatedEvent(changedGroups: {}, newGroups: [])); // use GroupUpdatedEvent rather than UpdatedEvent
+    // for (var mangaId in mangaIds) {
+    //   EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.added, fromFavoritePage: false));
+    // }
     Navigator.of(context).pop(); // 关闭"正在处理"对话框
     await showYesNoAlertDialog(
       context: context,

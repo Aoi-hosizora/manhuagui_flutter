@@ -119,6 +119,25 @@ class _RestClient implements RestClient {
   }
 
   @override
+  Future<Result<dynamic>> voteManga({required mid, required score}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'score': score};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<dynamic>>(
+            Options(method: 'POST', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/manga/${mid}/vote',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<dynamic>.fromJson(
+      _result.data!,
+      (json) => json as dynamic,
+    );
+    return value;
+  }
+
+  @override
   Future<Result<MangaGroupList>> getHotSerialMangas(
       {allowCache = false}) async {
     const _extra = <String, dynamic>{};
@@ -606,7 +625,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<dynamic>> addComment(
+  Future<Result<AddedComment>> addComment(
       {required token, required mid, required text}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'text': text};
@@ -614,20 +633,20 @@ class _RestClient implements RestClient {
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<Result<dynamic>>(
+        _setStreamType<Result<AddedComment>>(
             Options(method: 'POST', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/comment/manga/${mid}',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = Result<dynamic>.fromJson(
+    final value = Result<AddedComment>.fromJson(
       _result.data!,
-      (json) => json as dynamic,
+      (json) => AddedComment.fromJson(json as Map<String, dynamic>),
     );
     return value;
   }
 
   @override
-  Future<Result<dynamic>> replyComment(
+  Future<Result<AddedComment>> replyComment(
       {required token, required mid, required cid, required text}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'text': text};
@@ -635,14 +654,14 @@ class _RestClient implements RestClient {
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
-        _setStreamType<Result<dynamic>>(
+        _setStreamType<Result<AddedComment>>(
             Options(method: 'POST', headers: _headers, extra: _extra)
                 .compose(_dio.options, '/comment/manga/${mid}/${cid}',
                     queryParameters: queryParameters, data: _data)
                 .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = Result<dynamic>.fromJson(
+    final value = Result<AddedComment>.fromJson(
       _result.data!,
-      (json) => json as dynamic,
+      (json) => AddedComment.fromJson(json as Map<String, dynamic>),
     );
     return value;
   }

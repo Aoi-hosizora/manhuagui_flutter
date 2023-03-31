@@ -146,7 +146,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   }
 
   Widget _buildExtraPageNumber(BuildContext context, int imageIndex) {
-    var pos = AppSetting.instance.view.pageNoPosition;
+    var pos = AppSetting.instance.view.pageNoPosition; // only for VerticalGalleryView
     double? left, right, top, bottom;
     switch (pos) {
       case PageNoPosition.hide:
@@ -255,7 +255,6 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           ),
         ),
         onImageLongPressed: (imageIndex) => widget.onLongPressed.call(imageIndex),
-        extraWidgetBuilder: _buildExtraPageNumber,
         // ****************************************************************
         // 额外页
         // ****************************************************************

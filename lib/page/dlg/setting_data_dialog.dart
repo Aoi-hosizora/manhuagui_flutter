@@ -46,6 +46,11 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
   Widget build(BuildContext context) {
     return SettingDialogView(
       children: [
+        Text(
+          '提醒：导出的数据可供当前版本或更新版本的APP导入使用，但无法导入至更老版本的APP。',
+          style: Theme.of(context).textTheme.bodyText1,
+        ),
+        SizedBox(height: 8),
         SettingSwitcherView(
           title: ExportDataType.readHistories.toTypeTitle(),
           value: _readHistories,

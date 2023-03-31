@@ -179,12 +179,14 @@ class CustomCombobox<T> extends StatelessWidget {
     required this.value,
     required this.onChanged,
     required this.items,
+    this.enable = true,
     this.textStyle,
   }) : super(key: key);
 
   final T? value;
   final ValueChanged<T?>? onChanged;
   final List<CustomComboboxItem<T>> items;
+  final bool enable;
   final TextStyle? textStyle;
 
   @override
@@ -207,18 +209,18 @@ class CustomCombobox<T> extends StatelessWidget {
     return ExtendedDropdownButton<T>(
       value: value,
       selectedItemBuilder: (c) => [
-        for (var item in items) _buildItem(item),
+        for (var item in items) _buildItem(item, textColor: enable ? null : Colors.grey),
       ],
       items: [
         for (var item in items) _buildItem(item, textColor: value == item.value ? Colors.deepOrange : null),
       ],
       isExpanded: true,
-      onChanged: onChanged,
+      onChanged: enable ? onChanged : null,
       underlinePosition: PositionArgument.fromLTRB(0, null, 0, 6),
       underline: Container(
         height: 0.8,
         margin: EdgeInsets.only(right: 3),
-        color: Theme.of(context).primaryColor,
+        color: enable ? Theme.of(context).primaryColor : Colors.grey,
       ),
       adjustRectToAvoidBottomInset: true /* !!! deal with popup menu layout when dismissing keyboard */,
       bottomViewInsetGetter: null /* <<< use default behavior */,
@@ -290,4 +292,3 @@ class IconTextMenuItem extends StatelessWidget {
     );
   }
 }
-

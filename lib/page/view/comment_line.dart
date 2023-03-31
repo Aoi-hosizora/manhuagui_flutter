@@ -120,14 +120,14 @@ class CommentLineView extends StatelessWidget {
                               SizedBox(width: 8),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: comment.gender == 1 ? Colors.blue[300] : Colors.red[400],
+                                  color: comment.gender == 1 ? Colors.blue[300] : (comment.gender == 2 ? Colors.red[400] : Colors.transparent),
                                   borderRadius: BorderRadius.all(Radius.circular(3)),
                                 ),
                                 height: 18,
                                 width: 18,
                                 child: Center(
                                   child: Icon(
-                                    comment.gender == 1 ? Icons.male : Icons.female,
+                                    comment.gender == 1 ? Icons.male : (comment.gender == 2 ? Icons.female : null),
                                     size: 16,
                                     color: Colors.white,
                                   ),

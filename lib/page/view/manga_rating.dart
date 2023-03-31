@@ -126,3 +126,25 @@ class MangaRatingDetailView extends StatelessWidget {
     );
   }
 }
+
+class SmallStarsForRating extends StatelessWidget {
+  const SmallStarsForRating({
+    Key? key,
+    required this.score,
+  }) : super(key: key);
+
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    return RatingBar.builder(
+      itemCount: 5,
+      itemBuilder: (c, i) => Icon(Icons.grade, color: Colors.amber),
+      initialRating: score.clamp(1, 5).toDouble(),
+      itemSize: 22,
+      allowHalfRating: false,
+      ignoreGestures: true,
+      onRatingUpdate: (_) {},
+    );
+  }
+}

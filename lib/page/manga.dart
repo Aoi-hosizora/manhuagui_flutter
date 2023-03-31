@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
+import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
@@ -1075,7 +1076,7 @@ class _MangaPageState extends State<MangaPage> {
                   child: Divider(height: 0, thickness: 1),
                 ),
                 // ****************************************************************
-                // 排名评价
+                // 评分投票
                 // ****************************************************************
                 Material(
                   color: Colors.white,
@@ -1090,7 +1091,7 @@ class _MangaPageState extends State<MangaPage> {
                     onTap: () => showDialog(
                       context: context,
                       builder: (c) => AlertDialog(
-                        title: Text('评分投票'),
+                        title: Text('投票评分详情'),
                         scrollable: true,
                         content: MangaRatingDetailView(
                           averageScore: _data!.averageScore,
@@ -1098,6 +1099,34 @@ class _MangaPageState extends State<MangaPage> {
                           perScores: _data!.perScores,
                         ),
                         actions: [
+                          TextButton(
+                            child: Text('投票'),
+                            onPressed: () async {
+                              var score = await showDialog<int>(
+                                context: context,
+                                builder: (c) => SimpleDialog(
+                                  title: Text('投票评分'),
+                                  children: [
+                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 5), Text('  5星')]), onPressed: () => Navigator.of(c).pop(5)),
+                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 4), Text('  4星')]), onPressed: () => Navigator.of(c).pop(4)),
+                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 3), Text('  3星')]), onPressed: () => Navigator.of(c).pop(3)),
+                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 2), Text('  2星')]), onPressed: () => Navigator.of(c).pop(2)),
+                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 1), Text('  1星')]), onPressed: () => Navigator.of(c).pop(1)),
+                                  ],
+                                ),
+                              );
+                              if (score != null) {
+                                final client = RestClient(DioManager.instance.dio);
+                                try {
+                                  await client.voteManga(mid: widget.id, score: score);
+                                  Fluttertoast.showToast(msg: '投票成功');
+                                } catch (e, s) {
+                                  var _ = wrapError(e, s); // ignore message
+                                  Fluttertoast.showToast(msg: '投票失败，可能已对该漫画投票');
+                                }
+                              }
+                            },
+                          ),
                           TextButton(
                             child: Text('确定'),
                             onPressed: () => Navigator.of(c).pop(),
@@ -1153,26 +1182,21 @@ class _MangaPageState extends State<MangaPage> {
                               style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Theme.of(context).primaryColor),
                             ),
                           ),
-                          onTap: () => showDialog(
-                            context: context,
-                            builder: (c) => AlertDialog(
-                              title: Text('发送评论'),
-                              content: Text('是否用浏览器打开漫画页面来发表评论？'),
-                              actions: [
-                                TextButton(
-                                  child: Text('确定'),
-                                  onPressed: () {
-                                    Navigator.of(c).pop();
-                                    launchInBrowser(context: context, url: '${_data!.url}#Comment');
-                                  },
-                                ),
-                                TextButton(
-                                  child: Text('取消'),
-                                  onPressed: () => Navigator.of(c).pop(),
-                                ),
-                              ],
-                            ),
-                          ),
+                          onTap: () async {
+                            var added = await showCommentDialogForAddingComment(context: context, mangaId: widget.id);
+                            if (added != null) {
+                              var ok = await showYesNoAlertDialog(
+                                context: context,
+                                title: Text('发表评论'),
+                                content: Text('评论发表成功，是否刷新评论列表？'),
+                                yesText: Text('刷新'),
+                                noText: Text('取消'),
+                              );
+                              if (ok == true) {
+                                _getComments();
+                              }
+                            }
+                          },
                         ),
                       ),
                     ],
@@ -1208,40 +1232,16 @@ class _MangaPageState extends State<MangaPage> {
                               CustomPageRoute(
                                 context: context,
                                 builder: (c) => CommentPage(
+                                  mangaId: widget.id,
                                   comment: _comments[i],
                                 ),
                               ),
                             ),
-                            onLongPressed: () => showDialog(
+                            onLongPressed: () => showCommentPopupMenuForListAndPage(
                               context: context,
-                              builder: (c) => SimpleDialog(
-                                title: Text(_comments[i].content, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                children: [
-                                  IconTextDialogOption(
-                                    icon: Icon(Icons.comment_outlined),
-                                    text: Text('查看评论详情'),
-                                    onPressed: () {
-                                      Navigator.of(c).pop();
-                                      Navigator.of(context).push(
-                                        CustomPageRoute(
-                                          context: context,
-                                          builder: (c) => CommentPage(
-                                            comment: _comments[i],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  IconTextDialogOption(
-                                    icon: Icon(Icons.copy),
-                                    text: Text('复制评论内容'),
-                                    onPressed: () {
-                                      Navigator.of(c).pop();
-                                      copyText(_comments[i].content, showToast: true);
-                                    }
-                                  ),
-                                ],
-                              ),
+                              mangaId: widget.id,
+                              forCommentList: true,
+                              comment: _comments[i],
                             ),
                           ),
                           if (i != _comments.length - 1)

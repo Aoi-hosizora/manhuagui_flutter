@@ -3,14 +3,13 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
+import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
-import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 /// 漫画评论列表页，网络请求并展示 [Comment] 列表信息
 class CommentsPage extends StatefulWidget {
@@ -52,100 +51,6 @@ class _CommentsPageState extends State<CommentsPage> {
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
-  Future<void> _comment() async {
-    var controller = TextEditingController()..text;
-    var ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => WillPopScope(
-        onWillPop: () async {
-          if (controller.text.trim() == '') {
-            return true;
-          }
-          var ok = await showYesNoAlertDialog(
-            context: context,
-            title: Text('发表评论'),
-            content: Text('是否放弃当前的输入？'),
-            yesText: Text('放弃'),
-            noText: Text('继续编辑'),
-            reverseYesNoOrder: true,
-          );
-          return ok == true;
-        },
-        child: AlertDialog(
-          title: Text('发表评论'),
-          content: SizedBox(
-            width: getDialogContentMaxWidth(context),
-            child: TextField(
-              controller: controller,
-              maxLines: null,
-              autofocus: true,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(vertical: 5),
-                labelText: '评论',
-                icon: Icon(Icons.mode_comment_outlined),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('确定'),
-              onPressed: () async {
-                if (controller.text.trim().isEmpty) {
-                  Fluttertoast.showToast(msg: '不允许发表空评论');
-                } else {
-                  Navigator.of(c).pop(true);
-                }
-              },
-            ),
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(c).maybePop(false),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (ok != true) {
-      return;
-    }
-
-    var content = controller.text.trim();
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (c) => WillPopScope(
-        onWillPop: () async => false,
-        child: AlertDialog(
-          contentPadding: EdgeInsets.zero,
-          content: CircularProgressDialogOption(
-            progress: CircularProgressIndicator(),
-            child: Text('发表评论中...\n\n$content'),
-          ),
-        ),
-      ),
-    );
-
-    var client = RestClient(DioManager.instance.dio);
-    try {
-      await client.addComment(token: AuthManager.instance.token, mid: widget.mangaId, text: content);
-    } catch (e, s) {
-      var we = wrapError(e, s);
-      Fluttertoast.showToast(msg: '评论发表失败：${we.text}');
-    } finally {
-      Navigator.of(context).pop();
-      var ok = await showYesNoAlertDialog(
-        context: context,
-        title: Text('发表评论'),
-        content: Text('评论发表成功，是否刷新评论列表？'),
-        yesText: Text('刷新'),
-        noText: Text('取消'),
-      );
-      if (ok == true) {
-        _pdvKey.currentState?.refresh();
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,7 +61,21 @@ class _CommentsPageState extends State<CommentsPage> {
           AppBarActionButton(
             icon: Icon(Icons.add_comment),
             tooltip: '发表评论',
-            onPressed: _comment,
+            onPressed: () async {
+              var added = await showCommentDialogForAddingComment(context: context, mangaId: widget.mangaId);
+              if (added != null) {
+                var ok = await showYesNoAlertDialog(
+                  context: context,
+                  title: Text('发表评论'),
+                  content: Text('评论发表成功，是否刷新评论列表？'),
+                  yesText: Text('刷新'),
+                  noText: Text('取消'),
+                );
+                if (ok == true) {
+                  _pdvKey.currentState?.refresh();
+                }
+              }
+            },
           ),
         ],
       ),
@@ -200,40 +119,16 @@ class _CommentsPageState extends State<CommentsPage> {
             CustomPageRoute(
               context: context,
               builder: (c) => CommentPage(
+                mangaId: widget.mangaId,
                 comment: item,
               ),
             ),
           ),
-          onLongPressed: () => showDialog(
+          onLongPressed: () => showCommentPopupMenuForListAndPage(
             context: context,
-            builder: (c) => SimpleDialog(
-              title: Text(item.content, maxLines: 2, overflow: TextOverflow.ellipsis),
-              children: [
-                IconTextDialogOption(
-                  icon: Icon(Icons.comment_outlined),
-                  text: Text('查看评论详情'),
-                  onPressed: () {
-                    Navigator.of(c).pop();
-                    Navigator.of(context).push(
-                      CustomPageRoute(
-                        context: context,
-                        builder: (c) => CommentPage(
-                          comment: item,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                IconTextDialogOption(
-                  icon: Icon(Icons.copy),
-                  text: Text('复制评论内容'),
-                  onPressed: () {
-                    Navigator.of(c).pop();
-                    copyText(item.content, showToast: true);
-                  },
-                ),
-              ],
-            ),
+            mangaId: widget.mangaId,
+            forCommentList: true,
+            comment: item,
           ),
         ),
         extra: UpdatableDataViewExtraWidgets(

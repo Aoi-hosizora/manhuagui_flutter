@@ -20,7 +20,6 @@ class HorizontalGalleryView extends StatefulWidget {
     this.preloadPagesCount = 0,
     this.initialPage = 0, // <<<
     this.viewportFraction = 1.0, // <<<
-    this.extraWidgetBuilder, // <<<
   }) : super(key: key);
 
   final int imageCount;
@@ -36,7 +35,6 @@ class HorizontalGalleryView extends StatefulWidget {
 
   final int initialPage;
   final double viewportFraction;
-  final Widget Function(BuildContext context, int imageIndex)? extraWidgetBuilder;
 
   @override
   State<HorizontalGalleryView> createState() => HorizontalGalleryViewState();
@@ -97,15 +95,7 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
         }
         return GestureDetector(
           onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(index - 1),
-          child: Stack(
-            children: [
-              Center(
-                child: builder(c, index - 1),
-              ),
-              if (widget.extraWidgetBuilder != null) //
-                widget.extraWidgetBuilder!.call(c, index - 1), // TODO hide if loading
-            ],
-          ),
+          child: builder(c, index - 1),
         );
       },
       fallbackOptions: widget.fallbackOptions,

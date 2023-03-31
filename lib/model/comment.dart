@@ -1,4 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 part 'comment.g.dart';
 
@@ -46,5 +48,33 @@ class RepliedComment {
 
   Comment toComment() {
     return Comment(cid: cid, uid: uid, username: username, avatar: avatar, gender: gender, content: content, likeCount: likeCount, replyCount: replyCount, commentTime: commentTime, replyTimeline: []);
+  }
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class AddedComment {
+  final int cid;
+  final int mid;
+  final int repliedCid;
+  final String content;
+
+  const AddedComment({required this.cid, required this.mid, required this.repliedCid, required this.content});
+
+  factory AddedComment.fromJson(Map<String, dynamic> json) => _$AddedCommentFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AddedCommentToJson(this);
+
+  RepliedComment toRepliedComment({required String username, required DateTime time}) {
+    return RepliedComment(
+      cid: cid,
+      uid: -1 /* <<< useless */,
+      username: username,
+      avatar: DEFAULT_USER_AVATAR_URL,
+      gender: -1 /* <<< do not show */,
+      content: content,
+      likeCount: 0,
+      replyCount: 0,
+      commentTime: formatDatetimeAndDuration(time, FormatPattern.datetime),
+    );
   }
 }

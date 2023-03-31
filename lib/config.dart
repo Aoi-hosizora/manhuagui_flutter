@@ -48,6 +48,8 @@ const BASE_API_URL = 'https://api-manhuagui.aoihosizora.top/v1/';
 const BASE_API_PURE_URL = 'https://api-manhuagui.aoihosizora.top/';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36';
 const REFERER = 'https://www.manhuagui.com/';
+const DEFAULT_USER_AVATAR_URL = 'https://cf.hamreus.com/images/default.png';
+const DEFAULT_AUTHOR_COVER_URL = 'https://cf.hamreus.com/zpic/none.jpg';
 
 // website urls
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';

@@ -113,6 +113,14 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   }
 
   void _updateByEvent(FavoriteUpdatedEvent event) async {
+    // 更新分组显示数量
+    if (event.reason == UpdateReason.added || event.reason == UpdateReason.deleted) {
+      var flag = (event.reason == UpdateReason.added ? 1 : (event.reason == UpdateReason.deleted ? -1 : 0));
+      _groupsLengths?[event.group] = (_groupsLengths?[event.group] ?? 0) + flag;
+      _allMangasCount = (_allMangasCount ?? 0) + flag;
+      if (mounted) setState(() {});
+    }
+
     if (_currentGroup != event.group && _currentGroup != event.oldGroup /* not null only when manga's group is updated */) {
       return; // 未影响当前分组 => 忽略
     }
@@ -524,6 +532,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           child: PaginationDataView<FavoriteManga>(
             key: _pdvKey,
             style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.masonryGridView,
+            // TODO masonryGridView
             data: _data,
             getData: ({indicator}) => _getData(page: indicator),
             scrollController: _controller,

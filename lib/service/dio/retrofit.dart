@@ -33,6 +33,9 @@ abstract class RestClient {
   @GET('/manga/random')
   Future<Result<RandomMangaInfo>> getRandomManga({@Query('allow_cache') bool allowCache = false});
 
+  @POST('/manga/{mid}/vote')
+  Future<Result> voteManga({@Path() required int mid, @Query('score') required int score});
+
   @GET('/list/serial')
   Future<Result<MangaGroupList>> getHotSerialMangas({@Query('allow_cache') bool allowCache = false});
 
@@ -94,10 +97,10 @@ abstract class RestClient {
   Future<Result> likeComment({@Path() required int cid});
 
   @POST('/comment/manga/{mid}')
-  Future<Result> addComment({@Header('Authorization') required String token, @Path() required int mid, @Query('text') required String text});
+  Future<Result<AddedComment>> addComment({@Header('Authorization') required String token, @Path() required int mid, @Query('text') required String text});
 
   @POST('/comment/manga/{mid}/{cid}')
-  Future<Result> replyComment({@Header('Authorization') required String token, @Path() required int mid, @Path() required int cid, @Query('text') required String text});
+  Future<Result<AddedComment>> replyComment({@Header('Authorization') required String token, @Path() required int mid, @Path() required int cid, @Query('text') required String text});
 
   @POST('/user/check_login')
   Future<Result<LoginCheckResult>> checkUserLogin({@Header('Authorization') required String token});

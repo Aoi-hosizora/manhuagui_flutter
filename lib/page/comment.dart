@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
-import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
-import 'package:manhuagui_flutter/service/native/clipboard.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
 /// 漫画评论详情页，展示所给 [Comment] 信息
 class CommentPage extends StatefulWidget {
   const CommentPage({
     Key? key,
+    required this.mangaId,
     required this.comment,
   }) : super(key: key);
 
+  final int mangaId;
   final Comment comment;
 
   @override
@@ -23,50 +26,27 @@ class _CommentPageState extends State<CommentPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
-  void _showPopupMenu(Comment comment) {
-    showDialog(
+  List<RepliedComment> get _replied => widget.comment.replyTimeline;
+  final _newReplied = <RepliedComment>[];
+
+  void _showPopupMenu(Comment comment, {bool alsoAdd = false}) {
+    showCommentPopupMenuForListAndPage(
       context: context,
-      builder: (c) => SimpleDialog(
-        title: Text(
-          comment.content,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        children: [
-          IconTextDialogOption(
-            icon: Icon(Icons.copy),
-            text: Text('复制评论内容'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              copyText(comment.content, showToast: true);
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(Icons.copy),
-            text: Text('复制用户名'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              copyText(comment.username == '-' ? '匿名用户' : comment.username, showToast: true);
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(Icons.account_circle),
-            text: Text('查看用户头像'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => ImageViewerPage(
-                    url: comment.avatar,
-                    title: '用户头像',
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      mangaId: widget.mangaId,
+      forCommentList: false,
+      comment: comment,
+      onReplied: (added) {
+        Fluttertoast.showToast(msg: '评论回复成功');
+        if (alsoAdd) {
+          _newReplied.add(
+            added.toRepliedComment(
+              username: '${AuthManager.instance.username} (我刚刚的回复)',
+              time: DateTime.now(),
+            ),
+          );
+          if (mounted) setState(() {});
+        }
+      },
     );
   }
 
@@ -76,6 +56,25 @@ class _CommentPageState extends State<CommentPage> {
       appBar: AppBar(
         title: Text('评论详情'),
         leading: AppBarActionButton.leading(context: context),
+        actions: [
+          AppBarActionButton(
+            icon: Icon(Icons.reply),
+            tooltip: '回复评论',
+            onPressed: () async {
+              var added = await showCommentDialogForReplyingComment(context: context, mangaId: widget.mangaId, commentId: widget.comment.cid);
+              if (added != null) {
+                Fluttertoast.showToast(msg: '评论回复成功');
+                _newReplied.add(
+                  added.toRepliedComment(
+                    username: '${AuthManager.instance.username} (刚刚回复)',
+                    time: DateTime.now(),
+                  ),
+                );
+                if (mounted) setState(() {});
+              }
+            },
+          ),
+        ],
       ),
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
@@ -93,10 +92,10 @@ class _CommentPageState extends State<CommentPage> {
           children: [
             CommentLineView.largeWithoutReplies(
               comment: widget.comment,
-              onPressed: () => _showPopupMenu(widget.comment),
-              onLongPressed: () => _showPopupMenu(widget.comment),
+              onPressed: () => _showPopupMenu(widget.comment, alsoAdd: true),
+              onLongPressed: () => _showPopupMenu(widget.comment, alsoAdd: true),
             ),
-            if (widget.comment.replyTimeline.isEmpty)
+            if (_newReplied.isEmpty && _replied.isEmpty)
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Center(
@@ -106,16 +105,32 @@ class _CommentPageState extends State<CommentPage> {
                   ),
                 ),
               ),
-            if (widget.comment.replyTimeline.isNotEmpty) ...[
+            if (_newReplied.isNotEmpty) ...[
               Container(height: 12),
-              for (var i = 0; i < widget.comment.replyTimeline.length; i++) ...[
+              for (var i = 0; i < _newReplied.length; i++) ...[
                 CommentLineView.largeForReply(
-                  comment: widget.comment.replyTimeline[i].toComment(),
-                  index: i + 1,
-                  onPressed: () => _showPopupMenu(widget.comment.replyTimeline[i].toComment()),
-                  onLongPressed: () => _showPopupMenu(widget.comment.replyTimeline[i].toComment()),
+                  comment: _newReplied[i].toComment(),
+                  index: _replied.length + 1 + i + 1,
+                  onPressed: () => _showPopupMenu(_newReplied[i].toComment()),
+                  onLongPressed: () => _showPopupMenu(_newReplied[i].toComment()),
                 ),
-                if (i != widget.comment.replyTimeline.length - 1)
+                if (i != _newReplied.length - 1)
+                  Container(
+                    color: Colors.white,
+                    child: Divider(height: 0, thickness: 1, indent: 40 + 2.0 * 15),
+                  ),
+              ],
+            ],
+            if (_replied.isNotEmpty) ...[
+              Container(height: 12),
+              for (var i = 0; i < _replied.length; i++) ...[
+                CommentLineView.largeForReply(
+                  comment: _replied[i].toComment(),
+                  index: i + 1,
+                  onPressed: () => _showPopupMenu(_replied[i].toComment()),
+                  onLongPressed: () => _showPopupMenu(_replied[i].toComment()),
+                ),
+                if (i != _replied.length - 1)
                   Container(
                     color: Colors.white,
                     child: Divider(height: 0, thickness: 1, indent: 40 + 2.0 * 15),

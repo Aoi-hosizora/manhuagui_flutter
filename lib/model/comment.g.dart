@@ -59,3 +59,18 @@ Map<String, dynamic> _$RepliedCommentToJson(RepliedComment instance) =>
       'reply_count': instance.replyCount,
       'comment_time': instance.commentTime,
     };
+
+AddedComment _$AddedCommentFromJson(Map<String, dynamic> json) => AddedComment(
+      cid: json['cid'] as int,
+      mid: json['mid'] as int,
+      repliedCid: json['replied_cid'] as int,
+      content: json['content'] as String,
+    );
+
+Map<String, dynamic> _$AddedCommentToJson(AddedComment instance) =>
+    <String, dynamic>{
+      'cid': instance.cid,
+      'mid': instance.mid,
+      'replied_cid': instance.repliedCid,
+      'content': instance.content,
+    };

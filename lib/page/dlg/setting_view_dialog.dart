@@ -178,6 +178,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           title: '每页显示额外页码',
           value: _pageNoPosition,
           values: const [PageNoPosition.hide, PageNoPosition.topLeft, PageNoPosition.topCenter, PageNoPosition.topRight, PageNoPosition.bottomLeft, PageNoPosition.bottomCenter, PageNoPosition.bottomRight],
+          enable: _viewDirection == ViewDirection.topToBottom,
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _pageNoPosition = s;
