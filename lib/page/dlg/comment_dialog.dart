@@ -20,6 +20,7 @@ void showCommentPopupMenuForListAndPage({
   required Comment comment,
   required bool forCommentList,
   void Function(AddedComment)? onReplied,
+  void Function(Future<void> Function() navigate)? pushNavigateWrapper,
 }) {
   showDialog(
     context: context,
@@ -30,8 +31,34 @@ void showCommentPopupMenuForListAndPage({
         overflow: TextOverflow.ellipsis,
       ),
       children: [
+        if (forCommentList)
+          IconTextDialogOption(
+            icon: Icon(Icons.comment_outlined),
+            text: Text('查看评论详情'),
+            onPressed: () {
+              if (!AuthManager.instance.logined) {
+                Fluttertoast.showToast(msg: '用户未登录');
+                return;
+              }
+              Navigator.of(c).pop();
+              var f = () => Navigator.of(context).push(
+                    CustomPageRoute(
+                      context: context,
+                      builder: (c) => CommentPage(
+                        mangaId: mangaId,
+                        comment: comment,
+                      ),
+                    ),
+                  );
+              if (pushNavigateWrapper == null) {
+                f();
+              } else {
+                pushNavigateWrapper.call(f);
+              }
+            },
+          ),
         IconTextDialogOption(
-          icon: Icon(Icons.thumb_up),
+          icon: Icon(Icons.thumb_up_alt),
           text: Text('点赞评论'),
           onPressed: () async {
             Navigator.of(c).pop();
@@ -40,8 +67,8 @@ void showCommentPopupMenuForListAndPage({
               await client.likeComment(cid: comment.cid);
               Fluttertoast.showToast(msg: '点赞成功，点赞结果需要等待几分钟才会显示');
             } catch (e, s) {
-              var _ = wrapError(e, s);
-              Fluttertoast.showToast(msg: '点赞成功');
+              var we = wrapError(e, s);
+              Fluttertoast.showToast(msg: '点赞失败：${we.text}');
             }
           },
         ),
@@ -58,23 +85,6 @@ void showCommentPopupMenuForListAndPage({
             }
           },
         ),
-        if (forCommentList)
-          IconTextDialogOption(
-            icon: Icon(Icons.comment_outlined),
-            text: Text('查看评论详情'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => CommentPage(
-                    mangaId: mangaId,
-                    comment: comment,
-                  ),
-                ),
-              );
-            },
-          ),
         Divider(height: 16, thickness: 1),
         IconTextDialogOption(
           icon: Icon(Icons.copy),
@@ -103,6 +113,7 @@ void showCommentPopupMenuForListAndPage({
                 builder: (c) => ImageViewerPage(
                   url: comment.avatar,
                   title: '用户头像',
+                  ignoreSystemUI: pushNavigateWrapper != null,
                 ),
               ),
             );

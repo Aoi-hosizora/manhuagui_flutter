@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
@@ -289,6 +290,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
       }));
       await AuthManager.instance.check();
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfCacheUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
@@ -609,8 +611,9 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
           controller: _msController,
           stateSetter: () => mountedSetState(() {}),
           onModeChanged: (_) => mountedSetState(() {}),
-          child: PaginationListView<ShelfCache>(
+          child: PaginationDataView<ShelfCache>(
             key: _pdvKey,
+            style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
             data: _data,
             getData: ({indicator}) => _getData(page: indicator),
             scrollController: _controller,
@@ -632,6 +635,12 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
             ),
             separator: Divider(height: 0, thickness: 1),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 0.0,
+              mainAxisSpacing: 0.0,
+              childAspectRatio: ShelfCacheLineView.getChildAspectRatioForTwoColumns(context),
+            ),
             itemBuilder: (c, _, item) => SelectableCheckboxItem<ValueKey<int>>(
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),

@@ -17,10 +17,12 @@ class CommentsPage extends StatefulWidget {
     Key? key,
     required this.mangaId,
     required this.mangaTitle,
+    this.pushNavigateWrapper,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
+  final void Function(Future<void> Function() navigate)? pushNavigateWrapper;
 
   @override
   _CommentsPageState createState() => _CommentsPageState();
@@ -115,20 +117,28 @@ class _CommentsPageState extends State<CommentsPage> {
         ),
         itemBuilder: (c, _, item) => CommentLineView.normalWithReplies(
           comment: item,
-          onPressed: () => Navigator.of(context).push(
-            CustomPageRoute(
-              context: context,
-              builder: (c) => CommentPage(
-                mangaId: widget.mangaId,
-                comment: item,
-              ),
-            ),
-          ),
+          onPressed: () {
+            var f = () => Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => CommentPage(
+                      mangaId: widget.mangaId,
+                      comment: item,
+                    ),
+                  ),
+                );
+            if (widget.pushNavigateWrapper == null) {
+              f();
+            } else {
+              widget.pushNavigateWrapper?.call(f);
+            }
+          },
           onLongPressed: () => showCommentPopupMenuForListAndPage(
             context: context,
             mangaId: widget.mangaId,
             forCommentList: true,
             comment: item,
+            pushNavigateWrapper: widget.pushNavigateWrapper,
           ),
         ),
         extra: UpdatableDataViewExtraWidgets(

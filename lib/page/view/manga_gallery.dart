@@ -145,12 +145,12 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     return null;
   }
 
-  Widget _buildExtraPageNumber(BuildContext context, int imageIndex) {
+  Widget _buildPageWithPageNumber(BuildContext context, Widget photoView, int imageIndex) {
     var pos = AppSetting.instance.view.pageNoPosition; // only for VerticalGalleryView
     double? left, right, top, bottom;
     switch (pos) {
       case PageNoPosition.hide:
-        return Positioned(left: 0, top: 0, child: SizedBox());
+        return photoView;
       case PageNoPosition.topLeft:
         left = 0.0;
         top = 0.0;
@@ -178,21 +178,26 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         bottom = 0.0;
         break;
     }
-    return Positioned(
-      left: left,
-      right: right,
-      top: top,
-      bottom: bottom,
-      child: Center(
-        child: Container(
-          color: Colors.black.withOpacity(0.5),
-          padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          child: Text(
-            '${imageIndex + 1}',
-            style: TextStyle(color: Colors.white),
+    return Stack(
+      children: [
+        Center(child: photoView),
+        Positioned(
+          left: left,
+          right: right,
+          top: top,
+          bottom: bottom,
+          child: Center(
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
+              padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              child: Text(
+                '${imageIndex + 1}',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -334,7 +339,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       onImageTapDown: (d) => _onPointerDown(d.globalPosition) /* <<< */,
       onImageTapUp: (d) => _onPointerUp(d.globalPosition) /* <<< */,
       onImageLongPressed: (imageIndex) => widget.onLongPressed.call(imageIndex),
-      extraWidgetBuilder: _buildExtraPageNumber,
+      customPageBuilder: _buildPageWithPageNumber,
       // ****************************************************************
       // 额外页
       // ****************************************************************

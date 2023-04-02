@@ -76,6 +76,18 @@ class GeneralLineView extends StatelessWidget {
   final void Function() onPressed;
   final void Function()? onLongPressed;
 
+  static double getChildAspectRatioForTwoColumns(BuildContext context) {
+    // note: customRows (DownloadLineView) will never be used when calling getHeight
+    var imageHeight = 100.0 + 5 * 2;
+    var titleHeight = TextSpan(text: '　', style: Theme.of(context).textTheme.subtitle1).layoutSize(context).height;
+    var lineHeight = TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
+    var textHeight = titleHeight + 4 + (lineHeight > 20 ? lineHeight : 20) * 3 + 3 * 2 + 5 * 2;
+
+    var width = MediaQuery.of(context).size.width / 2;
+    var height = imageHeight > textHeight ? imageHeight : textHeight;
+    return width / height;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -124,7 +136,7 @@ class GeneralLineView extends StatelessWidget {
                   if (customRows == null) ...[
                     GeneralLineIconText(icon: icon1, text: text1),
                     GeneralLineIconText(icon: icon2, text: text2),
-                    GeneralLineIconText(icon: icon3, text: text3, cornerIcons: cornerIcons),
+                    GeneralLineIconText(icon: icon3, text: text3, cornerIcons: cornerIcons, padding: EdgeInsets.zero),
                   ],
 
                   // ****************************************************************
@@ -210,7 +222,7 @@ class GeneralLineIconText extends StatelessWidget {
             child: Text(
               text ?? '',
               style: textStyle ?? //
-                  DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
+                  Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.grey[600]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

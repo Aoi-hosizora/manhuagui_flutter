@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/manga_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
@@ -242,7 +243,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     return Scaffold(
       body: PaginationDataView<ShelfManga>(
         key: _pdvKey,
-        style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.masonryGridView,
+        style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
@@ -268,9 +269,12 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           },
         ),
         separator: Divider(height: 0, thickness: 1),
-        crossAxisCount: 2,
-        mainAxisSpacing: 0.0,
-        crossAxisSpacing: 0.0,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 0.0,
+          mainAxisSpacing: 0.0,
+          childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+        ),
         itemBuilder: (c, _, item) => ShelfMangaLineView(
           manga: item,
           history: _histories[item.mid],

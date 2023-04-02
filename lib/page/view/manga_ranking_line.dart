@@ -12,10 +12,12 @@ class MangaRankingLineView extends StatelessWidget {
     Key? key,
     required this.manga,
     this.flags,
+    this.twoColumns = false,
   }) : super(key: key);
 
   final MangaRanking manga;
   final MangaCornerFlags? flags;
+  final bool twoColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,7 @@ class MangaRankingLineView extends StatelessWidget {
       icon3: Icons.update,
       text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       cornerIcons: flags?.buildIcons(),
+      twoColumns: twoColumns,
       extraRightPaddingForTitle: 28 - 14 + 5 /* badge width - line horizontal padding + extra space */,
       extrasInStack: [
         Positioned(

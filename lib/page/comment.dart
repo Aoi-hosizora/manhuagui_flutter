@@ -40,7 +40,7 @@ class _CommentPageState extends State<CommentPage> {
         if (alsoAdd) {
           _newReplied.add(
             added.toRepliedComment(
-              username: '${AuthManager.instance.username} (我刚刚的回复)',
+              username: AuthManager.instance.username,
               time: DateTime.now(),
             ),
           );
@@ -59,14 +59,14 @@ class _CommentPageState extends State<CommentPage> {
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.reply),
-            tooltip: '回复评论',
+            tooltip: '回复最新评论',
             onPressed: () async {
               var added = await showCommentDialogForReplyingComment(context: context, mangaId: widget.mangaId, commentId: widget.comment.cid);
               if (added != null) {
                 Fluttertoast.showToast(msg: '评论回复成功');
                 _newReplied.add(
                   added.toRepliedComment(
-                    username: '${AuthManager.instance.username} (刚刚回复)',
+                    username: AuthManager.instance.username,
                     time: DateTime.now(),
                   ),
                 );

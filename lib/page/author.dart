@@ -13,6 +13,7 @@ import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -66,6 +67,7 @@ class _AuthorPageState extends State<AuthorPage> {
       await AuthManager.instance.check();
     });
 
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) async {
       if (!ev.fromAuthorPage && ev.authorId == widget.id) {
         _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: ev.authorId);
@@ -609,8 +611,9 @@ class _AuthorPageState extends State<AuthorPage> {
             // 漫画列表
             // ****************************************************************
             body: Builder(
-              builder: (c) => PaginationSliverListView<SmallManga>(
+              builder: (c) => PaginationDataView<SmallManga>(
                 key: _pdvKey,
+                style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.sliverListView : UpdatableDataViewStyle.sliverGridView,
                 data: _mangas,
                 getData: ({indicator}) => _getMangas(page: indicator),
                 scrollController: PrimaryScrollController.of(c),
@@ -646,9 +649,16 @@ class _AuthorPageState extends State<AuthorPage> {
                 ),
                 useOverlapInjector: true,
                 separator: Divider(height: 0, thickness: 1),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 0.0,
+                  mainAxisSpacing: 0.0,
+                  childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+                ),
                 itemBuilder: (c, _, item) => TinyMangaLineView(
                   manga: item.toTiny(),
                   flags: _flagStorage.getFlags(mangaId: item.mid),
+                  twoColumns: AppSetting.instance.ui.showTwoColumns,
                 ),
               ),
             ),

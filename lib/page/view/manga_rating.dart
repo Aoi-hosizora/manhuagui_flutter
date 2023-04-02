@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-/// 漫画评分，在 [MangaPage] 使用
+/// 漫画评分 / [StarsTextView]，在 [MangaPage] 使用
 class MangaRatingView extends StatelessWidget {
   const MangaRatingView({
     Key? key,
@@ -127,24 +127,29 @@ class MangaRatingDetailView extends StatelessWidget {
   }
 }
 
-class SmallStarsForRating extends StatelessWidget {
-  const SmallStarsForRating({
+class StarsTextView extends StatelessWidget {
+  const StarsTextView({
     Key? key,
     required this.score,
   }) : super(key: key);
 
-  final int score;
+  final int score; // starts from 1
 
   @override
   Widget build(BuildContext context) {
-    return RatingBar.builder(
-      itemCount: 5,
-      itemBuilder: (c, i) => Icon(Icons.grade, color: Colors.amber),
-      initialRating: score.clamp(1, 5).toDouble(),
-      itemSize: 22,
-      allowHalfRating: false,
-      ignoreGestures: true,
-      onRatingUpdate: (_) {},
+    return Row(
+      children: [
+        RatingBar.builder(
+          itemCount: 5,
+          itemBuilder: (c, i) => Icon(Icons.grade, color: Colors.amber),
+          initialRating: score.clamp(1, 5).toDouble(),
+          itemSize: 22,
+          allowHalfRating: false,
+          ignoreGestures: true,
+          onRatingUpdate: (_) {},
+        ),
+        Text('   $score星'),
+      ],
     );
   }
 }

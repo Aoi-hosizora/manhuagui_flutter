@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/small_author_line.dart';
@@ -139,8 +140,9 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
         setting: PlaceholderSetting(useAnimatedSwitcher: false).copyWithChinese(),
         onRefresh: () => _loadGenres(),
         onChanged: (_, __) => _fabController.hide(),
-        childBuilder: (c) => PaginationListView<SmallAuthor>(
+        childBuilder: (c) => PaginationDataView<SmallAuthor>(
           key: _pdvKey,
+          style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
           data: _data,
           getData: ({indicator}) => _getData(page: indicator),
           scrollController: _controller,
@@ -179,9 +181,16 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             },
           ),
           separator: Divider(height: 0, thickness: 1),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 0.0,
+            mainAxisSpacing: 0.0,
+            childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+          ),
           itemBuilder: (c, _, item) => SmallAuthorLineView(
             author: item,
             flags: _flagStorage.getFlags(mangaId: item.aid),
+            twoColumns: AppSetting.instance.ui.showTwoColumns,
           ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [

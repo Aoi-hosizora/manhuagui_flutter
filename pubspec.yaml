@@ -58,6 +58,8 @@ dependencies:
 dependency_overrides:
   sqflite:
     path: ./deps/sqflite/sqflite
+  photo_view:
+    path: ./deps/photo_view
 
 dev_dependencies:
   flutter_test:

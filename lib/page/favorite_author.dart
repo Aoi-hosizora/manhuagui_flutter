@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
@@ -7,6 +8,7 @@ import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/favorite_author_line.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -42,6 +44,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
       }));
       await AuthManager.instance.check();
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
@@ -299,8 +302,9 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
           controller: _msController,
           stateSetter: () => mountedSetState(() {}),
           onModeChanged: (_) => mountedSetState(() {}),
-          child: PaginationListView<FavoriteAuthor>(
+          child: PaginationDataView<FavoriteAuthor>(
             key: _pdvKey,
+            style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
             data: _data,
             getData: ({indicator}) => _getData(page: indicator),
             scrollController: _controller,
@@ -322,6 +326,12 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
             ),
             separator: Divider(height: 0, thickness: 1),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 0.0,
+              mainAxisSpacing: 0.0,
+              childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+            ),
             itemBuilder: (c, _, item) => SelectableCheckboxItem<ValueKey<int>>(
               key: ValueKey<int>(item.authorId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
@@ -329,6 +339,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
               itemBuilder: (c, key, tip) => FavoriteAuthorLineView(
                 author: item,
                 flags: _flagStorage.getFlags(mangaId: item.authorId, forceInFavorite: true),
+                twoColumns: AppSetting.instance.ui.showTwoColumns,
                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
               ),
             ),

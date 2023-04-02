@@ -12,10 +12,12 @@ class SmallMangaLineView extends StatelessWidget {
     Key? key,
     required this.manga,
     this.flags,
+    this.twoColumns = false,
   }) : super(key: key);
 
   final SmallManga manga;
   final MangaCornerFlags? flags;
+  final bool twoColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,7 @@ class SmallMangaLineView extends StatelessWidget {
       icon3: Icons.update,
       text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       cornerIcons: flags?.buildIcons(),
+      twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

@@ -12,10 +12,12 @@ class SmallAuthorLineView extends StatelessWidget {
     Key? key,
     required this.author,
     this.flags,
+    this.twoColumns = false,
   }) : super(key: key);
 
   final SmallAuthor author;
   final AuthorCornerFlags? flags;
+  final bool twoColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,7 @@ class SmallAuthorLineView extends StatelessWidget {
       icon3: Icons.update,
       text3: '更新于 ${author.formattedNewestDateWithDuration}',
       cornerIcons: flags?.buildIcons(),
+      twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

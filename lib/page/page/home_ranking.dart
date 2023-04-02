@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -113,8 +115,9 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         setting: PlaceholderSetting(useAnimatedSwitcher: false).copyWithChinese(),
         onRefresh: () => _loadGenres(),
         onChanged: (_, __) => _fabController.hide(),
-        childBuilder: (c) => RefreshableListView<MangaRanking>(
+        childBuilder: (c) => RefreshableDataView<MangaRanking>(
           key: _rdvKey,
+          style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
           data: _data,
           getData: () => _getData(),
           scrollController: _controller,
@@ -144,9 +147,16 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             },
           ),
           separator: Divider(height: 0, thickness: 1),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 0.0,
+            mainAxisSpacing: 0.0,
+            childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+          ),
           itemBuilder: (c, _, item) => MangaRankingLineView(
             manga: item,
             flags: _flagStorage.getFlags(mangaId: item.mid),
+            twoColumns: AppSetting.instance.ui.showTwoColumns,
           ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [

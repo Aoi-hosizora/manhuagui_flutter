@@ -12,11 +12,13 @@ class FavoriteAuthorLineView extends StatelessWidget {
     Key? key,
     required this.author,
     this.flags,
+    this.twoColumns = false,
     required this.onLongPressed,
   }) : super(key: key);
 
   final FavoriteAuthor author;
   final AuthorCornerFlags? flags;
+  final bool twoColumns;
   final void Function()? onLongPressed;
 
   @override
@@ -31,6 +33,7 @@ class FavoriteAuthorLineView extends StatelessWidget {
       icon3: Icons.access_time,
       text3: '收藏于 ${author.formattedCreatedAtWithDuration}',
       cornerIcons: flags?.buildIcons(),
+      twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(
         CustomPageRoute(
           context: context,

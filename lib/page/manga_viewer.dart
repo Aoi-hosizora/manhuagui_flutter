@@ -846,6 +846,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           child: CommentsPage(
             mangaId: widget.mangaId,
             mangaTitle: _data!.mangaTitle,
+            pushNavigateWrapper: (navigate) async {
+              await _ScreenHelper.restoreSystemUI();
+              await navigate(); // pushReplaced => true
+              await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+            },
           ),
         ),
       ),
@@ -897,7 +902,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           },
           replaceNavigateWrapper: (navigate) async {
             await _ScreenHelper.restoreSystemUI();
-            await navigate(routeResult: true); // pushReplaced => true
+            await navigate(routeResult: true); // push
             await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
           },
         ),

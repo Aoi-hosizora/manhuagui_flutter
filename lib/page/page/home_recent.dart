@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -63,8 +65,9 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      body: PaginationListView<TinyManga>(
+      body: PaginationDataView<TinyManga>(
         data: _data,
+        style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
         paginationSetting: PaginationSetting(
@@ -89,9 +92,16 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
           },
         ),
         separator: Divider(height: 0, thickness: 1),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 0.0,
+          mainAxisSpacing: 0.0,
+          childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+        ),
         itemBuilder: (c, _, item) => TinyMangaLineView(
           manga: item,
           flags: _flagStorage.getFlags(mangaId: item.mid),
+          twoColumns: AppSetting.instance.ui.showTwoColumns,
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

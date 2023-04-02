@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:photo_view/reloadable_photo_view.dart' as reloadable_photo_view;
 
 /// 使用 [ExtendedPhotoGallery] 和 [ReloadablePhotoView] 扩展的横向/纵向画廊，在 [MangaGalleryView] 使用
 /// (带首页和末页的 GalleryView，允许传入一些界面风格的参数)
@@ -132,7 +133,7 @@ class VerticalGalleryView extends StatefulWidget {
     this.preloadPagesCount = 0,
     this.initialPage = 0, // <<<
     this.viewportPageSpace = 0.0, // <<<
-    this.extraWidgetBuilder, // <<<
+    this.customPageBuilder, // <<<
   }) : super(key: key);
 
   final int imageCount;
@@ -149,7 +150,7 @@ class VerticalGalleryView extends StatefulWidget {
 
   final int initialPage;
   final double viewportPageSpace;
-  final Widget Function(BuildContext context, int imageIndex)? extraWidgetBuilder;
+  final Widget Function(BuildContext context, Widget photoView, int imageIndex)? customPageBuilder;
 
   @override
   State<VerticalGalleryView> createState() => VerticalGalleryViewState();
@@ -159,7 +160,7 @@ const _kMaskAnimDuration = Duration(milliseconds: 150);
 
 class VerticalGalleryViewState extends State<VerticalGalleryView> {
   late final _controller = ScrollController()..addListener(_onScrollChanged);
-  late var _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<ReloadablePhotoViewState>());
+  late var _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<reloadable_photo_view.ReloadablePhotoViewState>());
   final _listKey = GlobalKey<State<StatefulWidget>>();
   late var _itemKeys = List.generate(widget.imageCount + 2, (_) => GlobalKey<State<StatefulWidget>>());
 
@@ -187,7 +188,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   void didUpdateWidget(covariant VerticalGalleryView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.imageCount != oldWidget.imageCount) {
-      _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<ReloadablePhotoViewState>());
+      _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<reloadable_photo_view.ReloadablePhotoViewState>());
       _itemKeys = List.generate(widget.imageCount + 2, (_) => GlobalKey<State<StatefulWidget>>());
     }
   }
@@ -258,7 +259,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     final pageOptions = widget.imagePageBuilder(context, imageIndex); // index excludes non-PhotoView pages
     final options = PhotoViewOptions.merge(pageOptions, widget.fallbackOptions);
     return ClipRect(
-      child: ReloadablePhotoView(
+      child: reloadable_photo_view.ReloadablePhotoView(
         key: _photoViewKeys[imageIndex],
         imageProviderBuilder: pageOptions.imageProviderBuilder,
         initialScale: options.initialScale,
@@ -285,6 +286,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         scaleStateCycle: options.scaleStateCycle,
         tightMode: true,
         wantKeepAlive: options.wantKeepAlive,
+        customBuilder: (c, view) => widget.customPageBuilder?.call(c, view, imageIndex) ?? view,
       ),
     );
   }
@@ -324,15 +326,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                           ? math.max(widget.viewportPageSpace, 10) // for first page, space must be larger than 10
                           : widget.viewportPageSpace /* for remaining pages */,
                     ),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: _buildPhotoItem(context, i), // TODO 竖直滚动的 GalleryView 暂时无法缩放页面
-                        ),
-                        if (widget.extraWidgetBuilder != null) //
-                          widget.extraWidgetBuilder!.call(context, i), // TODO hide if loading
-                      ],
-                    ),
+                    child: _buildPhotoItem(context, i), // TODO 竖直滚动的 GalleryView 暂时无法缩放页面,
                   ),
                 ),
 

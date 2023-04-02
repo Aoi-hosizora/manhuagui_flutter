@@ -11,6 +11,7 @@ import 'package:manhuagui_flutter/page/favorite_reorder.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/favorite_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -531,8 +532,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           onModeChanged: (_) => mountedSetState(() {}),
           child: PaginationDataView<FavoriteManga>(
             key: _pdvKey,
-            style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.masonryGridView,
-            // TODO masonryGridView
+            style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
             data: _data,
             getData: ({indicator}) => _getData(page: indicator),
             scrollController: _controller,
@@ -554,9 +554,12 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               onStartRefreshing: () => _msController.exitMultiSelectionMode(),
             ),
             separator: Divider(height: 0, thickness: 1),
-            crossAxisCount: 2,
-            mainAxisSpacing: 0.0,
-            crossAxisSpacing: 0.0,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 0.0,
+              mainAxisSpacing: 0.0,
+              childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+            ),
             itemBuilder: (c, idx, item) => SelectableCheckboxItem<ValueKey<int>>(
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),

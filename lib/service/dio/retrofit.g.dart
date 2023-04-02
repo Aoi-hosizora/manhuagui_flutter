@@ -119,10 +119,12 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<Result<dynamic>> voteManga({required mid, required score}) async {
+  Future<Result<dynamic>> voteManga(
+      {required token, required mid, required score}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'score': score};
-    final _headers = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     final _result = await _dio.fetch<Map<String, dynamic>>(
         _setStreamType<Result<dynamic>>(

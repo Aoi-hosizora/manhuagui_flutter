@@ -7,10 +7,13 @@ import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/small_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -30,6 +33,7 @@ class _SearchPageState extends State<SearchPage> {
   final _scrollController = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _fabController = AnimatedFabController();
+  final _cancelHandlers = <VoidCallback>[];
 
   String? _keyword;
 
@@ -48,10 +52,12 @@ class _SearchPageState extends State<SearchPage> {
       await Future.delayed(Duration(milliseconds: 300)); // open delay, faster than route's transitionDuration, which equals to 400ms
       _searchController.open();
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
   }
 
   @override
   void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
     _searchController.dispose();
     _searchScrollController.dispose();
     _scrollController.dispose();
@@ -173,8 +179,9 @@ class _SearchPageState extends State<SearchPage> {
               child: MediaQuery.removePadding(
                 context: context,
                 removeTop: true,
-                child: PaginationListView<SmallManga>(
+                child: PaginationDataView<SmallManga>(
                   key: _pdvKey,
+                  style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
                   data: _data,
                   getData: ({indicator}) => _getData(page: indicator),
                   scrollController: _scrollController,
@@ -212,9 +219,16 @@ class _SearchPageState extends State<SearchPage> {
                     },
                   ),
                   separator: Divider(height: 0, thickness: 1),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 0.0,
+                    mainAxisSpacing: 0.0,
+                    childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+                  ),
                   itemBuilder: (c, _, item) => SmallMangaLineView(
                     manga: item,
                     flags: _flagStorage.getFlags(mangaId: item.mid),
+                    twoColumns: AppSetting.instance.ui.showTwoColumns,
                   ),
                   extra: UpdatableDataViewExtraWidgets(
                     innerTopWidgets: [

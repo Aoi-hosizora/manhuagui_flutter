@@ -34,7 +34,7 @@ abstract class RestClient {
   Future<Result<RandomMangaInfo>> getRandomManga({@Query('allow_cache') bool allowCache = false});
 
   @POST('/manga/{mid}/vote')
-  Future<Result> voteManga({@Path() required int mid, @Query('score') required int score});
+  Future<Result> voteManga({@Header('Authorization') required String token, @Path() required int mid, @Query('score') required int score});
 
   @GET('/list/serial')
   Future<Result<MangaGroupList>> getHotSerialMangas({@Query('allow_cache') bool allowCache = false});

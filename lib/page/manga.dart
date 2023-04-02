@@ -83,6 +83,7 @@ class _MangaPageState extends State<MangaPage> {
       await AuthManager.instance.check();
     });
 
+    // TODO WARNING THROWN WHEN CALLING CustomPageRouteTheme.of: Looking up a deactivated widget's ancestor is unsafe
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) async {
       if (!ev.fromMangaPage && ev.mangaId == widget.id) {
@@ -1107,18 +1108,22 @@ class _MangaPageState extends State<MangaPage> {
                                 builder: (c) => SimpleDialog(
                                   title: Text('投票评分'),
                                   children: [
-                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 5), Text('  5星')]), onPressed: () => Navigator.of(c).pop(5)),
-                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 4), Text('  4星')]), onPressed: () => Navigator.of(c).pop(4)),
-                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 3), Text('  3星')]), onPressed: () => Navigator.of(c).pop(3)),
-                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 2), Text('  2星')]), onPressed: () => Navigator.of(c).pop(2)),
-                                    TextDialogOption(text: Row(children: const [SmallStarsForRating(score: 1), Text('  1星')]), onPressed: () => Navigator.of(c).pop(1)),
+                                    TextDialogOption(text: StarsTextView(score: 5), onPressed: () => Navigator.of(c).pop(5)),
+                                    TextDialogOption(text: StarsTextView(score: 4), onPressed: () => Navigator.of(c).pop(4)),
+                                    TextDialogOption(text: StarsTextView(score: 3), onPressed: () => Navigator.of(c).pop(3)),
+                                    TextDialogOption(text: StarsTextView(score: 2), onPressed: () => Navigator.of(c).pop(2)),
+                                    TextDialogOption(text: StarsTextView(score: 1), onPressed: () => Navigator.of(c).pop(1)),
                                   ],
                                 ),
                               );
                               if (score != null) {
+                                if (!AuthManager.instance.logined) {
+                                  Fluttertoast.showToast(msg: '用户未登录');
+                                  return;
+                                }
                                 final client = RestClient(DioManager.instance.dio);
                                 try {
-                                  await client.voteManga(mid: widget.id, score: score);
+                                  await client.voteManga(token: AuthManager.instance.token, mid: widget.id, score: score);
                                   Fluttertoast.showToast(msg: '投票成功');
                                 } catch (e, s) {
                                   var _ = wrapError(e, s); // ignore message
