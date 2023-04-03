@@ -100,7 +100,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           title: '列表显示设置',
         ),
         SettingSwitcherView(
-          title: '双列显示列表',
+          title: '以双列风格显示列表',
           value: _showTwoColumns,
           onChanged: (b) {
             _showTwoColumns = b;

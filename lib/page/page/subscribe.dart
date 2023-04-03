@@ -70,7 +70,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
                   t.item1,
                   style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white, fontSize: 16),
                 ),
-              )
+              ),
           ],
           onTap: (idx) {
             if (!_controller.indexIsChanging) {

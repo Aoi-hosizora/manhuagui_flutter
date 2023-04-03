@@ -12,7 +12,7 @@ dependencies:
 
   # basic
   material_design_icons_flutter: ^6.0.7096
-  logger: ^1.1.0
+  logger: ^1.2.2
   fluttertoast: 8.0.7
   url_launcher: ^6.1.5
   json_annotation: ^4.6.0
@@ -33,10 +33,10 @@ dependencies:
 
   # widgets
   flutter_ahlib:
-    path: ../flutter_ahlib
-    # git:
-    #   url: https://github.com/Aoi-hosizora/flutter_ahlib
-    #   ref: a65c7792337a701335699967d113cb39ffae4a66
+    # path: ../flutter_ahlib
+    git:
+      url: https://github.com/Aoi-hosizora/flutter_ahlib
+      ref: 090cbcf84bd45d3b113b99222fa67b1a4b277895
   flutter_cache_manager: ^3.3.0
   cached_network_image: ^3.2.0
   photo_view: ^0.14.0

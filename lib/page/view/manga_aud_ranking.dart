@@ -14,7 +14,7 @@ enum MangaAudRankingType {
   shaonv,
 }
 
-/// 漫画受众排行榜，在 [RecommendSubPage] / [MangaAudRankingPage] 使用
+/// 漫画受众排行榜，在 [RecommendSubPage] / [MangaAudRankingPage] 使用t
 class MangaAudRankingView extends StatefulWidget {
   const MangaAudRankingView({
     Key? key,
@@ -317,10 +317,10 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                     height: 40,
                     child: IconText(
                       mainAxisSize: MainAxisSize.min,
-                      icon: Icon(t.item1, size: 22),
-                      text: Text(t.item2),
-                      textPadding: EdgeInsets.only(right: 3, bottom: 1),
-                      space: 5,
+                      icon: Icon(t.item1, size: 21),
+                      text: Text(t.item2, style: TextStyle(fontSize: 15)),
+                      textPadding: EdgeInsets.only(right: 2, bottom: 1),
+                      space: 4,
                     ),
                   ),
               ],

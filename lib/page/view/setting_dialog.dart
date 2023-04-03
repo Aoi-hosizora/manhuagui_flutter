@@ -45,24 +45,31 @@ abstract class _SettingView extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodyText1,
-            ),
-            if (hint != null) ...[
-              SizedBox(width: 2),
-              HelpIconView.forSettingDlg(
-                title: title,
-                hint: hint!,
+        Flexible(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyText1,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              if (hint != null) ...[
+                SizedBox(width: 2),
+                HelpIconView.forSettingDlg(
+                  title: title,
+                  hint: hint!,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
-        SizedBox(
+        Container(
           height: height,
           width: width,
+          margin: EdgeInsets.only(left: 4),
           child: buildRightWidget(context),
         ),
       ],

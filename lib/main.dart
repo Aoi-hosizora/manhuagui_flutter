@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 Future<void> main() async {
   globalLogger = ExtendedLogger(filter: ProductionFilter(), printer: PreferredPrinter());
+  CustomPageRouteTheme.allowThrowingUnsafeAncestorException = false;
   SplashPage.preserve(WidgetsFlutterBinding.ensureInitialized());
   await SplashPage.prepare();
 

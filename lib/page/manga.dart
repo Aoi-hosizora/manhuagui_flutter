@@ -83,7 +83,6 @@ class _MangaPageState extends State<MangaPage> {
       await AuthManager.instance.check();
     });
 
-    // TODO WARNING THROWN WHEN CALLING CustomPageRouteTheme.of: Looking up a deactivated widget's ancestor is unsafe
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) async {
       if (!ev.fromMangaPage && ev.mangaId == widget.id) {

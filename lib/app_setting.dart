@@ -324,7 +324,7 @@ class UiSetting {
     required this.alwaysOpenNewListPage,
   });
 
-  final bool showTwoColumns; // 双列显示列表
+  final bool showTwoColumns; // 以双列风格显示列表
   final MangaOrder defaultMangaOrder; // 漫画列表默认排序方式
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool enableCornerIcons; // 列表内显示右下角图标
