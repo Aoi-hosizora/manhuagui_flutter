@@ -10,6 +10,7 @@ class FullRippleWidget extends StatelessWidget {
     this.onLongPress,
     this.highlightColor = Colors.black26,
     this.splashColor = Colors.black26,
+    this.backgroundDecoration,
   }) : super(key: key);
 
   final Widget child;
@@ -18,6 +19,7 @@ class FullRippleWidget extends StatelessWidget {
   final void Function()? onLongPress;
   final Color? highlightColor;
   final Color? splashColor;
+  final Decoration? backgroundDecoration;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +27,12 @@ class FullRippleWidget extends StatelessWidget {
       borderRadius: radius ?? BorderRadius.zero,
       child: Stack(
         children: [
+          if (backgroundDecoration != null)
+            Positioned.fill(
+              child: Container(
+                decoration: backgroundDecoration!,
+              ),
+            ),
           child,
           Positioned.fill(
             child: Material(

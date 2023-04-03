@@ -1,5 +1,7 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -47,18 +49,46 @@ class HistoryDao {
     // pass
   }
 
-  static Future<int?> getHistoryCount({required String username}) async {
+  static Future<void> upgradeFromVer3To4(Database db) async {
+    // pass
+  }
+
+  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
+      [_colMangaTitle, if (!pureSearch) _colMangaId],
+      keyword,
+      includeWHERE: includeWHERE,
+      includeAND: includeAND,
+    );
+  }
+
+  static Future<int?> getHistoryCount({required String username, bool includeUnread = true, String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblHistory
-         WHERE $_colUsername = ?''',
-      [username],
+         WHERE $_colUsername = ? ${includeUnread ? '' : 'AND $_colChapterId <> 0'} ${like?.item1 ?? ''}''',
+      [username, ...(like?.item2 ?? [])],
     );
     if (results == null) {
       return null;
     }
     return firstIntValue(results);
+  }
+
+  static Future<bool?> checkExistence({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colMangaId)
+         FROM $_tblHistory
+         WHERE $_colUsername = ? AND $_colMangaId = ?''',
+      [username, mid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
   }
 
   static Future<MangaHistory?> getHistory({required String username, required int mid}) async {
@@ -87,19 +117,20 @@ class HistoryDao {
     );
   }
 
-  static Future<List<MangaHistory>?> getHistories({required String username, required int page, int limit = 20, int offset = 0}) async {
+  static Future<List<MangaHistory>?> getHistories({required String username, bool includeUnread = true, String? keyword, bool pureSearch = false, required int page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
     offset = limit * (page - 1) - offset;
     if (offset < 0) {
       offset = 0;
     }
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
       '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime 
          FROM $_tblHistory
-         WHERE $_colUsername = ?
+         WHERE $_colUsername = ? ${includeUnread ? '' : 'AND $_colChapterId <> 0'} ${like?.item1 ?? ''}
          ORDER BY $_colLastTime DESC
          LIMIT $limit OFFSET $offset''',
-      [username],
+      [username, ...(like?.item2 ?? [])],
     );
     if (results == null) {
       return null;
@@ -159,5 +190,15 @@ class HistoryDao {
       [username, mid],
     );
     return rows != null && rows >= 1;
+  }
+
+  static Future<bool> clearHistories({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblHistory
+         WHERE $_colUsername = ?''',
+      [username],
+    );
+    return rows != null;
   }
 }

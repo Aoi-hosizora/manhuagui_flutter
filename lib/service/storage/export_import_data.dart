@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io' show File, Directory;
 
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -54,6 +54,88 @@ Future<List<String>> getImportDataNames() async {
   }
 }
 
+Future<bool> deleteImportData(String name) async {
+  try {
+    var directory = Directory(await _getDataDirectoryPath(name));
+    if (await directory.exists()) {
+      await directory.delete(recursive: true);
+    }
+    return true;
+  } catch (e, s) {
+    globalLogger.e('deleteImportData', e, s);
+    return false;
+  }
+}
+
+// ================
+// type and counter
+// ================
+
+enum ExportDataType {
+  // from db
+  readHistories, // 漫画阅读历史
+  downloadRecords, // 漫画下载记录
+  favoriteMangas, // 本地收藏漫画
+  favoriteAuthors, // 本地收藏作者
+
+  // from prefs
+  searchHistories, // 漫画搜索历史
+  appSetting, // 所有设置项
+}
+
+extension ExportDataTypeExtension on ExportDataType {
+  String toTypeTitle() {
+    switch (this) {
+      case ExportDataType.readHistories:
+        return '漫画阅读历史';
+      case ExportDataType.downloadRecords:
+        return '漫画下载记录';
+      case ExportDataType.favoriteMangas:
+        return '本地收藏漫画';
+      case ExportDataType.favoriteAuthors:
+        return '本地收藏作者';
+      case ExportDataType.searchHistories:
+        return '漫画搜索历史';
+      case ExportDataType.appSetting:
+        return '所有设置项';
+    }
+  }
+}
+
+class ExportDataTypeCounter {
+  ExportDataTypeCounter();
+
+  int readHistories = 0;
+  int downloadRecords = 0;
+  int favoriteMangas = 0;
+  int favoriteAuthors = 0;
+  int searchHistories = 0;
+  int appSetting = 0;
+
+  bool get isEmpty =>
+      readHistories == 0 && //
+      downloadRecords == 0 &&
+      favoriteMangas == 0 &&
+      favoriteAuthors == 0 &&
+      searchHistories == 0 &&
+      appSetting == 0;
+
+  String formatToString({required bool includeZero, required List<ExportDataType> includeTypes}) {
+    bool include(int count, ExportDataType type) => //
+        (includeZero || count != 0) && includeTypes.contains(type);
+
+    var titles = [
+      if (include(readHistories, ExportDataType.readHistories)) '$readHistories 条漫画阅读历史',
+      if (include(downloadRecords, ExportDataType.downloadRecords)) '$downloadRecords 条漫画下载记录',
+      if (include(favoriteMangas, ExportDataType.favoriteMangas)) '$favoriteMangas 部本地收藏漫画',
+      if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',
+      if (include(searchHistories, ExportDataType.searchHistories)) '$searchHistories 条漫画搜索历史',
+      if (include(appSetting, ExportDataType.appSetting)) '$appSetting 条设置项',
+    ];
+    return titles.join('、');
+  }
+}
+
 // ======
 // export
 // ======
@@ -88,28 +170,53 @@ Future<bool> _exportDB(File dbFile, List<ExportDataType> types, ExportDataTypeCo
   final db = await DBManager.instance.getDB();
   var anotherDB = await DBManager.instance.openDB(dbFile.path); // Database
 
+  // export database with transaction
   var ok = await db.exclusiveTransaction((tx, _) async {
-    // read histories
+    // => read histories
     if (types.contains(ExportDataType.readHistories)) {
       var rows = await _copyToDB(tx, anotherDB, HistoryDao.metadata);
       if (rows == null) {
-        return false;
+        return false; // error
       }
       counter.readHistories = rows;
     }
-    // download records
+
+    // => download records
     if (types.contains(ExportDataType.downloadRecords)) {
       var mangaRows = await _copyToDB(tx, anotherDB, DownloadDao.mangaMetadata);
       if (mangaRows == null) {
-        return false;
+        return false; // error
       }
       var chapterRows = await _copyToDB(tx, anotherDB, DownloadDao.chapterMetadata);
       if (chapterRows == null) {
-        return false;
+        return false; // error
       }
       counter.downloadRecords = mangaRows;
     }
-    return true;
+
+    // => favorite mangas
+    if (types.contains(ExportDataType.favoriteMangas)) {
+      var favoriteRows = await _copyToDB(tx, anotherDB, FavoriteDao.favoriteMetadata);
+      if (favoriteRows == null) {
+        return false; // error
+      }
+      var groupRows = await _copyToDB(tx, anotherDB, FavoriteDao.groupMetadata);
+      if (groupRows == null) {
+        return false; // error
+      }
+      counter.favoriteMangas = favoriteRows;
+    }
+
+    // => favorite authors
+    if (types.contains(ExportDataType.favoriteAuthors)) {
+      var rows = await _copyToDB(tx, anotherDB, FavoriteDao.authorMetadata);
+      if (rows == null) {
+        return false; // error
+      }
+      counter.favoriteAuthors = rows;
+    }
+
+    return true; // success
   });
   ok ??= false;
 
@@ -121,24 +228,27 @@ Future<bool> _exportPrefs(File prefsFile, List<ExportDataType> types, ExportData
   final prefs = await PrefsManager.instance.loadPrefs();
   var anotherPrefs = _SharedPreferencesMap.empty(); // SharedPreferences
 
+  // export shared preferences without transaction
   var ok = await () async {
-    // search histories
+    // => search histories
     if (types.contains(ExportDataType.searchHistories)) {
       var rows = await _copyToPrefs(prefs, anotherPrefs, SearchHistoryPrefs.keys);
       if (rows == null) {
-        return false;
+        return false; // error
       }
       counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories()).length; // use history list length as rows
     }
-    // app setting
+
+    // => app setting
     if (types.contains(ExportDataType.appSetting)) {
       var rows = await _copyToPrefs(prefs, anotherPrefs, AppSettingPrefs.keys);
       if (rows == null) {
-        return false;
+        return false; // error
       }
       counter.appSetting = rows;
     }
-    return true;
+
+    return true; // success
   }();
 
   ok = ok && await anotherPrefs.setVersion(prefs.getVersion());
@@ -162,10 +272,13 @@ Future<ExportDataTypeCounter?> importData(String name, {bool merge = false}) asy
     var counter = await db.exclusiveTransaction((tx, rollback) async {
       var counter = ExportDataTypeCounter();
       var ok1 = await _importDB(tmpDBFile, tx, counter, merge); // may fail
+      if (!ok1) {
+        rollback(msg: 'importData, importDB: $ok1, importPrefs: <not be executed>');
+        return null;
+      }
       var ok2 = await _importPrefs(tmpPrefsFile, prefs, counter, merge); // almost succeed
       if (!ok1 || !ok2) {
-        globalLogger.w('importData, importDB: $ok1, importPrefs: $ok2');
-        rollback(msg: 'importData');
+        rollback(msg: 'importData, importDB: $ok1, importPrefs: $ok2');
         return null;
       }
       return counter;
@@ -193,32 +306,59 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
   }
 
   var ok = await () async {
-    // read histories
+    // => read histories
     var readHistoryRows = await _copyToDB(exportedDB, db, HistoryDao.metadata, merge);
     if (readHistoryRows == null) {
-      return false;
+      return false; // error
     }
-    if (readHistoryRows > 0) {
-      counter.readHistories = readHistoryRows;
-    }
-    // download records
+    counter.readHistories = readHistoryRows;
+
+    // => download records
     var downloadMangaRows = await _copyToDB(exportedDB, db, DownloadDao.mangaMetadata, merge);
     if (downloadMangaRows == null) {
-      return false;
+      return false; // error
     }
     var downloadChapterRows = await _copyToDB(exportedDB, db, DownloadDao.chapterMetadata, merge);
     if (downloadChapterRows == null) {
-      return false;
+      return false; // error
     }
-    if (downloadMangaRows > 0) {
-      counter.downloadRecords = downloadMangaRows;
+    counter.downloadRecords = downloadMangaRows;
+
+    // => favorite mangas
+    var favoriteMangaRows = await _copyToDB(exportedDB, db, FavoriteDao.favoriteMetadata, merge);
+    if (favoriteMangaRows == null) {
+      return false; // error
     }
-    return true;
+    var favoriteGroupRows = await _copyToDB(exportedDB, db, FavoriteDao.groupMetadata, merge);
+    if (favoriteGroupRows == null) {
+      return false; // error
+    }
+    counter.favoriteMangas = favoriteMangaRows;
+
+    // => favorite authors
+    var favoriteAuthorRows = await _copyToDB(exportedDB, db, FavoriteDao.authorMetadata, merge);
+    if (favoriteAuthorRows == null) {
+      return false; // error
+    }
+    counter.favoriteAuthors = favoriteAuthorRows;
+
+    return true; // success
   }();
 
-  if (ok && counter.readHistories != null && counter.readHistories! > 0) {
-    // notify manga read history is changed
-    EventBusManager.instance.fire(HistoryUpdatedEvent());
+  if (ok) {
+    // notify that related entities have been changed
+    if (counter.readHistories > 0) {
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
+    }
+    if (counter.favoriteMangas > 0) {
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: -1));
+    }
+    if (counter.favoriteMangas > 0) {
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added));
+    }
+    if (counter.favoriteAuthors > 0) {
+      EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added));
+    }
   }
   await exportedDB.close();
   return ok;
@@ -231,36 +371,34 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
   var exportedPrefs = _SharedPreferencesMap.empty();
   var ok = await exportedPrefs.readFromFile(prefsFile);
   if (!ok) {
+    globalLogger.e('_importPrefs, readFromFile, !ok');
     return false;
   }
   await PrefsManager.instance.upgradePrefs(exportedPrefs); // upgrade prefs manually
 
   ok = await () async {
-    // search histories
+    // => search histories
     var searchHistoryRows = await _copyToPrefs(exportedPrefs, prefs, SearchHistoryPrefs.keys, merge);
     if (searchHistoryRows == null) {
-      return false;
+      return false; // error
     }
-    if (searchHistoryRows > 0) {
-      var exportedHistories = (await SearchHistoryPrefs.getSearchHistories(prefs: exportedPrefs));
-      if (exportedHistories.isNotEmpty) {
-        counter.searchHistories = exportedHistories.length; // use history list length as rows
-      }
-    }
-    // app setting
+    counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories(prefs: exportedPrefs)).length; // use history list length as rows
+
+    // => app setting
     var settingRows = await _copyToPrefs(exportedPrefs, prefs, AppSettingPrefs.keys, merge);
     if (settingRows == null) {
-      return false;
+      return false; // error
     }
-    if (settingRows > 0) {
-      counter.appSetting = settingRows;
-    }
-    return true;
+    counter.appSetting = settingRows;
+
+    return true; // success
   }();
 
-  if (ok && counter.appSetting != null && counter.appSetting! > 0) {
-    // apply data to AppSetting
-    await AppSettingPrefs.loadAllSettings();
+  if (ok) {
+    // reload AppSetting, and notify that settings have been changed
+    if (counter.appSetting > 0) {
+      await AppSettingPrefs.loadAllSettings(alsoFireEvent: true);
+    }
   }
   return ok;
 }
@@ -307,7 +445,9 @@ Future<int?> _copyToPrefs(SharedPreferences prefs, SharedPreferences prefs2, Lis
 
       if (merge && key is TypedKey<List> && value is List) {
         var existedValues = prefs2.safeGet(key) ?? [];
-        value.addAll(existedValues.where((v) => !value.contains(v)));
+        if (existedValues.isNotEmpty) {
+          value.addAll(existedValues.where((v) => !value.contains(v)));
+        }
       }
       var ok = await prefs2.safeSet(key, value, canThrow: true);
       if (ok) {

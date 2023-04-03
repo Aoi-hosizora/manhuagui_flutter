@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show File, Directory;
 
 import 'package:external_path/external_path.dart';
@@ -107,4 +108,17 @@ Future<int> getDefaultCacheManagerDirectoryBytes() async {
     }
   }
   return totalBytes;
+}
+
+Future<String?> getCachedOrDownloadedFilepath({String? url, File? file}) async {
+  if (file == null || !(await file.exists())) {
+    if (url != null && url.isNotEmpty) {
+      var info = await DefaultCacheManager().getFileFromCache(url);
+      file = info?.file;
+    }
+  }
+  if (file == null || !(await file.exists())) {
+    return null;
+  }
+  return file.path;
 }

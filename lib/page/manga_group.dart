@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
 
 /// 漫画分组页，展示所给 [MangaGroupList] (三个 [MangaGroup]) 信息
@@ -18,6 +19,7 @@ class MangaGroupPage extends StatefulWidget {
 
 class _MangaGroupPageState extends State<MangaGroupPage> {
   final _controller = ScrollController();
+  final _physicsController = CustomScrollPhysicsController();
 
   @override
   void dispose() {
@@ -27,11 +29,17 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DrawerScaffold(
       appBar: AppBar(
         title: Text('漫画分组'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
       ),
+      drawer: AppDrawer(
+        currentSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: null,
+      physicsController: _physicsController,
+      implicitlyOverscrollableScaffold: true,
       body: ExtendedScrollbar(
         controller: _controller,
         interactive: true,
@@ -42,9 +50,12 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
           padding: EdgeInsets.zero,
           physics: AlwaysScrollableScrollPhysics(),
           children: [
-            MangaGroupView(
-              groupList: widget.groupList,
-              style: MangaGroupViewStyle.normalFull,
+            DefaultScrollPhysics(
+              physics: CustomScrollPhysics(controller: _physicsController),
+              child: MangaGroupView(
+                groupList: widget.groupList,
+                style: MangaGroupViewStyle.normalFull,
+              ),
             ),
           ],
         ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
-/// 通用行，在 [TinyMangaLineView] / [SmallAuthorLineView] / [MangaRankLinkView] / [ShelfMangaLineView] / [MangaHistoryLineView] / [DownloadLineView] 使用
+/// 通用行，在 [TinyMangaLineView] / [SmallAuthorLineView] / [MangaRankLinkView] / [ShelfMangaLineView] / [MangaHistoryLineView] / [DownloadLineView] / [FavoriteMangaLineView] 使用
 class GeneralLineView extends StatelessWidget {
   const GeneralLineView({
     Key? key,
@@ -14,10 +14,13 @@ class GeneralLineView extends StatelessWidget {
     required this.text2,
     required this.icon3,
     required this.text3,
+    this.cornerIcons,
     this.extrasInRow,
     this.extraWidthInRow,
+    this.extraRightPaddingForTitle,
     this.extrasInStack,
     this.topExtrasInStack,
+    this.twoColumns = false,
     required this.onPressed,
     this.onLongPressed,
   })  : customRows = null,
@@ -30,8 +33,10 @@ class GeneralLineView extends StatelessWidget {
     required List<Widget> this.customRows,
     this.extrasInRow,
     this.extraWidthInRow,
+    this.extraRightPaddingForTitle,
     this.extrasInStack,
     this.topExtrasInStack,
+    this.twoColumns = false,
     required this.onPressed,
     this.onLongPressed,
   })  : icon1 = null,
@@ -40,19 +45,21 @@ class GeneralLineView extends StatelessWidget {
         text2 = null,
         icon3 = null,
         text3 = null,
+        cornerIcons = null,
         super(key: key);
 
   // required
   final String imageUrl;
   final String title;
 
-  // simple rows
+  // basic rows
   final IconData? icon1;
   final String? text1;
   final IconData? icon2;
   final String? text2;
   final IconData? icon3;
   final String? text3;
+  final List<IconData>? cornerIcons;
 
   // custom rows
   final List<Widget>? customRows; // 取代上面的 iconX 和 textX
@@ -60,12 +67,26 @@ class GeneralLineView extends StatelessWidget {
   // optional
   final List<Widget>? extrasInRow;
   final double? extraWidthInRow;
+  final double? extraRightPaddingForTitle;
   final List<Widget>? extrasInStack;
   final List<Widget>? topExtrasInStack;
+  final bool twoColumns;
 
   // callbacks
   final void Function() onPressed;
   final void Function()? onLongPressed;
+
+  static double getChildAspectRatioForTwoColumns(BuildContext context) {
+    // note: customRows (DownloadLineView) will never be used when calling getHeight
+    var imageHeight = 100.0 + 5 * 2;
+    var titleHeight = TextSpan(text: '　', style: Theme.of(context).textTheme.subtitle1).layoutSize(context).height;
+    var lineHeight = TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
+    var textHeight = titleHeight + 4 + (lineHeight > 20 ? lineHeight : 20) * 3 + 3 * 2 + 5 * 2;
+
+    var width = MediaQuery.of(context).size.width / 2;
+    var height = imageHeight > textHeight ? imageHeight : textHeight;
+    return width / height;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +111,7 @@ class GeneralLineView extends StatelessWidget {
             // 右边信息
             // ****************************************************************
             Container(
-              width: MediaQuery.of(context).size.width - 14 * 3 - 75 - (extraWidthInRow ?? 0), // | ▢ ▢▢ |
+              width: MediaQuery.of(context).size.width / (!twoColumns ? 1 : 2) - 14 * 3 - 75 - (extraWidthInRow ?? 0), // | ▢ ▢▢ |
               margin: EdgeInsets.only(top: 5, bottom: 5, right: 0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -100,7 +121,7 @@ class GeneralLineView extends StatelessWidget {
                   // 右上角标题
                   // ****************************************************************
                   Padding(
-                    padding: EdgeInsets.only(bottom: 4),
+                    padding: EdgeInsets.only(bottom: 4, right: extraRightPaddingForTitle ?? 0),
                     child: Text(
                       title,
                       style: Theme.of(context).textTheme.subtitle1,
@@ -115,7 +136,7 @@ class GeneralLineView extends StatelessWidget {
                   if (customRows == null) ...[
                     GeneralLineIconText(icon: icon1, text: text1),
                     GeneralLineIconText(icon: icon2, text: text2),
-                    GeneralLineIconText(icon: icon3, text: text3),
+                    GeneralLineIconText(icon: icon3, text: text3, cornerIcons: cornerIcons, padding: EdgeInsets.zero),
                   ],
 
                   // ****************************************************************
@@ -165,38 +186,60 @@ class GeneralLineIconText extends StatelessWidget {
     Key? key,
     required this.icon,
     required this.text,
+    this.cornerIcons,
     this.padding,
     this.iconSize,
+    this.cornerIconSize,
     this.textStyle,
     this.space,
+    this.cornerSpace,
+    this.textCornerSpace,
   }) : super(key: key);
 
   final IconData? icon;
   final String? text;
+  final List<IconData>? cornerIcons;
   final EdgeInsets? padding;
   final double? iconSize;
+  final double? cornerIconSize;
   final TextStyle? textStyle;
   final double? space;
+  final double? cornerSpace;
+  final double? textCornerSpace;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: padding ?? EdgeInsets.only(bottom: 2),
-      child: IconText(
+      padding: padding ?? EdgeInsets.only(bottom: 3),
+      child: IconText.texts(
         icon: Icon(
           icon,
           size: iconSize ?? 20,
           color: Colors.orange,
         ),
-        text: Flexible(
-          child: Text(
-            text ?? '',
-            style: textStyle ?? //
-                DefaultTextStyle.of(context).style.copyWith(color: Colors.grey[600]),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+        texts: [
+          Expanded(
+            child: Text(
+              text ?? '',
+              style: textStyle ?? //
+                  Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.grey[600]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
+          SizedBox(width: textCornerSpace ?? 4),
+          for (var i = 0; i < (cornerIcons?.length ?? 0); i++)
+            Padding(
+              padding: EdgeInsets.only(
+                left: i > 0 ? (cornerSpace ?? 2.5) : 0,
+              ),
+              child: Icon(
+                cornerIcons![i],
+                size: cornerIconSize ?? 18,
+                color: Colors.grey,
+              ),
+            ),
+        ],
         space: space ?? 8,
       ),
     );

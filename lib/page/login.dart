@@ -23,28 +23,12 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _suggestionController = SuggestionsBoxController();
-  var _passwordVisible = false;
-  var _logining = false;
-
-  var _rememberUsername = true;
-  var _rememberPassword = false;
-  var _usernamePasswordPairs = <Tuple2<String, String>>[];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      var remTuple = await AuthPrefs.getRememberOption();
-      _rememberUsername = remTuple.item1;
-      _rememberPassword = remTuple.item2;
-      _usernamePasswordPairs = await AuthPrefs.getUsernamePasswordPairs();
-      if (_usernamePasswordPairs.isNotEmpty) {
-        var currentUser = _usernamePasswordPairs.first;
-        _usernameController.text = currentUser.item1;
-        _passwordController.text = currentUser.item2;
-      }
-      if (mounted) setState(() {});
-    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _checkLogined());
   }
 
   @override
@@ -52,6 +36,52 @@ class _LoginPageState extends State<LoginPage> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  var _rememberUsername = true;
+  var _rememberPassword = false;
+  var _usernamePasswordPairs = <Tuple2<String, String>>[];
+  var _passwordVisible = false;
+  var _logining = false;
+
+  Future<void> _loadData() async {
+    var remTuple = await AuthPrefs.getRememberOption();
+    _rememberUsername = remTuple.item1;
+    _rememberPassword = remTuple.item2;
+    _usernamePasswordPairs = await AuthPrefs.getUsernamePasswordPairs();
+    if (_usernamePasswordPairs.isNotEmpty) {
+      var currentUser = _usernamePasswordPairs.first;
+      _usernameController.text = currentUser.item1;
+      _passwordController.text = currentUser.item2;
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _checkLogined() async {
+    if (!AuthManager.instance.logined) {
+      await AuthManager.instance.check();
+      if (!AuthManager.instance.logined) {
+        return;
+      }
+    }
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('登录状态'),
+        content: Text('检查到当前正以 "${AuthManager.instance.username}" 用户身份登录，是否保持该登录状态？'),
+        actions: [
+          TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+        ],
+      ),
+    );
+    if (ok != true) {
+      return;
+    }
+
+    // 再次通知一次，并关闭登录页面
+    AuthManager.instance.notify(logined: true);
+    Navigator.of(context).pop();
   }
 
   Future<void> _login() async {
@@ -77,12 +107,12 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) setState(() {});
     }
 
-    // state
+    // set state
     Fluttertoast.showToast(msg: '$username 登录成功');
     AuthManager.instance.record(username: username, token: token);
     AuthManager.instance.notify(logined: true);
 
-    // prefs
+    // save to prefs
     await AuthPrefs.setToken(token);
     await AuthPrefs.setRememberOption(_rememberUsername, _rememberPassword);
     if (!_rememberUsername) {
@@ -92,9 +122,10 @@ class _LoginPageState extends State<LoginPage> {
     } else {
       await AuthPrefs.addUsernamePasswordPair(username, '');
     }
+    await AuthPrefs.setLoginDateTime(DateTime.now());
 
-    // pop
-    Navigator.of(context).pop();
+    // pop this page
+    WidgetsBinding.instance?.addPostFrameCallback((_) => Navigator.of(context).maybePop());
   }
 
   @override
@@ -163,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                       context: context,
                       builder: (c) => AlertDialog(
                         title: Text('删除登录记录'),
-                        content: Text('确定要删除 $username 吗？'),
+                        content: Text('是否删除 "$username" 的登录记录？'),
                         actions: [
                           TextButton(
                             child: Text('删除'),

@@ -239,13 +239,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.2"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.5"
   dart_style:
     dependency: transitive
     description:
@@ -359,9 +352,11 @@ packages:
   flutter_ahlib:
     dependency: "direct main"
     description:
-      path: "../flutter_ahlib"
-      relative: true
-    source: path
+      path: "."
+      ref: "090cbcf84bd45d3b113b99222fa67b1a4b277895"
+      resolved-ref: "090cbcf84bd45d3b113b99222fa67b1a4b277895"
+      url: "https://github.com/Aoi-hosizora/flutter_ahlib"
+    source: git
     version: "1.2.0"
   flutter_blurhash:
     dependency: transitive
@@ -445,13 +440,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.0.1"
-  flutter_share:
-    dependency: "direct main"
-    description:
-      name: flutter_share
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.0.0"
   flutter_staggered_grid_view:
     dependency: transitive
     description:
@@ -594,7 +582,7 @@ packages:
       name: logger
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.1.0"
+    version: "1.3.0"
   logging:
     dependency: transitive
     description:
@@ -616,6 +604,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.1.3"
+  material_design_icons_flutter:
+    dependency: "direct main"
+    description:
+      name: material_design_icons_flutter
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "6.0.7096"
   material_floating_search_bar:
     dependency: "direct main"
     description:
@@ -766,9 +761,9 @@ packages:
   photo_view:
     dependency: "direct main"
     description:
-      name: photo_view
-      url: "https://pub.flutter-io.cn"
-    source: hosted
+      path: "deps/photo_view"
+      relative: true
+    source: path
     version: "0.14.0"
   platform:
     dependency: transitive
@@ -953,17 +948,17 @@ packages:
   sqflite:
     dependency: "direct main"
     description:
-      name: sqflite
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.0.2+1"
+      path: "deps/sqflite/sqflite"
+      relative: true
+    source: path
+    version: "2.2.5-0"
   sqflite_common:
     dependency: transitive
     description:
-      name: sqflite_common
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.3.0"
+      path: "deps/sqflite/sqflite_common"
+      relative: true
+    source: path
+    version: "2.4.2+2"
   stack_trace:
     dependency: transitive
     description:

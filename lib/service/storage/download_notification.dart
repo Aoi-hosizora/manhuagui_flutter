@@ -42,16 +42,16 @@ class DownloadNotificationHelper {
 
     switch (progress.stage) {
       case DownloadMangaProgressStage.gettingManga:
-        show('获取漫画信息中');
+        await show('获取漫画信息中');
         break;
       case DownloadMangaProgressStage.gettingChapter:
-        show('获取章节信息中');
+        await show('获取章节信息中');
         break;
       case DownloadMangaProgressStage.gotChapter:
       case DownloadMangaProgressStage.gotPage:
         var chapter = progress.currentChapter!;
         var tried = progress.triedChapterPageCount ?? 0;
-        show('${chapter.title} $tried/${chapter.pageCount}', tried, chapter.pageCount);
+        await show('${chapter.title} $tried/${chapter.pageCount}', tried, chapter.pageCount);
         break;
       default: // pass
     }

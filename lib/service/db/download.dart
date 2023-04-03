@@ -1,5 +1,7 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -72,11 +74,27 @@ class DownloadDao {
     await db.safeExecute('UPDATE $_tblDownloadChapter SET $_colDcNeedUpdate = 1');
   }
 
-  static Future<int?> getMangaCount() async {
+  static Future<void> upgradeFromVer3To4(Database db) async {
+    // pass
+  }
+
+  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
+      [_colDmMangaTitle, if (!pureSearch) _colDmMangaId],
+      keyword,
+      includeWHERE: includeWHERE,
+      includeAND: includeAND,
+    );
+  }
+
+  static Future<int?> getMangaCount({String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeWHERE: true);
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
-         FROM $_tblDownloadManga''',
+         FROM $_tblDownloadManga
+         ${like?.item1 ?? ''}''',
+      [...(like?.item2 ?? [])],
     );
     if (results == null) {
       return null;
@@ -98,19 +116,23 @@ class DownloadDao {
     return firstIntValue(results);
   }
 
-  static Future<List<DownloadedManga>?> getMangas() async {
+  static Future<List<DownloadedManga>?> getMangas({String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeWHERE: true);
     var mangaResults = await db.safeRawQuery(
       '''SELECT $_colDmMangaId, $_colDmMangaTitle, $_colDmMangaCover, $_colDmMangaUrl, $_colDmError, $_colDmUpdatedAt, $_colDmNeedUpdate
          FROM $_tblDownloadManga
+         ${like?.item1 ?? ''}
          ORDER BY $_colDmUpdatedAt DESC''',
+      [...(like?.item2 ?? [])],
     );
     if (mangaResults == null) {
       return null;
     }
     var chapterResults = await db.safeRawQuery(
       '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcTriedCount, $_colDcSuccessCount, $_colDcNeedUpdate
-         FROM $_tblDownloadChapter''',
+         FROM $_tblDownloadChapter
+         ORDER BY $_colDcChapterId ASC''',
     );
     if (chapterResults == null) {
       return null;
@@ -153,6 +175,34 @@ class DownloadDao {
     return out;
   }
 
+  static Future<bool?> checkMangaExistence({required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colDmMangaId)
+         FROM $_tblDownloadManga
+         WHERE $_colDmMangaId = ?''',
+      [mid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
+  }
+
+  static Future<bool?> checkChapterExistence({required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colDcChapterId)
+         FROM $_tblDownloadChapter
+         WHERE $_colDcMangaId = ? AND $_colDcChapterId = ?''',
+      [mid, cid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
+  }
+
   static Future<DownloadedManga?> getManga({required int mid}) async {
     final db = await DBManager.instance.getDB();
     var mangaResults = await db.safeRawQuery(
@@ -167,7 +217,8 @@ class DownloadDao {
     var chapterResults = await db.safeRawQuery(
       '''SELECT $_colDcMangaId, $_colDcChapterId, $_colDcChapterTitle, $_tblDcChapterGroup, $_colDcTotalCount, $_colDcTriedCount, $_colDcSuccessCount, $_colDcNeedUpdate
          FROM $_tblDownloadChapter
-         WHERE $_colDcMangaId = ?''',
+         WHERE $_colDcMangaId = ?
+         ORDER BY $_colDcChapterId ASC''',
       [mid],
     );
     if (chapterResults == null) {

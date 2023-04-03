@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
+import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/small_author_line.dart';
@@ -34,18 +38,21 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
+    widget.action?.addAction('find', () => _inputAndFind());
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
   }
 
   @override
   void dispose() {
     widget.action?.removeAction();
+    widget.action?.removeAction('find');
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
-  var _genreLoading = true;
+  var _genreLoading = true; // initialize to true
   final _genres = <TinyCategory>[];
   var _genreError = '';
 
@@ -55,16 +62,16 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
 
     final client = RestClient(DioManager.instance.dio);
     try {
-      if (globalGenres == null) {
-        var result = await client.getGenres();
-        globalGenres = result.data.data.map((c) => c.toTiny()).toList(); // 更新全局漫画类别
+      if (globalCategoryList == null) {
+        var result = await client.getCategories();
+        globalCategoryList ??= result.data; // 更新全局的漫画类别
       }
       _genres.clear();
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _genres.add(allGenres[0]);
-      _genres.addAll(globalGenres!);
+      _genres.addAll(globalCategoryList!.genres.map((g) => g.toTiny()).toList());
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -76,15 +83,17 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
 
   final _data = <SmallAuthor>[];
   var _total = 0;
-  var _currOrder = AppSetting.instance.other.defaultAuthorOrder;
-  var _lastOrder = AppSetting.instance.other.defaultAuthorOrder;
+  late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  var _getting = false;
+
+  var _currOrder = AppSetting.instance.ui.defaultAuthorOrder;
+  var _lastOrder = AppSetting.instance.ui.defaultAuthorOrder;
   var _currGenre = allGenres[0];
   var _lastGenre = allGenres[0];
   var _currAge = allAges[0];
   var _lastAge = allAges[0];
   var _currZone = allZones[0];
   var _lastZone = allZones[0];
-  var _getting = false;
 
   Future<PagedList<SmallAuthor>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -98,10 +107,23 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     var result = await f.onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
-
     _total = result.data.total;
     if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(authorIds: result.data.data.map((e) => e.aid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
+  }
+
+  Future<void> _inputAndFind() async {
+    var aid = await showIdInputDialogForFinding(context: context, title: '寻找作者', textLabel: '漫画作者 aid');
+    if (aid == null) {
+      return;
+    }
+    Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => AuthorPage(id: aid, name: '漫画作者 aid: $aid', url: 'https://www.manhuagui.com/author/$aid'),
+      ),
+    );
   }
 
   @override
@@ -115,10 +137,12 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
         isLoading: _genreLoading,
         errorText: _genreError,
         isEmpty: _genres.isEmpty,
-        setting: PlaceholderSetting().copyWithChinese(),
+        setting: PlaceholderSetting(useAnimatedSwitcher: false).copyWithChinese(),
         onRefresh: () => _loadGenres(),
-        childBuilder: (c) => PaginationListView<SmallAuthor>(
+        onChanged: (_, __) => _fabController.hide(),
+        childBuilder: (c) => PaginationDataView<SmallAuthor>(
           key: _pdvKey,
+          style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
           data: _data,
           getData: ({indicator}) => _getData(page: indicator),
           scrollController: _controller,
@@ -133,7 +157,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
             onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-            refreshFirst: true,
+            refreshFirst: true /* <<< refresh first */,
             clearWhenRefresh: false,
             clearWhenError: false,
             updateOnlyIfNotEmpty: false,
@@ -157,7 +181,17 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             },
           ),
           separator: Divider(height: 0, thickness: 1),
-          itemBuilder: (c, _, item) => SmallAuthorLineView(author: item),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 0.0,
+            mainAxisSpacing: 0.0,
+            childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+          ),
+          itemBuilder: (c, _, item) => SmallAuthorLineView(
+            author: item,
+            flags: _flagStorage.getFlags(mangaId: item.aid),
+            twoColumns: AppSetting.instance.ui.showTwoColumns,
+          ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [
               ListHintView.widgets(
@@ -209,7 +243,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
             ],
             innerTopWidgets: [
               ListHintView.textWidget(
-                leftText: '搜索结果 (共 $_total 位)',
+                leftText: '筛选结果 (共 $_total 位)',
                 rightWidget: OptionPopupView<AuthorOrder>(
                   items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byNew],
                   value: _currOrder,

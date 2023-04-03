@@ -1,31 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 
-/// 漫画章节目录（给定章节列表），在 [DlFinishedSubPage] 使用
+/// 漫画章节列表（给定章节分组列表，不包括正逆序等按钮），在 [DlFinishedSubPage] 使用
 class MangaSimpleTocView extends StatelessWidget {
   const MangaSimpleTocView({
     Key? key,
-    required this.chapters,
+    required this.groups,
+    this.columns = 4,
     this.gridPadding,
     this.invertOrder = true,
     this.highlightColor,
     this.highlightedChapters = const [],
     this.showNewBadge = true,
     this.customBadgeBuilder,
+    this.itemBuilder,
     required this.onChapterPressed,
     this.onChapterLongPressed,
   }) : super(key: key);
 
-  final List<Tuple2<String, TinyMangaChapter>> chapters;
+  final List<MangaChapterGroup> groups;
+  final int columns;
   final EdgeInsets? gridPadding;
   final bool invertOrder;
   final Color? highlightColor;
   final List<int> highlightedChapters;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
+  final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
   final void Function(int cid) onChapterPressed;
   final void Function(int cid)? onChapterLongPressed;
 
@@ -33,8 +36,10 @@ class MangaSimpleTocView extends StatelessWidget {
     return ChapterGridView(
       chapters: chapters,
       padding: gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
+      showPageCount: true,
       invertOrder: invertOrder /* true means desc */,
       maxLines: -1 /* show all chapters */,
+      columns: columns,
       highlightColor: highlightColor,
       highlightedChapters: highlightedChapters,
       extrasInStack: (chapter) {
@@ -48,6 +53,9 @@ class MangaSimpleTocView extends StatelessWidget {
           if (customBadge != null) customBadge,
         ];
       },
+      itemBuilder: itemBuilder == null
+          ? null //
+          : (ctx, chapter, itemWidget) => itemBuilder!.call(ctx, chapter?.cid, itemWidget),
       onChapterPressed: (chapter) {
         if (chapter != null) {
           onChapterPressed.call(chapter.cid);
@@ -65,31 +73,17 @@ class MangaSimpleTocView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (chapters.isEmpty) {
+    var isEmpty = this.groups.isEmpty || this.groups.allChapters.isEmpty;
+    if (isEmpty) {
       return Padding(
-        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+        padding: EdgeInsets.symmetric(vertical: 10),
         child: Center(
-          child: Text(
-            '暂无章节',
-            style: Theme.of(context).textTheme.subtitle1,
-          ),
+          child: Text('暂无章节', style: Theme.of(context).textTheme.subtitle1),
         ),
       );
     }
 
-    var groupMap = <String, List<TinyMangaChapter>>{};
-    for (var chapter in chapters) {
-      var groupName = chapter.item1;
-      var group = groupMap[groupName] ?? [];
-      group.add(chapter.item2);
-      groupMap[groupName] = group;
-    }
-    var groups = <MangaChapterGroup>[];
-    for (var kv in groupMap.entries) {
-      groups.add(MangaChapterGroup(title: kv.key, chapters: kv.value));
-    }
-    groups = groups.makeSureRegularGroupIsFirst(); // 保证【单话】为首个章节分组
-
+    var groups = this.groups.makeSureRegularGroupIsFirst(); // 保证【单话】为首个章节分组
     return Column(
       children: [
         SizedBox(height: 10),

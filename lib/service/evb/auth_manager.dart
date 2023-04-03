@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -15,6 +16,8 @@ class AuthData {
 
   final String username;
   final String token;
+
+  bool get logined => token.isNotEmpty;
 
   bool equals(AuthData? o) {
     return o != null && username == o.username && token == o.token;
@@ -32,7 +35,7 @@ class AuthManager {
   }
 
   var _data = AuthData(username: '', token: ''); // global auth data
-  bool _loading = false; // global loading flag
+  var _loading = false; // global loading flag
 
   AuthData get authData => _data;
 
@@ -40,7 +43,7 @@ class AuthManager {
 
   String get token => _data.token;
 
-  bool get logined => _data.token.isNotEmpty;
+  bool get logined => _data.logined;
 
   bool get loading => _loading;
 
@@ -48,9 +51,14 @@ class AuthManager {
     _data = AuthData(username: username, token: token);
   }
 
-  void Function() listen(AuthData? Function()? authDataGetter, void Function(AuthChangedEvent) onData) {
+  void Function() listen(void Function(AuthChangedEvent) onData) {
+    return EventBusManager.instance.listen<AuthChangedEvent>(onData);
+  }
+
+  void Function() listenOnlyWhen(Tuple1<AuthData> authData /* mutable */, void Function(AuthChangedEvent) onData) {
     return EventBusManager.instance.listen<AuthChangedEvent>((ev) {
-      if (authDataGetter?.call()?.equals(authData) != true) {
+      if (!AuthManager.instance.authData.equals(authData.item)) {
+        authData.item = AuthManager.instance.authData;
         onData.call(ev);
       }
     });
@@ -66,9 +74,7 @@ class AuthManager {
 
   Future<AuthChangedEvent> check() async {
     return _lock.synchronized<AuthChangedEvent>(() async {
-      _loading = true;
-
-      // check if is logined
+      // check if currently logined
       if (AuthManager.instance.logined) {
         return AuthManager.instance.notify(logined: true);
       }
@@ -80,6 +86,7 @@ class AuthManager {
       }
 
       // check stored token
+      _loading = true;
       final client = RestClient(DioManager.instance.dio);
       try {
         var r = await client.checkUserLogin(token: token);
@@ -91,9 +98,9 @@ class AuthManager {
           await AuthPrefs.setToken('');
         }
         return AuthManager.instance.notify(logined: false, error: we);
+      } finally {
+        _loading = false;
       }
-    }).whenComplete(() {
-      _loading = false;
     });
   }
 }

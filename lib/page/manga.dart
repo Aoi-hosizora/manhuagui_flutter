@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/comment.dart';
+import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
-import 'package:manhuagui_flutter/page/genre.dart';
+import 'package:manhuagui_flutter/page/download_manga.dart';
+import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
+import 'package:manhuagui_flutter/page/sep_genre.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -21,15 +28,21 @@ import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/native/share.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
+import 'package:manhuagui_flutter/service/storage/download_task.dart';
+import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
@@ -53,25 +66,46 @@ class _MangaPageState extends State<MangaPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
-  AuthData? _oldAuthData;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listen(() => _oldAuthData, (_) async {
-        _oldAuthData = AuthManager.instance.authData;
-        _history = null;
-        _refreshIndicatorKey.currentState?.show();
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) async {
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
+        _subscribeCount = null;
+        _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id);
+        _inShelf = false;
+        _inFavorite = _favoriteManga != null;
+        if (mounted) setState(() {});
       }));
       await AuthManager.instance.check();
     });
-    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((_) => _loadHistory()));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadedMangaEntityChangedEvent>((_) => _loadDownload()));
-    _cancelHandlers.add(EventBusManager.instance.listen<SubscribeUpdatedEvent>((e) {
-      if (e.mangaId == widget.id) {
-        _subscribed = e.subscribe;
+
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) async {
+      if (!ev.fromMangaPage && ev.mangaId == widget.id) {
+        _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
+        if (mounted) setState(() {});
+      }
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
+      if (!ev.fromMangaPage && ev.mangaId == widget.id) {
+        _downloadEntity = await DownloadDao.getManga(mid: widget.id);
+        if (mounted) setState(() {});
+      }
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) async {
+      if (!ev.fromMangaPage && ev.mangaId == widget.id) {
+        _inShelf = ev.added;
+        if (mounted) setState(() {});
+      }
+    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
+      if (!ev.fromMangaPage && ev.mangaId == widget.id) {
+        _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: ev.mangaId);
+        _inFavorite = _favoriteManga != null;
         if (mounted) setState(() {});
       }
     }));
@@ -85,15 +119,18 @@ class _MangaPageState extends State<MangaPage> {
     super.dispose();
   }
 
-  var _loading = true;
+  var _loading = true; // initialize to true
   Manga? _data;
   var _error = '';
+  TinyMangaChapter? _firstChapter;
   MangaHistory? _history;
   DownloadedManga? _downloadEntity;
 
   int? _subscribeCount;
-  var _subscribing = false;
-  var _subscribed = false;
+  FavoriteManga? _favoriteManga;
+  var _subscribing = false; // 执行订阅操作中
+  var _inShelf = false; // 书架
+  var _inFavorite = false; // 收藏
   var _showBriefIntroduction = true;
 
   Future<void> _loadData() async {
@@ -101,63 +138,56 @@ class _MangaPageState extends State<MangaPage> {
     _data = null;
     if (mounted) setState(() {});
 
-    final client = RestClient(DioManager.instance.dio);
-
     // 1. 异步加载漫画评论首页
     _getComments();
 
-    // 2. 异步获取漫画订阅信息
+    // 2. 异步获取漫画书架情况
+    final client = RestClient(DioManager.instance.dio);
     if (AuthManager.instance.logined) {
       Future.microtask(() async {
         try {
-          var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.id);
-          _subscribed = r.data.isIn;
+          var r = await client.checkShelfManga(token: AuthManager.instance.token, mid: widget.id); // 我的书架
+          _inShelf = r.data.isIn;
           _subscribeCount = r.data.count;
           if (mounted) setState(() {});
         } catch (e, s) {
           var we = wrapError(e, s);
           globalLogger.e('MangaPage._loadData checkShelfManga', e, s);
-          Fluttertoast.showToast(msg: we.text);
+          if (AppSetting.instance.ui.allowErrorToast) {
+            Fluttertoast.showToast(msg: '无法获取书架订阅情况：${we.text}');
+          }
+        }
+        if (_data != null && _subscribeCount != null) {
+          // 在获取到书架情况时，如果漫画数据已获得，则随即更新书架缓存
+          await _updateDatabaseAfterGot(updateHistory: false, updateDownload: false, updateShelfCache: true, updateFavorite: false);
         }
       });
     }
 
-    // 3. 异步获取下载信息
-    _loadDownload();
+    // 3. 获取数据库的各种信息
+    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id); // 阅读历史
+    _downloadEntity = await DownloadDao.getManga(mid: widget.id); // 下载记录
+    _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id); // 本地收藏
+    _inFavorite = _favoriteManga != null;
 
     try {
       // 4. 获取漫画信息
       var result = await client.getManga(mid: widget.id);
+      if (result.data.title == '') {
+        if (!result.data.copyright) {
+          throw SpecialException('该漫画暂无版权');
+        }
+        throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
+      }
       _data = null;
       _error = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
+      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // get first chapter
 
-      // 5. 更新漫画阅读历史
-      await _loadHistory();
-      var newHistory = _history?.copyWith(
-            mangaId: _data!.mid,
-            mangaTitle: _data!.title,
-            mangaCover: _data!.cover,
-            mangaUrl: _data!.url,
-            lastTime: _history?.read == true ? _history!.lastTime : DateTime.now(), // 只有未阅读过才修改时间
-          ) ??
-          MangaHistory(
-            mangaId: _data!.mid,
-            mangaTitle: _data!.title,
-            mangaCover: _data!.cover,
-            mangaUrl: _data!.url,
-            chapterId: 0 /* 未开始阅读 */,
-            chapterTitle: '',
-            chapterPage: 1,
-            lastTime: DateTime.now(),
-          );
-      if (_history == null || !newHistory.equals(_history!)) {
-        _history = newHistory;
-        await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
-        EventBusManager.instance.fire(HistoryUpdatedEvent());
-      }
+      // 5. 更新数据库的各种信息
+      await _updateDatabaseAfterGot(/* update all */);
     } catch (e, s) {
       _data = null;
       _error = wrapError(e, s).text;
@@ -167,14 +197,92 @@ class _MangaPageState extends State<MangaPage> {
     }
   }
 
-  Future<void> _loadHistory() async {
-    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
-    if (mounted) setState(() {});
-  }
+  Future<void> _updateDatabaseAfterGot({
+    bool updateHistory = true,
+    bool updateDownload = true,
+    bool updateShelfCache = true,
+    bool updateFavorite = true,
+  }) async {
+    // => 获取到漫画数据后更新数据库
+    if (_data == null) {
+      return;
+    }
 
-  Future<void> _loadDownload() async {
-    _downloadEntity = await DownloadDao.getManga(mid: widget.id);
-    if (mounted) setState(() {});
+    // 1. 更新漫画阅读历史
+    if (updateHistory) {
+      MangaHistory newHistory;
+      if (_history != null) {
+        newHistory = _history!.copyWith(
+          mangaId: _data!.mid,
+          mangaTitle: _data!.title,
+          mangaCover: _data!.cover,
+          mangaUrl: _data!.url,
+          lastTime: _history!.read ? _history!.lastTime : DateTime.now(), // 只有未阅读过才修改时间
+        );
+      } else {
+        newHistory = MangaHistory(
+          mangaId: _data!.mid,
+          mangaTitle: _data!.title,
+          mangaCover: _data!.cover,
+          mangaUrl: _data!.url,
+          chapterId: 0 /* 未开始阅读 */,
+          chapterTitle: '',
+          chapterPage: 1,
+          lastTime: DateTime.now(), // 新历史
+        );
+      }
+      if (_history == null || !newHistory.equals(_history!)) {
+        var toAdd = _history == null;
+        _history = newHistory;
+        await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
+        EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: toAdd ? UpdateReason.added : UpdateReason.updated, fromMangaPage: true));
+        if (mounted) setState(() {});
+      }
+    }
+
+    // 2. 更新漫画下载信息
+    if (updateDownload && _downloadEntity != null) {
+      var newDownload = _downloadEntity!.copyWith(
+        mangaId: _data!.mid,
+        mangaTitle: _data!.title,
+        mangaCover: _data!.cover,
+        mangaUrl: _data!.url,
+        needUpdate: false,
+      );
+      if (!newDownload.equals(_downloadEntity!)) {
+        _downloadEntity = newDownload;
+        await DownloadDao.addOrUpdateManga(manga: newDownload);
+        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, fromMangaPage: true));
+        if (mounted) setState(() {});
+      }
+    }
+
+    // 3. 更新书架缓存信息
+    if (updateShelfCache && _subscribeCount != null) {
+      if (_inShelf) {
+        var cache = ShelfCache(mangaId: widget.id, mangaTitle: _data!.title, mangaCover: _data!.cover, mangaUrl: _data!.url, cachedAt: DateTime.now());
+        await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
+      } else {
+        await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: widget.id);
+      }
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, added: _inShelf));
+    }
+
+    // 4. 更新漫画收藏信息
+    if (updateFavorite && _favoriteManga != null) {
+      var newFavorite = _favoriteManga!.copyWith(
+        mangaId: _data!.mid,
+        mangaTitle: _data!.title,
+        mangaCover: _data!.cover,
+        mangaUrl: _data!.url,
+      );
+      if (!newFavorite.equals(_favoriteManga!)) {
+        _favoriteManga = newFavorite;
+        await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
+        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: _data!.mid, group: newFavorite.groupName, reason: UpdateReason.updated, fromMangaPage: true));
+        if (mounted) setState(() {});
+      }
+    }
   }
 
   var _commentLoading = true;
@@ -191,7 +299,7 @@ class _MangaPageState extends State<MangaPage> {
     final client = RestClient(DioManager.instance.dio);
     try {
       var result = await client.getMangaComments(mid: widget.id, page: 1);
-      _comments.addAll(result.data.data);
+      _comments.addAll(result.data.data.sublist(0, 20.clamp(0, result.data.data.length))); // # = 30 -> 20
       _commentError = '';
       _commentTotal = result.data.total;
     } catch (e, s) {
@@ -203,54 +311,26 @@ class _MangaPageState extends State<MangaPage> {
     }
   }
 
-  Future<void> _subscribe() async {
-    if (!AuthManager.instance.logined) {
-      Fluttertoast.showToast(msg: '用户未登录');
-      return;
-    }
-    var toSubscribe = _subscribed != true; // 去订阅
-    if (!toSubscribe) {
-      var ok = await showDialog<bool>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text('取消订阅确认'),
-          content: Text('是否取消订阅《${_data!.title}》？'),
-          actions: [
-            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
-            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
-          ],
-        ),
-      );
-      if (ok != true) {
-        return;
-      }
-    }
-
-    final client = RestClient(DioManager.instance.dio);
-    _subscribing = true;
-    if (mounted) setState(() {});
-    try {
-      await (toSubscribe ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: _data!.mid);
-      _subscribed = toSubscribe;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画成功' : '取消订阅漫画成功')));
-      EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: _data!.mid, subscribe: _subscribed));
-    } catch (e, s) {
-      var err = wrapError(e, s).text;
-      var already = err.contains('已经被'), notYet = err.contains('还没有被');
-      if (already || notYet) {
-        _subscribed = already;
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err))); // 漫画已经被订阅 / 漫画还没有被订阅
-        EventBusManager.instance.fire(SubscribeUpdatedEvent(mangaId: _data!.mid, subscribe: _subscribed));
-      } else {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toSubscribe ? '订阅漫画失败，$err' : '取消订阅漫画失败，$err')));
-      }
-    } finally {
-      _subscribing = false;
-      if (mounted) setState(() {});
-    }
+  void _subscribe() {
+    showPopupMenuForSubscribing(
+      context: context,
+      mangaId: _data!.mid,
+      mangaTitle: _data!.title,
+      mangaCover: _data!.cover,
+      mangaUrl: _data!.url,
+      fromMangaPage: true,
+      nowInShelf: _inShelf,
+      nowInFavorite: _inFavorite,
+      subscribeCount: _subscribeCount,
+      favoriteManga: _favoriteManga,
+      subscribing: (s) => mountedSetState(() => _subscribing = s),
+      inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
+      inFavoriteSetter: (f) {
+        _inFavorite = f != null;
+        _favoriteManga = f;
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   void _read({required int? chapterId}) async {
@@ -260,10 +340,11 @@ class _MangaPageState extends State<MangaPage> {
         CustomPageRoute(
           context: context,
           builder: (c) => MangaViewerPage(
-            parentContext: context,
             mangaId: _data!.mid,
             chapterId: chapterId,
+            mangaTitle: _data!.title,
             mangaCover: _data!.cover,
+            mangaUrl: _data!.url,
             chapterGroups: _data!.chapterGroups,
             initialPage: _history?.chapterId == chapterId
                 ? _history?.chapterPage ?? 1 // have read
@@ -285,26 +366,361 @@ class _MangaPageState extends State<MangaPage> {
         Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
         return;
       }
-      cid = group.chapters.last.cid;
+      cid = group.chapters.last.cid; // get last chapter
       page = 1;
     } else {
       // 继续阅读
       cid = _history!.chapterId;
       page = _history!.chapterPage;
+      if (_data!.chapterGroups.findChapter(cid)?.pageCount == page) {
+        // 该章节已阅读完，寻找下一章节
+        var nextChapter = _data!.chapterGroups.findNextChapter(cid); // 从全部分组的章节中选取，尽量达到和 MangaViewerPage 阅读上/下一章节 一样的效果
+        if (nextChapter == null) {
+          // 未找到下一个章节
+          var ok = await showYesNoAlertDialog(
+            context: context,
+            title: Text('继续阅读'),
+            content: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，且暂无下一章节，是否继续阅读该章节？'),
+            yesText: Text('阅读'),
+            noText: Text('取消'),
+          );
+          if (ok != true) {
+            return;
+          }
+        } else {
+          // 已找到下一个章节
+          var readNew = await showDialog<bool>(
+            context: context,
+            builder: (c) => AlertDialog(
+              title: Text('继续阅读'),
+              content: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否选择阅读下一章节 (${nextChapter.title})？'),
+              actions: [
+                TextButton(child: Text('开始阅读新章节'), onPressed: () => Navigator.of(c).pop(true)),
+                TextButton(child: Text('继续阅读该章节'), onPressed: () => Navigator.of(c).pop(false)),
+                TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop()),
+              ],
+            ),
+          );
+          if (readNew == null) {
+            return;
+          }
+          if (readNew == true) {
+            cid = nextChapter.cid;
+            page = 1; // 从头阅读新章节
+          }
+        }
+      }
     }
 
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
         builder: (c) => MangaViewerPage(
-          parentContext: context,
           mangaId: _data!.mid,
           chapterId: cid,
+          mangaTitle: _data!.title,
           mangaCover: _data!.cover,
+          mangaUrl: _data!.url,
           chapterGroups: _data!.chapterGroups,
           initialPage: page,
           onlineMode: true,
         ),
+      ),
+    );
+  }
+
+  void _showAuthor() {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('查看作者'),
+        children: [
+          for (var author in _data!.authors)
+            IconTextDialogOption(
+              icon: Icon(Icons.person),
+              text: Text(author.name),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => AuthorPage(
+                      id: author.aid,
+                      name: author.name,
+                      url: author.url,
+                    ),
+                  ),
+                );
+              },
+            ),
+          IconTextDialogOption(
+            icon: Icon(Icons.people),
+            text: Text('查看已收藏的作者'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => FavoriteAuthorPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDownloadDetailDialog() {
+    var noChapter = _downloadEntity == null || _downloadEntity!.triedChaptersCount == 0;
+    var success = !noChapter && _downloadEntity!.allChaptersSucceeded;
+    var paused = QueueManager.instance.getDownloadMangaQueueTask(_data!.mid) == null;
+    var downloading = QueueManager.instance.getDownloadMangaQueueTask(_data!.mid)?.cancelRequested == false;
+
+    String text;
+    if (noChapter) {
+      text = '尚未下载任何章节。';
+    } else if (success) {
+      text = '${_downloadEntity!.totalChaptersCount} 个章节已全部下载完成。';
+    } else {
+      var started = _downloadEntity!.triedChaptersCount;
+      var success = _downloadEntity!.successChaptersCount;
+      var tot = _downloadEntity!.totalChaptersCount;
+      text = (paused ? '下载已暂停' : '漫画正在下载') + '，已开始下载 $started/$tot 个章节，其中共 $success/$tot 个章节已下载完成。';
+    }
+
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('漫画下载情况'),
+        content: Text(text),
+        actions: [
+          if (noChapter)
+            TextButton(
+              child: Text('去下载'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => DownloadChoosePage(
+                      mangaId: _data!.mid,
+                      mangaTitle: _data!.title,
+                      mangaCover: _data!.cover,
+                      mangaUrl: _data!.url,
+                      groups: _data!.chapterGroups,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (!noChapter)
+            TextButton(
+              child: Text('查看下载'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => DownloadMangaPage(
+                      mangaId: _data!.mid,
+                      gotoDownloading: !success,
+                    ),
+                    settings: DownloadMangaPage.buildRouteSetting(
+                      mangaId: _data!.mid,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (!noChapter && !success && downloading)
+            TextButton(
+              child: Text('暂停下载'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                QueueManager.instance.getDownloadMangaQueueTask(_data!.mid)?.cancel();
+              },
+            ),
+          TextButton(
+            child: Text('确定'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHistoryPopupMenu() {
+    // 显示对话框、更新数据库、更新界面[↴]、发送通知
+    // 本页引起的更新 => 更新历史相关的界面
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('漫画阅读历史'),
+        children: [
+          if (_history != null && _history!.read)
+            IconTextDialogOption(
+              icon: Icon(MdiIcons.bookClock),
+              text: Text('仅保留浏览历史'),
+              onPressed: () async {
+                Navigator.of(c).pop();
+                var newHistory = _history!.copyWith(chapterId: 0 /* 未开始阅读 */, chapterTitle: '', chapterPage: 1, lastTime: DateTime.now());
+                await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
+                _history = newHistory;
+                if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.updated, fromMangaPage: true));
+              },
+            ),
+          if (_history != null)
+            IconTextDialogOption(
+              icon: Icon(MdiIcons.deleteClock),
+              text: Text(!_history!.read ? '删除浏览历史' : '删除阅读历史'),
+              onPressed: () async {
+                Navigator.of(c).pop();
+                _history = null;
+                await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: _data!.mid);
+                if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.deleted, fromMangaPage: true));
+              },
+            ),
+          if (_history == null)
+            IconTextDialogOption(
+              icon: Icon(MdiIcons.bookClock),
+              text: Text('保留浏览历史'),
+              onPressed: () async {
+                Navigator.of(c).pop();
+                _history = MangaHistory(
+                  mangaId: _data!.mid,
+                  mangaTitle: _data!.title,
+                  mangaCover: _data!.cover,
+                  mangaUrl: _data!.url,
+                  chapterId: 0 /* 未开始阅读 */,
+                  chapterTitle: '',
+                  chapterPage: 1,
+                  lastTime: DateTime.now(),
+                );
+                await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
+                if (mounted) setState(() {});
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.added, fromMangaPage: true));
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showDescriptionPopupMenu() {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('漫画介绍'),
+        children: [
+          if (_data!.aliases.isNotEmpty)
+            IconTextDialogOption(
+              icon: Icon(Icons.copy),
+              text: Text('复制漫画别名'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                copyText(_data!.aliases.map((a) => '《$a》').join(), showToast: true);
+              },
+            ),
+          IconTextDialogOption(
+            icon: Icon(Icons.subject),
+            text: Text(_showBriefIntroduction ? '展开详细介绍' : '收起详细介绍'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              _showBriefIntroduction = !_showBriefIntroduction;
+              if (mounted) setState(() {});
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.copy),
+            text: Text('复制简要介绍'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              copyText(_data!.briefIntroduction, showToast: false);
+              await Fluttertoast.cancel();
+              Fluttertoast.showToast(msg: '漫画简要介绍已经复制到剪贴板');
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.copy),
+            text: Text('复制详细介绍'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              copyText(_data!.introduction, showToast: false);
+              await Fluttertoast.cancel();
+              Fluttertoast.showToast(msg: '漫画详细介绍已经复制到剪贴板');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChapterPopupMenu({required int chapterId, required bool forMangaPage}) {
+    var chapter = _data!.chapterGroups.findChapter(chapterId);
+    if (chapter == null) {
+      Fluttertoast.showToast(msg: '未从漫画章节列表中找到章节'); // almost unreachable
+      return;
+    }
+
+    // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+    // 本页引起的更新 => 更新历史相关的界面
+    showPopupMenuForMangaToc(
+      context: context,
+      mangaId: _data!.mid,
+      mangaTitle: _data!.title,
+      mangaCover: _data!.cover,
+      mangaUrl: _data!.url,
+      fromMangaPage: forMangaPage,
+      chapter: chapter,
+      chapterGroups: _data!.chapterGroups,
+      onHistoryUpdated: forMangaPage //
+          ? (h) => mountedSetState(() => _history = h)
+          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
+    );
+  }
+
+  void _gotoTocPage() {
+    // 直接打开 MangaTocPage (阅读历史和下载情况等数据由该页自行通过 EventBus 处理)
+    Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => MangaTocPage(
+          mangaId: _data!.mid,
+          mangaTitle: _data!.title,
+          groups: _data!.chapterGroups,
+          onChapterPressed: (cid) => _read(chapterId: cid),
+          onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: false),
+        ),
+      ),
+    );
+  }
+
+  void _showMoreChaptersPopupMenu() {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text(_data!.title),
+        children: [
+          IconTextDialogOption(
+            icon: Icon(Icons.notes),
+            text: Text('查看全部漫画章节'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              _gotoTocPage();
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(Icons.settings),
+            text: Text('漫画章节列表显示设置'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              showUiSettingDialog(context: context);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -348,6 +764,7 @@ class _MangaPageState extends State<MangaPage> {
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
+              cacheExtent: 999999 /* <<< keep states in ListView */,
               children: [
                 // ****************************************************************
                 // 头部框
@@ -379,6 +796,7 @@ class _MangaPageState extends State<MangaPage> {
                             url: _data!.cover,
                             height: 160,
                             width: 120,
+                            quality: FilterQuality.high,
                           ),
                           onTap: () => Navigator.of(context).push(
                             CustomPageRoute(
@@ -428,10 +846,10 @@ class _MangaPageState extends State<MangaPage> {
                                 ],
                               ),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 2.8),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
-                              icon: Icon(Icons.bookmark, size: 20, color: Colors.orange),
+                              icon: Icon(Icons.category, size: 20, color: Colors.orange),
                               text: TextGroup.normal(
                                 texts: [
                                   PlainTextItem(text: '类别：'),
@@ -443,7 +861,7 @@ class _MangaPageState extends State<MangaPage> {
                                       onTap: () => Navigator.of(context).push(
                                         CustomPageRoute(
                                           context: context,
-                                          builder: (c) => GenrePage(
+                                          builder: (c) => SepGenrePage(
                                             genre: _data!.genres[i].toTiny(),
                                           ),
                                         ),
@@ -454,22 +872,22 @@ class _MangaPageState extends State<MangaPage> {
                                 ],
                               ),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 2.8),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
-                              icon: Icon(Icons.date_range, size: 20, color: Colors.orange),
-                              text: Text('发布于 ${_data!.publishYear} / ${_data!.mangaZone.replaceAll('漫画', '')}'),
+                              icon: Icon(Icons.event, size: 20, color: Colors.orange),
+                              text: Text('发布于 ${_data!.publishYear} ${_data!.mangaZone.replaceAll('漫画', '')}'),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 2.8),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
-                              icon: Icon(Icons.trending_up, size: 20, color: Colors.orange),
-                              text: Text('排名 ${_data!.mangaRank} / 订阅数量 ${_subscribeCount ?? '未知'}'),
+                              icon: Icon(Icons.stars, size: 20, color: Colors.orange),
+                              text: Text('排名 ${_data!.mangaRank} / 订阅 ${_subscribeCount?.let((c) => '$c人') ?? '未知'}'),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 2.8),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
-                              icon: Icon(Icons.subject, size: 20, color: Colors.orange),
+                              icon: Icon(Icons.notes, size: 20, color: Colors.orange),
                               text: Flexible(
                                 child: Text(
                                   '最新章节：${_data!.newestChapter}',
@@ -478,13 +896,13 @@ class _MangaPageState extends State<MangaPage> {
                                 ),
                               ),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 2.8),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                             IconText(
-                              icon: Icon(Icons.access_time, size: 20, color: Colors.orange),
-                              text: Text(_data!.newestDate + (_data!.finished ? ' 已完结' : ' 连载中')),
+                              icon: Icon(Icons.update, size: 20, color: Colors.orange),
+                              text: Text('更新于 ${_data!.formattedNewestDate}・${_data!.finished ? '已完结' : '连载中'}'),
                               space: 8,
-                              iconPadding: EdgeInsets.symmetric(vertical: 2.8),
+                              iconPadding: EdgeInsets.symmetric(vertical: 3.3),
                             ),
                           ],
                         ),
@@ -493,18 +911,29 @@ class _MangaPageState extends State<MangaPage> {
                   ),
                 ),
                 // ****************************************************************
-                // 五个按钮
+                // 几个按钮
                 // ****************************************************************
                 Container(
                   color: Colors.white,
                   child: ActionRowView.five(
                     action1: ActionItem(
-                      text: _subscribed == true ? '取消订阅' : '订阅漫画',
-                      icon: _subscribed == true ? Icons.star : Icons.star_border,
+                      text: !_inShelf && !_inFavorite
+                          ? '订阅漫画'
+                          : _inShelf && _inFavorite
+                              ? '查看订阅'
+                              : (_inShelf && !_inFavorite ? '已放书架' : '已加收藏'),
+                      icon: !_inShelf && !_inFavorite ? Icons.sell : Icons.loyalty,
                       action: _subscribing ? null : () => _subscribe(),
+                      longPress: _subscribing ? null : () => _subscribe(),
                       enable: !_subscribing,
                     ),
                     action2: ActionItem(
+                      text: '查看作者',
+                      icon: Icons.person,
+                      action: () => _showAuthor(),
+                      longPress: () => _showAuthor(),
+                    ),
+                    action3: ActionItem(
                       text: '下载漫画',
                       icon: Icons.download,
                       action: () => Navigator.of(context).push(
@@ -519,27 +948,7 @@ class _MangaPageState extends State<MangaPage> {
                           ),
                         ),
                       ),
-                      longPress: () {
-                        if (_downloadEntity == null || _downloadEntity!.triedChapterIds.isEmpty) {
-                          Fluttertoast.showToast(msg: '未下载任何章节');
-                        } else if (_downloadEntity!.successChapterIds.length == _downloadEntity!.totalChapterIds.length) {
-                          Fluttertoast.showToast(msg: '已成功下载 ${_downloadEntity!.totalChapterIds.length} 章节');
-                        } else {
-                          Fluttertoast.showToast(msg: '未完成下载，已开始下载 ${_downloadEntity!.triedChapterIds.length}/${_downloadEntity!.totalChapterIds.length} 章节');
-                        }
-                      },
-                    ),
-                    action3: ActionItem(
-                      text: _history?.read == true ? '继续阅读' : '开始阅读',
-                      icon: Icons.import_contacts,
-                      action: () => _read(chapterId: null),
-                      longPress: () {
-                        if (_history == null || !_history!.read) {
-                          Fluttertoast.showToast(msg: '未开始阅读该漫画');
-                        } else if (_history != null) {
-                          Fluttertoast.showToast(msg: '上次阅读到 ${_history!.chapterTitle} 第${_history!.chapterPage}页');
-                        }
-                      },
+                      longPress: _showDownloadDetailDialog,
                     ),
                     action4: ActionItem(
                       text: '漫画详情',
@@ -554,9 +963,71 @@ class _MangaPageState extends State<MangaPage> {
                     action5: ActionItem(
                       text: '分享漫画',
                       icon: Icons.share,
-                      action: () => shareText(
-                        title: '漫画柜分享',
-                        text: '【${_data!.title}】${_data!.url}',
+                      action: () => shareText(text: '【${_data!.title}】${_data!.url}'),
+                      longPress: () => shareText(text: _data!.url),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  color: Colors.white,
+                  child: Divider(height: 0, thickness: 1),
+                ),
+                // ****************************************************************
+                // 阅读历史
+                // ****************************************************************
+                Material(
+                  color: Colors.white,
+                  child: InkWell(
+                    onTap: () => _read(chapterId: null),
+                    onLongPress: _showHistoryPopupMenu,
+                    child: IconText(
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 9), // | ▢° ▢▢ |
+                      space: 14 /* 14 + 2 <= 16 (narrow than horizontal_padding_18) */,
+                      icon: Stack(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(right: 2),
+                            child: Icon(Icons.import_contacts, size: 26, color: Colors.black54),
+                          ),
+                          if (_history == null || !_history!.read)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                height: 11,
+                                width: 11,
+                                decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                child: _history != null ? null : Icon(Icons.close, size: 9.0, color: Colors.white),
+                              ),
+                            ),
+                        ],
+                      ),
+                      text: Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _history == null || !_history!.read //
+                                  ? '开始阅读该漫画 (${_firstChapter?.title ?? '未知话'})'
+                                  : (_data!.chapterGroups.findChapter(_history!.chapterId)?.pageCount == _history!.chapterPage).let(
+                                      (fin) => '继续阅读该漫画 (${_history!.chapterTitle} 第${_history!.chapterPage}页${fin ? ' 完' : ''})',
+                                    ),
+                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              _history == null || !_history!.read //
+                                  ? '无阅读历史${_history == null ? '，且不保留浏览历史' : ''}'
+                                  : '最近阅读于 ${_history!.formattedLastTimeAndFullDuration}',
+                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -565,36 +1036,36 @@ class _MangaPageState extends State<MangaPage> {
                 // ****************************************************************
                 // 介绍
                 // ****************************************************************
-                Container(
+                Material(
                   color: Colors.white,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        _showBriefIntroduction = !_showBriefIntroduction;
-                        if (mounted) setState(() {});
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        child: TextGroup.normal(
-                          style: TextStyle(color: Colors.black),
-                          texts: [
-                            if (_showBriefIntroduction) ...[
-                              PlainTextItem(text: _data!.briefIntroduction),
-                              PlainTextItem(
-                                text: ' 展开详情',
-                                style: TextStyle(color: Theme.of(context).primaryColor),
-                              ),
-                            ],
-                            if (!_showBriefIntroduction) ...[
-                              PlainTextItem(text: _data!.introduction),
-                              PlainTextItem(
-                                text: ' 收起介绍',
-                                style: TextStyle(color: Theme.of(context).primaryColor),
-                              ),
-                            ],
+                  child: InkWell(
+                    onTap: () {
+                      _showBriefIntroduction = !_showBriefIntroduction;
+                      if (mounted) setState(() {});
+                    },
+                    onLongPress: () => _showDescriptionPopupMenu(),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                      child: TextGroup.normal(
+                        style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 15, height: 1.5),
+                        texts: [
+                          if (_data!.aliases.isNotEmpty) //
+                            PlainTextItem(text: '漫画别名${_data!.aliases.map((a) => '《$a》').join()}\n'),
+                          if (_showBriefIntroduction) ...[
+                            PlainTextItem(text: _data!.briefIntroduction),
+                            PlainTextItem(
+                              text: '　展开详情',
+                              style: TextStyle(color: Theme.of(context).primaryColor),
+                            ),
                           ],
-                        ),
+                          if (!_showBriefIntroduction) ...[
+                            PlainTextItem(text: _data!.introduction),
+                            PlainTextItem(
+                              text: '　收起介绍',
+                              style: TextStyle(color: Theme.of(context).primaryColor),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
@@ -605,13 +1076,13 @@ class _MangaPageState extends State<MangaPage> {
                   child: Divider(height: 0, thickness: 1),
                 ),
                 // ****************************************************************
-                // 排名评价
+                // 评分投票
                 // ****************************************************************
                 Material(
                   color: Colors.white,
                   child: InkWell(
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                       child: MangaRatingView(
                         averageScore: _data!.averageScore,
                         scoreCount: _data!.scoreCount,
@@ -620,7 +1091,7 @@ class _MangaPageState extends State<MangaPage> {
                     onTap: () => showDialog(
                       context: context,
                       builder: (c) => AlertDialog(
-                        title: Text('评分投票'),
+                        title: Text('投票评分详情'),
                         scrollable: true,
                         content: MangaRatingDetailView(
                           averageScore: _data!.averageScore,
@@ -628,6 +1099,38 @@ class _MangaPageState extends State<MangaPage> {
                           perScores: _data!.perScores,
                         ),
                         actions: [
+                          TextButton(
+                            child: Text('投票'),
+                            onPressed: () async {
+                              var score = await showDialog<int>(
+                                context: context,
+                                builder: (c) => SimpleDialog(
+                                  title: Text('投票评分'),
+                                  children: [
+                                    TextDialogOption(text: StarsTextView(score: 5), onPressed: () => Navigator.of(c).pop(5)),
+                                    TextDialogOption(text: StarsTextView(score: 4), onPressed: () => Navigator.of(c).pop(4)),
+                                    TextDialogOption(text: StarsTextView(score: 3), onPressed: () => Navigator.of(c).pop(3)),
+                                    TextDialogOption(text: StarsTextView(score: 2), onPressed: () => Navigator.of(c).pop(2)),
+                                    TextDialogOption(text: StarsTextView(score: 1), onPressed: () => Navigator.of(c).pop(1)),
+                                  ],
+                                ),
+                              );
+                              if (score != null) {
+                                if (!AuthManager.instance.logined) {
+                                  Fluttertoast.showToast(msg: '用户未登录');
+                                  return;
+                                }
+                                final client = RestClient(DioManager.instance.dio);
+                                try {
+                                  await client.voteManga(token: AuthManager.instance.token, mid: widget.id, score: score);
+                                  Fluttertoast.showToast(msg: '投票成功');
+                                } catch (e, s) {
+                                  var _ = wrapError(e, s); // ignore message
+                                  Fluttertoast.showToast(msg: '投票失败，可能已对该漫画投票');
+                                }
+                              }
+                            },
+                          ),
                           TextButton(
                             child: Text('确定'),
                             onPressed: () => Navigator.of(c).pop(),
@@ -646,108 +1149,142 @@ class _MangaPageState extends State<MangaPage> {
                   child: MangaTocView(
                     groups: _data!.chapterGroups,
                     full: false,
+                    firstGroupRowsIfNotFull: AppSetting.instance.ui.regularGroupRows,
+                    otherGroupsRowsIfNotFull: AppSetting.instance.ui.otherGroupRows,
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                     ),
                     onChapterPressed: (cid) => _read(chapterId: cid),
-                    onMoreChaptersPressed: () => Navigator.of(context).push(
-                      CustomPageRoute(
-                        context: context,
-                        builder: (c) => MangaTocPage(
-                          mangaId: _data!.mid,
-                          mangaTitle: _data!.title,
-                          groups: _data!.chapterGroups,
-                          onChapterPressed: (cid) => _read(chapterId: cid),
-                        ),
-                      ),
-                    ),
+                    onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: true),
+                    onMoreChaptersPressed: () => _gotoTocPage(),
+                    onMoreChaptersLongPressed: () => _showMoreChaptersPopupMenu(),
                   ),
                 ),
                 Container(height: 12),
                 // ****************************************************************
                 // 评论
                 // ****************************************************************
-                PlaceholderText.from(
-                  isEmpty: _comments.isEmpty,
-                  isLoading: _commentLoading,
-                  errorText: _commentError.isEmpty ? '' : '加载漫画评论失败\n$_commentError',
-                  displayRule: PlaceholderDisplayRule.errorFirst,
-                  setting: PlaceholderSetting().copyWithChinese(
-                    loadingText: '评论加载中...',
-                    nothingText: '暂无评论',
-                  ),
-                  onRefresh: () => _getComments(),
-                  childBuilder: (_) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.fromLTRB(12, 6, 6, 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        color: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '评论区',
-                              style: Theme.of(context).textTheme.subtitle1,
-                            ),
-                            Text(
-                              '共 $_commentTotal 条',
-                              style: Theme.of(context).textTheme.subtitle1,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        color: Colors.white,
-                        child: Divider(height: 0, thickness: 1),
-                      ),
-                      for (var comment in _comments.sublist(0, _comments.length - 1)) ...[
-                        CommentLineView(
-                          comment: comment,
-                          style: CommentLineViewStyle.normal,
-                        ),
-                        Container(
-                          color: Colors.white,
-                          child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
-                        ),
-                      ],
-                      CommentLineView(
-                        comment: _comments.last,
-                        style: CommentLineViewStyle.normal,
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        color: Colors.white,
-                        child: Divider(height: 0, thickness: 1),
+                      Text(
+                        '评论区 (共 $_commentTotal 条)',
+                        style: Theme.of(context).textTheme.subtitle1,
                       ),
                       Material(
-                        color: Colors.white,
+                        color: Colors.transparent,
                         child: InkWell(
-                          onTap: () => Navigator.of(context).push(
-                            CustomPageRoute(
-                              context: context,
-                              builder: (c) => CommentsPage(
-                                mangaId: _data!.mid,
-                                mangaTitle: _data!.title,
-                              ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            child: Text(
+                              '发表评论',
+                              style: Theme.of(context).textTheme.bodyText1?.copyWith(color: Theme.of(context).primaryColor),
                             ),
                           ),
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: 42,
-                            child: Center(
-                              child: Text(
-                                '查看更多评论...',
-                                style: Theme.of(context).textTheme.subtitle1,
-                              ),
-                            ),
-                          ),
+                          onTap: () async {
+                            var added = await showCommentDialogForAddingComment(context: context, mangaId: widget.id);
+                            if (added != null) {
+                              var ok = await showYesNoAlertDialog(
+                                context: context,
+                                title: Text('发表评论'),
+                                content: Text('评论发表成功，是否刷新评论列表？'),
+                                yesText: Text('刷新'),
+                                noText: Text('取消'),
+                              );
+                              if (ok == true) {
+                                _getComments();
+                              }
+                            }
+                          },
                         ),
                       ),
                     ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  color: Colors.white,
+                  child: Divider(height: 0, thickness: 1),
+                ),
+                Container(
+                  color: Colors.white,
+                  child: PlaceholderText.from(
+                    isEmpty: _comments.isEmpty,
+                    isLoading: _commentLoading,
+                    errorText: _commentError.isEmpty ? '' : '加载漫画评论失败\n$_commentError',
+                    displayRule: PlaceholderDisplayRule.errorFirst,
+                    setting: PlaceholderSetting(
+                      useAnimatedSwitcher: false,
+                      wholePaddingUnlessNormal: EdgeInsets.symmetric(vertical: 15),
+                    ).copyWithChinese(
+                      loadingText: '评论加载中...',
+                      nothingText: '暂无评论',
+                    ),
+                    onRefresh: () => _getComments(),
+                    childBuilder: (_) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var i = 0; i < _comments.length; i++) ...[
+                          CommentLineView.normalWithReplies(
+                            comment: _comments[i],
+                            onPressed: () => Navigator.of(context).push(
+                              CustomPageRoute(
+                                context: context,
+                                builder: (c) => CommentPage(
+                                  mangaId: widget.id,
+                                  comment: _comments[i],
+                                ),
+                              ),
+                            ),
+                            onLongPressed: () => showCommentPopupMenuForListAndPage(
+                              context: context,
+                              mangaId: widget.id,
+                              forCommentList: true,
+                              comment: _comments[i],
+                            ),
+                          ),
+                          if (i != _comments.length - 1)
+                            Container(
+                              color: Colors.white,
+                              child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
+                            ),
+                        ],
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          color: Colors.white,
+                          child: Divider(height: 0, thickness: 1),
+                        ),
+                        Material(
+                          color: Colors.white,
+                          child: InkWell(
+                            onTap: () => Navigator.of(context).push(
+                              CustomPageRoute(
+                                context: context,
+                                builder: (c) => CommentsPage(
+                                  mangaId: _data!.mid,
+                                  mangaTitle: _data!.title,
+                                ),
+                              ),
+                            ),
+                            child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              height: 42,
+                              child: Center(
+                                child: Text(
+                                  '查看更多评论...',
+                                  style: Theme.of(context).textTheme.subtitle1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

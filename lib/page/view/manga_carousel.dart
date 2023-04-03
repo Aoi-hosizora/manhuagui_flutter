@@ -35,6 +35,24 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (widget.mangas.isEmpty) {
+      return Container(
+        color: Colors.white,
+        width: MediaQuery.of(context).size.width,
+        height: widget.height,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.clear_all, size: 42, color: Colors.grey),
+              SizedBox(height: 10),
+              Text('暂无漫画推荐', style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.grey[600])),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Stack(
       children: [
         CarouselSlider.builder(
@@ -85,6 +103,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
                       url: widget.mangas[i].cover, // 3:4
                       height: widget.height,
                       width: widget.imageWidth,
+                      quality: FilterQuality.high,
                     ),
                   ),
                 ),
@@ -113,7 +132,7 @@ class _MangaCarouselViewState extends State<MangaCarouselView> with AutomaticKee
           bottom: 0,
           child: Container(
             width: MediaQuery.of(context).size.width,
-            padding: EdgeInsets.only(left: 8, right: 10, top: 4, bottom: 4),
+            padding: EdgeInsets.only(left: 8, right: 10, top: 5, bottom: 5),
             color: Colors.white.withOpacity(0.75),
             child: Center(
               child: Row(

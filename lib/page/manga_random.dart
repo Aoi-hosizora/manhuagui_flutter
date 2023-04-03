@@ -26,10 +26,9 @@ class _MangaRandomPageState extends State<MangaRandomPage> {
       var random = await client.getRandomManga();
       var mid = random.data.mid;
       var url = random.data.url;
-      Navigator.of(context).pop();
-      Navigator.of(context).push(
-        CustomPageRoute(
-          context: context,
+      Navigator.of(context).pushReplacement(
+        CustomPageRoute.fromTheme(
+          themeData: CustomPageRouteTheme.of(context),
           builder: (c) => MangaPage(
             id: mid,
             title: '漫画 mid: $mid',
@@ -69,7 +68,12 @@ class _MangaRandomPageState extends State<MangaRandomPage> {
         child: SizedBox(
           height: 50,
           width: 50,
-          child: CircularProgressIndicator(),
+          child: Padding(
+            padding: EdgeInsets.all(4.5 / 2),
+            child: CircularProgressIndicator(
+              strokeWidth: 4.5,
+            ),
+          ),
         ),
       ),
     );

@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 Future<void> main() async {
   globalLogger = ExtendedLogger(filter: ProductionFilter(), printer: PreferredPrinter());
+  CustomPageRouteTheme.allowThrowingUnsafeAncestorException = false;
   SplashPage.preserve(WidgetsFlutterBinding.ensureInitialized());
   await SplashPage.prepare();
 
@@ -55,7 +56,15 @@ class MyApp extends StatelessWidget {
           data: AppBarActionButtonThemeData(
             splashRadius: 19,
           ),
-          child: child!,
+          child: PlaceholderTextTheme(
+            setting: PlaceholderSetting(
+              useAnimatedSwitcher: true,
+              switchDuration: Duration(milliseconds: 200),
+              switchReverseDuration: Duration(milliseconds: 200),
+              switchLayoutBuilder: switchLayoutBuilderWithSwitchedFlag,
+            ).copyWithChinese(),
+            child: child!,
+          ),
         ),
       ),
     );

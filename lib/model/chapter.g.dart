@@ -11,6 +11,8 @@ MangaChapter _$MangaChapterFromJson(Map<String, dynamic> json) => MangaChapter(
       title: json['title'] as String,
       mid: json['mid'] as int,
       mangaTitle: json['manga_title'] as String,
+      mangaCover: json['manga_cover'] as String,
+      mangaUrl: json['manga_url'] as String,
       url: json['url'] as String,
       pages: (json['pages'] as List<dynamic>).map((e) => e as String).toList(),
       pageCount: json['page_count'] as int,
@@ -24,6 +26,8 @@ Map<String, dynamic> _$MangaChapterToJson(MangaChapter instance) =>
       'title': instance.title,
       'mid': instance.mid,
       'manga_title': instance.mangaTitle,
+      'manga_cover': instance.mangaCover,
+      'manga_url': instance.mangaUrl,
       'url': instance.url,
       'pages': instance.pages,
       'page_count': instance.pageCount,
@@ -39,6 +43,8 @@ TinyMangaChapter _$TinyMangaChapterFromJson(Map<String, dynamic> json) =>
       url: json['url'] as String,
       pageCount: json['page_count'] as int,
       isNew: json['is_new'] as bool,
+      group: json['group'] as String,
+      number: json['number'] as int,
     );
 
 Map<String, dynamic> _$TinyMangaChapterToJson(TinyMangaChapter instance) =>
@@ -49,6 +55,8 @@ Map<String, dynamic> _$TinyMangaChapterToJson(TinyMangaChapter instance) =>
       'url': instance.url,
       'page_count': instance.pageCount,
       'is_new': instance.isNew,
+      'group': instance.group,
+      'number': instance.number,
     };
 
 MangaChapterGroup _$MangaChapterGroupFromJson(Map<String, dynamic> json) =>

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 
+/// 图片加载和错误控件，在 [MangaGalleryView] / [ImageViewerPage] 使用
+
 class ImageLoadingView extends StatelessWidget {
   const ImageLoadingView({
     Key? key,
@@ -32,13 +34,14 @@ class ImageLoadingView extends StatelessWidget {
             ),
           Padding(
             padding: EdgeInsets.all(30),
-            child: Container(
-              width: 50,
+            child: SizedBox(
               height: 50,
-              child: CircularProgressIndicator(
-                value: (event == null || (event.expectedTotalBytes ?? 0) == 0)
-                    ? null //
-                    : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
+              width: 50,
+              child: Padding(
+                padding: EdgeInsets.all(4.5 / 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 4.5,
+                ),
               ),
             ),
           ),
@@ -65,10 +68,12 @@ class ImageLoadFailedView extends StatelessWidget {
     Key? key,
     required this.title,
     this.error,
+    this.errorFormatter,
   }) : super(key: key);
 
   final String title;
   final dynamic error;
+  final String? Function(dynamic error)? errorFormatter;
 
   @override
   Widget build(BuildContext context) {
@@ -102,12 +107,10 @@ class ImageLoadFailedView extends StatelessWidget {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 30),
             child: Text(
-              error == null
-                  ? '未知错误'
-                  : // Image file "/storage/emulated/0/Manhuagui/manhuagui_download/39793/620266/0005.webp" is not found while given url is null.
-                  error.toString().contains('not found while given url is null')
-                      ? '该页尚未下载，且未获取到该页的链接'
-                      : wrapError(error, StackTrace.empty).text,
+              errorFormatter?.call(error) ??
+                  (error == null //
+                      ? '未知错误'
+                      : wrapError(error, StackTrace.empty).text),
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),

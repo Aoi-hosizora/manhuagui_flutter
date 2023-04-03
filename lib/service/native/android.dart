@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 
 // =======
 // version
@@ -60,18 +61,68 @@ const _channelName = 'com.aoihosizora.manhuagui';
 const _channel = MethodChannel(_channelName);
 const _restartAppMethodName = 'restartApp';
 const _insertMediaMethodName = 'insertMedia';
+const _shareTextMethodName = 'shareText';
+const _shareFileMethodName = 'shareFile';
+const _shareFilesMethodName = 'shareFiles';
 
 Future<void> restartApp() async {
   if (Platform.isAndroid) {
-    await _channel.invokeMethod(_restartAppMethodName);
+    try {
+      await _channel.invokeMethod(_restartAppMethodName);
+    } catch (_) {}
   }
 }
 
 Future<void> addToGallery(File file) async {
   if (Platform.isAndroid) {
-    // Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
-    await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
-      'filepath': file.path,
-    });
+    try {
+      // Intent.ACTION_MEDIA_SCANNER_SCAN_FILE
+      await _channel.invokeMethod(_insertMediaMethodName, <String, dynamic>{
+        'filepath': file.path,
+      });
+    } catch (_) {}
+  }
+}
+
+Future<void> shareText({required String text, String? title}) async {
+  if (Platform.isAndroid) {
+    try {
+      // Intent.ACTION_SEND
+      await _channel.invokeMethod(_shareTextMethodName, <String, dynamic>{
+        'shareText': text,
+        'shareTitle': title,
+        'chooserTitle': AppSetting.instance.other.useNativeShareSheet ? null : '',
+      });
+    } catch (_) {}
+  }
+}
+
+Future<void> shareFile({required String filepath, String type = '*/*', String? text, String? title}) async {
+  if (Platform.isAndroid) {
+    try {
+      // Intent.ACTION_SEND
+      await _channel.invokeMethod(_shareFileMethodName, <String, dynamic>{
+        'filepath': filepath,
+        'fileType': type,
+        'shareText': text,
+        'shareTitle': title,
+        'chooserTitle': AppSetting.instance.other.useNativeShareSheet ? null : '',
+      });
+    } catch (_) {}
+  }
+}
+
+Future<void> shareFiles({required List<String> filepaths, String type = '*/*', String? text, String? title}) async {
+  if (Platform.isAndroid) {
+    try {
+      // Intent.ACTION_SEND_MULTIPLE
+      await _channel.invokeMethod(_shareFilesMethodName, <String, dynamic>{
+        'filepaths': filepaths,
+        'fileType': type,
+        'shareText': text,
+        'shareTitle': title,
+        'chooserTitle': AppSetting.instance.other.useNativeShareSheet ? null : '',
+      });
+    } catch (_) {}
   }
 }

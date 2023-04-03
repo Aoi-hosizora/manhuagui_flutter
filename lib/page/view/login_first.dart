@@ -32,17 +32,17 @@ class LoginFirstView extends StatelessWidget {
         errorRetryText: '重试',
       ),
       onRetryForNothing: () {
-        if (AuthManager.instance.logined) {
+        if (!AuthManager.instance.logined) {
+          Navigator.of(context).push(
+            CustomPageRoute.fromTheme(
+              themeData: CustomPageRouteTheme.of(context),
+              builder: (c) => LoginPage(),
+            ),
+          );
+        } else {
           Fluttertoast.showToast(msg: '${AuthManager.instance.username} 登录成功');
           AuthManager.instance.notify(logined: true);
-          return;
         }
-        Navigator.of(context).push(
-          CustomPageRoute(
-            context: context,
-            builder: (c) => LoginPage(),
-          ),
-        );
       },
       onRetryForError: onErrorRetry,
     );

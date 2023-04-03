@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
@@ -10,35 +11,44 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 
 enum MangaCollectionType {
   rankings,
-  updates,
+  recents,
   histories,
   shelves,
+  favorites,
   downloads,
 }
 
-/// 漫画集合，针对每日排行、最近更新、浏览历史、我的书架、下载列表，在 [RecommendSubPage] 使用
+/// 漫画集合，针对日排行榜、最近更新、阅读历史、我的书架、本地收藏、下载列表，在 [RecommendSubPage] 使用
 class MangaCollectionView extends StatefulWidget {
   const MangaCollectionView({
     Key? key,
     required this.type,
     this.ranking,
+    this.rankingDateTime,
     this.updates,
     this.histories,
     this.shelves,
+    this.favorites,
     this.downloads,
     this.error,
     required this.username,
+    this.onRefreshPressed,
+    this.disableRefresh = false,
     this.onMorePressed,
   }) : super(key: key);
 
   final MangaCollectionType type;
   final List<MangaRanking>? ranking;
+  final DateTime? rankingDateTime;
   final List<TinyManga>? updates;
   final List<MangaHistory>? histories;
   final List<ShelfManga>? shelves;
+  final List<FavoriteManga>? favorites;
   final List<DownloadedManga>? downloads;
   final String? error;
   final String? username;
+  final void Function()? onRefreshPressed;
+  final bool disableRefresh;
   final void Function()? onMorePressed;
 
   @override
@@ -46,7 +56,7 @@ class MangaCollectionView extends StatefulWidget {
 }
 
 class _MangaCollectionViewState extends State<MangaCollectionView> with AutomaticKeepAliveClientMixin {
-  Widget _buildCover(BuildContext context, int mid, String title, String url, String cover, double width, double height, {bool gotoDownload = false}) {
+  Widget _buildCover(BuildContext context, int mid, String title, String url, String cover, double width, double height, {bool highQuality = false, bool gotoDownload = false}) {
     return FullRippleWidget(
       child: Container(
         width: width,
@@ -55,6 +65,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           url: cover,
           width: width,
           height: height,
+          quality: !highQuality ? FilterQuality.low : FilterQuality.high,
           radius: BorderRadius.circular(8),
           border: Border.all(width: 0.7, color: Colors.grey[400]!),
         ),
@@ -98,7 +109,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.url, manga.cover, width, height),
+        _buildCover(context, manga.mid, manga.title, manga.url, manga.cover, width, height, highQuality: true),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -182,7 +193,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           width: width,
           padding: EdgeInsets.only(top: 2),
           child: Text(
-            !manga.read ? '未开始阅读' : manga.chapterTitle,
+            !manga.read ? '未阅读' : manga.chapterTitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
@@ -213,12 +224,35 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                '${manga.newestChapter}・${manga.newestDuration}',
+                '${manga.newestChapter}・${manga.formattedNewestDurationOrTime}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFavoriteItem(BuildContext context, FavoriteManga manga) {
+    final width = (MediaQuery.of(context).size.width - 15 * 6) / 5.5; // | ▢ ▢ ▢ ▢ ▢ ▢|
+    final height = width / 3 * 4;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaUrl, manga.mangaCover, width, height),
+        Container(
+          width: width,
+          padding: EdgeInsets.only(top: 2),
+          child: Text(
+            manga.mangaTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12),
           ),
         ),
       ],
@@ -245,9 +279,9 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                manga.successChapterIds.length == manga.totalChapterIds.length
-                    ? '已完成 (共 ${manga.totalChapterIds.length} 章节)' //
-                    : '未完成 (${manga.triedChapterIds.length}/${manga.totalChapterIds.length})',
+                manga.allChaptersSucceeded
+                    ? '已完成 (共 ${manga.totalChaptersCount} 章节)' //
+                    : '未完成 (${manga.successChaptersCount}/${manga.totalChaptersCount} 章节)',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),
@@ -268,6 +302,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
 
     String title;
     IconData icon;
+    String? right;
     List<Widget>? widgets;
     bool twoLine = false;
 
@@ -275,37 +310,46 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       case MangaCollectionType.rankings:
         title = '今日漫画排行榜';
         icon = Icons.trending_up;
+        right = '更新于 ${formatDatetimeAndDuration(widget.rankingDateTime ?? DateTime.now(), FormatPattern.date)}';
         widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList(); // # = 50 => 20
         break;
-      case MangaCollectionType.updates:
+      case MangaCollectionType.recents:
         title = '最近更新的漫画';
         icon = Icons.cached;
         widgets = widget.updates?.sublist(0, widget.updates!.length.clamp(0, 30)).map((el) => _buildUpdateItem(context, el)).toList(); // # = 42 => 30
         break;
       case MangaCollectionType.histories:
-        title = widget.username == null ? '本地浏览历史' : '${widget.username} 的浏览历史';
+        title = widget.username == null ? '本地阅读历史' : '${widget.username} 的阅读历史';
         icon = Icons.history;
-        widgets = widget.histories?.map((el) => _buildHistoryItem(context, el)).toList(); // # = 50
+        widgets = widget.histories?.sublist(0, widget.histories!.length.clamp(0, 30)).map((el) => _buildHistoryItem(context, el)).toList(); // # = 30
         twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.shelves:
         title = widget.username == null ? '我的书架' : '${widget.username} 的书架';
-        icon = Icons.star_outlined;
+        icon = Icons.star;
         widgets = widget.shelves?.map((el) => _buildShelfItem(context, el)).toList(); // # = 20
         twoLine = widgets != null && widgets.length > 6;
+        break;
+      case MangaCollectionType.favorites:
+        title = widget.username == null ? '我的本地收藏' : '${widget.username} 的本地收藏';
+        icon = Icons.bookmark;
+        widgets = widget.favorites?.map((el) => _buildFavoriteItem(context, el)).toList(); // # = 20
+        twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.downloads:
         title = '漫画下载列表';
         icon = Icons.download;
-        widgets = widget.downloads?.sublist(0, widget.downloads!.length.clamp(0, 20)).map((el) => _buildDownloadItem(context, el)).toList(); // # = 20
+        widgets = widget.downloads?.sublist(0, widget.downloads!.length.clamp(0, 10)).map((el) => _buildDownloadItem(context, el)).toList(); // # = 10
         break;
     }
 
     return HomepageColumnView(
       title: title,
       icon: icon,
+      onRefreshPressed: widget.onRefreshPressed,
+      disableRefresh: widget.disableRefresh,
+      rightText: right,
       onMorePressed: widget.onMorePressed,
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       child: PlaceholderText.from(
         isLoading: widgets == null,
         isEmpty: widgets?.isNotEmpty != true,
@@ -314,10 +358,10 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           showLoadingText: false,
           showNothingRetry: false,
           showErrorRetry: false,
-          progressPadding: const EdgeInsets.all(15),
+          progressPadding: const EdgeInsets.all(12),
           iconPadding: const EdgeInsets.all(5),
           textPadding: const EdgeInsets.all(5),
-          progressSize: 40,
+          progressSize: 42,
           iconSize: 42,
           textStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.grey[600]),
         ).copyWithChinese(),
@@ -344,10 +388,11 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                         child: Column(
                           children: [
                             widgets[i],
-                            if (i + 1 < widgets.length) ...[
-                              SizedBox(height: 10),
-                              widgets[i + 1],
-                            ],
+                            if (i + 1 < widgets.length)
+                              Padding(
+                                padding: EdgeInsets.only(top: 10),
+                                child: widgets[i + 1],
+                              ),
                           ],
                         ),
                       ),

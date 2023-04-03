@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/message.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/message_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 历史消息页，网络请求并展示 [Message] 信息
+/// 应用消息页，网络请求并展示 [Message] 信息
 class MessagePage extends StatefulWidget {
   const MessagePage({Key? key}) : super(key: key);
 
@@ -114,21 +116,25 @@ class _MessagePageState extends State<MessagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('历史消息'),
-        leading: AppBarActionButton.leading(context: context),
+        title: Text('应用消息'),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
-            icon: Icon(Icons.notifications_none),
+            icon: Icon(MdiIcons.bellCheck),
             tooltip: '全部标记为已阅读',
             onPressed: () => _markAllAsHasRead(context),
           ),
           AppBarActionButton(
-            icon: Icon(Icons.notification_add),
+            icon: Icon(MdiIcons.bellPlus),
             tooltip: '全部标记为未阅读',
             onPressed: () => _markAllAsUnread(context),
           ),
         ],
       ),
+      drawer: AppDrawer(
+        currentSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshableListView<Message>(
         key: _rdvKey,
         data: _data,
@@ -141,7 +147,7 @@ class _MessagePageState extends State<MessagePage> {
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          refreshFirst: true,
+          refreshFirst: true /* <<< refresh first */,
           clearWhenRefresh: false,
           clearWhenError: false,
           onError: (e) {

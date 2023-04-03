@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/comment.dart';
+import 'package:manhuagui_flutter/page/comment.dart';
+import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
+import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -14,16 +17,19 @@ class CommentsPage extends StatefulWidget {
     Key? key,
     required this.mangaId,
     required this.mangaTitle,
+    this.pushNavigateWrapper,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
+  final void Function(Future<void> Function() navigate)? pushNavigateWrapper;
 
   @override
   _CommentsPageState createState() => _CommentsPageState();
 }
 
 class _CommentsPageState extends State<CommentsPage> {
+  final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -52,9 +58,35 @@ class _CommentsPageState extends State<CommentsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('漫画评论'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
+        actions: [
+          AppBarActionButton(
+            icon: Icon(Icons.add_comment),
+            tooltip: '发表评论',
+            onPressed: () async {
+              var added = await showCommentDialogForAddingComment(context: context, mangaId: widget.mangaId);
+              if (added != null) {
+                var ok = await showYesNoAlertDialog(
+                  context: context,
+                  title: Text('发表评论'),
+                  content: Text('评论发表成功，是否刷新评论列表？'),
+                  yesText: Text('刷新'),
+                  noText: Text('取消'),
+                );
+                if (ok == true) {
+                  _pdvKey.currentState?.refresh();
+                }
+              }
+            },
+          ),
+        ],
       ),
+      drawer: AppDrawer(
+        currentSelection: DrawerSelection.none,
+      ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PaginationListView<Comment>(
+        key: _pdvKey,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
@@ -69,7 +101,7 @@ class _CommentsPageState extends State<CommentsPage> {
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          refreshFirst: true,
+          refreshFirst: true /* <<< refresh first */,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
@@ -83,9 +115,31 @@ class _CommentsPageState extends State<CommentsPage> {
           color: Colors.white,
           child: Divider(height: 0, thickness: 1, indent: 2.0 * 12 + 32),
         ),
-        itemBuilder: (c, _, item) => CommentLineView(
+        itemBuilder: (c, _, item) => CommentLineView.normalWithReplies(
           comment: item,
-          style: CommentLineViewStyle.normal,
+          onPressed: () {
+            var f = () => Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => CommentPage(
+                      mangaId: widget.mangaId,
+                      comment: item,
+                    ),
+                  ),
+                );
+            if (widget.pushNavigateWrapper == null) {
+              f();
+            } else {
+              widget.pushNavigateWrapper?.call(f);
+            }
+          },
+          onLongPressed: () => showCommentPopupMenuForListAndPage(
+            context: context,
+            mangaId: widget.mangaId,
+            forCommentList: true,
+            comment: item,
+            pushNavigateWrapper: widget.pushNavigateWrapper,
+          ),
         ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [

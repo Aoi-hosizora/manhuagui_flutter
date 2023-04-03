@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 part 'author.g.dart';
 
@@ -13,15 +14,24 @@ class Author {
   final int mangaCount;
   final int newestMangaId;
   final String newestMangaTitle;
+  final String newestMangaUrl;
   final String newestDate;
+  final int highestMangaId;
+  final String highestMangaTitle;
+  final String highestMangaUrl;
+  final double highestScore;
   final double averageScore;
+  final int popularity;
   final String introduction;
+  final List<TinyZonedAuthor> relatedAuthors;
 
-  const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestDate, required this.averageScore, required this.introduction});
+  const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestMangaUrl, required this.newestDate, required this.highestMangaId, required this.highestMangaTitle, required this.highestMangaUrl, required this.highestScore, required this.averageScore, required this.popularity, required this.introduction, required this.relatedAuthors});
 
   factory Author.fromJson(Map<String, dynamic> json) => _$AuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$AuthorToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -39,6 +49,16 @@ class SmallAuthor {
   factory SmallAuthor.fromJson(Map<String, dynamic> json) => _$SmallAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$SmallAuthorToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -52,4 +72,18 @@ class TinyAuthor {
   factory TinyAuthor.fromJson(Map<String, dynamic> json) => _$TinyAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyAuthorToJson(this);
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class TinyZonedAuthor {
+  final int aid;
+  final String name;
+  final String url;
+  final String zone;
+
+  const TinyZonedAuthor({required this.aid, required this.name, required this.url, required this.zone});
+
+  factory TinyZonedAuthor.fromJson(Map<String, dynamic> json) => _$TinyZonedAuthorFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TinyZonedAuthorToJson(this);
 }

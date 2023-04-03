@@ -11,32 +11,32 @@ dependencies:
     sdk: flutter
 
   # basic
-  cupertino_icons: ^1.0.5
-  logger: ^1.1.0
+  material_design_icons_flutter: ^6.0.7096
+  logger: ^1.2.2
   fluttertoast: 8.0.7
   url_launcher: ^6.1.5
-  permission_handler: ^10.0.0
-  flutter_native_splash: 2.1.6
   json_annotation: ^4.6.0
   dio: ^4.0.6
   retrofit: ^3.0.1+1
   intl: ^0.17.0
   basic_utils: ^5.2.2
-  synchronized: ^3.0.0+3
-  queue: ^3.1.0+1
 
-  # assists
+  # platform assists
+  permission_handler: ^10.0.0
   flutter_web_browser: ^0.17.1
-  flutter_share: ^2.0.0
   wakelock: ^0.6.2
   device_info_plus: 4.0.0
   battery_info: ^1.1.1
   connectivity_plus: 2.3.6+1
   flutter_local_notifications: 9.9.1
+  flutter_native_splash: 2.1.6
 
   # widgets
   flutter_ahlib:
-    path: ../flutter_ahlib
+    # path: ../flutter_ahlib
+    git:
+      url: https://github.com/Aoi-hosizora/flutter_ahlib
+      ref: 090cbcf84bd45d3b113b99222fa67b1a4b277895
   flutter_cache_manager: ^3.3.0
   cached_network_image: ^3.2.0
   photo_view: ^0.14.0
@@ -45,13 +45,21 @@ dependencies:
   carousel_slider: ^4.1.1
   flutter_typeahead: 3.2.7
 
-  # file system & others
+  # file system related and others
   path: 1.8.0
   path_provider: ^2.0.11
   external_path: ^1.0.1
   shared_preferences: ^2.0.15
   event_bus: ^2.0.0
   sqflite: ^2.0.2+1
+  synchronized: ^3.0.0+3
+  queue: ^3.1.0+1
+
+dependency_overrides:
+  sqflite:
+    path: ./deps/sqflite/sqflite
+  photo_view:
+    path: ./deps/photo_view
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +75,10 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/
+  fonts:
+    - family: CustomIcons
+      fonts:
+        - asset: lib/assets/icons/CustomIcons.ttf
 
 flutter_native_splash:
   color: '#FFFFFF'

@@ -4,6 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 
 part 'manga.g.dart';
 
@@ -17,8 +18,7 @@ class Manga {
   final String mangaZone;
   final List<Category> genres;
   final List<TinyAuthor> authors;
-  final String alias;
-  final String aliasTitle;
+  final List<String> aliases;
   final bool finished;
   final String newestChapter;
   final String newestDate;
@@ -32,11 +32,13 @@ class Manga {
   final bool copyright;
   final List<MangaChapterGroup> chapterGroups;
 
-  const Manga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.alias, required this.aliasTitle, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction, required this.introduction, required this.mangaRank, required this.averageScore, required this.scoreCount, required this.perScores, required this.banned, required this.copyright, required this.chapterGroups});
+  const Manga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.aliases, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction, required this.introduction, required this.mangaRank, required this.averageScore, required this.scoreCount, required this.perScores, required this.banned, required this.copyright, required this.chapterGroups});
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -60,6 +62,16 @@ class SmallManga {
 
   Map<String, dynamic> toJson() => _$SmallMangaToJson(this);
 
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
+
   TinyManga toTiny() {
     return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
   }
@@ -80,6 +92,16 @@ class TinyManga {
   factory TinyManga.fromJson(Map<String, dynamic> json) => _$TinyMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyMangaToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -183,19 +205,34 @@ class HomepageMangaGroupList {
   final MangaGroupList finish; // 经典完结
   final MangaGroupList latest; // 最新上架
   final List<MangaRanking> daily; // 日排行榜
-  final List<Category> genres; // 漫画类别
+  final List<Category> genres; // 漫画类别-剧情
+  final List<Category> ages; // 漫画类别-受众
+  final List<Category> zones; // 漫画类别-地区
 
-  const HomepageMangaGroupList({required this.serial, required this.finish, required this.latest, required this.daily, required this.genres});
+  const HomepageMangaGroupList({required this.serial, required this.finish, required this.latest, required this.daily, required this.genres, required this.ages, required this.zones});
 
   factory HomepageMangaGroupList.fromJson(Map<String, dynamic> json) => _$HomepageMangaGroupListFromJson(json);
 
   Map<String, dynamic> toJson() => _$HomepageMangaGroupListToJson(this);
 
   List<TinyBlockManga> get carouselMangas {
-    var p1 = daily.sublist(0, 8).map((e) => e.toTinyBlock()).toList(); // # = 8
-    var p2 = serial.topGroup.mangas.sublist(0, 4); // # = 4
+    var p1 = daily.sublist(0, 8.clamp(0, daily.length)).map((e) => e.toTinyBlock()).toList(); // # = 8
+    var p2 = serial.topGroup.mangas.sublist(0, 4.clamp(0, serial.topGroup.mangas.length)); // # = 4
     return [
-      ...{p1[0], p1[1], p2[0], p2[1], p1[2], p1[3], p2[2], p2[3], p1[4], p1[5], p1[6], p1[7]}, // # ≒ 12
+      ...{
+        if (p1.isNotEmpty) p1[0],
+        if (p1.length >= 2) p1[1],
+        if (p2.isNotEmpty) p2[0],
+        if (p1.length >= 3) p1[2],
+        if (p1.length >= 4) p1[3],
+        if (p2.length >= 2) p2[1],
+        if (p1.length >= 5) p1[4],
+        if (p1.length >= 6) p1[5],
+        if (p2.length >= 3) p2[2],
+        if (p1.length >= 7) p1[6],
+        if (p1.length >= 8) p1[7],
+        if (p2.length >= 4) p2[3],
+      }, // # ≒ 12
     ];
   }
 }
@@ -220,6 +257,21 @@ class MangaRanking {
 
   Map<String, dynamic> toJson() => _$MangaRankingToJson(this);
 
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
+
+  String get formattedNewestDurationOrDate {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    return result.duration ?? result.date;
+  }
+
   TinyBlockManga toTinyBlock() {
     return TinyBlockManga(
       mid: mid,
@@ -239,15 +291,33 @@ class ShelfManga {
   final String cover;
   final String url;
   final String newestChapter;
-  final String newestDuration;
+  final String newestDuration; // duration or date
   final String lastChapter;
-  final String lastDuration;
+  final String lastDuration; // duration or date
 
   const ShelfManga({required this.mid, required this.title, required this.cover, required this.url, required this.newestChapter, required this.newestDuration, required this.lastChapter, required this.lastDuration});
 
   factory ShelfManga.fromJson(Map<String, dynamic> json) => _$ShelfMangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
+
+  String get formattedLastDurationOrTime {
+    var result = parseDurationOrDateString(lastDuration);
+    return result.duration ?? result.date; // "xxx天前" or "2023/02/02"
+  }
+
+  String get formattedNewestDurationOrTime {
+    var result = parseDurationOrDateString(newestDuration);
+    return result.duration ?? result.date; // "xxx天前" or "2023/02/02"
+  }
+
+  String get formattedNewestTimeWithDuration {
+    var result = parseDurationOrDateString(newestDuration);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})'; // "xxx天前 (2023/02/02)" or "2023-02-02"
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

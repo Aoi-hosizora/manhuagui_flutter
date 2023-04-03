@@ -1,7 +1,9 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
+import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -30,14 +32,16 @@ class DBManager {
     _database = null;
   }
 
-  static const _newestVersion = 3;
+  static const _newestVersion = 4;
 
   Future<Database> openDB(String filepath) async {
     return await openDatabase(
       filepath,
       version: _newestVersion,
+      onConfigure: (db) async => await db.androidSetLocale('zh-CN'),
       onCreate: (db, _) async => await _onUpgrade(db, 0),
       onUpgrade: (db, oldVersion, _) async => _onUpgrade(db, oldVersion),
+      onDowngrade: (db, oldVersion, newVersion) async => throw Exception('downgrade db from $oldVersion to $newVersion !!!'),
     );
   }
 
@@ -47,16 +51,29 @@ class DBManager {
       version = 1; // x -> 1 create
       await HistoryDao.createForVer1(db);
       await DownloadDao.createForVer1(db);
+      await FavoriteDao.createForVer1(db);
+      await ShelfCacheDao.createForVer1(db);
     }
     if (version == 1) {
       version = 2; // 1 -> 2 upgrade
       await HistoryDao.upgradeFromVer1To2(db);
       await DownloadDao.upgradeFromVer1To2(db);
+      await FavoriteDao.upgradeFromVer1To2(db);
+      await ShelfCacheDao.upgradeFromVer1To2(db);
     }
     if (version == 2) {
       version = 3; // 2 -> 3 upgrade
       await HistoryDao.upgradeFromVer2To3(db);
       await DownloadDao.upgradeFromVer2To3(db);
+      await FavoriteDao.upgradeFromVer2To3(db);
+      await ShelfCacheDao.upgradeFromVer2To3(db);
+    }
+    if (version == 3) {
+      version = 4; // 3 -> 4 upgrade
+      await HistoryDao.upgradeFromVer3To4(db);
+      await DownloadDao.upgradeFromVer3To4(db);
+      await FavoriteDao.upgradeFromVer3To4(db);
+      await ShelfCacheDao.upgradeFromVer3To4(db);
     }
   }
 }

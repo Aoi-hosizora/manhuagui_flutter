@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 
-/// 与设置相关的 [SettingDialogView] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [OtherSettingSubPage] 使用
+/// 与设置相关的 [SettingDialogView] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [UiSettingSubPage] / [OtherSettingSubPage] 使用
 class SettingDialogView extends StatelessWidget {
   const SettingDialogView({
     Key? key,
@@ -13,8 +14,7 @@ class SettingDialogView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width - //
-          (MediaQuery.of(context).padding + kDialogDefaultInsetPadding + kAlertDialogDefaultContentPadding).horizontal,
+      width: getDialogContentMaxWidth(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -45,24 +45,31 @@ abstract class _SettingView extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodyText1,
-            ),
-            if (hint != null) ...[
-              SizedBox(width: 2),
-              HelpIconView(
-                title: title,
-                hint: hint!,
+        Flexible(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyText1,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              if (hint != null) ...[
+                SizedBox(width: 2),
+                HelpIconView.forSettingDlg(
+                  title: title,
+                  hint: hint!,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
-        SizedBox(
+        Container(
           height: height,
           width: width,
+          margin: EdgeInsets.only(left: 4),
           child: buildRightWidget(context),
         ),
       ],
@@ -80,7 +87,7 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
     this.enable = true,
     required this.value,
     required this.values,
-    required this.builder,
+    required this.textBuilder,
     required this.onChanged,
   }) : super(
           key: key,
@@ -93,42 +100,21 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
   final bool enable;
   final T value;
   final List<T> values;
-  final Widget Function(T) builder;
+  final String Function(T) textBuilder;
   final void Function(T) onChanged;
 
   @override
-  Widget buildRightWidget(BuildContext context) => Stack(
-        children: [
-          DropdownButton<T>(
-            value: value,
-            items: [
-              for (var v in values)
-                DropdownMenuItem<T>(
-                  value: v,
-                  child: DefaultTextStyle(
-                    style: Theme.of(context).textTheme.bodyText2!,
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 2),
-                      child: builder(v),
-                    ),
-                  ),
-                )
-            ],
-            isExpanded: true,
-            underline: Container(),
-            onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 6,
-            child: Container(
-              height: 0.8,
-              margin: EdgeInsets.only(right: 4),
-              color: Theme.of(context).primaryColor,
+  Widget buildRightWidget(BuildContext context) => CustomCombobox<T>(
+        value: value,
+        items: [
+          for (var v in values)
+            CustomComboboxItem(
+              value: v,
+              text: textBuilder(v),
             ),
-          ),
         ],
+        enable: enable,
+        onChanged: enable ? (v) => v?.let((it) => onChanged.call(it)) : null,
       );
 }
 
@@ -169,7 +155,7 @@ class SettingButtonView extends _SettingView {
     double? width,
     double height = 38,
     this.enable = true,
-    this.buttonPadding = const EdgeInsets.fromLTRB(0, 3, 9, 3),
+    this.buttonPadding = const EdgeInsets.fromLTRB(0, 4, 9, 4),
     required this.buttonChild,
     required this.onPressed,
   }) : super(
@@ -195,95 +181,28 @@ class SettingButtonView extends _SettingView {
       );
 }
 
-class HelpIconView extends StatelessWidget {
-  const HelpIconView({
+class SettingGroupTitleView extends StatelessWidget {
+  const SettingGroupTitleView({
     Key? key,
     required this.title,
-    required this.hint,
-    this.useRectangle = false,
-    this.padding = const EdgeInsets.all(5),
-    this.iconSize = 20,
-    this.iconColor,
+    this.padding = const EdgeInsets.symmetric(vertical: 4),
   }) : super(key: key);
 
   final String title;
-  final String hint;
-  final bool useRectangle;
   final EdgeInsets padding;
-  final double iconSize;
-  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkResponse(
-        child: Padding(
-          padding: padding,
-          child: Icon(
-            Icons.help_outline,
-            size: iconSize,
-            color: iconColor ?? Colors.grey[800],
-          ),
-        ),
-        highlightShape: useRectangle ? BoxShape.rectangle : BoxShape.circle,
-        containedInkWell: useRectangle,
-        radius: (iconSize + padding.horizontal) / 2 * (useRectangle ? calcSqrt(2) : 1),
-        onTap: () => showDialog(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: Text(title),
-            content: Text(hint),
-            actions: [
-              TextButton(
-                child: Text('确定'),
-                onPressed: () => Navigator.of(c).pop(),
-              ),
-            ],
-          ),
+    return Padding(
+      padding: padding,
+      child: Center(
+        child: Text(
+          '・$title・',
+          style: Theme.of(context).textTheme.bodyText1,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
-    );
-  }
-}
-
-class CheckBoxDialogOption extends StatefulWidget {
-  const CheckBoxDialogOption({
-    Key? key,
-    required this.initialValue,
-    required this.onChanged,
-    required this.text,
-  }) : super(key: key);
-
-  final bool initialValue;
-  final void Function(bool) onChanged;
-  final String text;
-
-  @override
-  State<CheckBoxDialogOption> createState() => _CheckBoxDialogOptionState();
-}
-
-class _CheckBoxDialogOptionState extends State<CheckBoxDialogOption> {
-  late bool _value = widget.initialValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconTextDialogOption(
-      icon: AbsorbPointer(
-        absorbing: true,
-        child: Checkbox(
-          value: _value,
-          onChanged: (_) {},
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity(horizontal: -4, vertical: -4),
-        ),
-      ),
-      text: Text(widget.text),
-      onPressed: () {
-        _value = !_value;
-        if (mounted) setState(() {});
-        widget.onChanged.call(_value);
-      },
     );
   }
 }

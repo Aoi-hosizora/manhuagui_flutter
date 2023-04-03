@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -36,11 +39,13 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     widget.action?.removeAction();
     _controller.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
   final _data = <TinyManga>[];
   var _total = 0;
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -49,6 +54,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     });
     _total = result.data.total;
     if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -59,8 +65,9 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      body: PaginationListView<TinyManga>(
+      body: PaginationDataView<TinyManga>(
         data: _data,
+        style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
         getData: ({indicator}) => _getData(page: indicator),
         scrollController: _controller,
         paginationSetting: PaginationSetting(
@@ -74,7 +81,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
           scrollbarCrossAxisMargin: 2,
           placeholderSetting: PlaceholderSetting().copyWithChinese(),
           onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-          refreshFirst: true,
+          refreshFirst: true /* <<< refresh first */,
           clearWhenRefresh: false,
           clearWhenError: false,
           updateOnlyIfNotEmpty: false,
@@ -85,12 +92,22 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
           },
         ),
         separator: Divider(height: 0, thickness: 1),
-        itemBuilder: (c, _, item) => TinyMangaLineView(manga: item),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 0.0,
+          mainAxisSpacing: 0.0,
+          childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+        ),
+        itemBuilder: (c, _, item) => TinyMangaLineView(
+          manga: item,
+          flags: _flagStorage.getFlags(mangaId: item.mid),
+          twoColumns: AppSetting.instance.ui.showTwoColumns,
+        ),
         extra: UpdatableDataViewExtraWidgets(
           innerTopWidgets: [
             ListHintView.textText(
-              leftText: '30天内更新的漫画',
-              rightText: '共 $_total 部',
+              leftText: '最近更新的漫画',
+              rightText: '共 $_total 部 (30天内)',
             ),
           ],
         ),

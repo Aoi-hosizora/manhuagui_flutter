@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/category.dart';
-import 'package:manhuagui_flutter/page/genre.dart';
+import 'package:manhuagui_flutter/page/sep_genre.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 
-/// 漫画类别列表，在 [RecommendSubPage] 使用
+/// 漫画剧情类别列表，在 [RecommendSubPage] 使用
 class GenreChipListView extends StatelessWidget {
   const GenreChipListView({
     Key? key,
     required this.genres,
   }) : super(key: key);
 
-  final List<Category> genres;
+  final List<TinyCategory> genres;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class GenreChipListView extends StatelessWidget {
                   backgroundColor: Colors.deepOrange[50],
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   label: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 1),
+                    padding: EdgeInsets.only(left: 1, right: 1, bottom: 1),
                     child: Text('#${genre.title}'),
                   ),
                   shape: StadiumBorder(
@@ -44,8 +44,8 @@ class GenreChipListView extends StatelessWidget {
                 onTap: () => Navigator.of(context).push(
                   CustomPageRoute(
                     context: context,
-                    builder: (c) => GenrePage(
-                      genre: genre.toTiny(),
+                    builder: (c) => SepGenrePage(
+                      genre: genre,
                     ),
                   ),
                 ),

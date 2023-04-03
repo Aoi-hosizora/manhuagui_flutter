@@ -108,15 +108,6 @@ class _LogConsolePageState extends State<LogConsolePage> {
         leading: AppBarActionButton.leading(context: context),
         actions: [
           AppBarActionButton(
-            icon: const Icon(Icons.delete),
-            tooltip: '清空日志',
-            onPressed: () {
-              _filteredBuffer.clear();
-              LogConsolePage._eventBuffer.clear();
-              if (mounted) setState(() {});
-            },
-          ),
-          AppBarActionButton(
             icon: const Icon(Icons.ios_share),
             tooltip: '导出日志',
             onPressed: () => showDialog(
@@ -137,7 +128,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     text: const Text('仅复制过滤后的日志'),
                     onPressed: () async {
                       Navigator.of(c).pop();
-                      var logs = _filteredBuffer.map((e) => e.plainText).join('\n');
+                      var logs = _filteredBuffer.map((e) => e.plainText).join('\n').trim();
                       await copyText(logs, showToast: false);
                       Fluttertoast.showToast(msg: '调试日志已复制');
                     },
@@ -145,6 +136,15 @@ class _LogConsolePageState extends State<LogConsolePage> {
                 ],
               ),
             ),
+          ),
+          AppBarActionButton(
+            icon: const Icon(Icons.delete),
+            tooltip: '清空日志',
+            onPressed: () {
+              _filteredBuffer.clear();
+              LogConsolePage._eventBuffer.clear();
+              if (mounted) setState(() {});
+            },
           ),
         ],
       ),
@@ -170,8 +170,8 @@ class _LogConsolePageState extends State<LogConsolePage> {
                         child: SizedBox(
                           width: 2000,
                           child: SelectableText(
-                            _filteredBuffer.map((el) => el.plainText).join('\n'),
-                            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontFamily: 'monospace'),
+                            _filteredBuffer.map((el) => el.plainText).join('\n') + ('\n' * 10),
+                            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12.5, fontFamily: 'monospace'),
                           ),
                         ),
                       ),

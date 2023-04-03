@@ -4,14 +4,14 @@ import 'dart:io';
 import 'package:basic_utils/basic_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/result.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 enum ErrorType { networkError, statusError, resultError, otherError }
 
 class ErrorMessage {
-  const ErrorMessage(this.type, this.error, this.stack, this.text, [this.response, this.serviceCode, this.detail, this.casting, this.function]);
+  const ErrorMessage(this.type, this.error, this.stack, this.text, [this.response, this.serviceCode, this.detail, this.casting, this.special, this.function]);
 
   const ErrorMessage.network(dynamic error, StackTrace stack, String text) //
       : this(ErrorType.networkError, error, stack, text);
@@ -22,8 +22,8 @@ class ErrorMessage {
   const ErrorMessage.result(dynamic error, StackTrace stack, String text, {Response? response, int? serviceCode, dynamic detail}) //
       : this(ErrorType.resultError, error, stack, text, response, serviceCode, detail);
 
-  const ErrorMessage.other(dynamic error, StackTrace stack, String text, {bool? casting, String? function}) //
-      : this(ErrorType.otherError, error, stack, text, null, null, null, casting, function);
+  const ErrorMessage.other(dynamic error, StackTrace stack, String text, {bool? casting, bool? special, String? function}) //
+      : this(ErrorType.otherError, error, stack, text, null, null, null, casting, special, function);
 
   final ErrorType type;
   final dynamic error;
@@ -34,10 +34,21 @@ class ErrorMessage {
   final int? serviceCode;
   final dynamic detail;
   final bool? casting;
+  final bool? special;
   final String? function;
 
   @override
   String toString() => 'ErrorMessage [$type]: $text\n    Error: $error\n    Trace: $stack';
+}
+
+class SpecialException implements Exception {
+  const SpecialException([this.message]);
+
+  final String? message;
+
+  @override
+  String toString() => //
+      message == null ? 'Exception' : 'Exception: $message';
 }
 
 /// Wraps given error to [ErrorMessage].
@@ -113,17 +124,32 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
         return kv.value;
       }
     }
-    if (DEBUG_ERROR) {
-      return '网络连接异常: [DEBUG] $runtimeType: $s';
+    if (AppSetting.instance.other.showDebugErrorMsg) {
+      return '网络连接异常: [DEBUG] $runtimeType: $s'; // Network error
     }
-    return '未知网络错误 ($runtimeType)\n如果该错误反复出现，请向开发者反馈'; // Unknown network error
+    return '网络连接异常 ($runtimeType)\n如果该错误反复出现，请向开发者反馈'; // Unknown network error
   }
-
-  var secondFrame = Trace.from(StackTrace.current).frames.firstOrNull;
-  globalLogger.e('wrapError (${e.runtimeType})\n===> ${secondFrame?.member} ${secondFrame?.location}', e, s, true /* ignoreOutput */);
 
   print('┌─────────────────── WrapError ───────────────────┐');
   print('===> date: ${DateTime.now().toIso8601String()}');
+
+  void _logForConsole(List<String> lines) {
+    var message = [
+      '┌─────────────────── WrapError ───────────────────┐',
+      '===> date: ${DateTime.now().toIso8601String()}',
+      for (var l in lines)
+        l.split('\n').length > 10 //
+            ? (l.split('\n').sublist(0, 10 /* #0~#8 */).join('\n') + '\n...')
+            : l,
+      '└─────────────────── WrapError ───────────────────┘',
+    ].join('\n');
+    globalLogger.e(
+      message,
+      null, // error
+      null, // stackTrace
+      true, // ignoreOutput
+    );
+  }
 
   if (e is DioError && e.type == DioErrorType.other && !_networkRelated(e.error)) {
     s = e.stackTrace ?? StackTrace.empty;
@@ -163,6 +189,14 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       print('===> error: DioError [${e.type}]: ${e.error.toString()}');
       print('===> trace:\n${e.stackTrace}');
       print('└─────────────────── WrapError ───────────────────┘');
+      _logForConsole([
+        '===> uri: ${e.requestOptions.uri}',
+        '===> method: ${e.requestOptions.method}',
+        '===> type: ${ErrorType.networkError}',
+        '===> text: $text',
+        '===> error: DioError [${e.type}]: ${e.error.toString()}',
+        '===> trace:\n${e.stackTrace}',
+      ]);
       return ErrorMessage.network(e, e.stackTrace!, text);
     }
 
@@ -178,8 +212,19 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       }
       print('===> type: ${ErrorType.statusError}');
       print('===> text: $text');
+      print('===> code: ${response.statusCode}');
       print('===> error: $err');
+      print('===> trace:\n${e.stackTrace}');
       print('└─────────────────── WrapError ───────────────────┘');
+      _logForConsole([
+        '===> uri: ${e.requestOptions.uri}',
+        '===> method: ${e.requestOptions.method}',
+        '===> type: ${ErrorType.statusError}',
+        '===> text: $text',
+        '===> code: ${response.statusCode}',
+        '===> error: $err',
+        '===> trace:\n${e.stackTrace}',
+      ]);
       return ErrorMessage.status(err, e.stackTrace!, text, response: response);
     }
 
@@ -198,9 +243,21 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
       var detail = response.data['error'] is Map<String, dynamic> ? response.data['error']['detail'] : null;
       print('===> type: ${ErrorType.resultError}');
       print('===> text: $text');
+      print('===> code: ${response.statusCode} ${r.code}');
       print('===> detail: $detail');
       print('===> error: $err');
+      print('===> trace:\n${e.stackTrace}');
       print('└─────────────────── WrapError ───────────────────┘');
+      _logForConsole([
+        '===> uri: ${e.requestOptions.uri}',
+        '===> method: ${e.requestOptions.method}',
+        '===> type: ${ErrorType.resultError}',
+        '===> text: $text',
+        '===> code: ${response.statusCode} ${r.code}',
+        '===> error: $err',
+        '===> detail: $detail',
+        '===> trace:\n${e.stackTrace}',
+      ]);
       return ErrorMessage.result(err, e.stackTrace!, text, response: response, serviceCode: r.code, detail: detail);
     } catch (e, s) {
       // must goto ErrorType.otherError
@@ -219,6 +276,14 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     print('===> error: TimeoutException: after ${e.duration}: ${e.message}');
     print('===> trace:\n$s');
     print('└─────────────────── WrapError ───────────────────┘');
+    _logForConsole([
+      '===> uri: ?',
+      '===> method: ?',
+      '===> type: ${ErrorType.networkError}',
+      '===> text: $text',
+      '===> error: TimeoutException: after ${e.duration}: ${e.message}',
+      '===> trace:\n$s',
+    ]);
     return ErrorMessage.network(e, s, text);
   }
 
@@ -226,7 +291,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
   // ErrorType.networkError (network related exception)
   var message = Tuple1<String?>(null);
   if (_networkRelated(e, message)) {
-    var text = _translate(e.message, e.runtimeType.toString()); // ...
+    var text = _translate(e.toString(), e.runtimeType.toString()); // ...
     print('===> uri: ?');
     print('===> method: ?');
     print('===> type: ${ErrorType.networkError}');
@@ -234,13 +299,22 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     print('===> error: ${message.item ?? "${e.runtimeType}: $e"}');
     print('===> trace:\n$s');
     print('└─────────────────── WrapError ───────────────────┘');
+    _logForConsole([
+      '===> uri: ?',
+      '===> method: ?',
+      '===> type: ${ErrorType.networkError}',
+      '===> text: $text',
+      '===> error: ${message.item ?? "${e.runtimeType}: $e"}',
+      '===> trace:\n$s',
+    ]);
     return ErrorMessage.network(e, s, text);
   }
 
   // ======================================================================================================================
-  // ErrorType.otherError (_CastError, ...)
+  // ErrorType.otherError (_CastError, UnknownException, ...)
   String? readable;
   var casting = e.runtimeType.toString() == '_CastError';
+  var special = e is SpecialException;
   if (casting) {
     if (e.toString().contains('Null check operator used on a null value')) {
       readable = 'Got unexpected null value';
@@ -251,6 +325,8 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
         readable = 'Want "${match.group(2)}" but got "${match.group(1)}"';
       }
     }
+  } else if (special) {
+    readable = e.message ?? e.toString();
   }
   String? function;
   var frames = Trace.from(s).frames;
@@ -261,17 +337,23 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     }
   }
   String text;
-  if (DEBUG_ERROR) {
+  if (AppSetting.instance.other.showDebugErrorMsg) {
     readable ??= '${e.runtimeType}: $e';
-    text = '应用发生错误: [DEBUG] $readable, ${function ?? '<?>'}'; // Application error
+    text = '应用发生错误: [DEBUG] $readable' + (special ? '' : ', ${function ?? '<line: ?>'}'); // Application error
   } else {
     readable ??= e.runtimeType.toString();
-    text = '应用发生错误 ($readable)\n如果该错误反复出现，请向开发者反馈';
+    text = '应用发生错误 ($readable)\n如果该错误反复出现，请向开发者反馈'; // Application error
   }
   print('===> type: ${ErrorType.otherError}');
   print('===> text: $text');
   print('===> error: ${e.runtimeType}: $e');
   print('===> trace:\n$s');
   print('└─────────────────── WrapError ───────────────────┘');
-  return ErrorMessage.other(e, s, text, casting: casting, function: function);
+  _logForConsole([
+    '===> type: ${ErrorType.otherError}',
+    '===> text: $text',
+    '===> error: ${e.runtimeType}: $e',
+    '===> trace:\n$s',
+  ]);
+  return ErrorMessage.other(e, s, text, casting: casting, special: special, function: function);
 }

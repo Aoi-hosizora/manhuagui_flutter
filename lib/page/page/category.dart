@@ -20,28 +20,30 @@ class CategorySubPage extends StatefulWidget {
 }
 
 class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProviderStateMixin {
-  late final _controller = TabController(length: _tabs.length, vsync: this);
-  var _selectedIndex = 0;
+  late final _controller = TabController(length: 2, vsync: this);
+  late final _keys = List.generate(2, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(2, (_) => ActionController());
   late final _tabs = [
-    Tuple2('类别', GenreSubPage(action: _actions[0])),
-    Tuple2('漫画作者', AuthorSubPage(action: _actions[1])),
+    Tuple2('类别', GenreSubPage(key: _keys[0], action: _actions[0])),
+    Tuple2('漫画作者', AuthorSubPage(key: _keys[1], action: _actions[1])),
   ];
-  VoidCallback? _cancelHandler;
+  var _currentPageIndex = 0; // for app bar actions only
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    _cancelHandler = EventBusManager.instance.listen<ToGenreRequestedEvent>((_) {
-      _controller.animateTo(0);
-      _selectedIndex = 0;
-    });
+    _actions[0].addAction('updateSubPage', () => mountedSetState(() {})); // for genre page
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
+      _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
+      if (mounted) setState(() {});
+    }));
   }
 
   @override
   void dispose() {
-    _cancelHandler?.call();
+    _cancelHandlers.forEach((c) => c.call());
     widget.action?.removeAction();
     _controller.dispose();
     _actions.forEach((a) => a.dispose());
@@ -56,31 +58,40 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
           controller: _controller,
           isScrollable: true,
           indicatorSize: TabBarIndicatorSize.label,
-          tabs: _tabs
-              .map(
-                (t) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    t.item1,
-                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                  ),
+          tabs: [
+            for (var t in _tabs)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 5),
+                child: Text(
+                  t.item1,
+                  style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white, fontSize: 16),
                 ),
-              )
-              .toList(),
+              ),
+          ],
           onTap: (idx) {
-            if (idx == _selectedIndex) {
+            if (!_controller.indexIsChanging) {
               _actions[idx].invoke();
-            } else {
-              _selectedIndex = idx;
             }
           },
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
+          if (_currentPageIndex == 0 && _actions[0].invoke('ifNeedBack') == true)
+            AppBarActionButton(
+              key: ValueKey('CategorySubPage_AppBarActionButton_Back'),
+              icon: Icon(Icons.apps),
+              tooltip: '返回类别列表',
+              onPressed: () => _actions[0].invoke('back'),
+            ),
+          if (_currentPageIndex == 1)
+            AppBarActionButton(
+              key: ValueKey('CategorySubPage_AppBarActionButton_Find'),
+              icon: Icon(Icons.person_search),
+              tooltip: '寻找作者',
+              onPressed: () => _actions[1].invoke('find'),
+            ),
           AppBarActionButton(
+            key: ValueKey('CategorySubPage_AppBarActionButton_Search'),
             icon: Icon(Icons.search),
             tooltip: '搜索漫画',
             onPressed: () => Navigator.of(context).push(
@@ -92,10 +103,19 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
           ),
         ],
       ),
-      body: TabBarView(
-        controller: _controller,
-        physics: DefaultScrollPhysics.of(context),
-        children: _tabs.map((t) => t.item2).toList(),
+      body: PageChangedListener(
+        callPageChangedAtEnd: false,
+        onPageChanged: (i) {
+          if (!_controller.indexIsChanging /* for `swipe manually` */ || i == _controller.index /* for `select tabBar` */) {
+            _currentPageIndex = i;
+            if (mounted) setState(() {});
+          }
+        },
+        child: TabBarView(
+          controller: _controller,
+          physics: DefaultScrollPhysics.of(context),
+          children: _tabs.map((t) => t.item2).toList(),
+        ),
       ),
     );
   }

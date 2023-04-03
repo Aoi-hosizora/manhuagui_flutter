@@ -1,4 +1,4 @@
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,19 +6,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppSettingPrefs {
   AppSettingPrefs._();
 
-  static List<TypedKey> get keys => [...viewSettingKeys, ...dlSettingKeys, ...otherSettingKeys];
+  static List<TypedKey> get keys => [...viewSettingKeys, ...dlSettingKeys, ...uiSettingKeys, ...otherSettingKeys];
 
-  static Future<void> loadAllSettings() async {
-    await loadViewSetting();
-    await loadDlSetting();
-    await loadOtherSetting();
+  static Future<void> loadAllSettings({bool alsoFireEvent = true}) async {
+    var view = await _loadViewSetting();
+    var dl = await _loadDlSetting();
+    var ui = await _loadUiSetting();
+    var other = await _loadOtherSetting();
+    AppSetting.instance.update(view: view, dl: dl, ui: ui, other: other, alsoFireEvent: alsoFireEvent);
   }
 
   static Future<void> saveAllSettings() async {
     await saveViewSetting();
     await saveDlSetting();
+    await saveUiSetting();
     await saveOtherSetting();
   }
+
+  // ============
+  // view setting
+  // ============
 
   static const _viewDirectionKey = IntKey('AppSettingPrefs_viewDirection');
   static const _showPageHintKey = BoolKey('AppSettingPrefs_showPageHint');
@@ -29,13 +36,29 @@ class AppSettingPrefs {
   static const _keepScreenOnKey = BoolKey('AppSettingPrefs_keepScreenOn');
   static const _fullscreenKey = BoolKey('AppSettingPrefs_fullscreen');
   static const _preloadCountKey = IntKey('AppSettingPrefs_preloadCount');
+  static const _pageNoPositionKey = IntKey('AppSettingPrefs_pageNoPosition');
+  static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
+  static const _keepAppBarWhenReplaceKey = BoolKey('AppSettingPrefs_keepAppBarWhenReplace');
 
-  static List<TypedKey> get viewSettingKeys => [_viewDirectionKey, _showPageHintKey, _showClockKey, _showNetworkKey, _showBatteryKey, _enablePageSpaceKey, _keepScreenOnKey, _fullscreenKey, _preloadCountKey];
+  static List<TypedKey> get viewSettingKeys => [
+        _viewDirectionKey,
+        _showPageHintKey,
+        _showClockKey,
+        _showNetworkKey,
+        _showBatteryKey,
+        _enablePageSpaceKey,
+        _keepScreenOnKey,
+        _fullscreenKey,
+        _preloadCountKey,
+        _pageNoPositionKey,
+        _hideAppBarWhenEnterKey,
+        _keepAppBarWhenReplaceKey,
+      ];
 
-  static Future<void> loadViewSetting() async {
+  static Future<ViewSetting> _loadViewSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var def = ViewSetting.defaultSetting;
-    var setting = ViewSetting(
+    return ViewSetting(
       viewDirection: ViewDirectionExtension.fromInt(prefs.safeGet<int>(_viewDirectionKey) ?? def.viewDirection.toInt()),
       showPageHint: prefs.safeGet<bool>(_showPageHintKey) ?? def.showPageHint,
       showClock: prefs.safeGet<bool>(_showClockKey) ?? def.showClock,
@@ -45,8 +68,10 @@ class AppSettingPrefs {
       keepScreenOn: prefs.safeGet<bool>(_keepScreenOnKey) ?? def.keepScreenOn,
       fullscreen: prefs.safeGet<bool>(_fullscreenKey) ?? def.fullscreen,
       preloadCount: prefs.safeGet<int>(_preloadCountKey) ?? def.preloadCount,
+      pageNoPosition: PageNoPositionExtension.fromInt(prefs.safeGet<int>(_pageNoPositionKey) ?? def.pageNoPosition.toInt()),
+      hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
+      keepAppBarWhenReplace: prefs.safeGet<bool>(_keepAppBarWhenReplaceKey) ?? def.keepAppBarWhenReplace,
     );
-    AppSetting.instance.update(view: setting);
   }
 
   static Future<void> saveViewSetting() async {
@@ -61,25 +86,39 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_keepScreenOnKey, setting.keepScreenOn);
     await prefs.safeSet<bool>(_fullscreenKey, setting.fullscreen);
     await prefs.safeSet<int>(_preloadCountKey, setting.preloadCount);
+    await prefs.safeSet<int>(_pageNoPositionKey, setting.pageNoPosition.toInt());
+    await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
+    await prefs.safeSet<bool>(_keepAppBarWhenReplaceKey, setting.keepAppBarWhenReplace);
   }
+
+  // ==========
+  // dl setting
+  // ==========
 
   static const _invertDownloadOrderKey = BoolKey('AppSettingPrefs_invertDownloadOrder');
   static const _defaultToDeleteFilesKey = BoolKey('AppSettingPrefs_defaultToDeleteFiles');
   static const _downloadPagesTogetherKey = IntKey('AppSettingPrefs_downloadPagesTogether');
   static const _defaultToOnlineModeKey = BoolKey('AppSettingPrefs_defaultToOnlineMode');
+  static const _usingDownloadedPageKey = BoolKey('AppSettingPrefs_usingDownloadedPage');
 
-  static List<TypedKey> get dlSettingKeys => [_invertDownloadOrderKey, _defaultToDeleteFilesKey, _downloadPagesTogetherKey, _defaultToOnlineModeKey];
+  static List<TypedKey> get dlSettingKeys => [
+        _invertDownloadOrderKey,
+        _defaultToDeleteFilesKey,
+        _downloadPagesTogetherKey,
+        _defaultToOnlineModeKey,
+        _usingDownloadedPageKey,
+      ];
 
-  static Future<void> loadDlSetting() async {
+  static Future<DlSetting> _loadDlSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var def = DlSetting.defaultSetting;
-    var setting = DlSetting(
+    return DlSetting(
       invertDownloadOrder: prefs.safeGet<bool>(_invertDownloadOrderKey) ?? def.invertDownloadOrder,
       defaultToDeleteFiles: prefs.safeGet<bool>(_defaultToDeleteFilesKey) ?? def.defaultToDeleteFiles,
       downloadPagesTogether: prefs.safeGet<int>(_downloadPagesTogetherKey) ?? def.downloadPagesTogether,
       defaultToOnlineMode: prefs.safeGet<bool>(_defaultToOnlineModeKey) ?? def.defaultToOnlineMode,
+      usingDownloadedPage: prefs.safeGet<bool>(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
     );
-    AppSetting.instance.update(dl: setting);
   }
 
   static Future<void> saveDlSetting() async {
@@ -89,31 +128,120 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_defaultToDeleteFilesKey, setting.defaultToDeleteFiles);
     await prefs.safeSet<int>(_downloadPagesTogetherKey, setting.downloadPagesTogether);
     await prefs.safeSet<bool>(_defaultToOnlineModeKey, setting.defaultToOnlineMode);
+    await prefs.safeSet<bool>(_usingDownloadedPageKey, setting.usingDownloadedPage);
   }
+
+  // ==========
+  // ui setting
+  // ==========
+
+  static const _showTwoColumnsKey = BoolKey('AppSettingPrefs_showTwoColumns');
+  static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
+  static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
+  static const _enableCornerIconsKey = BoolKey('AppSettingPrefs_enableCornerIcons');
+  static const _showMangaReadIconKey = BoolKey('AppSettingPrefs_showMangaReadIcon');
+  static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
+  static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
+  static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
+  static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
+  static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
+  static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
+  static const _homepageFavoriteKey = IntKey('AppSettingPrefs_homepageFavorite');
+  static const _homepageRefreshDataKey = IntKey('AppSettingPrefs_homepageRefreshData');
+  static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
+  static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
+
+  static List<TypedKey> get uiSettingKeys => [
+        _showTwoColumnsKey,
+        _defaultMangaOrderKey,
+        _defaultAuthorOrderKey,
+        _enableCornerIconsKey,
+        _showMangaReadIconKey,
+        _regularGroupRowsKey,
+        _otherGroupRowsKey,
+        _allowErrorToastKey,
+        _overviewLoadAllKey,
+        _includeUnreadInHomeKey,
+        _audienceMangaRowsKey,
+        _homepageFavoriteKey,
+        _homepageRefreshDataKey,
+        _clickToSearchKey,
+        _alwaysOpenNewListPageKey,
+      ];
+
+  static Future<UiSetting> _loadUiSetting() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    var def = UiSetting.defaultSetting;
+    return UiSetting(
+      showTwoColumns: prefs.safeGet<bool>(_showTwoColumnsKey) ?? def.showTwoColumns,
+      defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
+      defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
+      enableCornerIcons: prefs.safeGet<bool>(_enableCornerIconsKey) ?? def.enableCornerIcons,
+      showMangaReadIcon: prefs.safeGet<bool>(_showMangaReadIconKey) ?? def.showMangaReadIcon,
+      regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
+      otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
+      allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
+      overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
+      includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
+      audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
+      homepageFavorite: HomepageFavoriteExtension.fromInt(prefs.safeGet<int>(_homepageFavoriteKey) ?? def.homepageFavorite.toInt()),
+      homepageRefreshData: HomepageRefreshDatarExtension.fromInt(prefs.safeGet<int>(_homepageRefreshDataKey) ?? def.homepageRefreshData.toInt()),
+      clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
+      alwaysOpenNewListPage: prefs.safeGet<bool>(_alwaysOpenNewListPageKey) ?? def.alwaysOpenNewListPage,
+    );
+  }
+
+  static Future<void> saveUiSetting() async {
+    final prefs = await PrefsManager.instance.loadPrefs();
+    var setting = AppSetting.instance.ui;
+    await prefs.safeSet<bool>(_showTwoColumnsKey, setting.showTwoColumns);
+    await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
+    await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
+    await prefs.safeSet<bool>(_enableCornerIconsKey, setting.enableCornerIcons);
+    await prefs.safeSet<bool>(_showMangaReadIconKey, setting.showMangaReadIcon);
+    await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
+    await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
+    await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
+    await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
+    await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
+    await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
+    await prefs.safeSet<int>(_homepageFavoriteKey, setting.homepageFavorite.toInt());
+    await prefs.safeSet<int>(_homepageRefreshDataKey, setting.homepageRefreshData.toInt());
+    await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
+    await prefs.safeSet<bool>(_alwaysOpenNewListPageKey, setting.alwaysOpenNewListPage);
+  }
+
+  // =============
+  // other setting
+  // =============
 
   static const _timeoutBehaviorKey = IntKey('AppSettingPrefs_timeoutBehavior');
   static const _dlTimeoutBehaviorKey = IntKey('AppSettingPrefs_dlTimeoutBehavior');
+  static const _imgTimeoutBehaviorKey = IntKey('AppSettingPrefs_imgTimeoutBehavior');
   static const _enableLoggerKey = BoolKey('AppSettingPrefs_enableLogger');
-  static const _usingDownloadedPageKey = BoolKey('AppSettingPrefs_usingDownloadedPage');
-  static const _defaultMangaOrderKey = IntKey('AppSettingPrefs_defaultMangaOrder');
-  static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
-  static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
+  static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
+  static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
 
-  static List<TypedKey> get otherSettingKeys => [_timeoutBehaviorKey, _dlTimeoutBehaviorKey, _enableLoggerKey, _usingDownloadedPageKey, _defaultMangaOrderKey, _defaultAuthorOrderKey, _clickToSearchKey];
+  static List<TypedKey> get otherSettingKeys => [
+        _timeoutBehaviorKey,
+        _dlTimeoutBehaviorKey,
+        _imgTimeoutBehaviorKey,
+        _enableLoggerKey,
+        _showDebugErrorMsgKey,
+        _useNativeShareSheetKey,
+      ];
 
-  static Future<void> loadOtherSetting() async {
+  static Future<OtherSetting> _loadOtherSetting() async {
     final prefs = await PrefsManager.instance.loadPrefs();
     var def = OtherSetting.defaultSetting;
-    var setting = OtherSetting(
+    return OtherSetting(
       timeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_timeoutBehaviorKey) ?? def.timeoutBehavior.toInt()),
       dlTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_dlTimeoutBehaviorKey) ?? def.dlTimeoutBehavior.toInt()),
+      imgTimeoutBehavior: TimeoutBehaviorExtension.fromInt(prefs.safeGet<int>(_imgTimeoutBehaviorKey) ?? def.imgTimeoutBehavior.toInt()),
       enableLogger: prefs.safeGet<bool>(_enableLoggerKey) ?? def.enableLogger,
-      usingDownloadedPage: prefs.safeGet<bool>(_usingDownloadedPageKey) ?? def.usingDownloadedPage,
-      defaultMangaOrder: MangaOrderExtension.fromInt(prefs.safeGet<int>(_defaultMangaOrderKey) ?? def.defaultMangaOrder.toInt()),
-      defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
-      clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
+      showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
+      useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
     );
-    AppSetting.instance.update(other: setting);
   }
 
   static Future<void> saveOtherSetting() async {
@@ -121,12 +249,15 @@ class AppSettingPrefs {
     var setting = AppSetting.instance.other;
     await prefs.safeSet<int>(_timeoutBehaviorKey, setting.timeoutBehavior.toInt());
     await prefs.safeSet<int>(_dlTimeoutBehaviorKey, setting.dlTimeoutBehavior.toInt());
+    await prefs.safeSet<int>(_imgTimeoutBehaviorKey, setting.imgTimeoutBehavior.toInt());
     await prefs.safeSet<bool>(_enableLoggerKey, setting.enableLogger);
-    await prefs.safeSet<bool>(_usingDownloadedPageKey, setting.usingDownloadedPage);
-    await prefs.safeSet<int>(_defaultMangaOrderKey, setting.defaultMangaOrder.toInt());
-    await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
-    await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
+    await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
+    await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);
   }
+
+  // ===
+  // ...
+  // ===
 
   static Future<void> upgradeFromVer1To2(SharedPreferences prefs) async {
     var viewDef = ViewSetting.defaultSetting;
@@ -155,11 +286,11 @@ class AppSettingPrefs {
     await prefs.safeMigrate<bool>('DlSettingPrefs_invertDownloadOrder', _invertDownloadOrderKey, defaultValue: dlDef.invertDownloadOrder);
     await prefs.safeMigrate<bool>('DlSettingPrefs_defaultToDeleteFiles', _defaultToDeleteFilesKey, defaultValue: dlDef.defaultToDeleteFiles);
     await prefs.safeMigrate<int>('DlSettingPrefs_downloadPagesTogether', _downloadPagesTogetherKey, defaultValue: dlDef.downloadPagesTogether);
+    await prefs.safeMigrate<bool>('GlbSetting_usingDownloadedPage', _usingDownloadedPageKey, defaultValue: dlDef.usingDownloadedPage);
 
     var otherDef = OtherSetting.defaultSetting;
     await prefs.safeMigrate<int>('GlbSetting_timeoutBehavior', _timeoutBehaviorKey, defaultValue: otherDef.timeoutBehavior.toInt());
     await prefs.safeMigrate<int>('GlbSetting_dlTimeoutBehavior', _dlTimeoutBehaviorKey, defaultValue: otherDef.dlTimeoutBehavior.toInt());
     await prefs.safeMigrate<bool>('GlbSetting_enableLogger', _enableLoggerKey, defaultValue: otherDef.enableLogger);
-    await prefs.safeMigrate<bool>('GlbSetting_usingDownloadedPage', _usingDownloadedPageKey, defaultValue: otherDef.usingDownloadedPage);
   }
 }

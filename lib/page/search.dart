@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:manhuagui_flutter/model/app_setting.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
-import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/small_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -29,6 +33,7 @@ class _SearchPageState extends State<SearchPage> {
   final _scrollController = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _fabController = AnimatedFabController();
+  final _cancelHandlers = <VoidCallback>[];
 
   String? _keyword;
 
@@ -44,26 +49,31 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      await Future.delayed(Duration(milliseconds: 300)); // faster than transitionDuration 400ms
+      await Future.delayed(Duration(milliseconds: 300)); // open delay, faster than route's transitionDuration, which equals to 400ms
       _searchController.open();
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
   }
 
   @override
   void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
     _searchController.dispose();
     _searchScrollController.dispose();
     _scrollController.dispose();
     _fabController.dispose();
+    _flagStorage.dispose();
     super.dispose();
   }
 
   final _data = <SmallManga>[];
   var _total = 0;
-  var _currOrder = AppSetting.instance.other.defaultMangaOrder;
-  var _lastOrder = AppSetting.instance.other.defaultMangaOrder;
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  final _histories = <String>[]; // search history
   var _getting = false;
-  final _histories = <String>[];
+
+  var _currOrder = AppSetting.instance.ui.defaultMangaOrder;
+  var _lastOrder = AppSetting.instance.ui.defaultMangaOrder;
 
   Future<PagedList<SmallManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
@@ -72,6 +82,7 @@ class _SearchPageState extends State<SearchPage> {
     });
     _total = result.data.total;
     if (mounted) setState(() {});
+    _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
 
@@ -168,8 +179,9 @@ class _SearchPageState extends State<SearchPage> {
               child: MediaQuery.removePadding(
                 context: context,
                 removeTop: true,
-                child: PaginationListView<SmallManga>(
+                child: PaginationDataView<SmallManga>(
                   key: _pdvKey,
+                  style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
                   data: _data,
                   getData: ({indicator}) => _getData(page: indicator),
                   scrollController: _scrollController,
@@ -178,7 +190,7 @@ class _SearchPageState extends State<SearchPage> {
                     nothingIndicator: 0,
                   ),
                   setting: UpdatableDataViewSetting(
-                    padding: EdgeInsets.zero,
+                    padding: EdgeInsets.symmetric(vertical: 0),
                     interactiveScrollbar: true,
                     scrollbarMainAxisMargin: 2,
                     scrollbarCrossAxisMargin: 2,
@@ -189,7 +201,7 @@ class _SearchPageState extends State<SearchPage> {
                       nothingText: _q == null ? '请在搜索框中输入关键字...' : '无内容',
                     ),
                     onPlaceholderStateChanged: (_, __) => _fabController.hide(),
-                    refreshFirst: false,
+                    refreshFirst: false /* not to refresh first for search list */,
                     clearWhenRefresh: true,
                     clearWhenError: false,
                     updateOnlyIfNotEmpty: false,
@@ -207,7 +219,17 @@ class _SearchPageState extends State<SearchPage> {
                     },
                   ),
                   separator: Divider(height: 0, thickness: 1),
-                  itemBuilder: (c, _, item) => TinyMangaLineView(manga: item.toTiny()),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 0.0,
+                    mainAxisSpacing: 0.0,
+                    childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+                  ),
+                  itemBuilder: (c, _, item) => SmallMangaLineView(
+                    manga: item,
+                    flags: _flagStorage.getFlags(mangaId: item.mid),
+                    twoColumns: AppSetting.instance.ui.showTwoColumns,
+                  ),
                   extra: UpdatableDataViewExtraWidgets(
                     innerTopWidgets: [
                       ListHintView.textWidget(
@@ -271,7 +293,7 @@ class _SearchPageState extends State<SearchPage> {
                   transitionDuration: Duration(milliseconds: 400),
                   transitionCurve: Curves.easeInOut,
                   transition: CircularFloatingSearchBarTransition(),
-                  hint: '输入标题名称、标题拼音或漫画 mid 搜索漫画',
+                  hint: '输入漫画标题、作者名、mid 等搜索漫画',
                   hintStyle: Theme.of(context).textTheme.bodyText2?.copyWith(color: Theme.of(context).hintColor),
                   queryStyle: Theme.of(context).textTheme.bodyText2,
                   textInputType: TextInputType.text,
@@ -340,50 +362,51 @@ class _SearchPageState extends State<SearchPage> {
                       child: Column(
                         children: [
                           // ===================================================================
-                          if (_text.isNotEmpty && _text != _q)
+                          if (_text.isNotEmpty && _text != _q) // 输入的关键词不为空，且和当前的关键词不同
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 child: IconText(
-                                  icon: Icon(Icons.search, color: Colors.black45),
+                                  icon: Icon(Icons.search, color: Colors.deepOrange),
                                   text: Flexible(
-                                    child: Text('搜索 "$_text"', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    child: Text('搜索 "$_text"', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.deepOrange)),
                                   ),
                                 ),
                               ),
                               onTap: () => _search(), // => 搜索
                             ),
-                          if (_text.isNotEmpty && (int.tryParse(_text) ?? 0) > 0)
+                          if (_text.isNotEmpty && (int.tryParse(_text) ?? 0) > 0) // 输入的关键词不为空，且是纯数字
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 child: IconText(
-                                  icon: Icon(Icons.arrow_forward, color: Colors.black45),
+                                  icon: Icon(Icons.arrow_forward, color: Colors.deepOrange),
                                   text: Flexible(
-                                    child: Text('访问漫画 "mid: $_text"', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    child: Text('查看漫画 "mid: $_text"', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.deepOrange)),
                                   ),
                                 ),
                               ),
                               onTap: () => Navigator.of(context).push(
                                 CustomPageRoute(
                                   context: context,
-                                  builder: (c) => MangaPage(id: int.tryParse(_text)!, title: '漫画 mid: $_text', url: ''),
+                                  builder: (c) => MangaPage(id: int.tryParse(_text)!, title: '漫画 mid: $_text', url: 'https://www.manhuagui.com/comic/$_text'),
                                 ),
-                              ), // => 访问
+                              ), // => 查看漫画
                             ),
-                          if (_q != null)
+                          if (_q != null) // 当前已搜索
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                child: IconText.texts(
-                                  icon: Icon(Icons.arrow_back, color: Colors.black45),
-                                  texts: [
-                                    Text('返回 "'),
-                                    Flexible(
-                                      child: Text(_q!, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                    ),
-                                    Text('" 的搜索结果'),
-                                  ],
+                                child: DefaultTextStyle(
+                                  style: TextStyle(color: Colors.deepOrange),
+                                  child: IconText.texts(
+                                    icon: Icon(Icons.arrow_back, color: Colors.deepOrange),
+                                    texts: [
+                                      Text('返回 "'),
+                                      Flexible(child: Text(_q!, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                      Text('" 的搜索结果'),
+                                    ],
+                                  ),
                                 ),
                               ),
                               onTap: () => Navigator.of(context).maybePop(), // => 返回
@@ -402,15 +425,15 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                               onTap: () {
                                 _text = h; // => 候选
-                                if (AppSetting.instance.other.clickToSearch) {
+                                if (AppSetting.instance.ui.clickToSearch) {
                                   _search(); // => 搜索
                                 }
                               },
                               onLongPress: () => showDialog(
                                 context: context,
                                 builder: (c) => AlertDialog(
-                                  title: Text('删除搜索记录'),
-                                  content: Text('确定要删除 "$h" 吗？'),
+                                  title: Text('删除搜索历史'),
+                                  content: Text('是否删除 "$h" 搜索历史？'),
                                   actions: [
                                     TextButton(
                                       child: Text('删除'),
@@ -430,7 +453,7 @@ class _SearchPageState extends State<SearchPage> {
                               ), // => 删除
                             ),
                           // ===================================================================
-                          if (_histories.isEmpty)
+                          if (_histories.isEmpty && _q == null) // 历史为空且当前不在搜索
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
@@ -440,7 +463,7 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                               onTap: () {},
                             ),
-                          if (_histories.isNotEmpty && _text.isEmpty)
+                          if (_histories.isNotEmpty && _text.isEmpty) // 历史不为空且当前没有输入
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
@@ -452,7 +475,7 @@ class _SearchPageState extends State<SearchPage> {
                                 context: context,
                                 builder: (c) => AlertDialog(
                                   title: Text('清空历史记录'),
-                                  content: Text('确定要清空所有历史记录吗？'),
+                                  content: Text('是否清空所有历史记录？'),
                                   actions: [
                                     TextButton(
                                       child: Text('清空'),

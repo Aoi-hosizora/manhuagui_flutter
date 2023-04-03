@@ -34,6 +34,9 @@ class PrefsManager {
 
   Future<void> upgradePrefs(SharedPreferences prefs) async {
     var version = prefs.getVersion();
+    if (version > _newestVersion) {
+      throw Exception('downgrade prefs from $version to $_newestVersion !!!');
+    }
     if (version == _newestVersion) {
       return;
     }
