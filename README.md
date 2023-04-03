@@ -8,7 +8,7 @@
 
 ### Related repositories
 
-+ [Aoi-hosizora/manhuagui_api](https://github.com/Aoi-hosizora/manhuagui_api): The manhuagui backend used by this client, currently this repository is private.
++ [Aoi-hosizora/manhuagui_api](https://github.com/Aoi-hosizora/manhuagui_api): The manhuagui backend used by this client.
 + [Aoi-hosizora/flutter_ahlib](https://github.com/Aoi-hosizora/flutter_ahlib): A personal flutter widgets and utilities library, which is used in this project.
 
 ### Install
