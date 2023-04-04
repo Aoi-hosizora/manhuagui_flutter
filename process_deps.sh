@@ -34,7 +34,7 @@ fi
 if [ -f deps/photo_view/lib/reloadable_photo_view.dart ]; then
   echo "Ignore existed \"deps/photo_view/lib/reloadable_photo_view.dart\""
 else
-  curl -o deps/photo_view/lib/reloadable_photo_view.dart https://raw.githubusercontent.com/Aoi-hosizora/flutter_ahlib/dev.v1.3.0/lib/src/image/reloadable_photo_view.dart
+  curl -o deps/photo_view/lib/reloadable_photo_view.dart https://raw.githubusercontent.com/Aoi-hosizora/flutter_ahlib/v1.3.0/lib/src/image/reloadable_photo_view.dart
   sed -i "0,/this.errorBuilder,/s//this.errorBuilder,\n    this.customBuilder,/" deps/photo_view/lib/reloadable_photo_view.dart
   sed -i "0,/final ErrorPlaceholderBuilder? errorBuilder;/s//final ErrorPlaceholderBuilder? errorBuilder;\n\n  final Widget Function(BuildContext, Widget)? customBuilder;/" deps/photo_view/lib/reloadable_photo_view.dart
   sed -i "s/errorBuilder: widget.errorBuilder,/errorBuilder: widget.errorBuilder,\n        customBuilder: widget.customBuilder,/" deps/photo_view/lib/reloadable_photo_view.dart
