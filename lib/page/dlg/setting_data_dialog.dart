@@ -307,7 +307,7 @@ Future<void> showClearUnusedDlDialog({required BuildContext context}) async {
     return;
   }
 
-  await _showFakeProgressDialog(context, '清除图像缓存...');
+  await _showFakeProgressDialog(context, '清除无用的下载文件...');
   var result = await deleteUnusedFilesInDownloadDirectory();
   Navigator.of(context).pop(); // dismiss progress dialog
 

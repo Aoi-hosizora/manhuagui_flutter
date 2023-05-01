@@ -97,7 +97,7 @@ class ViewSetting {
   final int preloadCount; // 预加载页数
   final PageNoPosition pageNoPosition; // 每页显示额外页码
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
-  final bool keepAppBarWhenReplace; // 切换章节时保持标题栏
+  final bool keepAppBarWhenReplace; // 切换章节时保持标题栏 // TODO => 显示、隐藏、保持
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -334,9 +334,10 @@ class UiSetting {
   final bool allowErrorToast; // 允许弹出漫画错误提示
   final bool overviewLoadAll; // 章节一览页加载所有图片
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
+  // final bool homepageShowMoreManga; // 首页显示更多漫画 // TODO
   final int audienceRankingRows; // 首页受众排行榜显示行数
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
-  final HomepageRefreshData homepageRefreshData; // 首页需刷新的数据
+  final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为
   final bool clickToSearch; // 点击搜索历史立即搜索
   final bool alwaysOpenNewListPage; // 始终在新页面打开列表
 
@@ -485,11 +486,11 @@ extension HomepageRefreshDatarExtension on HomepageRefreshData {
   String toOptionTitle() {
     switch (this) {
       case HomepageRefreshData.onlyRecommend:
-        return '仅日排行和推荐';
+        return '仅刷新日排行、推荐漫画';
       case HomepageRefreshData.includeListIfEmpty:
-        return '日排行、空列表和推荐';
+        return '刷新日排行、空列表、推荐漫画';
       case HomepageRefreshData.allData:
-        return '首页所有数据';
+        return '刷新首页所有数据';
     }
   }
 

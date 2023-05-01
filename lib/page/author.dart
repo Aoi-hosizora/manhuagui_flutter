@@ -273,7 +273,10 @@ class _AuthorPageState extends State<AuthorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_data?.name ?? widget.name),
+        title: GestureDetector(
+          child: Text(_data?.name ?? widget.name),
+          onLongPress: () => copyText(_data?.name ?? widget.name, showToast: true), // TODO test
+        ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(

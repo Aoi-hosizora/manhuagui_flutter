@@ -220,8 +220,8 @@ class _DialogHelper {
               ),
             ),
             actions: [
-              TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).maybePop(true)),
-              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+              TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).maybePop(false)), // TODO test
             ],
           ),
         ),

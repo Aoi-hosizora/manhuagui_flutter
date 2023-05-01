@@ -105,7 +105,7 @@ void showPopupMenuForMangaList({
             if (!expandShelfOptions)
               IconTextDialogOption(
                 icon: Icon(MdiIcons.starCog),
-                text: Text('管理我的书架'),
+                text: Text('编辑我的书架'),
                 onPressed: () => _setState(() => expandShelfOptions = true),
               ),
             if (expandShelfOptions)
@@ -153,6 +153,8 @@ void showPopupMenuForMangaList({
                 ? helper.addFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromMangaPage: false)
                 : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
           ),
+
+          // TODO add 稍后阅读
 
           /// 历史
           if (mangaHistory != null)
@@ -230,7 +232,7 @@ void showPopupMenuForMangaToc({
   required List<MangaChapterGroup> chapterGroups,
   required void Function(MangaHistory history)? onHistoryUpdated,
   bool allowDeletingHistory = true,
-  void Function()? onReadChapterPressed, // => only for MangaViewerPage
+  void Function()? onReadChapterPressed, // => only for MangaViewerPage TODO offline ???
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
 }) async {
   var downloadEntity = await DownloadDao.getManga(mid: mangaId);
@@ -266,6 +268,13 @@ void showPopupMenuForMangaToc({
             popWhenPress: c,
             onPressed: onReadChapterPressed ?? // always turn to the first page here
                 () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: true),
+          ),
+        if (inDownloadTask)
+          IconTextDialogOption(
+            icon: Icon(Icons.import_contacts),
+            text: Text('离线阅读该章节'),
+            popWhenPress: c,
+            onPressed: () {}, // TODO offline
           ),
         IconTextDialogOption(
           icon: Icon(Icons.copy),
@@ -378,6 +387,8 @@ void showPopupMenuForSubscribing({
             onPressed: () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage),
           ),
 
+        // TODO add 稍后阅读
+
         /// 额外选项
         if (subscribeCount != null || favoriteManga != null) ...[
           Divider(height: 16, thickness: 1),
@@ -403,7 +414,8 @@ void showPopupMenuForSubscribing({
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               popWhenPress: c,
-              onPressed: () => helper.updateFavRemark(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+              onPressed: () => // TODO show first and then update
+                  helper.updateFavRemark(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
             ),
         ],
       ],
@@ -565,6 +577,14 @@ class _DialogHelper {
       group, // group
       addToTop, // order
     );
+  }
+
+  static Future<void> showFavoriteRemarkDialog({
+    required BuildContext context,
+    required String mangaTitle,
+    required String remark,
+  }) async {
+    // TODO show first and then edit
   }
 
   static Future<Tuple1<String>?> showEditFavoriteRemarkDialog({

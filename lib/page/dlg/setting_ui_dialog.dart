@@ -240,8 +240,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingComboBoxView<HomepageRefreshData>(
-          title: '首页需刷新的数据',
-          width: 175,
+          title: '首页下拉刷新行为',
+          width: 190, // TODO
           value: _homepageRefreshData,
           values: HomepageRefreshData.values,
           textBuilder: (s) => s.toOptionTitle(),

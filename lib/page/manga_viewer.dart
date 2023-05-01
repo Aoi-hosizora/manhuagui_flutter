@@ -1268,6 +1268,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   iconColor: Colors.white,
                                   disabledTextColor: Colors.grey[600],
                                   disabledIconColor: Colors.grey[600],
+                                  // TODO add multiple titles and options (use SimpleDialog)
+                                  // TODO long press to show dialog for detailed titles
+                                  // TODO referred to ViewExtraSubPage
                                   action1: ActionItem(
                                     text: !_isRightToLeft ? '上一章节' : '下一章节',
                                     icon: Icons.arrow_right_alt,

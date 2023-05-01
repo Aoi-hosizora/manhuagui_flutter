@@ -112,10 +112,12 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
       );
     }
 
+    // TODO long press to show dialog for detailed titles
+
     var prev = Expanded(
       child: _buildAction(
         text: widget.data.prevChapterId! != 0 ? '阅读上一章节' : '暂无上一章节',
-        subText: widget.data.prevChapterTitle!,
+        subText: widget.data.prevChapterTitle!, // TODO add multiple titles and options (use SimpleDialog)
         left: !widget.reverseScroll ? true : false,
         disable: widget.data.prevChapterId == 0,
         action: () => widget.toGotoChapter.call(true),
@@ -125,7 +127,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
     var next = Expanded(
       child: _buildAction(
         text: widget.data.nextChapterId! != 0 ? '阅读下一章节' : '暂无下一章节',
-        subText: widget.data.nextChapterTitle!,
+        subText: widget.data.nextChapterTitle!, // TODO add multiple titles and options (use SimpleDialog)
         left: !widget.reverseScroll ? false : true,
         disable: widget.data.nextChapterId == 0,
         action: () => widget.toGotoChapter.call(false),
@@ -302,16 +304,29 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Flexible(
-                          child: Text(
-                            '- ${widget.data.chapterTitle} -',
-                            style: Theme.of(context).textTheme.headline6?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Column(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '《${widget.data.mangaTitle}》', // TODO test
+                                style: Theme.of(context).textTheme.headline6,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Flexible(
+                              child: Text(
+                                '- ${widget.data.chapterTitle} -',
+                                style: Theme.of(context).textTheme.headline6?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

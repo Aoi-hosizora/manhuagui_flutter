@@ -421,6 +421,7 @@ class _SearchPageState extends State<SearchPage> {
                                   text: Flexible(
                                     child: Text(h, maxLines: 1, overflow: TextOverflow.ellipsis),
                                   ),
+                                  // TODO trailing icon when clickToSearch is false
                                 ),
                               ),
                               onTap: () {

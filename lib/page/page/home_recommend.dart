@@ -244,8 +244,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     }
   }
 
-  List<MangaRanking>? _qingnianRankings;
-  List<MangaRanking>? _shaonvRankings;
+  List<MangaRanking>? _qingnianRankings; // TODO modify-able
+  List<MangaRanking>? _shaonvRankings; // TODO modify-able
   DateTime? _qingnianRankingDateTime;
   DateTime? _shaonvRankingDateTime;
   var _qingnianRankingsError = '';
@@ -322,7 +322,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     }
   }
 
-  Widget _buildCollection(String error, MangaCollectionType type) {
+  Widget _buildCollection(MangaCollectionType type, {String? error}) {
     return Padding(
       padding: EdgeInsets.only(top: 12),
       child: MangaCollectionView(
@@ -334,7 +334,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         shelves: type == MangaCollectionType.shelves ? _shelves : null,
         favorites: type == MangaCollectionType.favorites ? _favorites : null,
         downloads: type == MangaCollectionType.downloads ? _downloads : null,
-        error: error,
+        error: error ?? '',
         username: !AuthManager.instance.logined ? null : AuthManager.instance.username,
         disableRefresh: type == MangaCollectionType.rankings || //
             (type == MangaCollectionType.recents && _updates == null) ||
@@ -469,13 +469,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     ],
                   ),
                 ),
-                _buildCollection('', MangaCollectionType.rankings), // 今日漫画排行榜
-                _buildCollection(_updatesError, MangaCollectionType.recents), // 最近更新的漫画
-                _buildCollection('', MangaCollectionType.histories), // 我的阅读历史
+                _buildCollection(MangaCollectionType.rankings), // 今日漫画排行榜 TODO refreshable
+                _buildCollection(MangaCollectionType.recents, error: _updatesError), // 最近更新的漫画
+                _buildCollection(MangaCollectionType.histories), // 我的阅读历史
                 _buildAudRanking(), // 漫画受众排行榜
-                _buildCollection(_shelvesError, MangaCollectionType.shelves), // 我的书架
-                _buildCollection('', MangaCollectionType.favorites), // 我的本地收藏
-                _buildCollection('', MangaCollectionType.downloads), // 漫画下载列表
+                // TODO add 稍后阅读
+                _buildCollection(MangaCollectionType.shelves, error: _shelvesError), // 我的书架
+                _buildCollection(MangaCollectionType.favorites), // 我的本地收藏
+                _buildCollection(MangaCollectionType.downloads), // 漫画下载列表
                 Padding(
                   padding: EdgeInsets.only(top: 12),
                   child: HomepageColumnView(

@@ -391,6 +391,7 @@ class _MangaPageState extends State<MangaPage> {
           // 已找到下一个章节
           var readNew = await showDialog<bool>(
             context: context,
+            // TODO use simple dialog rather alert dialog
             builder: (c) => AlertDialog(
               title: Text('继续阅读'),
               content: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否选择阅读下一章节 (${nextChapter.title})？'),
@@ -729,7 +730,10 @@ class _MangaPageState extends State<MangaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_data?.title ?? widget.title),
+        title: GestureDetector(
+          child: Text(_data?.title ?? widget.title),
+          onLongPress: () => copyText(_data?.title ?? widget.title, showToast: true), // TODO test
+        ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(

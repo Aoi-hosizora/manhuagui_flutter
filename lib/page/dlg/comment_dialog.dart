@@ -212,6 +212,9 @@ Future<AddedComment?> _showCommentDialog({
   }
 
   var content = controller.text.trim();
+  if (content == '') {
+    return null; // TODO test
+  }
   showDialog(
     context: context,
     barrierDismissible: false,

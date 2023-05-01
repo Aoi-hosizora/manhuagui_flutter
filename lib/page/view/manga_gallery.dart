@@ -68,6 +68,17 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   // current image index, exclude extra pages, start from 0.
   int get _currentImageIndex => (_currentPageIndex - 1).clamp(0, widget.imageCount - 1);
 
+  var _preloadPagesCount = 0; // set to zero firstly // TODO test
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(seconds: 2), () {
+      _preloadPagesCount = widget.preloadPagesCount;
+      if (mounted) setState(() {});
+    });
+  }
+
   Offset? _pointerDownPosition;
 
   void _onPointerDown(Offset pos) {
@@ -207,7 +218,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       return HorizontalGalleryView(
         key: _horizontalGalleryKey,
         imageCount: widget.imageCount,
-        preloadPagesCount: widget.preloadPagesCount,
+        preloadPagesCount: _preloadPagesCount,
         initialPage: widget.initialImageIndex + 1 /* include extra pages, start from 0 */,
         viewportFraction: widget.horizontalViewportFraction,
         reverse: widget.horizontalReverseScroll,
@@ -285,7 +296,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     return VerticalGalleryView(
       key: _verticalGalleryKey,
       imageCount: widget.imageCount,
-      preloadPagesCount: widget.preloadPagesCount,
+      preloadPagesCount: _preloadPagesCount,
       initialPage: widget.initialImageIndex + 1 /* include extra pages, start from 0 */,
       viewportPageSpace: widget.verticalViewportPageSpace,
       onPageChanged: (pageIndex) {

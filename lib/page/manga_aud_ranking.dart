@@ -63,7 +63,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
         interactive: true,
         mainAxisMargin: 2,
         crossAxisMargin: 2,
-        child: ListView(
+        child: ListView( // TODO change to use RefreshableDataView (also for dragging to refresh, and two columns), referred to RankingSubPage
           controller: _controller,
           padding: EdgeInsets.zero,
           physics: AlwaysScrollableScrollPhysics(),

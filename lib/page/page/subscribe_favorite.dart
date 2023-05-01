@@ -518,6 +518,19 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                     trailing: Text((_groupsLengths?[g.groupName] ?? 0).toString()),
                     selected: _currentGroup == g.groupName,
                     onTap: () => _switchGroup(g),
+                    onLongPress: () => showDialog(
+                      context: context,
+                      builder: (c) => SimpleDialog(
+                        title: Text(g.checkedGroupName),
+                        children: [
+                          IconTextDialogOption(
+                            icon: Icon(MdiIcons.folderMultipleOutline),
+                            text: Text('管理漫画收藏分组'), // TODO test
+                            onPressed: () => _manageGroups(),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   if (g.groupName != _groups!.last.groupName) //
                     Divider(height: 0, thickness: 1),
