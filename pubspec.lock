@@ -352,9 +352,9 @@ packages:
   flutter_ahlib:
     dependency: "direct main"
     description:
-      name: flutter_ahlib
-      url: "https://pub.flutter-io.cn"
-    source: hosted
+      path: "../flutter_ahlib"
+      relative: true
+    source: path
     version: "1.3.0"
   flutter_blurhash:
     dependency: transitive

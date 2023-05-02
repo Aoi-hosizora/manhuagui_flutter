@@ -275,7 +275,31 @@ class _AuthorPageState extends State<AuthorPage> {
       appBar: AppBar(
         title: GestureDetector(
           child: Text(_data?.name ?? widget.name),
-          onLongPress: () => copyText(_data?.name ?? widget.name, showToast: true), // TODO test
+          onLongPress: () => showDialog(
+            context: context,
+            builder: (c) => SimpleDialog(
+              title: Text(_data?.name ?? widget.name),
+              children: [
+                IconTextDialogOption(
+                  icon: Icon(Icons.copy),
+                  text: Text('复制标题'),
+                  onPressed: () {
+                    Navigator.of(c).pop();
+                    copyText(_data?.name ?? widget.name, showToast: true);
+                  },
+                ),
+                if (_data != null)
+                  IconTextDialogOption(
+                    icon: Icon(Icons.subject),
+                    text: Text('查看作者详情'),
+                    onPressed: () {
+                      Navigator.of(c).pop();
+                      Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => AuthorDetailPage(data: _data!)));
+                    },
+                  ),
+              ],
+            ),
+          ),
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [

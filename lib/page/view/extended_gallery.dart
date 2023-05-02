@@ -301,7 +301,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
             controller: _controller,
             padding: EdgeInsets.zero,
             physics: AlwaysScrollableScrollPhysics(),
-            cacheExtent: widget.preloadPagesCount < 1
+            cacheExtent: widget.preloadPagesCount < 1 // TODO improve cache extent logic
                 ? 0 //
                 : (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * (2 / 3) * widget.preloadPagesCount /* inaccuracy */,
             children: [

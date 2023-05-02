@@ -22,6 +22,7 @@ import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/sep_genre.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/manga_rating.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
@@ -184,7 +185,7 @@ class _MangaPageState extends State<MangaPage> {
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
-      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // get first chapter
+      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // get first chapter，首要选【单话】分组，否则选首个拥有非空章节的分组
 
       // 5. 更新数据库的各种信息
       await _updateDatabaseAfterGot(/* update all */);
@@ -361,12 +362,7 @@ class _MangaPageState extends State<MangaPage> {
     int page;
     if (_history?.read != true) {
       // 未访问 or 未开始阅读 => 开始阅读
-      var group = _data!.chapterGroups.getFirstNotEmptyGroup(); // 首要选【单话】分组，否则选首个拥有非空章节的分组
-      if (group == null) {
-        Fluttertoast.showToast(msg: '该漫画还没有章节，无法开始阅读');
-        return;
-      }
-      cid = group.chapters.last.cid; // get last chapter
+      cid = _firstChapter!.cid; // 首要选【单话】分组，否则选首个拥有非空章节的分组
       page = 1;
     } else {
       // 继续阅读
@@ -374,46 +370,86 @@ class _MangaPageState extends State<MangaPage> {
       page = _history!.chapterPage;
       if (_data!.chapterGroups.findChapter(cid)?.pageCount == page) {
         // 该章节已阅读完，寻找下一章节
-        var nextChapter = _data!.chapterGroups.findNextChapter(cid); // 从全部分组的章节中选取，尽量达到和 MangaViewerPage 阅读上/下一章节 一样的效果
-        if (nextChapter == null) {
+        var neighbor = _data!.chapterGroups.findNextChapter(cid); // 从全部分组的章节中选取，尽量达到和 MangaViewerPage 阅读上/下一章节 一样的效果
+        if (neighbor == null || !neighbor.hasNextChapter) {
           // 未找到下一个章节
-          var ok = await showYesNoAlertDialog(
-            context: context,
-            title: Text('继续阅读'),
-            content: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，且暂无下一章节，是否继续阅读该章节？'),
-            yesText: Text('阅读'),
-            noText: Text('取消'),
-          );
-          if (ok != true) {
-            return;
-          }
-        } else {
-          // 已找到下一个章节
           var result = await showDialog<int>(
             context: context,
             builder: (c) => SimpleDialog(
               title: Text('继续阅读'),
               children: [
-                Text(
-                  '该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否选择阅读下一章节 (${nextChapter.title})？',
-                  style: Theme.of(context).textTheme.subtitle2,
+                Padding(
+                  padding: kAlertDialogDefaultContentPadding.copyWith(bottom: 6, top: 2),
+                  child: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，且暂无下一章节，是否继续阅读该章节？', style: Theme.of(context).textTheme.subtitle1),
                 ),
-                SizedBox(height: 8),
-                IconTextDialogOption(icon: Icon(Icons.import_contacts), text: Text('开始阅读新章节'), onPressed: () => Navigator.of(c).pop(1)),
-                IconTextDialogOption(icon: Icon(Icons.import_contacts), text: Text('从头阅读该章节'), onPressed: () => Navigator.of(c).pop(2)),
-                IconTextDialogOption(icon: Icon(Icons.import_contacts), text: Text('继续阅读该章节'), onPressed: () => Navigator.of(c).pop(3)),
-                IconTextDialogOption(icon: Icon(Icons.close), text: Text('取消'), onPressed: () => Navigator.of(c).pop()),
+                IconTextDialogOption(
+                  icon: Icon(CustomIcons.opened_left_star_book),
+                  text: Text('从头阅读该章节 (${_history!.chapterTitle})'),
+                  onPressed: () => Navigator.of(c).pop(1),
+                ),
+                IconTextDialogOption(
+                  icon: Icon(Icons.import_contacts),
+                  text: Text('继续阅读该章节 (${_history!.chapterTitle})'),
+                  onPressed: () => Navigator.of(c).pop(2),
+                ),
               ],
             ),
-          ); // TODO test
+          );
           if (result == null) {
             return;
-          }
-          if (result == 1) {
-            cid = nextChapter.cid;
-            page = 1; // 开始阅读新章节
-          } else if (result == 2) {
+          } else if (result == 1) {
             page = 1; // 从头阅读该章节
+          } else if (result == 2) {
+            // pass => 继续阅读该章节
+          }
+        } else {
+          // 已找到下一个章节 (可能会找到两个)
+          var result = await showDialog<int>(
+            context: context,
+            builder: (c) => SimpleDialog(
+              title: Text('继续阅读'),
+              children: [
+                Padding(
+                  padding: kAlertDialogDefaultContentPadding.copyWith(bottom: 6, top: 2),
+                  child: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否阅读下一章节？', style: Theme.of(context).textTheme.subtitle1),
+                ),
+                if (neighbor.nextSameGroupChapter != null)
+                  IconTextDialogOption(
+                    icon: Icon(CustomIcons.opened_right_star_book),
+                    text: Text('开始阅读新章节 (${neighbor.nextSameGroupChapter!.title})'),
+                    onPressed: () => Navigator.of(c).pop(1),
+                  ),
+                if (neighbor.nextDiffGroupChapter != null)
+                  IconTextDialogOption(
+                    icon: Icon(CustomIcons.opened_right_star_book),
+                    text: Text('开始阅读新章节 (${neighbor.nextDiffGroupChapter!.title})'),
+                    onPressed: () => Navigator.of(c).pop(2),
+                  ),
+                IconTextDialogOption(
+                  icon: Icon(CustomIcons.opened_left_star_book),
+                  text: Text('从头阅读该章节 (${_history!.chapterTitle})'),
+                  onPressed: () => Navigator.of(c).pop(3),
+                ),
+                IconTextDialogOption(
+                  icon: Icon(Icons.import_contacts),
+                  text: Text('继续阅读该章节 (${_history!.chapterTitle})'),
+                  onPressed: () => Navigator.of(c).pop(4),
+                ),
+              ],
+            ),
+          );
+          if (result == null) {
+            return;
+          } else if (result == 1) {
+            cid = neighbor.nextSameGroupChapter!.cid;
+            page = 1; // 开始阅读新章节 (同一分组)
+          } else if (result == 2) {
+            cid = neighbor.nextDiffGroupChapter!.cid;
+            page = 1; // 开始阅读新章节 (不同分组)
+          } else if (result == 3) {
+            page = 1; // 从头阅读该章节
+          } else if (result == 4) {
+            // pass => 继续阅读该章节
           }
         }
       }
@@ -738,7 +774,31 @@ class _MangaPageState extends State<MangaPage> {
       appBar: AppBar(
         title: GestureDetector(
           child: Text(_data?.title ?? widget.title),
-          onLongPress: () => copyText(_data?.title ?? widget.title, showToast: true), // TODO test
+          onLongPress: () => showDialog(
+            context: context,
+            builder: (c) => SimpleDialog(
+              title: Text(_data?.title ?? widget.title),
+              children: [
+                IconTextDialogOption(
+                  icon: Icon(Icons.copy),
+                  text: Text('复制标题'),
+                  onPressed: () {
+                    Navigator.of(c).pop();
+                    copyText(_data?.title ?? widget.title, showToast: true);
+                  },
+                ),
+                if (_data != null)
+                  IconTextDialogOption(
+                    icon: Icon(Icons.subject),
+                    text: Text('查看漫画详情'),
+                    onPressed: () {
+                      Navigator.of(c).pop();
+                      Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaDetailPage(data: _data!)));
+                    },
+                  ),
+              ],
+            ),
+          ),
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [

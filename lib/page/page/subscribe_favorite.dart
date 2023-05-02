@@ -519,7 +519,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                     selected: _currentGroup == g.groupName,
                     onTap: () => _switchGroup(g),
                     onLongPress: () => showDialog(
-                      // TODO test
                       context: context,
                       builder: (c) => SimpleDialog(
                         title: Text(g.checkedGroupName),
@@ -527,12 +526,18 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                           IconTextDialogOption(
                             icon: Icon(Icons.folder_open),
                             text: Text('切换为该分组'),
-                            onPressed: () => _switchGroup(g),
+                            onPressed: () {
+                              Navigator.of(c).pop();
+                              _switchGroup(g);
+                            },
                           ),
                           IconTextDialogOption(
                             icon: Icon(MdiIcons.folderMultipleOutline),
                             text: Text('管理漫画收藏分组'),
-                            onPressed: () => _manageGroups(),
+                            onPressed: () {
+                              Navigator.of(c).pop();
+                              _manageGroups();
+                            },
                           ),
                         ],
                       ),

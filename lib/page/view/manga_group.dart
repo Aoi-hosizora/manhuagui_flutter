@@ -10,6 +10,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 enum MangaGroupViewStyle {
   normalFull,
   smallTruncated,
+  smallerTruncated,
 }
 
 /// 漫画分组，针对推荐列表（热门连载、经典完结、最新上架），在 [RecommendSubPage] / [MangaGroupPage] 使用
@@ -172,18 +173,21 @@ class _MangaGroupViewState extends State<MangaGroupView> {
   Widget build(BuildContext context) {
     const hSpace = 15.0;
     const vSpace = 10.0;
-    var width = widget.style == MangaGroupViewStyle.normalFull
-        ? (MediaQuery.of(context).size.width - hSpace * 4) / 3 // | ▢ ▢ ▢ |
-        : (MediaQuery.of(context).size.width - hSpace * 5) / 4; // | ▢ ▢ ▢ ▢ |
-
+    var count = widget.style == MangaGroupViewStyle.normalFull
+        ? 3 // | ▢ ▢ ▢ |
+        : widget.style == MangaGroupViewStyle.smallTruncated
+            ? 4 // | ▢ ▢ ▢ ▢ |
+            : 5; // | ▢ ▢ ▢ ▢ ▢ |
+    var width = (MediaQuery.of(context).size.width - hSpace * (count + 1)) / count;
     var group = _groupMap[_currentSelectedName] ?? _groupMap['']!;
     var mangas = group.mangas;
     switch (widget.style) {
       case MangaGroupViewStyle.normalFull:
         break;
       case MangaGroupViewStyle.smallTruncated:
-        if (mangas.length > 8) {
-          mangas = mangas.sublist(0, 8); // X X X X | X X X X
+      case MangaGroupViewStyle.smallerTruncated:
+        if (mangas.length > count * 2) {
+          mangas = mangas.sublist(0, count * 2); // X X X X | X X X X
         }
         break;
     }

@@ -78,7 +78,7 @@ class HomepageColumnView extends StatelessWidget {
                         ),
                       if (onHintPressed != null)
                         Padding(
-                          padding: EdgeInsets.only(left: 3, top: headerPadding.top - 3, bottom: headerPadding.bottom - 3), // <= headerPadding vertical
+                          padding: EdgeInsets.only(left: 1, top: headerPadding.top - 3, bottom: headerPadding.bottom - 3), // <= headerPadding vertical
                           child: InkWell(
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),

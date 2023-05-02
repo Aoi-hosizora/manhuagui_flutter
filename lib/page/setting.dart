@@ -174,7 +174,7 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '界面显示设置',
+            title: '界面与交互设置',
             icon: CustomIcons.application_star_cog,
             action: () => showUiSettingDialog(context: context),
           ),

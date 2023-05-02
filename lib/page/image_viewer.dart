@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
@@ -60,6 +61,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
     var url = widget.url;
     if (url.startsWith('//')) {
       url = 'https:$url';
+    }
+    if (AppSetting.instance.other.useHttpForImage) {
+      url = url.replaceAll('https://', 'http://');
     }
 
     return WillPopScope(

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 
 class NetworkImageView extends StatelessWidget {
@@ -76,6 +77,9 @@ class NetworkImageView extends StatelessWidget {
     var url = this.url;
     if (url.startsWith('//')) {
       url = 'https:$url';
+    }
+    if (AppSetting.instance.other.useHttpForImage) {
+      url = url.replaceAll('https://', 'http://');
     }
 
     return Container(

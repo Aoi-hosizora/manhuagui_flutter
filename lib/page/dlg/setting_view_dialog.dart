@@ -199,7 +199,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           title: '切换章节时标题栏行为',
           value: _appBarSwitchBehavior,
           values: const [AppBarSwitchBehavior.keep, AppBarSwitchBehavior.show, AppBarSwitchBehavior.hide],
-          enable: _viewDirection == ViewDirection.topToBottom,
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _appBarSwitchBehavior = s;

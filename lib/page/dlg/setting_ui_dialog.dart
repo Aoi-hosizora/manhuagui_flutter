@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 
-/// 设置页-界面显示设置 [showUiSettingDialog], [UiSettingSubPage]
+/// 设置页-界面与交互设置 [showUiSettingDialog], [UiSettingSubPage]
 
 class UiSettingSubPage extends StatefulWidget {
   const UiSettingSubPage({
@@ -53,6 +53,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _homepageRefreshData = widget.setting.homepageRefreshData;
   late var _clickToSearch = widget.setting.clickToSearch;
   late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
+  late var _enableAutoCheckin = widget.setting.enableAutoCheckin;
 
   UiSetting get _newestSetting => UiSetting(
         showTwoColumns: _showTwoColumns,
@@ -64,13 +65,14 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         otherGroupRows: _otherGroupRows,
         allowErrorToast: _allowErrorToast,
         overviewLoadAll: _overviewLoadAll,
-    homepageShowMoreMangas: _homepageShowMoreMangas,
+        homepageShowMoreMangas: _homepageShowMoreMangas,
         includeUnreadInHome: _includeUnreadInHome,
         audienceRankingRows: _audienceMangaRows,
         homepageFavorite: _homepageFavorite,
         homepageRefreshData: _homepageRefreshData,
         clickToSearch: _clickToSearch,
         alwaysOpenNewListPage: _alwaysOpenNewListPage,
+        enableAutoCheckin: _enableAutoCheckin,
       );
 
   void _setToDefault() {
@@ -91,6 +93,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _homepageRefreshData = setting.homepageRefreshData;
     _clickToSearch = setting.clickToSearch;
     _alwaysOpenNewListPage = setting.alwaysOpenNewListPage;
+    _enableAutoCheckin = setting.enableAutoCheckin;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -184,8 +187,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '允许弹出漫画错误提示',
-          hint: '漫画错误信息包括："无法获取书架订阅情况"、"无法获取漫画章节列表"。',
+          title: '阅读时允许弹出错误提示',
+          hint: '此处的错误信息包括："无法获取书架订阅情况"、"无法获取漫画章节列表"。',
           value: _allowErrorToast,
           onChanged: (b) {
             _allowErrorToast = b;
@@ -241,7 +244,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingComboBoxView<HomepageFavorite>(
           title: '首页收藏列表显示内容',
-          width: 175,
+          width: 170,
           value: _homepageFavorite,
           values: HomepageFavorite.values,
           textBuilder: (s) => s.toOptionTitle(),
@@ -253,7 +256,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingComboBoxView<HomepageRefreshData>(
           title: '首页下拉刷新行为',
-          width: 190, // TODO test
+          width: 210,
           value: _homepageRefreshData,
           values: HomepageRefreshData.values,
           textBuilder: (s) => s.toOptionTitle(),
@@ -264,7 +267,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingGroupTitleView(
-          title: '其他界面显示/交互设置',
+          title: '用户交互设置',
         ),
         SettingSwitcherView(
           title: '点击搜索历史立即搜索',
@@ -285,6 +288,16 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingSwitcherView(
+          title: '启用自动登录签到功能',
+          hint: '只有在登录漫画柜时勾选 "保存密码" 才能自动登录签到。',
+          value: _enableAutoCheckin,
+          onChanged: (b) {
+            _enableAutoCheckin = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
       ],
     );
   }
@@ -298,7 +311,7 @@ Future<bool> showUiSettingDialog({required BuildContext context}) async {
     builder: (c) => AlertDialog(
       title: IconText(
         icon: Icon(CustomIcons.application_star_cog, size: 26),
-        text: Text('界面显示设置'),
+        text: Text('界面与交互设置'),
         space: 12,
       ),
       scrollable: true,

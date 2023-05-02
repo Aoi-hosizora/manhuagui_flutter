@@ -83,6 +83,10 @@ Future<File?> downloadImageToGallery(String url, {File? precheck}) async {
     File f;
     if (precheck != null && await precheck.exists()) {
       // copy given file directly
+      var dir = Directory(PathUtils.getDirname(filepath));
+      if (!(await dir.exists())) {
+        await dir.create(recursive: true);
+      }
       f = await precheck.copy(filepath);
     } else {
       // download from network

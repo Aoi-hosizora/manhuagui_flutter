@@ -148,7 +148,7 @@ void showPopupMenuForAuthorFavorite({
               child: Text('当前收藏备注：${favoriteAuthor.remark.trim().isEmpty ? '暂无' : favoriteAuthor.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             popWhenPress: c,
-            onPressed: () => helper.updateFavRemark(oldFavorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: false, fromAuthorPage: true),
+            onPressed: () => helper.showAndUpdateFavRemark(favorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: false, fromAuthorPage: true),
           ),
         IconTextDialogOption(
           icon: Icon(Icons.people),
@@ -221,7 +221,7 @@ class _DialogHelper {
             ),
             actions: [
               TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
-              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).maybePop(false)), // TODO test
+              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).maybePop(false)),
             ],
           ),
         ),
@@ -309,6 +309,26 @@ class _DialogHelper {
     return controller.text.trim(); // remark, empty-able
   }
 
+  static Future<bool> showFavoriteRemarkDialog({
+    required BuildContext context,
+    required String authorName,
+    required String remark,
+  }) async {
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('"$authorName" 备注'),
+        content: SelectableText(remark == '' ? '暂无备注' : remark),
+        actions: [
+          TextButton(child: Text('修改'), onPressed: () => Navigator.of(c).pop(true)),
+          if (remark != '') TextButton(child: Text('复制'), onPressed: () => copyText(remark, showToast: true)),
+          TextButton(child: Text('关闭'), onPressed: () => Navigator.of(c).pop()),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
   // =======================
   // helper methods (others)
   // =======================
@@ -381,7 +401,7 @@ class _DialogHelper {
     EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
   }
 
-  // => called by showUpdateFavoriteAuthorRemarkDialog, showPopupMenuForAuthorFavorite
+  // => called by showUpdateFavoriteAuthorRemarkDialog
   Future<void> updateFavRemark({
     required FavoriteAuthor oldFavorite,
     required void Function(FavoriteAuthor newFavorite) onUpdated,
@@ -403,5 +423,25 @@ class _DialogHelper {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(remark == '' ? '已删除收藏备注' : '已将备注修改为 "$remark"')));
     }
     EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
+  }
+
+  // => called by showPopupMenuForAuthorFavorite
+  Future<void> showAndUpdateFavRemark({
+    required FavoriteAuthor favorite,
+    required void Function(FavoriteAuthor newFavorite) onUpdated,
+    required bool showSnackBar,
+    required bool fromFavoriteList,
+    required bool fromAuthorPage,
+  }) async {
+    var toEdit = await showFavoriteRemarkDialog(context: context, remark: favorite.remark.trim(), authorName: authorName);
+    if (toEdit) {
+      await updateFavRemark(
+        oldFavorite: favorite,
+        onUpdated: onUpdated,
+        showSnackBar: showSnackBar,
+        fromFavoriteList: fromFavoriteList,
+        fromAuthorPage: fromAuthorPage,
+      );
+    }
   }
 }

@@ -14,7 +14,7 @@ enum MangaAudRankingType {
   shaonv,
 }
 
-/// 漫画受众排行榜，在 [RecommendSubPage] / [MangaAudRankingPage] 使用t
+/// 漫画受众排行榜，在 [RecommendSubPage] / [MangaAudRankingPage] 使用
 class MangaAudRankingView extends StatefulWidget {
   const MangaAudRankingView({
     Key? key,
@@ -28,8 +28,8 @@ class MangaAudRankingView extends StatefulWidget {
     this.qingnianRankingsError = '',
     this.shaonvRankingsError = '',
     required this.mangaRows,
-    this.onRetryPressed,
-    this.onFullPressed,
+    this.onRefreshPressed,
+    this.onFullListPressed,
     this.onMorePressed,
   }) : super(key: key);
 
@@ -43,8 +43,8 @@ class MangaAudRankingView extends StatefulWidget {
   final String qingnianRankingsError;
   final String shaonvRankingsError;
   final int mangaRows;
-  final void Function(MangaAudRankingType)? onRetryPressed;
-  final void Function(MangaAudRankingType)? onFullPressed;
+  final void Function(MangaAudRankingType)? onRefreshPressed;
+  final void Function(MangaAudRankingType)? onFullListPressed;
   final void Function()? onMorePressed;
 
   @override
@@ -134,7 +134,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
             text: Text('查看完整的排行榜'),
             onPressed: () {
               Navigator.of(c).pop();
-              widget.onFullPressed?.call(type);
+              widget.onFullListPressed?.call(type);
             },
           ),
           IconTextDialogOption(
@@ -280,7 +280,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                       : widget.shaonvRankingsDateTime //
               ) ?? DateTime.now(), FormatPattern.dateNoYear)} 更新)',
       icon: Icons.emoji_events,
-      onRefreshPressed: () => widget.onRetryPressed?.call(_indexToType(_currentPageIndex)),
+      onRefreshPressed: () => widget.onRefreshPressed?.call(_indexToType(_currentPageIndex)),
       disableRefresh: (_currentPageIndex == 0 && widget.allRankings == null) || //
           (_currentPageIndex == 1 && widget.qingnianRankings == null) ||
           (_currentPageIndex == 2 && widget.shaonvRankings == null),
@@ -405,7 +405,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                 height: 36,
                 child: OutlinedButton(
                   child: Text('查看完整排行榜'),
-                  onPressed: () => widget.onFullPressed?.call(_indexToType(_currentPageIndex)),
+                  onPressed: () => widget.onFullListPressed?.call(_indexToType(_currentPageIndex)),
                   onLongPress: () => _showFullButtonPopupMenu(_indexToType(_currentPageIndex)),
                 ),
               ),

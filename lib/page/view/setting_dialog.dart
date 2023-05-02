@@ -185,7 +185,7 @@ class SettingGroupTitleView extends StatelessWidget {
   const SettingGroupTitleView({
     Key? key,
     required this.title,
-    this.padding = const EdgeInsets.symmetric(vertical: 4),
+    this.padding = const EdgeInsets.symmetric(vertical: 5),
   }) : super(key: key);
 
   final String title;

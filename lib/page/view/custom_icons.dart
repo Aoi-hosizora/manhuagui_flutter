@@ -31,4 +31,5 @@ class CustomIcons {
   static const IconData eye_download = IconData(0xe80b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData eye_sync = IconData(0xe80c, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData eye_public = IconData(0xe80d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData opened_book_offline = IconData(0xe80e, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

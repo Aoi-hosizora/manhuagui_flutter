@@ -414,30 +414,35 @@ class _SearchPageState extends State<SearchPage> {
                           // ===================================================================
                           for (var h in _histories)
                             InkWell(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    IconText(
-                                      icon: Icon(Icons.history, color: Colors.black45),
-                                      text: Flexible(
-                                        child: Text(h, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Flexible(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                      child: IconText(
+                                        icon: Icon(Icons.history, color: Colors.black45),
+                                        text: Flexible(
+                                          child: Text(h, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        ),
                                       ),
                                     ),
-                                    if (AppSetting.instance.ui.clickToSearch)
-                                      InkWell(
+                                  ),
+                                  if (AppSetting.instance.ui.clickToSearch)
+                                    Padding(
+                                      padding: EdgeInsets.only(right: 5),
+                                      child: InkWell(
                                         child: Tooltip(
                                           child: Padding(
-                                            padding: EdgeInsets.all(5),
-                                            child: Icon(Icons.north_west),
+                                            padding: EdgeInsets.all(8),
+                                            child: Icon(Icons.north_west, size: 22, color: Colors.black45),
                                           ),
-                                          message: '更新搜索关键词',
+                                          message: '更新关键词',
                                         ),
                                         onTap: () => _text = h, // => 候选
-                                      ), // TODO test
-                                  ],
-                                ),
+                                      ),
+                                    ),
+                                ],
                               ),
                               onTap: () {
                                 _text = h; // => 候选

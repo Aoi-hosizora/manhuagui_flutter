@@ -81,7 +81,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     });
     Future.microtask(() async {
       await Future.delayed(Duration(milliseconds: 5000)); // 额外等待，获取一些受众排行榜数据 (共2次网络请求)
-      await _loadRankings(MangaAudRankingType.values, onlyIfEmpty: false, needDelay: true, considerAllRankings: false);
+      await _loadRankings([MangaAudRankingType.qingnian, MangaAudRankingType.shaonv], onlyIfEmpty: false, needDelay: true);
     });
   }
 
@@ -119,7 +119,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       });
       Future.microtask(() async {
         await Future.delayed(Duration(milliseconds: 3000));
-        await _loadRankings(MangaAudRankingType.values, onlyIfEmpty: onlyIfEmpty, needDelay: true, considerAllRankings: false);
+        await _loadRankings([MangaAudRankingType.qingnian, MangaAudRankingType.shaonv], onlyIfEmpty: onlyIfEmpty, needDelay: true);
       });
     }
 
@@ -248,7 +248,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   }
 
   List<MangaRanking>? _rankings;
-  List<MangaRanking>? _qingnianRankings; // TODO modify-able
+  List<MangaRanking>? _qingnianRankings;
   List<MangaRanking>? _shaonvRankings;
   DateTime? _rankingsDateTime;
   DateTime? _qingnianRankingDateTime;
@@ -257,13 +257,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   var _qingnianRankingsError = '';
   var _shaonvRankingsError = '';
 
-  Future<void> _loadRankings(List<MangaAudRankingType> types, {bool onlyIfEmpty = false, bool needDelay = false, bool considerAllRankings = false}) async {
+  Future<void> _loadRankings(List<MangaAudRankingType> types, {bool onlyIfEmpty = false, bool needDelay = false}) async {
     final client = RestClient(DioManager.instance.dio);
 
     if (types.contains(MangaAudRankingType.all)) {
       Future.microtask(() async {
-        if (!considerAllRankings || (onlyIfEmpty && (_rankings == null || _rankings!.isNotEmpty))) {
-          return; // not considered or (onlyIfEmpty, loading or not empty) => ignore
+        if ((onlyIfEmpty && (_rankings == null || _rankings!.isNotEmpty))) {
+          return; // (onlyIfEmpty, loading or not empty) => ignore
         }
         _rankings = null; // loading
         _rankingsError = '';
@@ -372,9 +372,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             (type == MangaCollectionType.shelves && _shelves == null) ||
             (type == MangaCollectionType.favorites && _favorites == null) ||
             (type == MangaCollectionType.downloads && _downloads == null),
-        onRefreshPressed: type == MangaCollectionType.rankings
-            ? () => _loadRankings([MangaAudRankingType.all], onlyIfEmpty: false, needDelay: false, considerAllRankings: true) // TODO test
-            : () => _loadCollections([type], onlyIfEmpty: false, needDelay: false),
+        onRefreshPressed: type == MangaCollectionType.rankings ? () => _loadRankings([MangaAudRankingType.all], onlyIfEmpty: false, needDelay: false) : () => _loadCollections([type], onlyIfEmpty: false, needDelay: false),
         onMorePressed: type == MangaCollectionType.rankings
             ? null // show right text rather than more button for ranking collection
             : () {
@@ -402,8 +400,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         qingnianRankingsError: _qingnianRankingsError,
         shaonvRankingsError: _shaonvRankingsError,
         mangaRows: AppSetting.instance.ui.audienceRankingRows,
-        onRetryPressed: (t) => _loadRankings([t], onlyIfEmpty: false, needDelay: false, considerAllRankings: true),
-        onFullPressed: (t) => Navigator.of(context).push(
+        onRefreshPressed: (t) => _loadRankings([t], onlyIfEmpty: false, needDelay: false),
+        onFullListPressed: (t) => Navigator.of(context).push(
           CustomPageRoute(
             context: context,
             builder: (c) => MangaAudRankingPage(
@@ -431,7 +429,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       padding: EdgeInsets.only(top: 12),
       child: MangaGroupView(
         groupList: groupList, // 包括置顶漫画 (topGroup)、分类别漫画 (groups1, groups2)
-        style: MangaGroupViewStyle.smallTruncated,
+        style: !AppSetting.instance.ui.homepageShowMoreMangas ? MangaGroupViewStyle.smallTruncated : MangaGroupViewStyle.smallerTruncated,
         onMorePressed: () => Navigator.of(context).push(
           CustomPageRoute(
             context: context,

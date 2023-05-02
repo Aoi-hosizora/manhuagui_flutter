@@ -419,13 +419,14 @@ class DownloadMangaQueueTask extends QueueTask<void> {
           needUpdate: false /* 已被更新，无需更新 */,
         ),
       );
+      var neighbor = manga.chapterGroups.findChapterNeighbor(chapterId, prev: true, next: true);
       await writeMetadataFile(
         mangaId: mangaId,
         chapterId: chapterId,
         metadata: DownloadChapterMetadata(
           pages: chapter.pages,
-          nextCid: chapter.nextCid,
-          prevCid: chapter.prevCid,
+          nextCid: neighbor?.nextChapter?.cid ?? 0 /* 0 => 没有下一章节 */,
+          prevCid: neighbor?.prevChapter?.cid ?? 0 /* 0 => 没有上一章节 */,
           updatedAt: DateTime.now(),
         ), // => 目前仅写入跳转章节数据和所有页面链接
       ); // 忽略错误
@@ -451,6 +452,9 @@ class DownloadMangaQueueTask extends QueueTask<void> {
 
           // 5.5.3. 下载页面，若文件已存在则会跳过
           var pageUrl = chapter.pages[pageIndex];
+          if (AppSetting.instance.other.useHttpForImage) {
+            pageUrl = pageUrl.replaceAll('https://', 'http://');
+          }
           var ok = await downloadChapterPage(
             mangaId: chapter.mid,
             chapterId: chapter.cid,

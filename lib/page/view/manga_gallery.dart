@@ -68,13 +68,13 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   // current image index, exclude extra pages, start from 0.
   int get _currentImageIndex => (_currentPageIndex - 1).clamp(0, widget.imageCount - 1);
 
-  var _preloadPagesCount = 0; // set to zero firstly // TODO test
+  var _preloadPagesCount = 0; // set to zero firstly
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 2), () {
-      _preloadPagesCount = widget.preloadPagesCount;
+    Future.delayed(Duration(seconds: 5), () { // TODO improve delay preload logic, or improve cache extent logic
+      _preloadPagesCount = widget.preloadPagesCount; // 等待 5s 后再更新 preload，防止刚开始就预加载过多页面
       if (mounted) setState(() {});
     });
   }

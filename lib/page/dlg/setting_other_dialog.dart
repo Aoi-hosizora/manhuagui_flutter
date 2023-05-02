@@ -43,6 +43,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _enableLogger = widget.setting.enableLogger;
   late var _showDebugErrorMsg = widget.setting.showDebugErrorMsg;
   late var _useNativeShareSheet = widget.setting.useNativeShareSheet;
+  late var _useHttpForImage = widget.setting.useHttpForImage;
 
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
@@ -51,6 +52,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         enableLogger: _enableLogger,
         showDebugErrorMsg: _showDebugErrorMsg,
         useNativeShareSheet: _useNativeShareSheet,
+        useHttpForImage: _useHttpForImage,
       );
 
   void _setToDefault() {
@@ -61,6 +63,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
     _enableLogger = setting.enableLogger;
     _showDebugErrorMsg = setting.showDebugErrorMsg;
     _useNativeShareSheet = setting.useNativeShareSheet;
+    _useHttpForImage = setting.useHttpForImage;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -155,6 +158,16 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _useNativeShareSheet,
           onChanged: (b) {
             _useNativeShareSheet = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '使用HTTP查看图片',
+          hint: '较低版本的 Android 系统可能无法正常访问漫画柜的图片，如果在阅读漫画时出现 HTTPS error (certificate has expired) 错误，请启用该选项。',
+          value: _useHttpForImage,
+          onChanged: (b) {
+            _useHttpForImage = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

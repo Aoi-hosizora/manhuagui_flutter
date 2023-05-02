@@ -19,7 +19,8 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.inShelf,
     required this.inFavorite,
     required this.toJumpToImage,
-    required this.toGotoChapter,
+    required this.toGotoNeighbor,
+    required this.toShowNeighborTip,
     required this.toSubscribe,
     required this.toDownload,
     required this.toShowToc,
@@ -37,7 +38,8 @@ class ViewExtraSubPage extends StatefulWidget {
   final bool inShelf;
   final bool inFavorite;
   final void Function(int imageIndex /* start from 0 */, bool animated) toJumpToImage;
-  final void Function(bool gotoPrevious) toGotoChapter;
+  final void Function(bool gotoPrevious) toGotoNeighbor;
+  final void Function(bool previous) toShowNeighborTip;
   final void Function() toSubscribe;
   final void Function() toDownload;
   final void Function() toShowToc;
@@ -52,7 +54,7 @@ class ViewExtraSubPage extends StatefulWidget {
 
 class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
   Widget _buildChapters() {
-    if (widget.data.prevChapterId == null || widget.data.nextChapterId == null) {
+    if (widget.data.chapterNeighbor?.notLoaded != false) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 6),
         child: Center(
@@ -67,9 +69,10 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
       );
     }
 
-    Widget _buildAction({required String text, required String subText, required bool left, required void Function() action, required bool disable}) {
+    Widget _buildAction({required String text, required String subText, required bool left, required void Function() action, void Function()? longPress, required bool disable}) {
       return InkWell(
         onTap: disable ? null : action,
+        onLongPress: disable ? null : longPress,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: disable
@@ -112,25 +115,26 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
       );
     }
 
-    // TODO long press to show dialog for detailed titles
-
+    var neighbor = widget.data.chapterNeighbor!;
     var prev = Expanded(
       child: _buildAction(
-        text: widget.data.prevChapterId! != 0 ? '阅读上一章节' : '暂无上一章节',
-        subText: widget.data.prevChapterTitle!, // TODO add multiple titles and options (use SimpleDialog)
+        text: neighbor.hasPrevChapter ? '阅读上一章节' : '暂无上一章节',
+        subText: neighbor.getAvailableChapters(previous: true).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
         left: !widget.reverseScroll ? true : false,
-        disable: widget.data.prevChapterId == 0,
-        action: () => widget.toGotoChapter.call(true),
+        disable: !neighbor.hasPrevChapter,
+        action: () => widget.toGotoNeighbor.call(true),
+        longPress: () => widget.toShowNeighborTip.call(true),
       ),
     );
 
     var next = Expanded(
       child: _buildAction(
-        text: widget.data.nextChapterId! != 0 ? '阅读下一章节' : '暂无下一章节',
-        subText: widget.data.nextChapterTitle!, // TODO add multiple titles and options (use SimpleDialog)
+        text: neighbor.hasNextChapter ? '阅读下一章节' : '暂无下一章节',
+        subText: neighbor.getAvailableChapters(previous: false).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
         left: !widget.reverseScroll ? false : true,
-        disable: widget.data.nextChapterId == 0,
-        action: () => widget.toGotoChapter.call(false),
+        disable: !neighbor.hasNextChapter,
+        action: () => widget.toGotoNeighbor.call(false),
+        longPress: () => widget.toShowNeighborTip.call(false),
       ),
     );
 
@@ -304,29 +308,30 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Column(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                '《${widget.data.mangaTitle}》', // TODO test
-                                style: Theme.of(context).textTheme.headline6,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Flexible(
-                              child: Text(
-                                '- ${widget.data.chapterTitle} -',
-                                style: Theme.of(context).textTheme.headline6?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                        Flexible(
+                          child: Text(
+                            '- ${widget.data.chapterTitle} -',
+                            style: Theme.of(context).textTheme.headline6?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '《${widget.data.mangaTitle}》',
+                            style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),

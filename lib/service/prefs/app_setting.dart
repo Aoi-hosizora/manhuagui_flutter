@@ -151,6 +151,7 @@ class AppSettingPrefs {
   static const _homepageRefreshDataKey = IntKey('AppSettingPrefs_homepageRefreshData');
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
   static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
+  static const _enableAutoCheckinKey = BoolKey('AppSettingPrefs_enableAutoCheckin');
 
   static List<TypedKey> get uiSettingKeys => [
         _showTwoColumnsKey,
@@ -169,6 +170,7 @@ class AppSettingPrefs {
         _homepageRefreshDataKey,
         _clickToSearchKey,
         _alwaysOpenNewListPageKey,
+        _enableAutoCheckinKey,
       ];
 
   static Future<UiSetting> _loadUiSetting() async {
@@ -191,6 +193,7 @@ class AppSettingPrefs {
       homepageRefreshData: HomepageRefreshDatarExtension.fromInt(prefs.safeGet<int>(_homepageRefreshDataKey) ?? def.homepageRefreshData.toInt()),
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
       alwaysOpenNewListPage: prefs.safeGet<bool>(_alwaysOpenNewListPageKey) ?? def.alwaysOpenNewListPage,
+      enableAutoCheckin: prefs.safeGet<bool>(_enableAutoCheckinKey) ?? def.enableAutoCheckin,
     );
   }
 
@@ -213,6 +216,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_homepageRefreshDataKey, setting.homepageRefreshData.toInt());
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
     await prefs.safeSet<bool>(_alwaysOpenNewListPageKey, setting.alwaysOpenNewListPage);
+    await prefs.safeSet<bool>(_enableAutoCheckinKey, setting.enableAutoCheckin);
   }
 
   // =============
@@ -225,6 +229,7 @@ class AppSettingPrefs {
   static const _enableLoggerKey = BoolKey('AppSettingPrefs_enableLogger');
   static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
   static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
+  static const _useHttpForImageKey = BoolKey('AppSettingPrefs_useHttpForImage');
 
   static List<TypedKey> get otherSettingKeys => [
         _timeoutBehaviorKey,
@@ -233,6 +238,7 @@ class AppSettingPrefs {
         _enableLoggerKey,
         _showDebugErrorMsgKey,
         _useNativeShareSheetKey,
+        _useHttpForImageKey,
       ];
 
   static Future<OtherSetting> _loadOtherSetting() async {
@@ -245,6 +251,7 @@ class AppSettingPrefs {
       enableLogger: prefs.safeGet<bool>(_enableLoggerKey) ?? def.enableLogger,
       showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
       useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
+      useHttpForImage: prefs.safeGet<bool>(_useHttpForImageKey) ?? def.useHttpForImage,
     );
   }
 
@@ -257,6 +264,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_enableLoggerKey, setting.enableLogger);
     await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
     await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);
+    await prefs.safeSet<bool>(_useHttpForImageKey, setting.useHttpForImage);
   }
 
   // ===

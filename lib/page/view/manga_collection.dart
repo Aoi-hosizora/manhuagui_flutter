@@ -23,7 +23,7 @@ class MangaCollectionView extends StatefulWidget {
   const MangaCollectionView({
     Key? key,
     required this.type,
-    this.showMore = false, // TODO test
+    this.showMore = false,
     this.ranking,
     this.rankingDateTime,
     this.updates,

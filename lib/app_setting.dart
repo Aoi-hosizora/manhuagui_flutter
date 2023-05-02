@@ -358,13 +358,14 @@ class UiSetting {
     required this.otherGroupRows,
     required this.allowErrorToast,
     required this.overviewLoadAll,
-    required this.includeUnreadInHome,
     required this.homepageShowMoreMangas,
+    required this.includeUnreadInHome,
     required this.audienceRankingRows,
     required this.homepageFavorite,
     required this.homepageRefreshData,
     required this.clickToSearch,
     required this.alwaysOpenNewListPage,
+    required this.enableAutoCheckin,
   });
 
   final bool showTwoColumns; // 以双列风格显示列表
@@ -374,15 +375,16 @@ class UiSetting {
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final int regularGroupRows; // 单话章节分组显示行数
   final int otherGroupRows; // 其他章节分组显示行数
-  final bool allowErrorToast; // 允许弹出漫画错误提示
+  final bool allowErrorToast; // 阅读时允许弹出错误提示
   final bool overviewLoadAll; // 章节一览页加载所有图片
-  final bool includeUnreadInHome; // 首页显示未阅读漫画历史
   final bool homepageShowMoreMangas; // 首页显示更多漫画
+  final bool includeUnreadInHome; // 首页显示未阅读漫画历史
   final int audienceRankingRows; // 首页受众排行榜显示行数
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
   final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为
   final bool clickToSearch; // 点击搜索历史立即搜索
   final bool alwaysOpenNewListPage; // 始终在新页面打开列表
+  final bool enableAutoCheckin; // 启用自动登录签到功能
 
   static const defaultSetting = UiSetting(
     showTwoColumns: false,
@@ -394,13 +396,14 @@ class UiSetting {
     otherGroupRows: 1,
     allowErrorToast: true,
     overviewLoadAll: false,
-    includeUnreadInHome: true,
     homepageShowMoreMangas: false,
+    includeUnreadInHome: true,
     audienceRankingRows: 5,
     homepageFavorite: HomepageFavorite.defaultAscOrder,
     homepageRefreshData: HomepageRefreshData.includeListIfEmpty,
     clickToSearch: true,
     alwaysOpenNewListPage: false,
+    enableAutoCheckin: false,
   );
 
   UiSetting copyWith({
@@ -413,13 +416,14 @@ class UiSetting {
     int? otherGroupRows,
     bool? allowErrorToast,
     bool? overviewLoadAll,
-    bool? includeUnreadInHome,
     bool? homepageShowMoreMangas,
+    bool? includeUnreadInHome,
     int? audienceRankingRows,
     HomepageFavorite? homepageFavorite,
     HomepageRefreshData? homepageRefreshData,
     bool? clickToSearch,
     bool? alwaysOpenNewListPage,
+    bool? enableAutoCheckin,
   }) {
     return UiSetting(
       showTwoColumns: showTwoColumns ?? this.showTwoColumns,
@@ -431,13 +435,14 @@ class UiSetting {
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
       overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
-      includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
       homepageShowMoreMangas: homepageShowMoreMangas ?? this.homepageShowMoreMangas,
+      includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
       homepageFavorite: homepageFavorite ?? this.homepageFavorite,
       homepageRefreshData: homepageRefreshData ?? this.homepageRefreshData,
       clickToSearch: clickToSearch ?? this.clickToSearch,
       alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
+      enableAutoCheckin: enableAutoCheckin ?? this.enableAutoCheckin,
     );
   }
 }
@@ -576,6 +581,7 @@ class OtherSetting {
     required this.enableLogger,
     required this.showDebugErrorMsg,
     required this.useNativeShareSheet,
+    required this.useHttpForImage,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
@@ -584,6 +590,7 @@ class OtherSetting {
   final bool enableLogger; // 记录调试日志
   final bool showDebugErrorMsg; // 使用更详细的错误信息
   final bool useNativeShareSheet; // 使用原生的分享菜单
+  final bool useHttpForImage; // 使用HTTP查看图片
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
@@ -592,6 +599,7 @@ class OtherSetting {
     enableLogger: false,
     showDebugErrorMsg: false,
     useNativeShareSheet: true,
+    useHttpForImage: false,
   );
 
   OtherSetting copyWith({
@@ -602,6 +610,7 @@ class OtherSetting {
     bool? showDebugErrorMsg,
     bool? useNativeShareSheet,
     bool? reverseDialogActions,
+    bool? useHttpForImage,
   }) {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
@@ -610,6 +619,7 @@ class OtherSetting {
       enableLogger: enableLogger ?? this.enableLogger,
       showDebugErrorMsg: showDebugErrorMsg ?? this.showDebugErrorMsg,
       useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
+      useHttpForImage: useHttpForImage ?? this.useHttpForImage,
     );
   }
 }

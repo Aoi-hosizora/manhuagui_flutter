@@ -161,7 +161,8 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
         results.add('第${i + 1}页：已取消');
       } else {
         var url = widget.imageUrls[i];
-        var f = await downloadImageToGallery(url);
+        var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: i, url: url);
+        var f = await downloadImageToGallery(url, precheck: filepath == null ? null : File(filepath));
         if (f != null) {
           results.add('第${i + 1}页：已保存至 ${f.path}');
         } else {

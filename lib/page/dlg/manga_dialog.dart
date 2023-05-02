@@ -232,7 +232,7 @@ void showPopupMenuForMangaToc({
   required List<MangaChapterGroup> chapterGroups,
   required void Function(MangaHistory history)? onHistoryUpdated,
   bool allowDeletingHistory = true,
-  void Function()? onReadChapterPressed, // => only for MangaViewerPage TODO offline ???
+  void Function()? toSwitchChapter, // => only for switching chapter in MangaViewerPage
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
 }) async {
   var downloadEntity = await DownloadDao.getManga(mid: mangaId);
@@ -254,27 +254,34 @@ void showPopupMenuForMangaToc({
       title: Text(chapter.title),
       children: [
         /// 基本选项
-        IconTextDialogOption(
-          icon: Icon(Icons.import_contacts),
-          text: Text('阅读该章节'),
-          popWhenPress: c,
-          onPressed: onReadChapterPressed ?? //
-              () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: false),
-        ),
-        if (lastReadChapter)
+        if (toSwitchChapter == null) ...[
           IconTextDialogOption(
             icon: Icon(Icons.import_contacts),
-            text: Text('从头阅读该章节'),
+            text: Text(!lastReadChapter ? '阅读该章节' : '继续阅读该章节'),
             popWhenPress: c,
-            onPressed: onReadChapterPressed ?? // always turn to the first page here
-                () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: true),
+            onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: false, onlineMode: true),
           ),
-        if (inDownloadTask)
+          if (lastReadChapter)
+            IconTextDialogOption(
+              icon: Icon(CustomIcons.opened_left_star_book),
+              text: Text('从头阅读该章节'),
+              popWhenPress: c,
+              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: true, onlineMode: true),
+            ),
+          if (inDownloadTask)
+            IconTextDialogOption(
+              icon: Icon(CustomIcons.opened_book_offline),
+              text: Text('离线阅读该章节'),
+              popWhenPress: c,
+              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: false, onlineMode: false),
+            ),
+        ],
+        if (toSwitchChapter != null)
           IconTextDialogOption(
             icon: Icon(Icons.import_contacts),
-            text: Text('离线阅读该章节'),
+            text: Text('切换为该章节'),
             popWhenPress: c,
-            onPressed: () {}, // TODO offline
+            onPressed: toSwitchChapter, // always turn to the first page here
           ),
         IconTextDialogOption(
           icon: Icon(Icons.copy),
@@ -414,8 +421,7 @@ void showPopupMenuForSubscribing({
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               popWhenPress: c,
-              onPressed: () => // TODO test
-                  helper.showAndUpdateFavRemark(favorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+              onPressed: () => helper.showAndUpdateFavRemark(favorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
             ),
         ],
       ],
@@ -665,7 +671,7 @@ class _DialogHelper {
       context: context,
       builder: (c) => AlertDialog(
         title: Text('《$mangaTitle》备注'),
-        content: Text(remark == '' ? '暂无备注' : remark),
+        content: SelectableText(remark == '' ? '暂无备注' : remark),
         actions: [
           TextButton(child: Text('修改'), onPressed: () => Navigator.of(c).pop(true)),
           if (remark != '') TextButton(child: Text('复制'), onPressed: () => copyText(remark, showToast: true)),
@@ -708,7 +714,7 @@ class _DialogHelper {
     );
   }
 
-  void gotoChapterPage({required int chapterId, required List<MangaChapterGroup> chapterGroups, required MangaHistory? history, required bool readFirstPage}) {
+  void gotoChapterPage({required int chapterId, required List<MangaChapterGroup> chapterGroups, required MangaHistory? history, required bool readFirstPage, required bool onlineMode}) {
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
@@ -722,7 +728,7 @@ class _DialogHelper {
           initialPage: !readFirstPage && history?.chapterId == chapterId
               ? history?.chapterPage ?? 1 // have read
               : 1 /* have not read, or readFirstPage == true */,
-          onlineMode: true,
+          onlineMode: onlineMode,
         ),
       ),
     );

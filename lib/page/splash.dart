@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/page/dlg/message_dialog.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -12,6 +14,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/notification.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:manhuagui_flutter/service/storage/download_notification.dart';
@@ -74,11 +77,26 @@ class SplashPage extends StatefulWidget {
       }
     });
 
-    // 3. check auth asynchronously
+    // 3. check auth and checkin asynchronously
     Future.microtask(() async {
       var r = await AuthManager.instance.check();
       if (!r.logined && r.error != null) {
         Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');
+      } else if (r.logined && AppSetting.instance.ui.enableAutoCheckin) {
+        var lastDateTime = await AuthPrefs.getLoginDateTime(), nowDateTime = DateTime.now();
+        if (lastDateTime == null || lastDateTime.month != nowDateTime.month || lastDateTime.day != nowDateTime.day) {
+          var password = await AuthPrefs.getUserPassword(AuthManager.instance.username);
+          if (password != null && password.isNotEmpty) {
+            final client = RestClient(DioManager.instance.dio);
+            try {
+              await client.login(username: AuthManager.instance.username, password: password);
+              await AuthPrefs.setLoginDateTime(DateTime.now());
+              Fluttertoast.showToast(msg: '每日登录签到成功 (${formatDatetimeAndDuration(nowDateTime, FormatPattern.date)})');
+            } catch (e, s) {
+              wrapError(e, s); // ignored
+            }
+          }
+        }
       }
     });
   }
