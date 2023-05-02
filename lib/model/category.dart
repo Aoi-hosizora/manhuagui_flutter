@@ -84,13 +84,17 @@ final allGenres = <TinyCategory>[
 
 // 按受众 (顺序已调整)
 final allAges = <TinyCategory>[
-  const TinyCategory(title: '全部', name: 'all'),
-  const TinyCategory(title: '少年', name: 'shaonian'),
-  const TinyCategory(title: '少女', name: 'shaonv'),
-  const TinyCategory(title: '青年', name: 'qingnian'),
-  const TinyCategory(title: '儿童', name: 'ertong'),
-  const TinyCategory(title: '通用', name: 'tongyong'),
+  const TinyCategory(title: '全部', name: 'all'), // 0
+  const TinyCategory(title: '少年', name: 'shaonian'), // 1
+  const TinyCategory(title: '少女', name: 'shaonv'), // 2
+  const TinyCategory(title: '青年', name: 'qingnian'), // 3
+  const TinyCategory(title: '儿童', name: 'ertong'), // 4
+  const TinyCategory(title: '通用', name: 'tongyong'), // 5
 ];
+
+final allAgeCategory = allAges[0]; // all
+final qingnianAgeCategory = allAges[3]; // qingnian
+final shaonvAgeCategory = allAges[2]; // shaonv
 
 // 按地区 (顺序已调整)
 final allZones = <TinyCategory>[

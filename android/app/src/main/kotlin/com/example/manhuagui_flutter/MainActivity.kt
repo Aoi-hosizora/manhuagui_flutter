@@ -38,6 +38,8 @@ class MainActivity : FlutterActivity(), MethodCallHandler {
         }
     }
 
+    // TODO waifu2x bytearray
+
     private fun restartApp(@Suppress("UNUSED_PARAMETER") call: MethodCall, result: MethodResult) {
         // https://github.com/gabrimatic/restart_app/blob/master/android/src/main/kotlin/gabrimatic/info/restart/RestartPlugin.kt
 

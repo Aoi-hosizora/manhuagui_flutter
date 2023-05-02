@@ -47,7 +47,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _preloadCount = widget.setting.preloadCount;
   late var _pageNoPosition = widget.setting.pageNoPosition;
   late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
-  late var _keepAppBarWhenReplace = widget.setting.keepAppBarWhenReplace;
+  late var _appBarSwitchBehavior = widget.setting.appBarSwitchBehavior;
 
   ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
@@ -61,7 +61,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         preloadCount: _preloadCount,
         pageNoPosition: _pageNoPosition,
         hideAppBarWhenEnter: _hideAppBarWhenEnter,
-        keepAppBarWhenReplace: _keepAppBarWhenReplace,
+        appBarSwitchBehavior: _appBarSwitchBehavior,
       );
 
   void _setToDefault() {
@@ -77,7 +77,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _preloadCount = setting.preloadCount;
     _pageNoPosition = setting.pageNoPosition;
     _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
-    _keepAppBarWhenReplace = setting.keepAppBarWhenReplace;
+    _appBarSwitchBehavior = setting.appBarSwitchBehavior;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -195,11 +195,14 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
-        SettingSwitcherView(
-          title: '切换章节时保持标题栏',
-          value: _keepAppBarWhenReplace,
-          onChanged: (b) {
-            _keepAppBarWhenReplace = b;
+        SettingComboBoxView<AppBarSwitchBehavior>(
+          title: '切换章节时标题栏行为',
+          value: _appBarSwitchBehavior,
+          values: const [AppBarSwitchBehavior.keep, AppBarSwitchBehavior.show, AppBarSwitchBehavior.hide],
+          enable: _viewDirection == ViewDirection.topToBottom,
+          textBuilder: (s) => s.toOptionTitle(),
+          onChanged: (s) {
+            _appBarSwitchBehavior = s;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

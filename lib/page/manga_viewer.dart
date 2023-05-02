@@ -187,7 +187,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _ScreenHelper.initialize(
       context: context,
       setState: () => mountedSetState(() {}),
-      showAppBar: (!widget.replacing || !_setting.keepAppBarWhenReplace) ? !_setting.hideAppBarWhenEnter : null,
+      showAppBar: !widget.replacing
+          ? !_setting.hideAppBarWhenEnter // show/hide appBar when enter
+          : _setting.appBarSwitchBehavior == AppBarSwitchBehavior.keep
+              ? null // keep appBar when switch
+              : _setting.appBarSwitchBehavior == AppBarSwitchBehavior.show, // show/hide appBar when switch
+      // TODO test
     );
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       // apply settings to screen

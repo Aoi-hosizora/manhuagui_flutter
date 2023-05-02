@@ -23,6 +23,7 @@ class MangaCollectionView extends StatefulWidget {
   const MangaCollectionView({
     Key? key,
     required this.type,
+    this.showMore = false, // TODO test
     this.ranking,
     this.rankingDateTime,
     this.updates,
@@ -38,6 +39,7 @@ class MangaCollectionView extends StatefulWidget {
   }) : super(key: key);
 
   final MangaCollectionType type;
+  final bool showMore;
   final List<MangaRanking>? ranking;
   final DateTime? rankingDateTime;
   final List<TinyManga>? updates;
@@ -103,7 +105,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
   }
 
   Widget _buildRankItem(BuildContext context, MangaRanking manga) {
-    final width = (MediaQuery.of(context).size.width - 15 * 3) / 2.5; // | ▢ ▢ ▢|
+    final count = !widget.showMore ? 3 : 4;
+    final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢|
     final height = width / 3 * 4;
 
     return Column(
@@ -150,7 +153,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
   }
 
   Widget _buildUpdateItem(BuildContext context, TinyManga manga) {
-    final width = (MediaQuery.of(context).size.width - 15 * 4) / 3.5; // | ▢ ▢ ▢ ▢|
+    final count = !widget.showMore ? 4 : 5;
+    final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
 
     return Column(
@@ -182,7 +186,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
   }
 
   Widget _buildHistoryItem(BuildContext context, MangaHistory manga) {
-    final width = (MediaQuery.of(context).size.width - 15 * 6) / 5.5; // | ▢ ▢ ▢ ▢ ▢ ▢|
+    final count = !widget.showMore ? 6 : 8;
+    final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
 
     return Column(
@@ -205,7 +210,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
   }
 
   Widget _buildShelfItem(BuildContext context, ShelfManga manga) {
-    final width = (MediaQuery.of(context).size.width - 15 * 4) / 3.5; // | ▢ ▢ ▢ ▢|
+    final count = !widget.showMore ? 4 : 5;
+    final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
 
     return Column(
@@ -237,7 +243,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
   }
 
   Widget _buildFavoriteItem(BuildContext context, FavoriteManga manga) {
-    final width = (MediaQuery.of(context).size.width - 15 * 6) / 5.5; // | ▢ ▢ ▢ ▢ ▢ ▢|
+    final count = !widget.showMore ? 6 : 8;
+    final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
 
     return Column(
@@ -260,7 +267,8 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
   }
 
   Widget _buildDownloadItem(BuildContext context, DownloadedManga manga) {
-    final width = (MediaQuery.of(context).size.width - 15 * 4) / 3.5; // | ▢ ▢ ▢ ▢|
+    final count = !widget.showMore ? 4 : 5;
+    final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
 
     return Column(
@@ -346,9 +354,9 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return HomepageColumnView(
       title: title,
       icon: icon,
-      onRefreshPressed: widget.onRefreshPressed,
+      onRefreshPressed: widget.onRefreshPressed /* for all types */,
       disableRefresh: widget.disableRefresh,
-      rightText: right,
+      rightText: right /* only for rankings */,
       onMorePressed: widget.onMorePressed,
       child: PlaceholderText.from(
         isLoading: widgets == null,

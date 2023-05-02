@@ -38,7 +38,7 @@ class AppSettingPrefs {
   static const _preloadCountKey = IntKey('AppSettingPrefs_preloadCount');
   static const _pageNoPositionKey = IntKey('AppSettingPrefs_pageNoPosition');
   static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
-  static const _keepAppBarWhenReplaceKey = BoolKey('AppSettingPrefs_keepAppBarWhenReplace');
+  static const _appBarSwitchBehaviorKey = IntKey('AppSettingPrefs_appBarSwitchBehavior');
 
   static List<TypedKey> get viewSettingKeys => [
         _viewDirectionKey,
@@ -52,7 +52,7 @@ class AppSettingPrefs {
         _preloadCountKey,
         _pageNoPositionKey,
         _hideAppBarWhenEnterKey,
-        _keepAppBarWhenReplaceKey,
+        _appBarSwitchBehaviorKey,
       ];
 
   static Future<ViewSetting> _loadViewSetting() async {
@@ -70,7 +70,7 @@ class AppSettingPrefs {
       preloadCount: prefs.safeGet<int>(_preloadCountKey) ?? def.preloadCount,
       pageNoPosition: PageNoPositionExtension.fromInt(prefs.safeGet<int>(_pageNoPositionKey) ?? def.pageNoPosition.toInt()),
       hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
-      keepAppBarWhenReplace: prefs.safeGet<bool>(_keepAppBarWhenReplaceKey) ?? def.keepAppBarWhenReplace,
+      appBarSwitchBehavior: AppBarSwitchBehaviorExtension.fromInt(prefs.safeGet<int>(_appBarSwitchBehaviorKey) ?? def.appBarSwitchBehavior.toInt()),
     );
   }
 
@@ -88,7 +88,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_preloadCountKey, setting.preloadCount);
     await prefs.safeSet<int>(_pageNoPositionKey, setting.pageNoPosition.toInt());
     await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
-    await prefs.safeSet<bool>(_keepAppBarWhenReplaceKey, setting.keepAppBarWhenReplace);
+    await prefs.safeSet<int>(_appBarSwitchBehaviorKey, setting.appBarSwitchBehavior.toInt());
   }
 
   // ==========
@@ -144,6 +144,7 @@ class AppSettingPrefs {
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
   static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
   static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
+  static const _homepageShowMoreMangasKey = BoolKey('AppSettingPrefs_homepageShowMoreMangas');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
   static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
   static const _homepageFavoriteKey = IntKey('AppSettingPrefs_homepageFavorite');
@@ -161,6 +162,7 @@ class AppSettingPrefs {
         _otherGroupRowsKey,
         _allowErrorToastKey,
         _overviewLoadAllKey,
+        _homepageShowMoreMangasKey,
         _includeUnreadInHomeKey,
         _audienceMangaRowsKey,
         _homepageFavoriteKey,
@@ -182,6 +184,7 @@ class AppSettingPrefs {
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
       allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
       overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
+      homepageShowMoreMangas: prefs.safeGet<bool>(_homepageShowMoreMangasKey) ?? def.homepageShowMoreMangas,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
       audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
       homepageFavorite: HomepageFavoriteExtension.fromInt(prefs.safeGet<int>(_homepageFavoriteKey) ?? def.homepageFavorite.toInt()),
@@ -203,6 +206,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
     await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
     await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
+    await prefs.safeSet<bool>(_homepageShowMoreMangasKey, setting.homepageShowMoreMangas);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
     await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
     await prefs.safeSet<int>(_homepageFavoriteKey, setting.homepageFavorite.toInt());
@@ -292,5 +296,12 @@ class AppSettingPrefs {
     await prefs.safeMigrate<int>('GlbSetting_timeoutBehavior', _timeoutBehaviorKey, defaultValue: otherDef.timeoutBehavior.toInt());
     await prefs.safeMigrate<int>('GlbSetting_dlTimeoutBehavior', _dlTimeoutBehaviorKey, defaultValue: otherDef.dlTimeoutBehavior.toInt());
     await prefs.safeMigrate<bool>('GlbSetting_enableLogger', _enableLoggerKey, defaultValue: otherDef.enableLogger);
+  }
+
+  static Future<void> upgradeFromVer3To4(SharedPreferences prefs) async {
+    var keepAppBarWhenReplace = prefs.safeGet<bool>(BoolKey('AppSettingPrefs_keepAppBarWhenReplace'));
+    var appBarSwitchBehavior = keepAppBarWhenReplace == null || keepAppBarWhenReplace == true ? AppBarSwitchBehavior.keep : AppBarSwitchBehavior.show;
+    await prefs.safeSet<int>(_appBarSwitchBehaviorKey, appBarSwitchBehavior.toInt());
+    await prefs.remove('AppSettingPrefs_keepAppBarWhenReplace');
   }
 }

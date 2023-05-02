@@ -83,7 +83,7 @@ class ViewSetting {
     required this.fullscreen,
     required this.preloadCount,
     required this.hideAppBarWhenEnter,
-    required this.keepAppBarWhenReplace,
+    required this.appBarSwitchBehavior,
   });
 
   final ViewDirection viewDirection; // 阅读方向
@@ -97,7 +97,7 @@ class ViewSetting {
   final int preloadCount; // 预加载页数
   final PageNoPosition pageNoPosition; // 每页显示额外页码
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
-  final bool keepAppBarWhenReplace; // 切换章节时保持标题栏 // TODO => 显示、隐藏、保持
+  final AppBarSwitchBehavior appBarSwitchBehavior; // 切换章节时标题栏行为
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -111,7 +111,7 @@ class ViewSetting {
     preloadCount: 3,
     pageNoPosition: PageNoPosition.hide,
     hideAppBarWhenEnter: true,
-    keepAppBarWhenReplace: true,
+    appBarSwitchBehavior: AppBarSwitchBehavior.keep,
   );
 
   ViewSetting copyWith({
@@ -126,7 +126,7 @@ class ViewSetting {
     int? preloadCount,
     PageNoPosition? pageNoPosition,
     bool? hideAppBarWhenEnter,
-    bool? keepAppBarWhenReplace,
+    AppBarSwitchBehavior? appBarSwitchBehavior,
   }) {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
@@ -140,7 +140,7 @@ class ViewSetting {
       preloadCount: preloadCount ?? this.preloadCount,
       pageNoPosition: pageNoPosition ?? this.pageNoPosition,
       hideAppBarWhenEnter: hideAppBarWhenEnter ?? this.hideAppBarWhenEnter,
-      keepAppBarWhenReplace: keepAppBarWhenReplace ?? this.keepAppBarWhenReplace,
+      appBarSwitchBehavior: appBarSwitchBehavior ?? this.appBarSwitchBehavior,
     );
   }
 }
@@ -257,6 +257,48 @@ extension PageNoPositionExtension on PageNoPosition {
   }
 }
 
+enum AppBarSwitchBehavior {
+  keep,
+  show,
+  hide,
+}
+
+extension AppBarSwitchBehaviorExtension on AppBarSwitchBehavior {
+  String toOptionTitle() {
+    switch (this) {
+      case AppBarSwitchBehavior.keep:
+        return '保持显示状态';
+      case AppBarSwitchBehavior.show:
+        return '显示标题栏';
+      case AppBarSwitchBehavior.hide:
+        return '隐藏标题栏';
+    }
+  }
+
+  int toInt() {
+    switch (this) {
+      case AppBarSwitchBehavior.keep:
+        return 0;
+      case AppBarSwitchBehavior.show:
+        return 1;
+      case AppBarSwitchBehavior.hide:
+        return 2;
+    }
+  }
+
+  static AppBarSwitchBehavior fromInt(int i) {
+    switch (i) {
+      case 0:
+        return AppBarSwitchBehavior.keep;
+      case 1:
+        return AppBarSwitchBehavior.show;
+      case 2:
+        return AppBarSwitchBehavior.hide;
+    }
+    return AppBarSwitchBehavior.keep;
+  }
+}
+
 // =========
 // DlSetting
 // =========
@@ -317,6 +359,7 @@ class UiSetting {
     required this.allowErrorToast,
     required this.overviewLoadAll,
     required this.includeUnreadInHome,
+    required this.homepageShowMoreMangas,
     required this.audienceRankingRows,
     required this.homepageFavorite,
     required this.homepageRefreshData,
@@ -334,7 +377,7 @@ class UiSetting {
   final bool allowErrorToast; // 允许弹出漫画错误提示
   final bool overviewLoadAll; // 章节一览页加载所有图片
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
-  // final bool homepageShowMoreManga; // 首页显示更多漫画 // TODO
+  final bool homepageShowMoreMangas; // 首页显示更多漫画
   final int audienceRankingRows; // 首页受众排行榜显示行数
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
   final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为
@@ -352,6 +395,7 @@ class UiSetting {
     allowErrorToast: true,
     overviewLoadAll: false,
     includeUnreadInHome: true,
+    homepageShowMoreMangas: false,
     audienceRankingRows: 5,
     homepageFavorite: HomepageFavorite.defaultAscOrder,
     homepageRefreshData: HomepageRefreshData.includeListIfEmpty,
@@ -370,6 +414,7 @@ class UiSetting {
     bool? allowErrorToast,
     bool? overviewLoadAll,
     bool? includeUnreadInHome,
+    bool? homepageShowMoreMangas,
     int? audienceRankingRows,
     HomepageFavorite? homepageFavorite,
     HomepageRefreshData? homepageRefreshData,
@@ -387,6 +432,7 @@ class UiSetting {
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
       overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
+      homepageShowMoreMangas: homepageShowMoreMangas ?? this.homepageShowMoreMangas,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
       homepageFavorite: homepageFavorite ?? this.homepageFavorite,
       homepageRefreshData: homepageRefreshData ?? this.homepageRefreshData,

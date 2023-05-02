@@ -416,12 +416,27 @@ class _SearchPageState extends State<SearchPage> {
                             InkWell(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                child: IconText(
-                                  icon: Icon(Icons.history, color: Colors.black45),
-                                  text: Flexible(
-                                    child: Text(h, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                  ),
-                                  // TODO trailing icon when clickToSearch is false
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    IconText(
+                                      icon: Icon(Icons.history, color: Colors.black45),
+                                      text: Flexible(
+                                        child: Text(h, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                      ),
+                                    ),
+                                    if (AppSetting.instance.ui.clickToSearch)
+                                      InkWell(
+                                        child: Tooltip(
+                                          child: Padding(
+                                            padding: EdgeInsets.all(5),
+                                            child: Icon(Icons.north_west),
+                                          ),
+                                          message: '更新搜索关键词',
+                                        ),
+                                        onTap: () => _text = h, // => 候选
+                                      ), // TODO test
+                                  ],
                                 ),
                               ),
                               onTap: () {

@@ -389,25 +389,31 @@ class _MangaPageState extends State<MangaPage> {
           }
         } else {
           // 已找到下一个章节
-          var readNew = await showDialog<bool>(
+          var result = await showDialog<int>(
             context: context,
-            // TODO use simple dialog rather alert dialog
-            builder: (c) => AlertDialog(
+            builder: (c) => SimpleDialog(
               title: Text('继续阅读'),
-              content: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否选择阅读下一章节 (${nextChapter.title})？'),
-              actions: [
-                TextButton(child: Text('开始阅读新章节'), onPressed: () => Navigator.of(c).pop(true)),
-                TextButton(child: Text('继续阅读该章节'), onPressed: () => Navigator.of(c).pop(false)),
-                TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop()),
+              children: [
+                Text(
+                  '该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否选择阅读下一章节 (${nextChapter.title})？',
+                  style: Theme.of(context).textTheme.subtitle2,
+                ),
+                SizedBox(height: 8),
+                IconTextDialogOption(icon: Icon(Icons.import_contacts), text: Text('开始阅读新章节'), onPressed: () => Navigator.of(c).pop(1)),
+                IconTextDialogOption(icon: Icon(Icons.import_contacts), text: Text('从头阅读该章节'), onPressed: () => Navigator.of(c).pop(2)),
+                IconTextDialogOption(icon: Icon(Icons.import_contacts), text: Text('继续阅读该章节'), onPressed: () => Navigator.of(c).pop(3)),
+                IconTextDialogOption(icon: Icon(Icons.close), text: Text('取消'), onPressed: () => Navigator.of(c).pop()),
               ],
             ),
-          );
-          if (readNew == null) {
+          ); // TODO test
+          if (result == null) {
             return;
           }
-          if (readNew == true) {
+          if (result == 1) {
             cid = nextChapter.cid;
-            page = 1; // 从头阅读新章节
+            page = 1; // 开始阅读新章节
+          } else if (result == 2) {
+            page = 1; // 从头阅读该章节
           }
         }
       }

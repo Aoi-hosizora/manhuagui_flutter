@@ -414,8 +414,8 @@ void showPopupMenuForSubscribing({
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               popWhenPress: c,
-              onPressed: () => // TODO show first and then update
-                  helper.updateFavRemark(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+              onPressed: () => // TODO test
+                  helper.showAndUpdateFavRemark(favorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
             ),
         ],
       ],
@@ -579,14 +579,6 @@ class _DialogHelper {
     );
   }
 
-  static Future<void> showFavoriteRemarkDialog({
-    required BuildContext context,
-    required String mangaTitle,
-    required String remark,
-  }) async {
-    // TODO show first and then edit
-  }
-
   static Future<Tuple1<String>?> showEditFavoriteRemarkDialog({
     required BuildContext context,
     required String remark,
@@ -662,6 +654,26 @@ class _DialogHelper {
     return Tuple1(
       controller.text.trim(), // remark, empty-able
     );
+  }
+
+  static Future<bool> showFavoriteRemarkDialog({
+    required BuildContext context,
+    required String mangaTitle,
+    required String remark,
+  }) async {
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('《$mangaTitle》备注'),
+        content: Text(remark == '' ? '暂无备注' : remark),
+        actions: [
+          TextButton(child: Text('修改'), onPressed: () => Navigator.of(c).pop(true)),
+          if (remark != '') TextButton(child: Text('复制'), onPressed: () => copyText(remark, showToast: true)),
+          TextButton(child: Text('关闭'), onPressed: () => Navigator.of(c).pop()),
+        ],
+      ),
+    );
+    return ok ?? false;
   }
 
   // =======================
@@ -985,7 +997,7 @@ class _DialogHelper {
     }
   }
 
-  // => called by showUpdateFavoriteRemarkDialog, showPopupMenuForSubscribing
+  // => called by showUpdateFavoriteRemarkDialog
   Future<void> updateFavRemark({
     required FavoriteManga oldFavorite,
     required void Function(FavoriteManga newFavorite) onUpdated,
@@ -1008,5 +1020,25 @@ class _DialogHelper {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(newRemark == '' ? '已删除收藏备注' : '已将备注修改为 "$newRemark"')));
     }
     EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromMangaPage: fromMangaPage));
+  }
+
+  // => called by showPopupMenuForSubscribing
+  Future<void> showAndUpdateFavRemark({
+    required FavoriteManga favorite,
+    required void Function(FavoriteManga newFavorite) onUpdated,
+    required bool showSnackBar,
+    required bool fromFavoriteList,
+    required bool fromMangaPage,
+  }) async {
+    var toEdit = await showFavoriteRemarkDialog(context: context, remark: favorite.remark.trim(), mangaTitle: mangaTitle);
+    if (toEdit) {
+      await updateFavRemark(
+        oldFavorite: favorite,
+        onUpdated: onUpdated,
+        showSnackBar: showSnackBar,
+        fromFavoriteList: fromFavoriteList,
+        fromMangaPage: fromMangaPage,
+      );
+    }
   }
 }

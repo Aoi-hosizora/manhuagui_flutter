@@ -30,7 +30,7 @@ class PrefsManager {
     return await loadPrefs();
   }
 
-  static const _newestVersion = 3;
+  static const _newestVersion = 3; // TODO migrate to 4 before releasing
 
   Future<void> upgradePrefs(SharedPreferences prefs) async {
     var version = prefs.getVersion();
@@ -54,6 +54,13 @@ class PrefsManager {
       await AuthPrefs.upgradeFromVer2To3(prefs);
       await ReadMessagePrefs.upgradeFromVer2To3(prefs);
       await SearchHistoryPrefs.upgradeFromVer2To3(prefs);
+    }
+    if (version == 3) {
+      version = 4; // 3 -> 4 upgrade
+      await AppSettingPrefs.upgradeFromVer3To4(prefs);
+      await AuthPrefs.upgradeFromVer3To4(prefs);
+      await ReadMessagePrefs.upgradeFromVer3To4(prefs);
+      await SearchHistoryPrefs.upgradeFromVer3To4(prefs);
     }
 
     await prefs.setVersion(_newestVersion);

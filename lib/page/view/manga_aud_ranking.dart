@@ -280,14 +280,12 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                       : widget.shaonvRankingsDateTime //
               ) ?? DateTime.now(), FormatPattern.dateNoYear)} 更新)',
       icon: Icons.emoji_events,
-      onRefreshPressed: _currentPageIndex == 0
-          ? null // 全部漫画则隐藏刷新
-          : () => widget.onRetryPressed?.call(_indexToType(_currentPageIndex)),
-      disableRefresh: (_currentPageIndex == 0) || //
+      onRefreshPressed: () => widget.onRetryPressed?.call(_indexToType(_currentPageIndex)),
+      disableRefresh: (_currentPageIndex == 0 && widget.allRankings == null) || //
           (_currentPageIndex == 1 && widget.qingnianRankings == null) ||
           (_currentPageIndex == 2 && widget.shaonvRankings == null),
       onHintPressed: _currentPageIndex != 0
-          ? null // 全部漫画则显示提示
+          ? null // 全部漫画则显示额外的提示按钮
           : () => showYesNoAlertDialog(
                 context: context,
                 title: Text('漫画排行榜提示'),

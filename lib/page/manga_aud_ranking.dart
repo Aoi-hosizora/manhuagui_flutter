@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
-import 'package:manhuagui_flutter/page/view/homepage_column.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
+import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
 
@@ -27,6 +29,7 @@ class MangaAudRankingPage extends StatefulWidget {
 
 class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
   final _controller = ScrollController();
+  final _fabController = AnimatedFabController();
 
   @override
   void initState() {
@@ -47,54 +50,96 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
     _flagStorage.queryAndStoreFlags(mangaIds: widget.rankings.map((e) => e.mid)).then((_) => mountedSetState(() {}));
   }
 
+  String _typeToString(MangaAudRankingType type) {
+    return type == MangaAudRankingType.all
+        ? '全部漫画'
+        : type == MangaAudRankingType.qingnian
+            ? '青年漫画'
+            : '少女漫画';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('漫画受众排行榜'),
+        title: Text('${_typeToString(widget.type)} 日排行榜'), // TODO test
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
       ),
       drawer: AppDrawer(
         currentSelection: DrawerSelection.none,
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
-      body: ExtendedScrollbar(
-        controller: _controller,
-        interactive: true,
-        mainAxisMargin: 2,
-        crossAxisMargin: 2,
-        child: ListView( // TODO change to use RefreshableDataView (also for dragging to refresh, and two columns), referred to RankingSubPage
-          controller: _controller,
-          padding: EdgeInsets.zero,
-          physics: AlwaysScrollableScrollPhysics(),
-          children: [
-            HomepageColumnView(
-              title: '日排行榜 - ' +
-                  (widget.type == MangaAudRankingType.all
-                      ? '全部漫画'
-                      : widget.type == MangaAudRankingType.qingnian
-                          ? '青年漫画'
-                          : '少女漫画'),
-              icon: Icons.emoji_events,
+      body: RefreshableDataView<MangaRanking>( // TODO test
+        style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
+        data: widget.rankings,
+        getData: () async => [], // TODO disable refresh indicator
+        scrollController: _controller,
+        setting: UpdatableDataViewSetting(
+          padding: EdgeInsets.symmetric(vertical: 0),
+          interactiveScrollbar: true,
+          scrollbarMainAxisMargin: 2,
+          scrollbarCrossAxisMargin: 2,
+          placeholderSetting: PlaceholderSetting().copyWithChinese(),
+          onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+          refreshFirst: false /* not to refresh first for aud ranking list */,
+          clearWhenRefresh: false,
+          clearWhenError: false,
+        ),
+        separator: Divider(height: 0, thickness: 1),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 0.0,
+          mainAxisSpacing: 0.0,
+          childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+        ),
+        itemBuilder: (c, _, item) => MangaRankingLineView(
+          manga: item,
+          flags: _flagStorage.getFlags(mangaId: item.mid),
+          twoColumns: AppSetting.instance.ui.showTwoColumns,
+        ),
+        extra: UpdatableDataViewExtraWidgets(
+          outerTopWidgets: [
+            ListHintView.textText(
+              leftText: '漫画受众排行榜 (${_typeToString(widget.type)})',
               rightText: '更新于 ${formatDatetimeAndDuration(widget.rankingDatetime ?? DateTime.now(), FormatPattern.date)}',
-              padding: EdgeInsets.zero,
-              childColor: Theme.of(context).scaffoldBackgroundColor,
-              child: Column(
-                children: [
-                  for (var manga in widget.rankings) ...[
-                    Divider(height: 0, thickness: 1),
-                    MangaRankingLineView(
-                      manga: manga,
-                      flags: _flagStorage.getFlags(mangaId: manga.mid),
-                    ),
-                  ],
-                ],
-              ),
             ),
           ],
         ),
       ),
+      // ExtendedScrollbar(
+      //   controller: _controller,
+      //   interactive: true,
+      //   mainAxisMargin: 2,
+      //   crossAxisMargin: 2,
+      //   child: ListView(
+      //     // change to use RefreshableDataView (also for dragging to refresh, and two columns), referred to RankingSubPage
+      //     controller: _controller,
+      //     padding: EdgeInsets.zero,
+      //     physics: AlwaysScrollableScrollPhysics(),
+      //     children: [
+      //       HomepageColumnView(
+      //         title: '漫画受众排行榜 (${_typeToString(widget.type)})',
+      //         icon: Icons.emoji_events,
+      //         rightText: '更新于 ${formatDatetimeAndDuration(widget.rankingDatetime ?? DateTime.now(), FormatPattern.date)}',
+      //         padding: EdgeInsets.zero,
+      //         childColor: Theme.of(context).scaffoldBackgroundColor,
+      //         child: Column(
+      //           children: [
+      //             for (var manga in widget.rankings) ...[
+      //               Divider(height: 0, thickness: 1),
+      //               MangaRankingLineView(
+      //                 manga: manga,
+      //                 flags: _flagStorage.getFlags(mangaId: manga.mid),
+      //               ),
+      //             ],
+      //           ],
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      // ),
       floatingActionButton: ScrollAnimatedFab(
+        controller: _fabController,
         scrollController: _controller,
         condition: ScrollAnimatedCondition.direction,
         fab: FloatingActionButton(

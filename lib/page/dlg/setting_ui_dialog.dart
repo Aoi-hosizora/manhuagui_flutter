@@ -46,6 +46,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _otherGroupRows = widget.setting.otherGroupRows;
   late var _allowErrorToast = widget.setting.allowErrorToast;
   late var _overviewLoadAll = widget.setting.overviewLoadAll;
+  late var _homepageShowMoreMangas = widget.setting.homepageShowMoreMangas;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
   late var _audienceMangaRows = widget.setting.audienceRankingRows;
   late var _homepageFavorite = widget.setting.homepageFavorite;
@@ -63,6 +64,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         otherGroupRows: _otherGroupRows,
         allowErrorToast: _allowErrorToast,
         overviewLoadAll: _overviewLoadAll,
+    homepageShowMoreMangas: _homepageShowMoreMangas,
         includeUnreadInHome: _includeUnreadInHome,
         audienceRankingRows: _audienceMangaRows,
         homepageFavorite: _homepageFavorite,
@@ -82,6 +84,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _otherGroupRows = setting.otherGroupRows;
     _allowErrorToast = setting.allowErrorToast;
     _overviewLoadAll = setting.overviewLoadAll;
+    _homepageShowMoreMangas = setting.homepageShowMoreMangas;
     _includeUnreadInHome = setting.includeUnreadInHome;
     _audienceMangaRows = setting.audienceRankingRows;
     _homepageFavorite = setting.homepageFavorite;
@@ -207,6 +210,15 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           title: '首页显示设置',
         ),
         SettingSwitcherView(
+          title: '首页显示更多漫画',
+          value: _homepageShowMoreMangas,
+          onChanged: (b) {
+            _homepageShowMoreMangas = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
           title: '首页显示未阅读漫画历史',
           value: _includeUnreadInHome,
           onChanged: (b) {
@@ -241,7 +253,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingComboBoxView<HomepageRefreshData>(
           title: '首页下拉刷新行为',
-          width: 190, // TODO
+          width: 190, // TODO test
           value: _homepageRefreshData,
           values: HomepageRefreshData.values,
           textBuilder: (s) => s.toOptionTitle(),

@@ -229,6 +229,7 @@ class _AppDrawerState extends State<AppDrawer> {
           Divider(thickness: 1),
           _buildItem('我的书架', MdiIcons.bookshelf, DrawerSelection.shelf, () => _gotoPage(SepShelfPage(), canReplace: true), longPress: () => _gotoPage(SepShelfPage())),
           _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, DrawerSelection.favorite, () => _gotoPage(SepFavoritePage(), canReplace: true), longPress: () => _gotoPage(SepFavoritePage())),
+          // TODO add 稍后阅读
           _buildItem('阅读历史', Icons.history, DrawerSelection.history, () => _gotoPage(SepHistoryPage(), canReplace: true), longPress: () => _gotoPage(SepHistoryPage())),
           _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage(), canReplace: true), longPress: () => _gotoPage(DownloadPage())),
           _buildItem('最近更新', Icons.cached, DrawerSelection.recent, () => _gotoPage(SepRecentPage(), canReplace: true), longPress: () => _gotoPage(SepRecentPage())),

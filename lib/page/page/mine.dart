@@ -446,7 +446,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 child: ActionRowView.four(
                   action1: ActionItem.simple('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
                   action2: ActionItem.simple('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
-                  action3: ActionItem.simple('登录签到', !_checkining ? Icons.event_available : null, () => _checkin(), enable: !_checkining),
+                  action3: ActionItem.simple('登录签到', !_checkining ? Icons.event_available : null, () => _checkin(), enable: !_checkining), // TODO add 自动签到
                   action4: ActionItem.simple('退出登录', Icons.logout, () => _logout(sure: false)),
                 ),
               ),
@@ -467,6 +467,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                     : () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepFavoritePage())),
               ),
               _buildDivider(),
+              // TODO add 稍后阅读
               _buildActionLine(
                 text: '阅读历史',
                 icon: Icons.history,
