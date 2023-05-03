@@ -16,8 +16,6 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-// TODO update application icon
-
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
