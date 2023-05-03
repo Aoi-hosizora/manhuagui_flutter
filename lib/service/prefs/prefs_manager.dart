@@ -30,7 +30,7 @@ class PrefsManager {
     return await loadPrefs();
   }
 
-  static const _newestVersion = 3; // TODO migrate to 4 before releasing
+  static const _newestVersion = 4;
 
   Future<void> upgradePrefs(SharedPreferences prefs) async {
     var version = prefs.getVersion();

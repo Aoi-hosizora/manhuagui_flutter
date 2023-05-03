@@ -41,6 +41,10 @@ class ShelfCacheDao {
       )''');
   }
 
+  static Future<void> upgradeFromVer4To5(Database db) async {
+    // pass
+  }
+
   static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
     return QueryHelper.buildLikeStatement(
       [_colMangaTitle, if (!pureSearch) _colMangaId],

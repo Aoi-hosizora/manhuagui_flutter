@@ -13,6 +13,7 @@ enum MangaCollectionType {
   rankings,
   recents,
   histories,
+  laters,
   shelves,
   favorites,
   downloads,
@@ -28,6 +29,7 @@ class MangaCollectionView extends StatefulWidget {
     this.rankingDateTime,
     this.updates,
     this.histories,
+    this.laters,
     this.shelves,
     this.favorites,
     this.downloads,
@@ -44,6 +46,7 @@ class MangaCollectionView extends StatefulWidget {
   final DateTime? rankingDateTime;
   final List<TinyManga>? updates;
   final List<MangaHistory>? histories;
+  final List<LaterManga>? laters;
   final List<ShelfManga>? shelves;
   final List<FavoriteManga>? favorites;
   final List<DownloadedManga>? downloads;
@@ -209,6 +212,30 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
+  Widget _buildLaterItem(BuildContext context, LaterManga manga) {
+    final count = !widget.showMore ? 6 : 8;
+    final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢ ▢ ▢|
+    final height = width / 3 * 4;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaUrl, manga.mangaCover, width, height),
+        Container(
+          width: width,
+          padding: EdgeInsets.only(top: 2),
+          child: Text(
+            manga.mangaTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildShelfItem(BuildContext context, ShelfManga manga) {
     final count = !widget.showMore ? 4 : 5;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
@@ -331,6 +358,12 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
         icon = Icons.history;
         widgets = widget.histories?.sublist(0, widget.histories!.length.clamp(0, 30)).map((el) => _buildHistoryItem(context, el)).toList(); // # = 30
         twoLine = widgets != null && widgets.length > 10;
+        break;
+      case MangaCollectionType.laters:
+        title = widget.username == null ? '我的稍后阅读列表' : '${widget.username} 的稍后阅读列表';
+        icon = Icons.watch_later;
+        widgets = widget.laters?.sublist(0, widget.laters!.length.clamp(0, 20)).map((el) => _buildLaterItem(context, el)).toList(); // # = 20
+        twoLine = false;
         break;
       case MangaCollectionType.shelves:
         title = widget.username == null ? '我的书架' : '${widget.username} 的书架';

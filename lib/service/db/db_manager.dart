@@ -3,6 +3,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -32,7 +33,7 @@ class DBManager {
     _database = null;
   }
 
-  static const _newestVersion = 4;
+  static const _newestVersion = 5;
 
   Future<Database> openDB(String filepath) async {
     return await openDatabase(
@@ -53,6 +54,7 @@ class DBManager {
       await DownloadDao.createForVer1(db);
       await FavoriteDao.createForVer1(db);
       await ShelfCacheDao.createForVer1(db);
+      await LaterMangaDao.createForVer1(db);
     }
     if (version == 1) {
       version = 2; // 1 -> 2 upgrade
@@ -60,6 +62,7 @@ class DBManager {
       await DownloadDao.upgradeFromVer1To2(db);
       await FavoriteDao.upgradeFromVer1To2(db);
       await ShelfCacheDao.upgradeFromVer1To2(db);
+      await LaterMangaDao.upgradeFromVer1To2(db);
     }
     if (version == 2) {
       version = 3; // 2 -> 3 upgrade
@@ -67,6 +70,7 @@ class DBManager {
       await DownloadDao.upgradeFromVer2To3(db);
       await FavoriteDao.upgradeFromVer2To3(db);
       await ShelfCacheDao.upgradeFromVer2To3(db);
+      await LaterMangaDao.upgradeFromVer2To3(db);
     }
     if (version == 3) {
       version = 4; // 3 -> 4 upgrade
@@ -74,6 +78,15 @@ class DBManager {
       await DownloadDao.upgradeFromVer3To4(db);
       await FavoriteDao.upgradeFromVer3To4(db);
       await ShelfCacheDao.upgradeFromVer3To4(db);
+      await LaterMangaDao.upgradeFromVer3To4(db);
+    }
+    if (version == 4) {
+      version = 5; // 4 -> 5 upgrade
+      await HistoryDao.upgradeFromVer4To5(db);
+      await DownloadDao.upgradeFromVer4To5(db);
+      await FavoriteDao.upgradeFromVer4To5(db);
+      await ShelfCacheDao.upgradeFromVer4To5(db);
+      await LaterMangaDao.upgradeFromVer4To5(db);
     }
   }
 }

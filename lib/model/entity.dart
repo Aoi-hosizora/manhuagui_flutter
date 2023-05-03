@@ -539,3 +539,49 @@ class DownloadChapterMetadata {
         o.pages.join(',,,') == pages.join(',,,');
   }
 }
+
+class LaterManga {
+  final int mangaId;
+  final String mangaTitle;
+  final String mangaCover;
+  final String mangaUrl;
+  final DateTime createdAt;
+
+  const LaterManga({
+    required this.mangaId,
+    required this.mangaTitle,
+    required this.mangaCover,
+    required this.mangaUrl,
+    required this.createdAt,
+  });
+
+  String get formattedCreatedAt => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetimeNoSec);
+
+  String get formattedCreatedAtAndFullDuration => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetimeDuration);
+
+  LaterManga copyWith({
+    int? mangaId,
+    String? mangaTitle,
+    String? mangaCover,
+    String? mangaUrl,
+    DateTime? createdAt,
+  }) {
+    return LaterManga(
+      mangaId: mangaId ?? this.mangaId,
+      mangaTitle: mangaTitle ?? this.mangaTitle,
+      mangaCover: mangaCover ?? this.mangaCover,
+      mangaUrl: mangaUrl ?? this.mangaUrl,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  bool equals(LaterManga o) {
+    return mangaId == o.mangaId && //
+        mangaTitle == o.mangaTitle &&
+        mangaCover == o.mangaCover &&
+        mangaUrl == o.mangaUrl &&
+        createdAt == o.createdAt;
+  }
+}

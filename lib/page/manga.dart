@@ -16,6 +16,7 @@ import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
@@ -31,6 +32,7 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -110,6 +112,12 @@ class _MangaPageState extends State<MangaPage> {
         if (mounted) setState(() {});
       }
     }));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) async {
+      if (!ev.fromMangaPage && ev.mangaId == widget.id) {
+        _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: ev.mangaId);
+        if (mounted) setState(() {});
+      }
+    }));
   }
 
   @override
@@ -132,6 +140,7 @@ class _MangaPageState extends State<MangaPage> {
   var _subscribing = false; // 执行订阅操作中
   var _inShelf = false; // 书架
   var _inFavorite = false; // 收藏
+  LaterManga? _laterManga; // 稍后阅读
   var _showBriefIntroduction = true;
 
   Future<void> _loadData() async {
@@ -170,6 +179,7 @@ class _MangaPageState extends State<MangaPage> {
     _downloadEntity = await DownloadDao.getManga(mid: widget.id); // 下载记录
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id); // 本地收藏
     _inFavorite = _favoriteManga != null;
+    _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id); // 稍后阅读
 
     try {
       // 4. 获取漫画信息
@@ -322,6 +332,7 @@ class _MangaPageState extends State<MangaPage> {
       fromMangaPage: true,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
+      nowInLater: _laterManga != null,
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
       subscribing: (s) => mountedSetState(() => _subscribing = s),
@@ -329,6 +340,10 @@ class _MangaPageState extends State<MangaPage> {
       inFavoriteSetter: (f) {
         _inFavorite = f != null;
         _favoriteManga = f;
+        if (mounted) setState(() {});
+      },
+      inLaterSetter: (l) {
+        _laterManga = l;
         if (mounted) setState(() {});
       },
     );
@@ -380,7 +395,10 @@ class _MangaPageState extends State<MangaPage> {
               children: [
                 Padding(
                   padding: kAlertDialogDefaultContentPadding.copyWith(bottom: 6, top: 2),
-                  child: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，且暂无下一章节，是否继续阅读该章节？', style: Theme.of(context).textTheme.subtitle1),
+                  child: Text(
+                    '该章节 (${_history!.chapterTitle}) 已阅读至最后一页，且暂无下一章节，是否继续阅读该章节？',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
                 ),
                 IconTextDialogOption(
                   icon: Icon(CustomIcons.opened_left_star_book),
@@ -411,7 +429,10 @@ class _MangaPageState extends State<MangaPage> {
               children: [
                 Padding(
                   padding: kAlertDialogDefaultContentPadding.copyWith(bottom: 6, top: 2),
-                  child: Text('该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否阅读下一章节？', style: Theme.of(context).textTheme.subtitle1),
+                  child: Text(
+                    '该章节 (${_history!.chapterTitle}) 已阅读至最后一页，是否阅读下一章节？',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
                 ),
                 if (neighbor.nextSameGroupChapter != null)
                   IconTextDialogOption(
@@ -468,6 +489,52 @@ class _MangaPageState extends State<MangaPage> {
           initialPage: page,
           onlineMode: true,
         ),
+      ),
+    );
+  }
+
+  Future<void> _checkAndRemoveFromLater() async {
+    showDialog(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('稍后阅读'),
+        children: [
+          Padding(
+            padding: kAlertDialogDefaultContentPadding.copyWith(bottom: 6, top: 2),
+            child: Text(
+              '《${_data!.title}》在 ${_laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。',
+              style: Theme.of(context).textTheme.subtitle1,
+            ),
+          ),
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.bookMinus),
+            text: Text('取消稍后阅读'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+
+              // 更新数据库、更新界面、弹出提示、发送通知
+              await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: widget.id);
+              _laterManga = null;
+              if (mounted) setState(() {});
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已取消稍后阅读')));
+              EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: widget.id, added: false, fromLaterMangaPage: false, fromMangaPage: true));
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.bookRefreshOutline),
+            text: Text('查看稍后阅读列表'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => LaterMangaPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -980,6 +1047,30 @@ class _MangaPageState extends State<MangaPage> {
                     ],
                   ),
                 ),
+                // ****************************************************************
+                // 稍后阅读
+                // ****************************************************************
+                if (_laterManga != null)
+                  Material(
+                    color: Colors.blueGrey,
+                    child: InkWell(
+                      onTap: () => _checkAndRemoveFromLater(),
+                      onLongPress: () => _checkAndRemoveFromLater(),
+                      child: IconText(
+                        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        space: 16,
+                        icon: Icon(MdiIcons.bookRefresh, size: 26, color: Colors.white),
+                        text: Flexible(
+                          child: Text(
+                            '位于稍后阅读列表中 (${_laterManga!.formattedCreatedAt})',
+                            style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 // ****************************************************************
                 // 几个按钮
                 // ****************************************************************

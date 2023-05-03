@@ -352,9 +352,11 @@ packages:
   flutter_ahlib:
     dependency: "direct main"
     description:
-      path: "../flutter_ahlib"
-      relative: true
-    source: path
+      path: "."
+      ref: "2636ba5a9d23a1d57fc402458f2a6a21461d4f67"
+      resolved-ref: "2636ba5a9d23a1d57fc402458f2a6a21461d4f67"
+      url: "https://github.com/Aoi-hosizora/flutter_ahlib"
+    source: git
     version: "1.3.0"
   flutter_blurhash:
     dependency: transitive

@@ -104,6 +104,15 @@ class FavoriteAuthorUpdatedEvent {
   final bool fromAuthorPage;
 }
 
+class LaterMangaUpdatedEvent {
+  const LaterMangaUpdatedEvent({required this.mangaId, required this.added, this.fromLaterMangaPage = false, this.fromMangaPage = false});
+
+  final int mangaId;
+  final bool added;
+  final bool fromLaterMangaPage;
+  final bool fromMangaPage;
+}
+
 // ============
 // Other Events
 // ============

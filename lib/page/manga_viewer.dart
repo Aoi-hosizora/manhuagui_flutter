@@ -30,6 +30,7 @@ import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -174,6 +175,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         if (mounted) setState(() {});
       }
     }));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) async {
+      if (ev.mangaId == widget.mangaId) {
+        _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: ev.mangaId);
+        if (mounted) setState(() {});
+      }
+    }));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
       if (ev.mangaId == widget.mangaId && !ev.fromMangaViewerPage) {
         _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
@@ -248,6 +255,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _subscribing = false; // 执行订阅操作中
   var _inShelf = false; // 书架
   var _inFavorite = false; // 收藏
+  LaterManga? _laterManga; // 稍后阅读
   DownloadedManga? _downloadEntity;
   DownloadedChapter? _downloadChapter;
 
@@ -261,6 +269,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     // 1. 先获取各种数据库信息 (收藏、下载)
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
     _inFavorite = _favoriteManga != null;
+    _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
     _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
     _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
 
@@ -697,6 +706,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       fromMangaPage: false,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
+      nowInLater: _laterManga != null,
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
       subscribing: (s) => mountedSetState(() => _subscribing = s),
@@ -704,6 +714,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       inFavoriteSetter: (f) {
         _inFavorite = f != null;
         _favoriteManga = f;
+        if (mounted) setState(() {});
+      },
+      inLaterSetter: (l) {
+        _laterManga = l;
         if (mounted) setState(() {});
       },
     );
@@ -1200,6 +1214,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       subscribing: _subscribing,
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
+                      laterManga: _laterManga,
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
                       toGotoNeighbor: (prev) => _gotoNeighborChapter(gotoPrevious: prev),
                       toShowNeighborTip: (prev) => _showNeighborChapterTip(previous: prev),
@@ -1219,6 +1234,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       subscribing: _subscribing,
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
+                      laterManga: _laterManga,
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
                       toGotoNeighbor: (prev) => _gotoNeighborChapter(gotoPrevious: prev),
                       toShowNeighborTip: (prev) => _showNeighborChapterTip(previous: prev),

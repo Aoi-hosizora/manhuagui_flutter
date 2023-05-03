@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
@@ -77,6 +78,7 @@ enum ExportDataType {
   downloadRecords, // 漫画下载记录
   favoriteMangas, // 本地收藏漫画
   favoriteAuthors, // 本地收藏作者
+  laterMangas, // 稍后阅读记录
 
   // from prefs
   searchHistories, // 漫画搜索历史
@@ -94,6 +96,8 @@ extension ExportDataTypeExtension on ExportDataType {
         return '本地收藏漫画';
       case ExportDataType.favoriteAuthors:
         return '本地收藏作者';
+      case ExportDataType.laterMangas:
+        return '稍后阅读记录';
       case ExportDataType.searchHistories:
         return '漫画搜索历史';
       case ExportDataType.appSetting:
@@ -109,6 +113,7 @@ class ExportDataTypeCounter {
   int downloadRecords = 0;
   int favoriteMangas = 0;
   int favoriteAuthors = 0;
+  int laterMangas = 0;
   int searchHistories = 0;
   int appSetting = 0;
 
@@ -117,6 +122,7 @@ class ExportDataTypeCounter {
       downloadRecords == 0 &&
       favoriteMangas == 0 &&
       favoriteAuthors == 0 &&
+      laterMangas == 0 &&
       searchHistories == 0 &&
       appSetting == 0;
 
@@ -129,6 +135,7 @@ class ExportDataTypeCounter {
       if (include(downloadRecords, ExportDataType.downloadRecords)) '$downloadRecords 条漫画下载记录',
       if (include(favoriteMangas, ExportDataType.favoriteMangas)) '$favoriteMangas 部本地收藏漫画',
       if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',
+      if (include(laterMangas, ExportDataType.laterMangas)) '$laterMangas 条稍后阅读记录',
       if (include(searchHistories, ExportDataType.searchHistories)) '$searchHistories 条漫画搜索历史',
       if (include(appSetting, ExportDataType.appSetting)) '$appSetting 条设置项',
     ];
@@ -214,6 +221,15 @@ Future<bool> _exportDB(File dbFile, List<ExportDataType> types, ExportDataTypeCo
         return false; // error
       }
       counter.favoriteAuthors = rows;
+    }
+
+    // => later item
+    if (types.contains(ExportDataType.laterMangas)) {
+      var rows = await _copyToDB(tx, anotherDB, LaterMangaDao.laterMangaMetadata);
+      if (rows == null) {
+        return false; // error
+      }
+      counter.laterMangas = rows;
     }
 
     return true; // success
@@ -342,6 +358,13 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     }
     counter.favoriteAuthors = favoriteAuthorRows;
 
+    // => later items
+    var laterMangaRows = await _copyToDB(exportedDB, db, LaterMangaDao.laterMangaMetadata, merge);
+    if (laterMangaRows == null) {
+      return false; // error
+    }
+    counter.laterMangas = laterMangaRows;
+
     return true; // success
   }();
 
@@ -358,6 +381,9 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     }
     if (counter.favoriteAuthors > 0) {
       EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added));
+    }
+    if (counter.laterMangas > 0) {
+      EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: -1, added: true));
     }
   }
   await exportedDB.close();

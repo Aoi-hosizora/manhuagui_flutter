@@ -2,10 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画章节阅读页-额外页
 class ViewExtraSubPage extends StatefulWidget {
@@ -18,6 +20,7 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.subscribing,
     required this.inShelf,
     required this.inFavorite,
+    required this.laterManga,
     required this.toJumpToImage,
     required this.toGotoNeighbor,
     required this.toShowNeighborTip,
@@ -37,6 +40,7 @@ class ViewExtraSubPage extends StatefulWidget {
   final bool subscribing;
   final bool inShelf;
   final bool inFavorite;
+  final LaterManga? laterManga;
   final void Function(int imageIndex /* start from 0 */, bool animated) toJumpToImage;
   final void Function(bool gotoPrevious) toGotoNeighbor;
   final void Function(bool previous) toShowNeighborTip;
@@ -359,6 +363,38 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       ],
                     ),
                   ],
+                ),
+              ),
+            // ****************************************************************
+            // 稍后阅读
+            // ****************************************************************
+            if (widget.laterManga != null)
+              Material(
+                color: Colors.blueGrey,
+                child: InkWell(
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (c) => AlertDialog(
+                      title: Text('稍后阅读'),
+                      content: Text('《${widget.data.mangaTitle}》在 ${widget.laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
+                      actions: [
+                        TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop()),
+                      ],
+                    ),
+                  ),
+                  child: IconText(
+                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    space: 16,
+                    icon: Icon(MdiIcons.bookRefresh, size: 26, color: Colors.white),
+                    text: Flexible(
+                      child: Text(
+                        '位于稍后阅读列表中 (${widget.laterManga!.formattedCreatedAt})',
+                        style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             // ****************************************************************

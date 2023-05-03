@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
 import 'package:manhuagui_flutter/page/manga_random.dart';
@@ -26,6 +27,7 @@ import 'package:manhuagui_flutter/page/view/manga_group.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -87,7 +89,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
   void _loadDataWhenAuthChanged() {
     if (mounted) setState(() {}); // 更新界面，显示最新的用户名
-    _loadCollections([MangaCollectionType.shelves, MangaCollectionType.favorites, MangaCollectionType.histories]); // 获取一些漫画集合数据 (共1次网络请求)
+    _loadCollections([MangaCollectionType.shelves, MangaCollectionType.favorites, MangaCollectionType.laters, MangaCollectionType.histories]); // 获取一些漫画集合数据 (共1次网络请求)
   }
 
   var _loading = true; // initialize to true
@@ -149,6 +151,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
   List<TinyManga>? _recents;
   List<MangaHistory>? _histories;
+  List<LaterManga>? _laters;
   List<ShelfManga>? _shelves;
   List<FavoriteManga>? _favorites;
   List<DownloadedManga>? _downloads;
@@ -190,6 +193,17 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         var result = await HistoryDao.getHistories(username: AuthManager.instance.username, includeUnread: includeUnread, page: 1, limit: 30); // #=30
         await Future.delayed(kFakeRefreshDuration * 1.5);
         _histories = result ?? [];
+        if (mounted) setState(() {});
+      });
+    }
+
+    if (types.contains(MangaCollectionType.laters)) {
+      Future.microtask(() async {
+        _laters = null; // loading
+        if (mounted) setState(() {});
+        var result = await LaterMangaDao.getLaterMangas(username: AuthManager.instance.username, page: 1, limit: 20); // #=20
+        await Future.delayed(kFakeRefreshDuration * 1.5);
+        _laters = result ?? [];
         if (mounted) setState(() {});
       });
     }
@@ -354,6 +368,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         ranking: type == MangaCollectionType.rankings ? _rankings : null,
         updates: type == MangaCollectionType.recents ? _recents : null,
         histories: type == MangaCollectionType.histories ? _histories : null,
+        laters: type == MangaCollectionType.laters ? _laters : null,
         shelves: type == MangaCollectionType.shelves ? _shelves : null,
         favorites: type == MangaCollectionType.favorites ? _favorites : null,
         downloads: type == MangaCollectionType.downloads ? _downloads : null,
@@ -369,15 +384,19 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         disableRefresh: (type == MangaCollectionType.rankings && _rankings == null) || //
             (type == MangaCollectionType.recents && _recents == null) ||
             (type == MangaCollectionType.histories && _histories == null) ||
+            (type == MangaCollectionType.laters && _laters == null) ||
             (type == MangaCollectionType.shelves && _shelves == null) ||
             (type == MangaCollectionType.favorites && _favorites == null) ||
             (type == MangaCollectionType.downloads && _downloads == null),
-        onRefreshPressed: type == MangaCollectionType.rankings ? () => _loadRankings([MangaAudRankingType.all], onlyIfEmpty: false, needDelay: false) : () => _loadCollections([type], onlyIfEmpty: false, needDelay: false),
+        onRefreshPressed: type == MangaCollectionType.rankings //
+            ? () => _loadRankings([MangaAudRankingType.all], onlyIfEmpty: false, needDelay: false)
+            : () => _loadCollections([type], onlyIfEmpty: false, needDelay: false),
         onMorePressed: type == MangaCollectionType.rankings
             ? null // show right text rather than more button for ranking collection
             : () {
                 if (type == MangaCollectionType.recents) _openSepPage(SepRecentPage());
                 if (type == MangaCollectionType.histories) _openSepPage(SepHistoryPage());
+                if (type == MangaCollectionType.laters) Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()));
                 if (type == MangaCollectionType.shelves) _openSepPage(SepShelfPage());
                 if (type == MangaCollectionType.favorites) _openSepPage(SepFavoritePage());
                 if (type == MangaCollectionType.downloads) Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()));
@@ -485,11 +504,11 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       ActionRowView.four(
                         action1: ActionItem.simple('我的书架', MdiIcons.bookshelf, () => _openSepPage(SepShelfPage())),
                         action2: ActionItem.simple('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, () => _openSepPage(SepFavoritePage())),
-                        action3: ActionItem.simple('阅读历史', Icons.history, () => _openSepPage(SepHistoryPage())),
-                        action4: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
+                        action3: ActionItem.simple('稍后阅读', MdiIcons.bookRefreshOutline, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()))),
+                        action4: ActionItem.simple('阅读历史', Icons.history, () => _openSepPage(SepHistoryPage())),
                       ),
                       ActionRowView.four(
-                        action1: ActionItem.simple('最近更新', Icons.cached, () => _openSepPage(SepRecentPage())),
+                        action1: ActionItem.simple('下载列表', Icons.download, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()))),
                         action2: ActionItem.simple('漫画排行', Icons.trending_up, () => _openSepPage(SepRankingPage())),
                         action3: ActionItem.simple('随机漫画', Icons.shuffle, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaRandomPage()))),
                         action4: ActionItem.simple('外部浏览', Icons.open_in_browser, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),
@@ -501,7 +520,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 _buildCollection(MangaCollectionType.recents), // 最近更新的漫画
                 _buildCollection(MangaCollectionType.histories), // 我的阅读历史
                 _buildAudRanking(), // 漫画受众排行榜
-                // TODO add 稍后阅读
+                _buildCollection(MangaCollectionType.laters), // 我的稍后阅读列表
                 _buildCollection(MangaCollectionType.shelves), // 我的书架
                 _buildCollection(MangaCollectionType.favorites), // 我的本地收藏
                 _buildCollection(MangaCollectionType.downloads), // 漫画下载列表

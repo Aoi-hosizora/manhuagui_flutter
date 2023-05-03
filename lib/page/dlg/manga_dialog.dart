@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -30,7 +31,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 漫画页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
 
-// => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / download) and DownloadMangaPage
+// => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / *later* / download) and DownloadMangaPage
 void showPopupMenuForMangaList({
   required BuildContext context,
   required int mangaId,
@@ -39,14 +40,17 @@ void showPopupMenuForMangaList({
   required String mangaUrl,
   bool fromShelfList = false,
   bool fromFavoriteList = false,
+  bool fromLaterList = false,
   bool fromHistoryList = false,
   bool fromDownloadPage = false,
   void Function(bool inShelf)? inShelfSetter,
   void Function(bool inFavorite)? inFavoriteSetter,
+  void Function(bool inLater)? inLaterSetter,
   void Function(bool inHistory)? inHistorySetter,
 }) async {
   var nowInDownload = await DownloadDao.checkMangaExistence(mid: mangaId) ?? false;
   var nowInFavorite = await FavoriteDao.checkExistence(username: AuthManager.instance.username, mid: mangaId) ?? false;
+  var nowInLater = await LaterMangaDao.checkExistence(username: AuthManager.instance.username, mid: mangaId) ?? false;
   var mangaHistory = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
   var expandShelfOptions = false;
 
@@ -154,7 +158,13 @@ void showPopupMenuForMangaList({
                 : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
           ),
 
-          // TODO add 稍后阅读
+          /// 稍后阅读
+          IconTextDialogOption(
+            icon: Icon(!nowInLater ? MdiIcons.bookPlus : MdiIcons.bookMinus),
+            text: Text(!nowInLater ? '添加至稍后阅读' : '取消稍后阅读'),
+            popWhenPress: c,
+            onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: (l) => inLaterSetter?.call(l != null), fromLaterList: fromLaterList, fromMangaPage: false),
+          ),
 
           /// 历史
           if (mangaHistory != null)
@@ -343,11 +353,13 @@ void showPopupMenuForSubscribing({
   required bool fromMangaPage,
   required bool nowInShelf,
   required bool nowInFavorite,
+  required bool nowInLater,
   required int? subscribeCount,
   required FavoriteManga? favoriteManga,
   required void Function(bool subscribing) subscribing,
   required void Function(bool inShelf) inShelfSetter,
   required void Function(FavoriteManga? favorite) inFavoriteSetter,
+  required void Function(LaterManga? later) inLaterSetter,
 }) {
   var helper = _DialogHelper(
     context: context,
@@ -394,7 +406,13 @@ void showPopupMenuForSubscribing({
             onPressed: () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage),
           ),
 
-        // TODO add 稍后阅读
+        /// 稍后阅读
+        IconTextDialogOption(
+          icon: Icon(!nowInLater ? MdiIcons.bookPlus : MdiIcons.bookMinus),
+          text: Text(!nowInLater ? '添加至稍后阅读' : '取消稍后阅读'),
+          popWhenPress: c,
+          onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+        ),
 
         /// 额外选项
         if (subscribeCount != null || favoriteManga != null) ...[
@@ -890,6 +908,33 @@ class _DialogHelper {
     } finally {
       subscribing?.call(false);
     }
+  }
+
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
+  Future<void> addOrRemoveLater({
+    required bool toAdd,
+    required void Function(LaterManga? later)? onUpdated,
+    required bool fromLaterList,
+    required bool fromMangaPage,
+  }) async {
+    // 更新数据库、(更新界面)、弹出提示、发送通知
+    if (toAdd) {
+      var newLaterManga = LaterManga(
+        mangaId: mangaId,
+        mangaTitle: mangaTitle,
+        mangaCover: mangaCover,
+        mangaUrl: mangaUrl,
+        createdAt: DateTime.now(),
+      );
+      await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLaterManga);
+      onUpdated?.call(newLaterManga);
+    } else {
+      await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: mangaId);
+      onUpdated?.call(null);
+    }
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '已添加至稍后阅读列表' : '已取消稍后阅读')));
+    EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: toAdd, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
   // => called by showPopupMenuForMangaList

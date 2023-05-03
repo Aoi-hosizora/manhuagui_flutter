@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/sep_favorite.dart';
@@ -467,7 +468,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                     : () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepFavoritePage())),
               ),
               _buildDivider(),
-              // TODO add 稍后阅读
+              _buildActionLine(
+                text: '稍后阅读',
+                icon: MdiIcons.bookRefreshOutline,
+                action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage())),
+              ),
+              _buildDivider(),
               _buildActionLine(
                 text: '阅读历史',
                 icon: Icons.history,
