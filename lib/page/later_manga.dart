@@ -3,9 +3,10 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_line.dart';
@@ -13,9 +14,11 @@ import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/db/later_manga.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画稍后阅读页，查询并展示 [LaterManga] 列表信息，并提供列表整理功能
 class LaterMangaPage extends StatefulWidget {
@@ -60,6 +63,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
   var _removed = 0; // for query offset
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreLaters: true);
   final _histories = <int, MangaHistory?>{};
+  var _sortMethod = SortMethod.byTimeDesc; // for query condition
   var _isUpdated = false;
 
   Future<PagedList<LaterManga>> _getData({required int page}) async {
@@ -69,7 +73,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       _isUpdated = false;
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local records
-    var data = await LaterMangaDao.getLaterMangas(username: username, page: page, offset: _removed) ?? [];
+    var data = await LaterMangaDao.getLaterMangas(username: username, page: page, offset: _removed, sortMethod: _sortMethod) ?? [];
     _total = await LaterMangaDao.getLaterMangaCount(username: username) ?? 0;
     if (mounted) setState(() {});
     for (var item in data) {
@@ -91,6 +95,30 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _toSort() async {
+    var sort = await showSortMethodDialogForSorting(
+      context: context,
+      title: '漫画排序方式',
+      currValue: _sortMethod,
+      idTitle: '漫画ID',
+      nameTitle: '漫画标题',
+      timeTitle: '添加时间',
+      orderTitle: null,
+      defaultMethod: SortMethod.byTimeDesc,
+    );
+    if (sort != null && sort != _sortMethod) {
+      _sortMethod = sort;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSort() {
+    _sortMethod = SortMethod.byTimeDesc; // 默认排序方式
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   void _showPopupMenu({required int mangaId}) {
@@ -133,14 +161,14 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       builder: (c) => AlertDialog(
         title: Text('删除确认'),
         content: mangas.length == 1 //
-            ? Text('是否从稍后阅读列表中删除《${mangas.first.mangaTitle}》？')
+            ? Text('是否将《${mangas.first.mangaTitle}》移出稍后阅读列表？')
             : Text(
-                '是否从稍后阅读列表中删除以下 ${mangas.length} 部漫画？\n\n' + //
+                '是否将以下 ${mangas.length} 部漫画移出稍后阅读列表？\n\n' + //
                     [for (int i = 0; i < mangas.length; i++) '${i + 1}. 《${mangas[i].mangaTitle}》'].join('\n'),
               ),
         scrollable: true,
         actions: [
-          TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('移出'), onPressed: () => Navigator.of(c).pop(true)),
           TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
         ],
       ),
@@ -221,15 +249,25 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
               tooltip: '清空稍后阅读列表',
               onPressed: () => _clearLaterMangas(),
             ),
-            AppBarActionButton(
-              icon: Icon(Icons.search),
-              tooltip: '搜索漫画',
-              onPressed: () => Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => SearchPage(),
+            PopupMenuButton(
+              child: Builder(
+                builder: (c) => AppBarActionButton(
+                  icon: Icon(Icons.more_vert),
+                  tooltip: '更多选项',
+                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
                 ),
               ),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
+                ),
+                if (_sortMethod != SortMethod.byTimeDesc)
+                  PopupMenuItem(
+                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
+                    onTap: () => _exitSort(),
+                  ),
+              ],
             ),
           ],
         ),
@@ -285,10 +323,28 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
             ),
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
-                ListHintView.textText(
+                ListHintView.textWidget(
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的稍后阅读列表' : '未登录用户的稍后阅读列表') + //
                       (_isUpdated ? ' (有更新)' : ''),
-                  rightText: '共 $_total 部',
+                  rightWidget: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_sortMethod != SortMethod.byTimeDesc)
+                        HelpIconView.asButton(
+                          iconData: _sortMethod.toIcon(),
+                          tooltip: '漫画排序方式',
+                          onPressed: () => _toSort(),
+                        ),
+                      if (_sortMethod != SortMethod.byTimeDesc)
+                        Container(
+                          color: Theme.of(context).dividerColor,
+                          child: SizedBox(height: 20, width: 1),
+                          margin: EdgeInsets.only(left: 5, right: 5 + 3),
+                        ),
+                      Text('共 $_total 部'),
+                      SizedBox(width: 5),
+                    ],
+                  ),
                 ),
               ],
             ),

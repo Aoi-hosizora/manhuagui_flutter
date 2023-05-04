@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画页/评论列表页/论详情页-漫画评论弹出对话框 [showCommentPopupMenuForListAndPage]
 /// 漫画页/评论列表页/评论详情页-发表评论对话框 [showCommentDialogForAddingComment]
@@ -79,10 +80,36 @@ void showCommentPopupMenuForListAndPage({
             Navigator.of(c).pop();
             var added = await showCommentDialogForReplyingComment(context: context, mangaId: mangaId, commentId: comment.cid);
             if (added != null) {
-              onReplied?.call(added);
-            } else {
-              Fluttertoast.showToast(msg: '评论回复成功');
+              if (onReplied != null) {
+                onReplied.call(added);
+              } else {
+                Fluttertoast.showToast(msg: '评论回复成功');
+              }
             }
+          },
+        ),
+        IconTextDialogOption(
+          icon: Icon(MdiIcons.selectCompare),
+          text: Text('选择评论内容'),
+          onPressed: () {
+            Navigator.of(c).pop();
+            showDialog(
+              context: context,
+              builder: (c) => AlertDialog(
+                title: Text('"${comment.username}" 的评论内容'),
+                content: SelectableText(comment.content),
+                actions: [
+                  TextButton(
+                    child: Text('复制内容'),
+                    onPressed: () => copyText(comment.content, showToast: true),
+                  ),
+                  TextButton(
+                    child: Text('确定'),
+                    onPressed: () => Navigator.of(c).pop(),
+                  ),
+                ],
+              ),
+            );
           },
         ),
         Divider(height: 16, thickness: 1),
@@ -128,12 +155,23 @@ Future<AddedComment?> showCommentDialogForAddingComment({
   required BuildContext context,
   required int mangaId,
 }) async {
-  return await _showCommentDialog(
-    context: context,
-    title: '发表评论',
-    mangaId: mangaId,
-    commentId: 0,
-  );
+  var content = await _showCreatingCommentDialog(context: context, title: '发表评论', mangaId: mangaId);
+  if (content == null || content.isEmpty) {
+    return null;
+  }
+  _showCommentProgressDialog(context: context, content: content);
+
+  final client = RestClient(DioManager.instance.dio);
+  try {
+    var r = await client.addComment(token: AuthManager.instance.token, mid: mangaId, text: content);
+    return r.data;
+  } catch (e, s) {
+    var we = wrapError(e, s);
+    Fluttertoast.showToast(msg: '评论发表失败：${we.text}');
+    return null;
+  } finally {
+    Navigator.of(context).pop(); // pop progress
+  }
 }
 
 Future<AddedComment?> showCommentDialogForReplyingComment({
@@ -141,19 +179,29 @@ Future<AddedComment?> showCommentDialogForReplyingComment({
   required int mangaId,
   required int commentId,
 }) async {
-  return await _showCommentDialog(
-    context: context,
-    title: '回复评论',
-    mangaId: mangaId,
-    commentId: commentId,
-  );
+  var content = await _showCreatingCommentDialog(context: context, title: '回复评论', mangaId: mangaId);
+  if (content == null || content.isEmpty) {
+    return null;
+  }
+  _showCommentProgressDialog(context: context, content: content);
+
+  final client = RestClient(DioManager.instance.dio);
+  try {
+    var r = await client.replyComment(token: AuthManager.instance.token, mid: mangaId, cid: commentId, text: content);
+    return r.data;
+  } catch (e, s) {
+    var we = wrapError(e, s);
+    Fluttertoast.showToast(msg: '评论回复失败：${we.text}');
+    return null;
+  } finally {
+    Navigator.of(context).pop(); // pop progress
+  }
 }
 
-Future<AddedComment?> _showCommentDialog({
+Future<String?> _showCreatingCommentDialog({
   required BuildContext context,
   required String title,
   required int mangaId,
-  required int commentId,
 }) async {
   var controller = TextEditingController()..text;
   var ok = await showDialog<bool>(
@@ -210,11 +258,17 @@ Future<AddedComment?> _showCommentDialog({
   if (ok != true) {
     return null;
   }
-
   var content = controller.text.trim();
   if (content == '') {
     return null;
   }
+  return content;
+}
+
+void _showCommentProgressDialog({
+  required BuildContext context,
+  required String content,
+}) {
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -224,23 +278,9 @@ Future<AddedComment?> _showCommentDialog({
         contentPadding: EdgeInsets.zero,
         content: CircularProgressDialogOption(
           progress: CircularProgressIndicator(),
-          child: Text('发表评论中...\n\n$content'),
+          child: Text('评论发送中...\n\n$content'),
         ),
       ),
     ),
   );
-
-  final client = RestClient(DioManager.instance.dio);
-  try {
-    var r = commentId == 0 //
-        ? await client.addComment(token: AuthManager.instance.token, mid: mangaId, text: content)
-        : await client.replyComment(token: AuthManager.instance.token, mid: mangaId, cid: commentId, text: content);
-    return r.data;
-  } catch (e, s) {
-    var we = wrapError(e, s);
-    Fluttertoast.showToast(msg: '评论发表失败：${we.text}');
-    return null;
-  } finally {
-    Navigator.of(context).pop();
-  }
 }

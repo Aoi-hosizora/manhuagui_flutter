@@ -242,7 +242,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         _favorites = null; // loading
         if (mounted) setState(() {});
         var condition = AppSetting.instance.ui.homepageFavorite.determineQueryCondition();
-        var result = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: condition.item1, sortMethod: condition.item2, page: 1, limit: 20); // #=20
+        var result = await FavoriteDao.getFavorites(username: AuthManager.instance.username, groupName: condition.item1, sortMethod: condition.item2, page: 1, limit: 30); // #=30
         await Future.delayed(kFakeRefreshDuration * 1.5);
         _favorites = result ?? [];
         if (mounted) setState(() {});
@@ -504,7 +504,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       ActionRowView.four(
                         action1: ActionItem.simple('我的书架', MdiIcons.bookshelf, () => _openSepPage(SepShelfPage())),
                         action2: ActionItem.simple('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, () => _openSepPage(SepFavoritePage())),
-                        action3: ActionItem.simple('稍后阅读', MdiIcons.bookRefreshOutline, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()))),
+                        action3: ActionItem.simple('稍后阅读', MdiIcons.bookClockOutline, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()))),
                         action4: ActionItem.simple('阅读历史', Icons.history, () => _openSepPage(SepHistoryPage())),
                       ),
                       ActionRowView.four(

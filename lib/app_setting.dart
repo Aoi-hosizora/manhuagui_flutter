@@ -462,7 +462,7 @@ extension ReadGroupBehaviorExtension on ReadGroupBehavior {
   String toOptionTitle() {
     switch (this) {
       case ReadGroupBehavior.noCheck:
-        return '不检查';
+        return '不检查阅读情况';
       case ReadGroupBehavior.checkStartReading:
         return '部分阅读时弹出提示';
       case ReadGroupBehavior.checkFinishReading:
@@ -491,6 +491,14 @@ extension ReadGroupBehaviorExtension on ReadGroupBehavior {
         return ReadGroupBehavior.checkFinishReading;
     }
     return ReadGroupBehavior.noCheck;
+  }
+
+  bool needCheckStart({required int? currentPage, required int? totalPage}) {
+    return currentPage != null && totalPage != null && currentPage < totalPage && this == ReadGroupBehavior.checkStartReading;
+  }
+
+  bool needCheckFinish({required int? currentPage, required int? totalPage}) {
+    return currentPage != null && totalPage != null && currentPage >= totalPage && (this == ReadGroupBehavior.checkStartReading || this == ReadGroupBehavior.checkFinishReading);
   }
 }
 

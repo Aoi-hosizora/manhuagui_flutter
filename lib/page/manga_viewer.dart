@@ -938,8 +938,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await Navigator.of(context).push(
       CustomPageRoute(
         context: context,
-        builder: (c) => LaterMangaPage(
-        ),
+        builder: (c) => LaterMangaPage(),
       ),
     );
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);

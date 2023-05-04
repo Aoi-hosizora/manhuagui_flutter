@@ -558,6 +558,9 @@ class LaterManga {
   String get formattedCreatedAt => //
       formatDatetimeAndDuration(createdAt, FormatPattern.datetimeNoSec);
 
+  String get formattedCreatedAtWithDuration => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
+
   String get formattedCreatedAtAndFullDuration => //
       formatDatetimeAndDuration(createdAt, FormatPattern.datetimeDuration);
 

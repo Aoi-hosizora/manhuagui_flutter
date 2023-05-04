@@ -1,5 +1,6 @@
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
+import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 
@@ -49,6 +50,18 @@ class LaterMangaDao {
       )''');
   }
 
+  static String _buildOrderByStatement({required SortMethod sortMethod, bool includeORDERBY = false}) {
+    return QueryHelper.buildOrderByStatement(
+          sortMethod,
+          idColumn: _colMangaId,
+          nameColumn: _colMangaTitle,
+          timeColumn: _colCreatedAt,
+          orderColumn: null,
+          includeORDERBY: includeORDERBY,
+        ) ??
+        '';
+  }
+
   static Future<int?> getLaterMangaCount({required String username}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
@@ -78,8 +91,9 @@ class LaterMangaDao {
     return firstIntValue(results)! > 0;
   }
 
-  static Future<List<LaterManga>?> getLaterMangas({required String username, required int page, int limit = 20, int offset = 0}) async {
+  static Future<List<LaterManga>?> getLaterMangas({required String username, SortMethod sortMethod = SortMethod.byTimeDesc, required int page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
+    var orderBy = _buildOrderByStatement(sortMethod: sortMethod, includeORDERBY: false);
     offset = limit * (page - 1) - offset;
     if (offset < 0) {
       offset = 0;
@@ -88,7 +102,7 @@ class LaterMangaDao {
       '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCreatedAt
          FROM $_tblLaterManga
          WHERE $_colUsername = ?
-         ORDER BY $_colCreatedAt DESC
+         ORDER BY $orderBy, $_colCreatedAt DESC
          LIMIT $limit OFFSET $offset''',
       [username],
     );

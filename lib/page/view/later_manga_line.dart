@@ -33,7 +33,7 @@ class LaterMangaLineView extends StatelessWidget {
       icon2: history == null || !history!.read ? CustomIcons.opened_left_star_book : Icons.import_contacts,
       text2: (history == null || !history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle}') + ' (${history?.formattedLastTimeOrDuration ?? '未知时间'})',
       icon3: Icons.access_time,
-      text3: '添加于 ${manga.formattedCreatedAt}',
+      text3: '添加于 ${manga.formattedCreatedAtWithDuration}',
       cornerIcons: flags?.buildIcons(),
       twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(

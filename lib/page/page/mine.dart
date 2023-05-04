@@ -470,7 +470,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildDivider(),
               _buildActionLine(
                 text: '稍后阅读',
-                icon: MdiIcons.bookRefreshOutline,
+                icon: MdiIcons.bookClockOutline,
                 action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage())),
               ),
               _buildDivider(),

@@ -19,7 +19,7 @@ enum MangaCollectionType {
   downloads,
 }
 
-/// 漫画集合，针对日排行榜、最近更新、阅读历史、我的书架、本地收藏、下载列表，在 [RecommendSubPage] 使用
+/// 漫画集合，针对日排行榜、最近更新、阅读历史、稍后阅读、我的书架、本地收藏、下载列表，在 [RecommendSubPage] 使用
 class MangaCollectionView extends StatefulWidget {
   const MangaCollectionView({
     Key? key,
@@ -368,13 +368,13 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       case MangaCollectionType.shelves:
         title = widget.username == null ? '我的书架' : '${widget.username} 的书架';
         icon = Icons.star;
-        widgets = widget.shelves?.map((el) => _buildShelfItem(context, el)).toList(); // # = 20
+        widgets = widget.shelves?.sublist(0, widget.shelves!.length.clamp(0, 20)).map((el) => _buildShelfItem(context, el)).toList(); // # = 20
         twoLine = widgets != null && widgets.length > 6;
         break;
       case MangaCollectionType.favorites:
         title = widget.username == null ? '我的本地收藏' : '${widget.username} 的本地收藏';
         icon = Icons.bookmark;
-        widgets = widget.favorites?.map((el) => _buildFavoriteItem(context, el)).toList(); // # = 20
+        widgets = widget.favorites?.sublist(0, widget.favorites!.length.clamp(0, 30)).map((el) => _buildFavoriteItem(context, el)).toList(); // # = 30
         twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.downloads:

@@ -169,7 +169,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           title: '点击阅读章节分组行为',
           width: 170,
           value: _readGroupBehavior,
-          values: ReadGroupBehavior.values,
+          values: const [ReadGroupBehavior.checkStartReading, ReadGroupBehavior.checkFinishReading, ReadGroupBehavior.noCheck],
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _readGroupBehavior = s;

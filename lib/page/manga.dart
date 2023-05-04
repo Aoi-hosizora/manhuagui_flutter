@@ -26,6 +26,7 @@ import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
+import 'package:manhuagui_flutter/page/view/later_manga_banner.dart';
 import 'package:manhuagui_flutter/page/view/manga_rating.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
@@ -378,9 +379,8 @@ class _MangaPageState extends State<MangaPage> {
         // 选择的章节在上次被阅读 => 弹出选项判断是否需要阅读
         var historyTitle = _history!.chapterTitle, historyPage = _history!.chapterPage;
         var chapter = _data!.chapterGroups.findChapter(chapterId);
-        var behavior = AppSetting.instance.ui.readGroupBehavior;
-        var checkStart = chapter != null && historyPage < chapter.pageCount && behavior == ReadGroupBehavior.checkStartReading;
-        var checkFinish = chapter != null && historyPage >= chapter.pageCount && (behavior == ReadGroupBehavior.checkFinishReading || behavior == ReadGroupBehavior.checkStartReading);
+        var checkStart = AppSetting.instance.ui.readGroupBehavior.needCheckStart(currentPage: historyPage, totalPage: chapter?.pageCount);
+        var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter?.pageCount);
         if (!checkStart && !checkFinish) {
           // 所选章节无需弹出提示 => 继续阅读
           gotoViewerPage(cid: chapterId, page: historyPage);
@@ -392,7 +392,7 @@ class _MangaPageState extends State<MangaPage> {
               title: Text('继续阅读'),
               children: [
                 SubtitleDialogOption(
-                  text: Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.pageCount}页)。'),
+                  text: Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter!.pageCount}页)。'),
                 ),
                 IconTextDialogOption(
                   icon: Icon(Icons.import_contacts),
@@ -549,8 +549,8 @@ class _MangaPageState extends State<MangaPage> {
             text: Text('《${_data!.title}》在 ${_laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
           ),
           IconTextDialogOption(
-            icon: Icon(MdiIcons.bookMinus),
-            text: Text('取消稍后阅读'),
+            icon: Icon(MdiIcons.clockMinus),
+            text: Text('从稍后阅读移出'),
             onPressed: () async {
               Navigator.of(c).pop();
 
@@ -559,12 +559,12 @@ class _MangaPageState extends State<MangaPage> {
               _laterManga = null;
               if (mounted) setState(() {});
               ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已取消稍后阅读')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已从稍后阅读列表中移出')));
               EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: widget.id, added: false, fromLaterMangaPage: false, fromMangaPage: true));
             },
           ),
           IconTextDialogOption(
-            icon: Icon(MdiIcons.bookRefresh),
+            icon: Icon(MdiIcons.bookClock),
             text: Text('查看稍后阅读列表'),
             onPressed: () {
               Navigator.of(c).pop();
@@ -712,7 +712,7 @@ class _MangaPageState extends State<MangaPage> {
         children: [
           if (_history != null && _history!.read)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.bookClock),
+              icon: Icon(MdiIcons.clipboardTextClock),
               text: Text('仅保留浏览历史'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -737,7 +737,7 @@ class _MangaPageState extends State<MangaPage> {
             ),
           if (_history == null)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.bookClock),
+              icon: Icon(MdiIcons.clipboardTextClock),
               text: Text('保留浏览历史'),
               onPressed: () async {
                 Navigator.of(c).pop();
@@ -1089,25 +1089,10 @@ class _MangaPageState extends State<MangaPage> {
                 // 稍后阅读
                 // ****************************************************************
                 if (_laterManga != null)
-                  Material(
-                    color: Colors.blueGrey,
-                    child: InkWell(
-                      onTap: () => _checkAndRemoveFromLater(),
-                      onLongPress: () => _checkAndRemoveFromLater(),
-                      child: IconText(
-                        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        space: 16,
-                        icon: Icon(MdiIcons.bookRefresh, size: 26, color: Colors.white),
-                        text: Flexible(
-                          child: Text(
-                            '位于稍后阅读列表中 (添加于 ${_laterManga!.formattedCreatedAt})',
-                            style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ),
+                  LaterMangaBannerView(
+                    manga: _laterManga!,
+                    onPressed: () => _checkAndRemoveFromLater(),
+                    onLongPressed: () => _checkAndRemoveFromLater(),
                   ),
                 // ****************************************************************
                 // 几个按钮

@@ -18,6 +18,7 @@ import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/later_manga_banner.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/db/later_manga.dart';
@@ -336,9 +337,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       // 选择的章节在上次被阅读 => 弹出选项判断是否需要阅读
       var historyTitle = _history!.chapterTitle, historyPage = _history!.chapterPage;
       var chapter = _data!.downloadedChapters.where((c) => c.chapterId == chapterId).firstOrNull;
-      var behavior = AppSetting.instance.ui.readGroupBehavior;
-      var checkStart = chapter != null && historyPage < chapter.totalPageCount && behavior == ReadGroupBehavior.checkStartReading;
-      var checkFinish = chapter != null && historyPage >= chapter.totalPageCount && (behavior == ReadGroupBehavior.checkFinishReading || behavior == ReadGroupBehavior.checkStartReading);
+      var checkStart = AppSetting.instance.ui.readGroupBehavior.needCheckStart(currentPage: historyPage, totalPage: chapter?.totalPageCount);
+      var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter?.totalPageCount);
       if (!checkStart && !checkFinish) {
         // 所选章节无需弹出提示 => 继续阅读
         gotoViewerPage(cid: chapterId, page: historyPage);
@@ -351,7 +351,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             children: [
               SubtitleDialogOption(
                 text: checkStart //
-                    ? Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.totalPageCount}页)。')
+                    ? Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter!.totalPageCount}页)。')
                     : Text('该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)。'),
               ),
               ...([
@@ -546,33 +546,19 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     if (_later != null)
                       Padding(
                         padding: EdgeInsets.only(top: 12),
-                        child: Material(
-                          color: Colors.blueGrey,
-                          child: InkWell(
-                            child: IconText(
-                              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                              space: 16,
-                              icon: Icon(MdiIcons.bookRefresh, size: 26, color: Colors.white),
-                              text: Flexible(
-                                child: Text(
-                                  '位于稍后阅读列表中 (添加于 ${_later!.formattedCreatedAt})',
-                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                            onTap: () => showYesNoAlertDialog(
-                              context: context,
-                              title: Text('稍后阅读'),
-                              content: Text('《${_data!.mangaTitle}》在 ${_later!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
-                              yesText: Text('查看列表'),
-                              noText: Text('确定'),
-                              yesOnPressed: (c) {
-                                Navigator.of(c).pop();
-                                Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()));
-                              },
-                            ),
+                        child: LaterMangaBannerView(
+                          manga: _later!,
+                          sameCallback: true,
+                          onPressed: () => showYesNoAlertDialog(
+                            context: context,
+                            title: Text('稍后阅读'),
+                            content: Text('《${_data!.mangaTitle}》在 ${_later!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
+                            yesText: Text('查看列表'),
+                            noText: Text('确定'),
+                            yesOnPressed: (c) {
+                              Navigator.of(c).pop();
+                              Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()));
+                            },
                           ),
                         ),
                       ),

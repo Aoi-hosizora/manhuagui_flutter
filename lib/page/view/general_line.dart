@@ -220,7 +220,7 @@ class GeneralLineIconText extends StatelessWidget {
         texts: [
           Expanded(
             child: Text(
-              text ?? '',
+              text ?? '　',
               style: textStyle ?? //
                   Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.grey[600]),
               maxLines: 1,

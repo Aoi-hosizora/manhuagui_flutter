@@ -160,8 +160,8 @@ void showPopupMenuForMangaList({
 
           /// 稍后阅读
           IconTextDialogOption(
-            icon: Icon(!nowInLater ? MdiIcons.bookPlus : MdiIcons.bookMinus),
-            text: Text(!nowInLater ? '添加至稍后阅读' : '取消稍后阅读'),
+            icon: Icon(!nowInLater ? MdiIcons.clockPlus : MdiIcons.clockMinus),
+            text: Text(!nowInLater ? '添加至稍后阅读' : '从稍后阅读移出'),
             popWhenPress: c,
             onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: (l) => inLaterSetter?.call(l != null), fromLaterList: fromLaterList, fromMangaPage: false),
           ),
@@ -408,8 +408,8 @@ void showPopupMenuForSubscribing({
 
         /// 稍后阅读
         IconTextDialogOption(
-          icon: Icon(!nowInLater ? MdiIcons.bookPlus : MdiIcons.bookMinus),
-          text: Text(!nowInLater ? '添加至稍后阅读' : '取消稍后阅读'),
+          icon: Icon(!nowInLater ? MdiIcons.clockPlus : MdiIcons.clockMinus),
+          text: Text(!nowInLater ? '添加至稍后阅读' : '从稍后阅读移出'),
           popWhenPress: c,
           onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
         ),
@@ -933,7 +933,7 @@ class _DialogHelper {
       onUpdated?.call(null);
     }
     ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '已添加至稍后阅读列表' : '已取消稍后阅读')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '已添加至稍后阅读列表' : '已从稍后阅读列表中移出')));
     EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: toAdd, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
