@@ -140,6 +140,7 @@ class AppSettingPrefs {
   static const _defaultAuthorOrderKey = IntKey('AppSettingPrefs_defaultAuthorOrder');
   static const _enableCornerIconsKey = BoolKey('AppSettingPrefs_enableCornerIcons');
   static const _showMangaReadIconKey = BoolKey('AppSettingPrefs_showMangaReadIcon');
+  static const _readGroupBehaviorKey = IntKey('AppSettingPrefs_readGroupBehavior');
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
   static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
@@ -159,6 +160,7 @@ class AppSettingPrefs {
         _defaultAuthorOrderKey,
         _enableCornerIconsKey,
         _showMangaReadIconKey,
+        _readGroupBehaviorKey,
         _regularGroupRowsKey,
         _otherGroupRowsKey,
         _allowErrorToastKey,
@@ -182,6 +184,7 @@ class AppSettingPrefs {
       defaultAuthorOrder: AuthorOrderExtension.fromInt(prefs.safeGet<int>(_defaultAuthorOrderKey) ?? def.defaultAuthorOrder.toInt()),
       enableCornerIcons: prefs.safeGet<bool>(_enableCornerIconsKey) ?? def.enableCornerIcons,
       showMangaReadIcon: prefs.safeGet<bool>(_showMangaReadIconKey) ?? def.showMangaReadIcon,
+      readGroupBehavior: ReadGroupBehaviorExtension.fromInt(prefs.safeGet<int>(_readGroupBehaviorKey) ?? def.readGroupBehavior.toInt()),
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
       allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
@@ -205,6 +208,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_defaultAuthorOrderKey, setting.defaultAuthorOrder.toInt());
     await prefs.safeSet<bool>(_enableCornerIconsKey, setting.enableCornerIcons);
     await prefs.safeSet<bool>(_showMangaReadIconKey, setting.showMangaReadIcon);
+    await prefs.safeSet<int>(_readGroupBehaviorKey, setting.readGroupBehavior.toInt());
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
     await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);

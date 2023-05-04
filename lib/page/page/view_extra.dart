@@ -28,6 +28,7 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.toDownload,
     required this.toShowToc,
     required this.toShowComments,
+    required this.toShowLaters,
     required this.toShowImage,
     required this.toOnlineMode,
     required this.toPop,
@@ -48,6 +49,7 @@ class ViewExtraSubPage extends StatefulWidget {
   final void Function() toDownload;
   final void Function() toShowToc;
   final void Function() toShowComments;
+  final void Function() toShowLaters;
   final void Function(String url, String title) toShowImage;
   final void Function() toOnlineMode;
   final void Function() toPop;
@@ -369,30 +371,34 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
             // 稍后阅读
             // ****************************************************************
             if (widget.laterManga != null)
-              Material(
-                color: Colors.blueGrey,
-                child: InkWell(
-                  onTap: () => showDialog(
-                    context: context,
-                    builder: (c) => AlertDialog(
+              Padding(
+                padding: EdgeInsets.only(top: 18),
+                child: Material(
+                  color: Colors.blueGrey,
+                  child: InkWell(
+                    child: IconText(
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      space: 16,
+                      icon: Icon(MdiIcons.bookRefresh, size: 26, color: Colors.white),
+                      text: Flexible(
+                        child: Text(
+                          '位于稍后阅读列表中 (添加于 ${widget.laterManga!.formattedCreatedAt})',
+                          style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    onTap: () => showYesNoAlertDialog(
+                      context: context,
                       title: Text('稍后阅读'),
                       content: Text('《${widget.data.mangaTitle}》在 ${widget.laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
-                      actions: [
-                        TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop()),
-                      ],
-                    ),
-                  ),
-                  child: IconText(
-                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                    space: 16,
-                    icon: Icon(MdiIcons.bookRefresh, size: 26, color: Colors.white),
-                    text: Flexible(
-                      child: Text(
-                        '位于稍后阅读列表中 (${widget.laterManga!.formattedCreatedAt})',
-                        style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      yesText: Text('查看列表'),
+                      noText: Text('确定'),
+                      yesOnPressed: (c) {
+                        Navigator.of(c).pop();
+                        widget.toShowLaters.call();
+                      },
                     ),
                   ),
                 ),

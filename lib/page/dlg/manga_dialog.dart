@@ -273,7 +273,7 @@ void showPopupMenuForMangaToc({
           ),
           if (lastReadChapter)
             IconTextDialogOption(
-              icon: Icon(CustomIcons.opened_left_star_book),
+              icon: Icon(CustomIcons.opened_book_replay),
               text: Text('从头阅读该章节'),
               popWhenPress: c,
               onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: true, onlineMode: true),

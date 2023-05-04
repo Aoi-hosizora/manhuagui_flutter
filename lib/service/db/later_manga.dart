@@ -17,7 +17,7 @@ class LaterMangaDao {
   static const laterMangaMetadata = TableMetadata(
     tableName: _tblLaterManga,
     primaryKeys: [_colUsername, _colMangaId],
-    columns: [_tblLaterManga, _colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colCreatedAt],
+    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colCreatedAt],
   );
 
   static Future<void> createForVer1(Database db) async {

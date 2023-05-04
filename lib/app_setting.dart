@@ -354,6 +354,7 @@ class UiSetting {
     required this.defaultAuthorOrder,
     required this.enableCornerIcons,
     required this.showMangaReadIcon,
+    required this.readGroupBehavior,
     required this.regularGroupRows,
     required this.otherGroupRows,
     required this.allowErrorToast,
@@ -373,6 +374,7 @@ class UiSetting {
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
+  final ReadGroupBehavior readGroupBehavior; // 点击阅读章节分组行为
   final int regularGroupRows; // 单话章节分组显示行数
   final int otherGroupRows; // 其他章节分组显示行数
   final bool allowErrorToast; // 阅读时允许弹出错误提示
@@ -392,6 +394,7 @@ class UiSetting {
     defaultAuthorOrder: AuthorOrder.byPopular,
     enableCornerIcons: true,
     showMangaReadIcon: true,
+    readGroupBehavior: ReadGroupBehavior.checkFinishReading,
     regularGroupRows: 3,
     otherGroupRows: 1,
     allowErrorToast: true,
@@ -412,6 +415,7 @@ class UiSetting {
     AuthorOrder? defaultAuthorOrder,
     bool? enableCornerIcons,
     bool? showMangaReadIcon,
+    ReadGroupBehavior? readGroupBehavior,
     int? regularGroupRows,
     int? otherGroupRows,
     bool? allowErrorToast,
@@ -431,6 +435,7 @@ class UiSetting {
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       enableCornerIcons: enableCornerIcons ?? this.enableCornerIcons,
       showMangaReadIcon: showMangaReadIcon ?? this.showMangaReadIcon,
+      readGroupBehavior: readGroupBehavior ?? this.readGroupBehavior,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
@@ -444,6 +449,48 @@ class UiSetting {
       alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
       enableAutoCheckin: enableAutoCheckin ?? this.enableAutoCheckin,
     );
+  }
+}
+
+enum ReadGroupBehavior {
+  noCheck,
+  checkStartReading,
+  checkFinishReading,
+}
+
+extension ReadGroupBehaviorExtension on ReadGroupBehavior {
+  String toOptionTitle() {
+    switch (this) {
+      case ReadGroupBehavior.noCheck:
+        return '不检查';
+      case ReadGroupBehavior.checkStartReading:
+        return '部分阅读时弹出提示';
+      case ReadGroupBehavior.checkFinishReading:
+        return '已阅读完时弹出提示';
+    }
+  }
+
+  int toInt() {
+    switch (this) {
+      case ReadGroupBehavior.noCheck:
+        return 0;
+      case ReadGroupBehavior.checkStartReading:
+        return 1;
+      case ReadGroupBehavior.checkFinishReading:
+        return 2;
+    }
+  }
+
+  static ReadGroupBehavior fromInt(int i) {
+    switch (i) {
+      case 0:
+        return ReadGroupBehavior.noCheck;
+      case 1:
+        return ReadGroupBehavior.checkStartReading;
+      case 2:
+        return ReadGroupBehavior.checkFinishReading;
+    }
+    return ReadGroupBehavior.noCheck;
   }
 }
 

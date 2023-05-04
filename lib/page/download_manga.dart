@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
+import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/page/dl_finished.dart';
@@ -14,10 +15,12 @@ import 'package:manhuagui_flutter/page/page/dl_unfinished.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -82,6 +85,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => _updateByEvent(progressEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(entityEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
   }
 
   @override
@@ -99,6 +103,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   DownloadMangaQueueTask? _task;
   var _byte = 0;
   MangaHistory? _history;
+  LaterManga? _later;
   Manga? _mangaData; // loaded in background
   var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
   var _showAllChapters = false;
@@ -110,6 +115,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _task = null;
     _byte = 0;
     _history = null;
+    _later = null;
     _mangaData = null;
     if (mounted) setState(() {});
 
@@ -129,6 +135,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       _data = data;
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      _later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次刷新时都重新统计文件大小
     } else {
       _error = '暂无漫画下载记录';
@@ -137,7 +144,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     if (mounted) setState(() {});
   }
 
-  Future<void> _updateByEvent({DownloadProgressChangedEvent? progressEvent, DownloadUpdatedEvent? entityEvent, HistoryUpdatedEvent? historyEvent}) async {
+  Future<void> _updateByEvent({DownloadProgressChangedEvent? progressEvent, DownloadUpdatedEvent? entityEvent, HistoryUpdatedEvent? historyEvent, LaterMangaUpdatedEvent? laterEvent}) async {
     if (progressEvent != null && progressEvent.mangaId == widget.mangaId) {
       var task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       if (progressEvent.finished) {
@@ -160,6 +167,11 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
 
     if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+
+    if (laterEvent != null && laterEvent.mangaId == widget.mangaId) {
+      _later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
   }
@@ -298,24 +310,71 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     // 此处不异步请求漫画数据，由 MangaViewerPage 请求并回传更新 _mangaData，从而避免重复请求
     // _loadMangaDataAsync(forceRefresh: false);
 
-    Navigator.of(context).push(
-      CustomPageRoute(
-        context: context,
-        builder: (c) => MangaViewerPage(
-          mangaId: widget.mangaId,
-          chapterId: chapterId,
-          mangaTitle: _data!.mangaTitle,
-          mangaCover: _data!.mangaCover,
-          mangaUrl: _data!.mangaUrl,
-          chapterGroups: _mangaData?.chapterGroups /* nullable */,
-          initialPage: _history?.chapterId == chapterId
-              ? _history?.chapterPage ?? 1 // have read
-              : 1 /* have not read */,
-          onlineMode: _onlineMode,
-          onMangaGot: (manga) => _mangaData = manga,
+    void gotoViewerPage({required int cid, required int page}) {
+      Navigator.of(context).push(
+        CustomPageRoute(
+          context: context,
+          builder: (c) => MangaViewerPage(
+            mangaId: widget.mangaId,
+            chapterId: cid,
+            mangaTitle: _data!.mangaTitle,
+            mangaCover: _data!.mangaCover,
+            mangaUrl: _data!.mangaUrl,
+            chapterGroups: _mangaData?.chapterGroups /* nullable */,
+            initialPage: page,
+            onlineMode: _onlineMode,
+            onMangaGot: (manga) => _mangaData = manga,
+          ),
         ),
-      ),
-    );
+      );
+    }
+
+    if (_history == null || _history!.chapterId != chapterId) {
+      // 该章节不是上次阅读的章节 => 直接阅读
+      gotoViewerPage(cid: chapterId, page: 1);
+    } else {
+      // 选择的章节在上次被阅读 => 弹出选项判断是否需要阅读
+      var historyTitle = _history!.chapterTitle, historyPage = _history!.chapterPage;
+      var chapter = _data!.downloadedChapters.where((c) => c.chapterId == chapterId).firstOrNull;
+      var behavior = AppSetting.instance.ui.readGroupBehavior;
+      var checkStart = chapter != null && historyPage < chapter.totalPageCount && behavior == ReadGroupBehavior.checkStartReading;
+      var checkFinish = chapter != null && historyPage >= chapter.totalPageCount && (behavior == ReadGroupBehavior.checkFinishReading || behavior == ReadGroupBehavior.checkStartReading);
+      if (!checkStart && !checkFinish) {
+        // 所选章节无需弹出提示 => 继续阅读
+        gotoViewerPage(cid: chapterId, page: historyPage);
+      } else {
+        // 所选章节已开始阅读 => 弹出提示
+        showDialog(
+          context: context,
+          builder: (c) => SimpleDialog(
+            title: Text('继续阅读'),
+            children: [
+              SubtitleDialogOption(
+                text: checkStart //
+                    ? Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.totalPageCount}页)。')
+                    : Text('该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)。'),
+              ),
+              ...([
+                IconTextDialogOption(
+                  icon: Icon(Icons.import_contacts),
+                  text: Text('继续阅读该章节 ($historyTitle)'),
+                  popWhenPress: c,
+                  onPressed: () => gotoViewerPage(cid: chapterId, page: historyPage),
+                ),
+                IconTextDialogOption(
+                  icon: Icon(CustomIcons.opened_book_replay),
+                  text: Text('从头阅读该章节 ($historyTitle)'),
+                  popWhenPress: c,
+                  onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
+                ),
+              ].let(
+                (opts) => checkFinish ? opts.reversed.toList() : opts,
+              )),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _deleteChapters({required List<int> chapterIds}) async {
@@ -481,6 +540,42 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         downloadedBytes: _byte,
                       ),
                     ),
+                    // ****************************************************************
+                    // 稍后阅读
+                    // ****************************************************************
+                    if (_later != null)
+                      Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: Material(
+                          color: Colors.blueGrey,
+                          child: InkWell(
+                            child: IconText(
+                              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                              space: 16,
+                              icon: Icon(MdiIcons.bookRefresh, size: 26, color: Colors.white),
+                              text: Flexible(
+                                child: Text(
+                                  '位于稍后阅读列表中 (添加于 ${_later!.formattedCreatedAt})',
+                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                            onTap: () => showYesNoAlertDialog(
+                              context: context,
+                              title: Text('稍后阅读'),
+                              content: Text('《${_data!.mangaTitle}》在 ${_later!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
+                              yesText: Text('查看列表'),
+                              noText: Text('确定'),
+                              yesOnPressed: (c) {
+                                Navigator.of(c).pop();
+                                Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()));
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
                     Container(height: 12),
                     // ****************************************************************
                     // 五个按钮

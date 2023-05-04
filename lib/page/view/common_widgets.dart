@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem]
+/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [SubtitleDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem]
 
 class HelpIconView extends StatelessWidget {
   const HelpIconView({
@@ -159,6 +159,26 @@ class _CheckBoxDialogOptionState extends State<CheckBoxDialogOption> {
         if (mounted) setState(() {});
         widget.onChanged.call(_value);
       },
+    );
+  }
+}
+
+class SubtitleDialogOption extends StatelessWidget {
+  const SubtitleDialogOption({
+    Key? key,
+    required this.text,
+  }) : super(key: key);
+
+  final Widget text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: kAlertDialogDefaultContentPadding.copyWith(bottom: 8, top: 2),
+      child: DefaultTextStyle(
+        child: text,
+        style: Theme.of(context).textTheme.subtitle1!,
+      ),
     );
   }
 }

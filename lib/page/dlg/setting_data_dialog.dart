@@ -30,6 +30,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
   var _downloadRecords = true;
   var _favoriteMangas = true;
   var _favoriteAuthors = true;
+  var _laterMangas = true;
   var _searchHistories = true;
   var _appSetting = true;
 
@@ -38,6 +39,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
         if (_downloadRecords) ExportDataType.downloadRecords,
         if (_favoriteMangas) ExportDataType.favoriteMangas,
         if (_favoriteAuthors) ExportDataType.favoriteAuthors,
+        if (_laterMangas) ExportDataType.laterMangas,
         if (_searchHistories) ExportDataType.searchHistories,
         if (_appSetting) ExportDataType.appSetting,
       ];
@@ -48,7 +50,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
       children: [
         Text(
           '提醒：导出的数据可供当前版本或更新版本的APP导入使用，但无法导入至更老版本的APP。',
-          style: Theme.of(context).textTheme.bodyText1,
+          style: Theme.of(context).textTheme.bodyText2,
         ),
         SizedBox(height: 8),
         SettingSwitcherView(
@@ -83,6 +85,15 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _favoriteAuthors,
           onChanged: (b) {
             _favoriteAuthors = b;
+            widget.onTypesChanged.call(_newestTypes);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: ExportDataType.laterMangas.toTypeTitle(),
+          value: _laterMangas,
+          onChanged: (b) {
+            _laterMangas = b;
             widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },

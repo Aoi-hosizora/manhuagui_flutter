@@ -22,6 +22,7 @@ import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
+import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_overview.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
@@ -932,6 +933,18 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
+  Future<void> _showLaters() async {
+    await _ScreenHelper.restoreSystemUI();
+    await Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => LaterMangaPage(
+        ),
+      ),
+    );
+    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+  }
+
   Future<void> _showImage(String url, String title) async {
     await _ScreenHelper.restoreSystemUI(notificationBar: false, fullscreen: true);
     await Navigator.of(context).push(
@@ -1222,6 +1235,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toDownload: _downloadManga,
                       toShowToc: _showToc,
                       toShowComments: _showComments,
+                      toShowLaters: _showLaters,
                       toShowImage: _showImage,
                       toOnlineMode: () => _toOnlineMode(alsoCheck: false),
                       toPop: () => Navigator.of(context).maybePop(),
@@ -1242,6 +1256,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toDownload: _downloadManga,
                       toShowToc: _showToc,
                       toShowComments: _showComments,
+                      toShowLaters: _showLaters,
                       toShowImage: _showImage,
                       toOnlineMode: () => _toOnlineMode(alsoCheck: false),
                       toPop: () => Navigator.of(context).maybePop(),

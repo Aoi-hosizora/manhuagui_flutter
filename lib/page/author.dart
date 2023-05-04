@@ -283,19 +283,15 @@ class _AuthorPageState extends State<AuthorPage> {
                 IconTextDialogOption(
                   icon: Icon(Icons.copy),
                   text: Text('复制标题'),
-                  onPressed: () {
-                    Navigator.of(c).pop();
-                    copyText(_data?.name ?? widget.name, showToast: true);
-                  },
+                  popWhenPress: c,
+                  onPressed: () => copyText(_data?.name ?? widget.name, showToast: true),
                 ),
                 if (_data != null)
                   IconTextDialogOption(
                     icon: Icon(Icons.subject),
                     text: Text('查看作者详情'),
-                    onPressed: () {
-                      Navigator.of(c).pop();
-                      Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => AuthorDetailPage(data: _data!)));
-                    },
+                    popWhenPress: c,
+                    onPressed: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => AuthorDetailPage(data: _data!))),
                   ),
               ],
             ),

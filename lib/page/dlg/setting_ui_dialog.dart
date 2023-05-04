@@ -42,6 +42,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _enableCornerIcons = widget.setting.enableCornerIcons;
   late var _showMangaReadIcon = widget.setting.showMangaReadIcon;
+  late var _readGroupBehavior = widget.setting.readGroupBehavior;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
   late var _allowErrorToast = widget.setting.allowErrorToast;
@@ -61,6 +62,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         defaultAuthorOrder: _defaultAuthorOrder,
         enableCornerIcons: _enableCornerIcons,
         showMangaReadIcon: _showMangaReadIcon,
+        readGroupBehavior: _readGroupBehavior,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
         allowErrorToast: _allowErrorToast,
@@ -82,6 +84,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _defaultAuthorOrder = setting.defaultAuthorOrder;
     _enableCornerIcons = setting.enableCornerIcons;
     _showMangaReadIcon = setting.showMangaReadIcon;
+    _readGroupBehavior = setting.readGroupBehavior;
     _regularGroupRows = setting.regularGroupRows;
     _otherGroupRows = setting.otherGroupRows;
     _allowErrorToast = setting.allowErrorToast;
@@ -161,6 +164,18 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingGroupTitleView(
           title: '漫画显示设置',
+        ),
+        SettingComboBoxView<ReadGroupBehavior>(
+          title: '点击阅读章节分组行为',
+          width: 170,
+          value: _readGroupBehavior,
+          values: ReadGroupBehavior.values,
+          textBuilder: (s) => s.toOptionTitle(),
+          onChanged: (s) {
+            _readGroupBehavior = s;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
         ),
         SettingComboBoxView<int>(
           title: '单话章节分组显示行数',
