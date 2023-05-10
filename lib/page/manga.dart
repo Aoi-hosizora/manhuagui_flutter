@@ -389,20 +389,20 @@ class _MangaPageState extends State<MangaPage> {
           showDialog(
             context: context,
             builder: (c) => SimpleDialog(
-              title: Text('继续阅读'),
+              title: Text('章节阅读'),
               children: [
                 SubtitleDialogOption(
                   text: Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter!.pageCount}页)。'),
                 ),
                 IconTextDialogOption(
                   icon: Icon(Icons.import_contacts),
-                  text: Text('继续阅读该章节 ($historyTitle)'),
+                  text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: chapterId, page: historyPage),
                 ),
                 IconTextDialogOption(
                   icon: Icon(CustomIcons.opened_book_replay),
-                  text: Text('从头阅读该章节 ($historyTitle)'),
+                  text: Text('从头阅读该章节 ($historyTitle 第1页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
                 ),
@@ -415,7 +415,7 @@ class _MangaPageState extends State<MangaPage> {
           showDialog(
             context: context,
             builder: (c) => SimpleDialog(
-              title: Text('继续阅读'),
+              title: Text('章节阅读'),
               children: [
                 SubtitleDialogOption(
                   text: Text('该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)。'),
@@ -423,26 +423,26 @@ class _MangaPageState extends State<MangaPage> {
                 if (neighbor?.nextSameGroupChapter != null)
                   IconTextDialogOption(
                     icon: Icon(CustomIcons.opened_left_star_book),
-                    text: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title})'),
+                    text: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title} 第1页)'),
                     popWhenPress: c,
                     onPressed: () => gotoViewerPage(cid: neighbor.nextSameGroupChapter!.cid, page: 1),
                   ),
                 if (neighbor?.nextDiffGroupChapter != null)
                   IconTextDialogOption(
                     icon: Icon(CustomIcons.opened_left_star_book),
-                    text: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title})'),
+                    text: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title} 第1页)'),
                     popWhenPress: c,
                     onPressed: () => gotoViewerPage(cid: neighbor.nextDiffGroupChapter!.cid, page: 1),
                   ),
                 IconTextDialogOption(
                   icon: Icon(CustomIcons.opened_book_replay),
-                  text: Text('从头阅读该章节 ($historyTitle)'),
+                  text: Text('从头阅读该章节 ($historyTitle 第1页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
                 ),
                 IconTextDialogOption(
                   icon: Icon(Icons.import_contacts),
-                  text: Text('继续阅读该章节 ($historyTitle)'),
+                  text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: chapterId, page: historyPage),
                 ),
@@ -482,13 +482,13 @@ class _MangaPageState extends State<MangaPage> {
                 ),
                 IconTextDialogOption(
                   icon: Icon(CustomIcons.opened_book_replay),
-                  text: Text('从头阅读该章节 ($historyTitle)'),
+                  text: Text('从头阅读该章节 ($historyTitle 第1页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: historyCid, page: 1),
                 ),
                 IconTextDialogOption(
                   icon: Icon(Icons.import_contacts),
-                  text: Text('继续阅读该章节 ($historyTitle)'),
+                  text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: historyCid, page: historyPage),
                 ),
@@ -508,26 +508,26 @@ class _MangaPageState extends State<MangaPage> {
                 if (neighbor.nextSameGroupChapter != null)
                   IconTextDialogOption(
                     icon: Icon(CustomIcons.opened_left_star_book),
-                    text: Text('开始阅读新章节 (${neighbor.nextSameGroupChapter!.title})'),
+                    text: Text('开始阅读新章节 (${neighbor.nextSameGroupChapter!.title} 第1页)'),
                     popWhenPress: c,
                     onPressed: () => gotoViewerPage(cid: neighbor.nextSameGroupChapter!.cid, page: 1),
                   ),
                 if (neighbor.nextDiffGroupChapter != null)
                   IconTextDialogOption(
                     icon: Icon(CustomIcons.opened_left_star_book),
-                    text: Text('开始阅读新章节 (${neighbor.nextDiffGroupChapter!.title})'),
+                    text: Text('开始阅读新章节 (${neighbor.nextDiffGroupChapter!.title} 第1页)'),
                     popWhenPress: c,
                     onPressed: () => gotoViewerPage(cid: neighbor.nextDiffGroupChapter!.cid, page: 1),
                   ),
                 IconTextDialogOption(
                   icon: Icon(CustomIcons.opened_book_replay),
-                  text: Text('从头阅读该章节 ($historyTitle)'),
+                  text: Text('从头阅读该章节 ($historyTitle 第1页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: historyCid, page: 1),
                 ),
                 IconTextDialogOption(
                   icon: Icon(Icons.import_contacts),
-                  text: Text('继续阅读该章节 ($historyTitle)'),
+                  text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: historyCid, page: historyPage),
                 ),

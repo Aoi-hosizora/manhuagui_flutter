@@ -494,7 +494,7 @@ extension ReadGroupBehaviorExtension on ReadGroupBehavior {
   }
 
   bool needCheckStart({required int? currentPage, required int? totalPage}) {
-    return currentPage != null && totalPage != null && currentPage < totalPage && this == ReadGroupBehavior.checkStartReading;
+    return currentPage != null && totalPage != null && currentPage > 1 && currentPage < totalPage && this == ReadGroupBehavior.checkStartReading;
   }
 
   bool needCheckFinish({required int? currentPage, required int? totalPage}) {

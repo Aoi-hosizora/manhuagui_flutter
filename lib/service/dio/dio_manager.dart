@@ -21,23 +21,23 @@ class DioManager {
   Dio get dio {
     if (_dio == null) {
       _dio = Dio();
-      _dio!.options.connectTimeout = CONNECT_TIMEOUT;
-      _dio!.options.sendTimeout = SEND_TIMEOUT;
-      _dio!.options.receiveTimeout = RECEIVE_TIMEOUT;
+      _dio!.options.connectTimeout = Duration(milliseconds: CONNECT_TIMEOUT);
+      _dio!.options.sendTimeout = Duration(milliseconds: SEND_TIMEOUT);
+      _dio!.options.receiveTimeout = Duration(milliseconds: RECEIVE_TIMEOUT);
       _dio!.interceptors.add(LogInterceptor());
     }
     if (_longDio == null) {
       _longDio = Dio();
-      _longDio!.options.connectTimeout = CONNECT_LTIMEOUT;
-      _longDio!.options.sendTimeout = SEND_LTIMEOUT;
-      _longDio!.options.receiveTimeout = RECEIVE_LTIMEOUT;
+      _longDio!.options.connectTimeout = Duration(milliseconds: CONNECT_LTIMEOUT);
+      _longDio!.options.sendTimeout = Duration(milliseconds: SEND_LTIMEOUT);
+      _longDio!.options.receiveTimeout = Duration(milliseconds: RECEIVE_LTIMEOUT);
       _longDio!.interceptors.add(LogInterceptor());
     }
     if (_longLongDio == null) {
       _longLongDio = Dio();
-      _longLongDio!.options.connectTimeout = CONNECT_LLTIMEOUT;
-      _longLongDio!.options.sendTimeout = SEND_LLTIMEOUT;
-      _longLongDio!.options.receiveTimeout = RECEIVE_LLTIMEOUT;
+      _longLongDio!.options.connectTimeout = Duration(milliseconds: CONNECT_LLTIMEOUT);
+      _longLongDio!.options.sendTimeout = Duration(milliseconds: SEND_LLTIMEOUT);
+      _longLongDio!.options.receiveTimeout = Duration(milliseconds: RECEIVE_LLTIMEOUT);
       _longLongDio!.interceptors.add(LogInterceptor());
     }
     if (_noTimeoutDio == null) {

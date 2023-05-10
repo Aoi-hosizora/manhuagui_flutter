@@ -31,6 +31,7 @@ class MangaAudRankingView extends StatefulWidget {
     this.onRefreshPressed,
     this.onFullListPressed,
     this.onMorePressed,
+    this.onLineLongPressed,
   }) : super(key: key);
 
   final List<MangaRanking>? allRankings;
@@ -46,6 +47,7 @@ class MangaAudRankingView extends StatefulWidget {
   final void Function(MangaAudRankingType)? onRefreshPressed;
   final void Function(MangaAudRankingType)? onFullListPressed;
   final void Function()? onMorePressed;
+  final void Function(MangaRanking)? onLineLongPressed;
 
   @override
   State<MangaAudRankingView> createState() => _MangaAudRankingViewState();
@@ -164,6 +166,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
           ),
         ),
       ),
+      onLongPress: widget.onLineLongPressed == null ? null : () => widget.onLineLongPressed?.call(manga),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20 /* 15 */, vertical: 6), // | ▢ ▢▢ |
         child: Row(

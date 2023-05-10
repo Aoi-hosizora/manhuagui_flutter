@@ -194,22 +194,26 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
     }
 
     // 对**所有分组**中的漫画章节排序
-    var prevChapters = !prev ? null : (allChapters.where((el) => el.cid < cid).toList()..sort((a, b) => b.cid.compareTo(a.cid))); // cid 从大到小排序
-    var nextChapters = !next ? null : (allChapters.where((el) => el.cid > cid).toList()..sort((a, b) => a.cid.compareTo(b.cid))); // cid 从小到大排序
+    // TODO change to use number to sort
+    var prevChapters = !prev
+        ? null
+        : (allChapters.where((el) => el.group == chapter.group ? el.number < chapter.number : el.cid < cid).toList() //
+          ..sort((a, b) => a.group == b.group ? b.number.compareTo(a.number) : b.cid.compareTo(a.cid))); // cid 从大到小排序
+    var nextChapters = !next
+        ? null
+        : (allChapters.where((el) => el.group == chapter.group ? el.number > chapter.number : el.cid > cid).toList() //
+          ..sort((a, b) => a.group == b.group ? a.number.compareTo(b.number) : a.cid.compareTo(b.cid))); // cid 从小到大排序
 
     // 从**所有分组**中找上一个章节
     TinyMangaChapter? prevDiffGroupChapter, prevSameGroupChapter;
     if (prev) {
       for (var prevChapter in prevChapters!) {
         if (prevChapter.group != chapter.group) {
-          prevDiffGroupChapter ??= prevChapter; // 找到的章节不属于同一分组
+          prevDiffGroupChapter ??= prevChapter; // 找到的章节不属于同一分组，且该章节的编号肯定小于当前章节的编号
           continue;
         }
-        if (prevChapter.number < chapter.number) {
-          prevSameGroupChapter ??= prevChapter; // 找到的章节属于同一分组，且分组内顺序小于当前顺序
-          break;
-        }
-        continue; // 找到的章节属于同一分组，且分组内顺序大于当前顺序，继续检查 (很少见，当章节列表内的章节顺序被调整时可能会出现)
+        prevSameGroupChapter ??= prevChapter; // 找到的章节属于同一分组，且该章节的顺序肯定小于当前章节的顺序
+        break;
       }
       if (prevDiffGroupChapter != null && prevSameGroupChapter != null && prevDiffGroupChapter.cid < prevSameGroupChapter.cid) {
         prevDiffGroupChapter = null; // 不同分组的章节出现得比同一分组的章节还要更前，舍弃
@@ -221,14 +225,11 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
     if (next) {
       for (var nextChapter in nextChapters!) {
         if (nextChapter.group != chapter.group) {
-          nextDiffGroupChapter ??= nextChapter; // 找到的章节不属于同一分组
+          nextDiffGroupChapter ??= nextChapter; // 找到的章节不属于同一分组，且该章节的编号肯定大于当前章节的编号
           continue;
         }
-        if (nextChapter.number > chapter.number) {
-          nextSameGroupChapter ??= nextChapter; // 找到的章节属于同一分组，且分组内顺序大于当前顺序
-          break;
-        }
-        continue; // 找到的章节属于同一分组，且分组内顺序小于当前顺序，继续检查 (很少见，当章节列表内的章节顺序被调整时可能会出现)
+        nextSameGroupChapter ??= nextChapter; // 找到的章节属于同一分组，且该章节的顺序肯定大于当前章节的顺序
+        break;
       }
       if (nextDiffGroupChapter != null && nextSameGroupChapter != null && nextDiffGroupChapter.cid > nextSameGroupChapter.cid) {
         nextDiffGroupChapter = null; // 不同分组的章节出现得比同一分组的章节还要更后，舍弃

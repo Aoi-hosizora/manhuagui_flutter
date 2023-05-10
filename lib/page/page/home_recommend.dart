@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_aud_ranking.dart';
@@ -439,6 +440,13 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           ),
         ),
         onMorePressed: () => _openSepPage(SepRankingPage()),
+        onLineLongPressed: (manga) => showPopupMenuForMangaList(
+          context: context,
+          mangaId: manga.mid,
+          mangaTitle: manga.title,
+          mangaCover: manga.cover,
+          mangaUrl: manga.url,
+        ),
       ),
     );
   }

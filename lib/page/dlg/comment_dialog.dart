@@ -96,7 +96,7 @@ void showCommentPopupMenuForListAndPage({
             showDialog(
               context: context,
               builder: (c) => AlertDialog(
-                title: Text('"${comment.username}" 的评论内容'),
+                title: Text((comment.username == '-' ? '匿名用户' : '"${comment.username}" ') + '的评论内容'),
                 content: SelectableText(comment.content),
                 actions: [
                   TextButton(

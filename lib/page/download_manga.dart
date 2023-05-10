@@ -347,7 +347,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
         showDialog(
           context: context,
           builder: (c) => SimpleDialog(
-            title: Text('继续阅读'),
+            title: Text('章节阅读'),
             children: [
               SubtitleDialogOption(
                 text: checkStart //
@@ -357,13 +357,13 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
               ...([
                 IconTextDialogOption(
                   icon: Icon(Icons.import_contacts),
-                  text: Text('继续阅读该章节 ($historyTitle)'),
+                  text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: chapterId, page: historyPage),
                 ),
                 IconTextDialogOption(
                   icon: Icon(CustomIcons.opened_book_replay),
-                  text: Text('从头阅读该章节 ($historyTitle)'),
+                  text: Text('从头阅读该章节 ($historyTitle 第1页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
                 ),

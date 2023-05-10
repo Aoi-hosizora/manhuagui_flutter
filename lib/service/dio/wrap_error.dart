@@ -151,8 +151,8 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     );
   }
 
-  if (e is DioError && e.type == DioErrorType.other && !_networkRelated(e.error)) {
-    s = e.stackTrace ?? StackTrace.empty;
+  if (e is DioError && (e.type == DioErrorType.connectionError || e.type == DioErrorType.badCertificate || e.type == DioErrorType.unknown) && !_networkRelated(e.error)) {
+    s = e.stackTrace;
     e = e.error;
   }
   if (e is DioError) {
@@ -165,22 +165,24 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     if (response == null) {
       String text;
       switch (e.type) {
-        case DioErrorType.other:
+        case DioErrorType.connectionError:
+        case DioErrorType.badCertificate:
+        case DioErrorType.unknown:
           text = _translate(e.error.toString(), 'DioError_${e.error.runtimeType}'); // ...
           break;
-        case DioErrorType.connectTimeout:
-          text = '连接超时 [${e.requestOptions.connectTimeout / 1000}s]'; // Connection timed out
+        case DioErrorType.connectionTimeout:
+          text = '连接超时 [${e.requestOptions.connectTimeout!.inMilliseconds / 1000}s]'; // Connection timed out
           break;
         case DioErrorType.sendTimeout:
-          text = '发送请求超时 [${e.requestOptions.sendTimeout / 1000}s]'; // Request timed out
+          text = '发送请求超时 [${e.requestOptions.sendTimeout!.inMilliseconds / 1000}s]'; // Request timed out
           break;
         case DioErrorType.receiveTimeout:
-          text = '获取响应超时 [${e.requestOptions.receiveTimeout / 1000}s]'; // Response timed out
+          text = '获取响应超时 [${e.requestOptions.receiveTimeout!.inMilliseconds / 1000}s]'; // Response timed out
           break;
         case DioErrorType.cancel:
           text = '请求被取消'; // Request is cancelled
           break;
-        case DioErrorType.response:
+        case DioErrorType.badResponse:
           text = '响应错误'; // Response error // x
           break;
       }
@@ -197,7 +199,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
         '===> error: DioError [${e.type}]: ${e.error.toString()}',
         '===> trace:\n${e.stackTrace}',
       ]);
-      return ErrorMessage.network(e, e.stackTrace!, text);
+      return ErrorMessage.network(e, e.stackTrace, text);
     }
 
     // ======================================================================================================================
@@ -225,7 +227,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
         '===> error: $err',
         '===> trace:\n${e.stackTrace}',
       ]);
-      return ErrorMessage.status(err, e.stackTrace!, text, response: response);
+      return ErrorMessage.status(err, e.stackTrace, text, response: response);
     }
 
     // ======================================================================================================================
@@ -258,7 +260,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
         '===> detail: $detail',
         '===> trace:\n${e.stackTrace}',
       ]);
-      return ErrorMessage.result(err, e.stackTrace!, text, response: response, serviceCode: r.code, detail: detail);
+      return ErrorMessage.result(err, e.stackTrace, text, response: response, serviceCode: r.code, detail: detail);
     } catch (e, s) {
       // must goto ErrorType.otherError
       return wrapError(e, s);
