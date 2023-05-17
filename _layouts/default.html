@@ -20,7 +20,8 @@
     <a id="skip-to-content" href="#content">Skip to the content.</a>
 
     <header class="page-header" role="banner">
-      <h1 class="project-name">{{ page.title | default: site.title | default: site.github.repository_name }}</h1>
+      <!-- <h1 class="project-name">{{ page.title | default: site.title | default: site.github.repository_name }}</h1> -->
+      <h1 class="project-name">{{ site.title | default: site.github.repository_name }}</h1>
       <h2 class="project-tagline">{{ page.description | default: site.description | default: site.github.project_tagline }}</h2>
       <!--
       {% if site.github.is_project_page %}
@@ -31,9 +32,11 @@
         <a href="{{ site.github.tar_url }}" class="btn">Download .tar.gz</a>
       {% endif %}
       -->
+
+      <!-- !!! Modified by @Aoi-hosizora -->
       <a href="https://github.com/Aoi-hosizora/manhuagui_flutter" class="btn">View on GitHub (Android)</a>
       <a href="https://github.com/Aoi-hosizora/manhuagui_api" class="btn">View on GitHub (Backend)</a>
-      <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/release" class="btn">Download Released apk</a>
+      <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases" class="btn">Download Released apk</a>
     </header>
 
     <main id="content" class="main-content" role="main">
