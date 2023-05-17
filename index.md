@@ -1,29 +1,33 @@
-[![Release](https://img.shields.io/github/v/release/Aoi-hosizora/manhuagui_flutter?display_name=tag)](https://github.com/Aoi-hosizora/manhuagui_flutter/releases)
-[![Release Date](https://img.shields.io/github/release-date/Aoi-hosizora/manhuagui_flutter)](https://github.com/Aoi-hosizora/manhuagui_flutter/releases)
-[![Downloads](https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/total?color=success)](https://github.com/Aoi-hosizora/manhuagui_flutter/releases)
-[![Downloads](https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/latest/total?color=success)](https://github.com/Aoi-hosizora/manhuagui_flutter/releases)
-[![License](https://img.shields.io/github/license/Aoi-hosizora/manhuagui_flutter)](./LICENSE)
+<p align="center">
+  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases"><img src="https://img.shields.io/github/v/release/Aoi-hosizora/manhuagui_flutter?display_name=tag" alt="Release" /></a>
+  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases/latest"><img src="https://img.shields.io/github/release-date/Aoi-hosizora/manhuagui_flutter" alt="Release Date" /></a>
+  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases"><img src="https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/total?color=success" alt="Downloads" /></a>
+  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases/latest"><img src="https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/latest/total?color=successg" alt="Latest Downloads" /></a>
+  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/blob/master/LICENSE"><img src="https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/latest/total?color=success" alt="License" /></a>
+</p>
 
 ## Main repositories
 
-+ ***[Aoi-hosizora/manhuagui_flutter](https://github.com/Aoi-hosizora/manhuagui_flutter)***: The manhuagui android application.
-![Stars](https://img.shields.io/github/stars/Aoi-hosizora/manhuagui_flutter?logo=github)
-![Forks](https://img.shields.io/github/forks/Aoi-hosizora/manhuagui_flutter?logo=github)
-![Last commit](https://img.shields.io/github/last-commit/Aoi-hosizora/manhuagui_flutter?logo=github)
-![Issues](https://img.shields.io/github/issues/Aoi-hosizora/manhuagui_flutter?logo=github)
-![Top language](https://img.shields.io/github/languages/top/Aoi-hosizora/manhuagui_flutter?color=00B4AB)
++ [Aoi-hosizora/manhuagui_flutter](https://github.com/Aoi-hosizora/manhuagui_flutter): The unofficial manhuagui android application.
 
-+ ***[Aoi-hosizora/manhuagui_api](https://github.com/Aoi-hosizora/manhuagui_api)***: The manhuagui backend used by this client.
-![Stars](https://img.shields.io/github/stars/Aoi-hosizora/manhuagui_api?logo=github)
-![Forks](https://img.shields.io/github/forks/Aoi-hosizora/manhuagui_api?logo=github)
-![Last commit](https://img.shields.io/github/last-commit/Aoi-hosizora/manhuagui_api?logo=github)
-![Issues](https://img.shields.io/github/issues/Aoi-hosizora/manhuagui_api?logo=github)
-![Top language](https://img.shields.io/github/languages/top/Aoi-hosizora/manhuagui_api?color=00ADD8)
+    ![Stars](https://img.shields.io/github/stars/Aoi-hosizora/manhuagui_flutter?logo=github)
+    ![Forks](https://img.shields.io/github/forks/Aoi-hosizora/manhuagui_flutter?logo=github)
+    ![Last commit](https://img.shields.io/github/last-commit/Aoi-hosizora/manhuagui_flutter?logo=github)
+    ![Issues](https://img.shields.io/github/issues/Aoi-hosizora/manhuagui_flutter?logo=github)
+    ![Top language](https://img.shields.io/github/languages/top/Aoi-hosizora/manhuagui_flutter?color=00B4AB)
+
++ [Aoi-hosizora/manhuagui_api](https://github.com/Aoi-hosizora/manhuagui_api): The unofficial manhuagui backend system.
+
+    ![Stars](https://img.shields.io/github/stars/Aoi-hosizora/manhuagui_api?logo=github)
+    ![Forks](https://img.shields.io/github/forks/Aoi-hosizora/manhuagui_api?logo=github)
+    ![Last commit](https://img.shields.io/github/last-commit/Aoi-hosizora/manhuagui_api?logo=github)
+    ![Issues](https://img.shields.io/github/issues/Aoi-hosizora/manhuagui_api?logo=github)
+    ![Top language](https://img.shields.io/github/languages/top/Aoi-hosizora/manhuagui_api?color=00ADD8)
 
 ## Related repositories
 
-+ [Aoi-hosizora/flutter_ahlib](https://github.com/Aoi-hosizora/flutter_ahlib): A personal flutter widgets and utilities library. ![Top Language](https://img.shields.io/github/languages/top/Aoi-hosizora/flutter_ahlib?color=00B4AB)
-+ [Aoi-hosizora/ahlib](https://github.com/Aoi-hosizora/ahlib): A personal golang utilities library. ![Top Language](https://img.shields.io/github/languages/top/Aoi-hosizora/ahlib?color=00ADD8)
++ [Aoi-hosizora/flutter_ahlib](https://github.com/Aoi-hosizora/flutter_ahlib): A personal flutter widgets and utilities library.
++ [Aoi-hosizora/ahlib](https://github.com/Aoi-hosizora/ahlib): A personal golang utilities library.
 
 ## Tips
 
