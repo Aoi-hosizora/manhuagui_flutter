@@ -1,9 +1,11 @@
+<img src="https://raw.githubusercontent.com/Aoi-hosizora/manhuagui_flutter/master/lib/assets/logo_xxhdpi.png" alt="LOGO" height="100" width="100" align="right" />
+
 <p align="center">
   <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases"><img src="https://img.shields.io/github/v/release/Aoi-hosizora/manhuagui_flutter?display_name=tag" alt="Release" /></a>
   <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases/latest"><img src="https://img.shields.io/github/release-date/Aoi-hosizora/manhuagui_flutter" alt="Release Date" /></a>
   <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases"><img src="https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/total?color=success" alt="Downloads" /></a>
-  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases/latest"><img src="https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/latest/total?color=successg" alt="Latest Downloads" /></a>
-  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/blob/master/LICENSE"><img src="https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/latest/total?color=success" alt="License" /></a>
+  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/releases/latest"><img src="https://img.shields.io/github/downloads/Aoi-hosizora/manhuagui_flutter/latest/total?color=success" alt="Latest Downloads" /></a>
+  <a href="https://github.com/Aoi-hosizora/manhuagui_flutter/blob/master/LICENSE"><img src="https://img.shields.io/github/license/Aoi-hosizora/manhuagui_flutter" alt="License" /></a>
 </p>
 
 ## Main repositories
