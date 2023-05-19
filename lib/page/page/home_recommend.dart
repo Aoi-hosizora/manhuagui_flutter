@@ -6,20 +6,22 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
 import 'package:manhuagui_flutter/page/manga_random.dart';
+import 'package:manhuagui_flutter/page/sep_category.dart';
 import 'package:manhuagui_flutter/page/sep_favorite.dart';
 import 'package:manhuagui_flutter/page/sep_history.dart';
 import 'package:manhuagui_flutter/page/sep_ranking.dart';
 import 'package:manhuagui_flutter/page/sep_recent.dart';
 import 'package:manhuagui_flutter/page/sep_shelf.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/category_chip_list.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
-import 'package:manhuagui_flutter/page/view/genre_chip_list.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
@@ -36,6 +38,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 首页-推荐
@@ -65,6 +68,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) => _loadDataWhenAuthChanged()));
     });
+    _cancelHandlers.add(EventBusManager.instance.listen<MarkedCategoryUpdatedEvent>((ev) => _loadMarkedCategories(ev)));
   }
 
   @override
@@ -96,6 +100,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   var _loading = true; // initialize to true
   HomepageMangaGroupList? _data;
   var _error = '';
+  final _markedCategoryNames = <String>[];
 
   Future<void> _loadingGroupList({bool considerOtherData = true}) async {
     _loading = true;
@@ -138,7 +143,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       _rankings = result.data.daily;
       _rankingsDateTime = DateTime.now();
       _rankingsError = '';
+
       globalCategoryList ??= CategoryList(genres: result.data.genres, zones: result.data.zones, ages: result.data.ages); // 更新全局的漫画类别
+      await _loadMarkedCategories(null); // 加载被标记的漫画类别
     } catch (e, s) {
       _error = wrapError(e, s).text;
       if (_data != null) {
@@ -147,6 +154,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     } finally {
       _loading = false;
       if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _loadMarkedCategories(MarkedCategoryUpdatedEvent? ev) async {
+    var categories = await MarkedCategoryPrefs.getMarkedCategories();
+    _markedCategoryNames.clear();
+    _markedCategoryNames.addAll(categories);
+    if (ev != null) {
+      if (mounted) setState(() {}); // from event
     }
   }
 
@@ -540,7 +556,16 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Center(
-                        child: GenreChipListView(genres: _data!.genres.map((g) => g.toTiny()).toList()),
+                        child: CategoryChipListView(
+                          genres: _data!.genres.map((g) => g.toTiny()).toList(),
+                          markedCategoryNames: _markedCategoryNames, // TODO test
+                          onPressed: (g) => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepCategoryPage(genre: g))),
+                          onLongPressed: (g) => showCategoryPopupMenu(
+                            context: context,
+                            category: g,
+                            onSelected: (_) => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepCategoryPage(genre: g))),
+                          ),
+                        ),
                       ),
                     ),
                   ),

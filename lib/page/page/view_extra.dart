@@ -282,7 +282,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                         ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                  ), // TODO clickable ???
+                                  ),
                                 ),
                               ],
                             ],

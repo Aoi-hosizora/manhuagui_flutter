@@ -22,7 +22,7 @@ enum DrawerSelection {
   none,
   // none => MangaPage / AuthorPage / MessagePage / CommentsPage / CommentPage
   //         MangaTocPage / DownloadMangaPage / MangaShelfCachePage / FavoriteAllPage / FavoriteAuthorPage
-  //         LaterMangaPage / MangaGroupPage / MangaAudRankingPage / SepGenrePage
+  //         LaterMangaPage / MangaGroupPage / MangaAudRankingPage / SepCategoryPage
 
   home, // IndexPage
   search, // SearchPage

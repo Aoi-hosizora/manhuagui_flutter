@@ -19,7 +19,7 @@ import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
-import 'package:manhuagui_flutter/page/sep_genre.dart';
+import 'package:manhuagui_flutter/page/sep_category.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
@@ -1012,7 +1012,7 @@ class _MangaPageState extends State<MangaPage> {
                                       onTap: () => Navigator.of(context).push(
                                         CustomPageRoute(
                                           context: context,
-                                          builder: (c) => SepGenrePage(
+                                          builder: (c) => SepCategoryPage(
                                             genre: _data!.genres[i].toTiny(),
                                           ),
                                         ),

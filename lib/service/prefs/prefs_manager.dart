@@ -1,6 +1,7 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:manhuagui_flutter/service/prefs/auth.dart';
+import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
 import 'package:manhuagui_flutter/service/prefs/read_message.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,6 +48,7 @@ class PrefsManager {
       await AuthPrefs.upgradeFromVer1To2(prefs);
       await ReadMessagePrefs.upgradeFromVer1To2(prefs);
       await SearchHistoryPrefs.upgradeFromVer1To2(prefs);
+      await MarkedCategoryPrefs.upgradeFromVer1To2(prefs);
     }
     if (version == 2) {
       version = 3; // 2 -> 3 upgrade
@@ -54,6 +56,7 @@ class PrefsManager {
       await AuthPrefs.upgradeFromVer2To3(prefs);
       await ReadMessagePrefs.upgradeFromVer2To3(prefs);
       await SearchHistoryPrefs.upgradeFromVer2To3(prefs);
+      await MarkedCategoryPrefs.upgradeFromVer2To3(prefs);
     }
     if (version == 3) {
       version = 4; // 3 -> 4 upgrade
@@ -61,6 +64,7 @@ class PrefsManager {
       await AuthPrefs.upgradeFromVer3To4(prefs);
       await ReadMessagePrefs.upgradeFromVer3To4(prefs);
       await SearchHistoryPrefs.upgradeFromVer3To4(prefs);
+      await MarkedCategoryPrefs.upgradeFromVer3To4(prefs);
     }
 
     await prefs.setVersion(_newestVersion);

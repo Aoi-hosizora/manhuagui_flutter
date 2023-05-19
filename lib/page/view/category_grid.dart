@@ -8,17 +8,21 @@ enum CategoryGridViewStyle {
   fourColumns,
 }
 
-/// 漫画类别方格，在 [GenreSubPage] 使用
+/// 漫画类别Grid，在 [CategoryGridListView] 使用
 class CategoryGridView extends StatelessWidget {
   const CategoryGridView({
     Key? key,
     required this.categories,
-    required this.onSelected,
+    required this.onPressed,
+    this.onLongPressed,
+    this.ifNeedHighlight,
     this.style = CategoryGridViewStyle.threeColumns,
   }) : super(key: key);
 
   final List<Category> categories;
-  final void Function(Category category) onSelected;
+  final void Function(Category category) onPressed;
+  final void Function(Category category)? onLongPressed;
+  final bool Function(Category category)? ifNeedHighlight;
   final CategoryGridViewStyle style;
 
   Widget _buildItem({required BuildContext context, required Category category, required double width, required double imgHeight}) {
@@ -26,6 +30,7 @@ class CategoryGridView extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 1.5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
+      color: ifNeedHighlight?.call(category) == true ? Colors.orange[100] : null,
       child: FullRippleWidget(
         highlightColor: null,
         splashColor: null,
@@ -60,7 +65,9 @@ class CategoryGridView extends StatelessWidget {
                 padding: EdgeInsets.only(top: 3, bottom: 4),
                 child: Text(
                   category.title == '全部' ? '全部漫画' : category.title,
-                  style: Theme.of(context).textTheme.bodyText1,
+                  style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                        color: ifNeedHighlight?.call(category) == true ? Colors.deepOrange[600] : null,
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -68,7 +75,8 @@ class CategoryGridView extends StatelessWidget {
             ],
           ),
         ),
-        onTap: () => onSelected.call(category),
+        onTap: () => onPressed.call(category),
+        onLongPress: onLongPressed == null ? null : () => onLongPressed?.call(category),
       ),
     );
   }

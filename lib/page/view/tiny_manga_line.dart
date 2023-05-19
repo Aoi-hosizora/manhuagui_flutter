@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
-/// 漫画行，[TinyManga]，在 [RecentSubPage] / [OverallSubPage] / [GenreSubPage] / [AuthorPage] 使用
+/// 漫画行，[TinyManga]，在 [RecentSubPage] / [OverallSubPage] / [MangaCategorySubPage] / [AuthorPage] 使用
 class TinyMangaLineView extends StatelessWidget {
   const TinyMangaLineView({
     Key? key,

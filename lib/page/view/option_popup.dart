@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 可弹出选项的按钮，在 [OverallSubPage] / [RankingSubPage] / [GenreSubPage] / [AuthorSubPage] / [AuthorPage] / [SearchPage] 使用
+/// 可弹出选项的按钮，在 [OverallSubPage] / [RankingSubPage] / [MangaCategorySubPage] / [AuthorSubPage] / [AuthorPage] / [SearchPage] 使用
 class OptionPopupView<T extends Object> extends StatefulWidget {
   const OptionPopupView({
     Key? key,
@@ -9,18 +9,24 @@ class OptionPopupView<T extends Object> extends StatefulWidget {
     required this.value,
     required this.titleBuilder,
     required this.onSelect,
+    this.ifNeedHighlight,
     this.height = 26.0,
     this.width,
     this.enable = true,
+    this.onLongPressed,
+    this.onOptionLongPressed,
   }) : super(key: key);
 
   final List<T> items;
   final T value;
   final String Function(BuildContext, T) titleBuilder;
   final void Function(T) onSelect;
+  final bool Function(T)? ifNeedHighlight;
   final double height;
   final double? width;
   final bool enable;
+  final void Function()? onLongPressed;
+  final void Function(T, void Function(T), StateSetter)? onOptionLongPressed;
 
   @override
   _OptionPopupRouteViewState<T> createState() => _OptionPopupRouteViewState<T>();
@@ -41,44 +47,50 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.transparent,
-      pageBuilder: (c, _, __) => Stack(
-        children: [
-          Positioned(
-            top: itemRect.bottom + 5 + 10 /* keep the same as ListHint vertical padding + some spaces */,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: GestureDetector(
+      pageBuilder: (c, _, __) => StatefulBuilder(
+        builder: (_, _setState) => Stack(
+          children: [
+            Positioned(
+              top: itemRect.bottom + 5 + 10 /* keep the same as ListHint vertical padding + some spaces */,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: GestureDetector(
+                child: Container(
+                  color: const Color(0x80000000),
+                ),
+                onTap: () => Navigator.of(context).pop(null),
+              ),
+            ),
+            Positioned(
+              top: itemRect.bottom + 5 /* keep the same as ListHint vertical padding */,
+              left: 0,
+              right: 0,
               child: Container(
-                color: const Color(0x80000000),
-              ),
-              onTap: () => Navigator.of(context).pop(null),
-            ),
-          ),
-          Positioned(
-            top: itemRect.bottom + 5 /* keep the same as ListHint vertical padding */,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 5,
-                    spreadRadius: 0,
-                    offset: Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: _OptionPopupRouteView<T>(
-                value: widget.value,
-                items: widget.items,
-                titleBuilder: widget.titleBuilder,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 5,
+                      spreadRadius: 0,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: _OptionPopupRouteView<T>(
+                  value: widget.value,
+                  items: widget.items,
+                  titleBuilder: widget.titleBuilder,
+                  ifNeedHighlight: widget.ifNeedHighlight,
+                  onLongPressed: widget.onOptionLongPressed == null //
+                      ? null
+                      : (value) => widget.onOptionLongPressed?.call(value, (value) => Navigator.of(c).pop(value), _setState),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
 
@@ -95,6 +107,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
       color: Colors.transparent,
       child: InkWell(
         onTap: widget.enable ? _onTap : null,
+        onLongPress: widget.enable ? widget.onLongPressed : null,
         child: Container(
           height: widget.height, // 26 (keep the same as ListHint height)
           width: widget.width,
@@ -105,12 +118,12 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
             textPadding: EdgeInsets.only(left: 10),
             icon: Icon(
               Icons.arrow_drop_down,
-              color: !widget.enable ? Colors.grey[300] : (_selected ? Colors.orange : Colors.grey[700]),
+              color: !widget.enable ? Colors.grey[300] : (_selected ? Colors.deepOrange : Colors.grey[700]),
             ),
             text: Text(
               widget.titleBuilder(context, widget.value),
               style: TextStyle(
-                color: !widget.enable ? Colors.grey : (_selected ? Colors.orange : Colors.black),
+                color: !widget.enable ? Colors.grey : (_selected ? Colors.deepOrange : Colors.black),
               ),
             ),
           ),
@@ -126,11 +139,15 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
     required this.items,
     required this.value,
     required this.titleBuilder,
+    this.ifNeedHighlight,
+    this.onLongPressed,
   }) : super(key: key);
 
   final List<T> items;
   final T value;
   final String Function(BuildContext, T) titleBuilder;
+  final bool Function(T)? ifNeedHighlight;
+  final void Function(T)? onLongPressed;
 
   Widget _buildItem({required BuildContext context, required T value, required double width, required double height}) {
     final selected = this.value == value;
@@ -143,7 +160,9 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: selected ? Colors.white : Colors.black,
+            color: selected //
+                ? (ifNeedHighlight?.call(value) == true ? Colors.yellow : Colors.white)
+                : (ifNeedHighlight?.call(value) == true ? Colors.deepOrange : Colors.black),
           ),
         ),
         style: OutlinedButton.styleFrom(
@@ -152,6 +171,7 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         onPressed: () => Navigator.of(context).pop(value),
+        onLongPress: onLongPressed == null ? null : () => onLongPressed?.call(value),
       ),
     );
   }

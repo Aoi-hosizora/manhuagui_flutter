@@ -113,6 +113,13 @@ class LaterMangaUpdatedEvent {
   final bool fromMangaPage;
 }
 
+class MarkedCategoryUpdatedEvent {
+  const MarkedCategoryUpdatedEvent({required this.categoryName, required this.added});
+
+  final String categoryName;
+  final bool added;
+}
+
 // ============
 // Other Events
 // ============

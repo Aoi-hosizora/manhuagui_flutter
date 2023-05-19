@@ -32,6 +32,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
   var _favoriteAuthors = true;
   var _laterMangas = true;
   var _searchHistories = true;
+  var _markedCategories = true;
   var _appSetting = true;
 
   List<ExportDataType> get _newestTypes => [
@@ -41,6 +42,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
         if (_favoriteAuthors) ExportDataType.favoriteAuthors,
         if (_laterMangas) ExportDataType.laterMangas,
         if (_searchHistories) ExportDataType.searchHistories,
+        if (_markedCategories) ExportDataType.markedCategories,
         if (_appSetting) ExportDataType.appSetting,
       ];
 
@@ -103,6 +105,15 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _searchHistories,
           onChanged: (b) {
             _searchHistories = b;
+            widget.onTypesChanged.call(_newestTypes);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: ExportDataType.markedCategories.toTypeTitle(),
+          value: _markedCategories,
+          onChanged: (b) {
+            _markedCategories = b;
             widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },

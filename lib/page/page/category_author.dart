@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -15,10 +16,13 @@ import 'package:manhuagui_flutter/page/view/small_author_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
 
-/// 分类-漫画作者
-class AuthorSubPage extends StatefulWidget {
-  const AuthorSubPage({
+/// 分类-作者类别
+class AuthorCategorySubPage extends StatefulWidget {
+  const AuthorCategorySubPage({
     Key? key,
     this.action,
   }) : super(key: key);
@@ -26,13 +30,14 @@ class AuthorSubPage extends StatefulWidget {
   final ActionController? action;
 
   @override
-  _AuthorSubPageState createState() => _AuthorSubPageState();
+  _AuthorCategorySubPageState createState() => _AuthorCategorySubPageState();
 }
 
-class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveClientMixin {
+class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with AutomaticKeepAliveClientMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
@@ -40,6 +45,7 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
     widget.action?.addAction(() => _controller.scrollToTop());
     widget.action?.addAction('find', () => _inputAndFind());
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
+    _cancelHandlers.add(EventBusManager.instance.listen<MarkedCategoryUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
@@ -55,8 +61,13 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
   var _genreLoading = true; // initialize to true
   final _genres = <TinyCategory>[];
   var _genreError = '';
+  final _markedCategoryNames = <String>[];
 
   Future<void> _loadGenres() async {
+    var categories = await MarkedCategoryPrefs.getMarkedCategories();
+    _markedCategoryNames.clear();
+    _markedCategoryNames.addAll(categories);
+
     _genreLoading = true;
     if (mounted) setState(() {});
 
@@ -80,6 +91,26 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
       if (mounted) setState(() {});
     }
   }
+
+  void _updateByEvent(MarkedCategoryUpdatedEvent ev) async {
+    var categories = await MarkedCategoryPrefs.getMarkedCategories();
+    _markedCategoryNames.clear();
+    _markedCategoryNames.addAll(categories);
+    if (mounted) setState(() {});
+  }
+
+  void _longPressCategoryOption(TinyCategory genre, void Function(TinyCategory) selectGenre, StateSetter _setState) {
+    showCategoryPopupMenu(
+      context: context,
+      category: genre,
+      onSelected: selectGenre,
+      onMarkedChanged: (genre, marked) {
+        (marked ? _markedCategoryNames.add : _markedCategoryNames.remove)(genre.name);
+        _setState(() {});
+      },
+    );
+  }
+
 
   final _data = <SmallAuthor>[];
   var _total = 0;
@@ -209,6 +240,8 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
                         _pdvKey.currentState?.refresh();
                       }
                     },
+                    ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
+                    onOptionLongPressed: _longPressCategoryOption,
                   ),
                   OptionPopupView<TinyCategory>(
                     items: allAges,
@@ -223,6 +256,8 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
                         _pdvKey.currentState?.refresh();
                       }
                     },
+                    ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
+                    onOptionLongPressed: _longPressCategoryOption,
                   ),
                   OptionPopupView<TinyCategory>(
                     items: allZones,
@@ -237,6 +272,8 @@ class _AuthorSubPageState extends State<AuthorSubPage> with AutomaticKeepAliveCl
                         _pdvKey.currentState?.refresh();
                       }
                     },
+                    ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
+                    onOptionLongPressed: _longPressCategoryOption,
                   ),
                 ],
               ),

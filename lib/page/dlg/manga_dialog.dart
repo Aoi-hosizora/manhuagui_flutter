@@ -747,16 +747,6 @@ class _DialogHelper {
     return ok ?? false;
   }
 
-  static void showSnackBar({required BuildContext context, required String content}) {
-    try {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(content)));
-    } catch (e, s) {
-      // for destroyed context
-      var _ = wrapError(e, s); // ignore
-    }
-  }
-
   // =======================
   // helper methods (others)
   // =======================
@@ -886,8 +876,11 @@ class _DialogHelper {
       await (toAdd ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: mangaId);
       added = toAdd;
       onUpdated?.call(added);
-      ScaffoldMessenger.of(context).clearSnackBars(); // TODO destroyed context ???
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '成功将漫画放入书架' : '成功将漫画移出书架')));
+      try {
+        // TODO test
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '成功将漫画放入书架' : '成功将漫画移出书架')));
+      } catch (_) {} // for destroyed context
       EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, added: added, fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
     } catch (e, s) {
       var err = wrapError(e, s).text;
@@ -895,12 +888,16 @@ class _DialogHelper {
       if (already || notYet) {
         added = already;
         onUpdated?.call(added);
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '漫画已经在书架上' : '漫画还未在书架上')));
+        try {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '漫画已经在书架上' : '漫画还未在书架上')));
+        } catch (_) {} // for destroyed context
         EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, added: added, fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
       } else {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '放入书架失败，$err' : '移出书架失败，$err')));
+        try {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '放入书架失败，$err' : '移出书架失败，$err')));
+        } catch (_) {} // for destroyed context
       }
     } finally {
       subscribing?.call(false);

@@ -11,6 +11,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
+import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
 import 'package:manhuagui_flutter/service/prefs/prefs_manager.dart';
 import 'package:manhuagui_flutter/service/prefs/search_history.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
@@ -82,6 +83,7 @@ enum ExportDataType {
 
   // from prefs
   searchHistories, // 漫画搜索历史
+  markedCategories, // 标记漫画类别
   appSetting, // 所有设置项
 }
 
@@ -100,6 +102,8 @@ extension ExportDataTypeExtension on ExportDataType {
         return '稍后阅读记录';
       case ExportDataType.searchHistories:
         return '漫画搜索历史';
+      case ExportDataType.markedCategories:
+        return '标记漫画类别';
       case ExportDataType.appSetting:
         return '所有设置项';
     }
@@ -115,6 +119,7 @@ class ExportDataTypeCounter {
   int favoriteAuthors = 0;
   int laterMangas = 0;
   int searchHistories = 0;
+  int markedCategories = 0;
   int appSetting = 0;
 
   bool get isEmpty =>
@@ -124,6 +129,7 @@ class ExportDataTypeCounter {
       favoriteAuthors == 0 &&
       laterMangas == 0 &&
       searchHistories == 0 &&
+      markedCategories == 0 &&
       appSetting == 0;
 
   String formatToString({required bool includeZero, required List<ExportDataType> includeTypes}) {
@@ -137,6 +143,7 @@ class ExportDataTypeCounter {
       if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',
       if (include(laterMangas, ExportDataType.laterMangas)) '$laterMangas 条稍后阅读记录',
       if (include(searchHistories, ExportDataType.searchHistories)) '$searchHistories 条漫画搜索历史',
+      if (include(markedCategories, ExportDataType.markedCategories)) '$markedCategories 个标记漫画类别',
       if (include(appSetting, ExportDataType.appSetting)) '$appSetting 条设置项',
     ];
     return titles.join('、');
@@ -252,7 +259,16 @@ Future<bool> _exportPrefs(File prefsFile, List<ExportDataType> types, ExportData
       if (rows == null) {
         return false; // error
       }
-      counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories()).length; // use history list length as rows
+      counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories()).length;
+    }
+
+    // => marked categories
+    if (types.contains(ExportDataType.markedCategories)) {
+      var rows = await _copyToPrefs(prefs, anotherPrefs, MarkedCategoryPrefs.keys);
+      if (rows == null) {
+        return false; // error
+      }
+      counter.markedCategories = (await MarkedCategoryPrefs.getMarkedCategories()).length;
     }
 
     // => app setting
@@ -408,7 +424,14 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
     if (searchHistoryRows == null) {
       return false; // error
     }
-    counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories(prefs: exportedPrefs)).length; // use history list length as rows
+    counter.searchHistories = (await SearchHistoryPrefs.getSearchHistories(prefs: exportedPrefs)).length;
+
+    // => marked categories
+    var markedCategories = await _copyToPrefs(exportedPrefs, prefs, MarkedCategoryPrefs.keys, merge);
+    if (markedCategories == null) {
+      return false; // error
+    }
+    counter.markedCategories = (await MarkedCategoryPrefs.getMarkedCategories(prefs: exportedPrefs)).length;
 
     // => app setting
     var settingRows = await _copyToPrefs(exportedPrefs, prefs, AppSettingPrefs.keys, merge);
@@ -421,9 +444,11 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
   }();
 
   if (ok) {
-    // reload AppSetting, and notify that settings have been changed
+    if (counter.markedCategories > 0) {
+      EventBusManager.instance.fire(MarkedCategoryUpdatedEvent(categoryName: '', added: true));
+    }
     if (counter.appSetting > 0) {
-      await AppSettingPrefs.loadAllSettings(alsoFireEvent: true);
+      await AppSettingPrefs.loadAllSettings(alsoFireEvent: true); // reload AppSetting, and notify that settings have been changed
     }
   }
   return ok;

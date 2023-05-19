@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/category_author.dart';
-import 'package:manhuagui_flutter/page/page/category_genre.dart';
+import 'package:manhuagui_flutter/page/page/category_manga.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -24,8 +24,8 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   late final _keys = List.generate(2, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(2, (_) => ActionController());
   late final _tabs = [
-    Tuple2('类别', GenreSubPage(key: _keys[0], action: _actions[0])),
-    Tuple2('漫画作者', AuthorSubPage(key: _keys[1], action: _actions[1])),
+    Tuple2('漫画类别', MangaCategorySubPage(key: _keys[0], action: _actions[0])),
+    Tuple2('作者类别', AuthorCategorySubPage(key: _keys[1], action: _actions[1])),
   ];
   var _currentPageIndex = 0; // for app bar actions only
   final _cancelHandlers = <VoidCallback>[];
@@ -34,7 +34,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
-    _actions[0].addAction('updateSubPage', () => mountedSetState(() {})); // for genre page
+    _actions[0].addAction('updateSubPage', () => mountedSetState(() {})); // for manga category page
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});

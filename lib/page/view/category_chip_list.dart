@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/category.dart';
-import 'package:manhuagui_flutter/page/sep_genre.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 
-/// 漫画剧情类别列表，在 [RecommendSubPage] 使用
-class GenreChipListView extends StatelessWidget {
-  const GenreChipListView({
+/// 漫画类别Chip列表，在 [RecommendSubPage] 使用
+class CategoryChipListView extends StatelessWidget {
+  const CategoryChipListView({
     Key? key,
     required this.genres,
+    this.markedCategoryNames,
+    required this.onPressed,
+    this.onLongPressed,
   }) : super(key: key);
 
   final List<TinyCategory> genres;
+  final List<String>? markedCategoryNames;
+  final void Function(TinyCategory) onPressed;
+  final void Function(TinyCategory)? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,12 @@ class GenreChipListView extends StatelessWidget {
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   label: Padding(
                     padding: EdgeInsets.only(left: 1, right: 1, bottom: 1),
-                    child: Text('#${genre.title}'),
+                    child: Text(
+                      '#${genre.title}',
+                      style: TextStyle(
+                        color: markedCategoryNames?.any((el) => genre.name == el) == true ? Colors.deepOrange[600] : null,
+                      ),
+                    ),
                   ),
                   shape: StadiumBorder(
                     side: BorderSide(width: 1, color: Colors.transparent),
@@ -41,14 +50,8 @@ class GenreChipListView extends StatelessWidget {
                 ),
                 highlightColor: null,
                 splashColor: null,
-                onTap: () => Navigator.of(context).push(
-                  CustomPageRoute(
-                    context: context,
-                    builder: (c) => SepGenrePage(
-                      genre: genre,
-                    ),
-                  ),
-                ),
+                onTap: () => onPressed.call(genre),
+                onLongPress: onLongPressed == null ? null : () => onLongPressed?.call(genre),
               ),
             ),
           ),

@@ -5,7 +5,8 @@ import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
-import 'package:manhuagui_flutter/page/view/category_grid.dart';
+import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
+import 'package:manhuagui_flutter/page/view/category_grid_list.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -14,10 +15,13 @@ import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
 
-/// 分类-类别
-class GenreSubPage extends StatefulWidget {
-  const GenreSubPage({
+/// 分类-漫画类别
+class MangaCategorySubPage extends StatefulWidget {
+  const MangaCategorySubPage({
     Key? key,
     this.action,
     this.defaultGenre,
@@ -27,32 +31,35 @@ class GenreSubPage extends StatefulWidget {
   final TinyCategory? defaultGenre;
 
   @override
-  _GenreSubPageState createState() => _GenreSubPageState();
+  _MangaCategorySubPageState createState() => _MangaCategorySubPageState();
 }
 
-class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClientMixin {
+class _MangaCategorySubPageState extends State<MangaCategorySubPage> with AutomaticKeepAliveClientMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
-  final _controllerForGenre = ScrollController();
-  final _fabControllerForGenre = AnimatedFabController();
+  final _controllerForCategory = ScrollController();
+  final _fabControllerForCategory = AnimatedFabController();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction(() => (!_chosen ? _controllerForGenre : _controller).scrollToTop());
+    widget.action?.addAction(() => (!_chosen ? _controllerForCategory : _controller).scrollToTop());
     widget.action?.addAction('ifNeedBack', () => _chosen);
     widget.action?.addAction('back', () => _chooseCategory(toChoose: false));
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
+    _cancelHandlers.add(EventBusManager.instance.listen<MarkedCategoryUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
   void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
     widget.action?.removeAction();
     widget.action?.removeAction('ifNeedBack');
     widget.action?.removeAction('back');
-    _controllerForGenre.dispose();
-    _fabControllerForGenre.dispose();
+    _controllerForCategory.dispose();
+    _fabControllerForCategory.dispose();
     _controller.dispose();
     _fabController.dispose();
     _flagStorage.dispose();
@@ -63,8 +70,13 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
   final _genres = <TinyCategory>[];
   var _genreError = '';
   late var _chosen = widget.defaultGenre != null; // initialize to false if defaultGenre is null
+  final _markedCategoryNames = <String>[];
 
   Future<void> _loadGenres() async {
+    var categories = await MarkedCategoryPrefs.getMarkedCategories();
+    _markedCategoryNames.clear();
+    _markedCategoryNames.addAll(categories);
+
     _genreLoading = true;
     if (mounted) setState(() {});
 
@@ -80,6 +92,10 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
       await Future.delayed(kFlashListDuration);
       _genres.add(allGenres[0]);
       _genres.addAll(globalCategoryList!.genres.map((g) => g.toTiny()).toList());
+      if (widget.defaultGenre != null) {
+        // update CategorySubPage or SepCategoryPage if have default genre (_chosen == true)
+        widget.action?.invoke('updateSubPage');
+      }
     } catch (e, s) {
       _genres.clear();
       _genreError = wrapError(e, s).text;
@@ -87,6 +103,13 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
       _genreLoading = false;
       if (mounted) setState(() {});
     }
+  }
+
+  void _updateByEvent(MarkedCategoryUpdatedEvent ev) async {
+    var categories = await MarkedCategoryPrefs.getMarkedCategories();
+    _markedCategoryNames.clear();
+    _markedCategoryNames.addAll(categories);
+    if (mounted) setState(() {});
   }
 
   void _chooseCategory({required bool toChoose, TinyCategory? genre, TinyCategory? age, TinyCategory? zone}) {
@@ -108,8 +131,20 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
     _chosen = toChoose;
     _data.clear();
     _total = 0;
-    widget.action?.invoke('updateSubPage'); // update CategorySubPage
+    widget.action?.invoke('updateSubPage'); // update CategorySubPage or SepCategoryPage
     if (mounted) setState(() {});
+  }
+
+  void _longPressCategoryOption(TinyCategory genre, void Function(TinyCategory) selectGenre, StateSetter _setState) {
+    showCategoryPopupMenu(
+      context: context,
+      category: genre,
+      onSelected: selectGenre,
+      onMarkedChanged: (genre, marked) {
+        (marked ? _markedCategoryNames.add : _markedCategoryNames.remove)(genre.name);
+        _setState(() {});
+      },
+    );
   }
 
   final _data = <TinyManga>[];
@@ -130,7 +165,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
 
   Future<PagedList<TinyManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var f = client.getGenreMangas(
+    var f = client.getGenreMangas /* get category mangas */ (
       genre: _currGenre.name,
       zone: _currZone.name,
       age: _currAge.name,
@@ -160,61 +195,22 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
         isEmpty: _genres.isEmpty,
         onRefresh: () => _loadGenres(),
         setting: PlaceholderSetting(
-          useAnimatedSwitcher: widget.defaultGenre == null /* only animate when no default genre */,
+          useAnimatedSwitcher: true, // TODO widget.defaultGenre == null /* only animate when no default genre */,
           customNormalStateBuilder: (c, _, childBuilder) => _chosen
               ? childBuilder.call(c) // normal state
-              : Column(
-                  key: PageStorageKey<String>('GenreSubPage_CategoryGridView_Column'),
-                  children: [
-                    ListHintView.textText(
-                      leftText: '选择一个类别筛选漫画',
-                      rightText: '',
-                    ),
-                    Expanded(
-                      child: ExtendedScrollbar(
-                        controller: _controllerForGenre,
-                        interactive: true,
-                        mainAxisMargin: 2,
-                        crossAxisMargin: 2,
-                        child: ListView(
-                          controller: _controllerForGenre,
-                          padding: EdgeInsets.zero,
-                          physics: AlwaysScrollableScrollPhysics(),
-                          cacheExtent: 999999 /* <<< keep states in ListView */,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(top: 9, bottom: 10),
-                              child: Text('・漫画剧情・', textAlign: TextAlign.center, style: Theme.of(context).textTheme.subtitle1),
-                            ),
-                            CategoryGridView(
-                              categories: _genres.map((g) => g.toCategory(cover: globalCategoryList!.genres.where((el) => el.name == g.name).firstOrNull?.cover)).toList(),
-                              onSelected: (c) => _chooseCategory(toChoose: true, genre: c.toTiny()),
-                              style: CategoryGridViewStyle.threeColumns,
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 9, bottom: 10),
-                              child: Text('・漫画受众・', textAlign: TextAlign.center, style: Theme.of(context).textTheme.subtitle1),
-                            ),
-                            CategoryGridView(
-                              categories: allAges.sublist(1).map((g) => g.toCategory(cover: globalCategoryList!.ages.where((el) => el.name == g.name).firstOrNull?.cover)).toList(),
-                              onSelected: (c) => _chooseCategory(toChoose: true, age: c.toTiny()),
-                              style: CategoryGridViewStyle.fourColumns,
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 9, bottom: 10),
-                              child: Text('・漫画地区・', textAlign: TextAlign.center, style: Theme.of(context).textTheme.subtitle1),
-                            ),
-                            CategoryGridView(
-                              categories: allZones.sublist(1).map((g) => g.toCategory(cover: globalCategoryList!.zones.where((el) => el.name == g.name).firstOrNull?.cover)).toList(),
-                              onSelected: (c) => _chooseCategory(toChoose: true, zone: c.toTiny()),
-                              style: CategoryGridViewStyle.fourColumns,
-                            ),
-                            SizedBox(height: 15),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+              : CategoryGridListView(
+                  key: PageStorageKey<String>('CategorySubPage_CategoryGridListView'),
+                  controller: _controllerForCategory,
+                  title: '选择一个漫画类别来筛选漫画',
+                  genres: _genres,
+                  markedCategoryNames: _markedCategoryNames,
+                  // TODO test
+                  onChoose: ({genre, age, zone}) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
+                  onLongPressed: ({genre, age, zone}) => showCategoryPopupMenu(
+                    context: context,
+                    category: genre ?? age ?? zone ?? allGenres[0],
+                    onSelected: (_) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
+                  ),
                 ),
         ).copyWithChinese(),
         childBuilder: (c) => PaginationDataView<TinyManga>(
@@ -288,6 +284,9 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         _pdvKey.currentState?.refresh();
                       }
                     },
+                    onLongPressed: () => _chooseCategory(toChoose: false),
+                    ifNeedHighlight: (category) => _markedCategoryNames.any((el) => category.name == el) == true,
+                    onOptionLongPressed: _longPressCategoryOption,
                   ),
                   OptionPopupView<TinyCategory>(
                     items: allAges,
@@ -302,6 +301,9 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         _pdvKey.currentState?.refresh();
                       }
                     },
+                    onLongPressed: () => _chooseCategory(toChoose: false),
+                    ifNeedHighlight: (category) => _markedCategoryNames.any((el) => category.name == el) == true,
+                    onOptionLongPressed: _longPressCategoryOption,
                   ),
                   OptionPopupView<TinyCategory>(
                     items: allZones,
@@ -316,6 +318,9 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         _pdvKey.currentState?.refresh();
                       }
                     },
+                    onLongPressed: () => _chooseCategory(toChoose: false),
+                    ifNeedHighlight: (category) => _markedCategoryNames.any((el) => category.name == el) == true,
+                    onOptionLongPressed: _longPressCategoryOption,
                   ),
                   OptionPopupView<TinyCategory>(
                     items: allStatuses,
@@ -330,6 +335,7 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
                         _pdvKey.currentState?.refresh();
                       }
                     },
+                    onLongPressed: () => _chooseCategory(toChoose: false),
                   ),
                 ],
               ),
@@ -359,13 +365,13 @@ class _GenreSubPageState extends State<GenreSubPage> with AutomaticKeepAliveClie
       floatingActionButton: Stack(
         children: [
           ScrollAnimatedFab(
-            controller: _fabControllerForGenre,
-            scrollController: _controllerForGenre,
+            controller: _fabControllerForCategory,
+            scrollController: _controllerForCategory,
             condition: _chosen ? ScrollAnimatedCondition.forceHide : ScrollAnimatedCondition.direction,
             fab: FloatingActionButton(
               child: Icon(Icons.vertical_align_top),
               heroTag: null,
-              onPressed: () => _controllerForGenre.scrollToTop(),
+              onPressed: () => _controllerForCategory.scrollToTop(),
             ),
           ),
           ScrollAnimatedFab(

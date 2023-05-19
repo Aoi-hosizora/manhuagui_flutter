@@ -4,6 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
+import 'package:manhuagui_flutter/page/view/category_grid_list.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -12,6 +14,9 @@ import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
 
 /// 首页-排行
 class RankingSubPage extends StatefulWidget {
@@ -28,30 +33,44 @@ class RankingSubPage extends StatefulWidget {
 
 class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin {
   final _rdvKey = GlobalKey<RefreshableDataViewState>();
+  final _controllerForCategory = ScrollController();
+  final _fabControllerForCategory = AnimatedFabController();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
-    widget.action?.addAction(() => _controller.scrollToTop());
+    widget.action?.addAction(() => (!_chosen ? _controllerForCategory : _controller).scrollToTop());
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadGenres());
+    _cancelHandlers.add(EventBusManager.instance.listen<MarkedCategoryUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
   void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
     widget.action?.removeAction();
+    _controllerForCategory.dispose();
+    _fabControllerForCategory.dispose();
     _controller.dispose();
     _fabController.dispose();
     _flagStorage.dispose();
     super.dispose();
   }
 
-  var _genreLoading = true;
+  var _genreLoading = true; // initialize to true
   final _genres = <TinyCategory>[];
   var _genreError = '';
+  var _chosen = false;
+  final _categories = <TinyCategory>[];
+  final _markedCategoryNames = <String>[];
 
   Future<void> _loadGenres() async {
+    var categories = await MarkedCategoryPrefs.getMarkedCategories();
+    _markedCategoryNames.clear();
+    _markedCategoryNames.addAll(categories);
+
     _genreLoading = true;
     if (mounted) setState(() {});
 
@@ -62,18 +81,54 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         globalCategoryList ??= result.data; // 更新全局的漫画类别
       }
       _genres.clear();
+      _categories.clear();
       _genreError = '';
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
-      _genres.addAll(allRankingTypes);
+      _genres.add(allGenres[0]);
       _genres.addAll(globalCategoryList!.genres.map((g) => g.toTiny()).toList());
+      _categories.addAll(_genres);
+      _categories.addAll(allRankingTypes.sublist(1));
     } catch (e, s) {
       _genres.clear();
+      _categories.clear();
       _genreError = wrapError(e, s).text;
     } finally {
       _genreLoading = false;
       if (mounted) setState(() {});
     }
+  }
+
+  void _updateByEvent(MarkedCategoryUpdatedEvent ev) async {
+    var categories = await MarkedCategoryPrefs.getMarkedCategories();
+    _markedCategoryNames.clear();
+    _markedCategoryNames.addAll(categories);
+    if (mounted) setState(() {});
+  }
+
+  void _chooseCategory({required bool toChoose, TinyCategory? genre, TinyCategory? age, TinyCategory? zone}) {
+    if (toChoose == _chosen) {
+      return;
+    }
+
+    _currType = genre ?? age ?? zone ?? allRankingTypes[0]; // TODO test
+    _lastType = allRankingTypes[0];
+
+    _chosen = toChoose;
+    _data.clear();
+    if (mounted) setState(() {});
+  }
+
+  void _longPressCategoryOption(TinyCategory genre, void Function(TinyCategory) selectGenre, StateSetter _setState) {
+    showCategoryPopupMenu(
+      context: context,
+      category: genre,
+      onSelected: selectGenre,
+      onMarkedChanged: (genre, marked) {
+        (marked ? _markedCategoryNames.add : _markedCategoryNames.remove)(genre.name);
+        _setState(() {});
+      },
+    );
   }
 
   final _data = <MangaRanking>[];
@@ -112,9 +167,26 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
         isLoading: _genreLoading,
         errorText: _genreError,
         isEmpty: _genres.isEmpty,
-        setting: PlaceholderSetting(useAnimatedSwitcher: false).copyWithChinese(),
         onRefresh: () => _loadGenres(),
-        onChanged: (_, __) => _fabController.hide(),
+        setting: PlaceholderSetting(
+          useAnimatedSwitcher: true,
+          customNormalStateBuilder: (c, _, childBuilder) => _chosen
+              ? childBuilder.call(c) // normal state
+              : CategoryGridListView(
+                  key: PageStorageKey<String>('RankingSubPage_CategoryGridListView'),
+                  controller: _controllerForCategory,
+                  title: '选择一个漫画类别来查看排行榜',
+                  genres: _genres,
+                  markedCategoryNames: _markedCategoryNames,
+                  // TODO test
+                  onChoose: ({genre, age, zone}) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
+                  onLongPressed: ({genre, age, zone}) => showCategoryPopupMenu(
+                    context: context,
+                    category: genre ?? age ?? zone ?? allGenres[0],
+                    onSelected: (_) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
+                  ),
+                ),
+        ).copyWithChinese(),
         childBuilder: (c) => RefreshableDataView<MangaRanking>(
           key: _rdvKey,
           style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
@@ -127,7 +199,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             scrollbarMainAxisMargin: 2,
             scrollbarCrossAxisMargin: 2,
             placeholderSetting: PlaceholderSetting().copyWithChinese(),
-            onPlaceholderStateChanged: (_, __) => _fabController.hide(),
+            onPlaceholderStateChanged: (_, __) => _fabController.hasClient.ifTrue(() => _fabController.hide()),
             refreshFirst: true /* <<< refresh first */,
             clearWhenRefresh: false,
             clearWhenError: false,
@@ -166,7 +238,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     OptionPopupView<TinyCategory>(
-                      items: _genres,
+                      items: _categories,
                       value: _currType,
                       titleBuilder: (c, v) => v.isAll() ? '分类' : v.title,
                       enable: !_getting,
@@ -178,6 +250,9 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                           _rdvKey.currentState?.refresh();
                         }
                       },
+                      onLongPressed: () => _chooseCategory(toChoose: false),
+                      ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
+                      onOptionLongPressed: _longPressCategoryOption,
                     ),
                     SizedBox(width: 12),
                     OptionPopupView<TinyCategory>(
@@ -193,6 +268,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                           _rdvKey.currentState?.refresh();
                         }
                       },
+                      onLongPressed: () => _chooseCategory(toChoose: false),
                     ),
                   ],
                 ),
@@ -201,15 +277,29 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
           ),
         ),
       ),
-      floatingActionButton: ScrollAnimatedFab(
-        controller: _fabController,
-        scrollController: _controller,
-        condition: ScrollAnimatedCondition.direction,
-        fab: FloatingActionButton(
-          child: Icon(Icons.vertical_align_top),
-          heroTag: null,
-          onPressed: () => _controller.scrollToTop(),
-        ),
+      floatingActionButton: Stack(
+        children: [
+          ScrollAnimatedFab(
+            controller: _fabControllerForCategory,
+            scrollController: _controllerForCategory,
+            condition: _chosen ? ScrollAnimatedCondition.forceHide : ScrollAnimatedCondition.direction,
+            fab: FloatingActionButton(
+              child: Icon(Icons.vertical_align_top),
+              heroTag: null,
+              onPressed: () => _controllerForCategory.scrollToTop(),
+            ),
+          ),
+          ScrollAnimatedFab(
+            controller: _fabController,
+            scrollController: _controller,
+            condition: !_chosen ? ScrollAnimatedCondition.forceHide : ScrollAnimatedCondition.direction,
+            fab: FloatingActionButton(
+              child: Icon(Icons.vertical_align_top),
+              heroTag: null,
+              onPressed: () => _controller.scrollToTop(),
+            ),
+          ),
+        ],
       ),
     );
   }

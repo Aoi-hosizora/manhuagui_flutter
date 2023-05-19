@@ -125,10 +125,10 @@ final allRankingDurations = <TinyCategory>[
 // 排行榜类型
 final allRankingTypes = <TinyCategory>[
   const TinyCategory(title: '全部', name: 'all'),
-  // 按地区
-  for (var i = 1; i < allZones.length; i++) allZones[i],
-  // 按受众
-  for (var i = 1; i < allAges.length; i++) allAges[i],
   // 按剧情
   // ...
+  // 按受众
+  for (var i = 1; i < allAges.length; i++) allAges[i],
+  // 按地区
+  for (var i = 1; i < allZones.length; i++) allZones[i],
 ];
