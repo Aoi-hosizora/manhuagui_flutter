@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/chapter_detail.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
+import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
@@ -30,6 +31,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 漫画收藏页-修改备注对话框 [showUpdateFavoriteMangaRemarkDialog]
 /// 漫画页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
+/// 漫画页/章节页/漫画下载页-稍后阅读对话框 [showPopupMenuForLaterManga]
 
 // => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / *later* / download / aud_ranking) and DownloadMangaPage
 void showPopupMenuForMangaList({
@@ -239,7 +241,7 @@ void showPopupMenuForMangaToc({
   required String mangaUrl,
   required bool fromMangaPage,
   required TinyMangaChapter chapter,
-  required List<MangaChapterGroup> chapterGroups,
+  required MangaChapterNeededData chapterNeededData,
   required void Function(MangaHistory history)? onHistoryUpdated,
   bool allowDeletingHistory = true,
   void Function()? toSwitchChapter, // => only for switching chapter in MangaViewerPage
@@ -269,21 +271,21 @@ void showPopupMenuForMangaToc({
             icon: Icon(Icons.import_contacts),
             text: Text(!lastReadChapter ? '阅读该章节' : '继续阅读该章节'),
             popWhenPress: c,
-            onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: false, onlineMode: true),
+            onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterNeededData: chapterNeededData, history: historyEntity, readFirstPage: false, onlineMode: true),
           ),
           if (lastReadChapter)
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_replay),
               text: Text('从头阅读该章节'),
               popWhenPress: c,
-              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: true, onlineMode: true),
+              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterNeededData: chapterNeededData, history: historyEntity, readFirstPage: true, onlineMode: true),
             ),
           if (inDownloadTask)
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_offline),
               text: Text('离线阅读该章节'),
               popWhenPress: c,
-              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterGroups: chapterGroups, history: historyEntity, readFirstPage: false, onlineMode: false),
+              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterNeededData: chapterNeededData, history: historyEntity, readFirstPage: false, onlineMode: false),
             ),
         ],
         if (toSwitchChapter != null)
@@ -312,7 +314,7 @@ void showPopupMenuForMangaToc({
             icon: Icon(Icons.download),
             text: Text('下载该章节'),
             popWhenPress: c,
-            onPressed: () => helper.downloadSingleChapter(chapterId: chapter.cid, chapterTitle: chapter.title, chapterGroups: chapterGroups),
+            onPressed: () => helper.downloadSingleChapter(chapterId: chapter.cid, chapterTitle: chapter.title, chapterGroups: chapterNeededData.chapterGroups),
           ),
         if (inDownloadTask)
           IconTextDialogOption(
@@ -336,7 +338,7 @@ void showPopupMenuForMangaToc({
           icon: Icon(Icons.subject),
           text: Text('查看章节信息'),
           popWhenPress: c,
-          onPressed: () => navigateWrapper(() => helper.gotoChapterDetailsPage(chapter: chapter, chapterGroups: chapterGroups, mangaTitle: mangaTitle, mangaUrl: mangaUrl)),
+          onPressed: () => navigateWrapper(() => helper.gotoChapterDetailsPage(chapter: chapter, chapterGroups: chapterNeededData.chapterGroups, mangaTitle: mangaTitle, mangaUrl: mangaUrl)),
         ),
       ],
     ),
@@ -442,6 +444,51 @@ void showPopupMenuForSubscribing({
               onPressed: () => helper.showAndUpdateFavRemark(favorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
             ),
         ],
+      ],
+    ),
+  );
+}
+
+// => called in MangaPage and MangaViewerPage and DownloadedMangaPage
+void showPopupMenuForLaterManga({
+  required BuildContext context,
+  required int mangaId,
+  required String mangaTitle,
+  required String mangaCover,
+  required String mangaUrl,
+  required bool fromMangaPage,
+  required LaterManga? laterManga,
+  required void Function(LaterManga? later) inLaterSetter,
+  void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
+}) {
+  var helper = _DialogHelper(
+    context: context,
+    mangaId: mangaId,
+    mangaTitle: mangaTitle,
+    mangaCover: mangaCover,
+    mangaUrl: mangaUrl,
+  );
+
+  showDialog(
+    context: context,
+    builder: (c) => SimpleDialog(
+      title: Text('稍后阅读'),
+      children: [
+        SubtitleDialogOption(
+          text: Text('《$mangaTitle》在 ${laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
+        ),
+        IconTextDialogOption(
+          icon: Icon(MdiIcons.clockMinus),
+          text: Text('从稍后阅读移出'),
+          popWhenPress: c,
+          onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+        ),
+        IconTextDialogOption(
+          icon: Icon(MdiIcons.bookClock),
+          text: Text('查看稍后阅读列表'),
+          popWhenPress: c,
+          onPressed: () => navigateWrapper(() => helper.gotoLaterPage()),
+        ),
       ],
     ),
   );
@@ -700,6 +747,16 @@ class _DialogHelper {
     return ok ?? false;
   }
 
+  static void showSnackBar({required BuildContext context, required String content}) {
+    try {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(content)));
+    } catch (e, s) {
+      // for destroyed context
+      var _ = wrapError(e, s); // ignore
+    }
+  }
+
   // =======================
   // helper methods (others)
   // =======================
@@ -732,7 +789,13 @@ class _DialogHelper {
     );
   }
 
-  void gotoChapterPage({required int chapterId, required List<MangaChapterGroup> chapterGroups, required MangaHistory? history, required bool readFirstPage, required bool onlineMode}) {
+  void gotoChapterPage({
+    required int chapterId,
+    required MangaChapterNeededData chapterNeededData,
+    required MangaHistory? history,
+    required bool readFirstPage,
+    required bool onlineMode,
+  }) {
     Navigator.of(context).push(
       CustomPageRoute(
         context: context,
@@ -742,7 +805,7 @@ class _DialogHelper {
           mangaTitle: mangaTitle,
           mangaCover: mangaCover,
           mangaUrl: mangaUrl,
-          chapterGroups: chapterGroups,
+          neededData: chapterNeededData,
           initialPage: !readFirstPage && history?.chapterId == chapterId
               ? history?.chapterPage ?? 1 // have read
               : 1 /* have not read, or readFirstPage == true */,
@@ -793,6 +856,15 @@ class _DialogHelper {
     );
   }
 
+  Future<void> gotoLaterPage() async {
+    await Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => LaterMangaPage(),
+      ),
+    );
+  }
+
   // ========================
   // methods (add and remove)
   // ========================
@@ -814,7 +886,7 @@ class _DialogHelper {
       await (toAdd ? client.addToShelf : client.removeFromShelf)(token: AuthManager.instance.token, mid: mangaId);
       added = toAdd;
       onUpdated?.call(added);
-      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).clearSnackBars(); // TODO destroyed context ???
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '成功将漫画放入书架' : '成功将漫画移出书架')));
       EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, added: added, fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
     } catch (e, s) {
@@ -910,7 +982,7 @@ class _DialogHelper {
     }
   }
 
-  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
   Future<void> addOrRemoveLater({
     required bool toAdd,
     required void Function(LaterManga? later)? onUpdated,

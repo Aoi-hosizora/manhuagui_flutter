@@ -194,15 +194,14 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
     }
 
     // 对**所有分组**中的漫画章节排序
-    // TODO change to use number to sort
     var prevChapters = !prev
         ? null
         : (allChapters.where((el) => el.group == chapter.group ? el.number < chapter.number : el.cid < cid).toList() //
-          ..sort((a, b) => a.group == b.group ? b.number.compareTo(a.number) : b.cid.compareTo(a.cid))); // cid 从大到小排序
+          ..sort((a, b) => a.group == b.group ? b.number.compareTo(a.number) : b.cid.compareTo(a.cid))); // number (同一分组) 或 cid (不同分组) 从大到小排序
     var nextChapters = !next
         ? null
         : (allChapters.where((el) => el.group == chapter.group ? el.number > chapter.number : el.cid > cid).toList() //
-          ..sort((a, b) => a.group == b.group ? a.number.compareTo(b.number) : a.cid.compareTo(b.cid))); // cid 从小到大排序
+          ..sort((a, b) => a.group == b.group ? a.number.compareTo(b.number) : a.cid.compareTo(b.cid))); // number (同一分组) 或 cid (不同分组) 从小到大排序
 
     // 从**所有分组**中找上一个章节
     TinyMangaChapter? prevDiffGroupChapter, prevSameGroupChapter;

@@ -7,7 +7,6 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
-import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/page/dl_finished.dart';
@@ -321,7 +320,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             mangaTitle: _data!.mangaTitle,
             mangaCover: _data!.mangaCover,
             mangaUrl: _data!.mangaUrl,
-            chapterGroups: _mangaData?.chapterGroups /* nullable */,
+            neededData: MangaChapterNeededData.fromNullableMangaData(_mangaData) /* nullable */,
             initialPage: page,
             onlineMode: _onlineMode,
             onMangaGot: (manga) => _mangaData = manga,
@@ -548,16 +547,18 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         padding: EdgeInsets.only(top: 12),
                         child: LaterMangaBannerView(
                           manga: _later!,
-                          sameCallback: true,
-                          onPressed: () => showYesNoAlertDialog(
+                          action: () => showPopupMenuForLaterManga(
                             context: context,
-                            title: Text('稍后阅读'),
-                            content: Text('《${_data!.mangaTitle}》在 ${_later!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
-                            yesText: Text('查看列表'),
-                            noText: Text('确定'),
-                            yesOnPressed: (c) {
-                              Navigator.of(c).pop();
-                              Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()));
+                            mangaId: _data!.mangaId,
+                            mangaTitle: _data!.mangaTitle,
+                            mangaCover: _data!.mangaCover,
+                            mangaUrl: _data!.mangaUrl,
+                            fromMangaPage: false,
+                            laterManga: _later,
+                            inLaterSetter: (l) {
+                              // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+                              _later = l;
+                              if (mounted) setState(() {});
                             },
                           ),
                         ),

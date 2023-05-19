@@ -427,6 +427,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
               tooltip: '分享所有图片',
               onPressed: () => _shareImages(_msController.selectedItems.map((e) => e.value).toList()),
             ),
+            // TODO 图片拼接
           ],
           fabForNormal: ScrollAnimatedFab(
             scrollController: _controller,

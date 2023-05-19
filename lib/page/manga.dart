@@ -16,7 +16,6 @@ import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
-import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
@@ -362,7 +361,7 @@ class _MangaPageState extends State<MangaPage> {
             mangaTitle: _data!.title,
             mangaCover: _data!.cover,
             mangaUrl: _data!.url,
-            chapterGroups: _data!.chapterGroups,
+            neededData: MangaChapterNeededData.fromMangaData(_data!),
             initialPage: page,
             onlineMode: true,
           ),
@@ -459,7 +458,9 @@ class _MangaPageState extends State<MangaPage> {
       // 未访问 or 未开始阅读 => 开始阅读
       _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // 首要选【单话】分组，否则选首个拥有非空章节的分组
       if (mounted) setState(() {});
-      gotoViewerPage(cid: _firstChapter!.cid, page: 1);
+      if (_firstChapter != null) {
+        gotoViewerPage(cid: _firstChapter!.cid, page: 1);
+      }
     } else {
       var historyCid = _history!.chapterId;
       var historyTitle = _history!.chapterTitle;
@@ -539,45 +540,20 @@ class _MangaPageState extends State<MangaPage> {
     }
   }
 
-  Future<void> _checkAndRemoveFromLater() async {
-    showDialog(
+  Future<void> _showLaterMangaDialog() async {
+    showPopupMenuForLaterManga(
       context: context,
-      builder: (c) => SimpleDialog(
-        title: Text('稍后阅读'),
-        children: [
-          SubtitleDialogOption(
-            text: Text('《${_data!.title}》在 ${_laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
-          ),
-          IconTextDialogOption(
-            icon: Icon(MdiIcons.clockMinus),
-            text: Text('从稍后阅读移出'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-
-              // 更新数据库、更新界面、弹出提示、发送通知
-              await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: widget.id);
-              _laterManga = null;
-              if (mounted) setState(() {});
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已从稍后阅读列表中移出')));
-              EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: widget.id, added: false, fromLaterMangaPage: false, fromMangaPage: true));
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(MdiIcons.bookClock),
-            text: Text('查看稍后阅读列表'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => LaterMangaPage(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      mangaId: _data!.mid,
+      mangaTitle: _data!.title,
+      mangaCover: _data!.cover,
+      mangaUrl: _data!.url,
+      fromMangaPage: true,
+      laterManga: _laterManga,
+      inLaterSetter: (l) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        _laterManga = l;
+        if (mounted) setState(() {});
+      },
     );
   }
 
@@ -827,7 +803,7 @@ class _MangaPageState extends State<MangaPage> {
       mangaUrl: _data!.url,
       fromMangaPage: forMangaPage,
       chapter: chapter,
-      chapterGroups: _data!.chapterGroups,
+      chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
       onHistoryUpdated: forMangaPage //
           ? (h) => mountedSetState(() => _history = h)
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
@@ -1091,8 +1067,7 @@ class _MangaPageState extends State<MangaPage> {
                 if (_laterManga != null)
                   LaterMangaBannerView(
                     manga: _laterManga!,
-                    onPressed: () => _checkAndRemoveFromLater(),
-                    onLongPressed: () => _checkAndRemoveFromLater(),
+                    action: () => _showLaterMangaDialog(),
                   ),
                 // ****************************************************************
                 // 几个按钮

@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
-import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -28,11 +27,11 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.toSubscribe,
     required this.toDownload,
     required this.toShowToc,
+    required this.toShowDetails,
     required this.toShowComments,
     required this.toShowLaters,
     required this.toShowImage,
     required this.toOnlineMode,
-    required this.toPop,
   }) : super(key: key);
 
   final bool isHeader;
@@ -49,11 +48,11 @@ class ViewExtraSubPage extends StatefulWidget {
   final void Function() toSubscribe;
   final void Function() toDownload;
   final void Function() toShowToc;
+  final void Function() toShowDetails;
   final void Function() toShowComments;
   final void Function() toShowLaters;
   final void Function(String url, String title) toShowImage;
   final void Function() toOnlineMode;
-  final void Function() toPop;
 
   @override
   State<ViewExtraSubPage> createState() => _ViewExtraSubPageState();
@@ -175,11 +174,6 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
         ),
       ),
       action1: ActionItem(
-        text: '结束阅读',
-        icon: Icons.arrow_back,
-        action: () => widget.toPop.call(),
-      ),
-      action2: ActionItem(
         text: !widget.inShelf && !widget.inFavorite
             ? '订阅漫画'
             : widget.inShelf && widget.inFavorite
@@ -189,15 +183,20 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
         action: widget.subscribing ? null : () => widget.toSubscribe.call(),
         enable: !widget.subscribing,
       ),
+      action2: ActionItem(
+        text: '下载漫画',
+        icon: Icons.download,
+        action: () => widget.toDownload.call(),
+      ),
       action3: ActionItem(
         text: '章节列表',
         icon: Icons.menu,
         action: () => widget.toShowToc.call(),
       ),
       action4: ActionItem(
-        text: '下载漫画',
-        icon: Icons.download,
-        action: () => widget.toDownload.call(),
+        text: '章节详情',
+        icon: Icons.subject,
+        action: () => widget.toShowDetails.call(),
       ),
       action5: ActionItem(
         text: '查看评论',
@@ -254,7 +253,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                 child: Text(
                                   widget.data.mangaTitle,
                                   style: Theme.of(context).textTheme.headline6,
-                                  maxLines: 3,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -271,6 +270,21 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              if (widget.data.mangaAuthors != null) ...[
+                                SizedBox(height: 5),
+                                Flexible(
+                                  child: Text(
+                                    widget.data.mangaAuthors!.map((a) => a.name).join('/'),
+                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ), // TODO clickable ???
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -342,6 +356,22 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                         ),
                       ],
                     ),
+                    if (widget.data.mangaAuthors != null) ...[
+                      SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '作者：${widget.data.mangaAuthors!.map((a) => a.name).join('/')}',
+                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -376,18 +406,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                 padding: EdgeInsets.only(top: 18),
                 child: LaterMangaBannerView(
                   manga: widget.laterManga!,
-                  sameCallback: true,
-                  onPressed: () => showYesNoAlertDialog(
-                    context: context,
-                    title: Text('稍后阅读'),
-                    content: Text('《${widget.data.mangaTitle}》在 ${widget.laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
-                    yesText: Text('查看列表'),
-                    noText: Text('确定'),
-                    yesOnPressed: (c) {
-                      Navigator.of(c).pop();
-                      widget.toShowLaters.call();
-                    },
-                  ),
+                  action: () => widget.toShowLaters.call(),
                 ),
               ),
             // ****************************************************************

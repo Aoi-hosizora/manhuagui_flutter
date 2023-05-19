@@ -8,23 +8,19 @@ class LaterMangaBannerView extends StatelessWidget {
   const LaterMangaBannerView({
     Key? key,
     required this.manga,
-    this.onPressed,
-    this.onLongPressed,
-    this.sameCallback = false,
+    this.action,
   }) : super(key: key);
 
   final LaterManga manga;
-  final VoidCallback? onPressed;
-  final VoidCallback? onLongPressed;
-  final bool sameCallback;
+  final VoidCallback? action;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.blueGrey,
       child: InkWell(
-        onTap: onPressed,
-        onLongPress: sameCallback ? onPressed : onLongPressed,
+        onTap: action,
+        onLongPress: action,
         child: Stack(
           children: [
             Positioned(
