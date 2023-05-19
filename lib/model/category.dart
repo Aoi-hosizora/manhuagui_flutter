@@ -63,6 +63,37 @@ class TinyCategory {
   }
 }
 
+class RestorableObject<T extends Object> {
+  RestorableObject(T initializedValue)
+      : _curr = initializedValue,
+        _last = initializedValue;
+
+  T _curr;
+  T _last;
+
+  T get curr => _curr;
+
+  T get last => _last;
+
+  void select(T category, {bool alsoPass = false, bool sameLast = false}) {
+    if (alsoPass && !sameLast) {
+      _last = _curr;
+    }
+    _curr = category;
+    if (sameLast && !alsoPass) {
+      _last = category;
+    }
+  }
+
+  void pass() {
+    _last = _curr;
+  }
+
+  void restore() {
+    _curr = _last;
+  }
+}
+
 /*
   genre:  (all|...)
   age:    (all|shaonv|shaonian|qingnian|ertong|tongyong)
@@ -122,8 +153,8 @@ final allRankingDurations = <TinyCategory>[
   const TinyCategory(title: '总排行', name: 'total'),
 ];
 
-// 排行榜类型
-final allRankingTypes = <TinyCategory>[
+// 排行榜类别
+final allRankingCategories = <TinyCategory>[
   const TinyCategory(title: '全部', name: 'all'),
   // 按剧情
   // ...

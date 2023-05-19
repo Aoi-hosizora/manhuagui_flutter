@@ -199,7 +199,7 @@ extension SortMethodExtension on SortMethod {
   }
 }
 
-// => called in AuthorSubPage
+// => called in AuthorCategorySubPage
 Future<int?> showIdInputDialogForFinding({
   required BuildContext context,
   required String title,

@@ -6,11 +6,11 @@ import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/view/category_grid_list.dart';
+import 'package:manhuagui_flutter/page/view/category_popup.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
-import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -62,7 +62,6 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   var _genreLoading = true; // initialize to true
   final _genres = <TinyCategory>[];
   var _genreError = '';
-  var _chosen = false;
   final _categories = <TinyCategory>[];
   final _markedCategoryNames = <String>[];
 
@@ -88,7 +87,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
       _genres.add(allGenres[0]);
       _genres.addAll(globalCategoryList!.genres.map((g) => g.toTiny()).toList());
       _categories.addAll(_genres);
-      _categories.addAll(allRankingTypes.sublist(1));
+      _categories.addAll(allRankingCategories.sublist(1));
     } catch (e, s) {
       _genres.clear();
       _categories.clear();
@@ -106,50 +105,36 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     if (mounted) setState(() {});
   }
 
+  var _chosen = false;
+  final _currCategory = RestorableObject(allRankingCategories[0]);
+  final _currDuration = RestorableObject(allRankingDurations[0]);
+
   void _chooseCategory({required bool toChoose, TinyCategory? genre, TinyCategory? age, TinyCategory? zone}) {
     if (toChoose == _chosen) {
       return;
     }
-
-    _currType = genre ?? age ?? zone ?? allRankingTypes[0]; // TODO test
-    _lastType = allRankingTypes[0];
-
     _chosen = toChoose;
+    _currCategory.select(genre ?? age ?? zone ?? allRankingCategories[0], sameLast: true);
+    _currDuration.select(allRankingDurations[0], sameLast: true);
+
     _data.clear();
     if (mounted) setState(() {});
-  }
-
-  void _longPressCategoryOption(TinyCategory genre, void Function(TinyCategory) selectGenre, StateSetter _setState) {
-    showCategoryPopupMenu(
-      context: context,
-      category: genre,
-      onSelected: selectGenre,
-      onMarkedChanged: (genre, marked) {
-        (marked ? _markedCategoryNames.add : _markedCategoryNames.remove)(genre.name);
-        _setState(() {});
-      },
-    );
   }
 
   final _data = <MangaRanking>[];
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _getting = false;
 
-  var _currType = allRankingTypes[0];
-  var _lastType = allRankingTypes[0];
-  var _currDuration = allRankingDurations[0];
-  var _lastDuration = allRankingDurations[0];
-
   Future<List<MangaRanking>> _getData() async {
     final client = RestClient(DioManager.instance.dio);
-    var f = _currDuration.name == 'day'
+    var f = _currDuration.curr.name == 'day'
         ? client.getDayRanking
-        : _currDuration.name == 'week'
+        : _currDuration.curr.name == 'week'
             ? client.getWeekRanking
-            : _currDuration.name == 'month'
+            : _currDuration.curr.name == 'month'
                 ? client.getMonthRanking
                 : client.getTotalRanking;
-    var result = await f(type: _currType.name).onError((e, s) {
+    var result = await f(type: _currCategory.curr.name).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
@@ -174,11 +159,10 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
               ? childBuilder.call(c) // normal state
               : CategoryGridListView(
                   key: PageStorageKey<String>('RankingSubPage_CategoryGridListView'),
-                  controller: _controllerForCategory,
                   title: '选择一个漫画类别来查看排行榜',
                   genres: _genres,
                   markedCategoryNames: _markedCategoryNames,
-                  // TODO test
+                  controller: _controllerForCategory,
                   onChoose: ({genre, age, zone}) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
                   onLongPressed: ({genre, age, zone}) => showCategoryPopupMenu(
                     context: context,
@@ -205,16 +189,12 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             clearWhenError: false,
             onStartGettingData: () => mountedSetState(() => _getting = true),
             onStopGettingData: () => mountedSetState(() => _getting = false),
-            onAppend: (_, l) {
-              _lastDuration = _currDuration;
-              _lastType = _currType;
-            },
+            onAppend: (_, l) => [_currCategory, _currDuration].forEach((c) => c.pass()),
             onError: (e) {
               if (_data.isNotEmpty) {
                 Fluttertoast.showToast(msg: e.toString());
               }
-              _currDuration = _lastDuration;
-              _currType = _lastType;
+              [_currCategory, _currDuration].forEach((c) => c.restore());
               if (mounted) setState(() {});
             },
           ),
@@ -237,36 +217,30 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                 rightWidget: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    OptionPopupView<TinyCategory>(
-                      items: _categories,
-                      value: _currType,
-                      titleBuilder: (c, v) => v.isAll() ? '分类' : v.title,
+                    CategoryPopupView(
+                      categories: _categories,
+                      selectedCategory: _currCategory.curr,
+                      markedCategoryNames: _markedCategoryNames,
+                      defaultName: '分类',
                       enable: !_getting,
-                      onSelect: (t) {
-                        if (_currType != t) {
-                          _lastType = _currType;
-                          _currType = t;
-                          if (mounted) setState(() {});
-                          _rdvKey.currentState?.refresh();
-                        }
+                      allowLongPressCategory: true,
+                      onSelected: (c) {
+                        _currCategory.select(c, alsoPass: true);
+                        if (mounted) setState(() {});
+                        _rdvKey.currentState?.refresh();
                       },
                       onLongPressed: () => _chooseCategory(toChoose: false),
-                      ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
-                      onOptionLongPressed: _longPressCategoryOption,
                     ),
                     SizedBox(width: 12),
-                    OptionPopupView<TinyCategory>(
-                      items: allRankingDurations,
-                      value: _currDuration,
-                      titleBuilder: (c, v) => v.title,
+                    CategoryPopupView(
+                      categories: allRankingDurations,
+                      selectedCategory: _currDuration.curr,
                       enable: !_getting,
-                      onSelect: (d) {
-                        if (_currDuration != d) {
-                          _lastDuration = _currDuration;
-                          _currDuration = d;
-                          if (mounted) setState(() {});
-                          _rdvKey.currentState?.refresh();
-                        }
+                      allowLongPressCategory: false,
+                      onSelected: (d) {
+                        _currDuration.select(d, alsoPass: true);
+                        if (mounted) setState(() {});
+                        _rdvKey.currentState?.refresh();
                       },
                       onLongPressed: () => _chooseCategory(toChoose: false),
                     ),

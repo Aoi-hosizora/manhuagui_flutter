@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 可弹出选项的按钮，在 [OverallSubPage] / [RankingSubPage] / [MangaCategorySubPage] / [AuthorSubPage] / [AuthorPage] / [SearchPage] 使用
+/// 可弹出选项的按钮，在 [CategoryPopupView] / [MangaCategorySubPage] / [AuthorCategorySubPage] / [AuthorPage] / [SearchPage] 使用
 class OptionPopupView<T extends Object> extends StatefulWidget {
   const OptionPopupView({
     Key? key,
     required this.items,
     required this.value,
     required this.titleBuilder,
-    required this.onSelect,
+    required this.onSelected,
     this.ifNeedHighlight,
     this.height = 26.0,
     this.width,
@@ -20,13 +20,13 @@ class OptionPopupView<T extends Object> extends StatefulWidget {
   final List<T> items;
   final T value;
   final String Function(BuildContext, T) titleBuilder;
-  final void Function(T) onSelect;
+  final void Function(T) onSelected;
   final bool Function(T)? ifNeedHighlight;
   final double height;
   final double? width;
   final bool enable;
   final void Function()? onLongPressed;
-  final void Function(T, void Function(T), StateSetter)? onOptionLongPressed;
+  final void Function(T, void Function(T) selectAndPop, StateSetter setState)? onOptionLongPressed;
 
   @override
   _OptionPopupRouteViewState<T> createState() => _OptionPopupRouteViewState<T>();
@@ -97,7 +97,7 @@ class _OptionPopupRouteViewState<T extends Object> extends State<OptionPopupView
     _selected = false;
     if (mounted) setState(() {});
     if (result != null) {
-      widget.onSelect(result);
+      widget.onSelected(result);
     }
   }
 

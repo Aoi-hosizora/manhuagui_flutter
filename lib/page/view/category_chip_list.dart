@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 
-/// 漫画类别Chip列表，在 [RecommendSubPage] 使用
+/// 漫画类别标签列表，在 [RecommendSubPage] 使用
 class CategoryChipListView extends StatelessWidget {
   const CategoryChipListView({
     Key? key,
-    required this.genres,
+    required this.categories,
     this.markedCategoryNames,
     required this.onPressed,
     this.onLongPressed,
   }) : super(key: key);
 
-  final List<TinyCategory> genres;
+  final List<TinyCategory> categories;
   final List<String>? markedCategoryNames;
   final void Function(TinyCategory) onPressed;
   final void Function(TinyCategory)? onLongPressed;
@@ -24,7 +24,7 @@ class CategoryChipListView extends StatelessWidget {
       spacing: 10.0,
       runSpacing: 10.0,
       children: [
-        for (var genre in genres)
+        for (var genre in categories)
           Container(
             decoration: ShapeDecoration(
               shape: StadiumBorder(),

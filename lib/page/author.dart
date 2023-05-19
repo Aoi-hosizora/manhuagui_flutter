@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
+import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
@@ -140,13 +141,11 @@ class _AuthorPageState extends State<AuthorPage> {
   var _total = 0;
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _getting = false;
-
-  var _currOrder = AppSetting.instance.ui.defaultMangaOrder;
-  var _lastOrder = AppSetting.instance.ui.defaultMangaOrder;
+  final _currOrder = RestorableObject(AppSetting.instance.ui.defaultMangaOrder);
 
   Future<PagedList<SmallManga>> _getMangas({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _currOrder).onError((e, s) {
+    var result = await client.getAuthorMangas(aid: widget.id, page: page, order: _currOrder.curr).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -611,13 +610,12 @@ class _AuthorPageState extends State<AuthorPage> {
                         leftText: '全部漫画 (共 $_total 部)',
                         rightWidget: OptionPopupView<MangaOrder>(
                           items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                          value: _currOrder,
+                          value: _currOrder.curr,
                           titleBuilder: (c, v) => v.toTitle(),
                           enable: !_getting,
-                          onSelect: (o) {
-                            if (_currOrder != o) {
-                              _lastOrder = _currOrder;
-                              _currOrder = o;
+                          onSelected: (o) {
+                            if (_currOrder.curr != o) {
+                              _currOrder.select(o, alsoPass: true);
                               if (mounted) setState(() {});
                               _pdvKey.currentState?.refresh();
                             }
@@ -659,14 +657,12 @@ class _AuthorPageState extends State<AuthorPage> {
                   updateOnlyIfNotEmpty: false,
                   onStartGettingData: () => mountedSetState(() => _getting = true),
                   onStopGettingData: () => mountedSetState(() => _getting = false),
-                  onAppend: (_, l) {
-                    _lastOrder = _currOrder;
-                  },
+                  onAppend: (_, l) => _currOrder.pass(),
                   onError: (e) {
                     if (_mangas.isNotEmpty) {
                       Fluttertoast.showToast(msg: e.toString());
                     }
-                    _currOrder = _lastOrder;
+                    _currOrder.restore();
                     if (mounted) setState(() {});
                   },
                 ),

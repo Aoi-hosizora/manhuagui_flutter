@@ -8,7 +8,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 /// 漫画类别页/漫画排行页-漫画类别弹出菜单 [showCategoryPopupMenu]
 
-// => called by RankingSubPage / MangaCategorySubPage / RecommendSubPage
+// => called by RankingSubPage / MangaCategorySubPage / RecommendSubPage / CategoryPopupView
 Future<void> showCategoryPopupMenu({
   required BuildContext context,
   required TinyCategory category,

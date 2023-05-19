@@ -6,8 +6,8 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/author.dart';
-import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
+import 'package:manhuagui_flutter/page/view/category_popup.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -99,41 +99,24 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
     if (mounted) setState(() {});
   }
 
-  void _longPressCategoryOption(TinyCategory genre, void Function(TinyCategory) selectGenre, StateSetter _setState) {
-    showCategoryPopupMenu(
-      context: context,
-      category: genre,
-      onSelected: selectGenre,
-      onMarkedChanged: (genre, marked) {
-        (marked ? _markedCategoryNames.add : _markedCategoryNames.remove)(genre.name);
-        _setState(() {});
-      },
-    );
-  }
-
-
   final _data = <SmallAuthor>[];
   var _total = 0;
   late final _flagStorage = AuthorCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _getting = false;
 
-  var _currOrder = AppSetting.instance.ui.defaultAuthorOrder;
-  var _lastOrder = AppSetting.instance.ui.defaultAuthorOrder;
-  var _currGenre = allGenres[0];
-  var _lastGenre = allGenres[0];
-  var _currAge = allAges[0];
-  var _lastAge = allAges[0];
-  var _currZone = allZones[0];
-  var _lastZone = allZones[0];
+  final _currGenre = RestorableObject(allGenres[0]);
+  final _currAge = RestorableObject(allAges[0]);
+  final _currZone = RestorableObject(allZones[0]);
+  final _currOrder = RestorableObject(AppSetting.instance.ui.defaultAuthorOrder);
 
   Future<PagedList<SmallAuthor>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
     var f = client.getAllAuthors(
-      genre: _currGenre.name,
-      zone: _currZone.name,
-      age: _currAge.name,
+      genre: _currGenre.curr.name,
+      zone: _currZone.curr.name,
+      age: _currAge.curr.name,
       page: page,
-      order: _currOrder,
+      order: _currOrder.curr,
     );
     var result = await f.onError((e, s) {
       return Future.error(wrapError(e, s).text);
@@ -194,20 +177,12 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
             updateOnlyIfNotEmpty: false,
             onStartGettingData: () => mountedSetState(() => _getting = true),
             onStopGettingData: () => mountedSetState(() => _getting = false),
-            onAppend: (_, l) {
-              _lastOrder = _currOrder;
-              _lastGenre = _currGenre;
-              _lastAge = _currAge;
-              _lastZone = _currZone;
-            },
+            onAppend: (_, l) => [_currGenre, _currAge, _currZone, _currOrder].forEach((c) => c.pass()),
             onError: (e) {
               if (_data.isNotEmpty) {
                 Fluttertoast.showToast(msg: e.toString());
               }
-              _currOrder = _lastOrder;
-              _currGenre = _lastGenre;
-              _currAge = _lastAge;
-              _currZone = _lastZone;
+              [_currGenre, _currAge, _currZone, _currOrder].forEach((c) => c.restore());
               if (mounted) setState(() {});
             },
           ),
@@ -227,54 +202,24 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
             outerTopWidgets: [
               ListHintView.widgets(
                 widgets: [
-                  OptionPopupView<TinyCategory>(
-                    items: _genres,
-                    value: _currGenre,
-                    titleBuilder: (c, v) => v.isAll() ? '剧情' : v.title,
-                    enable: !_getting,
-                    onSelect: (g) {
-                      if (_currGenre != g) {
-                        _lastGenre = _currGenre;
-                        _currGenre = g;
+                  for (var t in [
+                    Tuple4(_genres, _currGenre, '剧情', true),
+                    Tuple4(allAges, _currAge, '受众', true),
+                    Tuple4(allZones, _currZone, '地区', true),
+                  ])
+                    CategoryPopupView(
+                      categories: t.item1,
+                      selectedCategory: t.item2.curr,
+                      markedCategoryNames: t.item4 ? _markedCategoryNames : [],
+                      defaultName: t.item3,
+                      enable: !_getting,
+                      allowLongPressCategory: t.item4,
+                      onSelected: (c) {
+                        t.item2.select(c, alsoPass: true);
                         if (mounted) setState(() {});
                         _pdvKey.currentState?.refresh();
-                      }
-                    },
-                    ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
-                    onOptionLongPressed: _longPressCategoryOption,
-                  ),
-                  OptionPopupView<TinyCategory>(
-                    items: allAges,
-                    value: _currAge,
-                    titleBuilder: (c, v) => v.isAll() ? '受众' : v.title,
-                    enable: !_getting,
-                    onSelect: (a) {
-                      if (_currAge != a) {
-                        _lastAge = _currAge;
-                        _currAge = a;
-                        if (mounted) setState(() {});
-                        _pdvKey.currentState?.refresh();
-                      }
-                    },
-                    ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
-                    onOptionLongPressed: _longPressCategoryOption,
-                  ),
-                  OptionPopupView<TinyCategory>(
-                    items: allZones,
-                    value: _currZone,
-                    titleBuilder: (c, v) => v.isAll() ? '地区' : v.title,
-                    enable: !_getting,
-                    onSelect: (z) {
-                      if (_currZone != z) {
-                        _lastZone = _currZone;
-                        _currZone = z;
-                        if (mounted) setState(() {});
-                        _pdvKey.currentState?.refresh();
-                      }
-                    },
-                    ifNeedHighlight: (genre) => _markedCategoryNames.any((el) => genre.name == el) == true,
-                    onOptionLongPressed: _longPressCategoryOption,
-                  ),
+                      },
+                    ),
                 ],
               ),
             ],
@@ -283,13 +228,12 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
                 leftText: '筛选结果 (共 $_total 位)',
                 rightWidget: OptionPopupView<AuthorOrder>(
                   items: const [AuthorOrder.byPopular, AuthorOrder.byComic, AuthorOrder.byNew],
-                  value: _currOrder,
+                  value: _currOrder.curr,
                   titleBuilder: (c, v) => v.toTitle(),
                   enable: !_getting,
-                  onSelect: (o) {
-                    if (_currOrder != o) {
-                      _lastOrder = _currOrder;
-                      _currOrder = o;
+                  onSelected: (o) {
+                    if (_currOrder.curr != o) {
+                      _currOrder.select(o, alsoPass: true);
                       if (mounted) setState(() {});
                       _pdvKey.currentState?.refresh();
                     }

@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
-/// 作者行，[SmallAuthor]，在 [AuthorSubPage] 使用
+/// 作者行，[SmallAuthor]，在 [AuthorCategorySubPage] 使用
 class SmallAuthorLineView extends StatelessWidget {
   const SmallAuthorLineView({
     Key? key,

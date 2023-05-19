@@ -877,7 +877,6 @@ class _DialogHelper {
       added = toAdd;
       onUpdated?.call(added);
       try {
-        // TODO test
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '成功将漫画放入书架' : '成功将漫画移出书架')));
       } catch (_) {} // for destroyed context

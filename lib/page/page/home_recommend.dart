@@ -557,8 +557,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Center(
                         child: CategoryChipListView(
-                          genres: _data!.genres.map((g) => g.toTiny()).toList(),
-                          markedCategoryNames: _markedCategoryNames, // TODO test
+                          categories: _data!.genres.map((g) => g.toTiny()).toList(),
+                          markedCategoryNames: _markedCategoryNames,
                           onPressed: (g) => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepCategoryPage(genre: g))),
                           onLongPressed: (g) => showCategoryPopupMenu(
                             context: context,

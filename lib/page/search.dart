@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
+import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
@@ -71,13 +72,11 @@ class _SearchPageState extends State<SearchPage> {
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   final _histories = <String>[]; // search history
   var _getting = false;
-
-  var _currOrder = AppSetting.instance.ui.defaultMangaOrder;
-  var _lastOrder = AppSetting.instance.ui.defaultMangaOrder;
+  final _currOrder = RestorableObject(AppSetting.instance.ui.defaultMangaOrder);
 
   Future<PagedList<SmallManga>> _getData({required int page}) async {
     final client = RestClient(DioManager.instance.dio);
-    var result = await client.searchMangas(keyword: _q!, page: page, order: _currOrder).onError((e, s) {
+    var result = await client.searchMangas(keyword: _q!, page: page, order: _currOrder.curr).onError((e, s) {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
@@ -207,14 +206,12 @@ class _SearchPageState extends State<SearchPage> {
                     updateOnlyIfNotEmpty: false,
                     onStartGettingData: () => mountedSetState(() => _getting = true),
                     onStopGettingData: () => mountedSetState(() => _getting = false),
-                    onAppend: (_, l) {
-                      _lastOrder = _currOrder;
-                    },
+                    onAppend: (_, l) => _currOrder.pass(),
                     onError: (e) {
                       if (_data.isNotEmpty) {
                         Fluttertoast.showToast(msg: e.toString());
                       }
-                      _currOrder = _lastOrder;
+                      _currOrder.restore();
                       if (mounted) setState(() {});
                     },
                   ),
@@ -236,13 +233,12 @@ class _SearchPageState extends State<SearchPage> {
                         leftText: '"$_q" 的搜索结果 (共 $_total 部)',
                         rightWidget: OptionPopupView<MangaOrder>(
                           items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                          value: _currOrder,
+                          value: _currOrder.curr,
                           titleBuilder: (c, v) => v.toTitle(),
                           enable: !_getting,
-                          onSelect: (o) {
-                            if (_currOrder != o) {
-                              _lastOrder = _currOrder;
-                              _currOrder = o;
+                          onSelected: (o) {
+                            if (_currOrder.curr != o) {
+                              _currOrder.select(o, alsoPass: true);
                               if (mounted) setState(() {});
                               _pdvKey.currentState?.refresh();
                             }
