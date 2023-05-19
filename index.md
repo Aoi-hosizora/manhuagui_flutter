@@ -1,3 +1,8 @@
+---
+title: Manhuagui
+description: An unofficial android application for manhuagui, powered by flutter.
+---
+
 <img src="https://raw.githubusercontent.com/Aoi-hosizora/manhuagui_flutter/master/lib/assets/logo_xxhdpi.png" alt="LOGO" height="100" width="100" align="right" />
 
 <p align="center">
