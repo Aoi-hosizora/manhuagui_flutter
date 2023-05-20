@@ -107,6 +107,7 @@ ErrorMessage wrapError(dynamic e, StackTrace s, {bool useResult = true}) {
     const map = <String, String>{
       'unreachable': '网络不可用', // Network is unavailable
       'failed host lookup': '网络不可用',
+      'no route to host': '网络不可用',
       'connection refused': '网络连接异常 (Connection refused)', // Network error
       'connection abort': '网络连接异常 (Connection abort)',
       'connection reset': '网络连接异常 (Connection reset)',

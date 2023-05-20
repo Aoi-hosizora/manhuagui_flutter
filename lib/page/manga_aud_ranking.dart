@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
+import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
@@ -17,11 +18,15 @@ class MangaAudRankingPage extends StatefulWidget {
     required this.type,
     required this.rankings,
     required this.rankingDatetime,
+    this.remappedQingnianCategory,
+    this.remappedShaonvCategory,
   }) : super(key: key);
 
   final MangaAudRankingType type;
   final List<MangaRanking> rankings;
   final DateTime? rankingDatetime;
+  final TinyCategory? remappedQingnianCategory;
+  final TinyCategory? remappedShaonvCategory;
 
   @override
   State<MangaAudRankingPage> createState() => _MangaAudRankingPageState();
@@ -54,8 +59,8 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
     return type == MangaAudRankingType.all
         ? '全部漫画'
         : type == MangaAudRankingType.qingnian
-            ? '青年漫画'
-            : '少女漫画';
+            ? '${(widget.remappedQingnianCategory ?? qingnianAgeCategory).title}漫画'
+            : '${(widget.remappedShaonvCategory ?? shaonvAgeCategory).title}漫画';
   }
 
   @override

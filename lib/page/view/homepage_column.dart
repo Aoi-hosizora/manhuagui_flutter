@@ -12,6 +12,7 @@ class HomepageColumnView extends StatelessWidget {
     this.childColor = Colors.white,
     this.onRefreshPressed,
     this.disableRefresh = false,
+    this.hintIconData,
     this.onHintPressed,
     this.onMorePressed,
     this.rightText,
@@ -26,6 +27,7 @@ class HomepageColumnView extends StatelessWidget {
   final Color childColor;
   final void Function()? onRefreshPressed;
   final bool disableRefresh;
+  final IconData? hintIconData;
   final void Function()? onHintPressed;
   final void Function()? onMorePressed;
   final String? rightText; // ignored when onMorePressed is not null
@@ -82,7 +84,7 @@ class HomepageColumnView extends StatelessWidget {
                           child: InkWell(
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-                              child: Icon(Icons.help_outline, size: 22 /* a little smaller */, color: Colors.orange),
+                              child: Icon(hintIconData ?? Icons.help_outline, size: 22 /* a little smaller */, color: Colors.orange),
                             ),
                             onTap: onHintPressed,
                           ),

@@ -30,6 +30,8 @@ class CategoryList {
 
   const CategoryList({required this.genres, required this.ages, required this.zones});
 
+  List<Category> get allCategories => [...genres, ...ages, ...zones];
+
   factory CategoryList.fromJson(Map<String, dynamic> json) => _$CategoryListFromJson(json);
 
   Map<String, dynamic> toJson() => _$CategoryListToJson(this);

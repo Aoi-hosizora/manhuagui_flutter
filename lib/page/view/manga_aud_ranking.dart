@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -24,6 +26,8 @@ class MangaAudRankingView extends StatefulWidget {
     this.allRankingsDateTime,
     this.qingnianRankingsDateTime,
     this.shaonvRankingsDateTime,
+    this.remappedQingnianCategory,
+    this.remappedShaonvCategory,
     this.allRankingsError = '',
     this.qingnianRankingsError = '',
     this.shaonvRankingsError = '',
@@ -32,6 +36,7 @@ class MangaAudRankingView extends StatefulWidget {
     this.onFullListPressed,
     this.onMorePressed,
     this.onLineLongPressed,
+    this.onAudCategoryRemapped,
   }) : super(key: key);
 
   final List<MangaRanking>? allRankings;
@@ -40,6 +45,8 @@ class MangaAudRankingView extends StatefulWidget {
   final DateTime? allRankingsDateTime;
   final DateTime? qingnianRankingsDateTime;
   final DateTime? shaonvRankingsDateTime;
+  final TinyCategory? remappedQingnianCategory;
+  final TinyCategory? remappedShaonvCategory;
   final String allRankingsError;
   final String qingnianRankingsError;
   final String shaonvRankingsError;
@@ -48,6 +55,7 @@ class MangaAudRankingView extends StatefulWidget {
   final void Function(MangaAudRankingType)? onFullListPressed;
   final void Function()? onMorePressed;
   final void Function(MangaRanking)? onLineLongPressed;
+  final void Function(MangaAudRankingType)? onAudCategoryRemapped;
 
   @override
   State<MangaAudRankingView> createState() => _MangaAudRankingViewState();
@@ -287,14 +295,18 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
       disableRefresh: (_currentPageIndex == 0 && widget.allRankings == null) || //
           (_currentPageIndex == 1 && widget.qingnianRankings == null) ||
           (_currentPageIndex == 2 && widget.shaonvRankings == null),
-      onHintPressed: _currentPageIndex != 0
-          ? null // 全部漫画则显示额外的提示按钮
-          : () => showYesNoAlertDialog(
+      hintIconData: _currentPageIndex == 0 ? null : Icons.edit,
+      onHintPressed: _currentPageIndex == 0
+          ? () => showYesNoAlertDialog(
                 context: context,
                 title: Text('漫画排行榜提示'),
                 content: Text('提示：漫画柜中少年漫画排行榜与全部漫画排行榜基本一致，主页不单独显示少年漫画。'),
                 yesText: Text('确定'),
                 noText: null,
+              )
+          : () => showAudCategoryRemapPopupMenu(
+                context: context,
+                onRemapped: widget.onAudCategoryRemapped,
               ),
       onMorePressed: widget.onMorePressed,
       headerPadding: EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 8),
@@ -310,9 +322,20 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
               unselectedLabelStyle: Theme.of(context).textTheme.subtitle1?.copyWith(fontSize: 16),
               tabs: [
                 for (var t in [
+                  // 1
                   Tuple2(Icons.whatshot, '全部/少年'),
-                  Tuple2(Icons.wc, '青年漫画'),
-                  Tuple2(Icons.female, '少女漫画'),
+
+                  // 2
+                  if ((widget.remappedQingnianCategory ?? qingnianAgeCategory).name == qingnianAgeCategory.name) //
+                    Tuple2(Icons.wc, '青年漫画'),
+                  if ((widget.remappedQingnianCategory ?? qingnianAgeCategory).name != qingnianAgeCategory.name) //
+                    Tuple2(Icons.category, '${widget.remappedQingnianCategory!.title}漫画'),
+
+                  // 3
+                  if ((widget.remappedShaonvCategory ?? shaonvAgeCategory).name == shaonvAgeCategory.name) //
+                    Tuple2(Icons.female, '少女漫画'),
+                  if ((widget.remappedShaonvCategory ?? shaonvAgeCategory).name != shaonvAgeCategory.name) //
+                    Tuple2(Icons.category, '${widget.remappedShaonvCategory!.title}漫画'),
                 ])
                   Tab(
                     height: 40,

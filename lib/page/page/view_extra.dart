@@ -257,7 +257,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              SizedBox(height: 10),
+                              SizedBox(height: 8),
                               Flexible(
                                 child: Text(
                                   widget.data.chapterTitle,
@@ -270,21 +270,22 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (widget.data.mangaAuthors != null) ...[
-                                SizedBox(height: 5),
+                              if (widget.data.mangaAuthors != null)
                                 Flexible(
-                                  child: Text(
-                                    widget.data.mangaAuthors!.map((a) => a.name).join('/'),
-                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                          color: Theme.of(context).primaryColor,
-                                        ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      widget.data.mangaAuthors!.map((a) => a.name).join('/'),
+                                      style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
-                              ],
                             ],
                           ),
                         ),

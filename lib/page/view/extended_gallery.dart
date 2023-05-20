@@ -2,7 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/page/view/image_load.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/reloadable_photo_view.dart' as reloadable_photo_view;
+import 'package:synchronized/synchronized.dart';
 
 /// 使用 [ExtendedPhotoGallery] 和 [ReloadablePhotoView] 扩展的横向/纵向画廊，在 [MangaGalleryView] 使用
 /// (带首页和末页的 GalleryView，允许传入一些界面风格的参数)
@@ -19,7 +22,7 @@ class HorizontalGalleryView extends StatefulWidget {
     this.onPageChanged, // include extra pages, start from 0
     this.reverse = false,
     this.preloadPagesCount = 0,
-    this.initialPage = 0, // <<<
+    this.initialImageIndex = 0, // <<<
     this.viewportFraction = 1.0, // <<<
   }) : super(key: key);
 
@@ -34,7 +37,7 @@ class HorizontalGalleryView extends StatefulWidget {
   final bool reverse;
   final int preloadPagesCount;
 
-  final int initialPage;
+  final int initialImageIndex;
   final double viewportFraction;
 
   @override
@@ -44,10 +47,10 @@ class HorizontalGalleryView extends StatefulWidget {
 class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
   final _key = GlobalKey<ExtendedPhotoGalleryState>();
   late var _controller = PageController(
-    initialPage: widget.initialPage,
+    initialPage: widget.initialImageIndex + 1,
     viewportFraction: widget.viewportFraction,
   );
-  late var _currentPageIndex = widget.initialPage;
+  late var _currentPageIndex = widget.initialImageIndex;
 
   @override
   void didUpdateWidget(covariant HorizontalGalleryView oldWidget) {
@@ -131,7 +134,7 @@ class VerticalGalleryView extends StatefulWidget {
     this.fallbackOptions,
     this.onPageChanged, // include extra pages, start from 0
     this.preloadPagesCount = 0,
-    this.initialPage = 0, // <<<
+    this.initialImageIndex = 0, // <<<
     this.viewportPageSpace = 0.0, // <<<
     this.customPageBuilder, // <<<
   }) : super(key: key);
@@ -148,7 +151,7 @@ class VerticalGalleryView extends StatefulWidget {
   final void Function(int pageIndex)? onPageChanged;
   final int preloadPagesCount;
 
-  final int initialPage;
+  final int initialImageIndex;
   final double viewportPageSpace;
   final Widget Function(BuildContext context, Widget photoView, int imageIndex)? customPageBuilder;
 
@@ -160,21 +163,60 @@ const _kMaskAnimDuration = Duration(milliseconds: 150);
 
 class VerticalGalleryViewState extends State<VerticalGalleryView> {
   late final _controller = ScrollController()..addListener(_onScrollChanged);
-  late var _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<reloadable_photo_view.ReloadablePhotoViewState>());
-  final _listKey = GlobalKey<State<StatefulWidget>>();
-  late var _itemKeys = List.generate(widget.imageCount + 2, (_) => GlobalKey<State<StatefulWidget>>());
+  late var _currentPageIndex = widget.initialImageIndex + 1;
+
+  final _firstPageKey = GlobalKey<State<StatefulWidget>>();
+  final _lastPageKey = GlobalKey<State<StatefulWidget>>();
+  var _firstPageHeight = 0.0;
+  var _lastPageHeight = 0.0;
+
+  late final _imagePageKeys = List.generate(widget.imageCount, (_) => GlobalKey<State<StatefulWidget>>());
+  late final _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<reloadable_photo_view.ReloadablePhotoViewState>());
+  final _imagePageWidgets = <Widget>[];
+  late final _imagePageLoaded = List.generate(widget.imageCount, (_) => false);
+  late final _imagePageHeights = List.generate(widget.imageCount, (_) => 0.0);
+
+  int get _totalPageCount => widget.imageCount + 2;
+
+  GlobalKey<State<StatefulWidget>> _getPageKey(int pageIndex) => pageIndex == 0
+      ? _firstPageKey
+      : pageIndex == _totalPageCount - 1
+          ? _lastPageKey
+          : _imagePageKeys[pageIndex - 1];
 
   @override
   void initState() {
     super.initState();
+
+    for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
+      if (imageIndex == widget.initialImageIndex) {
+        _imagePageWidgets.add(_buildPhotoPage(key: _imagePageKeys[imageIndex], context: context, imageIndex: imageIndex));
+        _imagePageLoaded[imageIndex] = true;
+      } else {
+        _imagePageWidgets.add(_buildPhotoPage(key: _imagePageKeys[imageIndex], context: context, imageIndex: imageIndex, onlyForPlaceholder: true));
+      }
+    }
+
     _masking = true;
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      if (widget.initialPage > 0) {
-        await jumpToPage(widget.initialPage, masked: true);
+      for (var pageIndex = 0; pageIndex < _totalPageCount; pageIndex++) {
+        var renderBox = _getPageKey(pageIndex).currentContext?.findRenderBox();
+        var height = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
+        if (pageIndex == 0) {
+          _firstPageHeight = height;
+        } else if (pageIndex == _totalPageCount - 1) {
+          _lastPageHeight = height;
+        } else {
+          _imagePageHeights[pageIndex - 1] = height;
+        }
+      }
+
+      if (widget.initialImageIndex >= 0 && widget.initialImageIndex < widget.imageCount) {
+        await jumpToPage(widget.initialImageIndex + 1, masked: true);
       }
       _masking = false;
+      _jumping = false;
       if (mounted) setState(() {});
-      _onScrollChanged();
     });
   }
 
@@ -187,10 +229,11 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   @override
   void didUpdateWidget(covariant VerticalGalleryView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.imageCount != oldWidget.imageCount) {
-      _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<reloadable_photo_view.ReloadablePhotoViewState>());
-      _itemKeys = List.generate(widget.imageCount + 2, (_) => GlobalKey<State<StatefulWidget>>());
-    }
+    assert(
+      widget.imageCount == oldWidget.imageCount,
+      'VerticalGalleryView is not allowed for dynamic image pages! '
+      '(previous image count: ${oldWidget.imageCount}, current image count: ${widget.imageCount})',
+    );
   }
 
   /// reload, excludes extra page, start from 0
@@ -202,58 +245,88 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
 
   var _jumping = false;
   var _masking = false;
+  final _jumpLock = Lock();
 
   /// jumpToPage, include extra pages, start from 0
-  Future<void> jumpToPage(int pageIndex, {bool masked = true}) async {
-    var scrollRect = _ScrollHelper.getScrollViewRect(_listKey);
-    if (scrollRect == null) {
-      return;
-    }
-
+  Future<void> jumpToPage(int pageIndex, {bool masked = false}) async {
     _jumping = true;
-    _masking = masked; // actually this is almost set to true
+    _masking = masked;
     if (mounted) setState(() {});
     await Future.delayed(_kMaskAnimDuration);
 
-    var ok = await _ScrollHelper.scrollToIndex(_controller, pageIndex, _itemKeys, scrollRect, widget.viewportPageSpace);
+    var cumulatedOffset = 0.0;
+    if (pageIndex > 0) {
+      cumulatedOffset += _firstPageHeight;
+    }
+    for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
+      if (pageIndex - 1 > imageIndex) {
+        cumulatedOffset += _imagePageHeights[imageIndex]; // cumulate offset
+      }
+    }
+    if (pageIndex > _totalPageCount - 1) {
+      cumulatedOffset += _lastPageHeight;
+    }
+
+    await _jumpLock.synchronized(() async {
+      _controller.jumpTo(cumulatedOffset + widget.viewportPageSpace + 1); // <<<
+      await WidgetsBinding.instance?.endOfFrame;
+    });
+
     _jumping = false;
     _masking = false;
     if (mounted) setState(() {});
-    if (ok) {
+
+    if (_currentPageIndex != pageIndex) {
+      _currentPageIndex = pageIndex;
       widget.onPageChanged?.call(pageIndex);
     }
+    _onScrollChanged();
   }
 
   void _onScrollChanged() {
     if (_jumping) {
-      return;
+      return; // ignore scroll changed when jumping
     }
+
+    // 1. update _currentPageIndex and call onPageChanged (by checking offset and cumulating offset)
+    var newPageIndex = 0;
     if (_controller.offset == 0) {
-      widget.onPageChanged?.call(0);
+      newPageIndex = 0;
     } else if (_controller.offset == _controller.position.maxScrollExtent) {
-      widget.onPageChanged?.call(widget.imageCount + 1);
+      newPageIndex = _totalPageCount - 1;
     } else {
-      var scrollRect = _ScrollHelper.getScrollViewRect(_listKey);
-      if (scrollRect != null) {
-        var index = _ScrollHelper.getVisibleExactItemIndex(_itemKeys, scrollRect);
-        if (index != null) {
-          widget.onPageChanged?.call(index);
+      var currentOffset = _controller.offset;
+      var cumulatedOffset = _firstPageHeight;
+      var pageIndex = widget.imageCount;
+      for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
+        cumulatedOffset += _imagePageHeights[imageIndex]; // cumulate offset
+        if (cumulatedOffset > currentOffset) {
+          // <<< itemRect.top <= scrollRect.top && itemRect.bottom > scrollRect.top
+          pageIndex = imageIndex + 1;
+          break;
+        }
+      }
+      newPageIndex = pageIndex.clamp(1, widget.imageCount);
+    }
+    if (_currentPageIndex != newPageIndex) {
+      _currentPageIndex = newPageIndex;
+      widget.onPageChanged?.call(newPageIndex);
+    }
+
+    // 2. load current page's neighbor image pages
+    var currentImageIndex = _currentPageIndex - 1;
+    for (var imageIndex = currentImageIndex - widget.preloadPagesCount; imageIndex <= currentImageIndex + widget.preloadPagesCount; imageIndex++) {
+      if (imageIndex >= 0 && imageIndex <= widget.imageCount - 1) {
+        if (!_imagePageLoaded[imageIndex]) {
+          // <<< load neighbor pages
+          // print('Loading image page ${imageIndex + 1}');
+          _imagePageWidgets[imageIndex] = _buildPhotoPage(key: _imagePageKeys[imageIndex], context: context, imageIndex: imageIndex);
+          _imagePageLoaded[imageIndex] = true;
         }
       }
     }
+    if (mounted) setState(() {});
   }
-
-  // PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState s) {
-  //   switch (s) {
-  //     case PhotoViewScaleState.initial:
-  //       return PhotoViewScaleState.originalSize;
-  //     case PhotoViewScaleState.covering:
-  //     case PhotoViewScaleState.originalSize:
-  //     case PhotoViewScaleState.zoomedIn:
-  //     case PhotoViewScaleState.zoomedOut:
-  //       return PhotoViewScaleState.initial;
-  //   }
-  // }
 
   Widget _buildPhotoItem(BuildContext context, int imageIndex) {
     final pageOptions = widget.imagePageBuilder(context, imageIndex); // index excludes non-PhotoView pages
@@ -286,7 +359,44 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         scaleStateCycle: options.scaleStateCycle,
         tightMode: true,
         wantKeepAlive: options.wantKeepAlive,
-        customBuilder: (c, view) => widget.customPageBuilder?.call(c, view, imageIndex) ?? view,
+        customBuilder /* <<< this property is added in process_deps.sh */ : (c, view) => widget.customPageBuilder?.call(c, view, imageIndex) ?? view,
+        onLoadingStateChanged /* <<< this property is added in process_deps.sh */ : () => WidgetsBinding.instance?.addPostFrameCallback((_) async {
+          var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
+          var newHeight = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
+          var oldHeight = _imagePageHeights[imageIndex];
+          if (oldHeight == newHeight) return;
+          // print('Image ${imageIndex + 1} new height: $oldHeight -> $newHeight');
+          _imagePageHeights[imageIndex] = newHeight;
+          if (_currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
+            // <<< some pages before current page has its height changed, need to jump back to the previous offset
+            await _jumpLock.synchronized(() async {
+              _jumping = true;
+              _controller.jumpTo(_controller.offset + (newHeight - oldHeight));
+              await WidgetsBinding.instance?.endOfFrame;
+              _jumping = false;
+            });
+          }
+        }),
+      ),
+    );
+  }
+
+  Widget _buildPhotoPage({Key? key, required BuildContext context, required int imageIndex, bool onlyForPlaceholder = false}) {
+    return GestureDetector(
+      key: key,
+      behavior: HitTestBehavior.opaque,
+      onTapDown: widget.onImageTapDown /* <<< */,
+      onTapUp: widget.onImageTapUp /* <<< */,
+      onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(imageIndex) /* <<< */,
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: imageIndex == 0
+              ? math.max(widget.viewportPageSpace, 10) // for first page (page space must be larger than 10)
+              : widget.viewportPageSpace, // for remaining pages (use viewport page space as top padding)
+        ),
+        child: onlyForPlaceholder //
+            ? ImageLoadingView(title: '${imageIndex + 1}', event: null)
+            : _buildPhotoItem(context, imageIndex), // TODO 竖直滚动的 GalleryView 的缩放效果问题待修复
       ),
     );
   }
@@ -296,49 +406,37 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     return Stack(
       children: [
         Positioned.fill(
-          child: ListView(
-            key: _listKey,
-            controller: _controller,
-            padding: EdgeInsets.zero,
-            physics: AlwaysScrollableScrollPhysics(),
-            cacheExtent: widget.preloadPagesCount < 1 // TODO improve cache extent logic
-                ? 0 //
-                : (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * (2 / 3) * widget.preloadPagesCount /* inaccuracy */,
-            children: [
-              // 1
-              Padding(
-                key: _itemKeys[0],
-                padding: EdgeInsets.only(top: 0),
-                child: widget.firstPageBuilder(context),
-              ),
-
-              // 2
-              for (var i = 0; i < widget.imageCount; i++)
-                GestureDetector(
-                  key: _itemKeys[i + 1],
-                  behavior: HitTestBehavior.opaque,
-                  onTapDown: widget.onImageTapDown /* <<< */,
-                  onTapUp: widget.onImageTapUp /* <<< */,
-                  onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(i) /* <<< */,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: i == 0
-                          ? math.max(widget.viewportPageSpace, 10) // for first page, space must be larger than 10
-                          : widget.viewportPageSpace /* for remaining pages */,
-                    ),
-                    child: _buildPhotoItem(context, i), // TODO 竖直滚动的 GalleryView 暂时无法缩放页面,
+          child: PhotoView.customChild(
+            minScale: 1.0,
+            maxScale: 2.0,
+            child: SingleChildScrollView(
+              controller: _controller,
+              padding: EdgeInsets.zero,
+              physics: AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  // 1
+                  Padding(
+                    key: _firstPageKey,
+                    padding: EdgeInsets.only(top: 0),
+                    child: widget.firstPageBuilder(context),
                   ),
-                ),
 
-              // 3
-              Padding(
-                key: _itemKeys[widget.imageCount + 1],
-                padding: EdgeInsets.only(
-                  top: math.max(widget.viewportPageSpace, 10), // for last page, space must be larger than 10
-                ),
-                child: widget.lastPageBuilder(context),
+                  // 2
+                  for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) //
+                    _imagePageWidgets[imageIndex],
+
+                  // 3
+                  Padding(
+                    key: _lastPageKey,
+                    padding: EdgeInsets.only(
+                      top: math.max(widget.viewportPageSpace, 10), // for last page (page space must be larger than 10)
+                    ),
+                    child: widget.lastPageBuilder(context),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
 
@@ -366,68 +464,5 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         ),
       ],
     );
-  }
-}
-
-class _ScrollHelper {
-  static Rect? getScrollViewRect(GlobalKey key) {
-    var scrollRect = key.currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
-    return scrollRect;
-  }
-
-  static int? getVisibleExactItemIndex(List<GlobalKey> itemKeys, Rect scrollRect) {
-    for (var i = 0; i < itemKeys.length; i++) {
-      var itemRect = itemKeys[i].currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
-      if (itemRect != null) {
-        if (itemRect.top <= scrollRect.top && itemRect.bottom > scrollRect.top) {
-          return i;
-        }
-      }
-    }
-    return null;
-  }
-
-  static Future<bool> scrollToIndex(ScrollController controller, int targetIndex, List<GlobalKey> itemKeys, Rect scrollRect, [double additionalOffset = 0]) async {
-    // 0. jump to top or bottom directly if target index is predefined
-    if (targetIndex <= 0 || targetIndex >= itemKeys.length - 1) {
-      controller.jumpTo(targetIndex == 0 ? 0 : controller.position.maxScrollExtent);
-      await WidgetsBinding.instance?.endOfFrame;
-      return true;
-    }
-
-    // 1. scroll the scrollable view, make sure whether the target item rect is accessible (means not null) and valid (means showing within scrollable view)
-    Rect? getItemRect(int index) => index < 0 || index >= itemKeys.length
-        ? null //
-        : itemKeys[index].currentContext?.findRenderObject()?.getBoundInAncestorCoordinate();
-    var targetItemRect = getItemRect(targetIndex);
-    while (targetItemRect == null || targetItemRect.bottom <= scrollRect.top || targetItemRect.top >= scrollRect.bottom) {
-      // 1.1. get current visible item index
-      var currIndex = getVisibleExactItemIndex(itemKeys, scrollRect) ?? -1;
-      if (currIndex < 0) {
-        return false; // almost unreachable
-      }
-      if (currIndex == targetIndex) {
-        break; // almost unreachable
-      }
-
-      // 1.2. automatically scroll screen by screen
-      var direction = currIndex > targetIndex ? -1 /* up */ : 1 /* down */;
-      controller.jumpTo(controller.offset + direction * scrollRect.height * 0.98);
-      await WidgetsBinding.instance?.endOfFrame;
-      await Future.delayed(Duration(milliseconds: 15)); // wait extra duration for page building
-      if (controller.offset < 0 || controller.offset > 1000000) {
-        return false; // almost unreachable, only for abnormal behavior
-      }
-      targetItemRect = getItemRect(targetIndex);
-    }
-
-    // 2. re-get the target item rect, and scroll to this item accurately
-    targetItemRect = getItemRect(targetIndex);
-    if (targetItemRect == null) {
-      return false; // almost unreachable
-    }
-    controller.jumpTo(controller.offset + targetItemRect.top - scrollRect.top + additionalOffset + 1);
-    await WidgetsBinding.instance?.endOfFrame;
-    return true;
   }
 }

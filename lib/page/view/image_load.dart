@@ -41,6 +41,11 @@ class ImageLoadingView extends StatelessWidget {
                 padding: EdgeInsets.all(4.5 / 2),
                 child: CircularProgressIndicator(
                   strokeWidth: 4.5,
+                  value: event == null
+                      ? null
+                      : (event.expectedTotalBytes ?? 0) == 0
+                          ? null
+                          : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
                 ),
               ),
             ),

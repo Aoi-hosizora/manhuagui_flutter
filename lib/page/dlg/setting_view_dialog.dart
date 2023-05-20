@@ -237,13 +237,13 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
               child: Text('恢复默认'),
               onPressed: () => action.invoke(),
             ),
-            if (anotherButtonBuilder != null) //
-              anotherButtonBuilder.call(c),
           ],
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (anotherButtonBuilder != null) //
+              anotherButtonBuilder.call(c),
             TextButton(
               child: Text('确定'),
               onPressed: () async {

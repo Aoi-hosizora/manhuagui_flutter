@@ -68,17 +68,6 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
   // current image index, exclude extra pages, start from 0.
   int get _currentImageIndex => (_currentPageIndex - 1).clamp(0, widget.imageCount - 1);
 
-  var _preloadPagesCount = 0; // set to zero firstly
-
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration(seconds: 5), () { // TODO improve delay preload logic, or improve cache extent logic
-      _preloadPagesCount = widget.preloadPagesCount; // 等待 5s 后再更新 preload，防止刚开始就预加载过多页面
-      if (mounted) setState(() {});
-    });
-  }
-
   Offset? _pointerDownPosition;
 
   void _onPointerDown(Offset pos) {
@@ -112,11 +101,11 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
 
   /// jumpToPage, include extra pages, start from 0
   void jumpToPage(int pageIndex, {bool animated = false}) {
-    if (pageIndex >= 0 && pageIndex <= widget.imageCount + 1) {
+    if (pageIndex >= 0 && pageIndex < widget.imageCount + 2) {
       if (!widget.verticalScroll) {
         _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated);
       } else {
-        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: !animated);
+        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: false /* !animated */);
       }
     }
   }
@@ -128,7 +117,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       if (!widget.verticalScroll) {
         _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated);
       } else {
-        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: !animated);
+        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: false /* !animated */);
       }
     }
   }
@@ -200,7 +189,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           child: Center(
             child: Container(
               color: Colors.black.withOpacity(0.5),
-              padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
               child: Text(
                 '${imageIndex + 1}',
                 style: TextStyle(color: Colors.white),
@@ -218,8 +207,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       return HorizontalGalleryView(
         key: _horizontalGalleryKey,
         imageCount: widget.imageCount,
-        preloadPagesCount: _preloadPagesCount,
-        initialPage: widget.initialImageIndex + 1 /* include extra pages, start from 0 */,
+        preloadPagesCount: widget.preloadPagesCount,
+        initialImageIndex: widget.initialImageIndex /* exclude extra pages, start from 0 */,
         viewportFraction: widget.horizontalViewportFraction,
         reverse: widget.horizontalReverseScroll,
         onPageChanged: (pageIndex) {
@@ -296,8 +285,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     return VerticalGalleryView(
       key: _verticalGalleryKey,
       imageCount: widget.imageCount,
-      preloadPagesCount: _preloadPagesCount,
-      initialPage: widget.initialImageIndex + 1 /* include extra pages, start from 0 */,
+      preloadPagesCount: widget.preloadPagesCount,
+      initialImageIndex: widget.initialImageIndex /* exclude extra pages, start from 0 */,
       viewportPageSpace: widget.verticalViewportPageSpace,
       onPageChanged: (pageIndex) {
         _currentPageIndex = pageIndex; // include extra pages, start from 0

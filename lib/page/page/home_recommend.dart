@@ -146,6 +146,10 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
 
       globalCategoryList ??= CategoryList(genres: result.data.genres, zones: result.data.zones, ages: result.data.ages); // 更新全局的漫画类别
       await _loadMarkedCategories(null); // 加载被标记的漫画类别
+      var remappedQingnianName = await MarkedCategoryPrefs.getRemappedQingnianCategoryName() ?? qingnianAgeCategory.name; // 加载青年漫画排行榜修改映射
+      var remappedShaonvName = await MarkedCategoryPrefs.getRemappedShaonvCategoryName() ?? shaonvAgeCategory.name; // 加载少女漫画排行榜修改映射
+      _remappedQingnianCategory = globalCategoryList!.allCategories.where((el) => el.name == remappedQingnianName).firstOrNull?.toTiny() ?? qingnianAgeCategory;
+      _remappedShaonvCategory = globalCategoryList!.allCategories.where((el) => el.name == remappedShaonvName).firstOrNull?.toTiny() ?? shaonvAgeCategory;
     } catch (e, s) {
       _error = wrapError(e, s).text;
       if (_data != null) {
@@ -284,6 +288,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   DateTime? _rankingsDateTime;
   DateTime? _qingnianRankingDateTime;
   DateTime? _shaonvRankingDateTime;
+  TinyCategory _remappedQingnianCategory = qingnianAgeCategory;
+  TinyCategory _remappedShaonvCategory = shaonvAgeCategory;
   var _rankingsError = '';
   var _qingnianRankingsError = '';
   var _shaonvRankingsError = '';
@@ -313,6 +319,11 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     }
 
     if (types.contains(MangaAudRankingType.qingnian)) {
+      var remappedName = await MarkedCategoryPrefs.getRemappedQingnianCategoryName() ?? qingnianAgeCategory.name;
+      globalCategoryList?.allCategories.let((allCategories) {
+        _remappedQingnianCategory = allCategories.where((el) => el.name == remappedName).firstOrNull?.toTiny() ?? qingnianAgeCategory; // 加载青年漫画排行榜修改映射
+        if (mounted) setState(() {});
+      });
       Future.microtask(() async {
         if (onlyIfEmpty && (_qingnianRankings == null || _qingnianRankings!.isNotEmpty)) {
           return; // loading or not empty => ignore
@@ -321,7 +332,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         _qingnianRankingsError = '';
         if (mounted) setState(() {});
         try {
-          var result = await client.getDayRanking(type: qingnianAgeCategory.name); // #=50
+          var result = await client.getDayRanking(type: remappedName); // #=50
           _qingnianRankings = result.data.data;
           _qingnianRankingDateTime = DateTime.now();
         } catch (e, s) {
@@ -334,6 +345,11 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     }
 
     if (types.contains(MangaAudRankingType.shaonv)) {
+      var remappedName = await MarkedCategoryPrefs.getRemappedShaonvCategoryName() ?? shaonvAgeCategory.name;
+      globalCategoryList?.allCategories.let((allCategories) {
+        _remappedShaonvCategory = allCategories.where((el) => el.name == remappedName).firstOrNull?.toTiny() ?? shaonvAgeCategory; // 加载少女漫画排行榜修改映射
+        if (mounted) setState(() {});
+      });
       Future.microtask(() async {
         if (onlyIfEmpty && (_shaonvRankings == null || _shaonvRankings!.isNotEmpty)) {
           return; // loading or not empty => ignore
@@ -343,9 +359,9 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         if (mounted) setState(() {});
         try {
           if (needDelay) {
-            await Future.delayed(Duration(milliseconds: 1000)); // 额外等待，我的书架
+            await Future.delayed(Duration(milliseconds: 1000)); // 额外等待，少女漫画
           }
-          var result = await client.getDayRanking(type: shaonvAgeCategory.name); // #=50
+          var result = await client.getDayRanking(type: remappedName); // #=50
           _shaonvRankings = result.data.data;
           _shaonvRankingDateTime = DateTime.now();
         } catch (e, s) {
@@ -432,6 +448,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         allRankingsDateTime: _rankingsDateTime,
         qingnianRankingsDateTime: _qingnianRankingDateTime,
         shaonvRankingsDateTime: _shaonvRankingDateTime,
+        remappedQingnianCategory: _remappedQingnianCategory,
+        remappedShaonvCategory: _remappedShaonvCategory,
         allRankingsError: _rankingsError,
         qingnianRankingsError: _qingnianRankingsError,
         shaonvRankingsError: _shaonvRankingsError,
@@ -452,6 +470,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   : t == MangaAudRankingType.qingnian
                       ? _qingnianRankingDateTime
                       : _shaonvRankingDateTime,
+              remappedQingnianCategory: _remappedQingnianCategory,
+              remappedShaonvCategory: _remappedShaonvCategory,
             ),
           ),
         ),
@@ -463,6 +483,12 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           mangaCover: manga.cover,
           mangaUrl: manga.url,
         ),
+        onAudCategoryRemapped: (t) async {
+          // => 更新受众排行榜映射、更新界面、重新加载该页
+          if (t == MangaAudRankingType.qingnian || t == MangaAudRankingType.shaonv) {
+            _loadRankings([t], onlyIfEmpty: false, needDelay: false); // also include get remapped category name
+          }
+        },
       ),
     );
   }
