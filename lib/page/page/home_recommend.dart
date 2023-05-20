@@ -434,6 +434,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 if (type == MangaCollectionType.favorites) _openSepPage(SepFavoritePage());
                 if (type == MangaCollectionType.downloads) Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()));
               },
+        onLongPressed: !AppSetting.instance.ui.allowHomepagePopup
+            ? null
+            : (mangaId, mangaTitle, mangaCover, mangaUrl) => showPopupMenuForMangaList(
+                  context: context,
+                  mangaId: mangaId,
+                  mangaTitle: mangaTitle,
+                  mangaCover: mangaCover,
+                  mangaUrl: mangaUrl,
+                ),
       ),
     );
   }
@@ -507,6 +516,15 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             ),
           ),
         ),
+        onLongPressed: !AppSetting.instance.ui.allowHomepagePopup
+            ? null
+            : (manga) => showPopupMenuForMangaList(
+                  context: context,
+                  mangaId: manga.mid,
+                  mangaTitle: manga.title,
+                  mangaCover: manga.cover,
+                  mangaUrl: manga.url,
+                ),
       ),
     );
   }

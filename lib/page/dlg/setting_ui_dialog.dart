@@ -49,6 +49,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _overviewLoadAll = widget.setting.overviewLoadAll;
   late var _homepageShowMoreMangas = widget.setting.homepageShowMoreMangas;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
+  late var _allowHomepagePopup = widget.setting.allowHomepagePopup;
   late var _audienceMangaRows = widget.setting.audienceRankingRows;
   late var _homepageFavorite = widget.setting.homepageFavorite;
   late var _homepageRefreshData = widget.setting.homepageRefreshData;
@@ -69,6 +70,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         overviewLoadAll: _overviewLoadAll,
         homepageShowMoreMangas: _homepageShowMoreMangas,
         includeUnreadInHome: _includeUnreadInHome,
+        allowHomepagePopup: _allowHomepagePopup,
         audienceRankingRows: _audienceMangaRows,
         homepageFavorite: _homepageFavorite,
         homepageRefreshData: _homepageRefreshData,
@@ -91,6 +93,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _overviewLoadAll = setting.overviewLoadAll;
     _homepageShowMoreMangas = setting.homepageShowMoreMangas;
     _includeUnreadInHome = setting.includeUnreadInHome;
+    _allowHomepagePopup = setting.allowHomepagePopup;
     _audienceMangaRows = setting.audienceRankingRows;
     _homepageFavorite = setting.homepageFavorite;
     _homepageRefreshData = setting.homepageRefreshData;
@@ -241,6 +244,15 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _includeUnreadInHome,
           onChanged: (b) {
             _includeUnreadInHome = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '允许首页漫画弹出菜单',
+          value: _allowHomepagePopup,
+          onChanged: (b) {
+            _allowHomepagePopup = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

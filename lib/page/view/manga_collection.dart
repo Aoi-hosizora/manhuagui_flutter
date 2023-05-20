@@ -38,6 +38,7 @@ class MangaCollectionView extends StatefulWidget {
     this.onRefreshPressed,
     this.disableRefresh = false,
     this.onMorePressed,
+    this.onLongPressed,
   }) : super(key: key);
 
   final MangaCollectionType type;
@@ -55,6 +56,7 @@ class MangaCollectionView extends StatefulWidget {
   final void Function()? onRefreshPressed;
   final bool disableRefresh;
   final void Function()? onMorePressed;
+  final void Function(int mid, String title, String url, String cover)? onLongPressed;
 
   @override
   State<MangaCollectionView> createState() => _MangaCollectionViewState();
@@ -104,6 +106,9 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           );
         }
       },
+      onLongPress: widget.onLongPressed == null //
+          ? null
+          : () => widget.onLongPressed?.call(mid, title, url, cover),
     );
   }
 

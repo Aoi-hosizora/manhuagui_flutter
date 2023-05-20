@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/reloadable_photo_view.dart' as reloadable_photo_view;
@@ -136,6 +137,7 @@ class VerticalGalleryView extends StatefulWidget {
     this.preloadPagesCount = 0,
     this.initialImageIndex = 0, // <<<
     this.viewportPageSpace = 0.0, // <<<
+    this.pageNoPosition, // <<<
     this.customPageBuilder, // <<<
   }) : super(key: key);
 
@@ -153,6 +155,7 @@ class VerticalGalleryView extends StatefulWidget {
 
   final int initialImageIndex;
   final double viewportPageSpace;
+  final PageNoPosition? pageNoPosition;
   final Widget Function(BuildContext context, Widget photoView, int imageIndex)? customPageBuilder;
 
   @override
@@ -171,9 +174,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   var _lastPageHeight = 0.0;
 
   late final _imagePageKeys = List.generate(widget.imageCount, (_) => GlobalKey<State<StatefulWidget>>());
-  late final _photoViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<reloadable_photo_view.ReloadablePhotoViewState>());
-  final _imagePageWidgets = <Widget>[];
-  late final _imagePageLoaded = List.generate(widget.imageCount, (_) => false);
+  late final _imageViewKeys = List.generate(widget.imageCount, (_) => GlobalKey<reloadable_photo_view.ReloadablePhotoViewState>());
+  final _imageViewWidgets = <Widget>[];
+  late final _imageViewLoaded = List.generate(widget.imageCount, (_) => false);
   late final _imagePageHeights = List.generate(widget.imageCount, (_) => 0.0);
 
   int get _totalPageCount => widget.imageCount + 2;
@@ -190,10 +193,10 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
 
     for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
       if (imageIndex == widget.initialImageIndex) {
-        _imagePageWidgets.add(_buildPhotoPage(key: _imagePageKeys[imageIndex], context: context, imageIndex: imageIndex));
-        _imagePageLoaded[imageIndex] = true;
+        _imageViewWidgets.add(_buildImageView(context: context, imageIndex: imageIndex));
+        _imageViewLoaded[imageIndex] = true;
       } else {
-        _imagePageWidgets.add(_buildPhotoPage(key: _imagePageKeys[imageIndex], context: context, imageIndex: imageIndex, onlyForPlaceholder: true));
+        _imageViewWidgets.add(_buildImageView(context: context, imageIndex: imageIndex, onlyForPlaceholder: true));
       }
     }
 
@@ -234,12 +237,29 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
       'VerticalGalleryView is not allowed for dynamic image pages! '
       '(previous image count: ${oldWidget.imageCount}, current image count: ${widget.imageCount})',
     );
+    if (widget.viewportPageSpace != oldWidget.viewportPageSpace) {
+      var pageIndex = _currentPageIndex;
+      if (mounted) setState(() {});
+      WidgetsBinding.instance?.addPostFrameCallback((_) async {
+        for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
+          var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
+          var height = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
+          _imagePageHeights[imageIndex] = height; // update image page heights
+        }
+        await jumpToPage(pageIndex, masked: false); // adjust offset
+      });
+    }
+    if (widget.pageNoPosition != oldWidget.pageNoPosition) {
+      for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
+        _imageViewKeys[imageIndex].currentState?.setState(() {}); // update photo view state
+      }
+    }
   }
 
   /// reload, excludes extra page, start from 0
   void reload(int imageIndex, {bool alsoEvict = true}) {
     if (imageIndex >= 0 && imageIndex < widget.imageCount) {
-      _photoViewKeys[imageIndex].currentState?.reload(alsoEvict: alsoEvict);
+      _imageViewKeys[imageIndex].currentState?.reload(alsoEvict: alsoEvict);
     }
   }
 
@@ -252,7 +272,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _jumping = true;
     _masking = masked;
     if (mounted) setState(() {});
-    await Future.delayed(_kMaskAnimDuration);
+    if (masked) await Future.delayed(_kMaskAnimDuration);
 
     var cumulatedOffset = 0.0;
     if (pageIndex > 0) {
@@ -317,23 +337,26 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     var currentImageIndex = _currentPageIndex - 1;
     for (var imageIndex = currentImageIndex - widget.preloadPagesCount; imageIndex <= currentImageIndex + widget.preloadPagesCount; imageIndex++) {
       if (imageIndex >= 0 && imageIndex <= widget.imageCount - 1) {
-        if (!_imagePageLoaded[imageIndex]) {
+        if (!_imageViewLoaded[imageIndex]) {
           // <<< load neighbor pages
           // print('Loading image page ${imageIndex + 1}');
-          _imagePageWidgets[imageIndex] = _buildPhotoPage(key: _imagePageKeys[imageIndex], context: context, imageIndex: imageIndex);
-          _imagePageLoaded[imageIndex] = true;
+          _imageViewWidgets[imageIndex] = _buildImageView(context: context, imageIndex: imageIndex);
+          _imageViewLoaded[imageIndex] = true;
         }
       }
     }
     if (mounted) setState(() {});
   }
 
-  Widget _buildPhotoItem(BuildContext context, int imageIndex) {
+  Widget _buildImageView({required BuildContext context, required int imageIndex, bool onlyForPlaceholder = false}) {
+    if (onlyForPlaceholder) {
+      return ImageLoadingView(title: '${imageIndex + 1}', event: null);
+    }
     final pageOptions = widget.imagePageBuilder(context, imageIndex); // index excludes non-PhotoView pages
     final options = PhotoViewOptions.merge(pageOptions, widget.fallbackOptions);
     return ClipRect(
       child: reloadable_photo_view.ReloadablePhotoView(
-        key: _photoViewKeys[imageIndex],
+        key: _imageViewKeys[imageIndex],
         imageProviderBuilder: pageOptions.imageProviderBuilder,
         initialScale: options.initialScale,
         minScale: options.minScale,
@@ -381,26 +404,6 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     );
   }
 
-  Widget _buildPhotoPage({Key? key, required BuildContext context, required int imageIndex, bool onlyForPlaceholder = false}) {
-    return GestureDetector(
-      key: key,
-      behavior: HitTestBehavior.opaque,
-      onTapDown: widget.onImageTapDown /* <<< */,
-      onTapUp: widget.onImageTapUp /* <<< */,
-      onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(imageIndex) /* <<< */,
-      child: Padding(
-        padding: EdgeInsets.only(
-          top: imageIndex == 0
-              ? math.max(widget.viewportPageSpace, 10) // for first page (page space must be larger than 10)
-              : widget.viewportPageSpace, // for remaining pages (use viewport page space as top padding)
-        ),
-        child: onlyForPlaceholder //
-            ? ImageLoadingView(title: '${imageIndex + 1}', event: null)
-            : _buildPhotoItem(context, imageIndex), // TODO 竖直滚动的 GalleryView 的缩放效果问题待修复
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -423,8 +426,22 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                   ),
 
                   // 2
-                  for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) //
-                    _imagePageWidgets[imageIndex],
+                  for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++)
+                    GestureDetector(
+                      key: _imagePageKeys[imageIndex],
+                      behavior: HitTestBehavior.opaque,
+                      onTapDown: widget.onImageTapDown /* <<< */,
+                      onTapUp: widget.onImageTapUp /* <<< */,
+                      onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(imageIndex) /* <<< */,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          top: imageIndex == 0
+                              ? math.max(widget.viewportPageSpace, 10) // for first page (page space must be larger than 10)
+                              : widget.viewportPageSpace, // for remaining pages (use viewport page space as top padding)
+                        ),
+                        child: _imageViewWidgets[imageIndex], // TODO 竖直滚动的 GalleryView 的缩放效果问题待修复
+                      ),
+                    ),
 
                   // 3
                   Padding(

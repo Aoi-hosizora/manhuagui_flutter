@@ -51,57 +51,74 @@ class CategoryGridListView extends StatelessWidget {
         runSpacing: vSpace,
         children: [
           for (var category in categories)
-            Card(
-              margin: EdgeInsets.zero,
-              elevation: 1.5,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
-              color: ifNeedHighlight?.call(category) == true ? Colors.orange[100] : null,
-              child: FullRippleWidget(
-                highlightColor: null,
-                splashColor: null,
-                radius: BorderRadius.circular(6.0),
-                child: SizedBox(
-                  width: width,
-                  child: Column(
-                    children: [
-                      if (category.cover.isNotEmpty)
-                        NetworkImageView(
-                          url: category.cover,
-                          width: width,
-                          height: width,
-                          quality: FilterQuality.high,
-                          radius: BorderRadius.only(topLeft: Radius.circular(6.0), topRight: Radius.circular(6.0)),
-                        ),
-                      if (category.cover.isEmpty)
-                        Container(
-                          width: width,
-                          height: width,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              stops: const [0, 0.5, 1],
-                              colors: [Colors.blue[100]!, Colors.orange[100]!, Colors.purple[100]!],
+            (ifNeedHighlight?.call(category) == true).let(
+              (highlighted) => Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
+                elevation: highlighted ? 3.0 : 1.5,
+                color: highlighted ? Colors.deepOrange[50] : null,
+                shadowColor: highlighted ? Colors.deepOrange[600] : null,
+                child: FullRippleWidget(
+                  highlightColor: null,
+                  splashColor: null,
+                  radius: BorderRadius.circular(6.0),
+                  child: SizedBox(
+                    width: width,
+                    child: Column(
+                      children: [
+                        if (category.cover.isNotEmpty)
+                          NetworkImageView(
+                            url: category.cover,
+                            width: width,
+                            height: width,
+                            quality: FilterQuality.high,
+                            radius: BorderRadius.only(topLeft: Radius.circular(6.0), topRight: Radius.circular(6.0)),
+                          ),
+                        if (category.cover.isEmpty)
+                          Container(
+                            width: width,
+                            height: width,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                stops: const [0, 0.5, 1],
+                                colors: [Colors.blue[100]!, Colors.orange[100]!, Colors.purple[100]!],
+                              ),
+                              borderRadius: BorderRadius.only(topLeft: Radius.circular(6.0), topRight: Radius.circular(6.0)),
                             ),
-                            borderRadius: BorderRadius.only(topLeft: Radius.circular(6.0), topRight: Radius.circular(6.0)),
+                          ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 3, bottom: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (highlighted)
+                                Padding(
+                                  padding: EdgeInsets.only(right: 2),
+                                  child: Icon(
+                                    Icons.flag,
+                                    color: Colors.deepOrange[400],
+                                    size: 20,
+                                  ),
+                                ),
+                              Text(
+                                category.title == '全部' ? '全部漫画' : category.title,
+                                style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                                      color: highlighted ? Colors.deepOrange : null,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
-                      Padding(
-                        padding: EdgeInsets.only(top: 3, bottom: 4),
-                        child: Text(
-                          category.title == '全部' ? '全部漫画' : category.title,
-                          style: Theme.of(context).textTheme.bodyText1?.copyWith(
-                                color: ifNeedHighlight?.call(category) == true ? Colors.deepOrange[600] : null,
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  onTap: () => onPressed.call(category),
+                  onLongPress: onLongPressed == null ? null : () => onLongPressed.call(category),
                 ),
-                onTap: () => onPressed.call(category),
-                onLongPress: onLongPressed == null ? null : () => onLongPressed.call(category),
               ),
             ),
         ],

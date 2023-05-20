@@ -339,6 +339,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       onImageTapDown: (d) => _onPointerDown(d.globalPosition) /* <<< */,
       onImageTapUp: (d) => _onPointerUp(d.globalPosition) /* <<< */,
       onImageLongPressed: (imageIndex) => widget.onLongPressed.call(imageIndex),
+      pageNoPosition: AppSetting.instance.view.pageNoPosition,
       customPageBuilder: _buildPageWithPageNumber,
       // ****************************************************************
       // 额外页

@@ -20,11 +20,13 @@ class MangaGroupView extends StatefulWidget {
     required this.groupList,
     required this.style,
     this.onMorePressed,
+    this.onLongPressed,
   }) : super(key: key);
 
   final MangaGroupList groupList;
   final MangaGroupViewStyle style;
   final void Function()? onMorePressed;
+  final void Function(TinyBlockManga)? onLongPressed;
 
   @override
   State<MangaGroupView> createState() => _MangaGroupViewState();
@@ -154,6 +156,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
               ),
             ),
           ),
+          onLongPress: widget.onLongPressed == null ? null : () => widget.onLongPressed?.call(manga),
         ),
         Container(
           width: width,

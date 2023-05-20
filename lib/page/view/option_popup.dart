@@ -151,6 +151,7 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
 
   Widget _buildItem({required BuildContext context, required T value, required double width, required double height}) {
     final selected = this.value == value;
+    final highlighted = ifNeedHighlight?.call(value) == true;
     return SizedBox(
       width: width,
       height: height,
@@ -161,8 +162,8 @@ class _OptionPopupRouteView<T extends Object> extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: selected //
-                ? (ifNeedHighlight?.call(value) == true ? Colors.yellow : Colors.white)
-                : (ifNeedHighlight?.call(value) == true ? Colors.deepOrange : Colors.black),
+                ? (highlighted ? Colors.yellow : Colors.white)
+                : (highlighted ? Colors.deepOrange : Colors.black),
           ),
         ),
         style: OutlinedButton.styleFrom(
