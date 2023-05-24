@@ -4,6 +4,8 @@ import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/favorite_author.dart';
+import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
@@ -267,43 +269,28 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('所有已收藏的漫画'),
+          title: Text('已收藏的所有漫画'),
           leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
           actions: [
-            if (_searchKeyword.isNotEmpty)
-              AppBarActionButton(
-                icon: Icon(Icons.search_off),
-                tooltip: '退出搜索',
-                onPressed: () => _exitSearch(),
-              ),
-            PopupMenuButton(
-              child: Builder(
-                builder: (c) => AppBarActionButton(
-                  icon: Icon(Icons.more_vert),
-                  tooltip: '更多选项',
-                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+            AppBarActionButton(
+              icon: Icon(Icons.people),
+              tooltip: '浏览已收藏的漫画作者',
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => FavoriteAuthorPage(),
                 ),
               ),
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+            ),
+            AppBarActionButton(
+              icon: Icon(Icons.search),
+              tooltip: '搜索漫画',
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => SearchPage(),
                 ),
-                if (_searchKeyword.isNotEmpty)
-                  PopupMenuItem(
-                    child: IconTextMenuItem(Icons.search_off, '退出搜索'),
-                    onTap: () => _exitSearch(),
-                  ),
-                PopupMenuItem(
-                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
-                ),
-                if (_sortMethod != SortMethod.byTimeDesc)
-                  PopupMenuItem(
-                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
-                    onTap: () => _exitSort(),
-                  ),
-              ],
+              ),
             ),
           ],
         ),
@@ -366,13 +353,19 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (_searchKeyword.isNotEmpty)
+                        HelpIconView.asButton(
+                          iconData: Icons.search_off,
+                          tooltip: '退出搜索',
+                          onPressed: () => _exitSearch(),
+                        ),
                       if (_sortMethod != SortMethod.byTimeDesc)
                         HelpIconView.asButton(
                           iconData: _sortMethod.toIcon(),
                           tooltip: '漫画排序方式',
                           onPressed: () => _toSort(),
                         ),
-                      if (_sortMethod != SortMethod.byTimeDesc)
+                      if (_searchKeyword.isNotEmpty || _sortMethod != SortMethod.byTimeDesc)
                         Container(
                           color: Theme.of(context).dividerColor,
                           child: SizedBox(height: 20, width: 1),
@@ -380,6 +373,35 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
                         ),
                       Text('共 $_total 部'),
                       SizedBox(width: 5),
+                      PopupMenuButton(
+                        child: Builder(
+                          builder: (c) => HelpIconView.asButton(
+                            iconData: Icons.more_vert,
+                            tooltip: '更多选项',
+                            onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                          ),
+                        ),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                          ),
+                          if (_searchKeyword.isNotEmpty)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                              onTap: () => _exitSearch(),
+                            ),
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
+                          ),
+                          if (_sortMethod != SortMethod.byTimeDesc)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
+                              onTap: () => _exitSort(),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

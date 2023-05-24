@@ -42,6 +42,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _defaultAuthorOrder = widget.setting.defaultAuthorOrder;
   late var _enableCornerIcons = widget.setting.enableCornerIcons;
   late var _showMangaReadIcon = widget.setting.showMangaReadIcon;
+  late var _highlightRecentMangas = widget.setting.highlightRecentMangas;
   late var _readGroupBehavior = widget.setting.readGroupBehavior;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
@@ -63,6 +64,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         defaultAuthorOrder: _defaultAuthorOrder,
         enableCornerIcons: _enableCornerIcons,
         showMangaReadIcon: _showMangaReadIcon,
+        highlightRecentMangas: _highlightRecentMangas,
         readGroupBehavior: _readGroupBehavior,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
@@ -86,6 +88,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _defaultAuthorOrder = setting.defaultAuthorOrder;
     _enableCornerIcons = setting.enableCornerIcons;
     _showMangaReadIcon = setting.showMangaReadIcon;
+    _highlightRecentMangas = setting.highlightRecentMangas;
     _readGroupBehavior = setting.readGroupBehavior;
     _regularGroupRows = setting.regularGroupRows;
     _otherGroupRows = setting.otherGroupRows;
@@ -161,6 +164,16 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           enable: _enableCornerIcons,
           onChanged: (b) {
             _showMangaReadIcon = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '高亮近两天更新的漫画',
+          value: _highlightRecentMangas,
+          enable: _enableCornerIcons,
+          onChanged: (b) {
+            _highlightRecentMangas = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

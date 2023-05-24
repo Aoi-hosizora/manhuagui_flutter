@@ -226,6 +226,7 @@ class _SearchPageState extends State<SearchPage> {
                     manga: item,
                     flags: _flagStorage.getFlags(mangaId: item.mid),
                     twoColumns: AppSetting.instance.ui.showTwoColumns,
+                    highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
                   ),
                   extra: UpdatableDataViewExtraWidgets(
                     innerTopWidgets: [

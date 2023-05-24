@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
-/// 通用行，在 [TinyMangaLineView] / [SmallAuthorLineView] / [MangaRankLinkView] / [ShelfMangaLineView] / [MangaHistoryLineView] / [DownloadLineView] / [FavoriteMangaLineView] 使用
+/// 通用行，在 XXXLineView 使用
 class GeneralLineView extends StatelessWidget {
   const GeneralLineView({
     Key? key,
@@ -14,6 +14,7 @@ class GeneralLineView extends StatelessWidget {
     required this.text2,
     required this.icon3,
     required this.text3,
+    this.text3Color,
     this.cornerIcons,
     this.extrasInRow,
     this.extraWidthInRow,
@@ -45,6 +46,7 @@ class GeneralLineView extends StatelessWidget {
         text2 = null,
         icon3 = null,
         text3 = null,
+        text3Color = null,
         cornerIcons = null,
         super(key: key);
 
@@ -59,6 +61,7 @@ class GeneralLineView extends StatelessWidget {
   final String? text2;
   final IconData? icon3;
   final String? text3;
+  final Color? text3Color;
   final List<IconData>? cornerIcons;
 
   // custom rows
@@ -86,6 +89,24 @@ class GeneralLineView extends StatelessWidget {
     var width = MediaQuery.of(context).size.width / 2;
     var height = imageHeight > textHeight ? imageHeight : textHeight;
     return width / height;
+  }
+
+  static final Color textOrange = Colors.orange[700]!;
+  static final Color greyedTextOrange = Color.fromRGBO(190, 100, 90, 1.0);
+  static final Color moreGreyedTextOrange = Color.fromRGBO(150, 110, 100, 1.0);
+  static final Color grey = Colors.grey[600]!;
+
+  static Color? determineColorByNumber(int? number, {Color? zero, Color? one, Color? two, Color? other}) {
+    switch (number) {
+      case 0:
+        return zero;
+      case 1:
+        return one;
+      case 2:
+        return two;
+      default:
+        return other;
+    }
   }
 
   @override
@@ -136,7 +157,13 @@ class GeneralLineView extends StatelessWidget {
                   if (customRows == null) ...[
                     GeneralLineIconText(icon: icon1, text: text1),
                     GeneralLineIconText(icon: icon2, text: text2),
-                    GeneralLineIconText(icon: icon3, text: text3, cornerIcons: cornerIcons, padding: EdgeInsets.zero),
+                    GeneralLineIconText(
+                      icon: icon3,
+                      text: text3,
+                      highlightColor: text3Color,
+                      cornerIcons: cornerIcons,
+                      padding: EdgeInsets.zero,
+                    ),
                   ],
 
                   // ****************************************************************
@@ -191,6 +218,7 @@ class GeneralLineIconText extends StatelessWidget {
     this.iconSize,
     this.cornerIconSize,
     this.textStyle,
+    this.highlightColor,
     this.space,
     this.cornerSpace,
     this.textCornerSpace,
@@ -203,6 +231,7 @@ class GeneralLineIconText extends StatelessWidget {
   final double? iconSize;
   final double? cornerIconSize;
   final TextStyle? textStyle;
+  final Color? highlightColor; // this will be ignored if textStyle is set
   final double? space;
   final double? cornerSpace;
   final double? textCornerSpace;
@@ -222,7 +251,7 @@ class GeneralLineIconText extends StatelessWidget {
             child: Text(
               text ?? '　',
               style: textStyle ?? //
-                  Theme.of(context).textTheme.bodyText2?.copyWith(color: Colors.grey[600]),
+                  Theme.of(context).textTheme.bodyText2?.copyWith(color: highlightColor ?? Colors.grey[600]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

@@ -4,15 +4,17 @@ import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/page/page/category_manga.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 漫画类别页，即 Separate [MangaCategorySubPage]
 class SepCategoryPage extends StatefulWidget {
   const SepCategoryPage({
     Key? key,
-    required this.genre,
+    this.genre,
   }) : super(key: key);
 
-  final TinyCategory genre;
+  final TinyCategory? genre;
 
   @override
   _SepCategoryPageState createState() => _SepCategoryPageState();
@@ -20,16 +22,19 @@ class SepCategoryPage extends StatefulWidget {
 
 class _SepCategoryPageState extends State<SepCategoryPage> {
   final _action = ActionController();
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     _action.addAction('updateSubPage', () => mountedSetState(() {}));
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
   }
 
   @override
   void dispose() {
     _action.dispose();
+    _cancelHandlers.forEach((c) => c.call());
     super.dispose();
   }
 
@@ -60,7 +65,7 @@ class _SepCategoryPageState extends State<SepCategoryPage> {
         ],
       ),
       drawer: AppDrawer(
-        currentSelection: DrawerSelection.none,
+        currentSelection: DrawerSelection.category,
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: MangaCategorySubPage(

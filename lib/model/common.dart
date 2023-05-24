@@ -5,10 +5,15 @@ import 'package:intl/intl.dart';
 // ====================================================
 
 class ParseResult {
-  const ParseResult({required this.date, required this.duration});
+  const ParseResult({
+    required this.date,
+    required this.duration,
+    required this.dayDiff,
+  });
 
   final String date;
   final String? duration;
+  final int? dayDiff;
 }
 
 ParseResult parseDurationOrDateString(String text) {
@@ -16,22 +21,26 @@ ParseResult parseDurationOrDateString(String text) {
   var now = DateTime.now();
   var ymd = DateFormat('yyyy/MM/dd');
 
-  int? minutes, hours, days;
+  int? minutes, hours, days, dayDiff;
   String? duration, datetime;
   if (text.contains('分钟前')) {
     minutes = int.tryParse(text.substring(0, text.length - 3));
     if (minutes != null) {
       duration = minutes == 0 ? '不到1分钟前' : '$minutes分钟前';
+      dayDiff = 0;
     }
   } else if (text.contains('小时前')) {
     hours = int.tryParse(text.substring(0, text.length - 3));
     if (hours != null) {
       duration = '$hours小时前';
+      var now = DateTime.now();
+      dayDiff = hours <= now.hour ? 0 : 1;
     }
   } else if (text.contains('天前')) {
     days = int.tryParse(text.substring(0, text.length - 2));
     if (days != null && days <= 7) {
       duration = days == 0 ? '今天' : '$days天前';
+      dayDiff = days;
     }
   } else {
     try {
@@ -40,19 +49,20 @@ ParseResult parseDurationOrDateString(String text) {
       if (du.inDays <= 7) {
         days = du.inDays;
         duration = days == 0 ? '今天' : '$days天前';
+        dayDiff = days;
         datetime = text;
       }
     } catch (_) {}
   }
 
   if (duration == null) {
-    return ParseResult(date: text, duration: null); // "2023/02/02"
+    return ParseResult(date: text, duration: null, dayDiff: null); // "2023/02/02"
   }
   if (datetime == null) {
     var old = now.subtract(Duration(minutes: minutes ?? 0, hours: hours ?? 0, days: days ?? 0));
     datetime = ymd.format(old);
   }
-  return ParseResult(date: datetime, duration: duration); // "2023/02/02", "今天" or "xxx天前"
+  return ParseResult(date: datetime, duration: duration, dayDiff: dayDiff); // "2023/02/02", "今天" or "xxx天前"
 }
 
 // =====================================

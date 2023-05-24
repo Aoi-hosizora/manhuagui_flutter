@@ -335,14 +335,20 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('共 $_total 部'),
-                      SizedBox(width: 5),
                       if (_searchKeyword.isNotEmpty)
                         HelpIconView.asButton(
                           iconData: Icons.search_off,
                           tooltip: '退出搜索',
                           onPressed: () => _exitSearch(),
                         ),
+                      if (_searchKeyword.isNotEmpty)
+                        Container(
+                          color: Theme.of(context).dividerColor,
+                          child: SizedBox(height: 20, width: 1),
+                          margin: EdgeInsets.only(left: 5, right: 5 + 3),
+                        ),
+                      Text('共 $_total 部'),
+                      SizedBox(width: 5),
                       HelpIconView.forListHint(
                         title: '阅读历史',
                         hint: '提示：由于漫画柜官方并未提供记录漫画阅读历史的功能，所以本应用的阅读历史仅被记录在移动端本地，且不同账号间的阅读历史互不影响。',

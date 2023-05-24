@@ -10,6 +10,8 @@ import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 漫画受众排行榜页，展示所给单个 [MangaRanking] 列表信息
 class MangaAudRankingPage extends StatefulWidget {
@@ -35,15 +37,18 @@ class MangaAudRankingPage extends StatefulWidget {
 class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
   }
 
   @override
   void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _flagStorage.dispose();
     super.dispose();
@@ -101,6 +106,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
           manga: item,
           flags: _flagStorage.getFlags(mangaId: item.mid),
           twoColumns: AppSetting.instance.ui.showTwoColumns,
+          highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
         ),
         extra: UpdatableDataViewExtraWidgets(
           outerTopWidgets: [

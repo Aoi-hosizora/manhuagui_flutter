@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/search.dart';
+import 'package:manhuagui_flutter/page/sep_category.dart';
 import 'package:manhuagui_flutter/page/sep_favorite.dart';
 import 'package:manhuagui_flutter/page/sep_history.dart';
 import 'package:manhuagui_flutter/page/sep_ranking.dart';
@@ -21,8 +22,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 enum DrawerSelection {
   none,
   // none => MangaPage / AuthorPage / MessagePage / CommentsPage / CommentPage
-  //         MangaTocPage / DownloadMangaPage / MangaShelfCachePage / FavoriteAllPage / FavoriteAuthorPage
-  //         LaterMangaPage / MangaGroupPage / MangaAudRankingPage / SepCategoryPage
+  //         DownloadMangaPage / MangaShelfCachePage / FavoriteAllPage / FavoriteAuthorPage
+  //         MangaTocPage / MangaGroupPage / MangaAudRankingPage
 
   home, // IndexPage
   search, // SearchPage
@@ -33,6 +34,7 @@ enum DrawerSelection {
   history, // SepHistoryPage
   download, // SepDownloadPage
   recent, // SepRecentPage
+  category, // SepCategoryPage
   ranking, // SepRankingPage
 
   setting, // SettingPage
@@ -47,6 +49,7 @@ extension DrawerSelectionExtension on DrawerSelection {
         this == DrawerSelection.history ||
         this == DrawerSelection.download ||
         this == DrawerSelection.recent ||
+        this == DrawerSelection.category ||
         this == DrawerSelection.ranking;
   }
 }
@@ -100,6 +103,8 @@ class _AppDrawerState extends State<AppDrawer> {
         EventBusManager.instance.fire(ToHistoryRequestedEvent());
       } else if (page is SepRecentPage) {
         EventBusManager.instance.fire(ToRecentRequestedEvent());
+      } else if (page is SepCategoryPage) {
+        EventBusManager.instance.fire(ToCategoryRequestedEvent());
       } else if (page is SepRankingPage) {
         EventBusManager.instance.fire(ToRankingRequestedEvent());
       } else {
@@ -236,6 +241,7 @@ class _AppDrawerState extends State<AppDrawer> {
           _buildItem('阅读历史', Icons.history, DrawerSelection.history, () => _gotoPage(SepHistoryPage(), canReplace: true), longPress: () => _gotoPage(SepHistoryPage())),
           _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage(), canReplace: true), longPress: () => _gotoPage(DownloadPage())),
           _buildItem('最近更新', Icons.cached, DrawerSelection.recent, () => _gotoPage(SepRecentPage(), canReplace: true), longPress: () => _gotoPage(SepRecentPage())),
+          _buildItem('漫画类别', Icons.category, DrawerSelection.category, () => _gotoPage(SepCategoryPage(), canReplace: true), longPress: () => _gotoPage(SepCategoryPage())),
           _buildItem('漫画排行', Icons.trending_up, DrawerSelection.ranking, () => _gotoPage(SepRankingPage(), canReplace: true), longPress: () => _gotoPage(SepRankingPage())),
           Divider(thickness: 1),
           _buildItem('漫画柜官网', Icons.open_in_browser, null, () => launchInBrowser(context: context, url: WEB_HOMEPAGE_URL)),

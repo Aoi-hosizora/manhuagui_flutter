@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/service/db/query_helper.dart';
@@ -7,7 +6,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 /// 漫画列表页/作者列表页-搜索关键词对话框 [showKeywordDialogForSearching]
 /// 漫画列表页/作者列表页-排序对话框 [showSortMethodDialogForSorting]
-/// 作者列表页-寻找ID对话框 [showIdInputDialogForFinding]
 
 // => called by pages which needs search items in list
 Future<Tuple2<String, bool>?> showKeywordDialogForSearching({
@@ -197,60 +195,4 @@ extension SortMethodExtension on SortMethod {
         return MdiIcons.sortNumericDescending;
     }
   }
-}
-
-// => called in AuthorCategorySubPage
-Future<int?> showIdInputDialogForFinding({
-  required BuildContext context,
-  required String title,
-  String textLabel = '漫画作者 aid',
-  String textValue = '',
-  String emptyToast = '请输入作者 aid',
-  String invalidToast = '输入的作者 aid 有误',
-}) async {
-  var controller = TextEditingController()..text = textValue;
-  var ok = await showDialog<bool>(
-    context: context,
-    builder: (c) => AlertDialog(
-      title: Text(title),
-      content: SizedBox(
-        width: getDialogContentMaxWidth(context),
-        child: TextField(
-          controller: controller,
-          maxLines: 1,
-          autofocus: true,
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(vertical: 5),
-            labelText: textLabel,
-            icon: Icon(Icons.person_search),
-          ),
-          keyboardType: TextInputType.numberWithOptions(signed: false, decimal: false),
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: Text('确定'),
-          onPressed: () async {
-            var text = controller.text.trim();
-            if (text.isEmpty) {
-              Fluttertoast.showToast(msg: emptyToast);
-            } else if ((int.tryParse(text) ?? 0) <= 0) {
-              Fluttertoast.showToast(msg: invalidToast);
-            } else {
-              Navigator.of(c).pop(true);
-            }
-          },
-        ),
-        TextButton(
-          child: Text('取消'),
-          onPressed: () => Navigator.of(c).pop(false),
-        ),
-      ],
-    ),
-  );
-  if (ok != true) {
-    return null;
-  }
-  return int.tryParse(controller.text.trim());
 }

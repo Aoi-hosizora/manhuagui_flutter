@@ -299,6 +299,8 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       // ****************************************************************
       // 漫画页
       // ****************************************************************
+      minScale: 1.0,
+      maxScale: 2.5,
       imagePageBuilder: (c, imageIndex) => ExtendedPhotoGalleryPageOptions(
         initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained / 2,

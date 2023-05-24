@@ -6,18 +6,20 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
-/// 漫画排名行，在 [RankingSubPage] 使用
+/// 漫画排名行，在 [RankingSubPage] / [MangaAudRankingPage] 使用
 class MangaRankingLineView extends StatelessWidget {
   const MangaRankingLineView({
     Key? key,
     required this.manga,
     this.flags,
     this.twoColumns = false,
+    this.highlightRecent = true,
   }) : super(key: key);
 
   final MangaRanking manga;
   final MangaCornerFlags? flags;
   final bool twoColumns;
+  final bool highlightRecent;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,14 @@ class MangaRankingLineView extends StatelessWidget {
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,
       text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
+      text3Color: !highlightRecent
+          ? null
+          : GeneralLineView.determineColorByNumber(
+              manga.newestDateDayDuration,
+              zero: GeneralLineView.textOrange,
+              one: GeneralLineView.greyedTextOrange,
+              two: GeneralLineView.moreGreyedTextOrange,
+            ),
       cornerIcons: flags?.buildIcons(),
       twoColumns: twoColumns,
       extraRightPaddingForTitle: 28 - 14 + 5 /* badge width - line horizontal padding + extra space */,

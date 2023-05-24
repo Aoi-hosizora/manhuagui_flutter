@@ -678,6 +678,7 @@ class _AuthorPageState extends State<AuthorPage> {
                   manga: item.toTiny(),
                   flags: _flagStorage.getFlags(mangaId: item.mid),
                   twoColumns: AppSetting.instance.ui.showTwoColumns,
+                  highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
                 ),
               ),
             ),

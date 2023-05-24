@@ -39,6 +39,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
     }));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToCategoryRequestedEvent>((_) => _controller.animateTo(0)));
   }
 
   @override

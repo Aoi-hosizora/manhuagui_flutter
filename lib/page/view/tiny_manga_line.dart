@@ -13,11 +13,13 @@ class TinyMangaLineView extends StatelessWidget {
     required this.manga,
     this.flags,
     this.twoColumns = false,
+    this.highlightRecent = true,
   }) : super(key: key);
 
   final TinyManga manga;
   final MangaCornerFlags? flags;
   final bool twoColumns;
+  final bool highlightRecent;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,14 @@ class TinyMangaLineView extends StatelessWidget {
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,
       text3: '更新于 ${manga.formattedNewestDateWithDuration}',
+      text3Color: !highlightRecent
+          ? null
+          : GeneralLineView.determineColorByNumber(
+              manga.newestDateDayDuration,
+              zero: GeneralLineView.textOrange,
+              one: GeneralLineView.greyedTextOrange,
+              two: GeneralLineView.moreGreyedTextOrange,
+            ),
       cornerIcons: flags?.buildIcons(),
       twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(

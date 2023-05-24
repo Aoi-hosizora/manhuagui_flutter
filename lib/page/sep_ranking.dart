@@ -3,6 +3,8 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/home_ranking.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 漫画排行榜页，即 Separate [RankingSubPage]
 class SepRankingPage extends StatefulWidget {
@@ -15,6 +17,20 @@ class SepRankingPage extends StatefulWidget {
 }
 
 class _SepRankingPageState extends State<SepRankingPage> {
+  final _cancelHandlers = <VoidCallback>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
+  }
+
+  @override
+  void dispose() {
+    _cancelHandlers.forEach((c) => c.call());
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

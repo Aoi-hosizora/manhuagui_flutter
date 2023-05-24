@@ -41,6 +41,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((ev) => _jumpToPageByEvent(0, ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToCategoryRequestedEvent>((ev) => _jumpToPageByEvent(1, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRankingRequestedEvent>((ev) => _jumpToPageByEvent(0, ev)));
   }
 

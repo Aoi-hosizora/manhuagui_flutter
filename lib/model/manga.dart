@@ -72,6 +72,11 @@ class SmallManga {
     return '${result.duration} (${result.date})';
   }
 
+  int? get newestDateDayDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    return result.dayDiff;
+  }
+
   TinyManga toTiny() {
     return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
   }
@@ -101,6 +106,11 @@ class TinyManga {
       return result.date;
     }
     return '${result.duration} (${result.date})';
+  }
+
+  int? get newestDateDayDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    return result.dayDiff;
   }
 }
 
@@ -272,6 +282,11 @@ class MangaRanking {
     return result.duration ?? result.date;
   }
 
+  int? get newestDateDayDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    return result.dayDiff;
+  }
+
   TinyBlockManga toTinyBlock() {
     return TinyBlockManga(
       mid: mid,
@@ -317,6 +332,11 @@ class ShelfManga {
       return result.date;
     }
     return '${result.duration} (${result.date})'; // "xxx天前 (2023/02/02)" or "2023-02-02"
+  }
+
+  int? get newestDateDayDuration {
+    var result = parseDurationOrDateString(newestDuration);
+    return result.dayDiff;
   }
 }
 

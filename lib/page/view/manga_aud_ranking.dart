@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
+import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 
@@ -32,6 +33,7 @@ class MangaAudRankingView extends StatefulWidget {
     this.qingnianRankingsError = '',
     this.shaonvRankingsError = '',
     required this.mangaRows,
+    this.highlightRecent = true,
     this.onRefreshPressed,
     this.onFullListPressed,
     this.onMorePressed,
@@ -51,6 +53,7 @@ class MangaAudRankingView extends StatefulWidget {
   final String qingnianRankingsError;
   final String shaonvRankingsError;
   final int mangaRows;
+  final bool highlightRecent;
   final void Function(MangaAudRankingType)? onRefreshPressed;
   final void Function(MangaAudRankingType)? onFullListPressed;
   final void Function()? onMorePressed;
@@ -259,7 +262,18 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                         SizedBox(width: 4),
                         Text(
                           '${manga.newestChapter}・${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDurationOrDate}',
-                          style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),
+                          style: Theme.of(context).textTheme.bodyText2?.copyWith(
+                                fontSize: 12,
+                                color: !widget.highlightRecent
+                                    ? null
+                                    : GeneralLineView.determineColorByNumber(
+                                        manga.newestDateDayDuration,
+                                        zero: GeneralLineView.textOrange,
+                                        one: GeneralLineView.greyedTextOrange,
+                                        two: GeneralLineView.moreGreyedTextOrange,
+                                        other: Colors.grey[600],
+                                      ),
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

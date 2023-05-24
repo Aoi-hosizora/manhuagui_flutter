@@ -209,6 +209,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             manga: item,
             flags: _flagStorage.getFlags(mangaId: item.mid),
             twoColumns: AppSetting.instance.ui.showTwoColumns,
+            highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
           ),
           extra: UpdatableDataViewExtraWidgets(
             outerTopWidgets: [

@@ -16,6 +16,7 @@ class ShelfMangaLineView extends StatelessWidget {
     this.useLocalHistory = false,
     this.flags,
     this.twoColumns = false,
+    this.highlightRecent = true,
     this.onLongPressed,
   }) : super(key: key);
 
@@ -24,6 +25,7 @@ class ShelfMangaLineView extends StatelessWidget {
   final bool useLocalHistory;
   final MangaCornerFlags? flags;
   final bool twoColumns;
+  final bool highlightRecent;
   final VoidCallback? onLongPressed;
 
   @override
@@ -41,6 +43,14 @@ class ShelfMangaLineView extends StatelessWidget {
           : ((history == null || !history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle}') + ' (${history?.formattedLastTimeOrDuration ?? '未知时间'})'),
       icon3: Icons.update,
       text3: '更新于 ${manga.formattedNewestTimeWithDuration}',
+      text3Color: !highlightRecent
+          ? null
+          : GeneralLineView.determineColorByNumber(
+              manga.newestDateDayDuration,
+              zero: GeneralLineView.textOrange,
+              one: GeneralLineView.greyedTextOrange,
+              two: GeneralLineView.moreGreyedTextOrange,
+            ),
       cornerIcons: flags?.buildIcons(),
       twoColumns: twoColumns,
       onPressed: () => Navigator.of(context).push(

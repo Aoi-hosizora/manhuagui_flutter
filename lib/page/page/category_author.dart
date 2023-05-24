@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/author.dart';
-import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/view/category_popup.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -128,7 +128,7 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
   }
 
   Future<void> _inputAndFind() async {
-    var aid = await showIdInputDialogForFinding(context: context, title: '寻找作者', textLabel: '漫画作者 aid');
+    var aid = await showFindAuthorByIdDialog(context: context, title: '寻找作者', textLabel: '漫画作者 aid');
     if (aid == null) {
       return;
     }

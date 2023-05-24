@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
@@ -249,25 +250,15 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
               tooltip: '清空稍后阅读列表',
               onPressed: () => _clearLaterMangas(),
             ),
-            PopupMenuButton(
-              child: Builder(
-                builder: (c) => AppBarActionButton(
-                  icon: Icon(Icons.more_vert),
-                  tooltip: '更多选项',
-                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+            AppBarActionButton(
+              icon: Icon(Icons.search),
+              tooltip: '搜索漫画',
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => SearchPage(),
                 ),
               ),
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
-                ),
-                if (_sortMethod != SortMethod.byTimeDesc)
-                  PopupMenuItem(
-                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
-                    onTap: () => _exitSort(),
-                  ),
-              ],
             ),
           ],
         ),
@@ -343,6 +334,26 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
                         ),
                       Text('共 $_total 部'),
                       SizedBox(width: 5),
+                      PopupMenuButton(
+                        child: Builder(
+                          builder: (c) => HelpIconView.asButton(
+                            iconData: Icons.more_vert,
+                            tooltip: '更多选项',
+                            onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                          ),
+                        ),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
+                          ),
+                          if (_sortMethod != SortMethod.byTimeDesc)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
+                              onTap: () => _exitSort(),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

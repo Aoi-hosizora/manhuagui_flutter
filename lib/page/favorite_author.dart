@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
+import 'package:manhuagui_flutter/page/favorite_all.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
@@ -257,40 +259,35 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
           title: Text('已收藏的漫画作者'),
           leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
           actions: [
-            if (_searchKeyword.isNotEmpty)
-              AppBarActionButton(
-                icon: Icon(Icons.search_off),
-                tooltip: '退出搜索',
-                onPressed: () => _exitSearch(),
-              ),
-            PopupMenuButton(
-              child: Builder(
-                builder: (c) => AppBarActionButton(
-                  icon: Icon(Icons.more_vert),
-                  tooltip: '更多选项',
-                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+            AppBarActionButton(
+              icon: Icon(MdiIcons.bookmarkBoxMultipleOutline),
+              tooltip: '浏览已收藏的所有漫画',
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => FavoriteAllPage(),
                 ),
               ),
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  child: IconTextMenuItem(Icons.search, '搜索列表中的作者'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
-                ),
-                if (_searchKeyword.isNotEmpty)
-                  PopupMenuItem(
-                    child: IconTextMenuItem(Icons.search_off, '退出搜索'),
-                    onTap: () => _exitSearch(),
+            ),
+            AppBarActionButton(
+              icon: Icon(Icons.person_search),
+              tooltip: '寻找作者',
+              onPressed: () async {
+                var aid = await showFindAuthorByIdDialog(context: context, title: '寻找作者', textLabel: '漫画作者 aid');
+                if (aid == null) {
+                  return;
+                }
+                Navigator.of(context).push(
+                  CustomPageRoute(
+                    context: context,
+                    builder: (c) => AuthorPage(
+                      id: aid,
+                      name: '漫画作者 aid: $aid',
+                      url: 'https://www.manhuagui.com/author/$aid',
+                    ),
                   ),
-                PopupMenuItem(
-                  child: IconTextMenuItem(Icons.sort, '作者排序方式'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
-                ),
-                if (_sortMethod != SortMethod.byTimeDesc)
-                  PopupMenuItem(
-                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
-                    onTap: () => _exitSort(),
-                  ),
-              ],
+                );
+              },
             ),
           ],
         ),
@@ -351,13 +348,19 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (_searchKeyword.isNotEmpty)
+                        HelpIconView.asButton(
+                          iconData: Icons.search_off,
+                          tooltip: '退出搜索',
+                          onPressed: () => _exitSearch(),
+                        ),
                       if (_sortMethod != SortMethod.byTimeDesc)
                         HelpIconView.asButton(
                           iconData: _sortMethod.toIcon(),
-                          tooltip: '漫画排序方式',
+                          tooltip: '作者排序方式',
                           onPressed: () => _toSort(),
                         ),
-                      if (_sortMethod != SortMethod.byTimeDesc)
+                      if (_searchKeyword.isNotEmpty || _sortMethod != SortMethod.byTimeDesc)
                         Container(
                           color: Theme.of(context).dividerColor,
                           child: SizedBox(height: 20, width: 1),
@@ -369,6 +372,35 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                         title: '本地收藏的漫画作者',
                         hint: '"本地收藏"仅记录在移动端本地，但该作者列表并不支持分组管理，且不支持顺序自由调整。',
                         tooltip: '提示',
+                      ),
+                      PopupMenuButton(
+                        child: Builder(
+                          builder: (c) => HelpIconView.asButton(
+                            iconData: Icons.more_vert,
+                            tooltip: '更多选项',
+                            onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                          ),
+                        ),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.search, '搜索列表中的作者'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                          ),
+                          if (_searchKeyword.isNotEmpty)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                              onTap: () => _exitSearch(),
+                            ),
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.sort, '作者排序方式'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
+                          ),
+                          if (_sortMethod != SortMethod.byTimeDesc)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
+                              onTap: () => _exitSort(),
+                            ),
+                        ],
                       ),
                     ],
                   ),

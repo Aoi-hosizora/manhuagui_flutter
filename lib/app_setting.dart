@@ -354,6 +354,7 @@ class UiSetting {
     required this.defaultAuthorOrder,
     required this.enableCornerIcons,
     required this.showMangaReadIcon,
+    required this.highlightRecentMangas,
     required this.readGroupBehavior,
     required this.regularGroupRows,
     required this.otherGroupRows,
@@ -375,6 +376,7 @@ class UiSetting {
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
+  final bool highlightRecentMangas; // 高亮最近更新的漫画
   final ReadGroupBehavior readGroupBehavior; // 点击阅读章节分组行为
   final int regularGroupRows; // 单话章节分组显示行数
   final int otherGroupRows; // 其他章节分组显示行数
@@ -396,6 +398,7 @@ class UiSetting {
     defaultAuthorOrder: AuthorOrder.byPopular,
     enableCornerIcons: true,
     showMangaReadIcon: true,
+    highlightRecentMangas: true,
     readGroupBehavior: ReadGroupBehavior.checkFinishReading,
     regularGroupRows: 3,
     otherGroupRows: 1,
@@ -418,6 +421,7 @@ class UiSetting {
     AuthorOrder? defaultAuthorOrder,
     bool? enableCornerIcons,
     bool? showMangaReadIcon,
+    bool? highlightRecentMangas,
     ReadGroupBehavior? readGroupBehavior,
     int? regularGroupRows,
     int? otherGroupRows,
@@ -439,6 +443,7 @@ class UiSetting {
       defaultAuthorOrder: defaultAuthorOrder ?? this.defaultAuthorOrder,
       enableCornerIcons: enableCornerIcons ?? this.enableCornerIcons,
       showMangaReadIcon: showMangaReadIcon ?? this.showMangaReadIcon,
+      highlightRecentMangas: highlightRecentMangas ?? this.highlightRecentMangas,
       readGroupBehavior: readGroupBehavior ?? this.readGroupBehavior,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,

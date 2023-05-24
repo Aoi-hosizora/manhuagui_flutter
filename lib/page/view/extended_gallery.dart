@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/reloadable_photo_view.dart' as reloadable_photo_view;
 import 'package:synchronized/synchronized.dart';
 
@@ -129,6 +128,8 @@ class VerticalGalleryView extends StatefulWidget {
     required this.imagePageBuilder, // <<<
     required this.firstPageBuilder, // <<<
     required this.lastPageBuilder, // <<<
+    this.minScale = 1.0, // <<<
+    this.maxScale = 1.0, // <<<
     this.onImageTapDown, // <<<
     this.onImageTapUp, // <<<
     this.onImageLongPressed, // <<< // exclude extra pages, start from 0
@@ -145,6 +146,8 @@ class VerticalGalleryView extends StatefulWidget {
   final ExtendedPhotoGalleryPageOptions Function(BuildContext context, int imageIndex) imagePageBuilder;
   final Widget Function(BuildContext context) firstPageBuilder;
   final Widget Function(BuildContext context) lastPageBuilder;
+  final double minScale;
+  final double maxScale;
   final void Function(TapDownDetails details)? onImageTapDown;
   final void Function(TapUpDetails details)? onImageTapUp;
   final void Function(int imageIndex)? onImageLongPressed;
@@ -409,9 +412,12 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     return Stack(
       children: [
         Positioned.fill(
-          child: PhotoView.customChild(
-            minScale: 1.0,
-            maxScale: 2.0,
+          child: InteractiveViewer(
+            // PhotoView.customChild(
+            panEnabled: true,
+            scaleEnabled: true,
+            minScale: widget.minScale,
+            maxScale: widget.maxScale,
             child: SingleChildScrollView(
               controller: _controller,
               padding: EdgeInsets.zero,

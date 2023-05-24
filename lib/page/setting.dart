@@ -231,9 +231,9 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _divider(),
           _item(
-            title: '查看客户端/服务端源代码',
+            title: '查看本应用源代码',
             icon: Icons.code,
-            action: () => launchInBrowser(context: context, url: SOURCE_CODE_URL),
+            action: () => launchInBrowser(context: context, url: PROJECT_HOMEPAGE_URL),
           ),
           _divider(),
           _item(
@@ -281,7 +281,7 @@ class _SettingPageState extends State<SettingPage> {
           _divider(),
           _item(
             title: '查看相关开源协议',
-            icon: MdiIcons.packageCheck,
+            icon: MdiIcons.package,
             action: () => Navigator.of(context).push(
               CustomPageRoute(
                 context: context,

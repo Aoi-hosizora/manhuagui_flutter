@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
@@ -568,38 +569,15 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
               tooltip: '清空所有记录',
               onPressed: () => _clearCaches(),
             ),
-            PopupMenuButton(
-              child: Builder(
-                builder: (c) => AppBarActionButton(
-                  icon: Icon(Icons.more_vert),
-                  tooltip: '更多选项',
-                  onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+            AppBarActionButton(
+              icon: Icon(Icons.search),
+              tooltip: '搜索漫画',
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => SearchPage(),
                 ),
               ),
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
-                ),
-                if (_searchKeyword.isNotEmpty)
-                  PopupMenuItem(
-                    child: IconTextMenuItem(Icons.search_off, '退出搜索'),
-                    onTap: () => _exitSearch(),
-                  ),
-                PopupMenuItem(
-                  child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
-                ),
-                if (_sortMethod != SortMethod.byTimeDesc)
-                  PopupMenuItem(
-                    child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
-                    onTap: () => _exitSort(),
-                  ),
-                PopupMenuItem(
-                  child: IconTextMenuItem(CustomIcons.bookmark_plus, '全部添加至本地收藏'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => MangaShelfCachePage.addAllToFavorite(context)),
-                ),
-              ],
             ),
           ],
         ),
@@ -683,6 +661,39 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
                         title: '已同步的书架',
                         hint: '书架同步功能仅用于判断漫画是否在书架上，并用于显示漫画列表右下角的书架图标。',
                         tooltip: '提示',
+                      ),
+                      PopupMenuButton(
+                        child: Builder(
+                          builder: (c) => HelpIconView.asButton(
+                            iconData: Icons.more_vert,
+                            tooltip: '更多选项',
+                            onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                          ),
+                        ),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                          ),
+                          if (_searchKeyword.isNotEmpty)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                              onTap: () => _exitSearch(),
+                            ),
+                          PopupMenuItem(
+                            child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
+                          ),
+                          if (_sortMethod != SortMethod.byTimeDesc)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
+                              onTap: () => _exitSort(),
+                            ),
+                          PopupMenuItem(
+                            child: IconTextMenuItem(CustomIcons.bookmark_plus, '全部添加至本地收藏'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => MangaShelfCachePage.addAllToFavorite(context)),
+                          ),
+                        ],
                       ),
                     ],
                   ),

@@ -22,6 +22,10 @@ class ToRecentRequestedEvent {
   const ToRecentRequestedEvent();
 }
 
+class ToCategoryRequestedEvent {
+  const ToCategoryRequestedEvent();
+}
+
 class ToRankingRequestedEvent {
   const ToRankingRequestedEvent();
 }
