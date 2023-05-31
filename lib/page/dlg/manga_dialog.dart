@@ -409,12 +409,20 @@ void showPopupMenuForSubscribing({
           ),
 
         /// 稍后阅读
-        IconTextDialogOption(
-          icon: Icon(!nowInLater ? MdiIcons.clockPlus : MdiIcons.clockMinus),
-          text: Text(!nowInLater ? '添加至稍后阅读' : '从稍后阅读移出'),
-          popWhenPress: c,
-          onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
-        ),
+        if (!nowInLater)
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.clockPlus),
+            text: Text('添加至稍后阅读'),
+            popWhenPress: c,
+            onPressed: () => helper.addOrRemoveLater(toAdd: true, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+          ),
+        if (nowInLater)
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.clockMinus),
+            text: Text('从稍后阅读移出'),
+            popWhenPress: c,
+            onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+          ),
 
         /// 额外选项
         if (subscribeCount != null || favoriteManga != null) ...[
@@ -443,6 +451,13 @@ void showPopupMenuForSubscribing({
               popWhenPress: c,
               onPressed: () => helper.showAndUpdateFavRemark(favorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
             ),
+          if (nowInLater)
+            IconTextDialogOption(
+              icon: Icon(MdiIcons.bookClock),
+              text: Text('查看稍后阅读列表'),
+              popWhenPress: c,
+              onPressed: () => helper.gotoLaterPage(),
+            ),
         ],
       ],
     ),
@@ -460,7 +475,7 @@ void showPopupMenuForLaterManga({
   required LaterManga? laterManga,
   required void Function(LaterManga? later) inLaterSetter,
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
-}) {
+}) async {
   var helper = _DialogHelper(
     context: context,
     mangaId: mangaId,
@@ -468,6 +483,7 @@ void showPopupMenuForLaterManga({
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
   );
+  var later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: mangaId);
 
   showDialog(
     context: context,
@@ -479,10 +495,17 @@ void showPopupMenuForLaterManga({
         ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.clockMinus),
-          text: Text('从稍后阅读移出'),
+          text: Text('移出稍后阅读列表'),
           popWhenPress: c,
           onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
         ),
+        if (later != null)
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.sortClockDescending),
+            text: Text('置顶于稍后阅读列表'),
+            popWhenPress: c,
+            onPressed: () => helper.topmostLater(later: later, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+          ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.bookClock),
           text: Text('查看稍后阅读列表'),
@@ -867,6 +890,13 @@ class _DialogHelper {
     required bool fromShelfList,
     required bool fromMangaPage,
   }) async {
+    if (!toAdd) {
+      var ok = await showYesNoAlertDialog(context: context, title: Text('移出书架确认'), content: Text('确定将《$mangaTitle》移出书架？'), yesText: Text('移出'), noText: Text('取消'));
+      if (ok != true) {
+        return;
+      }
+    }
+
     final client = RestClient(DioManager.instance.dio);
 
     subscribing?.call(true);
@@ -963,6 +993,11 @@ class _DialogHelper {
     required bool fromFavoriteList,
     required bool fromMangaPage,
   }) async {
+    var ok = await showYesNoAlertDialog(context: context, title: Text('取消收藏确认'), content: Text('确定取消收藏《$mangaTitle》？'), yesText: Text('确定'), noText: Text('取消'));
+    if (ok != true) {
+      return;
+    }
+
     subscribing?.call(true);
     try {
       // 更新数据库、(更新界面)、弹出提示、发送通知
@@ -985,6 +1020,13 @@ class _DialogHelper {
     required bool fromLaterList,
     required bool fromMangaPage,
   }) async {
+    if (!toAdd) {
+      var ok = await showYesNoAlertDialog(context: context, title: Text('移出稍后阅读确认'), content: Text('确定将《$mangaTitle》移出稍后阅读列表？'), yesText: Text('移出'), noText: Text('取消'));
+      if (ok != true) {
+        return;
+      }
+    }
+
     // 更新数据库、(更新界面)、弹出提示、发送通知
     if (toAdd) {
       var newLaterManga = LaterManga(
@@ -1005,6 +1047,21 @@ class _DialogHelper {
     EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: toAdd, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
+  // => called by showPopupMenuForLaterManga
+  Future<void> topmostLater({
+    required LaterManga later,
+    required void Function(LaterManga? later)? onUpdated,
+    required bool fromLaterList,
+    required bool fromMangaPage,
+  }) async {
+    var updatedLaterManga = later.copyWith(createdAt: DateTime.now());
+    await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedLaterManga);
+    onUpdated?.call(updatedLaterManga);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画在稍后阅读列表中置顶')));
+    EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
+  }
+
   // => called by showPopupMenuForMangaList
   Future<void> removeHistory({
     required MangaHistory oldHistory,
@@ -1012,6 +1069,11 @@ class _DialogHelper {
     required bool fromHistoryList,
     required bool fromMangaPage,
   }) async {
+    var ok = await showYesNoAlertDialog(context: context, title: Text('删除历史确认'), content: Text('确定删除《$mangaTitle》的' + (oldHistory.read ? '阅读' : '浏览') + '历史？'), yesText: Text('删除'), noText: Text('取消'));
+    if (ok != true) {
+      return;
+    }
+
     // 更新数据库、(更新界面)、弹出提示、发送通知
     await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
     onRemoved?.call();

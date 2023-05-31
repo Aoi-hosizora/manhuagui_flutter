@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
@@ -859,27 +860,30 @@ class _MangaPageState extends State<MangaPage> {
       appBar: AppBar(
         title: GestureDetector(
           child: Text(_data?.title ?? widget.title),
-          onLongPress: () => showDialog(
-            context: context,
-            builder: (c) => SimpleDialog(
-              title: Text(_data?.title ?? widget.title),
-              children: [
-                IconTextDialogOption(
-                  icon: Icon(Icons.copy),
-                  text: Text('复制标题'),
-                  popWhenPress: c,
-                  onPressed: () => copyText(_data?.title ?? widget.title, showToast: true),
-                ),
-                if (_data != null)
+          onLongPress: () {
+            HapticFeedback.vibrate();
+            showDialog(
+              context: context,
+              builder: (c) => SimpleDialog(
+                title: Text(_data?.title ?? widget.title),
+                children: [
                   IconTextDialogOption(
-                    icon: Icon(Icons.subject),
-                    text: Text('查看漫画详情'),
+                    icon: Icon(Icons.copy),
+                    text: Text('复制标题'),
                     popWhenPress: c,
-                    onPressed: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaDetailPage(data: _data!))),
+                    onPressed: () => copyText(_data?.title ?? widget.title, showToast: true),
                   ),
-              ],
-            ),
-          ),
+                  if (_data != null)
+                    IconTextDialogOption(
+                      icon: Icon(Icons.subject),
+                      text: Text('查看漫画详情'),
+                      popWhenPress: c,
+                      onPressed: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaDetailPage(data: _data!))),
+                    ),
+                ],
+              ),
+            );
+          },
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [

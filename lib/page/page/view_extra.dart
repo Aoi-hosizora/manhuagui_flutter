@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
@@ -8,6 +9,7 @@ import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_banner.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 /// 漫画章节阅读页-额外页
 class ViewExtraSubPage extends StatefulWidget {
@@ -206,6 +208,11 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
     );
   }
 
+  void _vibrate(void Function() callback) {
+    HapticFeedback.vibrate();
+    callback.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MediaQuery.removePadding(
@@ -250,40 +257,49 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Flexible(
-                                child: Text(
-                                  widget.data.mangaTitle,
-                                  style: Theme.of(context).textTheme.headline6,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                                child: GestureDetector(
+                                  child: Text(
+                                    widget.data.mangaTitle,
+                                    style: Theme.of(context).textTheme.headline6,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onLongPress: () => _vibrate(() => copyText(widget.data.mangaTitle, showToast: true)),
                                 ),
                               ),
                               SizedBox(height: 8),
                               Flexible(
-                                child: Text(
-                                  widget.data.chapterTitle,
-                                  style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500,
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                                child: GestureDetector(
+                                  child: Text(
+                                    widget.data.chapterTitle,
+                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onLongPress: () => _vibrate(() => copyText(widget.data.chapterTitle, showToast: true)),
                                 ),
                               ),
                               if (widget.data.mangaAuthors != null)
                                 Flexible(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(top: 8),
-                                    child: Text(
-                                      widget.data.mangaAuthors!.map((a) => a.name).join('/'),
-                                      style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                            color: Theme.of(context).primaryColor,
-                                          ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
+                                  child: GestureDetector(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        widget.data.mangaAuthors!.map((a) => a.name).join('/'),
+                                        style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: Theme.of(context).primaryColor,
+                                            ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
+                                    onLongPress: () => _vibrate(() => copyText(widget.data.mangaAuthors!.map((a) => a.name).join('/'), showToast: true)),
                                   ),
                                 ),
                             ],
@@ -331,14 +347,17 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Flexible(
-                          child: Text(
-                            '- ${widget.data.chapterTitle} -',
-                            style: Theme.of(context).textTheme.headline6?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          child: GestureDetector(
+                            child: Text(
+                              '- ${widget.data.chapterTitle} -',
+                              style: Theme.of(context).textTheme.headline6?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onLongPress: () => _vibrate(() => copyText(widget.data.chapterTitle, showToast: true)),
                           ),
                         ),
                       ],
@@ -348,11 +367,14 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Flexible(
-                          child: Text(
-                            '《${widget.data.mangaTitle}》',
-                            style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          child: GestureDetector(
+                            child: Text(
+                              '《${widget.data.mangaTitle}》',
+                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onLongPress: () => _vibrate(() => copyText(widget.data.mangaTitle, showToast: true)),
                           ),
                         ),
                       ],
@@ -363,11 +385,14 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Flexible(
-                            child: Text(
-                              '作者：${widget.data.mangaAuthors!.map((a) => a.name).join('/')}',
-                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            child: GestureDetector(
+                              child: Text(
+                                '作者：${widget.data.mangaAuthors!.map((a) => a.name).join('/')}',
+                                style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onLongPress: () => _vibrate(() => copyText(widget.data.mangaAuthors!.map((a) => a.name).join('/'), showToast: true)),
                             ),
                           ),
                         ],

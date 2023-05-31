@@ -150,6 +150,26 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     );
   }
 
+  Future<void> _topmostLaterManga({required int mangaId}) async {
+    var manga = _data.where((el) => el.mangaId == mangaId).firstOrNull;
+    if (manga == null) {
+      return;
+    }
+
+    // 退出多选模式
+    _msController.exitMultiSelectionMode();
+
+    // 更新数据库、更新界面、弹出提示、发送通知
+    var updatedManga = manga.copyWith(createdAt: DateTime.now());
+    await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedManga);
+    _data.removeWhere((el) => el.mangaId == manga.mangaId);
+    _data.insert(0, updatedManga);
+    if (mounted) setState(() {});
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画置顶于稍后阅读列表')));
+    EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: true));
+  }
+
   Future<void> _deleteLaterMangas({required List<int> mangaIds}) async {
     var mangas = _data.where((el) => mangaIds.contains(el.mangaId)).toList();
     if (mangas.isEmpty) {
@@ -375,6 +395,12 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
               tooltip: '查看更多选项',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
+            ),
+            MultiSelectionFabOption(
+              child: Icon(MdiIcons.sortClockDescending),
+              tooltip: '置顶稍后阅读',
+              show: _msController.selectedItems.length == 1,
+              onPressed: () => _topmostLaterManga(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
               child: Icon(Icons.delete),

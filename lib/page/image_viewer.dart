@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -100,6 +101,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                   child: GestureDetector(
                     child: IconTextMenuItem(Icons.share, '分享图片链接　　'), // 　 for width and long press
                     onLongPress: () {
+                      HapticFeedback.vibrate();
                       Navigator.of(context).pop(); // hide button menu
                       shareText(text: url);
                     },
