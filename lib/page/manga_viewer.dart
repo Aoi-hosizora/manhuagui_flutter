@@ -40,6 +40,7 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -1136,9 +1137,37 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   : AppBar(
                       backgroundColor: Colors.black.withOpacity(0.7),
                       elevation: 0,
-                      title: Text(
-                        _data?.chapterTitle ?? widget.neededData?.chapterGroups.findChapter(widget.chapterId)?.title ?? '',
-                        style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),
+                      title: (_data?.chapterTitle ?? widget.neededData?.chapterGroups.findChapter(widget.chapterId)?.title ?? '未知章节').let(
+                        (title) => GestureDetector(
+                          child: Text(
+                            title,
+                            style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),
+                          ),
+                          onLongPress: () {
+                            HapticFeedback.vibrate();
+                            showDialog(
+                              context: context,
+                              builder: (c) => SimpleDialog(
+                                title: Text(title),
+                                children: [
+                                  IconTextDialogOption(
+                                    icon: Icon(Icons.copy),
+                                    text: Text('复制标题'),
+                                    popWhenPress: c,
+                                    onPressed: () => copyText(title, showToast: true),
+                                  ),
+                                  if (_data != null)
+                                    IconTextDialogOption(
+                                      icon: Icon(Icons.subject),
+                                      text: Text('查看章节详情'),
+                                      popWhenPress: c,
+                                      onPressed: () => _showDetails(),
+                                    ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       leading: AppBarActionButton(
                         icon: Icon(Icons.arrow_back),

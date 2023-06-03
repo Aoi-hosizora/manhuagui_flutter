@@ -105,7 +105,7 @@ void showPopupMenuForMangaList({
               icon: Icon(MdiIcons.starMinus),
               text: Text('移出我的书架'),
               popWhenPress: c,
-              onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+              onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false, checkRemoving: true),
             ),
           if (AuthManager.instance.logined && !fromShelfList) ...[
             if (!expandShelfOptions)
@@ -142,7 +142,7 @@ void showPopupMenuForMangaList({
                         text: Text('移出我的书架'),
                         padding: optionPadding,
                         popWhenPress: c,
-                        onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+                        onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false, checkRemoving: true),
                       ),
                     ],
                   ),
@@ -157,15 +157,15 @@ void showPopupMenuForMangaList({
             popWhenPress: c,
             onPressed: () => !nowInFavorite //
                 ? helper.addFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromMangaPage: false)
-                : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
+                : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false, checkRemoving: true),
           ),
 
           /// 稍后阅读
           IconTextDialogOption(
             icon: Icon(!nowInLater ? MdiIcons.clockPlus : MdiIcons.clockMinus),
-            text: Text(!nowInLater ? '添加至稍后阅读' : '从稍后阅读移出'),
+            text: Text(!nowInLater ? '添加至稍后阅读列表' : '移出稍后阅读列表'),
             popWhenPress: c,
-            onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: (l) => inLaterSetter?.call(l != null), fromLaterList: fromLaterList, fromMangaPage: false),
+            onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: (l) => inLaterSetter?.call(l != null), fromLaterList: fromLaterList, fromMangaPage: false, checkRemoving: true),
           ),
 
           /// 历史
@@ -174,7 +174,7 @@ void showPopupMenuForMangaList({
               icon: Icon(MdiIcons.deleteClock), // use MdiIcons.deleteClock rather than Icons.auto_delete to align icons
               text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读历史'),
               popWhenPress: c,
-              onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false),
+              onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false, checkRemoving: true),
             ),
         ],
       ),
@@ -412,14 +412,14 @@ void showPopupMenuForSubscribing({
         if (!nowInLater)
           IconTextDialogOption(
             icon: Icon(MdiIcons.clockPlus),
-            text: Text('添加至稍后阅读'),
+            text: Text('添加至稍后阅读列表'),
             popWhenPress: c,
             onPressed: () => helper.addOrRemoveLater(toAdd: true, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
         if (nowInLater)
           IconTextDialogOption(
             icon: Icon(MdiIcons.clockMinus),
-            text: Text('从稍后阅读移出'),
+            text: Text('移出稍后阅读列表'),
             popWhenPress: c,
             onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
@@ -889,8 +889,9 @@ class _DialogHelper {
     required void Function(bool inShelf)? onUpdated,
     required bool fromShelfList,
     required bool fromMangaPage,
+    bool checkRemoving = false,
   }) async {
-    if (!toAdd) {
+    if (!toAdd && checkRemoving) {
       var ok = await showYesNoAlertDialog(context: context, title: Text('移出书架确认'), content: Text('确定将《$mangaTitle》移出书架？'), yesText: Text('移出'), noText: Text('取消'));
       if (ok != true) {
         return;
@@ -992,10 +993,13 @@ class _DialogHelper {
     required void Function()? onRemoved,
     required bool fromFavoriteList,
     required bool fromMangaPage,
+    bool checkRemoving = false,
   }) async {
-    var ok = await showYesNoAlertDialog(context: context, title: Text('取消收藏确认'), content: Text('确定取消收藏《$mangaTitle》？'), yesText: Text('确定'), noText: Text('取消'));
-    if (ok != true) {
-      return;
+    if (checkRemoving) {
+      var ok = await showYesNoAlertDialog(context: context, title: Text('取消收藏确认'), content: Text('确定取消收藏《$mangaTitle》？'), yesText: Text('确定'), noText: Text('取消'));
+      if (ok != true) {
+        return;
+      }
     }
 
     subscribing?.call(true);
@@ -1019,8 +1023,9 @@ class _DialogHelper {
     required void Function(LaterManga? later)? onUpdated,
     required bool fromLaterList,
     required bool fromMangaPage,
+    bool checkRemoving = false,
   }) async {
-    if (!toAdd) {
+    if (!toAdd && checkRemoving) {
       var ok = await showYesNoAlertDialog(context: context, title: Text('移出稍后阅读确认'), content: Text('确定将《$mangaTitle》移出稍后阅读列表？'), yesText: Text('移出'), noText: Text('取消'));
       if (ok != true) {
         return;
@@ -1068,10 +1073,13 @@ class _DialogHelper {
     required void Function()? onRemoved,
     required bool fromHistoryList,
     required bool fromMangaPage,
+    bool checkRemoving = false,
   }) async {
-    var ok = await showYesNoAlertDialog(context: context, title: Text('删除历史确认'), content: Text('确定删除《$mangaTitle》的' + (oldHistory.read ? '阅读' : '浏览') + '历史？'), yesText: Text('删除'), noText: Text('取消'));
-    if (ok != true) {
-      return;
+    if (checkRemoving) {
+      var ok = await showYesNoAlertDialog(context: context, title: Text('删除历史确认'), content: Text('确定删除《$mangaTitle》的' + (oldHistory.read ? '阅读' : '浏览') + '历史？'), yesText: Text('删除'), noText: Text('取消'));
+      if (ok != true) {
+        return;
+      }
     }
 
     // 更新数据库、(更新界面)、弹出提示、发送通知

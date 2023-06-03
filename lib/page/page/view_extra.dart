@@ -208,9 +208,9 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
     );
   }
 
-  void _vibrate(void Function() callback) {
+  void _vibrateAndCopy(String msg) {
     HapticFeedback.vibrate();
-    callback.call();
+    copyText(msg, showToast: true);
   }
 
   @override
@@ -264,7 +264,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  onLongPress: () => _vibrate(() => copyText(widget.data.mangaTitle, showToast: true)),
+                                  onLongPress: () => _vibrateAndCopy(widget.data.mangaTitle),
                                 ),
                               ),
                               SizedBox(height: 8),
@@ -280,7 +280,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  onLongPress: () => _vibrate(() => copyText(widget.data.chapterTitle, showToast: true)),
+                                  onLongPress: () => _vibrateAndCopy(widget.data.chapterTitle),
                                 ),
                               ),
                               if (widget.data.mangaAuthors != null)
@@ -299,7 +299,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    onLongPress: () => _vibrate(() => copyText(widget.data.mangaAuthors!.map((a) => a.name).join('/'), showToast: true)),
+                                    onLongPress: () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
                                   ),
                                 ),
                             ],
@@ -357,7 +357,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            onLongPress: () => _vibrate(() => copyText(widget.data.chapterTitle, showToast: true)),
+                            onLongPress: () => _vibrateAndCopy(widget.data.chapterTitle),
                           ),
                         ),
                       ],
@@ -374,7 +374,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            onLongPress: () => _vibrate(() => copyText(widget.data.mangaTitle, showToast: true)),
+                            onLongPress: () => _vibrateAndCopy(widget.data.mangaTitle),
                           ),
                         ),
                       ],
@@ -392,7 +392,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              onLongPress: () => _vibrate(() => copyText(widget.data.mangaAuthors!.map((a) => a.name).join('/'), showToast: true)),
+                              onLongPress: () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
                             ),
                           ),
                         ],

@@ -398,7 +398,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
             ),
             MultiSelectionFabOption(
               child: Icon(MdiIcons.sortClockDescending),
-              tooltip: '置顶稍后阅读',
+              tooltip: '置顶稍后阅读记录',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _topmostLaterManga(mangaId: _msController.selectedItems.first.value),
             ),

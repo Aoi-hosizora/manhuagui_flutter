@@ -215,6 +215,7 @@ class _MangaPageState extends State<MangaPage> {
     bool updateDownload = true,
     bool updateShelfCache = true,
     bool updateFavorite = true,
+    bool updateLater = true,
   }) async {
     // => 获取到漫画数据后更新数据库
     if (_data == null) {
@@ -293,6 +294,22 @@ class _MangaPageState extends State<MangaPage> {
         _favoriteManga = newFavorite;
         await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
         EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: _data!.mid, group: newFavorite.groupName, reason: UpdateReason.updated, fromMangaPage: true));
+        if (mounted) setState(() {});
+      }
+    }
+
+    // 5. 更新稍后阅读信息
+    if (updateLater && _laterManga != null) {
+      var newLater = _laterManga!.copyWith(
+        mangaId: _data!.mid,
+        mangaTitle: _data!.title,
+        mangaCover: _data!.cover,
+        mangaUrl: _data!.url,
+      );
+      if (!newLater.equals(_laterManga!)) {
+        _laterManga = newLater;
+        await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
+        EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: _data!.mid, added: false, fromMangaPage: true));
         if (mounted) setState(() {});
       }
     }
