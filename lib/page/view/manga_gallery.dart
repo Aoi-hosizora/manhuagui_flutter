@@ -105,7 +105,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       if (!widget.verticalScroll) {
         _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated);
       } else {
-        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: false /* !animated */);
+        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated, masked: false);
       }
     }
   }
@@ -117,8 +117,15 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
       if (!widget.verticalScroll) {
         _horizontalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated);
       } else {
-        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, masked: false /* !animated */);
+        _verticalGalleryKey.currentState?.jumpToPage(pageIndex, animated: animated, masked: false);
       }
+    }
+  }
+
+  /// updatePageHeight, include extra pages, start from 0 (only for vertical scrolling).
+  void updatePageHeight(int pageIndex) {
+    if (widget.verticalScroll) {
+      _verticalGalleryKey.currentState?.updatePageHeight(pageIndex);
     }
   }
 
@@ -243,6 +250,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             onTapDown: (d) => _onPointerDown(d.globalPosition),
             onTapUp: (d) => _onPointerUp(d.globalPosition),
             onLongPress: () => widget.onLongPressed.call(imageIndex),
+            behavior: HitTestBehavior.opaque,
             child: ImageLoadingView(
               title: (imageIndex + 1).toString(),
               event: ev,
@@ -252,6 +260,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
             onTapDown: (d) => _onPointerDown(d.globalPosition),
             onTapUp: (d) => _onPointerUp(d.globalPosition),
             onLongPress: () => widget.onLongPressed.call(imageIndex),
+            behavior: HitTestBehavior.opaque,
             child: ImageLoadFailedView(
               title: (imageIndex + 1).toString(),
               error: err,
@@ -322,6 +331,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onTapDown: (d) => _onPointerDown(d.globalPosition),
           onTapUp: (d) => _onPointerUp(d.globalPosition),
           onLongPress: () => widget.onLongPressed.call(imageIndex),
+          behavior: HitTestBehavior.opaque,
           child: ImageLoadingView(
             title: (imageIndex + 1).toString(),
             event: ev,
@@ -331,6 +341,7 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
           onTapDown: (d) => _onPointerDown(d.globalPosition),
           onTapUp: (d) => _onPointerUp(d.globalPosition),
           onLongPress: () => widget.onLongPressed.call(imageIndex),
+          behavior: HitTestBehavior.opaque,
           child: ImageLoadFailedView(
             title: (imageIndex + 1).toString(),
             error: err,

@@ -167,147 +167,155 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // TODO willpop for category selection
-    return Scaffold(
-      body: PlaceholderText.from(
-        isLoading: _genreLoading,
-        errorText: _genreError,
-        isEmpty: _genres.isEmpty,
-        onRefresh: () => _loadGenres(),
-        setting: PlaceholderSetting(
-          useAnimatedSwitcher: _currGenre.curr != widget.defaultGenre /* only animate when no default genre */,
-          customNormalStateBuilder: (c, _, childBuilder) => _chosen
-              ? childBuilder.call(c) // normal state
-              : CategoryGridListView(
-                  key: PageStorageKey<String>('MangaCategorySubPage_CategoryGridListView'),
-                  title: '选择一个漫画类别来筛选漫画',
-                  genres: _genres,
-                  markedCategoryNames: _markedCategoryNames,
-                  controller: _controllerForCategory,
-                  onChoose: ({genre, age, zone}) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
-                  onLongPressed: ({genre, age, zone}) => showCategoryPopupMenu(
-                    context: context,
-                    category: genre ?? age ?? zone ?? allGenres[0],
-                    onSelected: (_) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
+    return WillPopScope(
+      onWillPop: () async {
+        if (_chosen) {
+          _chooseCategory(toChoose: false);
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        body: PlaceholderText.from(
+          isLoading: _genreLoading,
+          errorText: _genreError,
+          isEmpty: _genres.isEmpty,
+          onRefresh: () => _loadGenres(),
+          setting: PlaceholderSetting(
+            useAnimatedSwitcher: _currGenre.curr != widget.defaultGenre /* only animate when no default genre */,
+            customNormalStateBuilder: (c, _, childBuilder) => _chosen
+                ? childBuilder.call(c) // normal state
+                : CategoryGridListView(
+                    key: PageStorageKey<String>('MangaCategorySubPage_CategoryGridListView'),
+                    title: '选择一个漫画类别来筛选漫画',
+                    genres: _genres,
+                    markedCategoryNames: _markedCategoryNames,
+                    controller: _controllerForCategory,
+                    onChoose: ({genre, age, zone}) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
+                    onLongPressed: ({genre, age, zone}) => showCategoryPopupMenu(
+                      context: context,
+                      category: genre ?? age ?? zone ?? allGenres[0],
+                      onSelected: (_) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
+                    ),
                   ),
+          ).copyWithChinese(),
+          childBuilder: (c) => PaginationDataView<TinyManga>(
+            key: _pdvKey,
+            style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
+            data: _data,
+            getData: ({indicator}) => _getData(page: indicator),
+            scrollController: _controller,
+            paginationSetting: PaginationSetting(
+              initialIndicator: 1,
+              nothingIndicator: 0,
+            ),
+            setting: UpdatableDataViewSetting(
+              padding: EdgeInsets.symmetric(vertical: 0),
+              interactiveScrollbar: true,
+              scrollbarMainAxisMargin: 2,
+              scrollbarCrossAxisMargin: 2,
+              placeholderSetting: PlaceholderSetting().copyWithChinese(),
+              onPlaceholderStateChanged: (_, __) => _fabController.hasClient.ifTrue(() => _fabController.hide()),
+              refreshFirst: true /* <<< refresh first */,
+              clearWhenRefresh: false,
+              clearWhenError: false,
+              updateOnlyIfNotEmpty: false,
+              onStartGettingData: () => mountedSetState(() => _getting = true),
+              onStopGettingData: () => mountedSetState(() => _getting = false),
+              onAppend: (_, l) => [_currGenre, _currAge, _currZone, _currStatus, _currOrder].forEach((c) => c.pass()),
+              onError: (e) {
+                if (_data.isNotEmpty) {
+                  Fluttertoast.showToast(msg: e.toString());
+                }
+                [_currGenre, _currAge, _currZone, _currStatus, _currOrder].forEach((c) => c.restore());
+                if (mounted) setState(() {});
+              },
+            ),
+            separator: Divider(height: 0, thickness: 1),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 0.0,
+              mainAxisSpacing: 0.0,
+              childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
+            ),
+            itemBuilder: (c, _, item) => TinyMangaLineView(
+              manga: item,
+              flags: _flagStorage.getFlags(mangaId: item.mid),
+              twoColumns: AppSetting.instance.ui.showTwoColumns,
+              highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
+            ),
+            extra: UpdatableDataViewExtraWidgets(
+              outerTopWidgets: [
+                ListHintView.widgets(
+                  widgets: [
+                    for (var t in [
+                      Tuple4(_genres, _currGenre, '剧情', true),
+                      Tuple4(allAges, _currAge, '受众', true),
+                      Tuple4(allZones, _currZone, '地区', true),
+                      Tuple4(allStatuses, _currStatus, '进度', false),
+                    ])
+                      CategoryPopupView(
+                        categories: t.item1,
+                        selectedCategory: t.item2.curr,
+                        markedCategoryNames: t.item4 ? _markedCategoryNames : [],
+                        defaultName: t.item3,
+                        enable: !_getting,
+                        allowLongPressCategory: t.item4,
+                        onSelected: (c) {
+                          t.item2.select(c, alsoPass: true);
+                          if (mounted) setState(() {});
+                          _pdvKey.currentState?.refresh();
+                        },
+                        onLongPressed: () => _chooseCategory(toChoose: false),
+                      ),
+                  ],
                 ),
-        ).copyWithChinese(),
-        childBuilder: (c) => PaginationDataView<TinyManga>(
-          key: _pdvKey,
-          style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
-          data: _data,
-          getData: ({indicator}) => _getData(page: indicator),
-          scrollController: _controller,
-          paginationSetting: PaginationSetting(
-            initialIndicator: 1,
-            nothingIndicator: 0,
-          ),
-          setting: UpdatableDataViewSetting(
-            padding: EdgeInsets.symmetric(vertical: 0),
-            interactiveScrollbar: true,
-            scrollbarMainAxisMargin: 2,
-            scrollbarCrossAxisMargin: 2,
-            placeholderSetting: PlaceholderSetting().copyWithChinese(),
-            onPlaceholderStateChanged: (_, __) => _fabController.hasClient.ifTrue(() => _fabController.hide()),
-            refreshFirst: true /* <<< refresh first */,
-            clearWhenRefresh: false,
-            clearWhenError: false,
-            updateOnlyIfNotEmpty: false,
-            onStartGettingData: () => mountedSetState(() => _getting = true),
-            onStopGettingData: () => mountedSetState(() => _getting = false),
-            onAppend: (_, l) => [_currGenre, _currAge, _currZone, _currStatus, _currOrder].forEach((c) => c.pass()),
-            onError: (e) {
-              if (_data.isNotEmpty) {
-                Fluttertoast.showToast(msg: e.toString());
-              }
-              [_currGenre, _currAge, _currZone, _currStatus, _currOrder].forEach((c) => c.restore());
-              if (mounted) setState(() {});
-            },
-          ),
-          separator: Divider(height: 0, thickness: 1),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 0.0,
-            mainAxisSpacing: 0.0,
-            childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
-          ),
-          itemBuilder: (c, _, item) => TinyMangaLineView(
-            manga: item,
-            flags: _flagStorage.getFlags(mangaId: item.mid),
-            twoColumns: AppSetting.instance.ui.showTwoColumns,
-            highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
-          ),
-          extra: UpdatableDataViewExtraWidgets(
-            outerTopWidgets: [
-              ListHintView.widgets(
-                widgets: [
-                  for (var t in [
-                    Tuple4(_genres, _currGenre, '剧情', true),
-                    Tuple4(allAges, _currAge, '受众', true),
-                    Tuple4(allZones, _currZone, '地区', true),
-                    Tuple4(allStatuses, _currStatus, '进度', false),
-                  ])
-                    CategoryPopupView(
-                      categories: t.item1,
-                      selectedCategory: t.item2.curr,
-                      markedCategoryNames: t.item4 ? _markedCategoryNames : [],
-                      defaultName: t.item3,
-                      enable: !_getting,
-                      allowLongPressCategory: t.item4,
-                      onSelected: (c) {
-                        t.item2.select(c, alsoPass: true);
+              ],
+              innerTopWidgets: [
+                ListHintView.textWidget(
+                  leftText: '筛选结果 (共 $_total 部)',
+                  rightWidget: OptionPopupView<MangaOrder>(
+                    items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
+                    value: _currOrder.curr,
+                    titleBuilder: (c, v) => v.toTitle(),
+                    enable: !_getting,
+                    onSelected: (o) {
+                      if (_currOrder.curr != o) {
+                        _currOrder.select(o, alsoPass: true);
                         if (mounted) setState(() {});
                         _pdvKey.currentState?.refresh();
-                      },
-                      onLongPressed: () => _chooseCategory(toChoose: false),
-                    ),
-                ],
-              ),
-            ],
-            innerTopWidgets: [
-              ListHintView.textWidget(
-                leftText: '筛选结果 (共 $_total 部)',
-                rightWidget: OptionPopupView<MangaOrder>(
-                  items: const [MangaOrder.byPopular, MangaOrder.byNew, MangaOrder.byUpdate],
-                  value: _currOrder.curr,
-                  titleBuilder: (c, v) => v.toTitle(),
-                  enable: !_getting,
-                  onSelected: (o) {
-                    if (_currOrder.curr != o) {
-                      _currOrder.select(o, alsoPass: true);
-                      if (mounted) setState(() {});
-                      _pdvKey.currentState?.refresh();
-                    }
-                  },
+                      }
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      floatingActionButton: Stack(
-        children: [
-          ScrollAnimatedFab(
-            controller: _fabControllerForCategory,
-            scrollController: _controllerForCategory,
-            condition: _chosen ? ScrollAnimatedCondition.forceHide : ScrollAnimatedCondition.direction,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_top),
-              heroTag: null,
-              onPressed: () => _controllerForCategory.scrollToTop(),
+        floatingActionButton: Stack(
+          children: [
+            ScrollAnimatedFab(
+              controller: _fabControllerForCategory,
+              scrollController: _controllerForCategory,
+              condition: _chosen ? ScrollAnimatedCondition.forceHide : ScrollAnimatedCondition.direction,
+              fab: FloatingActionButton(
+                child: Icon(Icons.vertical_align_top),
+                heroTag: null,
+                onPressed: () => _controllerForCategory.scrollToTop(),
+              ),
             ),
-          ),
-          ScrollAnimatedFab(
-            controller: _fabController,
-            scrollController: _controller,
-            condition: !_chosen ? ScrollAnimatedCondition.forceHide : ScrollAnimatedCondition.direction,
-            fab: FloatingActionButton(
-              child: Icon(Icons.vertical_align_top),
-              heroTag: null,
-              onPressed: () => _controller.scrollToTop(),
+            ScrollAnimatedFab(
+              controller: _fabController,
+              scrollController: _controller,
+              condition: !_chosen ? ScrollAnimatedCondition.forceHide : ScrollAnimatedCondition.direction,
+              fab: FloatingActionButton(
+                child: Icon(Icons.vertical_align_top),
+                heroTag: null,
+                onPressed: () => _controller.scrollToTop(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

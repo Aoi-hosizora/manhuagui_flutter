@@ -69,7 +69,7 @@ void showPopupMenuForAuthorList({
           icon: Icon(!nowInFavorite ? CustomIcons.bookmark_plus : CustomIcons.bookmark_minus),
           text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
           popWhenPress: c,
-          predicateForPress: !nowInFavorite ? null : () => helper.showCheckRemovingFavoriteDialog(), // TODO test
+          predicateForPress: !nowInFavorite ? null : () => helper.showCheckRemovingFavoriteDialog(),
           onPressed: () => !nowInFavorite //
               ? helper.addFavorite(onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
               : helper.removeFavorite(onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
@@ -141,7 +141,6 @@ void showPopupMenuForAuthorFavorite({
             text: Text('取消本地收藏'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingFavoriteDialog(),
-            // TODO test
             onPressed: () => helper.removeFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true),
           ),
         Divider(thickness: 1),

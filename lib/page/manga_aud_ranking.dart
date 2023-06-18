@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/common.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
@@ -10,6 +11,8 @@ import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
+import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 
@@ -55,9 +58,14 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
   }
 
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
+  final _histories = <int, MangaHistory?>{};
 
   Future<void> _loadData() async {
     _flagStorage.queryAndStoreFlags(mangaIds: widget.rankings.map((e) => e.mid)).then((_) => mountedSetState(() {}));
+    for (var item in widget.rankings) {
+      _histories[item.mid] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: item.mid);
+    }
+    if (mounted) setState(() {});
   }
 
   String _typeToString(MangaAudRankingType type) {
@@ -104,6 +112,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
         ),
         itemBuilder: (c, _, item) => MangaRankingLineView(
           manga: item,
+          history: _histories[item.mid],
           flags: _flagStorage.getFlags(mangaId: item.mid),
           twoColumns: AppSetting.instance.ui.showTwoColumns,
           highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
@@ -111,7 +120,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
         extra: UpdatableDataViewExtraWidgets(
           outerTopWidgets: [
             ListHintView.textText(
-              leftText: '漫画受众排行榜・${_typeToString(widget.type)}', // TODO test
+              leftText: '漫画受众排行榜・${_typeToString(widget.type)}',
               rightText: '更新于 ${formatDatetimeAndDuration(widget.rankingDatetime ?? DateTime.now(), FormatPattern.date)}',
             ),
           ],

@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
@@ -75,12 +76,14 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
   final _physicsController = CustomScrollPhysicsController();
   var _animatingPage = false; // only used in _onPageChanged
   var _currentPageIndex = 0;
+  late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       _tabBarViewKey.currentState?.addListenerToPageController(_onPageChanged);
+      _loadData();
     });
   }
 
@@ -88,7 +91,29 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
   void dispose() {
     _tabBarViewKey.currentState?.removeListenerFromPageController(_onPageChanged);
     _controller.dispose();
+    _flagStorage.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    var newMangaIds = {
+      if (widget.allRankings != null) ...(widget.allRankings?.map((r) => r.mid) ?? []),
+      if (widget.qingnianRankings != null) ...(widget.qingnianRankings?.map((r) => r.mid) ?? []),
+      if (widget.shaonvRankings != null) ...(widget.shaonvRankings?.map((r) => r.mid) ?? []),
+    };
+    _flagStorage.queryAndStoreFlags(mangaIds: newMangaIds).then((_) => mountedSetState(() {}));
+  }
+
+  @override
+  void didUpdateWidget(covariant MangaAudRankingView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    var changedMangaIds = {
+      // => note: refreshing will replace the whole list object to a new list, so here use '!=' for updating detecting
+      if (widget.allRankings != oldWidget.allRankings) ...(widget.allRankings?.map((r) => r.mid) ?? []),
+      if (widget.qingnianRankings != oldWidget.qingnianRankings) ...(widget.qingnianRankings?.map((r) => r.mid) ?? []),
+      if (widget.shaonvRankings != oldWidget.shaonvRankings) ...(widget.shaonvRankings?.map((r) => r.mid) ?? []),
+    };
+    _flagStorage.queryAndStoreFlags(mangaIds: changedMangaIds).then((_) => mountedSetState(() {}));
   }
 
   bool _isPageValid(int index) {
@@ -242,6 +267,17 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        ..._flagStorage.getFlags(mangaId: manga.mid).buildIcons().let((flags) {
+                          if (flags.isEmpty) return [];
+                          return [
+                            Container(
+                              color: Colors.grey[400]!,
+                              child: SizedBox(height: 14, width: 1),
+                              margin: EdgeInsets.only(left: 6, right: 5.5),
+                            ),
+                            for (var icon in flags) Icon(icon, size: 14, color: Colors.grey),
+                          ];
+                        })
                       ],
                     ),
                     SizedBox(height: 1.5),
@@ -278,7 +314,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                        ), // TODO add icons
+                        ),
                       ],
                     ),
                   ],

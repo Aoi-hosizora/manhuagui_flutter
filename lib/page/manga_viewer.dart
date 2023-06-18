@@ -652,6 +652,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       return;
     }
 
+    // 寻找上/下一章节阅读
     // TODO improving neighbor accuracy
     var neighbor = _data!.chapterNeighbor!;
     int chapterId;
@@ -1318,11 +1319,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
                       toGotoNeighbor: (prev) => _gotoNeighborChapter(gotoPrevious: prev),
                       toShowNeighborTip: (prev) => _showNeighborChapterTip(previous: prev),
+                      toPop: () => Navigator.of(context).maybePop(),
+                      onActionsUpdated: (more) => _mangaGalleryViewKey.currentState?.updatePageHeight(0),
                       toSubscribe: _subscribe,
                       toDownload: _downloadManga,
                       toShowToc: _showToc,
+                      toShowSettings: _onSettingPressed,
                       toShowDetails: _showDetails,
                       toShowComments: _showComments,
+                      toShare: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
+                      toOpenInBrowser: () => launchInBrowser(context: context, url: _data!.chapterUrl),
                       toShowLaters: _showLaters,
                       toShowImage: _showImage,
                       toOnlineMode: () => _toOnlineMode(alsoCheck: false),
@@ -1339,11 +1345,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
                       toGotoNeighbor: (prev) => _gotoNeighborChapter(gotoPrevious: prev),
                       toShowNeighborTip: (prev) => _showNeighborChapterTip(previous: prev),
+                      toPop: () => Navigator.of(context).maybePop(),
+                      onActionsUpdated: (more) => _mangaGalleryViewKey.currentState?.jumpToPage(_data!.pageCount + 1, animated: true),
                       toSubscribe: _subscribe,
                       toDownload: _downloadManga,
                       toShowToc: _showToc,
+                      toShowSettings: _onSettingPressed,
                       toShowDetails: _showDetails,
                       toShowComments: _showComments,
+                      toShare: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
+                      toOpenInBrowser: () => launchInBrowser(context: context, url: _data!.chapterUrl),
                       toShowLaters: _showLaters,
                       toShowImage: _showImage,
                       toOnlineMode: () => _toOnlineMode(alsoCheck: false),

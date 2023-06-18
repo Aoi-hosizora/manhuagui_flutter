@@ -106,7 +106,7 @@ void showPopupMenuForMangaList({
               icon: Icon(MdiIcons.starMinus),
               text: Text('移出我的书架'),
               popWhenPress: c,
-              predicateForPress: () => helper.showCheckRemovingShelfDialog(), // TODO test
+              predicateForPress: () => helper.showCheckRemovingShelfDialog(),
               onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
             ),
           if (AuthManager.instance.logined && !fromShelfList) ...[
@@ -128,7 +128,7 @@ void showPopupMenuForMangaList({
                     children: [
                       IconTextDialogOption(
                         icon: Icon(MdiIcons.starCog, color: Colors.black26),
-                        text: Text('隐藏选项 (可能${!nowInShelfCache ? '未' : '已'}在书架上)'),
+                        text: Text('隐藏书架选项'),
                         padding: optionPadding,
                         onPressed: () => _setState(() => expandShelfOptions = false),
                       ),
@@ -158,7 +158,7 @@ void showPopupMenuForMangaList({
             icon: Icon(!nowInFavorite ? CustomIcons.bookmark_plus : CustomIcons.bookmark_minus),
             text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
             popWhenPress: c,
-            predicateForPress: !nowInFavorite ? null : () => helper.showCheckRemovingFavoriteDialog(), // TODO test
+            predicateForPress: !nowInFavorite ? null : () => helper.showCheckRemovingFavoriteDialog(),
             onPressed: () => !nowInFavorite //
                 ? helper.addFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromMangaPage: false)
                 : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
@@ -169,7 +169,7 @@ void showPopupMenuForMangaList({
             icon: Icon(!nowInLater ? MdiIcons.clockPlus : MdiIcons.clockMinus),
             text: Text(!nowInLater ? '添加至稍后阅读列表' : '移出稍后阅读列表'),
             popWhenPress: c,
-            predicateForPress: !nowInLater ? null : () => helper.showCheckRemovingLaterDialog(), // TODO test
+            predicateForPress: !nowInLater ? null : () => helper.showCheckRemovingLaterDialog(),
             onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: (l) => inLaterSetter?.call(l != null), fromLaterList: fromLaterList, fromMangaPage: false),
           ),
 
@@ -179,7 +179,7 @@ void showPopupMenuForMangaList({
               icon: Icon(MdiIcons.deleteClock) /* use MdiIcons.deleteClock rather than Icons.auto_delete to align icons */,
               text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读历史'),
               popWhenPress: c,
-              predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: mangaHistory.read), // TODO test
+              predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: mangaHistory.read),
               onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false),
             ),
 
@@ -338,7 +338,7 @@ void showPopupMenuForMangaToc({
             icon: Icon(MdiIcons.deleteClock),
             text: Text('删除阅读历史'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: historyEntity!.chapterTitle), // TODO test
+            predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: historyEntity!.chapterTitle),
             onPressed: () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage),
           ),
 
@@ -399,7 +399,7 @@ void showPopupMenuForSubscribing({
             icon: Icon(MdiIcons.starMinus),
             text: Text('移出我的书架'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckRemovingShelfDialog(), // TODO test
+            predicateForPress: () => helper.showCheckRemovingShelfDialog(),
             onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage),
           ),
 
@@ -416,7 +416,7 @@ void showPopupMenuForSubscribing({
             icon: Icon(CustomIcons.bookmark_minus),
             text: Text('取消本地收藏'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckRemovingFavoriteDialog(), // TODO test
+            predicateForPress: () => helper.showCheckRemovingFavoriteDialog(),
             onPressed: () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage),
           ),
 
@@ -433,7 +433,7 @@ void showPopupMenuForSubscribing({
             icon: Icon(MdiIcons.clockMinus),
             text: Text('移出稍后阅读列表'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckRemovingLaterDialog(), // TODO test
+            predicateForPress: () => helper.showCheckRemovingLaterDialog(),
             onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
 
@@ -479,8 +479,6 @@ void showPopupMenuForSubscribing({
               onPressed: () => helper.gotoLaterPage(),
             ),
         ],
-
-        // TODO add 更多选项
       ],
     ),
   );
@@ -519,7 +517,7 @@ void showPopupMenuForLaterManga({
           icon: Icon(MdiIcons.clockMinus),
           text: Text('移出稍后阅读列表'),
           popWhenPress: c,
-          predicateForPress: () => helper.showCheckRemovingLaterDialog(), // TODO test
+          predicateForPress: () => helper.showCheckRemovingLaterDialog(),
           onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
         ),
         if (later != null)

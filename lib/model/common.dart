@@ -159,3 +159,20 @@ String formatDatetimeAndDuration(DateTime datetime, FormatPattern pattern) {
       return '${formatDuration(duration)} (${hms.format(datetime)})'; // "xxx前 (17:53:15)"
   }
 }
+
+// ===========
+// other utils
+// ===========
+
+extension StringExtension on String {
+  bool checkEqualityConsideringLastSlash(String o) {
+    var a = this;
+    if (a.endsWith('/')) {
+      a = a.substring(0, a.length - 1);
+    }
+    if (o.endsWith('/')) {
+      o = o.substring(0, o.length - 1);
+    }
+    return a == o;
+  }
+}

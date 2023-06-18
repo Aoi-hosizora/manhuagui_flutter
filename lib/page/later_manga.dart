@@ -41,6 +41,8 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
+        _searchKeyword = ''; // 清空搜索关键词
+        if (mounted) setState(() {});
         _pdvKey.currentState?.refresh();
       }));
       await AuthManager.instance.check();
@@ -64,6 +66,8 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
   var _removed = 0; // for query offset
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreLaters: true);
   final _histories = <int, MangaHistory?>{};
+  var _searchKeyword = ''; // for query condition
+  var _searchTitleOnly = true; // for query condition
   var _sortMethod = SortMethod.byTimeDesc; // for query condition
   var _isUpdated = false;
 
@@ -74,8 +78,8 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       _isUpdated = false;
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local records
-    var data = await LaterMangaDao.getLaterMangas(username: username, page: page, offset: _removed, sortMethod: _sortMethod) ?? [];
-    _total = await LaterMangaDao.getLaterMangaCount(username: username) ?? 0;
+    var data = await LaterMangaDao.getLaterMangas(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
+    _total = await LaterMangaDao.getLaterMangaCount(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
     if (mounted) setState(() {});
     for (var item in data) {
       _histories[item.mangaId] = await HistoryDao.getHistory(username: username, mid: item.mangaId);
@@ -96,6 +100,29 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<void> _toSearch() async {
+    var result = await showKeywordDialogForSearching(
+      context: context,
+      title: '搜索稍后阅读漫画',
+      textValue: _searchKeyword,
+      optionTitle: '仅搜索漫画标题',
+      optionValue: _searchTitleOnly,
+      optionHint: (only) => only ? '当前选项使得本次仅搜索漫画标题' : '当前选项使得本次将搜索漫画ID以及漫画标题',
+    );
+    if (result != null && result.item1.isNotEmpty) {
+      _searchKeyword = result.item1;
+      _searchTitleOnly = result.item2;
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSearch() {
+    _searchKeyword = ''; // 清空搜索关键词
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
   }
 
   Future<void> _toSort() async {
@@ -258,6 +285,10 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
           _msController.exitMultiSelectionMode();
           return false;
         }
+        if (_searchKeyword.isNotEmpty) {
+          _exitSearch();
+          return false;
+        }
         return true;
       },
       child: Scaffold(
@@ -335,19 +366,25 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
-                  // TODO consider to use green style or not ???
+                  padding: EdgeInsets.fromLTRB(10, 5, 10 - 3, 5), // for popup btn
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的稍后阅读列表' : '未登录用户的稍后阅读列表') + //
-                      (_isUpdated ? ' (有更新)' : ''),
+                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (_searchKeyword.isNotEmpty)
+                        HelpIconView.asButton(
+                          iconData: Icons.search_off,
+                          tooltip: '退出搜索',
+                          onPressed: () => _exitSearch(),
+                        ),
                       if (_sortMethod != SortMethod.byTimeDesc)
                         HelpIconView.asButton(
                           iconData: _sortMethod.toIcon(),
                           tooltip: '漫画排序方式',
                           onPressed: () => _toSort(),
                         ),
-                      if (_sortMethod != SortMethod.byTimeDesc)
+                      if (_searchKeyword.isNotEmpty || _sortMethod != SortMethod.byTimeDesc)
                         Container(
                           color: Theme.of(context).dividerColor,
                           child: SizedBox(height: 20, width: 1),
@@ -365,6 +402,15 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
                         ),
                         itemBuilder: (_) => [
                           PopupMenuItem(
+                            child: IconTextMenuItem(Icons.search, '搜索列表中的漫画'),
+                            onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSearch()),
+                          ),
+                          if (_searchKeyword.isNotEmpty)
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.search_off, '退出搜索'),
+                              onTap: () => _exitSearch(),
+                            ),
+                          PopupMenuItem(
                             child: IconTextMenuItem(Icons.sort, '漫画排序方式'),
                             onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _toSort()),
                           ),
@@ -373,7 +419,6 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
                               child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                               onTap: () => _exitSort(),
                             ),
-                          // TODO add searching manga
                           // TODO add added date filter
                         ],
                       ),

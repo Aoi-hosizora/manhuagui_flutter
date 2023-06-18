@@ -108,7 +108,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       },
       onLongPress: widget.onLongPressed == null //
           ? null
-          : () => widget.onLongPressed?.call(mid, title, cover, url), // TODO test
+          : () => widget.onLongPressed?.call(mid, title, cover, url),
     );
   }
 

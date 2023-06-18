@@ -63,7 +63,7 @@ class MangaHistory {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
         (!includeCover || mangaCover == o.mangaCover) &&
-        mangaUrl == o.mangaUrl &&
+        mangaUrl.checkEqualityConsideringLastSlash(o.mangaUrl) &&
         chapterId == o.chapterId &&
         chapterTitle == o.chapterTitle &&
         chapterPage == o.chapterPage &&
@@ -109,7 +109,7 @@ class ShelfCache {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
         (!includeCover || mangaCover == o.mangaCover) &&
-        mangaUrl == o.mangaUrl &&
+        mangaUrl.checkEqualityConsideringLastSlash(o.mangaUrl) &&
         cachedAt == o.cachedAt;
   }
 }
@@ -169,7 +169,7 @@ class FavoriteManga {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
         (!includeCover || mangaCover == o.mangaCover) &&
-        mangaUrl == o.mangaUrl &&
+        mangaUrl.checkEqualityConsideringLastSlash(o.mangaUrl) &&
         remark == o.remark &&
         groupName == o.groupName &&
         order == o.order &&
@@ -376,7 +376,7 @@ class DownloadedManga {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
         (!includeCover || mangaCover == o.mangaCover) &&
-        mangaUrl == o.mangaUrl &&
+        mangaUrl.checkEqualityConsideringLastSlash(o.mangaUrl) &&
         error == o.error &&
         updatedAt == o.updatedAt &&
         downloadedChapters == o.downloadedChapters &&
@@ -589,7 +589,7 @@ class LaterManga {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
         (!includeCover || mangaCover == o.mangaCover) &&
-        mangaUrl == o.mangaUrl &&
+        mangaUrl.checkEqualityConsideringLastSlash(o.mangaUrl) &&
         createdAt == o.createdAt;
   }
 }

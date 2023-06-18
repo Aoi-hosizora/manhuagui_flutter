@@ -67,7 +67,7 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
                 DetailRow('(漫画标题)', '《${widget.mangaTitle}》', textForCopy: widget.mangaTitle),
                 DetailRow('(漫画封面)', widget.mangaCover),
                 DetailRow('(漫画网页链接)', widget.mangaUrl),
-                DetailRow('(漫画作者)', widget.mangaAuthors.join('/')), // TODO test
+                DetailRow('(漫画作者)', widget.mangaAuthors.join('/')),
                 if (widget.isTocLoaded) ...[
                   DetailRow('最近上传', widget.data.isNew ? '是' : '否', canCopy: false),
                   DetailRow('章节所属分组', widget.data.group.isEmpty ? '未知' : widget.data.group, canCopy: widget.data.group.isNotEmpty),

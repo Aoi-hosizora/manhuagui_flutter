@@ -472,7 +472,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           noText: Text('取消'),
           yesOnPressed: (c) {
             Navigator.of(c).pop();
-            _loadRankings(MangaAudRankingType.values, onlyIfEmpty: false, needDelay: true); // TODO test
+            _loadRankings(MangaAudRankingType.values, onlyIfEmpty: false, needDelay: true);
           },
         ),
         onFullListPressed: (t) => Navigator.of(context).push(

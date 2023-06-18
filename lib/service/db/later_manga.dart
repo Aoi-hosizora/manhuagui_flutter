@@ -1,3 +1,4 @@
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/db/query_helper.dart';
@@ -50,6 +51,15 @@ class LaterMangaDao {
       )''');
   }
 
+  static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
+    return QueryHelper.buildLikeStatement(
+      [_colMangaTitle, if (!pureSearch) _colMangaId],
+      keyword,
+      includeWHERE: includeWHERE,
+      includeAND: includeAND,
+    );
+  }
+
   static String _buildOrderByStatement({required SortMethod sortMethod, bool includeORDERBY = false}) {
     return QueryHelper.buildOrderByStatement(
           sortMethod,
@@ -62,13 +72,14 @@ class LaterMangaDao {
         '';
   }
 
-  static Future<int?> getLaterMangaCount({required String username}) async {
+  static Future<int?> getLaterMangaCount({required String username, String? keyword, bool pureSearch = false}) async {
     final db = await DBManager.instance.getDB();
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblLaterManga
-         WHERE $_colUsername = ?''',
-      [username],
+         WHERE $_colUsername = ? ${like?.item1 ?? ''}''',
+      [username, ...(like?.item2 ?? [])],
     );
     if (results == null) {
       return null;
@@ -91,8 +102,9 @@ class LaterMangaDao {
     return firstIntValue(results)! > 0;
   }
 
-  static Future<List<LaterManga>?> getLaterMangas({required String username, SortMethod sortMethod = SortMethod.byTimeDesc, required int page, int limit = 20, int offset = 0}) async {
+  static Future<List<LaterManga>?> getLaterMangas({required String username, String? keyword, bool pureSearch = false, SortMethod sortMethod = SortMethod.byTimeDesc, required int page, int limit = 20, int offset = 0}) async {
     final db = await DBManager.instance.getDB();
+    var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var orderBy = _buildOrderByStatement(sortMethod: sortMethod, includeORDERBY: false);
     offset = limit * (page - 1) - offset;
     if (offset < 0) {
@@ -101,10 +113,10 @@ class LaterMangaDao {
     var results = await db.safeRawQuery(
       '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCreatedAt
          FROM $_tblLaterManga
-         WHERE $_colUsername = ?
+         WHERE $_colUsername = ? ${like?.item1 ?? ''}
          ORDER BY $orderBy, $_colCreatedAt DESC
          LIMIT $limit OFFSET $offset''',
-      [username],
+      [username, ...(like?.item2 ?? [])],
     );
     if (results == null) {
       return null;

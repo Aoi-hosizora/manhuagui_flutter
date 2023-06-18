@@ -6,6 +6,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_banner.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -26,11 +27,16 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.toJumpToImage,
     required this.toGotoNeighbor,
     required this.toShowNeighborTip,
+    required this.toPop,
+    required this.onActionsUpdated,
     required this.toSubscribe,
     required this.toDownload,
     required this.toShowToc,
+    required this.toShowSettings,
     required this.toShowDetails,
     required this.toShowComments,
+    required this.toShare,
+    required this.toOpenInBrowser,
     required this.toShowLaters,
     required this.toShowImage,
     required this.toOnlineMode,
@@ -47,11 +53,16 @@ class ViewExtraSubPage extends StatefulWidget {
   final void Function(int imageIndex /* start from 0 */, bool animated) toJumpToImage;
   final void Function(bool gotoPrevious) toGotoNeighbor;
   final void Function(bool previous) toShowNeighborTip;
+  final void Function() toPop;
+  final void Function(bool more) onActionsUpdated;
   final void Function() toSubscribe;
   final void Function() toDownload;
   final void Function() toShowToc;
+  final void Function() toShowSettings;
   final void Function() toShowDetails;
   final void Function() toShowComments;
+  final void Function() toShare;
+  final void Function() toOpenInBrowser;
   final void Function() toShowLaters;
   final void Function(String url, String title) toShowImage;
   final void Function() toOnlineMode;
@@ -61,6 +72,8 @@ class ViewExtraSubPage extends StatefulWidget {
 }
 
 class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
+  var _moreActions = false; // 显示更多选项
+
   Widget _buildChapters() {
     if (widget.data.chapterNeighbor?.notLoaded != false) {
       return Padding(
@@ -160,52 +173,58 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
   }
 
   Widget _buildActions() {
-    return ActionRowView.five(
-      iconBuilder: (action) => Container(
-        height: 45,
-        width: 45,
-        margin: EdgeInsets.only(bottom: 3),
-        decoration: BoxDecoration(
-          border: Border.all(width: 0.8, color: Colors.grey[400]!),
-          shape: BoxShape.circle,
+    Widget iconBuilder(ActionItem action) => Container(
+          height: 45,
+          width: 45,
+          margin: EdgeInsets.only(bottom: 3),
+          decoration: BoxDecoration(
+            border: Border.all(width: 0.8, color: Colors.grey[400]!),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            action.icon,
+            size: 22,
+            color: action.enable ? Colors.grey[800] : Colors.grey,
+          ),
+        );
+
+    return Column(
+      children: [
+        ActionRowView.five(
+          iconBuilder: iconBuilder,
+          action1: ActionItem(text: '结束阅读', icon: Icons.arrow_back, action: () => widget.toPop.call()),
+          action2: ActionItem(
+            text: !widget.inShelf && !widget.inFavorite
+                ? '订阅漫画'
+                : widget.inShelf && widget.inFavorite
+                    ? '查看订阅'
+                    : (widget.inShelf && !widget.inFavorite ? '已放书架' : '已加收藏'),
+            icon: !widget.inShelf && !widget.inFavorite ? Icons.sell : Icons.loyalty,
+            action: widget.subscribing ? null : () => widget.toSubscribe.call(),
+            enable: !widget.subscribing,
+          ),
+          action3: ActionItem(text: '章节列表', icon: Icons.menu, action: () => widget.toShowToc.call()),
+          action4: ActionItem(text: '下载漫画', icon: Icons.download, action: () => widget.toDownload.call()),
+          action5: ActionItem(
+            text: !_moreActions ? '更多操作' : '更少操作',
+            icon: Icons.more_vert,
+            action: () {
+              _moreActions = !_moreActions;
+              if (mounted) setState(() {});
+              WidgetsBinding.instance?.addPostFrameCallback((_) => widget.onActionsUpdated.call(_moreActions));
+            },
+          ),
         ),
-        child: Icon(
-          action.icon,
-          size: 22,
-          color: action.enable ? Colors.grey[800] : Colors.grey,
-        ),
-      ),
-      action1: ActionItem(
-        text: !widget.inShelf && !widget.inFavorite
-            ? '订阅漫画'
-            : widget.inShelf && widget.inFavorite
-                ? '查看订阅'
-                : (widget.inShelf && !widget.inFavorite ? '已放书架' : '已加收藏'),
-        icon: !widget.inShelf && !widget.inFavorite ? Icons.sell : Icons.loyalty,
-        action: widget.subscribing ? null : () => widget.toSubscribe.call(),
-        enable: !widget.subscribing,
-      ),
-      action2: ActionItem(
-        text: '下载漫画',
-        icon: Icons.download,
-        action: () => widget.toDownload.call(),
-      ),
-      action3: ActionItem(
-        text: '章节列表',
-        icon: Icons.menu,
-        action: () => widget.toShowToc.call(),
-      ),
-      action4: ActionItem(
-        text: '章节详情',
-        icon: Icons.subject,
-        action: () => widget.toShowDetails.call(),
-      ),
-      action5: ActionItem(
-        text: '查看评论',
-        icon: Icons.forum,
-        action: () => widget.toShowComments.call(),
-      ),
-      // TODO add 更多操作 (包含查看评论、查看漫画详情、查看章节详情等)，并恢复 "结束阅读" 按钮
+        if (_moreActions)
+          ActionRowView.five(
+            iconBuilder: iconBuilder,
+            action1: ActionItem(text: '阅读设置', icon: CustomIcons.opened_book_cog, action: () => widget.toShowSettings.call()),
+            action2: ActionItem(text: '章节详情', icon: Icons.subject, action: () => widget.toShowDetails.call()),
+            action3: ActionItem(text: '查看评论', icon: Icons.forum, action: () => widget.toShowComments.call()),
+            action4: ActionItem(text: '分享章节', icon: Icons.share, action: () => widget.toShare.call()),
+            action5: ActionItem(text: '浏览打开', icon: Icons.open_in_browser, action: () => widget.toOpenInBrowser.call()),
+          ),
+      ],
     );
   }
 
@@ -259,6 +278,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                             children: [
                               Flexible(
                                 child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
                                   child: Text(
                                     widget.data.mangaTitle,
                                     style: Theme.of(context).textTheme.headline6,
@@ -268,10 +288,12 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                   onLongPress: () => _vibrateAndCopy(widget.data.mangaTitle),
                                 ),
                               ),
+                              SizedBox(height: 4),
                               Flexible(
                                 child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
                                   child: Padding(
-                                    padding: EdgeInsets.only(top: 8), // TODO test
+                                    padding: EdgeInsets.only(top: 4, bottom: 4),
                                     child: Text(
                                       widget.data.chapterTitle,
                                       style: Theme.of(context).textTheme.subtitle1?.copyWith(
@@ -286,39 +308,27 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                   onLongPress: () => _vibrateAndCopy(widget.data.chapterTitle),
                                 ),
                               ),
-                              if (widget.data.mangaAuthors != null)
+                              if (widget.data.mangaAuthors != null || widget.data.newestDateAndFinished != null)
                                 Flexible(
                                   child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
                                     child: Padding(
-                                      padding: EdgeInsets.only(top: 8),
+                                      padding: EdgeInsets.only(top: 4, bottom: 4),
                                       child: Text(
-                                        widget.data.mangaAuthors!.map((a) => a.name).join('/'),
+                                        [
+                                          widget.data.mangaAuthors?.map((a) => a.name).join('/'),
+                                          widget.data.newestDateAndFinished?.let((t) => (!t.item2 ? '更新' : '完结') + '于 ${t.item1}'),
+                                        ].join('・'),
                                         style: Theme.of(context).textTheme.subtitle1?.copyWith(
                                               fontSize: 14,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: FontWeight.normal,
                                               color: Theme.of(context).primaryColor,
                                             ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    onLongPress: () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
-                                  ),
-                                ),
-                              if (widget.data.newestDateAndFinished != null)
-                                Flexible(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(top: 8), // TODO test
-                                    child: Text(
-                                      '${!widget.data.newestDateAndFinished!.item2 ? '更新中' : '已完结'}・${widget.data.newestDateAndFinished!.item1}', // TODO test
-                                      style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                            color: Theme.of(context).primaryColor,
-                                          ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                    onLongPress: widget.data.mangaAuthors == null ? null : () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
                                   ),
                                 ),
                             ],
@@ -367,12 +377,14 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       children: [
                         Flexible(
                           child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
                             child: Text(
                               '- ${widget.data.chapterTitle} -',
                               style: Theme.of(context).textTheme.headline6?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: Theme.of(context).primaryColor,
                                   ),
+                              textAlign: TextAlign.center,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -381,62 +393,54 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 6),
+                    SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Flexible(
                           child: GestureDetector(
-                            child: Text(
-                              '《${widget.data.mangaTitle}》',
-                              style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
-                              textAlign: TextAlign.center, // TODO test
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            behavior: HitTestBehavior.opaque,
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 4, bottom: 4),
+                              child: Text(
+                                '《${widget.data.mangaTitle}》',
+                                style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             onLongPress: () => _vibrateAndCopy(widget.data.mangaTitle),
                           ),
                         ),
                       ],
                     ),
-                    if (widget.data.mangaAuthors != null)
+                    if (widget.data.mangaAuthors != null || widget.data.newestDateAndFinished != null)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Flexible(
                             child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               child: Padding(
-                                padding: EdgeInsets.only(top: 6), // TODO test
+                                padding: EdgeInsets.only(top: 4, bottom: 4),
                                 child: Text(
-                                  '作者：${widget.data.mangaAuthors!.map((a) => a.name).join('/')}',
+                                  [
+                                    widget.data.mangaAuthors?.map((a) => a.name).join('/').let((a) => '作者 $a'),
+                                    widget.data.newestDateAndFinished?.let((t) => (!t.item2 ? '最近更新' : '漫画完结') + '于 ${t.item1}'),
+                                  ].join('・'),
                                   style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                                  textAlign: TextAlign.center,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              onLongPress: () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
+                              onLongPress: widget.data.mangaAuthors == null ? null : () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
                             ),
                           ),
                         ],
                       ),
-                    if (widget.data.newestDateAndFinished != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Padding(
-                              padding: EdgeInsets.only(top: 6), // TODO test
-                              child: Text(
-                                '更新至 ${widget.data.newestDateAndFinished!.item1}・${!widget.data.newestDateAndFinished!.item2 ? '更新中' : '已完结'}', // TODO test
-                                style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    SizedBox(height: 18),
+                    SizedBox(height: 18 - 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

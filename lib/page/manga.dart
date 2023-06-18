@@ -222,8 +222,6 @@ class _MangaPageState extends State<MangaPage> {
       return;
     }
 
-    // TODO test
-
     // 1. 更新漫画阅读历史
     if (updateHistory) {
       MangaHistory newHistory;
@@ -704,6 +702,11 @@ class _MangaPageState extends State<MangaPage> {
   void _showHistoryPopupMenu() {
     // 显示对话框、更新数据库、更新界面[↴]、发送通知
     // 本页引起的更新 => 更新历史相关的界面
+    Future<bool> showCheckDialog({required String msg}) async {
+      var ok = await showYesNoAlertDialog(context: context, title: Text('删除历史确认'), content: Text(msg), yesText: Text('删除'), noText: Text('取消'));
+      return ok ?? false;
+    }
+
     showDialog(
       context: context,
       builder: (c) => SimpleDialog(
@@ -714,6 +717,7 @@ class _MangaPageState extends State<MangaPage> {
               icon: Icon(MdiIcons.clipboardTextClock),
               text: Text('仅保留浏览历史'),
               onPressed: () async {
+                if (await showCheckDialog(msg: '确定删除阅读历史，且保留浏览历史？') != true) return;
                 Navigator.of(c).pop();
                 var newHistory = _history!.copyWith(chapterId: 0 /* 未开始阅读 */, chapterTitle: '', chapterPage: 1, lastTime: DateTime.now());
                 await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
@@ -727,6 +731,7 @@ class _MangaPageState extends State<MangaPage> {
               icon: Icon(MdiIcons.deleteClock),
               text: Text(!_history!.read ? '删除浏览历史' : '删除阅读历史'),
               onPressed: () async {
+                if (await showCheckDialog(msg: '确定删除${!_history!.read ? '浏览历史' : '阅读历史以及浏览历史'}？') != true) return;
                 Navigator.of(c).pop();
                 _history = null;
                 await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: _data!.mid);

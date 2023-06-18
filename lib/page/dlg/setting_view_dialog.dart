@@ -87,7 +87,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     return SettingDialogView(
       children: [
         SettingGroupTitleView(
-          title: '常规设置', // TODO test
+          title: '常规设置',
         ),
         SettingComboBoxView<ViewDirection>(
           title: '阅读方向',

@@ -99,6 +99,7 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
         }
         return GestureDetector(
           onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(index - 1),
+          behavior: HitTestBehavior.opaque,
           child: builder(c, index - 1),
         );
       },
@@ -206,15 +207,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _masking = true;
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       for (var pageIndex = 0; pageIndex < _totalPageCount; pageIndex++) {
-        var renderBox = _getPageKey(pageIndex).currentContext?.findRenderBox();
-        var height = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
-        if (pageIndex == 0) {
-          _firstPageHeight = height;
-        } else if (pageIndex == _totalPageCount - 1) {
-          _lastPageHeight = height;
-        } else {
-          _imagePageHeights[pageIndex - 1] = height;
-        }
+        updatePageHeight(pageIndex);
       }
 
       if (widget.initialImageIndex >= 0 && widget.initialImageIndex < widget.imageCount) {
@@ -259,6 +252,19 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     }
   }
 
+  /// updatePageHeight, include extra pages, start from 0
+  void updatePageHeight(int pageIndex) {
+    var renderBox = _getPageKey(pageIndex).currentContext?.findRenderBox();
+    var height = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
+    if (pageIndex == 0) {
+      _firstPageHeight = height;
+    } else if (pageIndex == _totalPageCount - 1) {
+      _lastPageHeight = height;
+    } else {
+      _imagePageHeights[pageIndex - 1] = height;
+    }
+  }
+
   /// reload, excludes extra page, start from 0
   void reload(int imageIndex, {bool alsoEvict = true}) {
     if (imageIndex >= 0 && imageIndex < widget.imageCount) {
@@ -271,7 +277,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   final _jumpLock = Lock();
 
   /// jumpToPage, include extra pages, start from 0
-  Future<void> jumpToPage(int pageIndex, {bool masked = false}) async {
+  Future<void> jumpToPage(int pageIndex, {bool animated = false, bool masked = false}) async {
     _jumping = true;
     _masking = masked;
     if (mounted) setState(() {});
@@ -291,7 +297,12 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     }
 
     await _jumpLock.synchronized(() async {
-      _controller.jumpTo(cumulatedOffset + widget.viewportPageSpace + 1); // <<<
+      var offset = (cumulatedOffset + widget.viewportPageSpace + 1).clamp(0, _controller.position.maxScrollExtent); // <<<
+      if (animated) {
+        _controller.animateTo(offset.toDouble(), duration: kTabScrollDuration, curve: Curves.ease);
+      } else {
+        _controller.jumpTo(offset.toDouble());
+      }
       await WidgetsBinding.instance?.endOfFrame;
     });
 
