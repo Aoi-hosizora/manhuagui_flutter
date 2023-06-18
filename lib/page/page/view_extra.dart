@@ -205,6 +205,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
         icon: Icons.forum,
         action: () => widget.toShowComments.call(),
       ),
+      // TODO add 更多操作 (包含查看评论、查看漫画详情、查看章节详情等)，并恢复 "结束阅读" 按钮
     );
   }
 
@@ -267,18 +268,20 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                   onLongPress: () => _vibrateAndCopy(widget.data.mangaTitle),
                                 ),
                               ),
-                              SizedBox(height: 8),
                               Flexible(
                                 child: GestureDetector(
-                                  child: Text(
-                                    widget.data.chapterTitle,
-                                    style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w500,
-                                          color: Theme.of(context).primaryColor,
-                                        ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 8), // TODO test
+                                    child: Text(
+                                      widget.data.chapterTitle,
+                                      style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                   onLongPress: () => _vibrateAndCopy(widget.data.chapterTitle),
                                 ),
@@ -300,6 +303,22 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                       ),
                                     ),
                                     onLongPress: () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
+                                  ),
+                                ),
+                              if (widget.data.newestDateAndFinished != null)
+                                Flexible(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 8), // TODO test
+                                    child: Text(
+                                      '${!widget.data.newestDateAndFinished!.item2 ? '更新中' : '已完结'}・${widget.data.newestDateAndFinished!.item1}', // TODO test
+                                      style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
                             ],
@@ -371,6 +390,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                             child: Text(
                               '《${widget.data.mangaTitle}》',
                               style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                              textAlign: TextAlign.center, // TODO test
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -379,25 +399,43 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                         ),
                       ],
                     ),
-                    if (widget.data.mangaAuthors != null) ...[
-                      SizedBox(height: 6),
+                    if (widget.data.mangaAuthors != null)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Flexible(
                             child: GestureDetector(
-                              child: Text(
-                                '作者：${widget.data.mangaAuthors!.map((a) => a.name).join('/')}',
-                                style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 6), // TODO test
+                                child: Text(
+                                  '作者：${widget.data.mangaAuthors!.map((a) => a.name).join('/')}',
+                                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                               onLongPress: () => _vibrateAndCopy(widget.data.mangaAuthors!.map((a) => a.name).join('/')),
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    if (widget.data.newestDateAndFinished != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 6), // TODO test
+                              child: Text(
+                                '更新至 ${widget.data.newestDateAndFinished!.item1}・${!widget.data.newestDateAndFinished!.item2 ? '更新中' : '已完结'}', // TODO test
+                                style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

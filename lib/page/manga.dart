@@ -222,6 +222,8 @@ class _MangaPageState extends State<MangaPage> {
       return;
     }
 
+    // TODO test
+
     // 1. 更新漫画阅读历史
     if (updateHistory) {
       MangaHistory newHistory;
@@ -245,7 +247,7 @@ class _MangaPageState extends State<MangaPage> {
           lastTime: DateTime.now(), // 新历史
         );
       }
-      if (_history == null || !newHistory.equals(_history!)) {
+      if (_history == null || !newHistory.equals(_history!, includeCover: false)) {
         var toAdd = _history == null;
         _history = newHistory;
         await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
@@ -263,7 +265,7 @@ class _MangaPageState extends State<MangaPage> {
         mangaUrl: _data!.url,
         needUpdate: false,
       );
-      if (!newDownload.equals(_downloadEntity!)) {
+      if (!newDownload.equals(_downloadEntity!, includeCover: false)) {
         _downloadEntity = newDownload;
         await DownloadDao.addOrUpdateManga(manga: newDownload);
         EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, fromMangaPage: true));
@@ -290,7 +292,7 @@ class _MangaPageState extends State<MangaPage> {
         mangaCover: _data!.cover,
         mangaUrl: _data!.url,
       );
-      if (!newFavorite.equals(_favoriteManga!)) {
+      if (!newFavorite.equals(_favoriteManga!, includeCover: false)) {
         _favoriteManga = newFavorite;
         await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
         EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: _data!.mid, group: newFavorite.groupName, reason: UpdateReason.updated, fromMangaPage: true));
@@ -306,7 +308,7 @@ class _MangaPageState extends State<MangaPage> {
         mangaCover: _data!.cover,
         mangaUrl: _data!.url,
       );
-      if (!newLater.equals(_laterManga!)) {
+      if (!newLater.equals(_laterManga!, includeCover: false)) {
         _laterManga = newLater;
         await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
         EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: _data!.mid, added: false, fromMangaPage: true));
@@ -354,6 +356,7 @@ class _MangaPageState extends State<MangaPage> {
       nowInLater: _laterManga != null,
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
+      laterManga: _laterManga,
       subscribing: (s) => mountedSetState(() => _subscribing = s),
       inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
       inFavoriteSetter: (f) {
@@ -428,6 +431,7 @@ class _MangaPageState extends State<MangaPage> {
           );
         } else {
           // 所选章节已阅读完 => 弹出提示
+          // TODO improving neighbor accuracy
           var neighbor = _data!.chapterGroups.findNextChapter(chapterId); // 从全部分组的章节中选取上下章节
           showDialog(
             context: context,
@@ -488,6 +492,7 @@ class _MangaPageState extends State<MangaPage> {
         gotoViewerPage(cid: historyCid, page: historyPage);
       } else {
         // 该章节已阅读完，寻找下一章节
+        // TODO improving neighbor accuracy
         var neighbor = _data!.chapterGroups.findNextChapter(historyCid); // 从全部分组的章节中选取，尽量达到和 MangaViewerPage "阅读上/下一章节" 一样的效果
         if (neighbor == null || !neighbor.hasNextChapter) {
           // 未找到下一个章节
@@ -1303,7 +1308,7 @@ class _MangaPageState extends State<MangaPage> {
                                 final client = RestClient(DioManager.instance.dio);
                                 try {
                                   await client.voteManga(token: AuthManager.instance.token, mid: widget.id, score: score);
-                                  Fluttertoast.showToast(msg: '投票成功');
+                                  Fluttertoast.showToast(msg: '投票成功，刷新后可查看最新的投票结果');
                                 } catch (e, s) {
                                   var _ = wrapError(e, s); // ignore message
                                   Fluttertoast.showToast(msg: '投票失败，可能已对该漫画投票');

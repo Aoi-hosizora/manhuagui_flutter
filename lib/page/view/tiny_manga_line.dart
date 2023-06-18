@@ -27,7 +27,7 @@ class TinyMangaLineView extends StatelessWidget {
       imageUrl: manga.cover,
       title: manga.title,
       icon1: Icons.edit,
-      text1: manga.finished ? '已完结' : '连载中',
+      text1: manga.finished ? '已完结' : '连载中', // TODO show history ???
       icon2: Icons.notes,
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,

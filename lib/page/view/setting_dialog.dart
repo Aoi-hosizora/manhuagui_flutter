@@ -51,7 +51,7 @@ abstract class _SettingView extends StatelessWidget {
               Flexible(
                 child: Text(
                   title,
-                  style: Theme.of(context).textTheme.bodyText1,
+                  style: Theme.of(context).textTheme.bodyText1?.copyWith(fontWeight: FontWeight.normal),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -198,7 +198,7 @@ class SettingGroupTitleView extends StatelessWidget {
       child: Center(
         child: Text(
           '・$title・',
-          style: Theme.of(context).textTheme.bodyText1,
+          style: Theme.of(context).textTheme.bodyText1?.copyWith(fontWeight: FontWeight.normal),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

@@ -11,6 +11,7 @@ class HomepageColumnView extends StatelessWidget {
     this.color = Colors.white,
     this.childColor = Colors.white,
     this.onRefreshPressed,
+    this.onRefreshLongPressed,
     this.disableRefresh = false,
     this.hintIconData,
     this.onHintPressed,
@@ -26,6 +27,7 @@ class HomepageColumnView extends StatelessWidget {
   final Color color;
   final Color childColor;
   final void Function()? onRefreshPressed;
+  final void Function()? onRefreshLongPressed;
   final bool disableRefresh;
   final IconData? hintIconData;
   final void Function()? onHintPressed;
@@ -76,6 +78,7 @@ class HomepageColumnView extends StatelessWidget {
                               child: Icon(Icons.refresh, size: 23, color: !disableRefresh ? Colors.orange : Colors.orange[100]),
                             ),
                             onTap: disableRefresh ? null : onRefreshPressed,
+                            onLongPress: onRefreshLongPressed,
                           ),
                         ),
                       if (onHintPressed != null)

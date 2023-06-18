@@ -90,6 +90,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     var now = DateTime.now();
     if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime!) > Duration(seconds: 2)) {
       _lastBackPressedTime = now;
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('再按一次退出'),

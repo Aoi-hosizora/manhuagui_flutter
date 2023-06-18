@@ -81,15 +81,18 @@ class MangaChapterNeededData {
   const MangaChapterNeededData({
     required this.chapterGroups,
     required this.mangaAuthors,
+    required this.newestDateAndFinished,
   });
 
   final List<MangaChapterGroup> chapterGroups;
   final List<TinyAuthor> mangaAuthors;
+  final Tuple2<String, bool> newestDateAndFinished;
 
   static MangaChapterNeededData fromMangaData(Manga manga) {
     return MangaChapterNeededData(
       chapterGroups: manga.chapterGroups,
       mangaAuthors: manga.authors,
+      newestDateAndFinished: Tuple2(manga.formattedNewestDate, manga.finished),
     );
   }
 
@@ -116,6 +119,7 @@ class MangaViewerPageData {
     required this.chapterNeighbor,
     required this.chapterGroups,
     required this.mangaAuthors,
+    required this.newestDateAndFinished,
     required this.getMangaFailed,
     required this.metadataUpdatedAt,
   });
@@ -132,12 +136,19 @@ class MangaViewerPageData {
   final MangaChapterNeighbor? chapterNeighbor;
   final List<MangaChapterGroup>? chapterGroups;
   final List<TinyAuthor>? mangaAuthors;
+  final Tuple2<String, bool>? newestDateAndFinished;
   final bool? getMangaFailed; // only used when offline
   final DateTime? metadataUpdatedAt; // only used when offline
 
   String get chapterCover => pages.isNotEmpty ? pages.first : '';
 
-  MangaChapterNeededData? get neededData => chapterGroups == null || mangaAuthors == null ? null : MangaChapterNeededData(chapterGroups: chapterGroups!, mangaAuthors: mangaAuthors!);
+  MangaChapterNeededData? get neededData => chapterGroups == null || mangaAuthors == null || newestDateAndFinished == null
+      ? null
+      : MangaChapterNeededData(
+          chapterGroups: chapterGroups!,
+          mangaAuthors: mangaAuthors!,
+          newestDateAndFinished: newestDateAndFinished!,
+        );
 
   String chapterPageHtmlUrl(int imageIndex /* start from 0 */) => '$chapterUrl#p=${imageIndex + 1}';
 
@@ -158,6 +169,7 @@ class MangaViewerPageData {
       chapterNeighbor: neededData?.chapterGroups.findChapterNeighbor(chapterId, prev: true, next: true) ?? chapterNeighbor,
       chapterGroups: neededData?.chapterGroups ?? chapterGroups,
       mangaAuthors: neededData?.mangaAuthors ?? mangaAuthors,
+      newestDateAndFinished: neededData?.newestDateAndFinished ?? newestDateAndFinished,
       getMangaFailed: getMangaFailed,
       metadataUpdatedAt: metadataUpdatedAt,
     );
@@ -386,6 +398,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           chapterNeighbor: neededData.chapterGroups.findChapterNeighbor(widget.chapterId, prev: true, next: true) /* => no use response data as chapter neighbor */,
           chapterGroups: neededData.chapterGroups,
           mangaAuthors: neededData.mangaAuthors,
+          newestDateAndFinished: neededData.newestDateAndFinished,
           getMangaFailed: false,
           metadataUpdatedAt: null /* never used when online */,
         );
@@ -419,6 +432,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 ),
             chapterGroups: widget.neededData?.chapterGroups /* maybe null */,
             mangaAuthors: widget.neededData?.mangaAuthors /* maybe null */,
+            newestDateAndFinished: widget.neededData?.newestDateAndFinished /* maybe null */,
             getMangaFailed: null /* getting manga */,
             metadataUpdatedAt: metadata.updatedAt /* maybe null */,
           );
@@ -559,7 +573,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _currentPage = 1; // start from 1 (image page only)
   var _progressValue = 1; // start from 1, only used to display slider (must be seperated from currentPage)
-  var _inExtraPage = false;
+  var _inExtraPage = false; // just true or false (including the first extra page and the last extra page)
 
   void _onPageChanged(int imageIndex /* start from 0 */, bool inFirstExtraPage, bool inLastExtraPage) {
     _currentPage = imageIndex + 1; // start from 1
@@ -638,6 +652,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       return;
     }
 
+    // TODO improving neighbor accuracy
     var neighbor = _data!.chapterNeighbor!;
     int chapterId;
     if (gotoPrevious) {
@@ -742,6 +757,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       nowInLater: _laterManga != null,
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
+      laterManga: _laterManga,
       subscribing: (s) => mountedSetState(() => _subscribing = s),
       inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
       inFavoriteSetter: (f) {
@@ -931,6 +947,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           mangaTitle: _data!.mangaTitle,
           mangaCover: _data!.mangaCover,
           mangaUrl: _data!.mangaUrl,
+          mangaAuthors: _data!.mangaAuthors?.map((a) => a.name).toList() ?? [],
           isTocLoaded: tocLoaded,
         ),
       ),
@@ -1333,6 +1350,25 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                     ),
                   ),
                 ),
+                // ****************************************************************
+                // TODO 单手跳转章节助手 (同时添加到 ViewSetting 中)
+                // ****************************************************************
+                if (_inExtraPage && _currentPage > 1)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: AnimatedSwitcher(
+                      duration: _kAnimationDuration,
+                      child: !(_data != null && !_ScreenHelper.showAppBar && !_inExtraPage && _setting.showPageHint)
+                          ? const SizedBox.shrink() //
+                          : null,
+                      // : Container(
+                      //     color: Colors.black.withOpacity(0.7),
+                      //     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
+                      //     child: null,
+                      //   ),
+                    ),
+                  ),
                 // ****************************************************************
                 // 右下角的提示文字
                 // ****************************************************************

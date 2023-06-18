@@ -163,7 +163,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '使用HTTP查看图片',
+          title: '禁用HTTPS加载图片',
           hint: '较低版本的 Android 系统可能无法正常访问漫画柜的图片，如果在阅读漫画时出现 HTTPS error (certificate has expired) 错误，请启用该选项。',
           value: _useHttpForImage,
           onChanged: (b) {

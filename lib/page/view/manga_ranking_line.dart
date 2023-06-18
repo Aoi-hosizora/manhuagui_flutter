@@ -27,7 +27,7 @@ class MangaRankingLineView extends StatelessWidget {
       imageUrl: manga.cover,
       title: manga.title,
       icon1: Icons.person,
-      text1: manga.authors.map((a) => a.name).join('/'),
+      text1: manga.authors.map((a) => a.name).join('/'), // TODO show history or authors ???
       icon2: Icons.notes,
       text2: '最新章节 ${manga.newestChapter}',
       icon3: Icons.update,

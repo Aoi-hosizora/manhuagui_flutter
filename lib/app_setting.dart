@@ -94,7 +94,7 @@ class ViewSetting {
   final bool enablePageSpace; // 显示页面间空白
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
-  final int preloadCount; // 预加载页数
+  final int preloadCount; // 预加载章节页数
   final PageNoPosition pageNoPosition; // 每页显示额外页码
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
   final AppBarSwitchBehavior appBarSwitchBehavior; // 切换章节时标题栏行为
@@ -655,7 +655,7 @@ class OtherSetting {
   final bool enableLogger; // 记录调试日志
   final bool showDebugErrorMsg; // 使用更详细的错误信息
   final bool useNativeShareSheet; // 使用原生的分享菜单
-  final bool useHttpForImage; // 使用HTTP查看图片
+  final bool useHttpForImage; // 禁用HTTPS加载图片
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,

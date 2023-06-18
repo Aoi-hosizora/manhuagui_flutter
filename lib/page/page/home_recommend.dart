@@ -464,6 +464,17 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         shaonvRankingsError: _shaonvRankingsError,
         mangaRows: AppSetting.instance.ui.audienceRankingRows,
         onRefreshPressed: (t) => _loadRankings([t], onlyIfEmpty: false, needDelay: false),
+        onRefreshLongPressed: () => showYesNoAlertDialog(
+          context: context,
+          title: Text('刷新确认'),
+          content: Text('是否刷新三个漫画受众排行榜？'),
+          yesText: Text('刷新'),
+          noText: Text('取消'),
+          yesOnPressed: (c) {
+            Navigator.of(c).pop();
+            _loadRankings(MangaAudRankingType.values, onlyIfEmpty: false, needDelay: true); // TODO test
+          },
+        ),
         onFullListPressed: (t) => Navigator.of(context).push(
           CustomPageRoute(
             context: context,

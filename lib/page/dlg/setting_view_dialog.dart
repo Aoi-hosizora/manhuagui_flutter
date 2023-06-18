@@ -86,6 +86,9 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   Widget build(BuildContext context) {
     return SettingDialogView(
       children: [
+        SettingGroupTitleView(
+          title: '常规设置', // TODO test
+        ),
         SettingComboBoxView<ViewDirection>(
           title: '阅读方向',
           value: _viewDirection,
@@ -163,8 +166,11 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingGroupTitleView(
+          title: '高级设置',
+        ),
         SettingComboBoxView<int>(
-          title: '预加载页数',
+          title: '预加载章节页数',
           value: _preloadCount.clamp(0, 6),
           values: const [0, 1, 2, 3, 4, 5, 6],
           textBuilder: (s) => s == 0 ? '禁用预加载' : '前后$s页',
@@ -206,6 +212,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        // TODO 显示单手跳转章节助手
       ],
     );
   }

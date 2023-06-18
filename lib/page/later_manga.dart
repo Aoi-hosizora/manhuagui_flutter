@@ -335,6 +335,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
             extra: UpdatableDataViewExtraWidgets(
               outerTopWidgets: [
                 ListHintView.textWidget(
+                  // TODO consider to use green style or not ???
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的稍后阅读列表' : '未登录用户的稍后阅读列表') + //
                       (_isUpdated ? ' (有更新)' : ''),
                   rightWidget: Row(
@@ -372,6 +373,8 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
                               child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                               onTap: () => _exitSort(),
                             ),
+                          // TODO add searching manga
+                          // TODO add added date filter
                         ],
                       ),
                     ],

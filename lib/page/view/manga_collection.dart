@@ -56,14 +56,14 @@ class MangaCollectionView extends StatefulWidget {
   final void Function()? onRefreshPressed;
   final bool disableRefresh;
   final void Function()? onMorePressed;
-  final void Function(int mid, String title, String url, String cover)? onLongPressed;
+  final void Function(int mid, String title, String cover, String url)? onLongPressed;
 
   @override
   State<MangaCollectionView> createState() => _MangaCollectionViewState();
 }
 
 class _MangaCollectionViewState extends State<MangaCollectionView> with AutomaticKeepAliveClientMixin {
-  Widget _buildCover(BuildContext context, int mid, String title, String url, String cover, double width, double height, {bool highQuality = false, bool gotoDownload = false}) {
+  Widget _buildCover(BuildContext context, int mid, String title, String cover, String url, double width, double height, {bool highQuality = false, bool gotoDownload = false}) {
     return FullRippleWidget(
       child: Container(
         width: width,
@@ -108,7 +108,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       },
       onLongPress: widget.onLongPressed == null //
           ? null
-          : () => widget.onLongPressed?.call(mid, title, url, cover),
+          : () => widget.onLongPressed?.call(mid, title, cover, url), // TODO test
     );
   }
 
@@ -120,7 +120,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.url, manga.cover, width, height, highQuality: true),
+        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height, highQuality: true),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -168,7 +168,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.url, manga.cover, width, height),
+        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -201,7 +201,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaUrl, manga.mangaCover, width, height),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -225,7 +225,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaUrl, manga.mangaCover, width, height),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -249,7 +249,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.url, manga.cover, width, height),
+        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -282,7 +282,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaUrl, manga.mangaCover, width, height),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -306,7 +306,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaUrl, manga.mangaCover, width, height, gotoDownload: true),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height, gotoDownload: true),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),

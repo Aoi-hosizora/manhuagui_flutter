@@ -167,6 +167,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    // TODO willpop for category selection
     return Scaffold(
       body: PlaceholderText.from(
         isLoading: _genreLoading,

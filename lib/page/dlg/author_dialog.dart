@@ -68,6 +68,8 @@ void showPopupMenuForAuthorList({
         IconTextDialogOption(
           icon: Icon(!nowInFavorite ? CustomIcons.bookmark_plus : CustomIcons.bookmark_minus),
           text: Text(!nowInFavorite ? '添加本地收藏' : '取消本地收藏'),
+          popWhenPress: c,
+          predicateForPress: !nowInFavorite ? null : () => helper.showCheckRemovingFavoriteDialog(), // TODO test
           onPressed: () => !nowInFavorite //
               ? helper.addFavorite(onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
               : helper.removeFavorite(onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
@@ -138,6 +140,8 @@ void showPopupMenuForAuthorFavorite({
             icon: Icon(Icons.bookmark),
             text: Text('取消本地收藏'),
             popWhenPress: c,
+            predicateForPress: () => helper.showCheckRemovingFavoriteDialog(),
+            // TODO test
             onPressed: () => helper.removeFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true),
           ),
         Divider(thickness: 1),
@@ -411,6 +415,11 @@ class _DialogHelper {
         builder: (c) => FavoriteAuthorPage(),
       ),
     );
+  }
+
+  Future<bool> showCheckRemovingFavoriteDialog() async {
+    var ok = await showYesNoAlertDialog(context: context, title: Text('取消收藏确认'), content: Text('确定取消收藏漫画作者 "$authorName"？'), yesText: Text('确定'), noText: Text('取消'));
+    return ok ?? false;
   }
 
   // ===================================

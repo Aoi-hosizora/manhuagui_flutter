@@ -111,7 +111,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
         extra: UpdatableDataViewExtraWidgets(
           outerTopWidgets: [
             ListHintView.textText(
-              leftText: '漫画受众排行榜 (${_typeToString(widget.type)})',
+              leftText: '漫画受众排行榜・${_typeToString(widget.type)}', // TODO test
               rightText: '更新于 ${formatDatetimeAndDuration(widget.rankingDatetime ?? DateTime.now(), FormatPattern.date)}',
             ),
           ],

@@ -35,6 +35,7 @@ class MangaAudRankingView extends StatefulWidget {
     required this.mangaRows,
     this.highlightRecent = true,
     this.onRefreshPressed,
+    this.onRefreshLongPressed,
     this.onFullListPressed,
     this.onMorePressed,
     this.onLineLongPressed,
@@ -55,6 +56,7 @@ class MangaAudRankingView extends StatefulWidget {
   final int mangaRows;
   final bool highlightRecent;
   final void Function(MangaAudRankingType)? onRefreshPressed;
+  final void Function()? onRefreshLongPressed;
   final void Function(MangaAudRankingType)? onFullListPressed;
   final void Function()? onMorePressed;
   final void Function(MangaRanking)? onLineLongPressed;
@@ -276,7 +278,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                        ),
+                        ), // TODO add icons
                       ],
                     ),
                   ],
@@ -306,6 +308,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
               ) ?? DateTime.now(), FormatPattern.dateNoYear)} 更新)',
       icon: Icons.emoji_events,
       onRefreshPressed: () => widget.onRefreshPressed?.call(_indexToType(_currentPageIndex)),
+      onRefreshLongPressed: widget.onRefreshLongPressed,
       disableRefresh: (_currentPageIndex == 0 && widget.allRankings == null) || //
           (_currentPageIndex == 1 && widget.qingnianRankings == null) ||
           (_currentPageIndex == 2 && widget.shaonvRankings == null),

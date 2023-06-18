@@ -59,10 +59,10 @@ class MangaHistory {
     );
   }
 
-  bool equals(MangaHistory o) {
+  bool equals(MangaHistory o, {bool includeCover = true}) {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
-        mangaCover == o.mangaCover &&
+        (!includeCover || mangaCover == o.mangaCover) &&
         mangaUrl == o.mangaUrl &&
         chapterId == o.chapterId &&
         chapterTitle == o.chapterTitle &&
@@ -105,10 +105,10 @@ class ShelfCache {
     );
   }
 
-  bool equals(ShelfCache o) {
+  bool equals(ShelfCache o, {bool includeCover = true}) {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
-        mangaCover == o.mangaCover &&
+        (!includeCover || mangaCover == o.mangaCover) &&
         mangaUrl == o.mangaUrl &&
         cachedAt == o.cachedAt;
   }
@@ -165,10 +165,10 @@ class FavoriteManga {
     );
   }
 
-  bool equals(FavoriteManga o) {
+  bool equals(FavoriteManga o, {bool includeCover = true}) {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
-        mangaCover == o.mangaCover &&
+        (!includeCover || mangaCover == o.mangaCover) &&
         mangaUrl == o.mangaUrl &&
         remark == o.remark &&
         groupName == o.groupName &&
@@ -262,10 +262,10 @@ class FavoriteAuthor {
     );
   }
 
-  bool equals(FavoriteAuthor o) {
+  bool equals(FavoriteAuthor o, {bool includeCover = true}) {
     return authorId == o.authorId && //
         authorName == o.authorName &&
-        authorCover == o.authorCover &&
+        (!includeCover || authorCover == o.authorCover) &&
         authorUrl == o.authorUrl &&
         authorZone == o.authorZone &&
         remark == o.remark &&
@@ -372,10 +372,10 @@ class DownloadedManga {
     );
   }
 
-  bool equals(DownloadedManga o) {
+  bool equals(DownloadedManga o, {bool includeCover = true}) {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
-        mangaCover == o.mangaCover &&
+        (!includeCover || mangaCover == o.mangaCover) &&
         mangaUrl == o.mangaUrl &&
         error == o.error &&
         updatedAt == o.updatedAt &&
@@ -547,6 +547,11 @@ class LaterManga {
   final String mangaUrl;
   final DateTime createdAt;
 
+  // TODO 添加时更新至 chapterTitle (chapterUpdatedAt)
+  // final int chapterId;
+  // final String chapterTitle;
+  // final DateTime chapterUpdatedAt;
+
   const LaterManga({
     required this.mangaId,
     required this.mangaTitle,
@@ -580,10 +585,10 @@ class LaterManga {
     );
   }
 
-  bool equals(LaterManga o) {
+  bool equals(LaterManga o, {bool includeCover = true}) {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&
-        mangaCover == o.mangaCover &&
+        (!includeCover || mangaCover == o.mangaCover) &&
         mangaUrl == o.mangaUrl &&
         createdAt == o.createdAt;
   }

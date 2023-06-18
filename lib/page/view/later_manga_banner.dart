@@ -43,7 +43,7 @@ class LaterMangaBannerView extends StatelessWidget {
               icon: Icon(MdiIcons.bookClock, size: 26, color: Colors.white),
               text: Flexible(
                 child: Text(
-                  '位于稍后阅读列表中 (添加于 ${manga.formattedCreatedAt})',
+                  '位于稍后阅读列表中 (添加于 ${manga.formattedCreatedAt})', // TODO add 漫画最新章节已更新，是否更新稍后阅读列表
                   style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
