@@ -294,8 +294,9 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                                     scaleAlignment: Alignment.bottomRight,
                                   )
                                 : SizedBox.shrink(),
+                            useFullRipple: true,
+                            onFullRippleLongPressed: (_, key, tip) => tip.toToggle?.call(),
                             itemBuilder: (_, key, tip) => itemWidget /* single grid */,
-                        onFullRippleLongPressed:(_, key, tip) => tip.toToggle?.call(),
                           ),
                     onChapterPressed: (_) {},
                   ),

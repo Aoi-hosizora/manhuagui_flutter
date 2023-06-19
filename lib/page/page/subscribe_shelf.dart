@@ -153,6 +153,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       mangaTitle: manga.title,
       mangaCover: manga.cover,
       mangaUrl: manga.url,
+      extraData: MangaExtraDataForDialog.fromShelfManga(manga),
       fromShelfList: true,
       inShelfSetter: (inShelf) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)

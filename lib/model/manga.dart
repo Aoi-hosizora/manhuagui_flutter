@@ -316,6 +316,11 @@ class ShelfManga {
 
   Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
 
+  String get formattedNewestDate {
+    var result = parseDurationOrDateString(lastDuration);
+    return result.date; // "2023/02/02"
+  }
+
   String get formattedLastDurationOrTime {
     var result = parseDurationOrDateString(lastDuration);
     return result.duration ?? result.date; // "xxx天前" or "2023/02/02"

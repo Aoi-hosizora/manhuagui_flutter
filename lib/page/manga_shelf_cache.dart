@@ -623,6 +623,8 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+              useFullRipple: true,
+              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : null,
               itemBuilder: (c, key, tip) => ShelfCacheLineView(
                 manga: item,
                 onPressed: () => _showPopupMenu(mangaId: item.mangaId),

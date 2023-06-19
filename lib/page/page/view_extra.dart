@@ -35,8 +35,8 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.toShowSettings,
     required this.toShowDetails,
     required this.toShowComments,
+    required this.toShowOverview,
     required this.toShare,
-    required this.toOpenInBrowser,
     required this.toShowLaters,
     required this.toShowImage,
     required this.toOnlineMode,
@@ -61,8 +61,8 @@ class ViewExtraSubPage extends StatefulWidget {
   final void Function() toShowSettings;
   final void Function() toShowDetails;
   final void Function() toShowComments;
+  final void Function() toShowOverview;
   final void Function() toShare;
-  final void Function() toOpenInBrowser;
   final void Function() toShowLaters;
   final void Function(String url, String title) toShowImage;
   final void Function() toOnlineMode;
@@ -221,8 +221,8 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
             action1: ActionItem(text: '阅读设置', icon: CustomIcons.opened_book_cog, action: () => widget.toShowSettings.call()),
             action2: ActionItem(text: '章节详情', icon: Icons.subject, action: () => widget.toShowDetails.call()),
             action3: ActionItem(text: '查看评论', icon: Icons.forum, action: () => widget.toShowComments.call()),
-            action4: ActionItem(text: '分享章节', icon: Icons.share, action: () => widget.toShare.call()),
-            action5: ActionItem(text: '浏览打开', icon: Icons.open_in_browser, action: () => widget.toOpenInBrowser.call()),
+            action4: ActionItem(text: '页面一览', icon: CustomIcons.image_timeline, action: () => widget.toShowOverview.call()),
+            action5: ActionItem(text: '分享章节', icon: Icons.share, action: () => widget.toShare.call()),
           ),
       ],
     );
@@ -474,6 +474,8 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                 padding: EdgeInsets.only(top: 18),
                 child: LaterMangaBannerView(
                   manga: widget.laterManga!,
+                  currentNewestChapter: widget.data.newestChapterTitle,
+                  currentNewestDate: widget.data.newestDateAndFinished?.item1,
                   action: () => widget.toShowLaters.call(),
                 ),
               ),

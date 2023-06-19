@@ -31,8 +31,9 @@ class MangaRankingLineView extends StatelessWidget {
       title: manga.title,
       icon1: Icons.person,
       text1: manga.authors.map((a) => a.name).join('/'),
-      icon2: Icons.notes,
-      text2: '最新章节 ${manga.newestChapter}' + (history?.read == true ? ' (阅读至 ${history!.chapterTitle})' : ''), // TODO show history ???
+      icon2: Icons.notes /* TODO show history ??? */,
+      text2: '最新章节 ${manga.newestChapter}' + //
+          (history?.read != true ? '' : (manga.newestChapter == history!.chapterTitle ? ' (已阅读至该话)' : ' (阅读至 ${history!.chapterTitle})')),
       icon3: Icons.update,
       text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       text3Color: !highlightRecent
@@ -110,6 +111,7 @@ class MangaRankingLineView extends StatelessWidget {
         mangaTitle: manga.title,
         mangaCover: manga.cover,
         mangaUrl: manga.url,
+        extraData: MangaExtraDataForDialog.fromMangaRanking(manga),
       ),
     );
   }

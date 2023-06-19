@@ -545,20 +545,22 @@ class LaterManga {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final String? newestChapter;
+  final String? newestDate;
   final DateTime createdAt;
-
-  // TODO 添加时更新至 chapterTitle (chapterUpdatedAt)
-  // final int chapterId;
-  // final String chapterTitle;
-  // final DateTime chapterUpdatedAt;
 
   const LaterManga({
     required this.mangaId,
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    required this.newestChapter,
+    required this.newestDate,
     required this.createdAt,
   });
+
+  String get formattedNewestDateOrDuration => //
+      parseDurationOrDateString(newestDate ?? '').let((r) => r.duration ?? r.date);
 
   String get formattedCreatedAt => //
       formatDatetimeAndDuration(createdAt, FormatPattern.datetimeNoSec);
@@ -574,6 +576,8 @@ class LaterManga {
     String? mangaTitle,
     String? mangaCover,
     String? mangaUrl,
+    String? newestChapter,
+    String? newestDate,
     DateTime? createdAt,
   }) {
     return LaterManga(
@@ -581,6 +585,8 @@ class LaterManga {
       mangaTitle: mangaTitle ?? this.mangaTitle,
       mangaCover: mangaCover ?? this.mangaCover,
       mangaUrl: mangaUrl ?? this.mangaUrl,
+      newestChapter: newestChapter ?? this.newestChapter,
+      newestDate: newestDate ?? this.newestDate,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -590,6 +596,8 @@ class LaterManga {
         mangaTitle == o.mangaTitle &&
         (!includeCover || mangaCover == o.mangaCover) &&
         mangaUrl.checkEqualityConsideringLastSlash(o.mangaUrl) &&
-        createdAt == o.createdAt;
+        createdAt == o.createdAt &&
+        newestChapter == o.newestChapter &&
+        newestDate == o.newestDate;
   }
 }

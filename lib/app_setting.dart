@@ -384,7 +384,7 @@ class UiSetting {
   final bool overviewLoadAll; // 章节一览页加载所有图片
   final bool homepageShowMoreMangas; // 首页显示更多漫画
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
-  final bool allowHomepagePopup; // 允许首页漫画弹出菜单
+  final bool allowHomepagePopup; // 允许首页漫画弹出菜单 // TODO remove this setting
   final int audienceRankingRows; // 首页受众排行榜显示行数
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
   final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为

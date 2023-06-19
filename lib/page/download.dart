@@ -237,6 +237,7 @@ class _DownloadPageState extends State<DownloadPage> {
       mangaTitle: manga.mangaTitle,
       mangaCover: manga.mangaCover,
       mangaUrl: manga.mangaUrl,
+      extraData: null,
     );
   }
 
@@ -411,6 +412,8 @@ class _DownloadPageState extends State<DownloadPage> {
               return SelectableCheckboxItem<ValueKey<int>>(
                 key: ValueKey<int>(entity.mangaId),
                 checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+                useFullRipple: true,
+                onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : null,
                 itemBuilder: (c, key, tip) => DownloadMangaLineView(
                   mangaEntity: entity,
                   downloadTask: task,

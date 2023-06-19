@@ -14,12 +14,14 @@ class LaterMangaDao {
   static const _colMangaTitle = 'manga_title';
   static const _colMangaCover = 'manga_cover';
   static const _colMangaUrl = 'manga_url';
+  static const _colNewestChapter = 'newest_chapter';
+  static const _colNewestDate = 'newest_date';
   static const _colCreatedAt = 'created_at';
 
   static const laterMangaMetadata = TableMetadata(
     tableName: _tblLaterManga,
     primaryKeys: [_colUsername, _colMangaId],
-    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colCreatedAt],
+    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colNewestChapter, _colNewestDate, _colCreatedAt],
   );
 
   static Future<void> createForVer1(Database db) async {
@@ -46,6 +48,8 @@ class LaterMangaDao {
         $_colMangaTitle VARCHAR(1023),
         $_colMangaCover VARCHAR(1023),
         $_colMangaUrl VARCHAR(1023),
+        $_colNewestChapter VARCHAR(1023),
+        $_colNewestDate VARCHAR(1023),
         $_colCreatedAt DATETIME,
         PRIMARY KEY ($_colUsername, $_colMangaId)
       )''');
@@ -111,7 +115,7 @@ class LaterMangaDao {
       offset = 0;
     }
     var results = await db.safeRawQuery(
-      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCreatedAt
+      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt
          FROM $_tblLaterManga
          WHERE $_colUsername = ? ${like?.item1 ?? ''}
          ORDER BY $orderBy, $_colCreatedAt DESC
@@ -128,6 +132,8 @@ class LaterMangaDao {
         mangaTitle: r[_colMangaTitle]! as String,
         mangaCover: r[_colMangaCover]! as String,
         mangaUrl: r[_colMangaUrl]! as String,
+        newestChapter: r[_colNewestChapter] as String?,
+        newestDate: r[_colNewestDate] as String?,
         createdAt: DateTime.parse(r[_colCreatedAt]! as String),
       ));
     }
@@ -137,7 +143,7 @@ class LaterMangaDao {
   static Future<LaterManga?> getLaterManga({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
-      '''SELECT $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCreatedAt
+      '''SELECT $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt
          FROM $_tblLaterManga
          WHERE $_colUsername = ? AND $_colMangaId = ?
          ORDER BY $_colCreatedAt DESC
@@ -153,6 +159,8 @@ class LaterMangaDao {
       mangaTitle: r[_colMangaTitle]! as String,
       mangaCover: r[_colMangaCover]! as String,
       mangaUrl: r[_colMangaUrl]! as String,
+      newestChapter: r[_colNewestChapter] as String?,
+      newestDate: r[_colNewestDate] as String?,
       createdAt: DateTime.parse(r[_colCreatedAt]! as String),
     );
   }
@@ -173,16 +181,16 @@ class LaterMangaDao {
     int? rows = 0;
     if (count == 0) {
       rows = await db.safeRawInsert(
-        '''INSERT INTO $_tblLaterManga ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colCreatedAt)
-           VALUES (?, ?, ?, ?, ?, ?)''',
-        [username, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.createdAt.toIso8601String()],
+        '''INSERT INTO $_tblLaterManga ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        [username, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.newestChapter, manga.newestDate, manga.createdAt.toIso8601String()],
       );
     } else {
       rows = await db.safeRawUpdate(
         '''UPDATE $_tblLaterManga
-           SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colCreatedAt = ?
+           SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colNewestChapter = ?, $_colNewestDate = ?, $_colCreatedAt = ?
            WHERE $_colUsername = ? AND $_colMangaId = ?''',
-        [manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.createdAt.toIso8601String(), username, manga.mangaId],
+        [manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.newestChapter, manga.newestDate, manga.createdAt.toIso8601String(), username, manga.mangaId],
       );
     }
     return rows != null && rows >= 1;

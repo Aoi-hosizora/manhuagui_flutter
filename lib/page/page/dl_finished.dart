@@ -123,6 +123,8 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                                 scale: 0.7,
                                 scaleAlignment: Alignment.bottomRight,
                               ),
+                              useFullRipple: true,
+                              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? widget.toAdjustChapter(key.value) : null,
                               itemBuilder: (_, key, tip) => itemWidget /* single grid */,
                             ),
                       onChapterPressed: widget.toReadChapter,

@@ -547,12 +547,15 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         padding: EdgeInsets.only(top: 12),
                         child: LaterMangaBannerView(
                           manga: _later!,
+                          currentNewestChapter: _mangaData!.newestChapter,
+                          currentNewestDate: _mangaData!.formattedNewestDate,
                           action: () => showPopupMenuForLaterManga(
                             context: context,
                             mangaId: _data!.mangaId,
                             mangaTitle: _data!.mangaTitle,
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
+                            extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
                             fromMangaPage: false,
                             laterManga: _later,
                             inLaterSetter: (l) {
@@ -589,6 +592,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaTitle: _data!.mangaTitle,
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
+                            extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
                             fromDownloadPage: true,
                           ),
                         ),

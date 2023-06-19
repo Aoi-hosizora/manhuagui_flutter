@@ -245,11 +245,14 @@ class _MangaPageState extends State<MangaPage> {
           lastTime: DateTime.now(), // 新历史
         );
       }
-      if (_history == null || !newHistory.equals(_history!, includeCover: false)) {
+      if (_history == null || !newHistory.equals(_history!)) {
         var toAdd = _history == null;
+        var changedExcludeCover = !newHistory.equals(_history!, includeCover: false);
         _history = newHistory;
         await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
-        EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: toAdd ? UpdateReason.added : UpdateReason.updated, fromMangaPage: true));
+        if (changedExcludeCover) {
+          EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: toAdd ? UpdateReason.added : UpdateReason.updated, fromMangaPage: true));
+        }
         if (mounted) setState(() {});
       }
     }
@@ -263,10 +266,13 @@ class _MangaPageState extends State<MangaPage> {
         mangaUrl: _data!.url,
         needUpdate: false,
       );
-      if (!newDownload.equals(_downloadEntity!, includeCover: false)) {
+      if (!newDownload.equals(_downloadEntity!)) {
+        var changedExcludeCover = !newDownload.equals(_downloadEntity!, includeCover: false);
         _downloadEntity = newDownload;
         await DownloadDao.addOrUpdateManga(manga: newDownload);
-        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, fromMangaPage: true));
+        if (changedExcludeCover) {
+          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, fromMangaPage: true));
+        }
         if (mounted) setState(() {});
       }
     }
@@ -290,10 +296,13 @@ class _MangaPageState extends State<MangaPage> {
         mangaCover: _data!.cover,
         mangaUrl: _data!.url,
       );
-      if (!newFavorite.equals(_favoriteManga!, includeCover: false)) {
+      if (!newFavorite.equals(_favoriteManga!)) {
+        var changedExcludeCover = !newFavorite.equals(_favoriteManga!, includeCover: false);
         _favoriteManga = newFavorite;
         await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
-        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: _data!.mid, group: newFavorite.groupName, reason: UpdateReason.updated, fromMangaPage: true));
+        if (changedExcludeCover) {
+          EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: _data!.mid, group: newFavorite.groupName, reason: UpdateReason.updated, fromMangaPage: true));
+        }
         if (mounted) setState(() {});
       }
     }
@@ -306,10 +315,13 @@ class _MangaPageState extends State<MangaPage> {
         mangaCover: _data!.cover,
         mangaUrl: _data!.url,
       );
-      if (!newLater.equals(_laterManga!, includeCover: false)) {
+      if (!newLater.equals(_laterManga!)) {
+        var changedExcludeCover = !newLater.equals(_laterManga!, includeCover: false);
         _laterManga = newLater;
         await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
-        EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: _data!.mid, added: false, fromMangaPage: true));
+        if (changedExcludeCover) {
+          EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: _data!.mid, added: false, fromMangaPage: true));
+        }
         if (mounted) setState(() {});
       }
     }
@@ -348,6 +360,7 @@ class _MangaPageState extends State<MangaPage> {
       mangaTitle: _data!.title,
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
+      extraData: MangaExtraDataForDialog.fromManga(_data!),
       fromMangaPage: true,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
@@ -568,6 +581,7 @@ class _MangaPageState extends State<MangaPage> {
       mangaTitle: _data!.title,
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
+      extraData: MangaExtraDataForDialog.fromManga(_data!),
       fromMangaPage: true,
       laterManga: _laterManga,
       inLaterSetter: (l) {
@@ -1098,6 +1112,8 @@ class _MangaPageState extends State<MangaPage> {
                 if (_laterManga != null)
                   LaterMangaBannerView(
                     manga: _laterManga!,
+                    currentNewestChapter: _data!.newestChapter,
+                    currentNewestDate: _data!.formattedNewestDate,
                     action: () => _showLaterMangaDialog(),
                   ),
                 // ****************************************************************

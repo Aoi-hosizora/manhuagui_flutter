@@ -17,52 +17,45 @@ class ParseResult {
 }
 
 ParseResult parseDurationOrDateString(String text) {
-  text = text.replaceAll('-', '/');
+  text = text.replaceAll('-', '/').trim();
   var now = DateTime.now();
   var ymd = DateFormat('yyyy/MM/dd');
 
   int? minutes, hours, days, dayDiff;
-  String? duration, datetime;
-  if (text.contains('分钟前')) {
-    minutes = int.tryParse(text.substring(0, text.length - 3));
-    if (minutes != null) {
-      duration = minutes == 0 ? '不到1分钟前' : '$minutes分钟前';
-      dayDiff = 0;
-    }
-  } else if (text.contains('小时前')) {
-    hours = int.tryParse(text.substring(0, text.length - 3));
-    if (hours != null) {
-      duration = '$hours小时前';
-      var now = DateTime.now();
-      dayDiff = hours <= now.hour ? 0 : 1;
-    }
-  } else if (text.contains('天前')) {
-    days = int.tryParse(text.substring(0, text.length - 2));
-    if (days != null && days <= 7) {
-      duration = days == 0 ? '今天' : '$days天前';
-      dayDiff = days;
-    }
-  } else {
+  String? duration; // duration text or concrete date text
+  if (text.contains('分钟前')) /* X分钟前 */ {
+    minutes = int.tryParse(text.substring(0, text.length - 3)) ?? 0;
+    duration = minutes == 0 ? '不到1分钟前' : '$minutes分钟前';
+    dayDiff = 0;
+  } else if (text.contains('小时前')) /* X小时前 */ {
+    hours = int.tryParse(text.substring(0, text.length - 3)) ?? 0;
+    duration = '$hours小时前';
+    dayDiff = hours <= now.hour ? 0 : 1;
+  } else if (text.contains('天前')) /* X天前 */ {
+    days = int.tryParse(text.substring(0, text.length - 2)) ?? 0;
+    duration = days == 0 ? '今天' : (days <= 7 ? '$days天前' : ymd.format(now.subtract(Duration(days: days))));
+    dayDiff = days;
+  } else /* 2023/02/02 */ {
     try {
-      var parsed = ymd.parse(text);
-      var du = now.difference(parsed);
-      if (du.inDays <= 7) {
-        days = du.inDays;
-        duration = days == 0 ? '今天' : '$days天前';
-        dayDiff = days;
-        datetime = text;
-      }
-    } catch (_) {}
+      days = now.difference(ymd.parse(text)).inDays;
+      duration = days == 0 ? '今天' : (days <= 7 ? '$days天前' : ymd.format(now.subtract(Duration(days: days))));
+      dayDiff = days;
+    } catch (_) /* unexpected text format */ {
+      days = null;
+      duration = null;
+      dayDiff = null;
+    }
   }
 
   if (duration == null) {
-    return ParseResult(date: text, duration: null, dayDiff: null); // "2023/02/02"
+    return ParseResult(date: text, duration: null, dayDiff: null); // error, keep original text
   }
-  if (datetime == null) {
-    var old = now.subtract(Duration(minutes: minutes ?? 0, hours: hours ?? 0, days: days ?? 0));
-    datetime = ymd.format(old);
-  }
-  return ParseResult(date: datetime, duration: duration, dayDiff: dayDiff); // "2023/02/02", "今天" or "xxx天前"
+  var dateObj = now.subtract(Duration(minutes: minutes ?? 0, hours: hours ?? 0, days: days ?? 0));
+  return ParseResult(
+    date: ymd.format(dateObj), // "2023/02/02"
+    duration: duration, // "今天" or "xxx前" ("分钟" / "小时" / "天")
+    dayDiff: dayDiff, // 0 or xxx
+  );
 }
 
 // =====================================

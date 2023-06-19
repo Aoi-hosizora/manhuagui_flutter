@@ -109,7 +109,19 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                   onTap: () => shareText(text: '【${widget.title}】$url'),
                 ),
                 PopupMenuItem(
-                  child: IconTextMenuItem(MdiIcons.imageMove, '分享图片'),
+                  child: GestureDetector(
+                    child: IconTextMenuItem(MdiIcons.imageMove, '分享图片'),
+                    onLongPress: () async {
+                      HapticFeedback.vibrate();
+                      Navigator.of(context).pop(); // hide button menu
+                      var filepath = await getCachedOrDownloadedFilepath(url: url);
+                      if (filepath == null) {
+                        Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
+                      } else {
+                        await shareFile(filepath: filepath, type: 'image/*', text: '【${widget.title}】$url'); // TODO test
+                      }
+                    },
+                  ),
                   onTap: () async {
                     var filepath = await getCachedOrDownloadedFilepath(url: url);
                     if (filepath == null) {

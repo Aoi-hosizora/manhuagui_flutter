@@ -132,6 +132,8 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                             key: ValueKey<int>(chapter.chapterId),
                             checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
                             checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Colors.white),
+                            useFullRipple: true,
+                            onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? widget.toAdjustChapter(key.value) : null,
                             itemBuilder: (_, key, tip) => Material(
                               color: Colors.white,
                               child: DownloadChapterLineView(

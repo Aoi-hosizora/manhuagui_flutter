@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -163,6 +164,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       mangaTitle: manga.mangaTitle,
       mangaCover: manga.mangaCover,
       mangaUrl: manga.mangaUrl,
+      extraData: MangaExtraDataForDialog.fromLaterManga(manga),
       fromLaterList: true,
       inLaterSetter: (inLater) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
@@ -355,6 +357,8 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+              useFullRipple: true,
+              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : null,
               itemBuilder: (c, key, tip) => LaterMangaLineView(
                 manga: item,
                 history: _histories[item.mangaId],
@@ -445,7 +449,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
               onPressed: () => _showPopupMenu(mangaId: _msController.selectedItems.first.value),
             ),
             MultiSelectionFabOption(
-              child: Icon(MdiIcons.sortClockDescending),
+              child: Icon(CustomIcons.clock_topmost),
               tooltip: '置顶稍后阅读记录',
               show: _msController.selectedItems.length == 1,
               onPressed: () => _topmostLaterManga(mangaId: _msController.selectedItems.first.value),

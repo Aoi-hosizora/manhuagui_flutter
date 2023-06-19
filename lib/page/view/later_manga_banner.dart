@@ -8,11 +8,17 @@ class LaterMangaBannerView extends StatelessWidget {
   const LaterMangaBannerView({
     Key? key,
     required this.manga,
+    required this.currentNewestChapter,
+    required this.currentNewestDate,
     this.action,
   }) : super(key: key);
 
   final LaterManga manga;
+  final String? currentNewestChapter;
+  final String? currentNewestDate;
   final VoidCallback? action;
+
+  bool get _canUpdateChapter => currentNewestChapter != null && currentNewestDate != null && currentNewestChapter != manga.newestChapter;
 
   @override
   Widget build(BuildContext context) {
@@ -38,15 +44,32 @@ class LaterMangaBannerView extends StatelessWidget {
               ),
             ),
             IconText(
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              padding: !_canUpdateChapter //
+                  ? EdgeInsets.symmetric(horizontal: 18, vertical: 14)
+                  : EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               space: 16, // this icon text layout is almost the same as the read button in MangaPage
               icon: Icon(MdiIcons.bookClock, size: 26, color: Colors.white),
               text: Flexible(
-                child: Text(
-                  '位于稍后阅读列表中 (添加于 ${manga.formattedCreatedAt})', // TODO add 漫画最新章节已更新，是否更新稍后阅读列表
-                  style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '位于稍后阅读列表中 (添加于 ${manga.formattedCreatedAt})',
+                      style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 16, color: Colors.white),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (_canUpdateChapter)
+                      Padding(
+                        padding: EdgeInsets.only(top: 2),
+                        child: Text(
+                          '本漫画的最新章节已更新，是否更新稍后阅读记录？',
+                          style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 13, color: Colors.white),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),

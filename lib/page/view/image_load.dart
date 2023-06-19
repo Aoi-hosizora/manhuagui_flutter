@@ -87,7 +87,8 @@ class ImageLoadFailedView extends StatelessWidget {
       color: Colors.black,
       padding: EdgeInsets.symmetric(vertical: 40),
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
+        // <<< fill the screen for GestureDetector onLongPressed
+        minWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

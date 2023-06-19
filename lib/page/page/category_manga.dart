@@ -169,8 +169,8 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
     super.build(context);
     return WillPopScope(
       onWillPop: () async {
-        if (_chosen) {
-          _chooseCategory(toChoose: false);
+        if (_chosen && _currGenre.curr != widget.defaultGenre) {
+          _chooseCategory(toChoose: false); // only de-choose if pop when current genre is not the default genre
           return false;
         }
         return true;
@@ -182,7 +182,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
           isEmpty: _genres.isEmpty,
           onRefresh: () => _loadGenres(),
           setting: PlaceholderSetting(
-            useAnimatedSwitcher: _currGenre.curr != widget.defaultGenre /* only animate when no default genre */,
+            useAnimatedSwitcher: _currGenre.curr != widget.defaultGenre /* only animate when current genre is not the default genre */,
             customNormalStateBuilder: (c, _, childBuilder) => _chosen
                 ? childBuilder.call(c) // normal state
                 : CategoryGridListView(

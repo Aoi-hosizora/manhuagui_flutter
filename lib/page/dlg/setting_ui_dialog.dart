@@ -232,7 +232,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           hint: !_overviewLoadAll //
               ? '章节页面一览页将仅加载本地已缓存或已下载的图片，不会额外访问网络。'
               : ('章节页面一览页将加载所有页面图片，本地未缓存或未下载的图片会通过网络在线加载。\n\n'
-                  '提示：如果加载所有图片，可能会让本应用在短时间内发出大量请求，有较低概率会导致当前IP被漫画柜封禁。'),
+                  '提示：如果加载所有图片，可能会让本应用在短时间内发出大量请求，有一定概率会导致当前IP被漫画柜封禁。'),
           value: _overviewLoadAll,
           onChanged: (b) {
             _overviewLoadAll = b;

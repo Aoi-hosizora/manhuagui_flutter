@@ -58,6 +58,7 @@ class SmallMangaLineView extends StatelessWidget {
         mangaTitle: manga.title,
         mangaCover: manga.cover,
         mangaUrl: manga.url,
+        extraData: MangaExtraDataForDialog.fromSmallManga(manga),
       ),
     );
   }

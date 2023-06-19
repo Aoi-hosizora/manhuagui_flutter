@@ -27,9 +27,9 @@ class TinyMangaLineView extends StatelessWidget {
       imageUrl: manga.cover,
       title: manga.title,
       icon1: Icons.edit,
-      text1: manga.finished ? '已完结' : '连载中', // TODO show history ???
+      text1: manga.finished ? '已完结' : '连载中',
       icon2: Icons.notes,
-      text2: '最新章节 ${manga.newestChapter}',
+      text2: '最新章节 ${manga.newestChapter.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c)}', // TODO show history ???
       icon3: Icons.update,
       text3: '更新于 ${manga.formattedNewestDateWithDuration}',
       text3Color: !highlightRecent
@@ -58,6 +58,7 @@ class TinyMangaLineView extends StatelessWidget {
         mangaTitle: manga.title,
         mangaCover: manga.cover,
         mangaUrl: manga.url,
+        extraData: MangaExtraDataForDialog.fromTinyManga(manga),
       ),
     );
   }

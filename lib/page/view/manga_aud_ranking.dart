@@ -4,6 +4,7 @@ import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
@@ -39,7 +40,6 @@ class MangaAudRankingView extends StatefulWidget {
     this.onRefreshLongPressed,
     this.onFullListPressed,
     this.onMorePressed,
-    this.onLineLongPressed,
     this.onAudCategoryRemapped,
   }) : super(key: key);
 
@@ -60,7 +60,6 @@ class MangaAudRankingView extends StatefulWidget {
   final void Function()? onRefreshLongPressed;
   final void Function(MangaAudRankingType)? onFullListPressed;
   final void Function()? onMorePressed;
-  final void Function(MangaRanking)? onLineLongPressed;
   final void Function(MangaAudRankingType)? onAudCategoryRemapped;
 
   @override
@@ -204,7 +203,14 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
           ),
         ),
       ),
-      onLongPress: widget.onLineLongPressed == null ? null : () => widget.onLineLongPressed?.call(manga),
+      onLongPress: () => showPopupMenuForMangaList(
+        context: context,
+        mangaId: manga.mid,
+        mangaTitle: manga.title,
+        mangaCover: manga.cover,
+        mangaUrl: manga.url,
+        extraData: MangaExtraDataForDialog.fromMangaRanking(manga),
+      ),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20 /* 15 */, vertical: 6), // | ▢ ▢▢ |
         child: Row(

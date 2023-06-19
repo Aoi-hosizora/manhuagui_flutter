@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/chapter_detail.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/later_manga.dart';
@@ -40,6 +41,7 @@ void showPopupMenuForMangaList({
   required String mangaTitle,
   required String mangaCover,
   required String mangaUrl,
+  required MangaExtraDataForDialog? extraData,
   bool fromShelfList = false,
   bool fromFavoriteList = false,
   bool fromLaterList = false,
@@ -63,6 +65,7 @@ void showPopupMenuForMangaList({
     mangaTitle: mangaTitle,
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
+    extraData: extraData,
   );
 
   showDialog(
@@ -183,7 +186,13 @@ void showPopupMenuForMangaList({
               onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false),
             ),
 
-          // TODO add 更多选项
+          // /// 更多选项
+          // IconTextDialogOption(
+          //   icon: Icon(Icons.more_vert),
+          //   text: Text('更多选项'),
+          //   popWhenPress: c,
+          //   onPressed: () {}, // TODO add 更多选项
+          // ),
         ],
       ),
     ),
@@ -204,6 +213,7 @@ void showUpdateFavoriteMangasGroupDialog({
     mangaTitle: '',
     mangaCover: '',
     mangaUrl: '',
+    extraData: null,
   );
   await helper.updateFavsGroup(
     oldFavorites: favorites,
@@ -228,6 +238,7 @@ void showUpdateFavoriteMangaRemarkDialog({
     mangaTitle: favorite.mangaTitle,
     mangaCover: favorite.mangaCover,
     mangaUrl: favorite.mangaUrl,
+    extraData: null,
   );
   await helper.updateFavRemark(
     oldFavorite: favorite,
@@ -266,6 +277,7 @@ void showPopupMenuForMangaToc({
     mangaTitle: mangaTitle,
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
+    extraData: null,
   );
 
   showDialog(
@@ -361,6 +373,7 @@ void showPopupMenuForSubscribing({
   required String mangaTitle,
   required String mangaCover,
   required String mangaUrl,
+  required MangaExtraDataForDialog? extraData,
   required bool fromMangaPage,
   required bool nowInShelf,
   required bool nowInFavorite,
@@ -379,6 +392,7 @@ void showPopupMenuForSubscribing({
     mangaTitle: mangaTitle,
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
+    extraData: extraData,
   );
 
   showDialog(
@@ -466,7 +480,7 @@ void showPopupMenuForSubscribing({
             ),
           if (laterManga != null)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.sortClockDescending),
+              icon: Icon(CustomIcons.clock_topmost),
               text: Text('置顶于稍后阅读列表'),
               popWhenPress: c,
               onPressed: () => helper.topmostLater(later: laterManga, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
@@ -491,6 +505,7 @@ void showPopupMenuForLaterManga({
   required String mangaTitle,
   required String mangaCover,
   required String mangaUrl,
+  required MangaExtraDataForDialog? extraData,
   required bool fromMangaPage,
   required LaterManga? laterManga,
   required void Function(LaterManga? later) inLaterSetter,
@@ -502,6 +517,7 @@ void showPopupMenuForLaterManga({
     mangaTitle: mangaTitle,
     mangaCover: mangaCover,
     mangaUrl: mangaUrl,
+    extraData: extraData,
   );
   var later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: mangaId);
 
@@ -520,9 +536,16 @@ void showPopupMenuForLaterManga({
           predicateForPress: () => helper.showCheckRemovingLaterDialog(),
           onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
         ),
+        if (later != null && extraData != null && extraData.newestChapter != null && extraData.newestDate != null && extraData.newestChapter != later.newestChapter)
+          IconTextDialogOption(
+            icon: Icon(CustomIcons.clock_sync),
+            text: Text('更新记录至最新章节'),
+            popWhenPress: c,
+            onPressed: () => helper.updateLaterToNewestChapter(later: later, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage), // TODO test
+          ),
         if (later != null)
           IconTextDialogOption(
-            icon: Icon(MdiIcons.sortClockDescending),
+            icon: Icon(CustomIcons.clock_topmost),
             text: Text('置顶于稍后阅读列表'),
             popWhenPress: c,
             onPressed: () => helper.topmostLater(later: later, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
@@ -538,6 +561,35 @@ void showPopupMenuForLaterManga({
   );
 }
 
+class MangaExtraDataForDialog {
+  const MangaExtraDataForDialog({this.mangaAuthors, this.newestChapter, this.newestDate});
+
+  final List<String>? mangaAuthors;
+  final String? newestChapter;
+  final String? newestDate;
+
+  factory MangaExtraDataForDialog.fromManga(Manga manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.authors.map((a) => a.name).toList(), newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromMangaViewer(MangaViewerPageData manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.mangaAuthors?.map((a) => a.name).toList(), newestChapter: manga.newestChapterTitle, newestDate: manga.newestDateAndFinished?.item1);
+
+  factory MangaExtraDataForDialog.fromSmallManga(SmallManga manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.authors.map((a) => a.name).toList(), newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromTinyManga(TinyManga manga) => //
+      MangaExtraDataForDialog(newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromMangaRanking(MangaRanking manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.authors.map((a) => a.name).toList(), newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromShelfManga(ShelfManga manga) => //
+      MangaExtraDataForDialog(newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromLaterManga(LaterManga manga) => //
+      MangaExtraDataForDialog(newestChapter: manga.newestChapter, newestDate: manga.newestDate);
+}
+
 class _DialogHelper {
   const _DialogHelper({
     required this.context,
@@ -545,6 +597,7 @@ class _DialogHelper {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
+    required this.extraData,
   });
 
   final BuildContext context;
@@ -552,6 +605,7 @@ class _DialogHelper {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
+  final MangaExtraDataForDialog? extraData;
 
   // ============================
   // static methods (show dialog)
@@ -1062,6 +1116,8 @@ class _DialogHelper {
         mangaTitle: mangaTitle,
         mangaCover: mangaCover,
         mangaUrl: mangaUrl,
+        newestChapter: extraData?.newestChapter?.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c) /* null => 未知 */,
+        newestDate: extraData?.newestDate /* null => 未知 */,
         createdAt: DateTime.now(),
       );
       await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLaterManga);
@@ -1075,7 +1131,7 @@ class _DialogHelper {
     EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: toAdd, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
-  // => called by showPopupMenuForLaterManga
+  // => called by showPopupMenuForSubscribing, showPopupMenuForLaterManga
   Future<void> topmostLater({
     required LaterManga later,
     required void Function(LaterManga? later)? onUpdated,
@@ -1087,6 +1143,26 @@ class _DialogHelper {
     onUpdated?.call(updatedLaterManga);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画在稍后阅读列表中置顶')));
+    EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
+  }
+
+  // => called by showPopupMenuForLaterManga
+  Future<void> updateLaterToNewestChapter({
+    required LaterManga later,
+    required void Function(LaterManga? later)? onUpdated,
+    required bool fromLaterList,
+    required bool fromMangaPage,
+  }) async {
+    var newestChapter = extraData?.newestChapter?.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c);
+    var newestDate = extraData?.newestDate;
+    if (newestChapter == null || newestDate == null) {
+      return;
+    }
+    var updatedLaterManga = later.copyWith(newestChapter: newestChapter, newestDate: newestDate); // do not change createdAt
+    await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedLaterManga);
+    onUpdated?.call(updatedLaterManga);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将稍后阅读记录更新为最新章节')));
     EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 

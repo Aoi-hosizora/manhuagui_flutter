@@ -436,12 +436,17 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
               },
         onLongPressed: !AppSetting.instance.ui.allowHomepagePopup
             ? null
-            : (mangaId, mangaTitle, mangaCover, mangaUrl) => showPopupMenuForMangaList(
+            : (mangaId, mangaTitle, mangaCover, mangaUrl, extraData) => showPopupMenuForMangaList(
                   context: context,
                   mangaId: mangaId,
                   mangaTitle: mangaTitle,
                   mangaCover: mangaCover,
                   mangaUrl: mangaUrl,
+                  extraData: extraData,
+                  inShelfSetter: (i) => i ? null : mountedSetState(() => _shelves?.removeWhere((el) => el.mid == mangaId)),
+                  inFavoriteSetter: (i) => i ? null : mountedSetState(() => _favorites?.removeWhere((el) => el.mangaId == mangaId)),
+                  inLaterSetter: (i) => i ? null : mountedSetState(() => _laters?.removeWhere((el) => el.mangaId == mangaId)),
+                  inHistorySetter: (i) => i ? null : mountedSetState(() => _histories?.removeWhere((el) => el.mangaId == mangaId)),
                 ),
       ),
     );
@@ -496,13 +501,6 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           ),
         ),
         onMorePressed: () => _openSepPage(SepRankingPage()),
-        onLineLongPressed: (manga) => showPopupMenuForMangaList(
-          context: context,
-          mangaId: manga.mid,
-          mangaTitle: manga.title,
-          mangaCover: manga.cover,
-          mangaUrl: manga.url,
-        ),
         onAudCategoryRemapped: (t) async {
           // => 更新受众排行榜映射、更新界面、重新加载该页
           if (t == MangaAudRankingType.qingnian || t == MangaAudRankingType.shaonv) {
@@ -535,6 +533,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   mangaTitle: manga.title,
                   mangaCover: manga.cover,
                   mangaUrl: manga.url,
+                  extraData: null,
                 ),
       ),
     );

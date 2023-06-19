@@ -148,6 +148,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
       mangaTitle: favorite.mangaTitle,
       mangaCover: favorite.mangaCover,
       mangaUrl: favorite.mangaUrl,
+      extraData: null,
       fromFavoriteList: false /* <<< */,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
@@ -336,6 +337,8 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> {
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+              useFullRipple: true,
+              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : null,
               itemBuilder: (c, key, tip) => FavoriteMangaLineView(
                 manga: item,
                 index: null /* don't show order badge */,

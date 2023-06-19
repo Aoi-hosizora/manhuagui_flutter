@@ -33,4 +33,7 @@ class CustomIcons {
   static const IconData eye_public = IconData(0xe80d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData opened_book_offline = IconData(0xe80e, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData opened_book_replay = IconData(0xe80f, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData clock_topmost = IconData(0xe810, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData image_timeline = IconData(0xe811, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData clock_sync = IconData(0xe812, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

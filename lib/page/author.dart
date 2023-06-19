@@ -113,6 +113,7 @@ class _AuthorPageState extends State<AuthorPage> {
       if (mounted) setState(() {});
       await Future.delayed(kFlashListDuration);
       _data = result.data;
+      _total = _data!.mangaCount;
 
       // 3. 更新数据库收藏信息
       if (_favoriteAuthor != null) {

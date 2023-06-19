@@ -27,6 +27,7 @@ import 'package:manhuagui_flutter/page/manga_overview.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -81,17 +82,20 @@ class MangaChapterNeededData {
   const MangaChapterNeededData({
     required this.chapterGroups,
     required this.mangaAuthors,
+    required this.newestChapterTitle,
     required this.newestDateAndFinished,
   });
 
   final List<MangaChapterGroup> chapterGroups;
   final List<TinyAuthor> mangaAuthors;
+  final String newestChapterTitle;
   final Tuple2<String, bool> newestDateAndFinished;
 
   static MangaChapterNeededData fromMangaData(Manga manga) {
     return MangaChapterNeededData(
       chapterGroups: manga.chapterGroups,
       mangaAuthors: manga.authors,
+      newestChapterTitle: manga.newestChapter,
       newestDateAndFinished: Tuple2(manga.formattedNewestDate, manga.finished),
     );
   }
@@ -119,6 +123,7 @@ class MangaViewerPageData {
     required this.chapterNeighbor,
     required this.chapterGroups,
     required this.mangaAuthors,
+    required this.newestChapterTitle,
     required this.newestDateAndFinished,
     required this.getMangaFailed,
     required this.metadataUpdatedAt,
@@ -136,17 +141,19 @@ class MangaViewerPageData {
   final MangaChapterNeighbor? chapterNeighbor;
   final List<MangaChapterGroup>? chapterGroups;
   final List<TinyAuthor>? mangaAuthors;
+  final String? newestChapterTitle;
   final Tuple2<String, bool>? newestDateAndFinished;
   final bool? getMangaFailed; // only used when offline
   final DateTime? metadataUpdatedAt; // only used when offline
 
   String get chapterCover => pages.isNotEmpty ? pages.first : '';
 
-  MangaChapterNeededData? get neededData => chapterGroups == null || mangaAuthors == null || newestDateAndFinished == null
+  MangaChapterNeededData? get neededData => chapterGroups == null || mangaAuthors == null || newestChapterTitle == null || newestDateAndFinished == null
       ? null
       : MangaChapterNeededData(
           chapterGroups: chapterGroups!,
           mangaAuthors: mangaAuthors!,
+          newestChapterTitle: newestChapterTitle!,
           newestDateAndFinished: newestDateAndFinished!,
         );
 
@@ -169,6 +176,7 @@ class MangaViewerPageData {
       chapterNeighbor: neededData?.chapterGroups.findChapterNeighbor(chapterId, prev: true, next: true) ?? chapterNeighbor,
       chapterGroups: neededData?.chapterGroups ?? chapterGroups,
       mangaAuthors: neededData?.mangaAuthors ?? mangaAuthors,
+      newestChapterTitle: neededData?.newestChapterTitle ?? newestChapterTitle,
       newestDateAndFinished: neededData?.newestDateAndFinished ?? newestDateAndFinished,
       getMangaFailed: getMangaFailed,
       metadataUpdatedAt: metadataUpdatedAt,
@@ -398,6 +406,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           chapterNeighbor: neededData.chapterGroups.findChapterNeighbor(widget.chapterId, prev: true, next: true) /* => no use response data as chapter neighbor */,
           chapterGroups: neededData.chapterGroups,
           mangaAuthors: neededData.mangaAuthors,
+          newestChapterTitle: neededData.newestChapterTitle,
           newestDateAndFinished: neededData.newestDateAndFinished,
           getMangaFailed: false,
           metadataUpdatedAt: null /* never used when online */,
@@ -432,6 +441,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 ),
             chapterGroups: widget.neededData?.chapterGroups /* maybe null */,
             mangaAuthors: widget.neededData?.mangaAuthors /* maybe null */,
+            newestChapterTitle: widget.neededData?.newestChapterTitle /* maybe null */,
             newestDateAndFinished: widget.neededData?.newestDateAndFinished /* maybe null */,
             getMangaFailed: null /* getting manga */,
             metadataUpdatedAt: metadata.updatedAt /* maybe null */,
@@ -752,6 +762,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaTitle: _data!.mangaTitle,
       mangaCover: _data!.mangaCover,
       mangaUrl: _data!.mangaUrl,
+      extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
       fromMangaPage: false,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
@@ -983,13 +994,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
-  Future<void> _showLaters() async {
+  Future<void> _showLaterMangaDialog() async {
     showPopupMenuForLaterManga(
       context: context,
       mangaId: _data!.mangaId,
       mangaTitle: _data!.mangaTitle,
       mangaCover: _data!.mangaCover,
       mangaUrl: _data!.mangaUrl,
+      extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
       fromMangaPage: false,
       laterManga: _laterManga,
       inLaterSetter: (l) {
@@ -1060,6 +1072,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   }
 
   void _showPopupMenu(int imageIndex /* start from 0 */) {
+    HapticFeedback.vibrate();
     var imageIndexP1 = imageIndex + 1; // start from 1
     showDialog(
       context: context,
@@ -1117,6 +1130,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
               } else {
                 await shareFile(filepath: filepath, type: 'image/*');
+              }
+            },
+            onLongPressed: () async {
+              Navigator.of(c).pop();
+              var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
+              var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
+              if (filepath == null) {
+                Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
+              } else {
+                await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第$imageIndexP1页 $url'); // TODO test
               }
             },
           ),
@@ -1234,10 +1257,28 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                               ),
                             ),
                           ),
-                        AppBarActionButton(
-                          icon: Icon(Icons.open_in_browser),
-                          tooltip: '用浏览器打开',
-                          onPressed: () => launchInBrowser(context: context, url: _data?.chapterUrl ?? widget.mangaUrl),
+                        PopupMenuButton(
+                          child: Builder(
+                            builder: (c) => AppBarActionButton(
+                              icon: Icon(Icons.more_vert),
+                              tooltip: '更多选项',
+                              onPressed: () => c.findAncestorStateOfType<PopupMenuButtonState>()?.showButtonMenu(),
+                            ),
+                          ),
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.refresh, '重新加载本章节'),
+                              onTap: () => _loadData(),
+                            ),
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.share, '分享本章节'),
+                              onTap: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
+                            ),
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.open_in_browser, '用浏览器打开'),
+                              onTap: () => launchInBrowser(context: context, url: _data?.chapterUrl ?? widget.mangaUrl),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1327,9 +1368,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toShowSettings: _onSettingPressed,
                       toShowDetails: _showDetails,
                       toShowComments: _showComments,
+                      toShowOverview: _openOverviewPage,
                       toShare: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
-                      toOpenInBrowser: () => launchInBrowser(context: context, url: _data!.chapterUrl),
-                      toShowLaters: _showLaters,
+                      toShowLaters: _showLaterMangaDialog,
                       toShowImage: _showImage,
                       toOnlineMode: () => _toOnlineMode(alsoCheck: false),
                     ),
@@ -1353,9 +1394,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toShowSettings: _onSettingPressed,
                       toShowDetails: _showDetails,
                       toShowComments: _showComments,
+                      toShowOverview: _openOverviewPage,
                       toShare: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
-                      toOpenInBrowser: () => launchInBrowser(context: context, url: _data!.chapterUrl),
-                      toShowLaters: _showLaters,
+                      toShowLaters: _showLaterMangaDialog,
                       toShowImage: _showImage,
                       toOnlineMode: () => _toOnlineMode(alsoCheck: false),
                     ),

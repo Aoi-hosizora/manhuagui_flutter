@@ -149,6 +149,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       mangaTitle: history.mangaTitle,
       mangaCover: history.mangaCover,
       mangaUrl: history.mangaUrl,
+      extraData: null,
       fromHistoryList: true,
       inHistorySetter: (inHistory) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
@@ -319,6 +320,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
               key: ValueKey<int>(item.mangaId),
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
+              useFullRipple: true,
+              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : null,
               itemBuilder: (c, key, tip) => MangaHistoryLineView(
                 history: item,
                 flags: _flagStorage.getFlags(mangaId: item.mangaId, forceInHistory: true),

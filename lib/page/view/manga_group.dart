@@ -133,7 +133,7 @@ class _MangaGroupViewState extends State<MangaGroupView> {
                   child: Padding(
                     padding: EdgeInsets.only(top: 2),
                     child: Text(
-                      manga.finished ? '${manga.newestChapter} 全' : '更新至 ${manga.newestChapter}',
+                      manga.finished ? '${manga.newestChapter} 完结' : '更新至 ${manga.newestChapter}',
                       style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.white),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

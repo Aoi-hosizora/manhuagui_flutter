@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -56,14 +57,25 @@ class MangaCollectionView extends StatefulWidget {
   final void Function()? onRefreshPressed;
   final bool disableRefresh;
   final void Function()? onMorePressed;
-  final void Function(int mid, String title, String cover, String url)? onLongPressed;
+  final void Function(int mid, String title, String cover, String url, MangaExtraDataForDialog? extraData)? onLongPressed;
 
   @override
   State<MangaCollectionView> createState() => _MangaCollectionViewState();
 }
 
 class _MangaCollectionViewState extends State<MangaCollectionView> with AutomaticKeepAliveClientMixin {
-  Widget _buildCover(BuildContext context, int mid, String title, String cover, String url, double width, double height, {bool highQuality = false, bool gotoDownload = false}) {
+  Widget _buildCover(
+    BuildContext context,
+    int mid,
+    String title,
+    String cover,
+    String url,
+    double width,
+    double height, {
+    bool highQuality = false,
+    bool gotoDownload = false,
+    required MangaExtraDataForDialog? extraData,
+  }) {
     return FullRippleWidget(
       child: Container(
         width: width,
@@ -108,19 +120,20 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
       },
       onLongPress: widget.onLongPressed == null //
           ? null
-          : () => widget.onLongPressed?.call(mid, title, cover, url),
+          : () => widget.onLongPressed?.call(mid, title, cover, url, extraData),
     );
   }
 
-  Widget _buildRankItem(BuildContext context, MangaRanking manga) {
+  Widget _buildRankingItem(BuildContext context, MangaRanking manga) {
     final count = !widget.showMore ? 3 : 4;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢|
     final height = width / 3 * 4;
+    final extraData = MangaExtraDataForDialog.fromMangaRanking(manga);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height, highQuality: true),
+        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height, highQuality: true, extraData: extraData),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -160,15 +173,16 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildUpdateItem(BuildContext context, TinyManga manga) {
+  Widget _buildRecentItem(BuildContext context, TinyManga manga) {
     final count = !widget.showMore ? 4 : 5;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
+    final extraData = MangaExtraDataForDialog.fromTinyManga(manga);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height),
+        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height, extraData: extraData),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -181,7 +195,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                !manga.finished ? '更新至 ${manga.newestChapter}' : '${manga.newestChapter} 全',
+                manga.newestChapter.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c).let((c) => !manga.finished ? '更新至 $c' : '$c 完结'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),
@@ -201,7 +215,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height, extraData: null),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -221,11 +235,12 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     final count = !widget.showMore ? 6 : 8;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
+    final extraData = MangaExtraDataForDialog.fromLaterManga(manga);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height, extraData: extraData),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -245,11 +260,12 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     final count = !widget.showMore ? 4 : 5;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
+    final extraData = MangaExtraDataForDialog.fromShelfManga(manga);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height),
+        _buildCover(context, manga.mid, manga.title, manga.cover, manga.url, width, height, extraData: extraData),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -282,7 +298,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height, extraData: null),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -306,7 +322,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height, gotoDownload: true),
+        _buildCover(context, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, width, height, gotoDownload: true, extraData: null),
         Container(
           width: width,
           padding: EdgeInsets.only(top: 2),
@@ -351,12 +367,12 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
         title = '今日漫画排行榜';
         icon = Icons.trending_up;
         right = '更新于 ${formatDatetimeAndDuration(widget.rankingDateTime ?? DateTime.now(), FormatPattern.date)}';
-        widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankItem(context, el)).toList(); // # = 50 => 20
+        widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankingItem(context, el)).toList(); // # = 50 => 20
         break;
       case MangaCollectionType.recents:
         title = '最近更新的漫画';
         icon = Icons.cached;
-        widgets = widget.updates?.sublist(0, widget.updates!.length.clamp(0, 30)).map((el) => _buildUpdateItem(context, el)).toList(); // # = 42 => 30
+        widgets = widget.updates?.sublist(0, widget.updates!.length.clamp(0, 30)).map((el) => _buildRecentItem(context, el)).toList(); // # = 42 => 30
         break;
       case MangaCollectionType.histories:
         title = widget.username == null ? '本地阅读历史' : '${widget.username} 的阅读历史';
