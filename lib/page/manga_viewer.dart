@@ -208,6 +208,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _networkInfo = 'WIFI';
   var _batteryInfo = '0%';
 
+  final _assistantHandlerKey = GlobalKey();
+  var _assistantHandlerYPosition = 50.0;
+
   @override
   void initState() {
     super.initState();
@@ -968,29 +971,21 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   }
 
   Future<void> _showComments() async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (c) => MediaQuery.removePadding(
+    await _ScreenHelper.restoreSystemUI();
+    await Navigator.of(context).push(
+      CustomPageRoute(
         context: context,
-        removeTop: true,
-        removeBottom: true,
-        child: Container(
-          height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
-          margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-          child: CommentsPage(
-            mangaId: widget.mangaId,
-            mangaTitle: _data!.mangaTitle,
-            pushNavigateWrapper: (navigate) async {
-              await _ScreenHelper.restoreSystemUI();
-              await navigate(); // pushReplaced => true
-              await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
-            },
-          ),
+        builder: (c) => CommentsPage(
+          mangaId: widget.mangaId,
+          mangaTitle: _data!.mangaTitle,
+          pushNavigateWrapper: (navigate) async {
+            await _ScreenHelper.restoreSystemUI();
+            await navigate(); // pushReplaced => true
+            await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+          },
         ),
       ),
     );
-    await Future.delayed(kBottomSheetExitDuration + Duration(milliseconds: 10));
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
@@ -1139,7 +1134,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
               if (filepath == null) {
                 Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
               } else {
-                await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第$imageIndexP1页 $url'); // TODO test
+                await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第$imageIndexP1页 $url');
               }
             },
           ),
@@ -1405,22 +1400,120 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 // ****************************************************************
                 // TODO 单手跳转章节助手 (同时添加到 ViewSetting 中)
                 // ****************************************************************
-                if (_inExtraPage && _currentPage > 1)
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: AnimatedSwitcher(
-                      duration: _kAnimationDuration,
-                      child: !(_data != null && !_ScreenHelper.showAppBar && !_inExtraPage && _setting.showPageHint)
-                          ? const SizedBox.shrink() //
-                          : null,
-                      // : Container(
-                      //     color: Colors.black.withOpacity(0.7),
-                      //     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
-                      //     child: null,
-                      //   ),
+                Positioned(
+                  top: _assistantHandlerYPosition,
+                  left: 0,
+                  right: 0,
+                  child: AnimatedSwitcher(
+                    duration: _kAnimationDuration,
+                    child: !(_data != null && _inExtraPage && _currentPage > 1)
+                        ? const SizedBox.shrink() //
+                        : Material(
+                            key: _assistantHandlerKey,
+                            color: Colors.orange[900]?.withOpacity(0.9),
+                            child: Container(
+                              // padding: EdgeInsets.symmetric(horizontal: 15 - 8, vertical: 18 - 6),
+                              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6),
+                              width: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
+                              child: IntrinsicHeight(
+                                child: Row(
+                                  children: [
+                                    // InkWell(
+                                    //   child: Padding(
+                                    //     padding: EdgeInsets.all(8),
+                                    //     child: Icon(Icons.menu, size: 20, color: Colors.white),
+                                    //   ),
+                                    //   onTap: () => Fluttertoast.showToast(msg: '长按拖动可调整 "单手跳转章节助手" 的位置'),
+                                    // ),
+                                    // SizedBox(width: 15 - 8),
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () {},
+                                        onLongPress: () {},
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Transform.rotate(
+                                                angle: math.pi,
+                                                child: Icon(
+                                                  Icons.arrow_right_alt,
+                                                  size: 30,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              Text(
+                                                '阅读上一章节',
+                                                style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                                      fontSize: 18,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    VerticalDivider(width: 15 * 2 + 2, thickness: 2, color: Colors.white38),
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () {},
+                                        onLongPress: () {},
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Transform.rotate(
+                                                angle: 0,
+                                                child: Icon(
+                                                  Icons.arrow_right_alt,
+                                                  size: 30,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              Text(
+                                                '阅读下一章节',
+                                                style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                                      fontSize: 18,
+                                                      color: Colors.white,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // SizedBox(width: 15 - 8),
+                                    // Tooltip(
+                                    //   message: '打开漫画阅读设置',
+                                    //   child: InkWell(
+                                    //     child: Padding(
+                                    //       padding: EdgeInsets.all(8),
+                                    //       child: Icon(Icons.settings, size: 20, color: Colors.white),
+                                    //     ),
+                                    //     onTap: _onSettingPressed,
+                                    //   ),
+                                    // ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                  ).let(
+                    (draggableChild) => LongPressDraggable(
+                      child: draggableChild,
+                      childWhenDragging: const SizedBox.shrink(),
+                      feedback: Opacity(opacity: 0.8, child: draggableChild),
+                      axis: Axis.vertical,
+                      onDraggableCanceled: (_, offset) => mountedSetState(() => _assistantHandlerYPosition = (offset.dy - MediaQuery.of(context).padding.top).clamp(
+                            0,
+                            MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - (_assistantHandlerKey.currentContext?.findRenderBox()?.size.height ?? 0),
+                          )),
                     ),
                   ),
+                ),
                 // ****************************************************************
                 // 右下角的提示文字
                 // ****************************************************************

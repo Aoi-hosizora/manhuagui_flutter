@@ -547,8 +547,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         padding: EdgeInsets.only(top: 12),
                         child: LaterMangaBannerView(
                           manga: _later!,
-                          currentNewestChapter: _mangaData!.newestChapter,
-                          currentNewestDate: _mangaData!.formattedNewestDate,
+                          currentNewestChapter: _mangaData?.newestChapter,
+                          currentNewestDate: _mangaData?.formattedNewestDate,
                           action: () => showPopupMenuForLaterManga(
                             context: context,
                             mangaId: _data!.mangaId,

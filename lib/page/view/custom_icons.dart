@@ -36,4 +36,5 @@ class CustomIcons {
   static const IconData clock_topmost = IconData(0xe810, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData image_timeline = IconData(0xe811, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData clock_sync = IconData(0xe812, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData calendar_off = IconData(0xe813, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

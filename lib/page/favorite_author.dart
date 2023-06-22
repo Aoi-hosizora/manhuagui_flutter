@@ -334,7 +334,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
               useFullRipple: true,
-              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(authorId: key.value) : null,
+              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(authorId: key.value) : tip.toToggle?.call(),
               itemBuilder: (c, key, tip) => FavoriteAuthorLineView(
                 author: item,
                 flags: _flagStorage.getFlags(mangaId: item.authorId, forceInFavorite: true),

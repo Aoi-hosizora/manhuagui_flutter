@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
@@ -11,12 +12,14 @@ class SmallMangaLineView extends StatelessWidget {
   const SmallMangaLineView({
     Key? key,
     required this.manga,
+    required this.history,
     this.flags,
     this.twoColumns = false,
     this.highlightRecent = true,
   }) : super(key: key);
 
   final SmallManga manga;
+  final MangaHistory? history;
   final MangaCornerFlags? flags;
   final bool twoColumns;
   final bool highlightRecent;
@@ -29,7 +32,8 @@ class SmallMangaLineView extends StatelessWidget {
       icon1: Icons.person,
       text1: manga.authors.map((a) => a.name).join('/'),
       icon2: Icons.notes,
-      text2: '最新章节 ${manga.newestChapter}',
+      text2: '最新章节 ${manga.newestChapter}' + // TODO show history ???
+          (history?.read != true ? '' : (manga.newestChapter == history!.chapterTitle ? ' (已阅读至该话)' : ' (阅读至 ${history!.shortChapterTitle})')),
       icon3: Icons.update,
       text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       text3Color: !highlightRecent

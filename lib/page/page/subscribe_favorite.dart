@@ -590,7 +590,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
               useFullRipple: true,
-              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : null,
+              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : tip.toToggle?.call(),
               itemBuilder: (c, key, tip) => FavoriteMangaLineView(
                 manga: item,
                 index: _searchKeyword.isNotEmpty /* show index badge only when no searching and sort by order asc */

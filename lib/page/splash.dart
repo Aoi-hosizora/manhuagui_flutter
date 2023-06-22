@@ -48,14 +48,7 @@ class SplashPage extends StatefulWidget {
     }
 
     // 2. upgrade db and prefs
-    var db = await DBManager.instance.getDB();
-    try {
-      // TODO
-      await db.safeExecute('ALTER TABLE tbl_later_manga ADD COLUMN newest_chapter VARCHAR(1023)');
-      await db.safeExecute('ALTER TABLE tbl_later_manga ADD COLUMN newest_date VARCHAR(1023)');
-    } catch (ex) {
-      print(ex.toString());
-    }
+    await DBManager.instance.getDB();
     await PrefsManager.instance.loadPrefs();
 
     // 3. load all settings

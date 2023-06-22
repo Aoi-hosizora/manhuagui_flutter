@@ -92,6 +92,8 @@ class TinyManga {
   final String newestChapter;
   final String newestDate;
 
+  String get formattedNewestChapter => RegExp('^[0-9]').hasMatch(newestChapter) ? '第$newestChapter' : newestChapter;
+
   const TinyManga({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.newestChapter, required this.newestDate});
 
   factory TinyManga.fromJson(Map<String, dynamic> json) => _$TinyMangaFromJson(json);

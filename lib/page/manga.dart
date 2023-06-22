@@ -247,7 +247,7 @@ class _MangaPageState extends State<MangaPage> {
       }
       if (_history == null || !newHistory.equals(_history!)) {
         var toAdd = _history == null;
-        var changedExcludeCover = !newHistory.equals(_history!, includeCover: false);
+        var changedExcludeCover = _history == null || !newHistory.equals(_history!, includeCover: false);
         _history = newHistory;
         await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
         if (changedExcludeCover) {

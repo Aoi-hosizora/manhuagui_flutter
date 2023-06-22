@@ -183,7 +183,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     final client = RestClient(DioManager.instance.dio);
 
     if (types.contains(MangaCollectionType.rankings)) {
-      // pass => #=50 (use _loadRankings instead)
+      // pass => #=50 (use _loadRankings(..., forCollection: true) instead)
     }
 
     if (types.contains(MangaCollectionType.recents)) {
@@ -282,6 +282,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     }
   }
 
+  List<MangaRanking>? _tempRankingsForToday; // 用于请求更新"受众排行榜"时暂存"今日漫画排行榜"
   List<MangaRanking>? _rankings;
   List<MangaRanking>? _qingnianRankings;
   List<MangaRanking>? _shaonvRankings;
@@ -294,7 +295,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   var _qingnianRankingsError = '';
   var _shaonvRankingsError = '';
 
-  Future<void> _loadRankings(List<MangaAudRankingType> types, {bool onlyIfEmpty = false, bool needDelay = false}) async {
+  Future<void> _loadRankings(List<MangaAudRankingType> types, {bool onlyIfEmpty = false, bool needDelay = false, bool forCollection = false}) async {
     final client = RestClient(DioManager.instance.dio);
 
     if (types.contains(MangaAudRankingType.all)) {
@@ -302,6 +303,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         if ((onlyIfEmpty && (_rankings == null || _rankings!.isNotEmpty))) {
           return; // (onlyIfEmpty, loading or not empty) => ignore
         }
+        _tempRankingsForToday = forCollection ? null : _rankings; // 刷新受众排行榜时暂存当前排行榜
         _rankings = null; // loading
         _rankingsError = '';
         if (mounted) setState(() {});
@@ -313,6 +315,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           _rankings = []; // loaded but error
           _rankingsError = wrapError(e, s).text;
         } finally {
+          _tempRankingsForToday = null; // 清除暂存的排行榜
           if (mounted) setState(() {});
         }
       });
@@ -398,7 +401,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
       child: MangaCollectionView(
         type: type,
         showMore: AppSetting.instance.ui.homepageShowMoreMangas,
-        ranking: type == MangaCollectionType.rankings ? _rankings : null,
+        ranking: type == MangaCollectionType.rankings ? (_rankings ?? _tempRankingsForToday) : null,
         updates: type == MangaCollectionType.recents ? _recents : null,
         histories: type == MangaCollectionType.histories ? _histories : null,
         laters: type == MangaCollectionType.laters ? _laters : null,
@@ -422,7 +425,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             (type == MangaCollectionType.favorites && _favorites == null) ||
             (type == MangaCollectionType.downloads && _downloads == null),
         onRefreshPressed: type == MangaCollectionType.rankings //
-            ? () => _loadRankings([MangaAudRankingType.all], onlyIfEmpty: false, needDelay: false)
+            ? () => _loadRankings([MangaAudRankingType.all], onlyIfEmpty: false, needDelay: false, forCollection: true)
             : () => _loadCollections([type], onlyIfEmpty: false, needDelay: false),
         onMorePressed: type == MangaCollectionType.rankings
             ? null // show right text rather than more button for ranking collection
@@ -434,20 +437,18 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                 if (type == MangaCollectionType.favorites) _openSepPage(SepFavoritePage());
                 if (type == MangaCollectionType.downloads) Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()));
               },
-        onLongPressed: !AppSetting.instance.ui.allowHomepagePopup
-            ? null
-            : (mangaId, mangaTitle, mangaCover, mangaUrl, extraData) => showPopupMenuForMangaList(
-                  context: context,
-                  mangaId: mangaId,
-                  mangaTitle: mangaTitle,
-                  mangaCover: mangaCover,
-                  mangaUrl: mangaUrl,
-                  extraData: extraData,
-                  inShelfSetter: (i) => i ? null : mountedSetState(() => _shelves?.removeWhere((el) => el.mid == mangaId)),
-                  inFavoriteSetter: (i) => i ? null : mountedSetState(() => _favorites?.removeWhere((el) => el.mangaId == mangaId)),
-                  inLaterSetter: (i) => i ? null : mountedSetState(() => _laters?.removeWhere((el) => el.mangaId == mangaId)),
-                  inHistorySetter: (i) => i ? null : mountedSetState(() => _histories?.removeWhere((el) => el.mangaId == mangaId)),
-                ),
+        onLongPressed: (mangaId, mangaTitle, mangaCover, mangaUrl, extraData) => showPopupMenuForMangaList(
+          context: context,
+          mangaId: mangaId,
+          mangaTitle: mangaTitle,
+          mangaCover: mangaCover,
+          mangaUrl: mangaUrl,
+          extraData: extraData,
+          inShelfSetter: (i) => i ? null : mountedSetState(() => _shelves?.removeWhere((el) => el.mid == mangaId)),
+          inFavoriteSetter: (i) => i ? null : mountedSetState(() => _favorites?.removeWhere((el) => el.mangaId == mangaId)),
+          inLaterSetter: (i) => i ? null : mountedSetState(() => _laters?.removeWhere((el) => el.mangaId == mangaId)),
+          inHistorySetter: (i) => i ? null : mountedSetState(() => _histories?.removeWhere((el) => el.mangaId == mangaId)),
+        ),
       ),
     );
   }
@@ -525,16 +526,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             ),
           ),
         ),
-        onLongPressed: !AppSetting.instance.ui.allowHomepagePopup
-            ? null
-            : (manga) => showPopupMenuForMangaList(
-                  context: context,
-                  mangaId: manga.mid,
-                  mangaTitle: manga.title,
-                  mangaCover: manga.cover,
-                  mangaUrl: manga.url,
-                  extraData: null,
-                ),
+        onLongPressed: (manga) => showPopupMenuForMangaList(
+          context: context,
+          mangaId: manga.mid,
+          mangaTitle: manga.title,
+          mangaCover: manga.cover,
+          mangaUrl: manga.url,
+          extraData: null,
+        ),
       ),
     );
   }

@@ -148,7 +148,6 @@ class AppSettingPrefs {
   static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
   static const _homepageShowMoreMangasKey = BoolKey('AppSettingPrefs_homepageShowMoreMangas');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
-  static const _allowHomepagePopupKey = BoolKey('AppSettingPrefs_allowHomepagePopup');
   static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
   static const _homepageFavoriteKey = IntKey('AppSettingPrefs_homepageFavorite');
   static const _homepageRefreshDataKey = IntKey('AppSettingPrefs_homepageRefreshData');
@@ -170,7 +169,6 @@ class AppSettingPrefs {
         _overviewLoadAllKey,
         _homepageShowMoreMangasKey,
         _includeUnreadInHomeKey,
-        _allowHomepagePopupKey,
         _audienceMangaRowsKey,
         _homepageFavoriteKey,
         _homepageRefreshDataKey,
@@ -196,7 +194,6 @@ class AppSettingPrefs {
       overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
       homepageShowMoreMangas: prefs.safeGet<bool>(_homepageShowMoreMangasKey) ?? def.homepageShowMoreMangas,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
-      allowHomepagePopup: prefs.safeGet<bool>(_allowHomepagePopupKey) ?? def.allowHomepagePopup,
       audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
       homepageFavorite: HomepageFavoriteExtension.fromInt(prefs.safeGet<int>(_homepageFavoriteKey) ?? def.homepageFavorite.toInt()),
       homepageRefreshData: HomepageRefreshDatarExtension.fromInt(prefs.safeGet<int>(_homepageRefreshDataKey) ?? def.homepageRefreshData.toInt()),
@@ -222,7 +219,6 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
     await prefs.safeSet<bool>(_homepageShowMoreMangasKey, setting.homepageShowMoreMangas);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
-    await prefs.safeSet<bool>(_allowHomepagePopupKey, setting.allowHomepagePopup);
     await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
     await prefs.safeSet<int>(_homepageFavoriteKey, setting.homepageFavorite.toInt());
     await prefs.safeSet<int>(_homepageRefreshDataKey, setting.homepageRefreshData.toInt());

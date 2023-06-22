@@ -25,6 +25,8 @@ class MangaHistory {
 
   bool get read => chapterId != 0;
 
+  String get shortChapterTitle => chapterTitle.trim().split(' ')[0];
+
   String get formattedLastTime => //
       formatDatetimeAndDuration(lastTime, FormatPattern.datetime);
 

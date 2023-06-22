@@ -112,7 +112,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       angle: left ? math.pi : 0,
                       child: Icon(
                         Icons.arrow_right_alt,
-                        size: 28,
+                        size: 30,
                         color: Theme.of(context).primaryColor,
                       ),
                     ),
@@ -164,7 +164,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
         children: [
           if (!widget.reverseScroll) prev, // 上一章
           if (widget.reverseScroll) next, // 下一章(反)
-          VerticalDivider(width: 36, thickness: 2),
+          VerticalDivider(width: 15 * 2 + 2, thickness: 2),
           if (!widget.reverseScroll) next, // 下一章(反)
           if (widget.reverseScroll) prev, // 上一章
         ],

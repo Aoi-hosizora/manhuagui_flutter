@@ -133,7 +133,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                             checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
                             checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Colors.white),
                             useFullRipple: true,
-                            onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? widget.toAdjustChapter(key.value) : null,
+                            onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? widget.toAdjustChapter(key.value) : tip.toToggle?.call(),
                             itemBuilder: (_, key, tip) => Material(
                               color: Colors.white,
                               child: DownloadChapterLineView(

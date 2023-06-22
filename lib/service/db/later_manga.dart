@@ -1,4 +1,5 @@
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
 import 'package:manhuagui_flutter/service/db/query_helper.dart';
@@ -163,6 +164,73 @@ class LaterMangaDao {
       newestDate: r[_colNewestDate] as String?,
       createdAt: DateTime.parse(r[_colCreatedAt]! as String),
     );
+  }
+
+  static Future<List<DateTime>> getLaterMangaDates({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT DISTINCT DATE($_colCreatedAt) AS date
+         FROM $_tblLaterManga
+         WHERE $_colUsername = ?
+         ORDER BY $_colCreatedAt DESC''',
+      [username],
+    );
+    if (results == null) {
+      return [];
+    }
+    var out = <DateTime>{};
+    for (var r in results) {
+      var dt = DateTime.parse(r['date']! as String);
+      out.add(DateTime(dt.year, dt.month, dt.day));
+    }
+    return out.toList();
+  }
+
+  static Future<int?> getLaterMangaCountByDate({required String username, required DateTime datetime}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblLaterManga
+         WHERE $_colUsername = ? AND DATE($_colCreatedAt) = ?''',
+      [username, formatDatetimeAndDuration(datetime, FormatPattern.barredDate)],
+    );
+    if (results == null) {
+      return null;
+    }
+    return firstIntValue(results);
+  }
+
+  static Future<List<LaterManga>?> getLaterMangasByDate({required String username, required DateTime datetime, SortMethod sortMethod = SortMethod.byTimeDesc, required int page, int limit = 20, int offset = 0}) async {
+    final db = await DBManager.instance.getDB();
+    var orderBy = _buildOrderByStatement(sortMethod: sortMethod, includeORDERBY: false);
+    offset = limit * (page - 1) - offset;
+    if (offset < 0) {
+      offset = 0;
+    }
+    var results = await db.safeRawQuery(
+      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt
+         FROM $_tblLaterManga
+         WHERE $_colUsername = ? AND DATE($_colCreatedAt) = ?
+         ORDER BY $orderBy, $_colCreatedAt DESC
+         LIMIT $limit OFFSET $offset''',
+      [username, formatDatetimeAndDuration(datetime, FormatPattern.barredDate)],
+    );
+    if (results == null) {
+      return null;
+    }
+    var out = <LaterManga>[];
+    for (var r in results) {
+      out.add(LaterManga(
+        mangaId: r[_colMangaId]! as int,
+        mangaTitle: r[_colMangaTitle]! as String,
+        mangaCover: r[_colMangaCover]! as String,
+        mangaUrl: r[_colMangaUrl]! as String,
+        newestChapter: r[_colNewestChapter] as String?,
+        newestDate: r[_colNewestDate] as String?,
+        createdAt: DateTime.parse(r[_colCreatedAt]! as String),
+      ));
+    }
+    return out;
   }
 
   static Future<bool> addOrUpdateLaterManga({required String username, required LaterManga manga}) async {

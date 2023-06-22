@@ -22,39 +22,39 @@ ParseResult parseDurationOrDateString(String text) {
   var ymd = DateFormat('yyyy/MM/dd');
 
   int? minutes, hours, days, dayDiff;
-  String? duration; // duration text or concrete date text
+  String? duration; // duration text or null
   if (text.contains('分钟前')) /* X分钟前 */ {
     minutes = int.tryParse(text.substring(0, text.length - 3)) ?? 0;
-    duration = minutes == 0 ? '不到1分钟前' : '$minutes分钟前';
     dayDiff = 0;
+    duration = minutes == 0 ? '不到1分钟前' : '$minutes分钟前';
   } else if (text.contains('小时前')) /* X小时前 */ {
     hours = int.tryParse(text.substring(0, text.length - 3)) ?? 0;
-    duration = '$hours小时前';
     dayDiff = hours <= now.hour ? 0 : 1;
+    duration = '$hours小时前';
   } else if (text.contains('天前')) /* X天前 */ {
     days = int.tryParse(text.substring(0, text.length - 2)) ?? 0;
-    duration = days == 0 ? '今天' : (days <= 7 ? '$days天前' : ymd.format(now.subtract(Duration(days: days))));
     dayDiff = days;
+    duration = days == 0 ? '今天' : (days <= 7 ? '$days天前' : null);
   } else /* 2023/02/02 */ {
     try {
       days = now.difference(ymd.parse(text)).inDays;
-      duration = days == 0 ? '今天' : (days <= 7 ? '$days天前' : ymd.format(now.subtract(Duration(days: days))));
       dayDiff = days;
+      duration = days == 0 ? '今天' : (days <= 7 ? '$days天前' : null);
     } catch (_) /* unexpected text format */ {
       days = null;
+      dayDiff = null; // null dayDiff => error
       duration = null;
-      dayDiff = null;
     }
   }
 
-  if (duration == null) {
+  if (dayDiff == null) {
     return ParseResult(date: text, duration: null, dayDiff: null); // error, keep original text
   }
   var dateObj = now.subtract(Duration(minutes: minutes ?? 0, hours: hours ?? 0, days: days ?? 0));
   return ParseResult(
     date: ymd.format(dateObj), // "2023/02/02"
-    duration: duration, // "今天" or "xxx前" ("分钟" / "小时" / "天")
-    dayDiff: dayDiff, // 0 or xxx
+    duration: duration, // "x分钟前" or "x小时前" or "今天" or "x天前" or null
+    dayDiff: dayDiff, // day difference from today, must be not null here
   );
 }
 
@@ -65,6 +65,7 @@ ParseResult parseDurationOrDateString(String text) {
 enum FormatPattern {
   dateNoYear, // "02/02"
   date, // "2023/02/02"
+  barredDate, // "2023-02-02"
   datetimeNoSec, // "2023/02/02 17:53"
   datetime, // "2023/02/02 17:53:15"
   duration, // "xxx前"
@@ -81,6 +82,7 @@ enum FormatPattern {
 String formatDatetimeAndDuration(DateTime datetime, FormatPattern pattern) {
   var md = DateFormat('MM/dd');
   var ymd = DateFormat('yyyy/MM/dd');
+  var ymd2 = DateFormat('yyyy-MM-dd');
   var hms = DateFormat('HH:mm:ss');
   var mdhms = DateFormat('MM/dd HH:mm:ss');
   var ymdhm = DateFormat('yyyy/MM/dd HH:mm');
@@ -101,9 +103,11 @@ String formatDatetimeAndDuration(DateTime datetime, FormatPattern pattern) {
 
   switch (pattern) {
     case FormatPattern.dateNoYear:
-      return md.format(datetime); // "2023/02/02"
+      return md.format(datetime); // "02/02"
     case FormatPattern.date:
       return ymd.format(datetime); // "2023/02/02"
+    case FormatPattern.barredDate:
+      return ymd2.format(datetime); // "2023-02-02"
     case FormatPattern.datetimeNoSec:
       return ymdhm.format(datetime); // "2023/02/02 17:53"
     case FormatPattern.datetime:

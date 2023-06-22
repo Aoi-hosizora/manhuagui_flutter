@@ -88,6 +88,23 @@ void showCommentPopupMenuForListAndPage({
             }
           },
         ),
+        Divider(height: 16, thickness: 1),
+        IconTextDialogOption(
+          icon: Icon(Icons.copy),
+          text: Text('复制评论内容'),
+          onPressed: () {
+            Navigator.of(c).pop();
+            copyText(comment.content, showToast: true);
+          },
+        ),
+        IconTextDialogOption(
+          icon: Icon(Icons.copy),
+          text: Text('复制用户名'),
+          onPressed: () {
+            Navigator.of(c).pop();
+            copyText(comment.username == '-' ? '匿名用户' : comment.username, showToast: true);
+          },
+        ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.selectCompare),
           text: Text('选择评论内容'),
@@ -110,23 +127,6 @@ void showCommentPopupMenuForListAndPage({
                 ],
               ),
             );
-          },
-        ),
-        Divider(height: 16, thickness: 1),
-        IconTextDialogOption(
-          icon: Icon(Icons.copy),
-          text: Text('复制评论内容'),
-          onPressed: () {
-            Navigator.of(c).pop();
-            copyText(comment.content, showToast: true);
-          },
-        ),
-        IconTextDialogOption(
-          icon: Icon(Icons.copy),
-          text: Text('复制用户名'),
-          onPressed: () {
-            Navigator.of(c).pop();
-            copyText(comment.username == '-' ? '匿名用户' : comment.username, showToast: true);
           },
         ),
         IconTextDialogOption(

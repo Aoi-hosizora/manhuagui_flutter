@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
@@ -43,6 +43,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
         _searchKeyword = ''; // 清空搜索关键词
+        _searchDateTime = DateTime(0); // 清空搜索日期
         if (mounted) setState(() {});
         _pdvKey.currentState?.refresh();
       }));
@@ -69,6 +70,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
   final _histories = <int, MangaHistory?>{};
   var _searchKeyword = ''; // for query condition
   var _searchTitleOnly = true; // for query condition
+  var _searchDateTime = DateTime(0); // for query condition
   var _sortMethod = SortMethod.byTimeDesc; // for query condition
   var _isUpdated = false;
 
@@ -79,8 +81,16 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       _isUpdated = false;
     }
     var username = AuthManager.instance.username; // maybe empty, which represents local records
-    var data = await LaterMangaDao.getLaterMangas(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
-    _total = await LaterMangaDao.getLaterMangaCount(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
+    List<LaterManga> data;
+    if (_searchDateTime.year == 0) {
+      // no search, or search by keyword
+      data = await LaterMangaDao.getLaterMangas(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
+      _total = await LaterMangaDao.getLaterMangaCount(username: username, keyword: _searchKeyword, pureSearch: _searchTitleOnly) ?? 0;
+    } else {
+      // search by date
+      data = await LaterMangaDao.getLaterMangasByDate(username: username, datetime: _searchDateTime, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
+      _total = await LaterMangaDao.getLaterMangaCountByDate(username: username, datetime: _searchDateTime) ?? 0;
+    }
     if (mounted) setState(() {});
     for (var item in data) {
       _histories[item.mangaId] = await HistoryDao.getHistory(username: username, mid: item.mangaId);
@@ -115,6 +125,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     if (result != null && result.item1.isNotEmpty) {
       _searchKeyword = result.item1;
       _searchTitleOnly = result.item2;
+      _searchDateTime = DateTime(0); // 清空搜索日期
       if (mounted) setState(() {});
       _pdvKey.currentState?.refresh();
     }
@@ -146,6 +157,49 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
 
   void _exitSort() {
     _sortMethod = SortMethod.byTimeDesc; // 默认排序方式
+    if (mounted) setState(() {});
+    _pdvKey.currentState?.refresh();
+  }
+
+  Future<void> _toSearchByDate() async {
+    var dates = await LaterMangaDao.getLaterMangaDates(username: AuthManager.instance.username);
+    if (dates.isEmpty) {
+      showYesNoAlertDialog(
+        context: context,
+        title: Text('按日期搜索'),
+        content: Text('稍后阅读列表为空，无需搜索。'),
+        yesText: Text('确定'),
+        noText: null,
+      );
+      return;
+    }
+
+    var now = DateTime.now().let((now) => DateTime(now.year, now.month, now.day));
+    var oldestDate = dates.last;
+    var newestDate = dates.first;
+    if (newestDate.year != now.year || newestDate.month != now.month || newestDate.day != now.day) {
+      dates.insert(0, now); // add now day to dates if necessary
+    }
+
+    var d = await showDatePicker(
+      context: context,
+      initialDate: _searchDateTime.year == 0 ? now : _searchDateTime,
+      firstDate: oldestDate,
+      lastDate: now,
+      selectableDayPredicate: (d) => dates.any((el) => el.year == d.year && el.month == d.month && el.day == d.day),
+      helpText: '请选择日期来搜索稍后阅读记录',
+    );
+
+    if (d != null) {
+      _searchDateTime = d;
+      _searchKeyword = ''; // 清空搜索关键词
+      if (mounted) setState(() {});
+      _pdvKey.currentState?.refresh();
+    }
+  }
+
+  void _exitSearchByDate() {
+    _searchDateTime = DateTime(0); // 清空搜索日期
     if (mounted) setState(() {});
     _pdvKey.currentState?.refresh();
   }
@@ -242,43 +296,6 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     }
   }
 
-  Future<void> _clearLaterMangas() async {
-    _total = await LaterMangaDao.getLaterMangaCount(username: AuthManager.instance.username) ?? 0;
-    if (_total == 0) {
-      Fluttertoast.showToast(msg: '当前无稍后阅读记录');
-      return;
-    }
-
-    // 不退出多选模式、先弹出对话框
-    var ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text('清空确认'),
-        content: Text('是否清空稍后阅读列表？'),
-        actions: [
-          TextButton(child: Text('清空'), onPressed: () => Navigator.of(c).pop(true)),
-          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
-        ],
-      ),
-    );
-    if (ok != true) {
-      return;
-    }
-
-    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
-    // 本页引起的删除 => 更新列表显示
-    _msController.exitMultiSelectionMode();
-    await LaterMangaDao.clearLaterMangas(username: AuthManager.instance.username);
-    var mangaIds = _data.map((el) => el.mangaId).toList();
-    _data.clear();
-    _total = 0;
-    _removed = mangaIds.length;
-    if (mounted) setState(() {});
-    for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: true));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -291,6 +308,10 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
           _exitSearch();
           return false;
         }
+        if (_searchDateTime.year != 0) {
+          _exitSearchByDate();
+          return false;
+        }
         return true;
       },
       child: Scaffold(
@@ -299,9 +320,9 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
           leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
           actions: [
             AppBarActionButton(
-              icon: Icon(Icons.delete),
-              tooltip: '清空稍后阅读列表',
-              onPressed: () => _clearLaterMangas(),
+              icon: Icon(MdiIcons.calendarFilter),
+              tooltip: '按日期搜索稍后阅读记录',
+              onPressed: () => _toSearchByDate(),
             ),
             AppBarActionButton(
               icon: Icon(Icons.search),
@@ -358,7 +379,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
               checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Theme.of(context).scaffoldBackgroundColor),
               useFullRipple: true,
-              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : null,
+              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : tip.toToggle?.call(),
               itemBuilder: (c, key, tip) => LaterMangaLineView(
                 manga: item,
                 history: _histories[item.mangaId],
@@ -372,7 +393,11 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
                 ListHintView.textWidget(
                   padding: EdgeInsets.fromLTRB(10, 5, 10 - 3, 5), // for popup btn
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的稍后阅读列表' : '未登录用户的稍后阅读列表') + //
-                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
+                      (_searchKeyword.isNotEmpty
+                          ? ' ("$_searchKeyword" 的搜索结果)'
+                          : _searchDateTime.year != 0
+                              ? ' (${formatDatetimeAndDuration(_searchDateTime, FormatPattern.date)} 的记录)'
+                              : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -382,13 +407,19 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
                           tooltip: '退出搜索',
                           onPressed: () => _exitSearch(),
                         ),
+                      if (_searchDateTime.year != 0)
+                        HelpIconView.asButton(
+                          iconData: CustomIcons.calendar_off,
+                          tooltip: '退出搜索',
+                          onPressed: () => _exitSearchByDate(),
+                        ),
                       if (_sortMethod != SortMethod.byTimeDesc)
                         HelpIconView.asButton(
                           iconData: _sortMethod.toIcon(),
                           tooltip: '漫画排序方式',
                           onPressed: () => _toSort(),
                         ),
-                      if (_searchKeyword.isNotEmpty || _sortMethod != SortMethod.byTimeDesc)
+                      if (_searchKeyword.isNotEmpty || _searchDateTime.year != 0 || _sortMethod != SortMethod.byTimeDesc)
                         Container(
                           color: Theme.of(context).dividerColor,
                           child: SizedBox(height: 20, width: 1),
@@ -423,7 +454,6 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
                               child: IconTextMenuItem(MdiIcons.sortVariantRemove, '恢复默认排序'),
                               onTap: () => _exitSort(),
                             ),
-                          // TODO add added date filter
                         ],
                       ),
                     ],

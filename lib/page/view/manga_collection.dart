@@ -195,7 +195,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                manga.newestChapter.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c).let((c) => !manga.finished ? '更新至 $c' : '$c 完结'),
+                manga.formattedNewestChapter.let((c) => !manga.finished ? '更新至 $c' : '$c 完结'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),

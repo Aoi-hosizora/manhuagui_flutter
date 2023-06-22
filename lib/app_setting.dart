@@ -362,7 +362,6 @@ class UiSetting {
     required this.overviewLoadAll,
     required this.homepageShowMoreMangas,
     required this.includeUnreadInHome,
-    required this.allowHomepagePopup,
     required this.audienceRankingRows,
     required this.homepageFavorite,
     required this.homepageRefreshData,
@@ -384,7 +383,6 @@ class UiSetting {
   final bool overviewLoadAll; // 章节一览页加载所有图片
   final bool homepageShowMoreMangas; // 首页显示更多漫画
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
-  final bool allowHomepagePopup; // 允许首页漫画弹出菜单 // TODO remove this setting
   final int audienceRankingRows; // 首页受众排行榜显示行数
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
   final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为
@@ -406,7 +404,6 @@ class UiSetting {
     overviewLoadAll: false,
     homepageShowMoreMangas: false,
     includeUnreadInHome: true,
-    allowHomepagePopup: false,
     audienceRankingRows: 5,
     homepageFavorite: HomepageFavorite.defaultAscOrder,
     homepageRefreshData: HomepageRefreshData.includeListIfEmpty,
@@ -429,7 +426,6 @@ class UiSetting {
     bool? overviewLoadAll,
     bool? homepageShowMoreMangas,
     bool? includeUnreadInHome,
-    bool? allowHomepagePopup,
     int? audienceRankingRows,
     HomepageFavorite? homepageFavorite,
     HomepageRefreshData? homepageRefreshData,
@@ -451,7 +447,6 @@ class UiSetting {
       overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
       homepageShowMoreMangas: homepageShowMoreMangas ?? this.homepageShowMoreMangas,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
-      allowHomepagePopup: allowHomepagePopup ?? this.allowHomepagePopup,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
       homepageFavorite: homepageFavorite ?? this.homepageFavorite,
       homepageRefreshData: homepageRefreshData ?? this.homepageRefreshData,

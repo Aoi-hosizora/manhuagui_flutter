@@ -541,7 +541,7 @@ void showPopupMenuForLaterManga({
             icon: Icon(CustomIcons.clock_sync),
             text: Text('更新记录至最新章节'),
             popWhenPress: c,
-            onPressed: () => helper.updateLaterToNewestChapter(later: later, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage), // TODO test
+            onPressed: () => helper.updateLaterToNewestChapter(later: later, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
         if (later != null)
           IconTextDialogOption(
@@ -1156,13 +1156,12 @@ class _DialogHelper {
     var newestChapter = extraData?.newestChapter?.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c);
     var newestDate = extraData?.newestDate;
     if (newestChapter == null || newestDate == null) {
-      return;
+      return; // almost unreachable
     }
     var updatedLaterManga = later.copyWith(newestChapter: newestChapter, newestDate: newestDate); // do not change createdAt
     await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedLaterManga);
     onUpdated?.call(updatedLaterManga);
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将稍后阅读记录更新为最新章节')));
+    Fluttertoast.showToast(msg: '已将本漫画的稍后阅读记录更新到最新章节');
     EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
