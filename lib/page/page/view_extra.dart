@@ -17,18 +17,39 @@ class ViewExtraSubPage extends StatefulWidget {
   const ViewExtraSubPage({
     Key? key,
     required this.isHeader,
-    required this.reverseScroll,
+    required this.isRtlOperation,
     required this.data,
     required this.onlineMode,
     required this.subscribing,
     required this.inShelf,
     required this.inFavorite,
     required this.laterManga,
+    required this.onActionsUpdated,
+    required this.callbacks,
+  }) : super(key: key);
+
+  final bool isHeader;
+  final bool isRtlOperation;
+  final MangaViewerPageData data;
+  final bool onlineMode;
+  final bool subscribing;
+  final bool inShelf;
+  final bool inFavorite;
+  final LaterManga? laterManga;
+  final void Function(bool more) onActionsUpdated;
+  final ViewExtraSubPageCallbacks callbacks;
+
+  @override
+  State<ViewExtraSubPage> createState() => ViewExtraSubPageState();
+}
+
+/// 一堆回调函数，在 [ViewExtraSubPage] 使用
+class ViewExtraSubPageCallbacks {
+  const ViewExtraSubPageCallbacks({
     required this.toJumpToImage,
     required this.toGotoNeighbor,
     required this.toShowNeighborTip,
     required this.toPop,
-    required this.onActionsUpdated,
     required this.toSubscribe,
     required this.toDownload,
     required this.toShowToc,
@@ -40,21 +61,12 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.toShowLaters,
     required this.toShowImage,
     required this.toOnlineMode,
-  }) : super(key: key);
+  });
 
-  final bool isHeader;
-  final bool reverseScroll;
-  final MangaViewerPageData data;
-  final bool onlineMode;
-  final bool subscribing;
-  final bool inShelf;
-  final bool inFavorite;
-  final LaterManga? laterManga;
   final void Function(int imageIndex /* start from 0 */, bool animated) toJumpToImage;
   final void Function(bool gotoPrevious) toGotoNeighbor;
   final void Function(bool previous) toShowNeighborTip;
   final void Function() toPop;
-  final void Function(bool more) onActionsUpdated;
   final void Function() toSubscribe;
   final void Function() toDownload;
   final void Function() toShowToc;
@@ -66,13 +78,17 @@ class ViewExtraSubPage extends StatefulWidget {
   final void Function() toShowLaters;
   final void Function(String url, String title) toShowImage;
   final void Function() toOnlineMode;
-
-  @override
-  State<ViewExtraSubPage> createState() => _ViewExtraSubPageState();
 }
 
-class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
+class ViewExtraSubPageState extends State<ViewExtraSubPage> {
+  final _headerTitleBoxKey = GlobalKey();
+  final _footerTitleBoxKey = GlobalKey();
+
   var _moreActions = false; // 显示更多选项
+
+  double? getTitleBoxHeight() {
+    return (widget.isHeader ? _headerTitleBoxKey : _footerTitleBoxKey).currentContext?.findRenderBox()?.size.height;
+  }
 
   Widget _buildChapters() {
     if (widget.data.chapterNeighbor?.notLoaded != false) {
@@ -141,32 +157,31 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
       child: _buildAction(
         text: neighbor.hasPrevChapter ? '阅读上一章节' : '暂无上一章节',
         subText: neighbor.getAvailableChapters(previous: true).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
-        left: !widget.reverseScroll ? true : false,
+        left: !widget.isRtlOperation ? true : false,
         disable: !neighbor.hasPrevChapter,
-        action: () => widget.toGotoNeighbor.call(true),
-        longPress: () => widget.toShowNeighborTip.call(true),
+        action: () => widget.callbacks.toGotoNeighbor.call(true),
+        longPress: () => widget.callbacks.toShowNeighborTip.call(true),
       ),
     );
-
     var next = Expanded(
       child: _buildAction(
         text: neighbor.hasNextChapter ? '阅读下一章节' : '暂无下一章节',
         subText: neighbor.getAvailableChapters(previous: false).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
-        left: !widget.reverseScroll ? false : true,
+        left: !widget.isRtlOperation ? false : true,
         disable: !neighbor.hasNextChapter,
-        action: () => widget.toGotoNeighbor.call(false),
-        longPress: () => widget.toShowNeighborTip.call(false),
+        action: () => widget.callbacks.toGotoNeighbor.call(false),
+        longPress: () => widget.callbacks.toShowNeighborTip.call(false),
       ),
     );
 
     return IntrinsicHeight(
       child: Row(
         children: [
-          if (!widget.reverseScroll) prev, // 上一章
-          if (widget.reverseScroll) next, // 下一章(反)
+          if (!widget.isRtlOperation) prev, // 上一章
+          if (widget.isRtlOperation) next, // 下一章(反)
           VerticalDivider(width: 15 * 2 + 2, thickness: 2),
-          if (!widget.reverseScroll) next, // 下一章(反)
-          if (widget.reverseScroll) prev, // 上一章
+          if (!widget.isRtlOperation) next, // 下一章(反)
+          if (widget.isRtlOperation) prev, // 上一章
         ],
       ),
     );
@@ -192,7 +207,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
       children: [
         ActionRowView.five(
           iconBuilder: iconBuilder,
-          action1: ActionItem(text: '结束阅读', icon: Icons.arrow_back, action: () => widget.toPop.call()),
+          action1: ActionItem(text: '结束阅读', icon: Icons.arrow_back, action: () => widget.callbacks.toPop.call()),
           action2: ActionItem(
             text: !widget.inShelf && !widget.inFavorite
                 ? '订阅漫画'
@@ -200,11 +215,11 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                     ? '查看订阅'
                     : (widget.inShelf && !widget.inFavorite ? '已放书架' : '已加收藏'),
             icon: !widget.inShelf && !widget.inFavorite ? Icons.sell : Icons.loyalty,
-            action: widget.subscribing ? null : () => widget.toSubscribe.call(),
+            action: widget.subscribing ? null : () => widget.callbacks.toSubscribe.call(),
             enable: !widget.subscribing,
           ),
-          action3: ActionItem(text: '章节列表', icon: Icons.menu, action: () => widget.toShowToc.call()),
-          action4: ActionItem(text: '下载漫画', icon: Icons.download, action: () => widget.toDownload.call()),
+          action3: ActionItem(text: '章节列表', icon: Icons.menu, action: () => widget.callbacks.toShowToc.call()),
+          action4: ActionItem(text: '下载漫画', icon: Icons.download, action: () => widget.callbacks.toDownload.call()),
           action5: ActionItem(
             text: !_moreActions ? '更多操作' : '更少操作',
             icon: Icons.more_vert,
@@ -218,11 +233,11 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
         if (_moreActions)
           ActionRowView.five(
             iconBuilder: iconBuilder,
-            action1: ActionItem(text: '阅读设置', icon: CustomIcons.opened_book_cog, action: () => widget.toShowSettings.call()),
-            action2: ActionItem(text: '章节详情', icon: Icons.subject, action: () => widget.toShowDetails.call()),
-            action3: ActionItem(text: '查看评论', icon: Icons.forum, action: () => widget.toShowComments.call()),
-            action4: ActionItem(text: '页面一览', icon: CustomIcons.image_timeline, action: () => widget.toShowOverview.call()),
-            action5: ActionItem(text: '分享章节', icon: Icons.share, action: () => widget.toShare.call()),
+            action1: ActionItem(text: '阅读设置', icon: CustomIcons.opened_book_cog, action: () => widget.callbacks.toShowSettings.call()),
+            action2: ActionItem(text: '章节详情', icon: Icons.subject, action: () => widget.callbacks.toShowDetails.call()),
+            action3: ActionItem(text: '查看评论', icon: Icons.forum, action: () => widget.callbacks.toShowComments.call()),
+            action4: ActionItem(text: '页面一览', icon: CustomIcons.image_timeline, action: () => widget.callbacks.toShowOverview.call()),
+            action5: ActionItem(text: '分享章节', icon: Icons.share, action: () => widget.callbacks.toShare.call()),
           ),
       ],
     );
@@ -248,6 +263,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
             // ****************************************************************
             if (widget.isHeader)
               Container(
+                key: _headerTitleBoxKey,
                 color: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
                 child: Column(
@@ -267,7 +283,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                               color: Colors.grey[400]!,
                             ),
                           ),
-                          onTap: () => widget.toShowImage(widget.data.mangaCover, '漫画封面'),
+                          onTap: () => widget.callbacks.toShowImage(widget.data.mangaCover, '漫画封面'),
                         ),
                         SizedBox(width: 18),
                         Container(
@@ -342,7 +358,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       width: 200,
                       child: ElevatedButton(
                         child: Text('开始阅读'),
-                        onPressed: () => widget.toJumpToImage.call(0, true),
+                        onPressed: () => widget.callbacks.toJumpToImage.call(0, true),
                       ),
                     ),
                   ],
@@ -353,6 +369,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
             // ****************************************************************
             if (!widget.isHeader)
               Container(
+                key: _footerTitleBoxKey,
                 color: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
                 child: Column(
@@ -369,7 +386,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                           color: Colors.grey[400]!,
                         ),
                       ),
-                      onTap: () => widget.toShowImage(widget.data.chapterCover, '章节封面'),
+                      onTap: () => widget.callbacks.toShowImage(widget.data.chapterCover, '章节封面'),
                     ),
                     SizedBox(height: 18),
                     Row(
@@ -449,7 +466,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('重新阅读'),
-                            onPressed: () => widget.toJumpToImage.call(0, false),
+                            onPressed: () => widget.callbacks.toJumpToImage.call(0, false),
                           ),
                         ),
                         SizedBox(width: 18),
@@ -458,7 +475,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                           width: 150,
                           child: ElevatedButton(
                             child: Text('返回上一页'),
-                            onPressed: () => widget.toJumpToImage.call(widget.data.pageCount - 1, true),
+                            onPressed: () => widget.callbacks.toJumpToImage.call(widget.data.pageCount - 1, true),
                           ),
                         ),
                       ],
@@ -476,7 +493,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                   manga: widget.laterManga!,
                   currentNewestChapter: widget.data.newestChapterTitle,
                   currentNewestDate: widget.data.newestDateAndFinished?.item1,
-                  action: () => widget.toShowLaters.call(),
+                  action: () => widget.callbacks.toShowLaters.call(),
                 ),
               ),
             // ****************************************************************
@@ -522,7 +539,7 @@ class _ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       noText: Text('关闭'),
                       yesOnPressed: (c) {
                         Navigator.of(c).pop();
-                        widget.toOnlineMode.call();
+                        widget.callbacks.toOnlineMode.call();
                       },
                     ),
                   ),

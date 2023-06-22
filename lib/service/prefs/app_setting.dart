@@ -39,6 +39,7 @@ class AppSettingPrefs {
   static const _pageNoPositionKey = IntKey('AppSettingPrefs_pageNoPosition');
   static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
   static const _appBarSwitchBehaviorKey = IntKey('AppSettingPrefs_appBarSwitchBehavior');
+  static const _useChapterAssistantKey = BoolKey('AppSettingPrefs_useChapterAssistant');
 
   static List<TypedKey> get viewSettingKeys => [
         _viewDirectionKey,
@@ -53,6 +54,7 @@ class AppSettingPrefs {
         _pageNoPositionKey,
         _hideAppBarWhenEnterKey,
         _appBarSwitchBehaviorKey,
+        _useChapterAssistantKey,
       ];
 
   static Future<ViewSetting> _loadViewSetting() async {
@@ -71,6 +73,7 @@ class AppSettingPrefs {
       pageNoPosition: PageNoPositionExtension.fromInt(prefs.safeGet<int>(_pageNoPositionKey) ?? def.pageNoPosition.toInt()),
       hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
       appBarSwitchBehavior: AppBarSwitchBehaviorExtension.fromInt(prefs.safeGet<int>(_appBarSwitchBehaviorKey) ?? def.appBarSwitchBehavior.toInt()),
+      useChapterAssistant: prefs.safeGet<bool>(_useChapterAssistantKey) ?? def.useChapterAssistant,
     );
   }
 
@@ -89,6 +92,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_pageNoPositionKey, setting.pageNoPosition.toInt());
     await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
     await prefs.safeSet<int>(_appBarSwitchBehaviorKey, setting.appBarSwitchBehavior.toInt());
+    await prefs.safeSet<bool>(_useChapterAssistantKey, setting.useChapterAssistant);
   }
 
   // ==========

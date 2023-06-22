@@ -73,7 +73,6 @@ class AppSetting {
 class ViewSetting {
   const ViewSetting({
     required this.viewDirection,
-    required this.pageNoPosition,
     required this.showPageHint,
     required this.showClock,
     required this.showNetwork,
@@ -82,8 +81,10 @@ class ViewSetting {
     required this.keepScreenOn,
     required this.fullscreen,
     required this.preloadCount,
+    required this.pageNoPosition,
     required this.hideAppBarWhenEnter,
     required this.appBarSwitchBehavior,
+    required this.useChapterAssistant,
   });
 
   final ViewDirection viewDirection; // 阅读方向
@@ -98,6 +99,7 @@ class ViewSetting {
   final PageNoPosition pageNoPosition; // 每页显示额外页码
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
   final AppBarSwitchBehavior appBarSwitchBehavior; // 切换章节时标题栏行为
+  final bool useChapterAssistant; // 使用单手章节跳转助手
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -112,6 +114,7 @@ class ViewSetting {
     pageNoPosition: PageNoPosition.hide,
     hideAppBarWhenEnter: true,
     appBarSwitchBehavior: AppBarSwitchBehavior.keep,
+    useChapterAssistant: false,
   );
 
   ViewSetting copyWith({
@@ -127,6 +130,7 @@ class ViewSetting {
     PageNoPosition? pageNoPosition,
     bool? hideAppBarWhenEnter,
     AppBarSwitchBehavior? appBarSwitchBehavior,
+    bool? useChapterAssistant,
   }) {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
@@ -141,6 +145,7 @@ class ViewSetting {
       pageNoPosition: pageNoPosition ?? this.pageNoPosition,
       hideAppBarWhenEnter: hideAppBarWhenEnter ?? this.hideAppBarWhenEnter,
       appBarSwitchBehavior: appBarSwitchBehavior ?? this.appBarSwitchBehavior,
+      useChapterAssistant: useChapterAssistant ?? this.useChapterAssistant,
     );
   }
 }
@@ -149,6 +154,7 @@ enum ViewDirection {
   leftToRight,
   rightToLeft,
   topToBottom,
+  topToBottomRtl,
 }
 
 extension ViewDirectionExtension on ViewDirection {
@@ -160,6 +166,8 @@ extension ViewDirectionExtension on ViewDirection {
         return '从右往左';
       case ViewDirection.topToBottom:
         return '从上往下';
+      case ViewDirection.topToBottomRtl:
+        return '从上往下 (右到左)';
     }
   }
 
@@ -171,6 +179,8 @@ extension ViewDirectionExtension on ViewDirection {
         return 1;
       case ViewDirection.topToBottom:
         return 2;
+      case ViewDirection.topToBottomRtl:
+        return 3;
     }
   }
 
@@ -182,6 +192,8 @@ extension ViewDirectionExtension on ViewDirection {
         return ViewDirection.rightToLeft;
       case 2:
         return ViewDirection.topToBottom;
+      case 3:
+        return ViewDirection.topToBottomRtl;
     }
     return ViewDirection.leftToRight;
   }

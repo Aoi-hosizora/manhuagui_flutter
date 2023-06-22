@@ -78,6 +78,7 @@ class MangaViewerPage extends StatefulWidget {
   _MangaViewerPageState createState() => _MangaViewerPageState();
 }
 
+/// 漫画章节阅读页所需的一些额外的漫画数据，字段均来自 [Manga]，在 [MangaViewerPage] 使用
 class MangaChapterNeededData {
   const MangaChapterNeededData({
     required this.chapterGroups,
@@ -108,7 +109,7 @@ class MangaChapterNeededData {
   }
 }
 
-/// 页面数据，基本覆盖 [TinyMangaChapter]，在 [MangaViewerPage] / [ViewExtraSubPage] 使用
+/// 页面数据，基本覆盖 [TinyMangaChapter]，并展开 [MangaChapterNeededData] 的所有字段，在 [MangaViewerPage] / [ViewExtraSubPage] 使用
 class MangaViewerPageData {
   const MangaViewerPageData({
     required this.mangaId,
@@ -193,23 +194,30 @@ const _kOverlayAnimationDuration = Duration(milliseconds: 100); // SystemUI 动�
 
 class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAliveClientMixin {
   final _mangaGalleryViewKey = GlobalKey<MangaGalleryViewState>();
+  final _firstExtraPageKey = GlobalKey<ViewExtraSubPageState>();
+  final _lastExtraPageKey = GlobalKey<ViewExtraSubPageState>();
   final _cancelHandlers = <VoidCallback>[];
 
   ViewSetting get _setting => AppSetting.instance.view;
 
-  bool get _isLeftToRight => _setting.viewDirection == ViewDirection.leftToRight;
+  bool get _isLeftToRight => _setting.viewDirection == ViewDirection.leftToRight; // 从左往右
 
-  bool get _isRightToLeft => _setting.viewDirection == ViewDirection.rightToLeft;
+  bool get _isRightToLeft => _setting.viewDirection == ViewDirection.rightToLeft; // 从右往左
 
-  bool get _isTopToBottom => _setting.viewDirection == ViewDirection.topToBottom;
+  bool get _isTopToBottom => _setting.viewDirection == ViewDirection.topToBottom; // 从上往下
+
+  bool get _isTopToBottomRtl => _setting.viewDirection == ViewDirection.topToBottomRtl; // 从上往下 (右到左)
+
+  bool get _isHorizontalScroll => _isLeftToRight || _isRightToLeft; // 水平滚动阅读
+
+  bool get _isVerticalScroll => _isTopToBottom || _isTopToBottomRtl; // 竖直滚动阅读
+
+  bool get _isRtlOperation => _isRightToLeft || _isTopToBottomRtl; // 从右到左操作
 
   Timer? _timer;
   var _currentTime = '00:00';
   var _networkInfo = 'WIFI';
   var _batteryInfo = '0%';
-
-  final _assistantHandlerKey = GlobalKey();
-  var _assistantHandlerYPosition = 50.0;
 
   @override
   void initState() {
@@ -300,7 +308,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   // these fields are only used for MangaGalleryView
   int? _initialPage; // start from 1
-  List<String?>? _pageUrls; // also used to share link, share image, and open grid view
+  List<String?>? _pageUrls; // also used to share link, share image, and construct overview page
   List<Future<String?>>? _urlFutures;
   List<Future<File?>>? _fileFutures;
 
@@ -495,7 +503,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
 
     // 指定起始页，初始化进度条
-    _initialPage = widget.initialPage.clamp(1, _data!.pageCount);
+    _initialPage = widget.initialPage.clamp(1, _data!.pageCount); // exclude extra pages, start from 1
     _currentPage = _initialPage!;
     _progressValue = _initialPage!;
 
@@ -587,6 +595,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _currentPage = 1; // start from 1 (image page only)
   var _progressValue = 1; // start from 1, only used to display slider (must be seperated from currentPage)
   var _inExtraPage = false; // just true or false (including the first extra page and the last extra page)
+  var _inLastExtraPage = false; // specific flag for the last extra
+  var _hideAssistantOnce = false; // for chapter assistant
 
   void _onPageChanged(int imageIndex /* start from 0 */, bool inFirstExtraPage, bool inLastExtraPage) {
     _currentPage = imageIndex + 1; // start from 1
@@ -598,15 +608,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       }
       _inExtraPage = inExtraPage;
     }
+    _hideAssistantOnce = false;
+    _inLastExtraPage = inLastExtraPage;
     if (mounted) setState(() {});
   }
 
-  void _onSliderChanged(int value /* start from 1 */) {
-    _progressValue = value; // start from 1
+  void _onSliderChanged(int sliderValue /* start from 1 */) {
+    _progressValue = sliderValue; // start from 1
     if (_currentPage == _progressValue) {
       return; // same page, ignore jump
     }
-    _mangaGalleryViewKey.currentState?.jumpToImage(value - 1, animated: false); // start from 0
+    _mangaGalleryViewKey.currentState?.jumpToImage(sliderValue - 1, animated: false); // start from 0
     if (mounted) setState(() {});
   }
 
@@ -736,7 +748,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   var _showHelpRegion = false; // 显示区域提示
 
-  Future<void> _onSettingPressed() async {
+  Future<void> _showSettingDialog() async {
     var ok = await showViewSettingDialog(
       context: context,
       anotherButtonBuilder: (c) => TextButton(
@@ -758,7 +770,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
-  void _subscribe() {
+  void _toSubscribe() {
     showPopupMenuForSubscribing(
       context: context,
       mangaId: widget.mangaId,
@@ -787,7 +799,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
   }
 
-  Future<void> _downloadManga() async {
+  Future<void> _toDownloadManga() async {
     if (_data!.chapterGroups == null) {
       if (_data!.getMangaFailed != true) {
         Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
@@ -1027,7 +1039,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
   }
 
-  Future<void> _openOverviewPage() async {
+  Future<void> _showOverview() async {
     if (_pageUrls!.any((el) => el == null)) {
       // some page urls maybe invalid when offline => null
       Fluttertoast.showToast(msg: '当前处于离线模式，但未能获取到部分页面的链接');
@@ -1143,12 +1155,21 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
   }
 
+  void _toggleAppBarVisibility(int imageIndex /* start from 0 */) {
+    _ScreenHelper.toggleAppBarVisibility(
+      show: !_ScreenHelper.showAppBar,
+      fullscreen: _setting.fullscreen,
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
     return WillPopScope(
       onWillPop: () async {
         // 全部都异步执行
@@ -1329,67 +1350,60 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       longLong: Duration(milliseconds: GALLERY_IMAGE_LLTIMEOUT),
                     ),
                     preloadPagesCount: _setting.preloadCount,
-                    verticalScroll: _isTopToBottom,
+                    verticalScroll: _isVerticalScroll,
                     horizontalReverseScroll: _isRightToLeft,
                     horizontalViewportFraction: _setting.enablePageSpace ? _kViewportFraction : 1,
                     verticalViewportPageSpace: _setting.enablePageSpace ? _kViewportPageSpace : 0,
+                    verticalPageNoPosition: AppSetting.instance.view.pageNoPosition,
                     slideWidthRatio: _kSlideWidthRatio,
                     slideHeightRatio: _kSlideHeightRatio,
                     initialImageIndex: (_initialPage ?? 1) - 1 /* start from 0 */,
                     fileAndUrlNotFoundMessage: '该页尚未下载，且未获取到该页的链接\n请重新下载该章节、或切换成在线模式再阅读',
                     onPageChanged: _onPageChanged,
                     onLongPressed: _showPopupMenu,
-                    onCenterAreaTapped: (_) {
-                      _ScreenHelper.toggleAppBarVisibility(show: !_ScreenHelper.showAppBar, fullscreen: _setting.fullscreen);
-                      if (mounted) setState(() {});
-                    },
-                    firstPageBuilder: (c) => ViewExtraSubPage(
+                    onCenterAreaTapped: _toggleAppBarVisibility,
+                    mediaQueryPadding: MediaQuery.of(context).padding,
+                    firstPageBuilder: (c, extraCallbacks) => ViewExtraSubPage(
+                      key: _firstExtraPageKey,
                       isHeader: true,
-                      reverseScroll: _isRightToLeft,
+                      isRtlOperation: _isRtlOperation,
                       data: _data!,
                       onlineMode: widget.onlineMode,
                       subscribing: _subscribing,
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
                       laterManga: _laterManga,
-                      toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
-                      toGotoNeighbor: (prev) => _gotoNeighborChapter(gotoPrevious: prev),
-                      toShowNeighborTip: (prev) => _showNeighborChapterTip(previous: prev),
-                      toPop: () => Navigator.of(context).maybePop(),
-                      onActionsUpdated: (more) => _mangaGalleryViewKey.currentState?.updatePageHeight(0),
-                      toSubscribe: _subscribe,
-                      toDownload: _downloadManga,
-                      toShowToc: _showToc,
-                      toShowSettings: _onSettingPressed,
-                      toShowDetails: _showDetails,
-                      toShowComments: _showComments,
-                      toShowOverview: _openOverviewPage,
-                      toShare: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
-                      toShowLaters: _showLaterMangaDialog,
-                      toShowImage: _showImage,
-                      toOnlineMode: () => _toOnlineMode(alsoCheck: false),
+                      onActionsUpdated: (more) => _mangaGalleryViewKey.currentState?.updatePageHeight(0) /* update page height */,
+                      callbacks: extraCallbacks as ViewExtraSubPageCallbacks,
                     ),
-                    lastPageBuilder: (c) => ViewExtraSubPage(
+                    lastPageBuilder: (c, extraCallbacks) => ViewExtraSubPage(
+                      key: _lastExtraPageKey,
                       isHeader: false,
-                      reverseScroll: _isRightToLeft,
+                      isRtlOperation: _isRtlOperation,
                       data: _data!,
                       onlineMode: widget.onlineMode,
                       subscribing: _subscribing,
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
                       laterManga: _laterManga,
+                      onActionsUpdated: (more) {
+                        _mangaGalleryViewKey.currentState?.updatePageHeight(_data!.pageCount + 1); // update page height
+                        _mangaGalleryViewKey.currentState?.jumpToPage(_data!.pageCount + 1, animated: true);
+                      },
+                      callbacks: extraCallbacks as ViewExtraSubPageCallbacks,
+                    ),
+                    pageBuilderData: ViewExtraSubPageCallbacks(
                       toJumpToImage: (idx, anim) => _mangaGalleryViewKey.currentState?.jumpToImage(idx, animated: anim) /* start from 0 */,
                       toGotoNeighbor: (prev) => _gotoNeighborChapter(gotoPrevious: prev),
                       toShowNeighborTip: (prev) => _showNeighborChapterTip(previous: prev),
                       toPop: () => Navigator.of(context).maybePop(),
-                      onActionsUpdated: (more) => _mangaGalleryViewKey.currentState?.jumpToPage(_data!.pageCount + 1, animated: true),
-                      toSubscribe: _subscribe,
-                      toDownload: _downloadManga,
+                      toSubscribe: _toSubscribe,
+                      toDownload: _toDownloadManga,
                       toShowToc: _showToc,
-                      toShowSettings: _onSettingPressed,
+                      toShowSettings: _showSettingDialog,
                       toShowDetails: _showDetails,
                       toShowComments: _showComments,
-                      toShowOverview: _openOverviewPage,
+                      toShowOverview: _showOverview,
                       toShare: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
                       toShowLaters: _showLaterMangaDialog,
                       toShowImage: _showImage,
@@ -1398,120 +1412,133 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   ),
                 ),
                 // ****************************************************************
-                // TODO 单手跳转章节助手 (同时添加到 ViewSetting 中)
+                // 单手章节跳转助手
                 // ****************************************************************
-                Positioned(
-                  top: _assistantHandlerYPosition,
-                  left: 0,
-                  right: 0,
-                  child: AnimatedSwitcher(
-                    duration: _kAnimationDuration,
-                    child: !(_data != null && _inExtraPage && _currentPage > 1)
-                        ? const SizedBox.shrink() //
-                        : Material(
-                            key: _assistantHandlerKey,
-                            color: Colors.orange[900]?.withOpacity(0.9),
-                            child: Container(
-                              // padding: EdgeInsets.symmetric(horizontal: 15 - 8, vertical: 18 - 6),
-                              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 18 - 6),
-                              width: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal,
-                              child: IntrinsicHeight(
-                                child: Row(
-                                  children: [
-                                    // InkWell(
-                                    //   child: Padding(
-                                    //     padding: EdgeInsets.all(8),
-                                    //     child: Icon(Icons.menu, size: 20, color: Colors.white),
-                                    //   ),
-                                    //   onTap: () => Fluttertoast.showToast(msg: '长按拖动可调整 "单手跳转章节助手" 的位置'),
-                                    // ),
-                                    // SizedBox(width: 15 - 8),
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: () {},
-                                        onLongPress: () {},
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Transform.rotate(
-                                                angle: math.pi,
-                                                child: Icon(
-                                                  Icons.arrow_right_alt,
-                                                  size: 30,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              Text(
-                                                '阅读上一章节',
-                                                style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                                      fontSize: 18,
-                                                      color: Colors.white,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
+                ...(({required bool left, required String text, String? disableText, required void Function() action, void Function()? longPress, required bool disable}) => //
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0, 0.5, 1],
+                          colors: [
+                            Colors.orange[800]!.withOpacity(0.75),
+                            Colors.orange[900]!.withOpacity(0.8),
+                            Colors.orange[700]!.withOpacity(0.75),
+                          ],
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: disable ? null : action,
+                          onLongPress: disable ? null : longPress,
+                          highlightColor: Colors.black12,
+                          splashColor: Colors.black12,
+                          child: Column(
+                            children: [
+                              SizedBox(height: 4 + 6 * 2 + 20), // make column symmetric
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (!disable)
+                                        Transform.rotate(
+                                          angle: left ? math.pi : 0,
+                                          child: Icon(Icons.arrow_right_alt, size: 28, color: Colors.white),
                                         ),
-                                      ),
-                                    ),
-                                    VerticalDivider(width: 15 * 2 + 2, thickness: 2, color: Colors.white38),
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: () {},
-                                        onLongPress: () {},
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Transform.rotate(
-                                                angle: 0,
-                                                child: Icon(
-                                                  Icons.arrow_right_alt,
-                                                  size: 30,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              Text(
-                                                '阅读下一章节',
-                                                style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                                                      fontSize: 18,
-                                                      color: Colors.white,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
+                                      if (disable)
+                                        Padding(
+                                          padding: EdgeInsets.all((28 - 22) / 2),
+                                          child: Icon(Icons.do_not_disturb, size: 22, color: Colors.white.withOpacity(0.45)),
                                         ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        (!disable ? text : (disableText ?? text)).split('').join('\n').trim(),
+                                        style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                                              fontSize: 18,
+                                              color: !disable ? Colors.white : Colors.white.withOpacity(0.45),
+                                            ),
                                       ),
-                                    ),
-                                    // SizedBox(width: 15 - 8),
-                                    // Tooltip(
-                                    //   message: '打开漫画阅读设置',
-                                    //   child: InkWell(
-                                    //     child: Padding(
-                                    //       padding: EdgeInsets.all(8),
-                                    //       child: Icon(Icons.settings, size: 20, color: Colors.white),
-                                    //     ),
-                                    //     onTap: _onSettingPressed,
-                                    //   ),
-                                    // ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
+                              if (left)
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 4),
+                                  child: Tooltip(
+                                    message: '打开漫画阅读设置',
+                                    child: InkWell(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(Icons.settings, size: 20, color: Colors.white),
+                                      ),
+                                      onTap: _showSettingDialog,
+                                    ),
+                                  ),
+                                ),
+                              if (!left)
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 4),
+                                  child: Tooltip(
+                                    message: '暂时隐藏 "单手章节跳转助手"',
+                                    child: InkWell(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(Icons.visibility_off, size: 20, color: Colors.white),
+                                      ),
+                                      onTap: () => mountedSetState(() => _hideAssistantOnce = !_hideAssistantOnce),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                  ).let(
-                    (draggableChild) => LongPressDraggable(
-                      child: draggableChild,
-                      childWhenDragging: const SizedBox.shrink(),
-                      feedback: Opacity(opacity: 0.8, child: draggableChild),
-                      axis: Axis.vertical,
-                      onDraggableCanceled: (_, offset) => mountedSetState(() => _assistantHandlerYPosition = (offset.dy - MediaQuery.of(context).padding.top).clamp(
-                            0,
-                            MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - (_assistantHandlerKey.currentContext?.findRenderBox()?.size.height ?? 0),
-                          )),
-                    ),
+                        ),
+                      ),
+                    )).let(
+                  (buildHandler) => //
+                      ((_mangaGalleryViewKey.currentState?.getPageHeight(_data!.pageCount + 1) ?? 0) - (_lastExtraPageKey.currentState?.getTitleBoxHeight() ?? 0)).let(
+                    (positionBottom) => [
+                      Positioned(
+                        top: 0,
+                        bottom: positionBottom,
+                        left: 0,
+                        child: AnimatedSwitcher(
+                          duration: _kAnimationDuration,
+                          child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
+                              ? const SizedBox.shrink() //
+                              : buildHandler(
+                                  left: true,
+                                  text: !_isRtlOperation ? '阅读上一章节' : '阅读下一章节',
+                                  disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasPrevChapter != true : _data!.chapterNeighbor?.hasNextChapter != true,
+                                  disableText: !_isRtlOperation ? '暂无上一章节' : '暂无下一章节',
+                                  action: () => _gotoNeighborChapter(gotoPrevious: !_isRtlOperation),
+                                  longPress: () => _showNeighborChapterTip(previous: !_isRtlOperation),
+                                ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        bottom: positionBottom,
+                        right: 0,
+                        child: AnimatedSwitcher(
+                          duration: _kAnimationDuration,
+                          child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
+                              ? const SizedBox.shrink() //
+                              : buildHandler(
+                                  left: false,
+                                  text: !_isRtlOperation ? '阅读下一章节' : '阅读上一章节',
+                                  disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasNextChapter != true : _data!.chapterNeighbor?.hasPrevChapter != true,
+                                  disableText: !_isRtlOperation ? '暂无下一章节' : '暂无上一章节',
+                                  action: () => _gotoNeighborChapter(gotoPrevious: _isRtlOperation),
+                                  longPress: () => _showNeighborChapterTip(previous: _isRtlOperation),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 // ****************************************************************
@@ -1561,7 +1588,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   children: [
                                     Expanded(
                                       child: Directionality(
-                                        textDirection: !_isRightToLeft ? TextDirection.ltr : TextDirection.rtl,
+                                        textDirection: !_isRtlOperation ? TextDirection.ltr : TextDirection.rtl,
                                         child: SliderTheme(
                                           data: Theme.of(context).sliderTheme.copyWith(
                                                 thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10.0),
@@ -1598,7 +1625,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                                 ),
                                               ),
                                             ),
-                                            onTap: _openOverviewPage,
+                                            onTap: _showOverview,
                                           ),
                                         ),
                                       ),
@@ -1612,24 +1639,24 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   disabledTextColor: Colors.grey[600],
                                   disabledIconColor: Colors.grey[600],
                                   action1: ActionItem(
-                                    text: !_isRightToLeft ? '上一章节' : '下一章节',
+                                    text: !_isRtlOperation ? '上一章节' : '下一章节',
                                     icon: Icons.arrow_right_alt,
                                     rotateAngle: math.pi,
-                                    action: () => _gotoNeighborChapter(gotoPrevious: !_isRightToLeft),
-                                    longPress: () => _showNeighborChapterTip(previous: !_isRightToLeft),
-                                    enable: !_isRightToLeft ? _data!.chapterNeighbor?.hasPrevChapter == true : _data!.chapterNeighbor?.hasNextChapter == true,
+                                    action: () => _gotoNeighborChapter(gotoPrevious: !_isRtlOperation),
+                                    longPress: () => _showNeighborChapterTip(previous: !_isRtlOperation),
+                                    enable: !_isRtlOperation ? _data!.chapterNeighbor?.hasPrevChapter == true : _data!.chapterNeighbor?.hasNextChapter == true,
                                   ),
                                   action2: ActionItem(
-                                    text: !_isRightToLeft ? '下一章节' : '上一章节',
+                                    text: !_isRtlOperation ? '下一章节' : '上一章节',
                                     icon: Icons.arrow_right_alt,
-                                    action: () => _gotoNeighborChapter(gotoPrevious: _isRightToLeft),
-                                    longPress: () => _showNeighborChapterTip(previous: _isRightToLeft),
-                                    enable: !_isRightToLeft ? _data!.chapterNeighbor?.hasNextChapter == true : _data!.chapterNeighbor?.hasPrevChapter == true,
+                                    action: () => _gotoNeighborChapter(gotoPrevious: _isRtlOperation),
+                                    longPress: () => _showNeighborChapterTip(previous: _isRtlOperation),
+                                    enable: !_isRtlOperation ? _data!.chapterNeighbor?.hasNextChapter == true : _data!.chapterNeighbor?.hasPrevChapter == true,
                                   ),
                                   action3: ActionItem(
                                     text: '阅读设置',
                                     icon: Icons.settings,
-                                    action: () => _onSettingPressed(),
+                                    action: () => _showSettingDialog(),
                                   ),
                                   action4: ActionItem(
                                     text: '章节列表',
@@ -1646,63 +1673,67 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 // ****************************************************************
                 // 帮助区域显示
                 // ****************************************************************
-                if (_showHelpRegion)
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: () {
-                        _showHelpRegion = false;
-                        if (mounted) setState(() {});
-                      },
-                      child: DefaultTextStyle(
-                        style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
-                        child: !_isTopToBottom
-                            ? Row(
-                                children: [
-                                  Container(
-                                    width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
-                                    color: Colors.orange[300]!.withOpacity(0.75),
-                                    alignment: Alignment.center,
-                                    child: Text(_isLeftToRight ? '上\n一\n页' : '下\n一\n页'),
-                                  ),
-                                  Container(
-                                    width: MediaQuery.of(context).size.width * (1 - 2 * _kSlideWidthRatio),
-                                    color: Colors.blue[300]!.withOpacity(0.75),
-                                    alignment: Alignment.center,
-                                    child: Text('显示菜单'),
-                                  ),
-                                  Container(
-                                    width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
-                                    color: Colors.pink[300]!.withOpacity(0.75),
-                                    alignment: Alignment.center,
-                                    child: Text(_isLeftToRight ? '下\n一\n页' : '上\n一\n页'),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  Container(
-                                    height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
-                                    color: Colors.orange[300]!.withOpacity(0.75),
-                                    alignment: Alignment.center,
-                                    child: Text('上一页'),
-                                  ),
-                                  Container(
-                                    height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * (1 - 2 * _kSlideHeightRatio),
-                                    color: Colors.blue[300]!.withOpacity(0.75),
-                                    alignment: Alignment.center,
-                                    child: Text('显示菜单'),
-                                  ),
-                                  Container(
-                                    height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
-                                    color: Colors.pink[300]!.withOpacity(0.75),
-                                    alignment: Alignment.center,
-                                    child: Text('下一页'),
-                                  ),
-                                ],
-                              ),
-                      ),
-                    ),
+                Positioned.fill(
+                  child: AnimatedSwitcher(
+                    duration: _kAnimationDuration,
+                    child: !_showHelpRegion
+                        ? const SizedBox.shrink()
+                        : GestureDetector(
+                            onTap: () {
+                              _showHelpRegion = false;
+                              if (mounted) setState(() {});
+                            },
+                            child: DefaultTextStyle(
+                              style: Theme.of(context).textTheme.headline6!.copyWith(color: Colors.white),
+                              child: _isHorizontalScroll
+                                  ? Row(
+                                      children: [
+                                        Container(
+                                          width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
+                                          color: Colors.orange[300]!.withOpacity(0.75),
+                                          alignment: Alignment.center,
+                                          child: Text(!_isRtlOperation ? '上\n一\n页' : '下\n一\n页'),
+                                        ),
+                                        Container(
+                                          width: MediaQuery.of(context).size.width * (1 - 2 * _kSlideWidthRatio),
+                                          color: Colors.blue[300]!.withOpacity(0.75),
+                                          alignment: Alignment.center,
+                                          child: Text('显示菜单'),
+                                        ),
+                                        Container(
+                                          width: MediaQuery.of(context).size.width * _kSlideWidthRatio,
+                                          color: Colors.pink[300]!.withOpacity(0.75),
+                                          alignment: Alignment.center,
+                                          child: Text(!_isRtlOperation ? '下\n一\n页' : '上\n一\n页'),
+                                        ),
+                                      ],
+                                    )
+                                  : Column(
+                                      children: [
+                                        Container(
+                                          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
+                                          color: Colors.orange[300]!.withOpacity(0.75),
+                                          alignment: Alignment.center,
+                                          child: Text('上一页'),
+                                        ),
+                                        Container(
+                                          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * (1 - 2 * _kSlideHeightRatio),
+                                          color: Colors.blue[300]!.withOpacity(0.75),
+                                          alignment: Alignment.center,
+                                          child: Text('显示菜单'),
+                                        ),
+                                        Container(
+                                          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical) * _kSlideHeightRatio,
+                                          color: Colors.pink[300]!.withOpacity(0.75),
+                                          alignment: Alignment.center,
+                                          child: Text('下一页'),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
                   ),
+                ),
                 // ****************************************************************
                 // Stack children 结束
                 // ****************************************************************

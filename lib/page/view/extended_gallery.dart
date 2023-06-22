@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/image_load.dart';
 import 'package:photo_view/reloadable_photo_view.dart' as reloadable_photo_view;
 import 'package:synchronized/synchronized.dart';
@@ -14,7 +13,7 @@ class HorizontalGalleryView extends StatefulWidget {
   const HorizontalGalleryView({
     Key? key,
     required this.imageCount, // <<<
-    required this.imagePageBuilder, // <<<
+    required this.imagePageBuilder, // <<< // exclude extra pages, start from 0
     required this.firstPageBuilder, // <<<
     required this.lastPageBuilder, // <<<
     this.onImageLongPressed, // <<< // exclude extra pages, start from 0
@@ -22,7 +21,7 @@ class HorizontalGalleryView extends StatefulWidget {
     this.onPageChanged, // include extra pages, start from 0
     this.reverse = false,
     this.preloadPagesCount = 0,
-    this.initialImageIndex = 0, // <<<
+    this.initialPageIndex = 1, // <<< // include extra pages, start from 0
     this.viewportFraction = 1.0, // <<<
   }) : super(key: key);
 
@@ -37,7 +36,7 @@ class HorizontalGalleryView extends StatefulWidget {
   final bool reverse;
   final int preloadPagesCount;
 
-  final int initialImageIndex;
+  final int initialPageIndex;
   final double viewportFraction;
 
   @override
@@ -47,10 +46,12 @@ class HorizontalGalleryView extends StatefulWidget {
 class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
   final _key = GlobalKey<ExtendedPhotoGalleryState>();
   late var _controller = PageController(
-    initialPage: widget.initialImageIndex + 1,
+    initialPage: widget.initialPageIndex, // include extra pages, start from 0
     viewportFraction: widget.viewportFraction,
   );
-  late var _currentPageIndex = widget.initialImageIndex;
+
+  // include extra pages, start from 0
+  late var _currentPageIndex = widget.initialPageIndex;
 
   @override
   void didUpdateWidget(covariant HorizontalGalleryView oldWidget) {
@@ -58,21 +59,21 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
     if (widget.viewportFraction != oldWidget.viewportFraction) {
       var oldController = _controller;
       _controller = PageController(
-        initialPage: _currentPageIndex,
+        initialPage: _currentPageIndex, // include extra pages, start from 0
         viewportFraction: widget.viewportFraction,
       );
       WidgetsBinding.instance?.addPostFrameCallback((_) => oldController.dispose());
     }
   }
 
-  /// reload, exclude extra pages, start from 0
+  /// reload, exclude extra pages, start from 0.
   void reload(int imageIndex, {bool alsoEvict = true}) {
     if (imageIndex >= 0 && imageIndex < widget.imageCount) {
       _key.currentState?.reloadPhoto(imageIndex, alsoEvict: alsoEvict);
     }
   }
 
-  /// jumpToPage, include extra pages, start from 0
+  /// jumpToPage, include extra pages, start from 0.
   void jumpToPage(int pageIndex, {bool animated = false}) {
     if (animated) {
       _controller.defaultAnimateToPage(pageIndex);
@@ -87,25 +88,27 @@ class HorizontalGalleryViewState extends State<HorizontalGalleryView> {
       key: _key,
       pageCount: widget.imageCount + 2,
       builder: widget.imagePageBuilder,
-      advancedBuilder: (c, index, builder) {
+      advancedBuilder: (c, pageIndex, imageBuilder) {
         // 0 => first
         // 1 ~ l => images
         // l+1 => last
-        if (index == 0) {
+        if (pageIndex == 0) {
           return widget.firstPageBuilder(c);
         }
-        if (index == widget.imageCount + 1) {
+        if (pageIndex == widget.imageCount + 1) {
           return widget.lastPageBuilder(c);
         }
         return GestureDetector(
-          onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(index - 1),
+          onLongPress: widget.onImageLongPressed == null //
+              ? null
+              : () => widget.onImageLongPressed!(pageIndex - 1) /* exclude extra pages, start from 0 */,
           behavior: HitTestBehavior.opaque,
-          child: builder(c, index - 1),
+          child: imageBuilder(c, pageIndex - 1) /* exclude extra pages, start from 0 */,
         );
       },
       fallbackOptions: widget.fallbackOptions,
       onPageChanged: (i) {
-        _currentPageIndex = i;
+        _currentPageIndex = i; // include extra pages, start from 0
         widget.onPageChanged?.call(i);
       },
       pageController: _controller,
@@ -126,7 +129,7 @@ class VerticalGalleryView extends StatefulWidget {
   const VerticalGalleryView({
     Key? key,
     required this.imageCount, // <<<
-    required this.imagePageBuilder, // <<<
+    required this.imagePageBuilder, // <<< // exclude extra pages, start from 0
     required this.firstPageBuilder, // <<<
     required this.lastPageBuilder, // <<<
     this.minScale = 1.0, // <<<
@@ -137,9 +140,8 @@ class VerticalGalleryView extends StatefulWidget {
     this.fallbackOptions,
     this.onPageChanged, // include extra pages, start from 0
     this.preloadPagesCount = 0,
-    this.initialImageIndex = 0, // <<<
+    this.initialPageIndex = 1, // <<< // include extra pages, start from 0
     this.viewportPageSpace = 0.0, // <<<
-    this.pageNoPosition, // <<<
     this.customPageBuilder, // <<<
   }) : super(key: key);
 
@@ -157,9 +159,8 @@ class VerticalGalleryView extends StatefulWidget {
   final void Function(int pageIndex)? onPageChanged;
   final int preloadPagesCount;
 
-  final int initialImageIndex;
+  final int initialPageIndex;
   final double viewportPageSpace;
-  final PageNoPosition? pageNoPosition;
   final Widget Function(BuildContext context, Widget photoView, int imageIndex)? customPageBuilder;
 
   @override
@@ -170,7 +171,9 @@ const _kMaskAnimDuration = Duration(milliseconds: 150);
 
 class VerticalGalleryViewState extends State<VerticalGalleryView> {
   late final _controller = ScrollController()..addListener(_onScrollChanged);
-  late var _currentPageIndex = widget.initialImageIndex + 1;
+
+  // include extra pages, start from 0
+  late var _currentPageIndex = widget.initialPageIndex;
 
   final _firstPageKey = GlobalKey<State<StatefulWidget>>();
   final _lastPageKey = GlobalKey<State<StatefulWidget>>();
@@ -196,9 +199,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     super.initState();
 
     for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
-      if (imageIndex == widget.initialImageIndex) {
+      if (imageIndex + 1 == widget.initialPageIndex) {
         _imageViewWidgets.add(_buildImageView(context: context, imageIndex: imageIndex));
-        _imageViewLoaded[imageIndex] = true;
+        _imageViewLoaded[imageIndex] = true; // exclude extra pages, start from 0
       } else {
         _imageViewWidgets.add(_buildImageView(context: context, imageIndex: imageIndex, onlyForPlaceholder: true));
       }
@@ -207,11 +210,11 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _masking = true;
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       for (var pageIndex = 0; pageIndex < _totalPageCount; pageIndex++) {
-        updatePageHeight(pageIndex);
+        updatePageHeight(pageIndex); // include extra pages, start from 0
       }
 
-      if (widget.initialImageIndex >= 0 && widget.initialImageIndex < widget.imageCount) {
-        await jumpToPage(widget.initialImageIndex + 1, masked: true);
+      if (widget.initialPageIndex >= 0 && widget.initialPageIndex < widget.imageCount + 2) {
+        await jumpToPage(widget.initialPageIndex, masked: true); // jump to the initial page
       }
       _masking = false;
       _jumping = false;
@@ -235,7 +238,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     );
     if (widget.viewportPageSpace != oldWidget.viewportPageSpace) {
       var pageIndex = _currentPageIndex;
-      if (mounted) setState(() {});
+      if (mounted) setState(() {}); // <<< update gallery state
       WidgetsBinding.instance?.addPostFrameCallback((_) async {
         for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
           var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
@@ -245,14 +248,20 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         await jumpToPage(pageIndex, masked: false); // adjust offset
       });
     }
-    if (widget.pageNoPosition != oldWidget.pageNoPosition) {
-      for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
-        _imageViewKeys[imageIndex].currentState?.setState(() {}); // update photo view state
-      }
-    }
   }
 
-  /// updatePageHeight, include extra pages, start from 0
+  /// getPageHeight, include extra pages, start from 0.
+  double getPageHeight(int pageIndex) {
+    if (pageIndex == 0) {
+      return _firstPageHeight - 0 /* extra padding */;
+    }
+    if (pageIndex == _totalPageCount - 1) {
+      return _lastPageHeight - math.max(widget.viewportPageSpace, 10) /* extra padding */;
+    }
+    return _imagePageHeights[pageIndex - 1] - widget.viewportPageSpace /* extra padding */;
+  }
+
+  /// updatePageHeight, include extra pages, start from 0.
   void updatePageHeight(int pageIndex) {
     var renderBox = _getPageKey(pageIndex).currentContext?.findRenderBox();
     var height = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
@@ -265,7 +274,12 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     }
   }
 
-  /// reload, excludes extra page, start from 0
+  /// updateImagePageState, exclude extra pages, start from 0.
+  void updateImagePageState(int imageIndex) {
+    _imageViewKeys[imageIndex].currentState?.setState(() {}); // <<< update photo view state manually
+  }
+
+  /// reload, excludes extra page, start from 0.
   void reload(int imageIndex, {bool alsoEvict = true}) {
     if (imageIndex >= 0 && imageIndex < widget.imageCount) {
       _imageViewKeys[imageIndex].currentState?.reload(alsoEvict: alsoEvict);
@@ -276,7 +290,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   var _masking = false;
   final _jumpLock = Lock();
 
-  /// jumpToPage, include extra pages, start from 0
+  /// !!! jumpToPage, include extra pages, start from 0.
   Future<void> jumpToPage(int pageIndex, {bool animated = false, bool masked = false}) async {
     _jumping = true;
     _masking = masked;
@@ -298,6 +312,11 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
 
     await _jumpLock.synchronized(() async {
       var offset = (cumulatedOffset + widget.viewportPageSpace + 1).clamp(0, _controller.position.maxScrollExtent); // <<<
+      if (pageIndex == 0) {
+        offset = 0;
+      } else if (pageIndex == widget.imageCount + 1) {
+        offset = _controller.position.maxScrollExtent;
+      }
       if (animated) {
         _controller.animateTo(offset.toDouble(), duration: kTabScrollDuration, curve: Curves.ease);
       } else {
@@ -317,6 +336,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _onScrollChanged();
   }
 
+  // !!!
   void _onScrollChanged() {
     if (_jumping) {
       return; // ignore scroll changed when jumping
@@ -344,7 +364,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     }
     if (_currentPageIndex != newPageIndex) {
       _currentPageIndex = newPageIndex;
-      widget.onPageChanged?.call(newPageIndex);
+      widget.onPageChanged?.call(newPageIndex); // include extra pages, start from 0
     }
 
     // 2. load current page's neighbor image pages
@@ -454,7 +474,9 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                       behavior: HitTestBehavior.opaque,
                       onTapDown: widget.onImageTapDown /* <<< */,
                       onTapUp: widget.onImageTapUp /* <<< */,
-                      onLongPress: widget.onImageLongPressed == null ? null : () => widget.onImageLongPressed!(imageIndex) /* <<< */,
+                      onLongPress: widget.onImageLongPressed == null //
+                          ? null
+                          : () => widget.onImageLongPressed!(imageIndex) /* exclude extra pages, start from 0 */,
                       child: Padding(
                         padding: EdgeInsets.only(
                           top: imageIndex == 0

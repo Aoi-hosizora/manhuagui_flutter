@@ -48,6 +48,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _pageNoPosition = widget.setting.pageNoPosition;
   late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
   late var _appBarSwitchBehavior = widget.setting.appBarSwitchBehavior;
+  late var _useChapterAssistant = widget.setting.useChapterAssistant;
 
   ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
@@ -62,6 +63,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         pageNoPosition: _pageNoPosition,
         hideAppBarWhenEnter: _hideAppBarWhenEnter,
         appBarSwitchBehavior: _appBarSwitchBehavior,
+        useChapterAssistant: _useChapterAssistant,
       );
 
   void _setToDefault() {
@@ -78,6 +80,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _pageNoPosition = setting.pageNoPosition;
     _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
     _appBarSwitchBehavior = setting.appBarSwitchBehavior;
+    _useChapterAssistant = setting.useChapterAssistant;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -91,8 +94,9 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         ),
         SettingComboBoxView<ViewDirection>(
           title: '阅读方向',
+          width: 150,
           value: _viewDirection,
-          values: const [ViewDirection.leftToRight, ViewDirection.rightToLeft, ViewDirection.topToBottom],
+          values: const [ViewDirection.leftToRight, ViewDirection.rightToLeft, ViewDirection.topToBottom, ViewDirection.topToBottomRtl],
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _viewDirection = s;
@@ -184,7 +188,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           title: '每页显示额外页码',
           value: _pageNoPosition,
           values: const [PageNoPosition.hide, PageNoPosition.topLeft, PageNoPosition.topCenter, PageNoPosition.topRight, PageNoPosition.bottomLeft, PageNoPosition.bottomCenter, PageNoPosition.bottomRight],
-          enable: _viewDirection == ViewDirection.topToBottom,
+          enable: _viewDirection == ViewDirection.topToBottom || _viewDirection == ViewDirection.topToBottomRtl,
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _pageNoPosition = s;
@@ -212,7 +216,15 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
-        // TODO 显示单手跳转章节助手
+        SettingSwitcherView(
+          title: '使用单手章节跳转助手',
+          value: _useChapterAssistant,
+          onChanged: (b) {
+            _useChapterAssistant = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
       ],
     );
   }
