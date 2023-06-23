@@ -193,6 +193,8 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
       return null;
     }
 
+    // TODO improving neighbor accuracy
+
     // 对**所有分组**中的漫画章节排序
     var prevChapters = !prev
         ? null

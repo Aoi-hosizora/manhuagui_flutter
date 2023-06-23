@@ -1480,7 +1480,15 @@ class _DialogHelper {
     required bool fromMangaPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
-    var newHistory = oldHistory.copyWith(chapterId: 0 /* 未开始阅读 */, chapterTitle: '', chapterPage: 1, lastTime: DateTime.now());
+    var newHistory = oldHistory.copyWith(
+      chapterId: 0 /* 未开始阅读 */,
+      chapterTitle: '',
+      chapterPage: 1,
+      lastChapterId: 0 /* 未开始阅读 */,
+      lastChapterTitle: '',
+      lastChapterPage: 1,
+      lastTime: DateTime.now(),
+    );
     await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
     onUpdated?.call(newHistory);
     ScaffoldMessenger.of(context).clearSnackBars();

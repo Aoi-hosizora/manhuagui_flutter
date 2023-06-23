@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
-/// 漫画行，[TinyManga]，在 [RecentSubPage] / [OverallSubPage] / [MangaCategorySubPage] / [AuthorPage] 使用
+/// 漫画行，[TinyManga]，在 [MangaCategorySubPage] 使用
 class TinyMangaLineView extends StatelessWidget {
   const TinyMangaLineView({
     Key? key,
     required this.manga,
+    required this.history,
     this.flags,
     this.twoColumns = false,
     this.highlightRecent = true,
   }) : super(key: key);
 
   final TinyManga manga;
+  final MangaHistory? history;
   final MangaCornerFlags? flags;
   final bool twoColumns;
   final bool highlightRecent;
@@ -26,12 +30,12 @@ class TinyMangaLineView extends StatelessWidget {
     return GeneralLineView(
       imageUrl: manga.cover,
       title: manga.title,
-      icon1: Icons.edit,
-      text1: manga.finished ? '已完结' : '连载中',
-      icon2: Icons.notes,
-      text2: '最新章节 ${manga.formattedNewestChapter}' /* TODO show history ??? */,
+      icon1: Icons.notes,
+      text1: '最新章节 ${manga.formattedNewestChapter}' /* no author information */,
+      icon2: history == null || !history!.read ? CustomIcons.opened_left_star_book : Icons.import_contacts,
+      text2: (history == null ? '未浏览阅读' : (!history!.read ? '未开始阅读 仅浏览' : '最近阅读至 ${history!.chapterTitle}')) + (history == null ? '' : ' (${history!.formattedLastTimeOrDuration})'),
       icon3: Icons.update,
-      text3: '更新于 ${manga.formattedNewestDateWithDuration}',
+      text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       text3Color: !highlightRecent
           ? null
           : GeneralLineView.determineColorByNumber(

@@ -23,7 +23,7 @@ class Author {
   final double averageScore;
   final int popularity;
   final String introduction;
-  final List<TinyZonedAuthor> relatedAuthors;
+  final List<SmallerAuthor> relatedAuthors;
 
   const Author({required this.aid, required this.name, required this.alias, required this.zone, required this.cover, required this.url, required this.mangaCount, required this.newestMangaId, required this.newestMangaTitle, required this.newestMangaUrl, required this.newestDate, required this.highestMangaId, required this.highestMangaTitle, required this.highestMangaUrl, required this.highestScore, required this.averageScore, required this.popularity, required this.introduction, required this.relatedAuthors});
 
@@ -62,6 +62,20 @@ class SmallAuthor {
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
+class SmallerAuthor {
+  final int aid;
+  final String name;
+  final String url;
+  final String zone;
+
+  const SmallerAuthor({required this.aid, required this.name, required this.url, required this.zone});
+
+  factory SmallerAuthor.fromJson(Map<String, dynamic> json) => _$SmallerAuthorFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SmallerAuthorToJson(this);
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class TinyAuthor {
   final int aid;
   final String name;
@@ -72,18 +86,4 @@ class TinyAuthor {
   factory TinyAuthor.fromJson(Map<String, dynamic> json) => _$TinyAuthorFromJson(json);
 
   Map<String, dynamic> toJson() => _$TinyAuthorToJson(this);
-}
-
-@JsonSerializable(fieldRename: FieldRename.snake)
-class TinyZonedAuthor {
-  final int aid;
-  final String name;
-  final String url;
-  final String zone;
-
-  const TinyZonedAuthor({required this.aid, required this.name, required this.url, required this.zone});
-
-  factory TinyZonedAuthor.fromJson(Map<String, dynamic> json) => _$TinyZonedAuthorFromJson(json);
-
-  Map<String, dynamic> toJson() => _$TinyZonedAuthorToJson(this);
 }

@@ -276,6 +276,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                     full: true,
                     columns: _columns,
                     highlightedChapters: [_history?.chapterId ?? 0],
+                    highlighted2Chapters: [_history?.lastChapterId ?? 0],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                     ),
@@ -287,9 +288,11 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                             checkboxBuilder: (_, __, tip) => tip.selected
                                 ? CheckboxForSelectableItem(
                                     tip: tip,
-                                    backgroundColor: chapterId != _history?.chapterId //
-                                        ? Colors.white
-                                        : Theme.of(context).primaryColorLight.applyOpacity(0.6),
+                                    backgroundColor: chapterId == _history?.chapterId //
+                                        ? Colors.deepOrange.applyOpacity(0.3) // same as ChapterGridView
+                                        : chapterId == _history?.lastChapterId
+                                            ? Colors.deepOrange.applyOpacity(0.08) // same as ChapterGridView
+                                            : Colors.white,
                                     scale: 0.85,
                                     scaleAlignment: Alignment.bottomRight,
                                   )

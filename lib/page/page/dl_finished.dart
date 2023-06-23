@@ -107,6 +107,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                       invertOrder: widget.invertOrder,
                       showNewBadge: false,
                       highlightedChapters: [widget.history?.chapterId ?? 0],
+                      highlighted2Chapters: [widget.history?.lastChapterId ?? 0],
                       customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                         entity: widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                       ),

@@ -5,10 +5,8 @@ import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/manga_shelf_cache.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
-import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
@@ -47,7 +45,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   void initState() {
     super.initState();
     widget.action?.addAction(() => _controller.scrollToTop());
-    widget.action?.addAction('sync', () => _showPopupMenuForShelfCache());
+    widget.action?.addAction('sync', () => showPopupMenuForShelfCache(context: context, fromCachePage: false));
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listen((ev) => _updateByAuthEvent(ev))); // !!! with checking AuthManager.instance.authData
       await AuthManager.instance.check();
@@ -163,57 +161,12 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           _total--; // no "removed++"
           if (mounted) setState(() {});
 
-          // 独立页时发送额外通知，让主页子页显示有更新
+          // 独立页时发送额外通知，让主页子页显示有更新 (fromSepShelfPage)
           if (widget.isSepPage) {
             EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: manga.mid, added: false, fromShelfPage: true, fromSepShelfPage: true));
           }
         }
       },
-    );
-  }
-
-  Future<void> _showPopupMenuForShelfCache() async {
-    if (!AuthManager.instance.logined) {
-      Fluttertoast.showToast(msg: '用户未登录');
-      return;
-    }
-
-    await showDialog(
-      context: context,
-      builder: (c) => SimpleDialog(
-        title: Text('同步'),
-        children: [
-          IconTextDialogOption(
-            icon: Icon(Icons.sync),
-            text: Text('同步我的书架'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              MangaShelfCachePage.syncShelfCaches(context);
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(Icons.format_list_bulleted),
-            text: Text('查看已同步的记录'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => MangaShelfCachePage(),
-                ),
-              );
-            },
-          ),
-          IconTextDialogOption(
-            icon: Icon(CustomIcons.bookmark_plus),
-            text: Text('添加所有记录至本地收藏'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              MangaShelfCachePage.addAllToFavorite(context);
-            },
-          ),
-        ],
-      ),
     );
   }
 

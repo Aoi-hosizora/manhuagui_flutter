@@ -245,6 +245,60 @@ class _RestClient implements RestClient {
   }
 
   @override
+  Future<Result<ResultPage<SmallerManga>>> getRecentUpdatedMangasV2(
+      {required page, needTotal = true, allowCache = false}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'need_total': needTotal,
+      r'allow_cache': allowCache
+    };
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<ResultPage<SmallerManga>>>(
+            Options(method: 'GET', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/list/updated_v2',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<ResultPage<SmallerManga>>.fromJson(
+      _result.data!,
+      (json) => ResultPage<SmallerManga>.fromJson(
+        json as Map<String, dynamic>,
+        (json) => SmallerManga.fromJson(json as Map<String, dynamic>),
+      ),
+    );
+    return value;
+  }
+
+  @override
+  Future<Result<ResultPage<SmallerManga>>> getRecentPublishedMangasV2(
+      {required page, needTotal = true, allowCache = false}) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'need_total': needTotal,
+      r'allow_cache': allowCache
+    };
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    final _result = await _dio.fetch<Map<String, dynamic>>(
+        _setStreamType<Result<ResultPage<SmallerManga>>>(
+            Options(method: 'GET', headers: _headers, extra: _extra)
+                .compose(_dio.options, '/list/published_v2',
+                    queryParameters: queryParameters, data: _data)
+                .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = Result<ResultPage<SmallerManga>>.fromJson(
+      _result.data!,
+      (json) => ResultPage<SmallerManga>.fromJson(
+        json as Map<String, dynamic>,
+        (json) => SmallerManga.fromJson(json as Map<String, dynamic>),
+      ),
+    );
+    return value;
+  }
+
+  @override
   Future<Result<CategoryList>> getCategories({allowCache = false}) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'allow_cache': allowCache};

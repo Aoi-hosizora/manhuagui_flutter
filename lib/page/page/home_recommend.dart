@@ -195,7 +195,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         _recentsError = '';
         if (mounted) setState(() {});
         try {
-          var result = await client.getRecentUpdatedMangas(page: 0); // #=42
+          var result = await client.getRecentUpdatedMangas(page: 0); // #=42 (use old api here)
           _recents = result.data.data;
         } catch (e, s) {
           _recents = []; // loaded but error

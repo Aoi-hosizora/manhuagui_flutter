@@ -13,6 +13,8 @@ class MangaSimpleTocView extends StatelessWidget {
     this.invertOrder = true,
     this.highlightColor,
     this.highlightedChapters = const [],
+    this.highlight2Color,
+    this.highlighted2Chapters = const [],
     this.showNewBadge = true,
     this.customBadgeBuilder,
     this.itemBuilder,
@@ -26,6 +28,8 @@ class MangaSimpleTocView extends StatelessWidget {
   final bool invertOrder;
   final Color? highlightColor;
   final List<int> highlightedChapters;
+  final Color? highlight2Color;
+  final List<int> highlighted2Chapters;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
@@ -42,6 +46,8 @@ class MangaSimpleTocView extends StatelessWidget {
       columns: columns,
       highlightColor: highlightColor,
       highlightedChapters: highlightedChapters,
+      highlight2Color: highlight2Color,
+      highlighted2Chapters: highlighted2Chapters,
       extrasInStack: (chapter) {
         if (chapter == null) {
           return [];

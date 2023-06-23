@@ -17,12 +17,15 @@ class HistoryDao {
   static const _colChapterId = 'chapter_id';
   static const _colChapterTitle = 'chapter_title';
   static const _colChapterPage = 'chapter_page';
+  static const _colLastChapterId = 'last_chapter_id';
+  static const _colLastChapterTitle = 'last_chapter_title';
+  static const _colLastChapterPage = 'last_chapter_page';
   static const _colLastTime = 'last_time';
 
   static const metadata = TableMetadata(
     tableName: _tblHistory,
     primaryKeys: [_colUsername, _colMangaId],
-    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colChapterId, _colChapterTitle, _colChapterPage, _colLastTime],
+    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colChapterId, _colChapterTitle, _colChapterPage, _colLastChapterId, _colLastChapterTitle, _colLastChapterPage, _colLastTime],
   );
 
   static Future<void> createForVer1(Database db) async {
@@ -54,7 +57,12 @@ class HistoryDao {
   }
 
   static Future<void> upgradeFromVer4To5(Database db) async {
-    // pass
+    await db.safeExecute('ALTER TABLE $_tblHistory ADD COLUMN $_colLastChapterId INTEGER');
+    await db.safeExecute('ALTER TABLE $_tblHistory ADD COLUMN $_colLastChapterTitle VARCHAR(1023)');
+    await db.safeExecute('ALTER TABLE $_tblHistory ADD COLUMN $_colLastChapterPage INTEGER');
+    await db.safeExecute('UPDATE $_tblHistory SET $_colLastChapterId = 0 WHERE $_colLastChapterId IS NULL');
+    await db.safeExecute('UPDATE $_tblHistory SET $_colLastChapterTitle = "" WHERE $_colLastChapterTitle IS NULL');
+    await db.safeExecute('UPDATE $_tblHistory SET $_colLastChapterPage = 1 WHERE $_colLastChapterPage IS NULL');
   }
 
   static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
@@ -98,7 +106,7 @@ class HistoryDao {
   static Future<MangaHistory?> getHistory({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
-      '''SELECT $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime
+      '''SELECT $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastChapterId, $_colLastChapterTitle, $_colLastChapterPage, $_colLastTime
          FROM $_tblHistory
          WHERE $_colUsername = ? AND $_colMangaId = ?
          ORDER BY $_colLastTime DESC
@@ -117,6 +125,9 @@ class HistoryDao {
       chapterId: r[_colChapterId]! as int,
       chapterTitle: r[_colChapterTitle]! as String,
       chapterPage: r[_colChapterPage]! as int,
+      lastChapterId: r[_colLastChapterId]! as int,
+      lastChapterTitle: r[_colLastChapterTitle]! as String,
+      lastChapterPage: r[_colLastChapterPage]! as int,
       lastTime: DateTime.parse(r[_colLastTime]! as String),
     );
   }
@@ -129,7 +140,7 @@ class HistoryDao {
     }
     var like = _buildLikeStatement(keyword: keyword, pureSearch: pureSearch, includeAND: true);
     var results = await db.safeRawQuery(
-      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime 
+      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastChapterId, $_colLastChapterTitle, $_colLastChapterPage, $_colLastTime 
          FROM $_tblHistory
          WHERE $_colUsername = ? ${includeUnread ? '' : 'AND $_colChapterId <> 0'} ${like?.item1 ?? ''}
          ORDER BY $_colLastTime DESC
@@ -149,6 +160,9 @@ class HistoryDao {
         chapterId: r[_colChapterId]! as int,
         chapterTitle: r[_colChapterTitle]! as String,
         chapterPage: r[_colChapterPage]! as int,
+        lastChapterId: r[_colLastChapterId]! as int,
+        lastChapterTitle: r[_colLastChapterTitle]! as String,
+        lastChapterPage: r[_colLastChapterPage]! as int,
         lastTime: DateTime.parse(r[_colLastTime]! as String),
       ));
     }
@@ -171,16 +185,16 @@ class HistoryDao {
     int? rows = 0;
     if (count == 0) {
       rows = await db.safeRawInsert(
-        '''INSERT INTO $_tblHistory ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastTime)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        [username, history.mangaId, history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String()],
+        '''INSERT INTO $_tblHistory ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colChapterId, $_colChapterTitle, $_colChapterPage, $_colLastChapterId, $_colLastChapterTitle, $_colLastChapterPage, $_colLastTime)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        [username, history.mangaId, history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastChapterId, history.lastChapterTitle, history.lastChapterPage, history.lastTime.toIso8601String()],
       );
     } else {
       rows = await db.safeRawUpdate(
         '''UPDATE $_tblHistory
-           SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colChapterId = ?, $_colChapterTitle = ?, $_colChapterPage = ?, $_colLastTime = ?
+           SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colChapterId = ?, $_colChapterTitle = ?, $_colChapterPage = ?, $_colLastChapterId = ?, $_colLastChapterTitle = ?, $_colLastChapterPage = ?, $_colLastTime = ?
            WHERE $_colUsername = ? AND $_colMangaId = ?''',
-        [history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastTime.toIso8601String(), username, history.mangaId],
+        [history.mangaTitle, history.mangaCover, history.mangaUrl, history.chapterId, history.chapterTitle, history.chapterPage, history.lastChapterId, history.lastChapterTitle, history.lastChapterPage, history.lastTime.toIso8601String(), username, history.mangaId],
       );
     }
     return rows != null && rows >= 1;

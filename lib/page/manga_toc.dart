@@ -144,6 +144,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
                   tocTitle: !_downloadOnly ? '章节列表' : '章节列表 (仅下载)',
                   columns: _columns,
                   highlightedChapters: [_history?.chapterId ?? 0],
+                  highlighted2Chapters: [_history?.lastChapterId ?? 0],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),

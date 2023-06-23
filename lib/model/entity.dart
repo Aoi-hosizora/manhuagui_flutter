@@ -10,9 +10,10 @@ class MangaHistory {
   final int chapterId; // 0表示还没开始阅读（点进漫画页），非0表示开始阅读（点进章节页）
   final String chapterTitle;
   final int chapterPage;
+  final int lastChapterId; // 本字段表示上次的漫画阅读历史，该字段的值也可以为零
+  final String lastChapterTitle;
+  final int lastChapterPage; // 本字段当前仅用于展示，选择阅读时不会自动跳转到该页
   final DateTime lastTime;
-
-  // TODO lastChapterId, lastChapterTitle, lastChapterPage
 
   const MangaHistory({
     required this.mangaId,
@@ -22,6 +23,9 @@ class MangaHistory {
     required this.chapterId,
     required this.chapterTitle,
     required this.chapterPage,
+    required this.lastChapterId,
+    required this.lastChapterTitle,
+    required this.lastChapterPage,
     required this.lastTime,
   });
 
@@ -29,7 +33,7 @@ class MangaHistory {
 
   String get shortChapterTitle => chapterTitle.trim().split(' ')[0];
 
-  String get formattedLastTime => //
+  String get formattedLastTime => // for manga page
       formatDatetimeAndDuration(lastTime, FormatPattern.datetime);
 
   String get formattedLastTimeWithDuration => // for history line
@@ -49,6 +53,9 @@ class MangaHistory {
     int? chapterId,
     String? chapterTitle,
     int? chapterPage,
+    int? lastChapterId,
+    String? lastChapterTitle,
+    int? lastChapterPage,
     DateTime? lastTime,
   }) {
     return MangaHistory(
@@ -59,6 +66,9 @@ class MangaHistory {
       chapterId: chapterId ?? this.chapterId,
       chapterTitle: chapterTitle ?? this.chapterTitle,
       chapterPage: chapterPage ?? this.chapterPage,
+      lastChapterId: lastChapterId ?? this.lastChapterId,
+      lastChapterTitle: lastChapterTitle ?? this.lastChapterTitle,
+      lastChapterPage: lastChapterPage ?? this.lastChapterPage,
       lastTime: lastTime ?? this.lastTime,
     );
   }

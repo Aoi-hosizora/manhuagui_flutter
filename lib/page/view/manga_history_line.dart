@@ -29,7 +29,7 @@ class MangaHistoryLineView extends StatelessWidget {
       icon1: null,
       text1: null,
       icon2: !history.read ? CustomIcons.opened_left_star_book : Icons.import_contacts,
-      text2: !history.read ? '未开始阅读' : '阅读至 ${history.chapterTitle} 第${history.chapterPage}页',
+      text2: !history.read ? '未开始阅读 仅浏览' : '阅读至 ${history.chapterTitle} 第${history.chapterPage}页',
       icon3: Icons.access_time,
       text3: (!history.read ? '浏览于 ' : '阅读于 ') + history.formattedLastTimeWithDuration,
       cornerIcons: flags?.buildIcons(),

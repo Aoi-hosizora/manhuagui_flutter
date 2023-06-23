@@ -51,6 +51,12 @@ abstract class RestClient {
   @GET('/list/updated')
   Future<Result<ResultPage<TinyManga>>> getRecentUpdatedMangas({@Query('page') required int page, @Query('limit') int limit = 42, @Query('allow_cache') bool allowCache = false});
 
+  @GET('/list/updated_v2')
+  Future<Result<ResultPage<SmallerManga>>> getRecentUpdatedMangasV2({@Query('page') required int page, @Query('need_total') bool needTotal = true, @Query('allow_cache') bool allowCache = false});
+
+  @GET('/list/published_v2')
+  Future<Result<ResultPage<SmallerManga>>> getRecentPublishedMangasV2({@Query('page') required int page, @Query('need_total') bool needTotal = true, @Query('allow_cache') bool allowCache = false});
+
   @GET('/category')
   Future<Result<CategoryList>> getCategories({@Query('allow_cache') bool allowCache = false});
 

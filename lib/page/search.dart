@@ -230,7 +230,7 @@ class _SearchPageState extends State<SearchPage> {
                     childAspectRatio: GeneralLineView.getChildAspectRatioForTwoColumns(context),
                   ),
                   itemBuilder: (c, _, item) => SmallMangaLineView(
-                    manga: item,
+                    manga: item.toSmaller(),
                     history: _mangaHistories[item.mid],
                     flags: _flagStorage.getFlags(mangaId: item.mid),
                     twoColumns: AppSetting.instance.ui.showTwoColumns,

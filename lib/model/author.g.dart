@@ -26,7 +26,7 @@ Author _$AuthorFromJson(Map<String, dynamic> json) => Author(
       popularity: json['popularity'] as int,
       introduction: json['introduction'] as String,
       relatedAuthors: (json['related_authors'] as List<dynamic>)
-          .map((e) => TinyZonedAuthor.fromJson(e as Map<String, dynamic>))
+          .map((e) => SmallerAuthor.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
@@ -73,6 +73,22 @@ Map<String, dynamic> _$SmallAuthorToJson(SmallAuthor instance) =>
       'newest_date': instance.newestDate,
     };
 
+SmallerAuthor _$SmallerAuthorFromJson(Map<String, dynamic> json) =>
+    SmallerAuthor(
+      aid: json['aid'] as int,
+      name: json['name'] as String,
+      url: json['url'] as String,
+      zone: json['zone'] as String,
+    );
+
+Map<String, dynamic> _$SmallerAuthorToJson(SmallerAuthor instance) =>
+    <String, dynamic>{
+      'aid': instance.aid,
+      'name': instance.name,
+      'url': instance.url,
+      'zone': instance.zone,
+    };
+
 TinyAuthor _$TinyAuthorFromJson(Map<String, dynamic> json) => TinyAuthor(
       aid: json['aid'] as int,
       name: json['name'] as String,
@@ -84,20 +100,4 @@ Map<String, dynamic> _$TinyAuthorToJson(TinyAuthor instance) =>
       'aid': instance.aid,
       'name': instance.name,
       'url': instance.url,
-    };
-
-TinyZonedAuthor _$TinyZonedAuthorFromJson(Map<String, dynamic> json) =>
-    TinyZonedAuthor(
-      aid: json['aid'] as int,
-      name: json['name'] as String,
-      url: json['url'] as String,
-      zone: json['zone'] as String,
-    );
-
-Map<String, dynamic> _$TinyZonedAuthorToJson(TinyZonedAuthor instance) =>
-    <String, dynamic>{
-      'aid': instance.aid,
-      'name': instance.name,
-      'url': instance.url,
-      'zone': instance.zone,
     };

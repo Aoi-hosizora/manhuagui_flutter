@@ -98,6 +98,33 @@ Map<String, dynamic> _$SmallMangaToJson(SmallManga instance) =>
       'brief_introduction': instance.briefIntroduction,
     };
 
+SmallerManga _$SmallerMangaFromJson(Map<String, dynamic> json) => SmallerManga(
+      mid: json['mid'] as int,
+      title: json['title'] as String,
+      cover: json['cover'] as String,
+      url: json['url'] as String,
+      finished: json['finished'] as bool,
+      authors:
+          (json['authors'] as List<dynamic>).map((e) => e as String).toList(),
+      genres:
+          (json['genres'] as List<dynamic>).map((e) => e as String).toList(),
+      newestChapter: json['newest_chapter'] as String,
+      newestDate: json['newest_date'] as String,
+    );
+
+Map<String, dynamic> _$SmallerMangaToJson(SmallerManga instance) =>
+    <String, dynamic>{
+      'mid': instance.mid,
+      'title': instance.title,
+      'cover': instance.cover,
+      'url': instance.url,
+      'finished': instance.finished,
+      'authors': instance.authors,
+      'genres': instance.genres,
+      'newest_chapter': instance.newestChapter,
+      'newest_date': instance.newestDate,
+    };
+
 TinyManga _$TinyMangaFromJson(Map<String, dynamic> json) => TinyManga(
       mid: json['mid'] as int,
       title: json['title'] as String,

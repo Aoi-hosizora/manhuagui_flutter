@@ -324,6 +324,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   List<Future<String?>>? _urlFutures;
   List<Future<File?>>? _fileFutures;
 
+  MangaHistory? _history;
   int? _subscribeCount;
   FavoriteManga? _favoriteManga;
   var _subscribing = false; // 执行订阅操作中
@@ -341,6 +342,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     if (mounted) setState(() {});
 
     // 1. 先获取各种数据库信息 (收藏、下载)
+    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
     _inFavorite = _favoriteManga != null;
     _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
@@ -591,17 +593,46 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   // 载入时调用 / 离开页面时调用 / 跳转章节时调用
   Future<void> _updateHistory() async {
     if (_data != null) {
-      var history = MangaHistory(
-        mangaId: widget.mangaId,
-        mangaTitle: _data!.mangaTitle,
-        mangaCover: _data!.mangaCover,
-        mangaUrl: _data!.mangaUrl,
-        chapterId: widget.chapterId,
-        chapterTitle: _data!.chapterTitle,
-        chapterPage: _currentPage /* start from 1 */,
-        lastTime: DateTime.now(),
-      );
-      await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: history);
+      var oldHistory = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      MangaHistory newHistory;
+      if (oldHistory == null || oldHistory.chapterId == widget.chapterId) {
+        // 老历史为空 (基本不可能)、或当前章节等于老历史的curr字段 => curr<-当前章节，last<-老历史的last字段
+        newHistory = MangaHistory(
+          mangaId: widget.mangaId,
+          mangaTitle: _data!.mangaTitle,
+          mangaCover: _data!.mangaCover,
+          mangaUrl: _data!.mangaUrl,
+          chapterId: widget.chapterId /* => set to current chapter history */,
+          chapterTitle: _data!.chapterTitle,
+          chapterPage: _currentPage /* start from 1 */,
+          lastChapterId: oldHistory?.lastChapterId ?? 0 /* => use last last chapter history */,
+          lastChapterTitle: oldHistory?.lastChapterTitle ?? '',
+          lastChapterPage: oldHistory?.lastChapterPage ?? 0,
+          lastTime: DateTime.now() /* 历史已更新 */,
+        );
+        if (newHistory.chapterId == newHistory.lastChapterId) {
+          // 额外的见擦汗，判断当前章节是否与last字段相等，如果相等则需要清空last字段
+          newHistory = newHistory.copyWith(lastChapterId: 0, lastChapterTitle: '', lastChapterPage: 1);
+        }
+      } else {
+        // 老历史不为空且当前章节不等于老历史的curr字段 => curr<-当前章节，last<-老历史的curr字段
+        newHistory = MangaHistory(
+          mangaId: widget.mangaId,
+          mangaTitle: _data!.mangaTitle,
+          mangaCover: _data!.mangaCover,
+          mangaUrl: _data!.mangaUrl,
+          chapterId: widget.chapterId /* => set to current chapter history */,
+          chapterTitle: _data!.chapterTitle,
+          chapterPage: _currentPage /* start from 1 */,
+          lastChapterId: oldHistory.chapterId /* => use last chapter history */,
+          lastChapterTitle: oldHistory.chapterTitle,
+          lastChapterPage: oldHistory.chapterPage,
+          lastTime: DateTime.now() /* 历史已更新 */,
+        );
+      }
+      _history = newHistory;
+      if (mounted) setState(() {});
+      await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated));
     }
   }
@@ -692,7 +723,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
 
     // 寻找上/下一章节阅读
-    // TODO improving neighbor accuracy
     var neighbor = _data!.chapterNeighbor!;
     int chapterId;
     if (gotoPrevious) {
@@ -923,6 +953,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             mangaTitle: mangaTitle,
             groups: neededData!.chapterGroups,
             highlightedChapter: widget.chapterId,
+            highlighted2Chapter: _history?.lastChapterId ?? 0,
             onChapterPressed: (cid) => switchChapter(c, cid),
             onChapterLongPressed: (cid) {
               var chapter = neededData!.chapterGroups.findChapter(cid);
@@ -1445,11 +1476,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           stops: const [0, 0.5, 1],
-                          colors: [
-                            Colors.orange[700]!.withOpacity(!disable ? 0.75 : 0.45),
-                            Colors.orange[900]!.withOpacity(!disable ? 0.8 : 0.45),
-                            Colors.orange[700]!.withOpacity(!disable ? 0.75 : 0.45),
-                          ],
+                          colors: !disable
+                              ? [
+                                  Colors.orange[700]!.withOpacity(0.75),
+                                  Colors.orange[900]!.withOpacity(0.8),
+                                  Colors.orange[700]!.withOpacity(0.75),
+                                ]
+                              : [
+                                  Colors.orange[400]!.withOpacity(0.55),
+                                  Colors.orange[700]!.withOpacity(0.55),
+                                  Colors.orange[400]!.withOpacity(0.55),
+                                ],
                         ),
                       ),
                       child: Material(
@@ -1461,7 +1498,22 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                           splashColor: Colors.black12,
                           child: Column(
                             children: [
-                              // top placeholder
+                              // top bottom
+                              Padding(
+                                padding: EdgeInsets.only(top: 5),
+                                child: Tooltip(
+                                  message: left ? '结束阅读' : '暂时隐藏 "单手章节跳转助手"',
+                                  child: InkWell(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Icon(left ? Icons.arrow_back : Icons.visibility_off, size: 20, color: Colors.white),
+                                    ),
+                                    onTap: left //
+                                        ? () => Navigator.of(context).maybePop()
+                                        : () => mountedSetState(() => _hideAssistantOnce = !_hideAssistantOnce),
+                                  ),
+                                ),
+                              ),
                               SizedBox(height: 5 + 8 * 2 + 20), // make column symmetric
                               // main navigation
                               Expanded(
@@ -1496,15 +1548,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                               Padding(
                                 padding: EdgeInsets.only(bottom: 5),
                                 child: Tooltip(
-                                  message: left ? '打开漫画阅读设置' : '暂时隐藏 "单手章节跳转助手"',
+                                  message: '打开漫画章节列表',
                                   child: InkWell(
                                     child: Padding(
                                       padding: EdgeInsets.all(8),
-                                      child: Icon(left ? Icons.settings : Icons.visibility_off, size: 20, color: Colors.white),
+                                      child: Icon(Icons.menu, size: 20, color: Colors.white),
                                     ),
-                                    onTap: left //
-                                        ? _showSettingDialog
-                                        : () => mountedSetState(() => _hideAssistantOnce = !_hideAssistantOnce),
+                                    onTap: _showToc,
                                   ),
                                 ),
                               ),

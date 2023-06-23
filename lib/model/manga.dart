@@ -80,6 +80,50 @@ class SmallManga {
   TinyManga toTiny() {
     return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
   }
+
+  SmallerManga toSmaller() {
+    return SmallerManga(mid: mid, title: title, cover: cover, url: url, finished: finished, authors: authors.map((a) => a.name).toList(), genres: genres.map((g) => g.name).toList(), newestChapter: newestChapter, newestDate: newestDate);
+  }
+}
+
+@JsonSerializable(fieldRename: FieldRename.snake)
+class SmallerManga {
+  final int mid;
+  final String title;
+  final String cover;
+  final String url;
+  final bool finished;
+  final List<String> authors;
+  final List<String> genres;
+  final String newestChapter;
+  final String newestDate;
+
+  String get formattedNewestChapter => RegExp('^[0-9]').hasMatch(newestChapter) ? '第$newestChapter' : newestChapter;
+
+  const SmallerManga({required this.mid, required this.title, required this.cover, required this.url, required this.finished, required this.authors, required this.genres, required this.newestChapter, required this.newestDate});
+
+  factory SmallerManga.fromJson(Map<String, dynamic> json) => _$SmallerMangaFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SmallerMangaToJson(this);
+
+  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+
+  String get formattedNewestDateWithDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    if (result.duration == null) {
+      return result.date;
+    }
+    return '${result.duration} (${result.date})';
+  }
+
+  int? get newestDateDayDuration {
+    var result = parseDurationOrDateString(formattedNewestDate);
+    return result.dayDiff;
+  }
+
+  TinyManga toTiny() {
+    return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
+  }
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

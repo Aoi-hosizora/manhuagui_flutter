@@ -14,6 +14,8 @@ class ChapterGridView extends StatelessWidget {
     this.columns = 4,
     this.highlightColor,
     this.highlightedChapters = const [],
+    this.highlight2Color,
+    this.highlighted2Chapters = const [],
     this.extrasInStack,
     this.itemBuilder,
     required this.onChapterPressed,
@@ -28,6 +30,8 @@ class ChapterGridView extends StatelessWidget {
   final int columns;
   final Color? highlightColor;
   final List<int> highlightedChapters;
+  final Color? highlight2Color;
+  final List<int> highlighted2Chapters;
   final List<Widget> Function(TinyMangaChapter? chapter)? extrasInStack;
   final Widget Function(BuildContext context, TinyMangaChapter? chapter, Widget itemWidget)? itemBuilder;
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
@@ -60,9 +64,11 @@ class ChapterGridView extends StatelessWidget {
             ),
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              backgroundColor: !highlightedChapters.contains(chapter?.cid)
-                  ? null //
-                  : (highlightColor ?? Theme.of(context).primaryColorLight.withOpacity(0.6)),
+              backgroundColor: highlightedChapters.contains(chapter?.cid)
+                  ? (highlightColor ?? Colors.deepOrange.withOpacity(0.3)) //
+                  : highlighted2Chapters.contains(chapter?.cid)
+                      ? (highlight2Color ?? Colors.deepOrange.withOpacity(0.08)) //
+                      : null,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () => onChapterPressed(chapter),

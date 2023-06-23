@@ -33,7 +33,7 @@ class FavoriteMangaLineView extends StatelessWidget {
       icon1: Icons.folder_open,
       text1: '${manga.checkedGroupName}${manga.remark.trim().isEmpty ? '' : '・备注 ${manga.remark.trim()}'}',
       icon2: history == null || !history!.read ? CustomIcons.opened_left_star_book : Icons.import_contacts,
-      text2: (history == null || !history!.read ? '未开始阅读' : '最近阅读至 ${history!.chapterTitle}') + ' (${history?.formattedLastTimeOrDuration ?? '未知时间'})',
+      text2: (history == null ? '未浏览阅读' : (!history!.read ? '未开始阅读 仅浏览' : '最近阅读至 ${history!.chapterTitle}')) + (history == null ? '' : ' (${history!.formattedLastTimeOrDuration})'),
       icon3: Icons.access_time,
       text3: '收藏于 ${manga.formattedCreatedAtWithDuration}',
       cornerIcons: flags?.buildIcons(),
