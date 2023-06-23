@@ -7,7 +7,6 @@ import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/page/dlg/message_dialog.dart';
 import 'package:manhuagui_flutter/service/db/db_manager.dart';
-import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -49,8 +48,7 @@ class SplashPage extends StatefulWidget {
     }
 
     // 2. upgrade db and prefs
-    var db = await DBManager.instance.getDB();
-    await HistoryDao.upgradeFromVer4To5(db); // TODO
+    await DBManager.instance.getDB();
     await PrefsManager.instance.loadPrefs();
 
     // 3. load all settings

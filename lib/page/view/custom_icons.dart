@@ -39,4 +39,6 @@ class CustomIcons {
   static const IconData calendar_off = IconData(0xe813, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData star_sync = IconData(0xe814, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData bookmark_multiple = IconData(0xe815, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData opened_book_clock = IconData(0xe816, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData opened_book_arrow_right = IconData(0xe817, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

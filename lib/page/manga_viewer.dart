@@ -28,6 +28,7 @@ import 'package:manhuagui_flutter/page/page/view_extra.dart';
 import 'package:manhuagui_flutter/page/page/view_toc.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_gallery.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -226,42 +227,23 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
   bool get _isRtlOperation => _isRightToLeft || _isTopToBottomRtl; // 从右到左操作
 
-  Timer? _timer;
-  var _currentTime = '00:00';
-  var _networkInfo = 'WIFI';
-  var _batteryInfo = '0%';
-
   @override
   void initState() {
     super.initState();
 
     // data related
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
-    _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) async {
-      if (ev.mangaId == widget.mangaId) {
-        _inShelf = ev.added;
-        if (mounted) setState(() {});
-      }
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
-      if (ev.mangaId == widget.mangaId) {
-        _inFavorite = ev.reason != UpdateReason.deleted;
-        if (mounted) setState(() {});
-      }
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) async {
-      if (ev.mangaId == widget.mangaId) {
-        _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: ev.mangaId);
-        if (mounted) setState(() {});
-      }
-    }));
-    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
-      if (ev.mangaId == widget.mangaId && !ev.fromMangaViewerPage) {
-        _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-        _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
-        if (mounted) setState(() {});
-      }
-    }));
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (ev) => _updateByEvent(authEvent: ev)));
+      await AuthManager.instance.check();
+    });
+    // _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {}))); // => unnecessary in viewer page
+    _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) => _updateByEvent(shelfEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) => _updateByEvent(favoriteEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
 
     // setting and screen related
     _ScreenHelper.initialize(
@@ -280,30 +262,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     });
 
     // timer related
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      Future<void> getInfo() async {
-        var now = DateTime.now();
-        _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-        var conn = await Connectivity().checkConnectivity();
-        _networkInfo = conn == ConnectivityResult.wifi ? 'WIFI' : (conn == ConnectivityResult.mobile ? '移动网络' : '无网络');
-        var battery = await BatteryInfoPlugin().androidBatteryInfo;
-        _batteryInfo = '电源${(battery?.batteryLevel ?? 0).clamp(0, 100)}%';
-        if (mounted) setState(() {});
-      }
-
-      getInfo();
-      var now = DateTime.now();
-      var nextMinute = DateTime(now.year, now.month, now.day, now.hour, now.minute + 1);
-      if (mounted && (_timer == null || !_timer!.isActive)) {
-        Timer(nextMinute.difference(now), () {
-          _timer = Timer.periodic(const Duration(minutes: 1), (_) async {
-            if (_timer != null && _timer!.isActive) {
-              await getInfo();
-            }
-          });
-        });
-      }
-    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => _prepareTimer());
   }
 
   @override
@@ -325,6 +284,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   List<Future<File?>>? _fileFutures;
 
   MangaHistory? _history;
+  Map<int, ChapterFootprint>? _footprints;
   int? _subscribeCount;
   FavoriteManga? _favoriteManga;
   var _subscribing = false; // 执行订阅操作中
@@ -342,11 +302,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     if (mounted) setState(() {});
 
     // 1. 先获取各种数据库信息 (收藏、下载)
-    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-    _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
+    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
+    _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节足迹
+    _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId); // 本地收藏
     _inFavorite = _favoriteManga != null;
-    _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
-    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+    _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId); // 稍后阅读
+    _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId); // 下载记录
     _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
 
     // 2. 在网络请求前，先判断当前是否处于离线模式，以及章节是否下载
@@ -462,8 +423,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 MangaChapterNeighbor(
                   // => use download metadata as chapter neighbor
                   notLoaded: metadata.prevCid == null || metadata.nextCid == null /* null => 未找到数据, notLoaded == true */,
-                  prevChapter: (metadata.prevCid ?? 0) <= 0 ? null : NanoTinyMangaChapter(cid: metadata.prevCid!, title: '未知章节', group: '未知分组') /* null => 没有上一章节 */,
-                  nextChapter: (metadata.nextCid ?? 0) <= 0 ? null : NanoTinyMangaChapter(cid: metadata.nextCid!, title: '未知章节', group: '未知分组') /* null => 没有下一章节 */,
+                  prevChapter: (metadata.prevCid ?? 0) <= 0 ? null : TinierMangaChapter(cid: metadata.prevCid!, title: '未知章节', group: '未知分组') /* null => 没有上一章节 */,
+                  nextChapter: (metadata.nextCid ?? 0) <= 0 ? null : TinierMangaChapter(cid: metadata.nextCid!, title: '未知章节', group: '未知分组') /* null => 没有下一章节 */,
                 ),
             chapterGroups: widget.neededData?.chapterGroups /* maybe null */,
             mangaAuthors: widget.neededData?.mangaAuthors /* maybe null */,
@@ -504,6 +465,21 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
       // 7. 异步更新阅读历史
       _updateHistory();
+
+      // 8. 显示网络使用提醒
+      if (widget.onlineMode && AppSetting.instance.view.showNotWifiHint) {
+        var conn = await Connectivity().checkConnectivity();
+        if (conn != ConnectivityResult.wifi) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('当前正在使用非WIFI网络，阅读漫画时请注意流量消耗！'),
+              duration: Duration(seconds: 6),
+              action: SnackBarAction(label: '确定', onPressed: () => SystemNavigator.pop()),
+            ),
+          );
+        }
+      }
     } catch (e, s) {
       _data = null;
       _error = wrapError(e, s).text;
@@ -590,8 +566,62 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
+  Future<void> _updateByEvent({
+    AuthChangedEvent? authEvent,
+    HistoryUpdatedEvent? historyEvent,
+    DownloadUpdatedEvent? downloadEvent,
+    ShelfUpdatedEvent? shelfEvent,
+    FavoriteUpdatedEvent? favoriteEvent,
+    LaterMangaUpdatedEvent? laterEvent,
+    FootprintUpdatedEvent? footprintEvent,
+  }) async {
+    if (authEvent != null) {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节足迹
+      _subscribeCount = null;
+      _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
+      _inShelf = false;
+      _inFavorite = _favoriteManga != null;
+      _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId); // 稍后阅读
+      if (mounted) setState(() {});
+    }
+
+    if (historyEvent != null && !historyEvent.fromMangaViewerPage && historyEvent.mangaId == widget.mangaId) {
+      _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+
+    if (downloadEvent != null && !downloadEvent.fromMangaViewerPage && downloadEvent.mangaId == widget.mangaId) {
+      _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
+      if (mounted) setState(() {});
+    }
+
+    if (shelfEvent != null && shelfEvent.mangaId == widget.mangaId) {
+      _inShelf = shelfEvent.added;
+      if (mounted) setState(() {});
+    }
+
+    if (favoriteEvent != null && favoriteEvent.mangaId == widget.mangaId) {
+      _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: favoriteEvent.mangaId);
+      _inFavorite = _favoriteManga != null;
+      if (mounted) setState(() {});
+    }
+
+    if (laterEvent != null && laterEvent.mangaId == widget.mangaId) {
+      _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+
+    if (footprintEvent != null && !footprintEvent.fromMangaViewerPage && footprintEvent.mangaId == widget.mangaId) {
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
+      if (mounted) setState(() {});
+    }
+  }
+
   // 载入时调用 / 离开页面时调用 / 跳转章节时调用
   Future<void> _updateHistory() async {
+    final nowDateTime = DateTime.now();
     if (_data != null) {
       var oldHistory = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       MangaHistory newHistory;
@@ -608,8 +638,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           lastChapterId: oldHistory?.lastChapterId ?? 0 /* => use last last chapter history */,
           lastChapterTitle: oldHistory?.lastChapterTitle ?? '',
           lastChapterPage: oldHistory?.lastChapterPage ?? 0,
-          lastTime: DateTime.now() /* 历史已更新 */,
-        );
+          lastTime: nowDateTime /* 历史已更新 */,
+        ); // 更新历史
         if (newHistory.chapterId == newHistory.lastChapterId) {
           // 额外的见擦汗，判断当前章节是否与last字段相等，如果相等则需要清空last字段
           newHistory = newHistory.copyWith(lastChapterId: 0, lastChapterTitle: '', lastChapterPage: 1);
@@ -627,13 +657,22 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           lastChapterId: oldHistory.chapterId /* => use last chapter history */,
           lastChapterTitle: oldHistory.chapterTitle,
           lastChapterPage: oldHistory.chapterPage,
-          lastTime: DateTime.now() /* 历史已更新 */,
-        );
+          lastTime: nowDateTime /* 历史已更新 */,
+        ); // 更新历史
       }
       _history = newHistory;
-      if (mounted) setState(() {});
       await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated));
+      var newFootprint = ChapterFootprint(
+        mangaId: widget.mangaId,
+        chapterId: widget.chapterId,
+        createdAt: nowDateTime /* 历史已更新 */,
+      ); // 更新足迹
+      var toUpdateFp = _footprints?.keys.contains(widget.chapterId) ?? false;
+      (_footprints ??= {})[widget.chapterId] = newFootprint;
+      await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
+      if (mounted) setState(() {});
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromMangaViewerPage: true));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: [widget.chapterId], reason: !toUpdateFp ? UpdateReason.added : UpdateReason.updated, fromMangaViewerPage: true));
     }
   }
 
@@ -691,7 +730,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             mangaCover: _data?.mangaCover ?? widget.mangaCover,
             mangaUrl: _data?.mangaUrl ?? widget.mangaUrl,
             neededData: _data?.neededData ?? widget.neededData,
-            initialPage: _currentPage /* start from 1 */,
+            initialPage: _currentPage /* initial page index starts from 1 */,
             onlineMode: true,
             replacing: true,
           ),
@@ -785,8 +824,38 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     if (neighbor == null || neighbor.notLoaded) {
       Fluttertoast.showToast(msg: '当前处于离线模式，但未在下载列表获取到章节跳转信息');
     } else {
-      var titles = neighbor.getAvailableChapters(previous: previous).map((t) => '【${t.group}】${t.title}').join('\n');
+      var titles = neighbor.getAvailableNeighbors(previous: previous).map((t) => '【${t.group}】${t.title}').join('\n');
       Fluttertoast.showToast(msg: (previous ? '上一章节\n' : '下一章节\n') + titles);
+    }
+  }
+
+  Timer? _timer; // 定时器 更新界面
+  var _currentTime = '00:00';
+  var _networkInfo = 'WIFI';
+  var _batteryInfo = '0%';
+
+  void _prepareTimer() {
+    Future<void> getInfo() async {
+      var now = DateTime.now();
+      _currentTime = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+      var conn = await Connectivity().checkConnectivity();
+      _networkInfo = conn == ConnectivityResult.wifi ? 'WIFI' : (conn == ConnectivityResult.mobile ? '移动网络' : '无网络');
+      var battery = await BatteryInfoPlugin().androidBatteryInfo;
+      _batteryInfo = '电源${(battery?.batteryLevel ?? 0).clamp(0, 100)}%';
+      if (mounted) setState(() {});
+    }
+
+    getInfo();
+    var now = DateTime.now();
+    var nextMinute = DateTime(now.year, now.month, now.day, now.hour, now.minute + 1);
+    if (mounted && (_timer == null || !_timer!.isActive)) {
+      Timer(nextMinute.difference(now), () {
+        _timer = Timer.periodic(const Duration(minutes: 1), (_) async {
+          if (_timer != null && _timer!.isActive) {
+            await getInfo();
+          }
+        });
+      });
     }
   }
 
@@ -888,13 +957,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   Future<void> _showToc() async {
     // 由于 _showToc 有可能在 _offlineError 时被调用，所以方法内不使用 _data 来获取这些数据
     String mangaTitle, mangaCover, mangaUrl;
-    MangaChapterNeededData? neededData;
+    MangaChapterNeededData neededData;
     if (!_offlineError) {
       mangaTitle = _data!.mangaTitle;
       mangaCover = _data!.mangaCover;
       mangaUrl = _data!.mangaUrl;
-      neededData = _data!.neededData;
-      if (neededData == null) {
+      if (_data!.neededData != null) {
+        neededData = _data!.neededData!;
+      } else {
         if (_data!.getMangaFailed != true) {
           Fluttertoast.showToast(msg: '当前处于离线模式，正在获取漫画章节列表');
         } else {
@@ -906,38 +976,101 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaTitle = widget.mangaTitle;
       mangaCover = widget.mangaCover;
       mangaUrl = widget.mangaUrl;
-      neededData = widget.neededData;
-      if (neededData == null) {
+      if (widget.neededData != null) {
+        neededData = widget.neededData!;
+      } else {
         Fluttertoast.showToast(msg: '当前处于离线模式，但未获取到漫画章节列表'); // <<< for _offlineError
         return;
       }
     }
 
-    void switchChapter(BuildContext c, int cid) {
-      if (cid == widget.chapterId) {
-        Fluttertoast.showToast(msg: '当前正在阅读 ${neededData?.chapterGroups.findChapter(cid)?.title ?? '该章节'}');
-      } else {
+    void switchChapter(BuildContext c, int chapterId) {
+      void gotoViewerPage({required int cid, required int page}) {
+        _updateHistory(); // update history before push route
         Navigator.of(c).pop(); // close bottom sheet
-        _updateHistory();
         Navigator.of(context).pushReplacement(
           CustomPageRoute.fromTheme(
             themeData: CustomPageRouteTheme.of(context),
             builder: (c) => MangaViewerPage(
               mangaId: widget.mangaId,
-              chapterId: cid,
+              chapterId: cid /* <<< */,
               mangaTitle: mangaTitle,
               mangaCover: mangaCover,
               mangaUrl: mangaUrl,
               neededData: neededData,
-              initialPage: 1 /* always turn to the first page */,
+              initialPage: page /* <<< */,
               onlineMode: widget.onlineMode,
               replacing: true,
             ),
           ),
         );
       }
+
+      if (chapterId == widget.chapterId) {
+        // (1) 所选章节是当前正在阅读(即历史中上次阅读)的章节 => 提示
+        Fluttertoast.showToast(msg: '当前正在阅读 ${neededData.chapterGroups.findChapter(chapterId)?.title ?? '该章节'}');
+      } else if (_history == null || _history!.lastChapterId != chapterId) {
+        // (2) 所选章节不是上上次阅读的章节 => 直接从第一页阅读
+        gotoViewerPage(cid: chapterId, page: 1);
+      } else {
+        // (3) 所选章节在上上次被阅读 => 弹出选项判断是否需要阅读
+        var historyTitle = _history!.lastChapterTitle;
+        var historyPage = _history!.lastChapterPage;
+        var chapter = neededData.chapterGroups.findChapter(chapterId);
+        if (chapter == null) {
+          showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
+          return; // actually unreachable
+        }
+        var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.pageCount); // 是否检查"未阅读完"
+        var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter.pageCount); // 是否检查"已阅读完"
+        if (!checkNotfin && !checkFinish) {
+          // (3.1) 所选章节无需弹出提示 => 继续阅读
+          gotoViewerPage(cid: chapterId, page: historyPage);
+        } else {
+          // (3.2) 所选章节需要弹出提示 (未阅读完/已阅读完) => 根据所选选项来确定阅读行为
+          showDialog(
+            context: context,
+            builder: (c) => SimpleDialog(
+              title: Text('章节阅读'),
+              children: [
+                SubtitleDialogOption(
+                  text: Text(
+                    checkNotfin //
+                        ? '所选章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.pageCount}页)。'
+                        : '所选章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)。',
+                  ),
+                ),
+                ...([
+                  IconTextDialogOption(
+                    icon: Icon(CustomIcons.opened_book_arrow_right),
+                    text: Text('继续阅读所选章节 ($historyTitle 第$historyPage页)'),
+                    popWhenPress: c,
+                    onPressed: () => gotoViewerPage(cid: chapterId, page: historyPage),
+                  ),
+                  if (historyPage > 1)
+                    IconTextDialogOption(
+                      icon: Icon(CustomIcons.opened_book_replay),
+                      text: Text('从头阅读所选章节 ($historyTitle 第1页)'),
+                      popWhenPress: c,
+                      onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
+                    ),
+                ].let(
+                  (opt) => checkNotfin ? opt /* 未阅读完 */ : opt.reversed /* 已阅读完 */,
+                )),
+                IconTextDialogOption(
+                  icon: Icon(Icons.menu),
+                  text: Text('重新选择其他章节'),
+                  popWhenPress: c,
+                  onPressed: () {}, // <<< 此处不提供新章节供选择阅读
+                ),
+              ],
+            ),
+          );
+        }
+      }
     }
 
+    // >>>
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -951,12 +1084,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           child: ViewTocSubPage(
             mangaId: widget.mangaId,
             mangaTitle: mangaTitle,
-            groups: neededData!.chapterGroups,
-            highlightedChapter: widget.chapterId,
-            highlighted2Chapter: _history?.lastChapterId ?? 0,
+            groups: neededData.chapterGroups,
+            currReadChapterId: widget.chapterId,
+            lastReadChapterId: _history?.lastChapterId ?? 0,
+            footprintChapterIds: _footprints?.keys.toList() ?? [],
             onChapterPressed: (cid) => switchChapter(c, cid),
             onChapterLongPressed: (cid) {
-              var chapter = neededData!.chapterGroups.findChapter(cid);
+              var chapter = neededData.chapterGroups.findChapter(cid);
               if (chapter == null) {
                 Fluttertoast.showToast(msg: '未在漫画章节列表中找到章节'); // almost unreachable
                 return;
@@ -972,7 +1106,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 fromMangaPage: false,
                 chapter: chapter,
                 chapterNeededData: neededData,
-                onHistoryUpdated: null,
+                onHistoryUpdated: null /* 不显示，不会触发 */,
+                onFootprintRemoved: null /* 不显示，不会触发 */,
                 allowDeletingHistory: false /* => 不显示 "删除阅读历史" */,
                 toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
                 navigateWrapper: (navigate) async {
@@ -1428,7 +1563,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
                       laterManga: _laterManga,
-                      onActionsUpdated: (more) => _mangaGalleryViewKey.currentState?.updatePageHeight(0) /* update page height */,
+                      onHeightChanged: ({bool byOpt = false, bool byLater = false}) {
+                        _mangaGalleryViewKey.currentState?.updatePageHeight(0); // update page height
+                      },
                       callbacks: extraCallbacks as ViewExtraSubPageCallbacks,
                     ),
                     lastPageBuilder: (c, extraCallbacks) => ViewExtraSubPage(
@@ -1441,9 +1578,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       inShelf: _inShelf,
                       inFavorite: _inFavorite,
                       laterManga: _laterManga,
-                      onActionsUpdated: (more) {
+                      onHeightChanged: ({bool byOpt = false, bool byLater = false}) {
                         _mangaGalleryViewKey.currentState?.updatePageHeight(_data!.pageCount + 1); // update page height
-                        _mangaGalleryViewKey.currentState?.jumpToPage(_data!.pageCount + 1, animated: true);
+                        if (byOpt) {
+                          _mangaGalleryViewKey.currentState?.jumpToPage(_data!.pageCount + 1, animated: true);
+                        }
                       },
                       callbacks: extraCallbacks as ViewExtraSubPageCallbacks,
                     ),

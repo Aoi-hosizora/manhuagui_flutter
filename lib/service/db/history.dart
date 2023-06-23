@@ -28,6 +28,18 @@ class HistoryDao {
     columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colChapterId, _colChapterTitle, _colChapterPage, _colLastChapterId, _colLastChapterTitle, _colLastChapterPage, _colLastTime],
   );
 
+  static const _tblFootprint = 'tbl_footprint';
+  static const _colFUsername = 'username';
+  static const _colFMangaId = 'id';
+  static const _colFChapterId = 'chapter_id';
+  static const _colFCreatedAt = 'created_at';
+
+  static const footprintMetadata = TableMetadata(
+    tableName: _tblFootprint,
+    primaryKeys: [_colFUsername, _colFMangaId, _colFChapterId],
+    columns: [_colFUsername, _colFMangaId, _colFChapterId, _colFCreatedAt],
+  );
+
   static Future<void> createForVer1(Database db) async {
     await db.safeExecute('''
       CREATE TABLE $_tblHistory(
@@ -63,6 +75,19 @@ class HistoryDao {
     await db.safeExecute('UPDATE $_tblHistory SET $_colLastChapterId = 0 WHERE $_colLastChapterId IS NULL');
     await db.safeExecute('UPDATE $_tblHistory SET $_colLastChapterTitle = "" WHERE $_colLastChapterTitle IS NULL');
     await db.safeExecute('UPDATE $_tblHistory SET $_colLastChapterPage = 1 WHERE $_colLastChapterPage IS NULL');
+    await db.safeExecute('''
+      CREATE TABLE $_tblFootprint(
+        $_colFUsername VARCHAR(1023),
+        $_colFMangaId INTEGER,
+        $_colFChapterId INTEGER,
+        $_colFCreatedAt DATETIME,
+        PRIMARY KEY ($_colFUsername, $_colFMangaId, $_colFChapterId)
+      )''');
+    await db.safeExecute('''
+      INSERT INTO $_tblFootprint ($_colFUsername, $_colFMangaId, $_colFChapterId, $_colFCreatedAt)
+      SELECT $_colUsername, $_colMangaId, $_colChapterId, $_colLastTime AS $_colFCreatedAt 
+      FROM $_tblHistory WHERE $_tblHistory.$_colChapterId <> 0
+    ''');
   }
 
   static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
@@ -216,6 +241,135 @@ class HistoryDao {
       '''DELETE FROM $_tblHistory
          WHERE $_colUsername = ?''',
       [username],
+    );
+    return rows != null;
+  }
+
+  static Future<int?> getMangaFootprintsCount({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblFootprint
+         WHERE $_colFUsername = ? AND $_colFMangaId = ?''',
+      [username, mid],
+    );
+    if (results == null) {
+      return null;
+    }
+    return firstIntValue(results);
+  }
+
+  static Future<bool?> checkFootprintExistence({required String username, required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblFootprint
+         WHERE $_colFUsername = ? AND $_colFMangaId = ? AND $_colFChapterId = ?''',
+      [username, mid, cid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
+  }
+
+  static Future<List<ChapterFootprint>?> getMangaFootprints({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT $_colFChapterId, $_colFCreatedAt
+         FROM $_tblFootprint
+         WHERE $_colFUsername = ? AND $_colFMangaId = ?
+         ORDER BY $_colFCreatedAt DESC''',
+      [username, mid],
+    );
+    if (results == null) {
+      return null;
+    }
+    var out = <ChapterFootprint>[];
+    for (var r in results) {
+      out.add(ChapterFootprint(
+        mangaId: mid,
+        chapterId: r[_colFChapterId]! as int,
+        createdAt: DateTime.parse(r[_colFCreatedAt]! as String),
+      ));
+    }
+    return out;
+  }
+
+  static Future<Map<int, ChapterFootprint>?> getMangaFootprintsSet({required String username, required int mid}) async {
+    var footprints = await getMangaFootprints(username: username, mid: mid);
+    if (footprints == null) {
+      return null;
+    }
+    return <int, ChapterFootprint>{for (var fp in footprints) fp.chapterId: fp};
+  }
+
+  static Future<ChapterFootprint?> getFootprint({required String username, required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT $_colFCreatedAt
+         FROM $_tblFootprint
+         WHERE $_colFUsername = ? AND $_colFMangaId = ? AND $_colFChapterId = ?''',
+      [username, mid, cid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    var r = results.first;
+    return ChapterFootprint(
+      mangaId: mid,
+      chapterId: cid,
+      createdAt: DateTime.parse(r[_colFCreatedAt]! as String),
+    );
+  }
+
+  static Future<bool> addOrUpdateFootprint({required String username, required ChapterFootprint footprint}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblFootprint
+         WHERE $_colFUsername = ? AND $_colFMangaId = ? AND $_colFChapterId = ?''',
+      [username, footprint.mangaId, footprint.chapterId],
+    );
+    if (results == null) {
+      return false;
+    }
+    var count = firstIntValue(results);
+
+    int? rows = 0;
+    if (count == 0) {
+      rows = await db.safeRawInsert(
+        '''INSERT INTO $_tblFootprint ($_colFUsername, $_colFMangaId, $_colFChapterId, $_colFCreatedAt)
+           VALUES (?, ?, ?, ?)''',
+        [username, footprint.mangaId, footprint.chapterId, footprint.createdAt.toIso8601String()],
+      );
+    } else {
+      rows = await db.safeRawUpdate(
+        '''UPDATE $_tblFootprint
+           SET $_colFCreatedAt = ?
+           WHERE $_colFUsername = ? AND $_colFMangaId = ? AND $_colFChapterId = ?''',
+        [footprint.createdAt.toIso8601String(), username, footprint.mangaId, footprint.chapterId],
+      );
+    }
+    return rows != null && rows >= 1;
+  }
+
+  static Future<bool> deleteFootprint({required String username, required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblFootprint
+         WHERE $_colUsername = ? AND $_colFMangaId = ? AND $_colFChapterId = ?''',
+      [username, mid, cid],
+    );
+    return rows != null && rows >= 1;
+  }
+
+  static Future<bool> clearMangaFootprints({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblFootprint
+         WHERE $_colUsername = ? AND $_colFMangaId = ?''',
+      [username, mid],
     );
     return rows != null;
   }

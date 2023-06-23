@@ -21,7 +21,6 @@ import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/small_manga_line.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
-import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -142,7 +141,6 @@ class _AuthorPageState extends State<AuthorPage> {
 
   final _mangas = <SmallManga>[];
   var _total = 0;
-  final _histories = <int, MangaHistory?>{};
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _getting = false;
   final _currOrder = RestorableObject(AppSetting.instance.ui.defaultMangaOrder);
@@ -153,9 +151,6 @@ class _AuthorPageState extends State<AuthorPage> {
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    for (var item in result.data.data) {
-      _histories[item.mid] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: item.mid);
-    }
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
@@ -686,7 +681,7 @@ class _AuthorPageState extends State<AuthorPage> {
                 ),
                 itemBuilder: (c, _, item) => SmallMangaLineView(
                   manga: item.toSmaller(),
-                  history: _histories[item.mid],
+                  history: _flagStorage.getHistory(mangaId: item.mid),
                   flags: _flagStorage.getFlags(mangaId: item.mid),
                   twoColumns: AppSetting.instance.ui.showTwoColumns,
                   highlightRecent: AppSetting.instance.ui.highlightRecentMangas,

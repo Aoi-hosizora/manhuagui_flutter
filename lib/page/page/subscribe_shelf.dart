@@ -11,7 +11,6 @@ import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/shelf_manga_line.dart';
-import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -98,7 +97,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   var _total = 0;
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreShelves: true);
   var _useLocalHistory = false;
-  final _histories = <int, MangaHistory?>{};
   var _isUpdated = false;
 
   Future<PagedList<ShelfManga>> _getData({required int page}) async {
@@ -118,9 +116,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, added: true));
       }
     });
-    for (var item in result.data.data) {
-      _histories[item.mid] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: item.mid);
-    }
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid), queryShelves: false).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
@@ -231,7 +226,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
         ),
         itemBuilder: (c, _, item) => ShelfMangaLineView(
           manga: item,
-          history: _histories[item.mid],
+          history: _flagStorage.getHistory(mangaId: item.mid),
           useLocalHistory: _useLocalHistory,
           flags: _flagStorage.getFlags(mangaId: item.mid, forceInShelf: true),
           twoColumns: AppSetting.instance.ui.showTwoColumns,

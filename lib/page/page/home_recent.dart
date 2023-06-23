@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
-import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/small_manga_line.dart';
-import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
 /// 首页-更新
 class RecentSubPage extends StatefulWidget {
@@ -49,7 +46,6 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   final _data = <SmallerManga>[];
   var _total = 0;
   var _needTotal = true;
-  final _histories = <int, MangaHistory?>{};
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
 
   Future<PagedList<SmallerManga>> _getData({required int page}) async {
@@ -62,9 +58,6 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
     });
     _total = _needTotal ? result.data.total : _total;
     _needTotal = false; // only get total once
-    for (var item in result.data.data) {
-      _histories[item.mid] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: item.mid);
-    }
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
@@ -112,7 +105,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
         ),
         itemBuilder: (c, _, item) => SmallMangaLineView(
           manga: item,
-          history: _histories[item.mid],
+          history: _flagStorage.getHistory(mangaId: item.mid),
           flags: _flagStorage.getFlags(mangaId: item.mid),
           twoColumns: AppSetting.instance.ui.showTwoColumns,
           highlightRecent: AppSetting.instance.ui.highlightRecentMangas,

@@ -15,7 +15,6 @@ import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
-import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -84,7 +83,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   var _total = 0;
   var _removed = 0; // for query offset
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreFavorites: true);
-  final _histories = <int, MangaHistory?>{};
   var _searchKeyword = ''; // for query condition
   var _searchTitleOnly = true; // for query condition
   var _sortMethod = SortMethod.byOrderAsc; // for query condition
@@ -105,9 +103,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     _groups ??= await FavoriteDao.getGroups(username: username);
     _groupsLengths ??= await FavoriteDao.getGroupsLengths(username: username);
     _allMangasCount ??= await FavoriteDao.getFavoriteCount(username: username, groupName: null) ?? 0;
-    for (var item in data) {
-      _histories[item.mangaId] = await HistoryDao.getHistory(username: username, mid: item.mangaId);
-    }
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryFavorites: false).then((_) => mountedSetState(() {}));
     return PagedList(list: data, next: page + 1);
@@ -633,7 +628,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                         : _sortMethod == SortMethod.byOrderDesc
                             ? _total - idx
                             : null),
-                history: _histories[item.mangaId],
+                history: _flagStorage.getHistory(mangaId: item.mangaId),
                 flags: _flagStorage.getFlags(mangaId: item.mangaId, forceInFavorite: true),
                 twoColumns: AppSetting.instance.ui.showTwoColumns,
                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),

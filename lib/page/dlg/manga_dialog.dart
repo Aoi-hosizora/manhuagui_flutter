@@ -292,10 +292,10 @@ void showPopupMenuForMangaList({
                     [
                       IconTextDialogOption(
                         icon: Icon(MdiIcons.deleteClock),
-                        text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读历史'),
+                        text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读与浏览历史'),
                         popWhenPress: c,
                         predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: mangaHistory.read),
-                        onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), fromHistoryList: fromHistoryList, fromMangaPage: false),
+                        onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), onFpCleared: null, fromHistoryList: fromHistoryList, fromMangaPage: false),
                       ),
                       if (!fromHistoryList)
                         IconTextDialogOption(
@@ -410,6 +410,7 @@ void showPopupMenuForMangaToc({
   required TinyMangaChapter chapter,
   required MangaChapterNeededData chapterNeededData,
   required void Function(MangaHistory history)? onHistoryUpdated,
+  required void Function(List<int> chapterIds)? onFootprintRemoved,
   bool allowDeletingHistory = true,
   void Function()? toSwitchChapter, // => only for switching chapter in MangaViewerPage
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
@@ -417,7 +418,10 @@ void showPopupMenuForMangaToc({
   var downloadEntity = await DownloadDao.getManga(mid: mangaId);
   var inDownloadTask = downloadEntity?.findChapter(chapter.cid) != null;
   var historyEntity = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
-  var lastReadChapter = historyEntity?.chapterId == chapter.cid;
+  var isChapterRead = historyEntity?.chapterId == chapter.cid || historyEntity?.lastChapterId == chapter.cid;
+  var readChapterTitle = historyEntity?.chapterId == chapter.cid ? historyEntity!.chapterTitle : (historyEntity?.lastChapterId == chapter.cid ? historyEntity?.lastChapterTitle : null);
+  var readChapterPage = historyEntity?.chapterId == chapter.cid ? historyEntity!.chapterPage : (historyEntity?.lastChapterId == chapter.cid ? historyEntity?.lastChapterPage : null);
+  var isInFootprint = await HistoryDao.checkFootprintExistence(username: AuthManager.instance.username, mid: mangaId, cid: chapter.cid) ?? false;
 
   var helper = _DialogHelper(
     context: context,
@@ -436,24 +440,24 @@ void showPopupMenuForMangaToc({
         /// 基本选项
         if (toSwitchChapter == null) ...[
           IconTextDialogOption(
-            icon: Icon(Icons.import_contacts),
-            text: Text(!lastReadChapter ? '阅读该章节' : '继续阅读该章节'),
+            icon: Icon(!isChapterRead ? Icons.import_contacts : CustomIcons.opened_book_arrow_right),
+            text: Text(!isChapterRead ? '阅读该章节 (第1页)' : '继续阅读该章节 (第${readChapterPage ?? 1}页)'),
             popWhenPress: c,
             onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterNeededData: chapterNeededData, history: historyEntity, readFirstPage: false, onlineMode: true),
           ),
-          if (lastReadChapter)
+          if (isChapterRead && ((readChapterPage ?? 1) > 1))
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_replay),
-              text: Text('从头阅读该章节'),
+              text: Text('从头阅读该章节 (第1页)'),
               popWhenPress: c,
               onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterNeededData: chapterNeededData, history: historyEntity, readFirstPage: true, onlineMode: true),
             ),
           if (inDownloadTask)
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_offline),
-              text: Text('离线阅读该章节'),
+              text: Text('离线阅读该章节 (第1页)'),
               popWhenPress: c,
-              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterNeededData: chapterNeededData, history: historyEntity, readFirstPage: false, onlineMode: false),
+              onPressed: () => helper.gotoChapterPage(chapterId: chapter.cid, chapterNeededData: chapterNeededData, history: historyEntity, readFirstPage: true, onlineMode: false),
             ),
         ],
         if (toSwitchChapter != null)
@@ -461,7 +465,7 @@ void showPopupMenuForMangaToc({
             icon: Icon(Icons.import_contacts),
             text: Text('切换为该章节'),
             popWhenPress: c,
-            onPressed: toSwitchChapter, // always turn to the first page here
+            onPressed: toSwitchChapter, // 在 MangaViewerPage 中指定章节切换的流程，可能会进一步弹框判断是否继续阅读
           ),
         IconTextDialogOption(
           icon: Icon(Icons.copy),
@@ -493,13 +497,21 @@ void showPopupMenuForMangaToc({
           ),
 
         /// 历史
-        if (allowDeletingHistory && lastReadChapter)
+        if (allowDeletingHistory && isChapterRead)
           IconTextDialogOption(
             icon: Icon(MdiIcons.deleteClock),
-            text: Text('删除阅读历史'),
+            text: Text('删除章节阅读历史'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: historyEntity!.chapterTitle),
-            onPressed: () => helper.clearChapterHistory(oldHistory: historyEntity!, onUpdated: onHistoryUpdated, fromHistoryList: false, fromMangaPage: fromMangaPage),
+            predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: readChapterTitle),
+            onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
+          ),
+        if (allowDeletingHistory && !isChapterRead && isInFootprint)
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.deleteClock),
+            text: Text('删除章节阅读足迹'),
+            popWhenPress: c,
+            predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: chapterNeededData.chapterGroups.findChapter(chapter.cid)?.title ?? '未知话'),
+            onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
           ),
 
         /// 查看信息
@@ -600,9 +612,9 @@ void showPopupMenuForSubscribing({
           ),
 
         /// 额外选项
-        if (subscribeCount != null || nowInShelf || favoriteManga != null || laterManga != null) ...[
+        if (nowInShelf || favoriteManga != null || laterManga != null) ...[
           Divider(height: 16, thickness: 1),
-          if (subscribeCount != null)
+          if (nowInShelf && subscribeCount != null)
             IconTextDialogOption(
               icon: Icon(Icons.stars),
               text: Text('共 $subscribeCount 人将本漫画放入书架'),
@@ -1137,9 +1149,13 @@ class _DialogHelper {
           mangaCover: mangaCover,
           mangaUrl: mangaUrl,
           neededData: chapterNeededData,
-          initialPage: !readFirstPage && history?.chapterId == chapterId
-              ? history?.chapterPage ?? 1 // have read
-              : 1 /* have not read, or readFirstPage == true */,
+          initialPage: readFirstPage
+              ? 1 // require to read first page
+              : history?.chapterId == chapterId
+                  ? history?.chapterPage ?? 1 // have read
+                  : history?.lastChapterId == chapterId
+                      ? history?.lastChapterPage ?? 1 // have read
+                      : 1 /* have not read */,
           onlineMode: onlineMode,
         ),
       ),
@@ -1445,12 +1461,28 @@ class _DialogHelper {
     required bool fromLaterList,
     required bool fromMangaPage,
   }) async {
+    var topmost = await showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('更新稍后阅读记录'),
+        content: Text('即将更新稍后阅读记录为本漫画的最新章节，是否同时置顶稍后阅读记录？'),
+        actions: [
+          TextButton(child: Text('置顶'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('不置顶'), onPressed: () => Navigator.of(c).pop(false)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(null)),
+        ],
+      ),
+    );
+    if (topmost == null) {
+      return;
+    }
+
     var newestChapter = extraData?.newestChapter?.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c);
     var newestDate = extraData?.newestDate;
     if (newestChapter == null || newestDate == null) {
       return; // almost unreachable
     }
-    var updatedLaterManga = later.copyWith(newestChapter: newestChapter, newestDate: newestDate); // do not change createdAt
+    var updatedLaterManga = later.copyWith(newestChapter: newestChapter, newestDate: newestDate, createdAt: topmost ? DateTime.now() : null);
     await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedLaterManga);
     onUpdated?.call(updatedLaterManga);
     Fluttertoast.showToast(msg: '已将本漫画的稍后阅读记录更新到最新章节');
@@ -1461,39 +1493,76 @@ class _DialogHelper {
   Future<void> removeHistory({
     required MangaHistory oldHistory,
     required void Function()? onRemoved,
+    required void Function()? onFpCleared,
     required bool fromHistoryList,
     required bool fromMangaPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
     await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
     onRemoved?.call();
+    await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: mangaId);
+    onFpCleared?.call();
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(oldHistory.read ? '漫画阅读历史已删除' : '漫画浏览历史已删除')));
     EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, fromMangaPage: fromMangaPage));
   }
 
   // => called by showPopupMenuForMangaToc
-  Future<void> clearChapterHistory({
+  Future<void> removeChapterHistory({
     required MangaHistory oldHistory,
+    required int chapterId,
     required void Function(MangaHistory newHistory)? onUpdated,
+    required void Function(List<int> chapterIds)? onFpRemoved,
     required bool fromHistoryList,
     required bool fromMangaPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
-    var newHistory = oldHistory.copyWith(
-      chapterId: 0 /* 未开始阅读 */,
-      chapterTitle: '',
-      chapterPage: 1,
-      lastChapterId: 0 /* 未开始阅读 */,
-      lastChapterTitle: '',
-      lastChapterPage: 1,
-      lastTime: DateTime.now(),
-    );
-    await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
-    onUpdated?.call(newHistory);
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('章节阅读历史已删除')));
-    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage));
+    MangaHistory? newHistory;
+    var removedFpCids = <int>[];
+    if (oldHistory.chapterId == chapterId) {
+      newHistory = oldHistory.copyWith(
+        chapterId: oldHistory.lastChapterId /* last延续上来 */,
+        chapterTitle: oldHistory.lastChapterTitle,
+        chapterPage: oldHistory.lastChapterPage,
+        lastChapterId: 0 /* 未开始阅读 */,
+        lastChapterTitle: '',
+        lastChapterPage: 1,
+        lastTime: DateTime.now(),
+      ); // 删除历史/足迹
+      removedFpCids.add(chapterId);
+    } else if (oldHistory.lastChapterId == chapterId) {
+      newHistory = oldHistory.copyWith(
+        lastChapterId: 0 /* 未开始阅读 */,
+        lastChapterTitle: '',
+        lastChapterPage: 1,
+        lastTime: DateTime.now(),
+      ); // 删除历史/足迹
+      removedFpCids.add(chapterId);
+    } else {
+      newHistory = null;
+      removedFpCids.add(chapterId);  // 仅删除足迹
+    }
+
+    if (newHistory != null) {
+      await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
+      onUpdated?.call(newHistory);
+    }
+    if (removedFpCids.isNotEmpty) {
+      for (var cid in removedFpCids) {
+        await HistoryDao.deleteFootprint(username: AuthManager.instance.username, mid: mangaId, cid: cid);
+      }
+      onFpRemoved?.call(removedFpCids);
+    }
+
+    if (newHistory != null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('章节阅读历史已删除')));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage));
+    }
+    if (removedFpCids.isNotEmpty) {
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: removedFpCids, reason: UpdateReason.deleted, fromMangaPage: fromMangaPage));
+    }
   }
 
   // =========================

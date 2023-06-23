@@ -3,7 +3,6 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/category.dart';
-import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
@@ -14,11 +13,9 @@ import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
 import 'package:manhuagui_flutter/page/view/tiny_manga_line.dart';
-import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
-import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
@@ -142,7 +139,6 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
 
   final _data = <TinyManga>[];
   var _total = 0;
-  final _histories = <int, MangaHistory?>{};
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}));
   var _getting = false;
 
@@ -160,9 +156,6 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
       return Future.error(wrapError(e, s).text);
     });
     _total = result.data.total;
-    for (var item in result.data.data) {
-      _histories[item.mid] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: item.mid);
-    }
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
@@ -247,7 +240,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
             ),
             itemBuilder: (c, _, item) => TinyMangaLineView(
               manga: item,
-              history: _histories[item.mid],
+              history: _flagStorage.getHistory(mangaId: item.mid),
               flags: _flagStorage.getFlags(mangaId: item.mid),
               twoColumns: AppSetting.instance.ui.showTwoColumns,
               highlightRecent: AppSetting.instance.ui.highlightRecentMangas,

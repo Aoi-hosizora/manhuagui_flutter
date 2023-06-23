@@ -43,6 +43,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
   }
 
   @override
@@ -54,6 +55,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
 
   var _loading = true; // initialize to true, fake loading flag
   MangaHistory? _history;
+  Map<int, ChapterFootprint>? _footprints;
   DownloadedManga? _downloadEntity;
   List<MangaChapterGroup>? _downloadedChapters;
   var _downloadOnly = false;
@@ -66,6 +68,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
     try {
       await Future.delayed(Duration(milliseconds: 400)); // fake loading
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
       _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
     } finally {
@@ -74,7 +77,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
     }
   }
 
-  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent}) async {
+  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent, FootprintUpdatedEvent? footprintEvent}) async {
     if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
@@ -82,6 +85,10 @@ class _MangaTocPageState extends State<MangaTocPage> {
     if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
       _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
+      if (mounted) setState(() {});
+    }
+    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId) {
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -145,6 +152,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
                   columns: _columns,
                   highlightedChapters: [_history?.chapterId ?? 0],
                   highlighted2Chapters: [_history?.lastChapterId ?? 0],
+                  faintedChapters: _footprints?.keys.toList() ?? [],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),

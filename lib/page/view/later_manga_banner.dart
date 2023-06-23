@@ -64,7 +64,10 @@ class LaterMangaBannerView extends StatelessWidget {
                         padding: EdgeInsets.only(top: 2),
                         child: Text(
                           '本漫画的最新章节已更新，是否更新稍后阅读记录？',
-                          style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 13, color: Colors.white),
+                          style: Theme.of(context).textTheme.bodyText2!.copyWith(
+                                fontSize: 13,
+                                color: Colors.yellow,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

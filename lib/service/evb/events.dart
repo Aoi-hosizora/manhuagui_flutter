@@ -37,13 +37,14 @@ class ToRankingRequestedEvent {
 enum UpdateReason { added, updated, deleted }
 
 class HistoryUpdatedEvent {
-  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.fromHistoryPage = false, this.fromSepHistoryPage = false, this.fromMangaPage = false});
+  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.fromHistoryPage = false, this.fromSepHistoryPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false});
 
   final int mangaId;
   final UpdateReason reason;
   final bool fromHistoryPage;
   final bool fromSepHistoryPage;
   final bool fromMangaPage;
+  final bool fromMangaViewerPage;
 }
 
 class ShelfUpdatedEvent {
@@ -115,6 +116,16 @@ class LaterMangaUpdatedEvent {
   final bool added;
   final bool fromLaterMangaPage;
   final bool fromMangaPage;
+}
+
+class FootprintUpdatedEvent {
+  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaViewerPage = false});
+
+  final int mangaId;
+  final List<int>? chapterIds;
+  final UpdateReason reason;
+  final bool fromMangaPage;
+  final bool fromMangaViewerPage;
 }
 
 class MarkedCategoryUpdatedEvent {

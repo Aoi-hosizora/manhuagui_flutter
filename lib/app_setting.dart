@@ -85,6 +85,7 @@ class ViewSetting {
     required this.hideAppBarWhenEnter,
     required this.appBarSwitchBehavior,
     required this.useChapterAssistant,
+    required this.showNotWifiHint,
   });
 
   final ViewDirection viewDirection; // 阅读方向
@@ -100,6 +101,7 @@ class ViewSetting {
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
   final AppBarSwitchBehavior appBarSwitchBehavior; // 切换章节时标题栏行为
   final bool useChapterAssistant; // 使用单手章节跳转助手
+  final bool showNotWifiHint; // 使用非WIFI网络时提醒
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -115,6 +117,7 @@ class ViewSetting {
     hideAppBarWhenEnter: true,
     appBarSwitchBehavior: AppBarSwitchBehavior.keep,
     useChapterAssistant: true,
+    showNotWifiHint: true,
   );
 
   ViewSetting copyWith({
@@ -131,6 +134,7 @@ class ViewSetting {
     bool? hideAppBarWhenEnter,
     AppBarSwitchBehavior? appBarSwitchBehavior,
     bool? useChapterAssistant,
+    bool? showNotWifiHint,
   }) {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
@@ -146,6 +150,7 @@ class ViewSetting {
       hideAppBarWhenEnter: hideAppBarWhenEnter ?? this.hideAppBarWhenEnter,
       appBarSwitchBehavior: appBarSwitchBehavior ?? this.appBarSwitchBehavior,
       useChapterAssistant: useChapterAssistant ?? this.useChapterAssistant,
+      showNotWifiHint: showNotWifiHint ?? this.showNotWifiHint,
     );
   }
 }
@@ -471,7 +476,7 @@ class UiSetting {
 
 enum ReadGroupBehavior {
   noCheck,
-  checkStartReading,
+  checkNotfinReading,
   checkFinishReading,
 }
 
@@ -480,10 +485,10 @@ extension ReadGroupBehaviorExtension on ReadGroupBehavior {
     switch (this) {
       case ReadGroupBehavior.noCheck:
         return '不检查阅读情况';
-      case ReadGroupBehavior.checkStartReading:
-        return '部分阅读时弹出提示';
+      case ReadGroupBehavior.checkNotfinReading:
+        return '部分阅读时确认';
       case ReadGroupBehavior.checkFinishReading:
-        return '已阅读完时弹出提示';
+        return '已阅读完时确认';
     }
   }
 
@@ -491,7 +496,7 @@ extension ReadGroupBehaviorExtension on ReadGroupBehavior {
     switch (this) {
       case ReadGroupBehavior.noCheck:
         return 0;
-      case ReadGroupBehavior.checkStartReading:
+      case ReadGroupBehavior.checkNotfinReading:
         return 1;
       case ReadGroupBehavior.checkFinishReading:
         return 2;
@@ -503,19 +508,25 @@ extension ReadGroupBehaviorExtension on ReadGroupBehavior {
       case 0:
         return ReadGroupBehavior.noCheck;
       case 1:
-        return ReadGroupBehavior.checkStartReading;
+        return ReadGroupBehavior.checkNotfinReading;
       case 2:
         return ReadGroupBehavior.checkFinishReading;
     }
     return ReadGroupBehavior.noCheck;
   }
 
-  bool needCheckStart({required int? currentPage, required int? totalPage}) {
-    return currentPage != null && totalPage != null && currentPage > 1 && currentPage < totalPage && this == ReadGroupBehavior.checkStartReading;
+  bool needCheckNotfin({required int? currentPage, required int? totalPage}) {
+    return (currentPage != null && totalPage != null) &&
+        currentPage > 0 && // 第一页也被视为"已开始阅读"
+        // currentPage > 1 && // 第二页以后才视为"已开始阅读"
+        currentPage < totalPage && // 最后一页视为"已阅读完"，本函数不返回 true
+        this == ReadGroupBehavior.checkNotfinReading; // 仅针对"部分阅读时弹出提示"
   }
 
   bool needCheckFinish({required int? currentPage, required int? totalPage}) {
-    return currentPage != null && totalPage != null && currentPage >= totalPage && (this == ReadGroupBehavior.checkStartReading || this == ReadGroupBehavior.checkFinishReading);
+    return (currentPage != null && totalPage != null) &&
+        currentPage >= totalPage && // 阅读到最后一页，视为"已阅读完"
+        (this == ReadGroupBehavior.checkNotfinReading || this == ReadGroupBehavior.checkFinishReading);
   }
 }
 

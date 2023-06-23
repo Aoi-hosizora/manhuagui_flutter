@@ -17,6 +17,7 @@ class DlFinishedSubPage extends StatefulWidget {
     required this.mangaEntity,
     required this.invertOrder,
     required this.history,
+    required this.footprints,
     required this.toReadChapter,
     required this.toDeleteChapters,
     required this.toAdjustChapter,
@@ -29,6 +30,7 @@ class DlFinishedSubPage extends StatefulWidget {
   final DownloadedManga mangaEntity;
   final bool invertOrder;
   final MangaHistory? history;
+  final Map<int, ChapterFootprint>? footprints;
   final void Function(int cid) toReadChapter;
   final void Function({required List<int> chapterIds}) toDeleteChapters;
   final void Function(int cid) toAdjustChapter;
@@ -108,6 +110,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                       showNewBadge: false,
                       highlightedChapters: [widget.history?.chapterId ?? 0],
                       highlighted2Chapters: [widget.history?.lastChapterId ?? 0],
+                      faintedChapters: widget.footprints?.keys.toList() ?? [],
                       customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                         entity: widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                       ),

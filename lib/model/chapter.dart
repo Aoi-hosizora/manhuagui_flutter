@@ -41,13 +41,8 @@ class TinyMangaChapter {
 
   Map<String, dynamic> toJson() => _$TinyMangaChapterToJson(this);
 
-  NanoTinyMangaChapter toNanoTiny() {
-    return NanoTinyMangaChapter(
-      cid: cid,
-      title: title,
-      group: group,
-      moreInfo: this,
-    );
+  TinierMangaChapter toTinier() {
+    return TinierMangaChapter(cid: cid, title: title, group: group);
   }
 }
 
@@ -63,23 +58,22 @@ class MangaChapterGroup {
   Map<String, dynamic> toJson() => _$MangaChapterGroupToJson(this);
 }
 
-class NanoTinyMangaChapter {
+class TinierMangaChapter {
   final int cid;
   final String title;
   final String group;
-  final TinyMangaChapter? moreInfo;
 
-  const NanoTinyMangaChapter({required this.cid, required this.title, required this.group, this.moreInfo});
+  const TinierMangaChapter({required this.cid, required this.title, required this.group});
 }
 
 class MangaChapterNeighbor {
-  final bool notLoaded;
-  final NanoTinyMangaChapter? prevChapter;
-  final NanoTinyMangaChapter? prevSameGroupChapter;
-  final NanoTinyMangaChapter? prevDiffGroupChapter;
-  final NanoTinyMangaChapter? nextChapter;
-  final NanoTinyMangaChapter? nextSameGroupChapter;
-  final NanoTinyMangaChapter? nextDiffGroupChapter;
+  final bool notLoaded; // 表示是否已获取到漫画章节列表，主要在 MangaViewerPage 被使用，与离线阅读状态相关
+  final TinierMangaChapter? prevChapter; // 章节分组间cid较小的上一章节
+  final TinierMangaChapter? prevSameGroupChapter; // 相同分组的上一章节
+  final TinierMangaChapter? prevDiffGroupChapter; // 不同分组的上一章节
+  final TinierMangaChapter? nextChapter; // 章节分组间cid较小的下一章节
+  final TinierMangaChapter? nextSameGroupChapter; // 相同分组的下一章节
+  final TinierMangaChapter? nextDiffGroupChapter; // 不同分组的下一章节
 
   const MangaChapterNeighbor({
     this.notLoaded = true,
@@ -95,35 +89,31 @@ class MangaChapterNeighbor {
 
   bool get hasNextChapter => !notLoaded && (nextChapter != null || nextSameGroupChapter != null || nextDiffGroupChapter != null);
 
-  List<NanoTinyMangaChapter> getAvailableChapters({required bool previous}) {
+  List<TinierMangaChapter> getAvailableNeighbors({required bool previous}) {
     if (notLoaded) {
-      return [];
+      return []; // 当前处于离线模式，但未在下载列表获取到章节跳转信息
     }
-    List<NanoTinyMangaChapter> chapters;
-    if (previous) {
-      chapters = [
-        if (prevSameGroupChapter == null && prevDiffGroupChapter == null && prevChapter != null) prevChapter!,
-        if (prevSameGroupChapter != null) prevSameGroupChapter!,
-        if (prevDiffGroupChapter != null) prevDiffGroupChapter!,
-      ];
-    } else {
-      chapters = [
-        if (nextSameGroupChapter == null && nextDiffGroupChapter == null && nextChapter != null) nextChapter!,
-        if (nextSameGroupChapter != null) nextSameGroupChapter!,
-        if (nextDiffGroupChapter != null) nextDiffGroupChapter!,
-      ];
-    }
-    return chapters;
+    return previous
+        ? [
+            if (prevSameGroupChapter == null && prevDiffGroupChapter == null && prevChapter != null) prevChapter!,
+            if (prevSameGroupChapter != null) prevSameGroupChapter!,
+            if (prevDiffGroupChapter != null) prevDiffGroupChapter!,
+          ]
+        : [
+            if (nextSameGroupChapter == null && nextDiffGroupChapter == null && nextChapter != null) nextChapter!,
+            if (nextSameGroupChapter != null) nextSameGroupChapter!,
+            if (nextDiffGroupChapter != null) nextDiffGroupChapter!,
+          ];
   }
 
   MangaChapterNeighbor copyWith({
     bool? notLoaded,
-    NanoTinyMangaChapter? prevChapter,
-    NanoTinyMangaChapter? prevSameGroupChapter,
-    NanoTinyMangaChapter? prevDiffGroupChapter,
-    NanoTinyMangaChapter? nextChapter,
-    NanoTinyMangaChapter? nextSameGroupChapter,
-    NanoTinyMangaChapter? nextDiffGroupChapter,
+    TinierMangaChapter? prevChapter,
+    TinierMangaChapter? prevSameGroupChapter,
+    TinierMangaChapter? prevDiffGroupChapter,
+    TinierMangaChapter? nextChapter,
+    TinierMangaChapter? nextSameGroupChapter,
+    TinierMangaChapter? nextDiffGroupChapter,
   }) {
     return MangaChapterNeighbor(
       notLoaded: notLoaded ?? this.notLoaded,
@@ -143,6 +133,7 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
   }
 
   List<MangaChapterGroup> makeSureRegularGroupIsFirst() {
+    // 保证【单话】为首个章节分组
     var rGroup = regularGroup;
     if (rGroup == null) {
       return this;
@@ -154,6 +145,7 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
   }
 
   MangaChapterGroup? getFirstNotEmptyGroup() {
+    // 首要选【单话】分组，否则选首个拥有非空章节的分组
     if (isEmpty) {
       return null;
     }
@@ -193,16 +185,15 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
       return null;
     }
 
-    // TODO improving neighbor accuracy
-
     // 对**所有分组**中的漫画章节排序
+    var allChapters = this.allChapters;
     var prevChapters = !prev
         ? null
-        : (allChapters.where((el) => el.group == chapter.group ? el.number < chapter.number : el.cid < cid).toList() //
+        : (allChapters.where((el) => el.group == chapter.group ? el.number < chapter.number : el.cid < chapter.cid).toList() //
           ..sort((a, b) => a.group == b.group ? b.number.compareTo(a.number) : b.cid.compareTo(a.cid))); // number (同一分组) 或 cid (不同分组) 从大到小排序
     var nextChapters = !next
         ? null
-        : (allChapters.where((el) => el.group == chapter.group ? el.number > chapter.number : el.cid > cid).toList() //
+        : (allChapters.where((el) => el.group == chapter.group ? el.number > chapter.number : el.cid > chapter.cid).toList() //
           ..sort((a, b) => a.group == b.group ? a.number.compareTo(b.number) : a.cid.compareTo(b.cid))); // number (同一分组) 或 cid (不同分组) 从小到大排序
 
     // 从**所有分组**中找上一个章节
@@ -241,12 +232,12 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
     TinyMangaChapter? min(TinyMangaChapter? a, TinyMangaChapter? b) => a == null ? b : (b == null ? a : (a.cid < b.cid ? a : b));
     return MangaChapterNeighbor(
       notLoaded: false,
-      prevChapter: max(prevDiffGroupChapter, prevSameGroupChapter)?.toNanoTiny(),
-      nextChapter: min(nextDiffGroupChapter, nextSameGroupChapter)?.toNanoTiny(),
-      prevSameGroupChapter: prevSameGroupChapter?.toNanoTiny(),
-      prevDiffGroupChapter: prevDiffGroupChapter?.toNanoTiny(),
-      nextSameGroupChapter: nextSameGroupChapter?.toNanoTiny(),
-      nextDiffGroupChapter: nextDiffGroupChapter?.toNanoTiny(),
+      prevChapter: max(prevDiffGroupChapter, prevSameGroupChapter)?.toTinier(),
+      nextChapter: min(nextDiffGroupChapter, nextSameGroupChapter)?.toTinier(),
+      prevSameGroupChapter: prevSameGroupChapter?.toTinier(),
+      prevDiffGroupChapter: prevDiffGroupChapter?.toTinier(),
+      nextSameGroupChapter: nextSameGroupChapter?.toTinier(),
+      nextDiffGroupChapter: nextDiffGroupChapter?.toTinier(),
     );
   }
 

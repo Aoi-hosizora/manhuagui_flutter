@@ -12,7 +12,7 @@ class MangaHistory {
   final int chapterPage;
   final int lastChapterId; // 本字段表示上次的漫画阅读历史，该字段的值也可以为零
   final String lastChapterTitle;
-  final int lastChapterPage; // 本字段当前仅用于展示，选择阅读时不会自动跳转到该页
+  final int lastChapterPage;
   final DateTime lastTime;
 
   const MangaHistory({
@@ -82,6 +82,36 @@ class MangaHistory {
         chapterTitle == o.chapterTitle &&
         chapterPage == o.chapterPage &&
         lastTime == o.lastTime;
+  }
+}
+
+class ChapterFootprint {
+  final int mangaId;
+  final int chapterId;
+  final DateTime createdAt;
+
+  const ChapterFootprint({
+    required this.mangaId,
+    required this.chapterId,
+    required this.createdAt,
+  });
+
+  ChapterFootprint? copyWith({
+    int? mangaId,
+    int? chapterId,
+    DateTime? createdAt,
+  }) {
+    return ChapterFootprint(
+      mangaId: mangaId ?? this.mangaId,
+      chapterId: chapterId ?? this.chapterId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  bool equals(ChapterFootprint o) {
+    return mangaId == o.mangaId && //
+        chapterId == o.chapterId &&
+        createdAt == o.createdAt;
   }
 }
 

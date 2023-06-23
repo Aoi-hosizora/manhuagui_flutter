@@ -49,6 +49,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
   late var _appBarSwitchBehavior = widget.setting.appBarSwitchBehavior;
   late var _useChapterAssistant = widget.setting.useChapterAssistant;
+  late var _showNotWifiHint = widget.setting.showNotWifiHint;
 
   ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
@@ -64,6 +65,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         hideAppBarWhenEnter: _hideAppBarWhenEnter,
         appBarSwitchBehavior: _appBarSwitchBehavior,
         useChapterAssistant: _useChapterAssistant,
+        showNotWifiHint: _showNotWifiHint,
       );
 
   void _setToDefault() {
@@ -81,6 +83,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
     _appBarSwitchBehavior = setting.appBarSwitchBehavior;
     _useChapterAssistant = setting.useChapterAssistant;
+    _showNotWifiHint = setting.showNotWifiHint;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -221,6 +224,15 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _useChapterAssistant,
           onChanged: (b) {
             _useChapterAssistant = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '使用非WIFI网络时提醒',
+          value: _showNotWifiHint,
+          onChanged: (b) {
+            _showNotWifiHint = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

@@ -109,10 +109,15 @@ class ActionRowView extends StatelessWidget {
                             ? (iconColor ?? Colors.black54) // enabled
                             : (disabledIconColor ?? Colors.grey) /* disabled */,
                       )
-                    : SizedBox(
-                        height: 22, // just smaller than icon
-                        width: 22,
-                        child: CircularProgressIndicator(),
+                    : Padding(
+                        padding: EdgeInsets.all(1.5),
+                        child: Container(
+                          height: 21, // 24 <= 21 + 1.5 * 2
+                          width: 21,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3.0,
+                          ),
+                        ),
                       ),
               ),
           text: Text(

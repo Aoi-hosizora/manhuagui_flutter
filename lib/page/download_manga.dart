@@ -85,6 +85,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadProgressChangedEvent>((ev) => _updateByEvent(progressEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(entityEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
   }
 
@@ -103,6 +104,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   DownloadMangaQueueTask? _task;
   var _byte = 0;
   MangaHistory? _history;
+  Map<int, ChapterFootprint>? _footprints;
   LaterManga? _later;
   Manga? _mangaData; // loaded in background
   var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
@@ -115,6 +117,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _task = null;
     _byte = 0;
     _history = null;
+    _footprints = null;
     _later = null;
     _mangaData = null;
     if (mounted) setState(() {});
@@ -135,6 +138,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       _data = data;
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次刷新时都重新统计文件大小
     } else {
@@ -144,7 +148,13 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     if (mounted) setState(() {});
   }
 
-  Future<void> _updateByEvent({DownloadProgressChangedEvent? progressEvent, DownloadUpdatedEvent? entityEvent, HistoryUpdatedEvent? historyEvent, LaterMangaUpdatedEvent? laterEvent}) async {
+  Future<void> _updateByEvent({
+    DownloadProgressChangedEvent? progressEvent,
+    DownloadUpdatedEvent? entityEvent,
+    HistoryUpdatedEvent? historyEvent,
+    FootprintUpdatedEvent? footprintEvent,
+    LaterMangaUpdatedEvent? laterEvent,
+  }) async {
     if (progressEvent != null && progressEvent.mangaId == widget.mangaId) {
       var task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       if (progressEvent.finished) {
@@ -167,6 +177,11 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
 
     if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+
+    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId) {
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
 
@@ -316,12 +331,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
           context: context,
           builder: (c) => MangaViewerPage(
             mangaId: widget.mangaId,
-            chapterId: cid,
+            chapterId: cid /* <<< */,
             mangaTitle: _data!.mangaTitle,
             mangaCover: _data!.mangaCover,
             mangaUrl: _data!.mangaUrl,
             neededData: MangaChapterNeededData.fromNullableMangaData(_mangaData) /* nullable */,
-            initialPage: page,
+            initialPage: page /* <<< */,
             onlineMode: _onlineMode,
             onMangaGot: (manga) => _mangaData = manga,
           ),
@@ -329,46 +344,58 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       );
     }
 
-    if (_history == null || _history!.chapterId != chapterId) {
-      // 该章节不是上次阅读的章节 => 直接阅读
+    if (_history == null || (_history!.chapterId != chapterId && _history!.lastChapterId != chapterId)) {
+      // (1) 所选章节不是上次/上上次阅读的章节 => 直接从第一页阅读
       gotoViewerPage(cid: chapterId, page: 1);
     } else {
-      // 选择的章节在上次被阅读 => 弹出选项判断是否需要阅读
-      var historyTitle = _history!.chapterTitle, historyPage = _history!.chapterPage;
+      // (2) 所选章节在上次/上上次被阅读 => 弹出选项判断是否需要阅读
+      var historyTitle = _history!.chapterId == chapterId ? _history!.chapterTitle : _history!.lastChapterTitle;
+      var historyPage = _history!.chapterId == chapterId ? _history!.chapterPage : _history!.lastChapterPage;
       var chapter = _data!.downloadedChapters.where((c) => c.chapterId == chapterId).firstOrNull;
-      var checkStart = AppSetting.instance.ui.readGroupBehavior.needCheckStart(currentPage: historyPage, totalPage: chapter?.totalPageCount);
-      var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter?.totalPageCount);
-      if (!checkStart && !checkFinish) {
-        // 所选章节无需弹出提示 => 继续阅读
+      if (chapter == null) {
+        showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
+        return; // actually unreachable
+      }
+      var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"未阅读完"
+      var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"已阅读完"
+      if (!checkNotfin && !checkFinish) {
+        // (2.1) 所选章节无需弹出提示 => 继续阅读
         gotoViewerPage(cid: chapterId, page: historyPage);
       } else {
-        // 所选章节已开始阅读 => 弹出提示
+        // (2.2) 所选章节需要弹出提示 (未阅读完/已阅读完) => 根据所选选项来确定阅读行为
         showDialog(
           context: context,
           builder: (c) => SimpleDialog(
             title: Text('章节阅读'),
             children: [
               SubtitleDialogOption(
-                text: checkStart //
-                    ? Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter!.totalPageCount}页)。')
-                    : Text('该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)。'),
+                text: checkNotfin //
+                    ? Text('所选章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.totalPageCount}页)。')
+                    : Text('所选章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)。'),
               ),
               ...([
                 IconTextDialogOption(
-                  icon: Icon(Icons.import_contacts),
-                  text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
+                  icon: Icon(CustomIcons.opened_book_arrow_right),
+                  text: Text('继续阅读所选章节 ($historyTitle 第$historyPage页)'),
                   popWhenPress: c,
                   onPressed: () => gotoViewerPage(cid: chapterId, page: historyPage),
                 ),
-                IconTextDialogOption(
-                  icon: Icon(CustomIcons.opened_book_replay),
-                  text: Text('从头阅读该章节 ($historyTitle 第1页)'),
-                  popWhenPress: c,
-                  onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
-                ),
+                if (historyPage > 1)
+                  IconTextDialogOption(
+                    icon: Icon(CustomIcons.opened_book_replay),
+                    text: Text('从头阅读所选章节 ($historyTitle 第1页)'),
+                    popWhenPress: c,
+                    onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
+                  ),
               ].let(
-                (opts) => checkFinish ? opts.reversed.toList() : opts,
+                (opt) => checkNotfin ? opt /* 未阅读完 */ : opt.reversed /* 已阅读完 */,
               )),
+              IconTextDialogOption(
+                icon: Icon(Icons.menu),
+                text: Text('重新选择其他章节'),
+                popWhenPress: c,
+                onPressed: () {}, // <<< 此处不提供新章节供选择阅读
+              ),
             ],
           ),
         );
@@ -683,6 +710,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   mangaEntity: _data!,
                   invertOrder: _invertOrder,
                   history: _history,
+                  footprints: _footprints,
                   toReadChapter: _readChapter,
                   toDeleteChapters: _deleteChapters,
                   toAdjustChapter: _adjustChapterDetails,

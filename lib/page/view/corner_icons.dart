@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -111,15 +112,13 @@ class MangaCornerFlagStorage {
     _favoritesMap.clear();
     _latersMap.clear();
     _historiesMap.clear();
-    _historiesReadMap.clear();
   }
 
   final _downloadsMap = <int, bool>{};
   final _shelvesMap = <int, bool>{};
   final _favoritesMap = <int, bool>{};
   final _latersMap = <int, bool>{};
-  final _historiesMap = <int, bool>{};
-  final _historiesReadMap = <int, bool>{};
+  final _historiesMap = <int, MangaHistory?>{};
 
   Future<void> queryAndStoreFlags({
     required Iterable<int> mangaIds,
@@ -145,9 +144,7 @@ class MangaCornerFlagStorage {
           _latersMap[mangaId] = (await LaterMangaDao.checkExistence(username: AuthManager.instance.username, mid: mangaId)) ?? false;
         }
         if (queryHistories) {
-          var history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
-          _historiesMap[mangaId] = history != null;
-          _historiesReadMap[mangaId] = history?.read == true;
+          _historiesMap[mangaId] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
         }
       });
       futures.add(future);
@@ -167,10 +164,14 @@ class MangaCornerFlagStorage {
       inDownload: forceInDownload || (_downloadsMap[mangaId] ?? false),
       inShelf: forceInShelf || (_shelvesMap[mangaId] ?? false),
       inFavorite: forceInFavorite || (_favoritesMap[mangaId] ?? false),
-      inHistory: forceInHistory || (_historiesMap[mangaId] ?? false),
       inLater: forceInLater || (_latersMap[mangaId] ?? false),
-      historyRead: _historiesReadMap[mangaId] ?? false,
+      inHistory: forceInHistory || (_historiesMap[mangaId] != null),
+      historyRead: _historiesMap[mangaId]?.read == true,
     );
+  }
+
+  MangaHistory? getHistory({required int mangaId}) {
+    return _historiesMap[mangaId];
   }
 }
 

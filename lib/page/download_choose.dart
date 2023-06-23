@@ -48,6 +48,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
   }
 
   @override
@@ -59,7 +60,9 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
   }
 
   var _loading = true; // initialize to true, fake loading flag
+  late final _allChapterIds = widget.groups.allChapterIds;
   MangaHistory? _history;
+  Map<int, ChapterFootprint>? _footprints;
   DownloadedManga? _downloadEntity;
   var _columns = 4; // default to four columns
 
@@ -70,6 +73,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
     try {
       await Future.delayed(Duration(milliseconds: 400)); // fake loading
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
     } finally {
       _loading = false;
@@ -78,13 +82,17 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
     }
   }
 
-  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent}) async {
+  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent, FootprintUpdatedEvent? footprintEvent}) async {
     if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
     if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId) {
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -161,17 +169,16 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
   var _isAllSelected = false;
 
   void _onSelectChanged() {
-    _isAllSelected = _msController.selectedItems.length == widget.groups.allChapterIds.length;
+    _isAllSelected = _msController.selectedItems.length == _allChapterIds.length;
     if (mounted) setState(() {});
   }
 
   void _selectAllOrUnselectAll() {
-    var allChapterIds = widget.groups.allChapterIds;
-    if (_msController.selectedItems.length == allChapterIds.length) {
+    if (_msController.selectedItems.length == _allChapterIds.length) {
       _msController.unselectAll();
       _isAllSelected = false;
     } else {
-      _msController.select(allChapterIds.map((el) => ValueKey(el)));
+      _msController.select(_allChapterIds.map((el) => ValueKey(el)));
       _isAllSelected = true;
     }
     if (mounted) setState(() {});
@@ -277,6 +284,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                     columns: _columns,
                     highlightedChapters: [_history?.chapterId ?? 0],
                     highlighted2Chapters: [_history?.lastChapterId ?? 0],
+                    faintedChapters: _footprints?.keys.toList() ?? [],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                     ),

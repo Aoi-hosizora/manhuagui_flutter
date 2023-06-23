@@ -416,9 +416,6 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         wantKeepAlive: options.wantKeepAlive,
         customBuilder /* <<< this property is added in process_deps.sh */ : (c, view) => widget.customPageBuilder?.call(c, view, imageIndex) ?? view,
         onLoadingStateChanged /* <<< this property is added in process_deps.sh */ : () => WidgetsBinding.instance?.addPostFrameCallback((_) async {
-          if (widget.imageCount == 1) {
-            return; // only have one page => no to detect height changing
-          }
           var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
           var newHeight = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
           var oldHeight = _imagePageHeights[imageIndex];
@@ -427,7 +424,8 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
           }
           // print('Image ${imageIndex + 1} new height: $oldHeight -> $newHeight');
           _imagePageHeights[imageIndex] = newHeight;
-          if (_currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
+
+          if (widget.imageCount > 1 && _currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
             // <<< some pages before current page has its height changed, need to jump back to the previous offset
             await _jumpLock.synchronized(() async {
               _jumping = true;

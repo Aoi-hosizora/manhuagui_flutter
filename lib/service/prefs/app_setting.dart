@@ -40,6 +40,7 @@ class AppSettingPrefs {
   static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
   static const _appBarSwitchBehaviorKey = IntKey('AppSettingPrefs_appBarSwitchBehavior');
   static const _useChapterAssistantKey = BoolKey('AppSettingPrefs_useChapterAssistant');
+  static const _showNotWifiHintKey = BoolKey('AppSettingPrefs_showNotWifiHint');
 
   static List<TypedKey> get viewSettingKeys => [
         _viewDirectionKey,
@@ -55,6 +56,7 @@ class AppSettingPrefs {
         _hideAppBarWhenEnterKey,
         _appBarSwitchBehaviorKey,
         _useChapterAssistantKey,
+        _showNotWifiHintKey,
       ];
 
   static Future<ViewSetting> _loadViewSetting() async {
@@ -74,6 +76,7 @@ class AppSettingPrefs {
       hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
       appBarSwitchBehavior: AppBarSwitchBehaviorExtension.fromInt(prefs.safeGet<int>(_appBarSwitchBehaviorKey) ?? def.appBarSwitchBehavior.toInt()),
       useChapterAssistant: prefs.safeGet<bool>(_useChapterAssistantKey) ?? def.useChapterAssistant,
+      showNotWifiHint: prefs.safeGet<bool>(_showNotWifiHintKey) ?? def.showNotWifiHint,
     );
   }
 
@@ -93,6 +96,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
     await prefs.safeSet<int>(_appBarSwitchBehaviorKey, setting.appBarSwitchBehavior.toInt());
     await prefs.safeSet<bool>(_useChapterAssistantKey, setting.useChapterAssistant);
+    await prefs.safeSet<bool>(_showNotWifiHintKey, setting.showNotWifiHint);
   }
 
   // ==========

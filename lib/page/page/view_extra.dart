@@ -24,7 +24,7 @@ class ViewExtraSubPage extends StatefulWidget {
     required this.inShelf,
     required this.inFavorite,
     required this.laterManga,
-    required this.onActionsUpdated,
+    required this.onHeightChanged,
     required this.callbacks,
   }) : super(key: key);
 
@@ -36,7 +36,7 @@ class ViewExtraSubPage extends StatefulWidget {
   final bool inShelf;
   final bool inFavorite;
   final LaterManga? laterManga;
-  final void Function(bool more) onActionsUpdated;
+  final void Function({bool byOpt, bool byLater}) onHeightChanged;
   final ViewExtraSubPageCallbacks callbacks;
 
   @override
@@ -85,6 +85,14 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
   final _footerTitleBoxKey = GlobalKey();
 
   var _moreActions = false; // 显示更多选项
+
+  @override
+  void didUpdateWidget(covariant ViewExtraSubPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((widget.laterManga == null && oldWidget.laterManga != null) || (widget.laterManga != null && oldWidget.laterManga == null)) {
+      WidgetsBinding.instance?.addPostFrameCallback((_) => widget.onHeightChanged.call(byLater: true));
+    }
+  }
 
   double? getTitleBoxHeight() {
     return (widget.isHeader ? _headerTitleBoxKey : _footerTitleBoxKey).currentContext?.findRenderBox()?.size.height;
@@ -156,7 +164,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
     var prev = Expanded(
       child: _buildAction(
         text: neighbor.hasPrevChapter ? '阅读上一章节' : '暂无上一章节',
-        subText: neighbor.getAvailableChapters(previous: true).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
+        subText: neighbor.getAvailableNeighbors(previous: true).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
         left: !widget.isRtlOperation ? true : false,
         disable: !neighbor.hasPrevChapter,
         action: () => widget.callbacks.toGotoNeighbor.call(true),
@@ -166,7 +174,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
     var next = Expanded(
       child: _buildAction(
         text: neighbor.hasNextChapter ? '阅读下一章节' : '暂无下一章节',
-        subText: neighbor.getAvailableChapters(previous: false).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
+        subText: neighbor.getAvailableNeighbors(previous: false).map((t) => t.title).let((t) => t.isEmpty ? '' : (t.length == 1 ? t.first : '${t.first}等')),
         left: !widget.isRtlOperation ? false : true,
         disable: !neighbor.hasNextChapter,
         action: () => widget.callbacks.toGotoNeighbor.call(false),
@@ -226,7 +234,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
             action: () {
               _moreActions = !_moreActions;
               if (mounted) setState(() {});
-              WidgetsBinding.instance?.addPostFrameCallback((_) => widget.onActionsUpdated.call(_moreActions));
+              WidgetsBinding.instance?.addPostFrameCallback((_) => widget.onHeightChanged.call(byOpt : true));
             },
           ),
         ),

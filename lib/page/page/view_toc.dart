@@ -16,8 +16,9 @@ class ViewTocSubPage extends StatefulWidget {
     required this.mangaId,
     required this.mangaTitle,
     required this.groups,
-    required this.highlightedChapter,
-    this.highlighted2Chapter,
+    required this.currReadChapterId,
+    this.lastReadChapterId,
+    this.footprintChapterIds,
     required this.onChapterPressed,
     this.onChapterLongPressed,
   }) : super(key: key);
@@ -25,8 +26,9 @@ class ViewTocSubPage extends StatefulWidget {
   final int mangaId;
   final String mangaTitle;
   final List<MangaChapterGroup> groups;
-  final int highlightedChapter;
-  final int? highlighted2Chapter;
+  final int currReadChapterId;
+  final int? lastReadChapterId;
+  final List<int>? footprintChapterIds;
   final void Function(int cid) onChapterPressed;
   final void Function(int cid)? onChapterLongPressed;
 
@@ -133,8 +135,9 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
                   full: true,
                   tocTitle: !_downloadOnly ? '章节列表' : '章节列表 (仅下载)',
                   columns: _columns,
-                  highlightedChapters: [widget.highlightedChapter],
-                  highlighted2Chapters: [widget.highlighted2Chapter ?? 0],
+                  highlightedChapters: [widget.currReadChapterId],
+                  highlighted2Chapters: [widget.lastReadChapterId ?? 0],
+                  faintedChapters: widget.footprintChapterIds ?? [],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),

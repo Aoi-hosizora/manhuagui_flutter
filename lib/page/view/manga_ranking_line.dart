@@ -12,7 +12,7 @@ class MangaRankingLineView extends StatelessWidget {
   const MangaRankingLineView({
     Key? key,
     required this.manga,
-    this.history,
+    required this.history,
     this.flags,
     this.twoColumns = false,
     this.highlightRecent = true,

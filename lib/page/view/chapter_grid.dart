@@ -16,6 +16,8 @@ class ChapterGridView extends StatelessWidget {
     this.highlightedChapters = const [],
     this.highlight2Color,
     this.highlighted2Chapters = const [],
+    this.faintTextColor,
+    this.faintedChapters = const [],
     this.extrasInStack,
     this.itemBuilder,
     required this.onChapterPressed,
@@ -32,6 +34,8 @@ class ChapterGridView extends StatelessWidget {
   final List<int> highlightedChapters;
   final Color? highlight2Color;
   final List<int> highlighted2Chapters;
+  final Color? faintTextColor;
+  final List<int> faintedChapters;
   final List<Widget> Function(TinyMangaChapter? chapter)? extrasInStack;
   final Widget Function(BuildContext context, TinyMangaChapter? chapter, Widget itemWidget)? itemBuilder;
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
@@ -48,7 +52,11 @@ class ChapterGridView extends StatelessWidget {
               children: [
                 Text(
                   chapter?.title ?? '...',
-                  style: Theme.of(context).textTheme.button?.copyWith(color: Colors.black),
+                  style: Theme.of(context).textTheme.button?.copyWith(
+                        color: !faintedChapters.contains(chapter?.cid) //
+                            ? Colors.black
+                            : (faintTextColor ?? Colors.grey[600]!.withOpacity(0.7)),
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -57,7 +65,11 @@ class ChapterGridView extends StatelessWidget {
                     padding: EdgeInsets.only(top: 1),
                     child: Text(
                       '共${chapter.pageCount}页',
-                      style: Theme.of(context).textTheme.overline?.copyWith(color: Colors.grey[800]),
+                      style: Theme.of(context).textTheme.overline?.copyWith(
+                            color: !faintedChapters.contains(chapter.cid) //
+                                ? Colors.grey[800]
+                                : (faintTextColor ?? Colors.grey[600]!.withOpacity(0.7)),
+                          ),
                     ),
                   ),
               ],

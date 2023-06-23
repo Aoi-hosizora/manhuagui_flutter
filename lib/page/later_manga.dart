@@ -14,7 +14,6 @@ import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
-import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -67,7 +66,6 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
   var _total = 0;
   var _removed = 0; // for query offset
   late final _flagStorage = MangaCornerFlagStorage(stateSetter: () => mountedSetState(() {}), ignoreLaters: true);
-  final _histories = <int, MangaHistory?>{};
   var _searchKeyword = ''; // for query condition
   var _searchTitleOnly = true; // for query condition
   var _searchDateTime = DateTime(0); // for query condition
@@ -90,10 +88,6 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       // search by date
       data = await LaterMangaDao.getLaterMangasByDate(username: username, datetime: _searchDateTime, sortMethod: _sortMethod, page: page, offset: _removed) ?? [];
       _total = await LaterMangaDao.getLaterMangaCountByDate(username: username, datetime: _searchDateTime) ?? 0;
-    }
-    if (mounted) setState(() {});
-    for (var item in data) {
-      _histories[item.mangaId] = await HistoryDao.getHistory(username: username, mid: item.mangaId);
     }
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryLaters: false).then((_) => mountedSetState(() {}));
@@ -393,7 +387,7 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
               onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(mangaId: key.value) : tip.toToggle?.call(),
               itemBuilder: (c, key, tip) => LaterMangaLineView(
                 manga: item,
-                history: _histories[item.mangaId],
+                history: _flagStorage.getHistory(mangaId: item.mangaId),
                 flags: _flagStorage.getFlags(mangaId: item.mangaId, forceInLater: true),
                 twoColumns: AppSetting.instance.ui.showTwoColumns,
                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),

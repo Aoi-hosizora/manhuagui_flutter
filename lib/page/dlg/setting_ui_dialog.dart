@@ -181,8 +181,12 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         SettingComboBoxView<ReadGroupBehavior>(
           title: '点击阅读章节分组行为',
           width: 170,
+          hint: '该选项会影响选择阅读章节分组中某章节时的行为，其中：\n\n'
+              '1. 不检查阅读情况：选择任何章节都会直接打开阅读页面，从上次读过的页面开始，继续阅读所选章节；\n'
+              '2. 部分阅读时确认：选择已开始阅读但未阅读完的章节时，会弹出选择框，确认是否需要继续阅读还是从头阅读；\n'
+              '3. 已阅读完时确认：选择已完成阅读的章节时，会弹出选择框，确认是否需要继续阅读、还是从头阅读、还是阅读下一章节。\n',
           value: _readGroupBehavior,
-          values: const [ReadGroupBehavior.checkStartReading, ReadGroupBehavior.checkFinishReading, ReadGroupBehavior.noCheck],
+          values: const [ReadGroupBehavior.checkNotfinReading, ReadGroupBehavior.checkFinishReading, ReadGroupBehavior.noCheck],
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _readGroupBehavior = s;
