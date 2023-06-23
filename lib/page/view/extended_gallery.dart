@@ -240,10 +240,8 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
       var pageIndex = _currentPageIndex;
       if (mounted) setState(() {}); // <<< update gallery state
       WidgetsBinding.instance?.addPostFrameCallback((_) async {
-        for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
-          var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
-          var height = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
-          _imagePageHeights[imageIndex] = height; // update image page heights
+        for (var pageIndex = 0; pageIndex < widget.imageCount + 2; pageIndex++) {
+          updatePageHeight(pageIndex); // update height of all pages, including extra pages
         }
         await jumpToPage(pageIndex, masked: false); // adjust offset
       });

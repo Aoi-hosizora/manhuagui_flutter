@@ -78,37 +78,6 @@ class MangaViewerPage extends StatefulWidget {
   _MangaViewerPageState createState() => _MangaViewerPageState();
 }
 
-/// 漫画章节阅读页所需的一些额外的漫画数据，字段均来自 [Manga]，在 [MangaViewerPage] 使用
-class MangaChapterNeededData {
-  const MangaChapterNeededData({
-    required this.chapterGroups,
-    required this.mangaAuthors,
-    required this.newestChapterTitle,
-    required this.newestDateAndFinished,
-  });
-
-  final List<MangaChapterGroup> chapterGroups;
-  final List<TinyAuthor> mangaAuthors;
-  final String newestChapterTitle;
-  final Tuple2<String, bool> newestDateAndFinished;
-
-  static MangaChapterNeededData fromMangaData(Manga manga) {
-    return MangaChapterNeededData(
-      chapterGroups: manga.chapterGroups,
-      mangaAuthors: manga.authors,
-      newestChapterTitle: manga.newestChapter,
-      newestDateAndFinished: Tuple2(manga.formattedNewestDate, manga.finished),
-    );
-  }
-
-  static MangaChapterNeededData? fromNullableMangaData(Manga? manga) {
-    if (manga == null) {
-      return null;
-    }
-    return fromMangaData(manga);
-  }
-}
-
 /// 页面数据，基本覆盖 [TinyMangaChapter]，并展开 [MangaChapterNeededData] 的所有字段，在 [MangaViewerPage] / [ViewExtraSubPage] 使用
 class MangaViewerPageData {
   const MangaViewerPageData({
@@ -124,12 +93,14 @@ class MangaViewerPageData {
     required this.chapterNeighbor,
     required this.chapterGroups,
     required this.mangaAuthors,
-    required this.newestChapterTitle,
-    required this.newestDateAndFinished,
+    required this.newestChapter,
+    required this.newestDate,
+    required this.isMangaFinished,
     required this.getMangaFailed,
     required this.metadataUpdatedAt,
   });
 
+  // chapter data
   final int mangaId;
   final String mangaTitle;
   final String mangaCover;
@@ -139,23 +110,29 @@ class MangaViewerPageData {
   final String chapterUrl;
   final int pageCount;
   final List<String> pages;
+
+  // manga data
   final MangaChapterNeighbor? chapterNeighbor;
   final List<MangaChapterGroup>? chapterGroups;
   final List<TinyAuthor>? mangaAuthors;
-  final String? newestChapterTitle;
-  final Tuple2<String, bool>? newestDateAndFinished;
-  final bool? getMangaFailed; // only used when offline
-  final DateTime? metadataUpdatedAt; // only used when offline
+  final String? newestChapter;
+  final String? newestDate;
+  final bool? isMangaFinished;
+
+  // manga data (only used when offline)
+  final bool? getMangaFailed;
+  final DateTime? metadataUpdatedAt;
 
   String get chapterCover => pages.isNotEmpty ? pages.first : '';
 
-  MangaChapterNeededData? get neededData => chapterGroups == null || mangaAuthors == null || newestChapterTitle == null || newestDateAndFinished == null
+  MangaChapterNeededData? get neededData => chapterGroups == null || mangaAuthors == null || newestChapter == null || newestDate == null || isMangaFinished == null
       ? null
       : MangaChapterNeededData(
           chapterGroups: chapterGroups!,
           mangaAuthors: mangaAuthors!,
-          newestChapterTitle: newestChapterTitle!,
-          newestDateAndFinished: newestDateAndFinished!,
+          newestChapter: newestChapter!,
+          newestDate: newestDate!,
+          isMangaFinished: isMangaFinished!,
         );
 
   String chapterPageHtmlUrl(int imageIndex /* start from 0 */) => '$chapterUrl#p=${imageIndex + 1}';
@@ -177,11 +154,46 @@ class MangaViewerPageData {
       chapterNeighbor: neededData?.chapterGroups.findChapterNeighbor(chapterId, prev: true, next: true) ?? chapterNeighbor,
       chapterGroups: neededData?.chapterGroups ?? chapterGroups,
       mangaAuthors: neededData?.mangaAuthors ?? mangaAuthors,
-      newestChapterTitle: neededData?.newestChapterTitle ?? newestChapterTitle,
-      newestDateAndFinished: neededData?.newestDateAndFinished ?? newestDateAndFinished,
+      newestChapter: neededData?.newestChapter ?? newestChapter,
+      newestDate: neededData?.newestDate ?? newestDate,
+      isMangaFinished: neededData?.isMangaFinished ?? isMangaFinished,
       getMangaFailed: getMangaFailed,
       metadataUpdatedAt: metadataUpdatedAt,
     );
+  }
+}
+
+/// 漫画章节阅读页所需的一些额外的漫画数据，字段均来自 [Manga]，在 [MangaViewerPage] 使用
+class MangaChapterNeededData {
+  const MangaChapterNeededData({
+    required this.chapterGroups,
+    required this.mangaAuthors,
+    required this.newestChapter,
+    required this.newestDate,
+    required this.isMangaFinished,
+  });
+
+  final List<MangaChapterGroup> chapterGroups;
+  final List<TinyAuthor> mangaAuthors;
+  final String newestChapter;
+  final String newestDate;
+  final bool isMangaFinished;
+
+  static MangaChapterNeededData fromMangaData(Manga manga) {
+    return MangaChapterNeededData(
+      chapterGroups: manga.chapterGroups,
+      mangaAuthors: manga.authors,
+      newestChapter: manga.newestChapter,
+      newestDate: manga.formattedNewestDate,
+      isMangaFinished: manga.finished,
+    );
+  }
+
+  static MangaChapterNeededData? fromNullableMangaData(Manga? manga) {
+    if (manga == null) {
+      return null;
+    }
+    return fromMangaData(manga);
   }
 }
 
@@ -417,8 +429,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           chapterNeighbor: neededData.chapterGroups.findChapterNeighbor(widget.chapterId, prev: true, next: true) /* => no use response data as chapter neighbor */,
           chapterGroups: neededData.chapterGroups,
           mangaAuthors: neededData.mangaAuthors,
-          newestChapterTitle: neededData.newestChapterTitle,
-          newestDateAndFinished: neededData.newestDateAndFinished,
+          newestChapter: neededData.newestChapter,
+          newestDate: neededData.newestDate,
+          isMangaFinished: neededData.isMangaFinished,
           getMangaFailed: false,
           metadataUpdatedAt: null /* never used when online */,
         );
@@ -452,8 +465,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 ),
             chapterGroups: widget.neededData?.chapterGroups /* maybe null */,
             mangaAuthors: widget.neededData?.mangaAuthors /* maybe null */,
-            newestChapterTitle: widget.neededData?.newestChapterTitle /* maybe null */,
-            newestDateAndFinished: widget.neededData?.newestDateAndFinished /* maybe null */,
+            newestChapter: widget.neededData?.newestChapter /* maybe null */,
+            newestDate: widget.neededData?.newestDate /* maybe null */,
+            isMangaFinished: widget.neededData?.isMangaFinished /* maybe null */,
             getMangaFailed: null /* getting manga */,
             metadataUpdatedAt: metadata.updatedAt /* maybe null */,
           );
@@ -1163,6 +1177,16 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     if (mounted) setState(() {});
   }
 
+  double _getChapterAssistantBottomPosition() {
+    // this function is only called, when the page view is at final page, or the scroll position is at bottom.
+    var extraPageHeight = _mangaGalleryViewKey.currentState?.getPageHeight(
+      _data!.pageCount + 1, // last extra page
+      safeArea: !_isHorizontalScroll || _ScreenHelper.safeAreaTop, // no consideration of safe area (media query), when vertical scrolling or non-fullscreen
+    );
+    var extraPageTitleBoxHeight = _lastExtraPageKey.currentState?.getTitleBoxHeight();
+    return (extraPageHeight ?? 0) - (extraPageTitleBoxHeight ?? 0);
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -1404,7 +1428,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       toShowDetails: _showDetails,
                       toShowComments: _showComments,
                       toShowOverview: _showOverview,
-                      toShare: () => shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}'),
+                      toShare: (short) => shareText(text: !short ? '【${_data!.mangaTitle} ${_data!.chapterTitle}】${_data!.chapterUrl}' : _data!.chapterUrl),
                       toShowLaters: _showLaterMangaDialog,
                       toShowImage: _showImage,
                       toOnlineMode: () => _toOnlineMode(alsoCheck: false),
@@ -1422,9 +1446,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                           end: Alignment.bottomCenter,
                           stops: const [0, 0.5, 1],
                           colors: [
-                            Colors.orange[800]!.withOpacity(0.75),
-                            Colors.orange[900]!.withOpacity(0.8),
-                            Colors.orange[700]!.withOpacity(0.75),
+                            Colors.orange[700]!.withOpacity(!disable ? 0.75 : 0.45),
+                            Colors.orange[900]!.withOpacity(!disable ? 0.8 : 0.45),
+                            Colors.orange[700]!.withOpacity(!disable ? 0.75 : 0.45),
                           ],
                         ),
                       ),
@@ -1437,7 +1461,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                           splashColor: Colors.black12,
                           child: Column(
                             children: [
-                              SizedBox(height: 4 + 6 * 2 + 20), // make column symmetric
+                              // top placeholder
+                              SizedBox(height: 5 + 8 * 2 + 20), // make column symmetric
+                              // main navigation
                               Expanded(
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 10),
@@ -1466,80 +1492,65 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   ),
                                 ),
                               ),
-                              if (left)
-                                Padding(
-                                  padding: EdgeInsets.only(bottom: 4),
-                                  child: Tooltip(
-                                    message: '打开漫画阅读设置',
-                                    child: InkWell(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(6),
-                                        child: Icon(Icons.settings, size: 20, color: Colors.white),
-                                      ),
-                                      onTap: _showSettingDialog,
+                              // bottom button
+                              Padding(
+                                padding: EdgeInsets.only(bottom: 5),
+                                child: Tooltip(
+                                  message: left ? '打开漫画阅读设置' : '暂时隐藏 "单手章节跳转助手"',
+                                  child: InkWell(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Icon(left ? Icons.settings : Icons.visibility_off, size: 20, color: Colors.white),
                                     ),
+                                    onTap: left //
+                                        ? _showSettingDialog
+                                        : () => mountedSetState(() => _hideAssistantOnce = !_hideAssistantOnce),
                                   ),
                                 ),
-                              if (!left)
-                                Padding(
-                                  padding: EdgeInsets.only(bottom: 4),
-                                  child: Tooltip(
-                                    message: '暂时隐藏 "单手章节跳转助手"',
-                                    child: InkWell(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(6),
-                                        child: Icon(Icons.visibility_off, size: 20, color: Colors.white),
-                                      ),
-                                      onTap: () => mountedSetState(() => _hideAssistantOnce = !_hideAssistantOnce),
-                                    ),
-                                  ),
-                                ),
+                              ),
                             ],
                           ),
                         ),
                       ),
                     )).let(
-                  (buildHandler) => //
-                      ((_mangaGalleryViewKey.currentState?.getPageHeight(_data!.pageCount + 1) ?? 0) - (_lastExtraPageKey.currentState?.getTitleBoxHeight() ?? 0)).let(
-                    (positionBottom) => [
-                      Positioned(
-                        top: 0,
-                        bottom: positionBottom,
-                        left: 0,
-                        child: AnimatedSwitcher(
-                          duration: _kAnimationDuration,
-                          child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
-                              ? const SizedBox.shrink() //
-                              : buildHandler(
-                                  left: true,
-                                  text: !_isRtlOperation ? '阅读上一章节' : '阅读下一章节',
-                                  disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasPrevChapter != true : _data!.chapterNeighbor?.hasNextChapter != true,
-                                  disableText: !_isRtlOperation ? '暂无上一章节' : '暂无下一章节',
-                                  action: () => _gotoNeighborChapter(gotoPrevious: !_isRtlOperation),
-                                  longPress: () => _showNeighborChapterTip(previous: !_isRtlOperation),
-                                ),
-                        ),
+                  (buildHandler) => [
+                    Positioned(
+                      top: 0,
+                      bottom: _getChapterAssistantBottomPosition(),
+                      left: 0, // left
+                      child: AnimatedSwitcher(
+                        duration: _kAnimationDuration,
+                        child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
+                            ? const SizedBox.shrink() //
+                            : buildHandler(
+                                left: true,
+                                text: !_isRtlOperation ? '阅读上一章节' : '阅读下一章节',
+                                disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasPrevChapter != true : _data!.chapterNeighbor?.hasNextChapter != true,
+                                disableText: !_isRtlOperation ? '暂无上一章节' : '暂无下一章节',
+                                action: () => _gotoNeighborChapter(gotoPrevious: !_isRtlOperation),
+                                longPress: () => _showNeighborChapterTip(previous: !_isRtlOperation),
+                              ),
                       ),
-                      Positioned(
-                        top: 0,
-                        bottom: positionBottom,
-                        right: 0,
-                        child: AnimatedSwitcher(
-                          duration: _kAnimationDuration,
-                          child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
-                              ? const SizedBox.shrink() //
-                              : buildHandler(
-                                  left: false,
-                                  text: !_isRtlOperation ? '阅读下一章节' : '阅读上一章节',
-                                  disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasNextChapter != true : _data!.chapterNeighbor?.hasPrevChapter != true,
-                                  disableText: !_isRtlOperation ? '暂无下一章节' : '暂无上一章节',
-                                  action: () => _gotoNeighborChapter(gotoPrevious: _isRtlOperation),
-                                  longPress: () => _showNeighborChapterTip(previous: _isRtlOperation),
-                                ),
-                        ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      bottom: _getChapterAssistantBottomPosition(),
+                      right: 0, // right
+                      child: AnimatedSwitcher(
+                        duration: _kAnimationDuration,
+                        child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
+                            ? const SizedBox.shrink() //
+                            : buildHandler(
+                                left: false,
+                                text: !_isRtlOperation ? '阅读下一章节' : '阅读上一章节',
+                                disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasNextChapter != true : _data!.chapterNeighbor?.hasPrevChapter != true,
+                                disableText: !_isRtlOperation ? '暂无下一章节' : '暂无上一章节',
+                                action: () => _gotoNeighborChapter(gotoPrevious: _isRtlOperation),
+                                longPress: () => _showNeighborChapterTip(previous: _isRtlOperation),
+                              ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 // ****************************************************************
                 // 右下角的提示文字
@@ -1815,7 +1826,7 @@ class _ScreenHelper {
 
   static bool _safeAreaTop = true; // defaults to non-fullscreen
 
-  static bool get safeAreaTop => _safeAreaTop;
+  static bool get safeAreaTop => _safeAreaTop; // true => non-fullscreen, false => fullscreen
 
   static double _bottomPanelDistance = 0; // defaults to non-fullscreen
 
@@ -1831,8 +1842,7 @@ class _ScreenHelper {
     await setSystemUIWhenAppbarChanged(fullscreen: fullscreen, isAppbarShown: _showAppBar);
   }
 
-  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool isAppbarShown /* explicit */
-      }) async {
+  static Future<void> setSystemUIWhenAppbarChanged({required bool fullscreen, required bool /* explicit */ isAppbarShown}) async {
     // https://hiyoko-programming.com/953/
     if (!fullscreen) {
       // 不全屏 => 全部显示，不透明 (manual)

@@ -230,6 +230,17 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
           if (mounted) setState(() {});
         }
       },
+      laterSetter: (newLater) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        // 本页引起的更新 => 更新列表显示 (置顶稍后阅读记录)
+        if (newLater != null) {
+          _data.replaceWhere((el) => el.mangaId == newLater.mangaId, (_) => newLater);
+          _data.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // _data.removeWhere((el) => el.mangaId == newLater.mangaId);
+          // _data.insert(0, newLater); // => 取巧的做法，但不通用于其他更新
+          if (mounted) setState(() {});
+        }
+      },
     );
   }
 

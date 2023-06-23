@@ -7,10 +7,12 @@ class MangaHistory {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final int chapterId; // 0 表示还没开始阅读（点进漫画页），非0 表示开始阅读（点进章节页）
+  final int chapterId; // 0表示还没开始阅读（点进漫画页），非0表示开始阅读（点进章节页）
   final String chapterTitle;
   final int chapterPage;
   final DateTime lastTime;
+
+  // TODO lastChapterId, lastChapterTitle, lastChapterPage
 
   const MangaHistory({
     required this.mangaId,

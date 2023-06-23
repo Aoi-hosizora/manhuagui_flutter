@@ -37,4 +37,6 @@ class CustomIcons {
   static const IconData image_timeline = IconData(0xe811, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData clock_sync = IconData(0xe812, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData calendar_off = IconData(0xe813, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData star_sync = IconData(0xe814, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData bookmark_multiple = IconData(0xe815, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

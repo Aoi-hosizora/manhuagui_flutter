@@ -91,7 +91,11 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
         _onPageChanged(_currentPageIndex); // include extra pages, start from 0
       });
     }
+    if (widget.verticalScroll && widget.verticalViewportPageSpace != oldWidget.verticalViewportPageSpace) {
+      // done by VerticalGalleryView, ignore
+    }
     if (widget.verticalScroll && widget.verticalPageNoPosition != oldWidget.verticalPageNoPosition) {
+      // not be done by VerticalGalleryView, do updating here
       for (int imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
         _verticalGalleryKey.currentState?.updateImagePageState(imageIndex); // <<< update photo view state manually
       }
@@ -152,10 +156,10 @@ class MangaGalleryViewState extends State<MangaGalleryView> {
     }
   }
 
-  /// getPageHeight, include extra pages, start from 0 (mainly for vertical scrolling).
-  double getPageHeight(int pageIndex) {
+  /// getPageHeight, include extra pages, start from 0.
+  double getPageHeight(int pageIndex, {bool safeArea = true}) {
     if (!widget.verticalScroll) {
-      return MediaQuery.of(context).size.height - widget.mediaQueryPadding.vertical;
+      return MediaQuery.of(context).size.height - (safeArea ? widget.mediaQueryPadding.vertical : 0 /* no need to minus if fullscreen */);
     }
     return (_verticalGalleryKey.currentState?.getPageHeight(pageIndex) ?? 0);
   }

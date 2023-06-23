@@ -74,7 +74,7 @@ class ViewExtraSubPageCallbacks {
   final void Function() toShowDetails;
   final void Function() toShowComments;
   final void Function() toShowOverview;
-  final void Function() toShare;
+  final void Function(bool short) toShare;
   final void Function() toShowLaters;
   final void Function(String url, String title) toShowImage;
   final void Function() toOnlineMode;
@@ -237,7 +237,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
             action2: ActionItem(text: '章节详情', icon: Icons.subject, action: () => widget.callbacks.toShowDetails.call()),
             action3: ActionItem(text: '查看评论', icon: Icons.forum, action: () => widget.callbacks.toShowComments.call()),
             action4: ActionItem(text: '页面一览', icon: CustomIcons.image_timeline, action: () => widget.callbacks.toShowOverview.call()),
-            action5: ActionItem(text: '分享章节', icon: Icons.share, action: () => widget.callbacks.toShare.call()),
+            action5: ActionItem(text: '分享章节', icon: Icons.share, action: () => widget.callbacks.toShare.call(false), longPress: () => widget.callbacks.toShare.call(true)),
           ),
       ],
     );
@@ -324,7 +324,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                   onLongPress: () => _vibrateAndCopy(widget.data.chapterTitle),
                                 ),
                               ),
-                              if (widget.data.mangaAuthors != null || widget.data.newestDateAndFinished != null)
+                              if (widget.data.mangaAuthors != null || (widget.data.newestDate != null && widget.data.isMangaFinished != null))
                                 Flexible(
                                   child: GestureDetector(
                                     behavior: HitTestBehavior.opaque,
@@ -333,7 +333,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                       child: Text(
                                         [
                                           widget.data.mangaAuthors?.map((a) => a.name).join('/'),
-                                          widget.data.newestDateAndFinished?.let((t) => (!t.item2 ? '更新' : '完结') + '于 ${t.item1}'),
+                                          widget.data.isMangaFinished?.let((fin) => '${fin ? '更新' : '完结'}于 ${widget.data.newestDate}'),
                                         ].join('・'),
                                         style: Theme.of(context).textTheme.subtitle1?.copyWith(
                                               fontSize: 14,
@@ -432,7 +432,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
                         ),
                       ],
                     ),
-                    if (widget.data.mangaAuthors != null || widget.data.newestDateAndFinished != null)
+                    if (widget.data.mangaAuthors != null || (widget.data.newestDate != null && widget.data.isMangaFinished != null))
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -444,7 +444,7 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
                                 child: Text(
                                   [
                                     widget.data.mangaAuthors?.map((a) => a.name).join('/').let((a) => '作者 $a'),
-                                    widget.data.newestDateAndFinished?.let((t) => (!t.item2 ? '最近更新' : '漫画完结') + '于 ${t.item1}'),
+                                    widget.data.isMangaFinished?.let((fin) => '${fin ? '最近更新' : '漫画完结'}于 ${widget.data.newestDate}'),
                                   ].join('・'),
                                   style: Theme.of(context).textTheme.bodyText2!.copyWith(fontSize: 14),
                                   textAlign: TextAlign.center,
@@ -491,8 +491,8 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
                 padding: EdgeInsets.only(top: 18),
                 child: LaterMangaBannerView(
                   manga: widget.laterManga!,
-                  currentNewestChapter: widget.data.newestChapterTitle,
-                  currentNewestDate: widget.data.newestDateAndFinished?.item1,
+                  currentNewestChapter: widget.data.newestChapter,
+                  currentNewestDate: widget.data.newestDate,
                   action: () => widget.callbacks.toShowLaters.call(),
                 ),
               ),

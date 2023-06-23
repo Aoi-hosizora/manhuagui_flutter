@@ -238,6 +238,7 @@ class _DownloadPageState extends State<DownloadPage> {
       mangaCover: manga.mangaCover,
       mangaUrl: manga.mangaUrl,
       extraData: null,
+      fromDownloadList: true,
     );
   }
 

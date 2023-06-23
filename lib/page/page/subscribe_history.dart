@@ -160,7 +160,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           _removed++;
           if (mounted) setState(() {});
 
-          // 独立页时发送额外通知，让主页子页显示有更新
+          // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
           if (widget.isSepPage) {
             EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
           }
@@ -211,7 +211,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
     }
 
-    // 独立页时发送额外通知，让主页子页显示有更新
+    // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
     if (widget.isSepPage) {
       for (var mangaId in mangaIds) {
         EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
@@ -255,7 +255,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
     }
 
-    // 独立页时发送额外通知，让主页子页显示有更新
+    // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
     if (widget.isSepPage) {
       for (var mangaId in mangaIds) {
         EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));

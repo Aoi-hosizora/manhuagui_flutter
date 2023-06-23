@@ -114,7 +114,7 @@ class ViewSetting {
     pageNoPosition: PageNoPosition.hide,
     hideAppBarWhenEnter: true,
     appBarSwitchBehavior: AppBarSwitchBehavior.keep,
-    useChapterAssistant: false,
+    useChapterAssistant: true,
   );
 
   ViewSetting copyWith({
