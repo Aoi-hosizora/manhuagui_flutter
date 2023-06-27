@@ -94,6 +94,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
         ],
       ),
       body: TabBarView(
+        // TODO lazy load
         controller: _controller,
         physics: DefaultScrollPhysics.of(context),
         children: _tabs.map((t) => t.item2).toList(),

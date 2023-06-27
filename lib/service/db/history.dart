@@ -373,4 +373,14 @@ class HistoryDao {
     );
     return rows != null;
   }
+
+  static Future<bool> clearAllFootprints({required String username}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblFootprint
+         WHERE $_colUsername = ?''',
+      [username],
+    );
+    return rows != null;
+  }
 }

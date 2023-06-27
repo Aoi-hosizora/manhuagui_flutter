@@ -397,6 +397,8 @@ class UiSetting {
   final int regularGroupRows; // 单话章节分组显示行数
   final int otherGroupRows; // 其他章节分组显示行数
   final bool allowErrorToast; // 阅读时允许弹出错误提示
+  // final bool showLastHistory; // 显示上上次阅读历史 // TODO
+  // final bool showFootprints; // 显示章节阅读足迹
   final bool overviewLoadAll; // 章节一览页加载所有图片
   final bool homepageShowMoreMangas; // 首页显示更多漫画
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史

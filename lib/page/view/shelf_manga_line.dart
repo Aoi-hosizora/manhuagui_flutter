@@ -38,7 +38,7 @@ class ShelfMangaLineView extends StatelessWidget {
       icon2: !useLocalHistory ? CustomIcons.opened_blank_book : (history == null || !history!.read ? CustomIcons.opened_left_star_book : CustomIcons.opened_blank_book),
       text2: !useLocalHistory //
           ? '最近阅读至 ${manga.lastChapter.isEmpty ? '未知章节' : manga.lastChapter} (${manga.formattedLastDurationOrTime})'
-          : ((history == null ? '未浏览阅读' : (!history!.read ? '未开始阅读 仅浏览' : '最近阅读至 ${history!.chapterTitle}')) + (history == null ? '' : ' (${history!.formattedLastTimeOrDuration})')),
+          : ((history == null ? '未浏览' : (!history!.read ? '未开始阅读 仅浏览' : '最近阅读至 ${history!.chapterTitle}')) + (history == null ? '' : ' (${history!.formattedLastTimeOrDuration})')),
       icon3: Icons.update,
       text3: '更新于 ${manga.formattedNewestTimeWithDuration}',
       text3Color: !highlightRecent

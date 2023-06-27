@@ -32,7 +32,8 @@ class SmallMangaLineView extends StatelessWidget {
       icon1: Icons.person,
       text1: manga.authors.join('/'),
       icon2: Icons.notes,
-      text2: '最新章节 ${manga.newestChapter}' + (history?.read != true ? '' : (manga.newestChapter == history!.chapterTitle ? ' (已阅读至该话)' : ' (阅读至 ${history!.shortChapterTitle})')),
+      text2: '最新章节 ${manga.newestChapter}' + //
+          ((history == null ? '' : (!history!.read ? ' (仅浏览)' : (manga.newestChapter == history!.chapterTitle ? ' (已阅读至该话)' : ' (阅读至 ${history!.shortChapterTitle})')))),
       icon3: Icons.update,
       text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       text3Color: !highlightRecent

@@ -33,7 +33,7 @@ class TinyMangaLineView extends StatelessWidget {
       icon1: Icons.notes,
       text1: '最新章节 ${manga.formattedNewestChapter}' /* no author information */,
       icon2: history == null || !history!.read ? CustomIcons.opened_left_star_book : Icons.import_contacts,
-      text2: (history == null ? '未浏览阅读' : (!history!.read ? '未开始阅读 仅浏览' : '最近阅读至 ${history!.chapterTitle}')) + (history == null ? '' : ' (${history!.formattedLastTimeOrDuration})'),
+      text2: (history == null ? '未浏览' : (!history!.read ? '未开始阅读 仅浏览' : '最近阅读至 ${history!.chapterTitle}')) + (history == null ? '' : ' (${history!.formattedLastTimeOrDuration})'),
       icon3: Icons.update,
       text3: '${manga.finished ? '已完结' : '连载中'}・${manga.formattedNewestDateWithDuration}',
       text3Color: !highlightRecent

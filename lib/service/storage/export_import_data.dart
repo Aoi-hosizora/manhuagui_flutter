@@ -76,6 +76,7 @@ Future<bool> deleteImportData(String name) async {
 enum ExportDataType {
   // from db
   readHistories, // 漫画阅读历史
+  chapterFootprints, // 章节阅读足迹
   downloadRecords, // 漫画下载记录
   favoriteMangas, // 本地收藏漫画
   favoriteAuthors, // 本地收藏作者
@@ -92,6 +93,8 @@ extension ExportDataTypeExtension on ExportDataType {
     switch (this) {
       case ExportDataType.readHistories:
         return '漫画阅读历史';
+      case ExportDataType.chapterFootprints:
+        return '章节阅读足迹';
       case ExportDataType.downloadRecords:
         return '漫画下载记录';
       case ExportDataType.favoriteMangas:
@@ -114,6 +117,7 @@ class ExportDataTypeCounter {
   ExportDataTypeCounter();
 
   int readHistories = 0;
+  int chapterFootprints = 0;
   int downloadRecords = 0;
   int favoriteMangas = 0;
   int favoriteAuthors = 0;
@@ -124,6 +128,7 @@ class ExportDataTypeCounter {
 
   bool get isEmpty =>
       readHistories == 0 && //
+      chapterFootprints == 0 &&
       downloadRecords == 0 &&
       favoriteMangas == 0 &&
       favoriteAuthors == 0 &&
@@ -138,6 +143,7 @@ class ExportDataTypeCounter {
 
     var titles = [
       if (include(readHistories, ExportDataType.readHistories)) '$readHistories 条漫画阅读历史',
+      if (include(chapterFootprints, ExportDataType.chapterFootprints)) '$chapterFootprints 条章节阅读足迹',
       if (include(downloadRecords, ExportDataType.downloadRecords)) '$downloadRecords 条漫画下载记录',
       if (include(favoriteMangas, ExportDataType.favoriteMangas)) '$favoriteMangas 部本地收藏漫画',
       if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',
@@ -193,6 +199,15 @@ Future<bool> _exportDB(File dbFile, List<ExportDataType> types, ExportDataTypeCo
         return false; // error
       }
       counter.readHistories = rows;
+    }
+
+    // => chapter footprints
+    if (types.contains(ExportDataType.chapterFootprints)) {
+      var rows = await _copyToDB(tx, anotherDB, HistoryDao.footprintMetadata);
+      if (rows == null) {
+        return false; // error
+      }
+      counter.chapterFootprints = rows;
     }
 
     // => download records
@@ -345,6 +360,13 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     }
     counter.readHistories = readHistoryRows;
 
+    // => chapter footprints
+    var chapterFootprintRows = await _copyToDB(exportedDB, db, HistoryDao.footprintMetadata, merge);
+    if (chapterFootprintRows == null) {
+      return false; // error
+    }
+    counter.chapterFootprints = chapterFootprintRows;
+
     // => download records
     var downloadMangaRows = await _copyToDB(exportedDB, db, DownloadDao.mangaMetadata, merge);
     if (downloadMangaRows == null) {
@@ -388,6 +410,9 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     // notify that related entities have been changed
     if (counter.readHistories > 0) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
+    }
+    if (counter.chapterFootprints > 0) {
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: -1, chapterIds: null, reason: UpdateReason.added));
     }
     if (counter.favoriteMangas > 0) {
       EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: -1));

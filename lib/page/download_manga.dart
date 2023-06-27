@@ -325,7 +325,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     // 此处不异步请求漫画数据，由 MangaViewerPage 请求并回传更新 _mangaData，从而避免重复请求
     // _loadMangaDataAsync(forceRefresh: false);
 
-    void gotoViewerPage({required int cid, required int page}) {
+    void __gotoViewerPage({required int cid, required int page}) {
       Navigator.of(context).push(
         CustomPageRoute(
           context: context,
@@ -346,60 +346,61 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
 
     if (_history == null || (_history!.chapterId != chapterId && _history!.lastChapterId != chapterId)) {
       // (1) 所选章节不是上次/上上次阅读的章节 => 直接从第一页阅读
-      gotoViewerPage(cid: chapterId, page: 1);
+      __gotoViewerPage(cid: chapterId, page: 1);
+      return;
+    }
+
+    // (2) 所选章节在上次/上上次被阅读 => 弹出选项判断是否需要阅读
+    var historyTitle = _history!.chapterId == chapterId ? _history!.chapterTitle : _history!.lastChapterTitle;
+    var historyPage = _history!.chapterId == chapterId ? _history!.chapterPage : _history!.lastChapterPage;
+    var chapter = _data!.downloadedChapters.where((c) => c.chapterId == chapterId).firstOrNull;
+    if (chapter == null) {
+      showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
+      return; // actually unreachable
+    }
+    var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"未阅读完"
+    var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"已阅读完"
+    if (!checkNotfin && !checkFinish) {
+      // (2.1) 所选章节无需弹出提示 => 继续阅读
+      __gotoViewerPage(cid: chapterId, page: historyPage);
     } else {
-      // (2) 所选章节在上次/上上次被阅读 => 弹出选项判断是否需要阅读
-      var historyTitle = _history!.chapterId == chapterId ? _history!.chapterTitle : _history!.lastChapterTitle;
-      var historyPage = _history!.chapterId == chapterId ? _history!.chapterPage : _history!.lastChapterPage;
-      var chapter = _data!.downloadedChapters.where((c) => c.chapterId == chapterId).firstOrNull;
-      if (chapter == null) {
-        showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
-        return; // actually unreachable
-      }
-      var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"未阅读完"
-      var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"已阅读完"
-      if (!checkNotfin && !checkFinish) {
-        // (2.1) 所选章节无需弹出提示 => 继续阅读
-        gotoViewerPage(cid: chapterId, page: historyPage);
-      } else {
-        // (2.2) 所选章节需要弹出提示 (未阅读完/已阅读完) => 根据所选选项来确定阅读行为
-        showDialog(
-          context: context,
-          builder: (c) => SimpleDialog(
-            title: Text('章节阅读'),
-            children: [
-              SubtitleDialogOption(
-                text: checkNotfin //
-                    ? Text('所选章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.totalPageCount}页)。')
-                    : Text('所选章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)。'),
-              ),
-              ...([
-                IconTextDialogOption(
-                  icon: Icon(CustomIcons.opened_book_arrow_right),
-                  text: Text('继续阅读所选章节 ($historyTitle 第$historyPage页)'),
-                  popWhenPress: c,
-                  onPressed: () => gotoViewerPage(cid: chapterId, page: historyPage),
-                ),
-                if (historyPage > 1)
-                  IconTextDialogOption(
-                    icon: Icon(CustomIcons.opened_book_replay),
-                    text: Text('从头阅读所选章节 ($historyTitle 第1页)'),
-                    popWhenPress: c,
-                    onPressed: () => gotoViewerPage(cid: chapterId, page: 1),
-                  ),
-              ].let(
-                (opt) => checkNotfin ? opt /* 未阅读完 */ : opt.reversed /* 已阅读完 */,
-              )),
+      // (2.2) 所选章节需要弹出提示 (未阅读完/已阅读完) => 根据所选选项来确定阅读行为
+      showDialog(
+        context: context,
+        builder: (c) => SimpleDialog(
+          title: Text('章节阅读'),
+          children: [
+            SubtitleDialogOption(
+              text: checkNotfin //
+                  ? Text('所选章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.totalPageCount}页)，是否继续阅读该页？') // 未阅读完
+                  : Text('所选章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)，是否选择其他章节阅读？'), // 已阅读完
+            ),
+            ...([
               IconTextDialogOption(
-                icon: Icon(Icons.menu),
-                text: Text('重新选择其他章节'),
+                icon: Icon(CustomIcons.opened_book_arrow_right),
+                text: Text('继续阅读所选章节 ($historyTitle 第$historyPage页)'),
                 popWhenPress: c,
-                onPressed: () {}, // <<< 此处不提供新章节供选择阅读
+                onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
               ),
-            ],
-          ),
-        );
-      }
+              if (historyPage > 1)
+                IconTextDialogOption(
+                  icon: Icon(CustomIcons.opened_book_replay),
+                  text: Text('从头阅读所选章节 ($historyTitle 第1页)'),
+                  popWhenPress: c,
+                  onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
+                ),
+            ].let(
+              (opt) => checkNotfin ? opt /* 未阅读完 */ : opt.reversed /* 已阅读完 */,
+            )),
+            IconTextDialogOption(
+              icon: Icon(Icons.menu),
+              text: Text('选择其他章节'),
+              popWhenPress: c,
+              onPressed: () {}, // <<< 此处不提供新章节供选择阅读
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -584,7 +585,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaUrl: _data!.mangaUrl,
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
                             fromMangaPage: false,
-                            laterManga: _later,
+                            laterManga: _later!,
                             inLaterSetter: (l) {
                               // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
                               _later = l;

@@ -380,6 +380,30 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     if (mounted) setState(() {});
   }
 
+  void _onImageViewLoadingStateChanged(int imageIndex) {
+    // !!! 当图片页状态 (加载/正常/错误) 变更时，更新高度，并且限制滚动偏移防止页面跳转
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
+      var newHeight = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
+      var oldHeight = _imagePageHeights[imageIndex];
+      if (oldHeight == newHeight) {
+        return; // height does not change
+      }
+      // print('Image ${imageIndex + 1} new height: $oldHeight -> $newHeight');
+      _imagePageHeights[imageIndex] = newHeight;
+
+      if (widget.imageCount > 1 && _currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
+        // <<< some pages before current page has its height changed, need to jump back to the previous offset
+        await _jumpLock.synchronized(() async {
+          _jumping = true;
+          _controller.jumpTo(_controller.offset + (newHeight - oldHeight));
+          await WidgetsBinding.instance?.endOfFrame;
+          _jumping = false;
+        });
+      }
+    });
+  }
+
   Widget _buildImageView({required BuildContext context, required int imageIndex, bool onlyForPlaceholder = false}) {
     if (onlyForPlaceholder) {
       return ImageLoadingView(title: '${imageIndex + 1}', event: null);
@@ -415,26 +439,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         tightMode: true,
         wantKeepAlive: options.wantKeepAlive,
         customBuilder /* <<< this property is added in process_deps.sh */ : (c, view) => widget.customPageBuilder?.call(c, view, imageIndex) ?? view,
-        onLoadingStateChanged /* <<< this property is added in process_deps.sh */ : () => WidgetsBinding.instance?.addPostFrameCallback((_) async {
-          var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
-          var newHeight = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
-          var oldHeight = _imagePageHeights[imageIndex];
-          if (oldHeight == newHeight) {
-            return; // height does not change
-          }
-          // print('Image ${imageIndex + 1} new height: $oldHeight -> $newHeight');
-          _imagePageHeights[imageIndex] = newHeight;
-
-          if (widget.imageCount > 1 && _currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
-            // <<< some pages before current page has its height changed, need to jump back to the previous offset
-            await _jumpLock.synchronized(() async {
-              _jumping = true;
-              _controller.jumpTo(_controller.offset + (newHeight - oldHeight));
-              await WidgetsBinding.instance?.endOfFrame;
-              _jumping = false;
-            });
-          }
-        }),
+        onLoadingStateChanged /* <<< this property is added in process_deps.sh */ : () => _onImageViewLoadingStateChanged(imageIndex),
       ),
     );
   }

@@ -307,13 +307,13 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
           actions: [
             if (!widget.loadAllImages)
               AppBarActionButton(
-                icon: Icon(CustomIcons.eye_sync),
-                tooltip: '当前仅加载已缓存和已下载的图片',
+                icon: Icon(CustomIcons.image_global),
+                tooltip: '加载所有图片',
                 onPressed: _toLoadAllImages,
               ),
             if (widget.loadAllImages)
               AppBarActionButton(
-                icon: Icon(CustomIcons.eye_public),
+                icon: Icon(CustomIcons.earth_warning),
                 tooltip: '当前加载着所有图片',
                 onPressed: _showHintForLoadingAllImages,
               ),
@@ -347,7 +347,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                   child: IconText(
-                    icon: Icon(Icons.import_contacts, color: Colors.black54),
+                    icon: Icon(CustomIcons.opened_book_arrow_right, color: Colors.black54),
                     text: Flexible(
                       child: Text('该章节当前阅读至第${widget.currentIndex + 1}页，点击继续阅读该页。', maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),

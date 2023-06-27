@@ -361,13 +361,27 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
                       ],
                     ),
                     SizedBox(height: 18),
-                    SizedBox(
-                      height: 45,
-                      width: 200,
-                      child: ElevatedButton(
-                        child: Text('开始阅读'),
-                        onPressed: () => widget.callbacks.toJumpToImage.call(0, true),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 45,
+                          width: 150,
+                          child: ElevatedButton(
+                            child: Text('开始阅读'),
+                            onPressed: () => widget.callbacks.toJumpToImage.call(0, true),
+                          ),
+                        ),
+                        SizedBox(width: 18),
+                        SizedBox(
+                          height: 45,
+                          width: 150,
+                          child: ElevatedButton(
+                            child: Text('转到最后一页'),
+                            onPressed: () => widget.callbacks.toJumpToImage.call(widget.data.pageCount - 1, false),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

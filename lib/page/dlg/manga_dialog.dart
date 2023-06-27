@@ -129,6 +129,8 @@ void showPopupMenuForMangaList({
               IconTextDialogOption(
                 icon: Icon(MdiIcons.starCog),
                 text: Text('编辑我的书架'),
+                predicateForPress: !nowInShelfCache ? null : () => helper.showCheckRemovingShelfDialog(),
+                onLongPressed: () => helper.addOrRemoveShelf(toAdd: !nowInShelfCache, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
                 onPressed: () => _setState(() => expandShelfOptions = true),
               ),
             if (expandShelfOptions)
@@ -500,7 +502,7 @@ void showPopupMenuForMangaToc({
         if (allowDeletingHistory && isChapterRead)
           IconTextDialogOption(
             icon: Icon(MdiIcons.deleteClock),
-            text: Text('删除章节阅读历史'),
+            text: Text('删除阅读历史'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: readChapterTitle),
             onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
@@ -508,10 +510,18 @@ void showPopupMenuForMangaToc({
         if (allowDeletingHistory && !isChapterRead && isInFootprint)
           IconTextDialogOption(
             icon: Icon(MdiIcons.deleteClock),
-            text: Text('删除章节阅读足迹'),
+            text: Text('删除阅读足迹'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: chapterNeededData.chapterGroups.findChapter(chapter.cid)?.title ?? '未知话'),
             onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
+          ),
+        if (allowDeletingHistory && !isChapterRead && !isInFootprint)
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.footPrint),
+            text: Text('添加阅读足迹'),
+            popWhenPress: c,
+            predicateForPress: () async => true,
+            onPressed: () {}, // TODO
           ),
 
         /// 查看信息
@@ -747,7 +757,7 @@ void showPopupMenuForLaterManga({
   required String mangaUrl,
   required MangaExtraDataForDialog? extraData,
   required bool fromMangaPage,
-  required LaterManga? laterManga,
+  required LaterManga laterManga,
   required void Function(LaterManga? later) inLaterSetter,
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
 }) async {
@@ -767,7 +777,7 @@ void showPopupMenuForLaterManga({
       title: Text('稍后阅读'),
       children: [
         SubtitleDialogOption(
-          text: Text('《$mangaTitle》在 ${laterManga!.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
+          text: Text('《$mangaTitle》在 ${laterManga.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中，且最新章节被记录为 "${laterManga.newestChapter ?? '未知'}"。'), // TODO
         ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.clockMinus),
@@ -1450,7 +1460,7 @@ class _DialogHelper {
     await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedLaterManga);
     onUpdated?.call(updatedLaterManga);
     ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画在稍后阅读列表中置顶')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将本漫画置顶于稍后阅读列表')));
     EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
@@ -1485,7 +1495,8 @@ class _DialogHelper {
     var updatedLaterManga = later.copyWith(newestChapter: newestChapter, newestDate: newestDate, createdAt: topmost ? DateTime.now() : null);
     await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedLaterManga);
     onUpdated?.call(updatedLaterManga);
-    Fluttertoast.showToast(msg: '已将本漫画的稍后阅读记录更新到最新章节');
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将本漫画的稍后阅读记录更新到最新章节')));
     EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
@@ -1541,7 +1552,7 @@ class _DialogHelper {
       removedFpCids.add(chapterId);
     } else {
       newHistory = null;
-      removedFpCids.add(chapterId);  // 仅删除足迹
+      removedFpCids.add(chapterId); // 仅删除足迹
     }
 
     if (newHistory != null) {

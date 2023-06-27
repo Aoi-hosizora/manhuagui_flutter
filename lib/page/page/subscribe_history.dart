@@ -181,9 +181,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       builder: (c) => AlertDialog(
         title: Text('删除确认'),
         content: histories.length == 1 //
-            ? Text('是否删除《${histories.first.mangaTitle}》阅读历史？')
+            ? Text('是否删除《${histories.first.mangaTitle}》阅读历史，包括所有的章节阅读足迹？')
             : Text(
-                '是否删除以下 ${histories.length} 项阅读历史？\n\n' + //
+                '是否删除以下 ${histories.length} 项阅读历史，包括所有的章节阅读足迹？\n\n' + //
                     [for (int i = 0; i < histories.length; i++) '${i + 1}. 《${histories[i].mangaTitle}》'].join('\n'),
               ),
         scrollable: true,
@@ -202,6 +202,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     _msController.exitMultiSelectionMode();
     for (var mangaId in mangaIds) {
       await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
+      await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: mangaId);
       _data.removeWhere((h) => h.mangaId == mangaId);
       _total--;
       _removed++;
@@ -209,6 +210,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted)); // currently no need for fromHistoryPage flag
     }
 
     // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
@@ -246,6 +248,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     // 本页引起的删除 => 更新列表显示
     _msController.exitMultiSelectionMode();
     await HistoryDao.clearHistories(username: AuthManager.instance.username);
+    await HistoryDao.clearAllFootprints(username: AuthManager.instance.username);
     var mangaIds = _data.map((el) => el.mangaId).toList();
     _data.clear();
     _total = 0;
@@ -253,6 +256,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted)); // currently no need for fromHistoryPage flag
     }
 
     // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)

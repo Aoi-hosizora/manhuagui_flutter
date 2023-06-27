@@ -277,7 +277,7 @@ class _AuthorPageState extends State<AuthorPage> {
         title: GestureDetector(
           child: Text(_data?.name ?? widget.name),
           onLongPress: () {
-            HapticFeedback.vibrate();
+            HapticFeedback.vibrate(); // TODO move to author_dialog.dart
             showDialog(
               context: context,
               builder: (c) => SimpleDialog(

@@ -27,6 +27,7 @@ class ExportDataSubPage extends StatefulWidget {
 
 class _ExportDataSubPageState extends State<ExportDataSubPage> {
   var _readHistories = true;
+  var _chapterFootprints = true;
   var _downloadRecords = true;
   var _favoriteMangas = true;
   var _favoriteAuthors = true;
@@ -37,6 +38,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
 
   List<ExportDataType> get _newestTypes => [
         if (_readHistories) ExportDataType.readHistories,
+        if (_chapterFootprints) ExportDataType.chapterFootprints,
         if (_downloadRecords) ExportDataType.downloadRecords,
         if (_favoriteMangas) ExportDataType.favoriteMangas,
         if (_favoriteAuthors) ExportDataType.favoriteAuthors,
@@ -60,6 +62,15 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _readHistories,
           onChanged: (b) {
             _readHistories = b;
+            widget.onTypesChanged.call(_newestTypes);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: ExportDataType.chapterFootprints.toTypeTitle(), // TODO test
+          value: _chapterFootprints,
+          onChanged: (b) {
+            _chapterFootprints = b;
             widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },

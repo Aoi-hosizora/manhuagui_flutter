@@ -117,6 +117,10 @@ void showCommentPopupMenuForListAndPage({
                 content: SelectableText(comment.content),
                 actions: [
                   TextButton(
+                    child: Text('提取链接'),
+                    onPressed: () {}, // TODO
+                  ),
+                  TextButton(
                     child: Text('复制内容'),
                     onPressed: () => copyText(comment.content, showToast: true),
                   ),
