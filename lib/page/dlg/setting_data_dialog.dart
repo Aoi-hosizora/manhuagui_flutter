@@ -67,7 +67,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: ExportDataType.chapterFootprints.toTypeTitle(), // TODO test
+          title: ExportDataType.chapterFootprints.toTypeTitle(),
           value: _chapterFootprints,
           onChanged: (b) {
             _chapterFootprints = b;

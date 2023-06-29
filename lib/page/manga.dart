@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
@@ -983,6 +982,9 @@ class _MangaPageState extends State<MangaPage> {
       onHistoryUpdated: forMangaPage //
           ? (h) => mountedSetState(() => _history = h)
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
+      onFootprintAdded: forMangaPage //
+          ? (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp)
+          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
       onFootprintRemoved: forMangaPage //
           ? (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key)))
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
@@ -1038,30 +1040,18 @@ class _MangaPageState extends State<MangaPage> {
       appBar: AppBar(
         title: GestureDetector(
           child: Text(_data?.title ?? widget.title),
-          onLongPress: () {
-            HapticFeedback.vibrate(); // TODO move to manga_dialog.dart
-            showDialog(
-              context: context,
-              builder: (c) => SimpleDialog(
-                title: Text(_data?.title ?? widget.title),
-                children: [
-                  IconTextDialogOption(
-                    icon: Icon(Icons.copy),
-                    text: Text('复制标题'),
-                    popWhenPress: c,
-                    onPressed: () => copyText(_data?.title ?? widget.title, showToast: true),
-                  ),
-                  if (_data != null)
-                    IconTextDialogOption(
-                      icon: Icon(Icons.subject),
-                      text: Text('查看漫画详情'),
-                      popWhenPress: c,
-                      onPressed: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => MangaDetailPage(data: _data!))),
-                    ),
-                ],
-              ),
-            );
-          },
+          onTap: () => showPopupMenuForMangaTitle(
+            context: context,
+            manga: _data,
+            fallbackTitle: widget.title,
+            vibrate: false,
+          ),
+          onLongPress: () => showPopupMenuForMangaTitle(
+            context: context,
+            manga: _data,
+            fallbackTitle: widget.title,
+            vibrate: true,
+          ),
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
@@ -1494,6 +1484,7 @@ class _MangaPageState extends State<MangaPage> {
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     highlighted2Chapters: [_history?.lastChapterId ?? 0],
+                    showHighlight2: AppSetting.instance.ui.showLastHistory,
                     faintedChapters: _footprints?.keys.toList() ?? [],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,

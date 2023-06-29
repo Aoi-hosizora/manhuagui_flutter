@@ -18,6 +18,9 @@ class ChapterGridView extends StatelessWidget {
     this.highlighted2Chapters = const [],
     this.faintTextColor,
     this.faintedChapters = const [],
+    this.showHighlight = true,
+    this.showHighlight2 = true,
+    this.showFaintColor = true,
     this.extrasInStack,
     this.itemBuilder,
     required this.onChapterPressed,
@@ -36,6 +39,9 @@ class ChapterGridView extends StatelessWidget {
   final List<int> highlighted2Chapters;
   final Color? faintTextColor;
   final List<int> faintedChapters;
+  final bool showHighlight;
+  final bool showHighlight2;
+  final bool showFaintColor;
   final List<Widget> Function(TinyMangaChapter? chapter)? extrasInStack;
   final Widget Function(BuildContext context, TinyMangaChapter? chapter, Widget itemWidget)? itemBuilder;
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
@@ -66,9 +72,9 @@ class ChapterGridView extends StatelessWidget {
                     child: Text(
                       '共${chapter.pageCount}页',
                       style: Theme.of(context).textTheme.overline?.copyWith(
-                            color: !faintedChapters.contains(chapter.cid) //
-                                ? Colors.grey[800]
-                                : (faintTextColor ?? Colors.grey[600]!.withOpacity(0.7)),
+                            color: showFaintColor && faintedChapters.contains(chapter.cid) //
+                                ? (faintTextColor ?? Colors.grey[600]!.withOpacity(0.7))
+                                : Colors.grey[800],
                           ),
                     ),
                   ),
@@ -76,9 +82,9 @@ class ChapterGridView extends StatelessWidget {
             ),
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              backgroundColor: highlightedChapters.contains(chapter?.cid)
+              backgroundColor: showHighlight && highlightedChapters.contains(chapter?.cid)
                   ? (highlightColor ?? Colors.deepOrange.withOpacity(0.3)) //
-                  : highlighted2Chapters.contains(chapter?.cid)
+                  : showHighlight2 && highlighted2Chapters.contains(chapter?.cid)
                       ? (highlight2Color ?? Colors.deepOrange.withOpacity(0.08)) //
                       : null,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,

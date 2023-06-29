@@ -40,7 +40,7 @@ class AppSettingPrefs {
   static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
   static const _appBarSwitchBehaviorKey = IntKey('AppSettingPrefs_appBarSwitchBehavior');
   static const _useChapterAssistantKey = BoolKey('AppSettingPrefs_useChapterAssistant');
-  static const _showNotWifiHintKey = BoolKey('AppSettingPrefs_showNotWifiHint');
+  static const _assistantActionSettingKey = StringListKey('AppSettingPrefs_assistantActionSetting');
 
   static List<TypedKey> get viewSettingKeys => [
         _viewDirectionKey,
@@ -56,7 +56,7 @@ class AppSettingPrefs {
         _hideAppBarWhenEnterKey,
         _appBarSwitchBehaviorKey,
         _useChapterAssistantKey,
-        _showNotWifiHintKey,
+        _assistantActionSettingKey,
       ];
 
   static Future<ViewSetting> _loadViewSetting() async {
@@ -76,7 +76,7 @@ class AppSettingPrefs {
       hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
       appBarSwitchBehavior: AppBarSwitchBehaviorExtension.fromInt(prefs.safeGet<int>(_appBarSwitchBehaviorKey) ?? def.appBarSwitchBehavior.toInt()),
       useChapterAssistant: prefs.safeGet<bool>(_useChapterAssistantKey) ?? def.useChapterAssistant,
-      showNotWifiHint: prefs.safeGet<bool>(_showNotWifiHintKey) ?? def.showNotWifiHint,
+      assistantActionSetting: AssistantActionSetting.fromStringList(prefs.safeGet<List<String>>(_assistantActionSettingKey) ?? def.assistantActionSetting.toStringList()),
     );
   }
 
@@ -96,7 +96,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
     await prefs.safeSet<int>(_appBarSwitchBehaviorKey, setting.appBarSwitchBehavior.toInt());
     await prefs.safeSet<bool>(_useChapterAssistantKey, setting.useChapterAssistant);
-    await prefs.safeSet<bool>(_showNotWifiHintKey, setting.showNotWifiHint);
+    await prefs.safeSet<List<String>>(_assistantActionSettingKey, setting.assistantActionSetting.toStringList());
   }
 
   // ==========
@@ -152,7 +152,7 @@ class AppSettingPrefs {
   static const _readGroupBehaviorKey = IntKey('AppSettingPrefs_readGroupBehavior');
   static const _regularGroupRowsKey = IntKey('AppSettingPrefs_regularGroupRows');
   static const _otherGroupRowsKey = IntKey('AppSettingPrefs_otherGroupRows');
-  static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
+  static const _showLastHistoryKey = BoolKey('AppSettingPrefs_showLastHistory');
   static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
   static const _homepageShowMoreMangasKey = BoolKey('AppSettingPrefs_homepageShowMoreMangas');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
@@ -162,6 +162,8 @@ class AppSettingPrefs {
   static const _clickToSearchKey = BoolKey('AppSettingPrefs_clickToSearch');
   static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
   static const _enableAutoCheckinKey = BoolKey('AppSettingPrefs_enableAutoCheckin');
+  static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
+  static const _showNotWifiHintKey = BoolKey('AppSettingPrefs_showNotWifiHint');
 
   static List<TypedKey> get uiSettingKeys => [
         _showTwoColumnsKey,
@@ -173,7 +175,7 @@ class AppSettingPrefs {
         _readGroupBehaviorKey,
         _regularGroupRowsKey,
         _otherGroupRowsKey,
-        _allowErrorToastKey,
+        _showLastHistoryKey,
         _overviewLoadAllKey,
         _homepageShowMoreMangasKey,
         _includeUnreadInHomeKey,
@@ -183,6 +185,8 @@ class AppSettingPrefs {
         _clickToSearchKey,
         _alwaysOpenNewListPageKey,
         _enableAutoCheckinKey,
+        _allowErrorToastKey,
+        _showNotWifiHintKey,
       ];
 
   static Future<UiSetting> _loadUiSetting() async {
@@ -198,7 +202,7 @@ class AppSettingPrefs {
       readGroupBehavior: ReadGroupBehaviorExtension.fromInt(prefs.safeGet<int>(_readGroupBehaviorKey) ?? def.readGroupBehavior.toInt()),
       regularGroupRows: prefs.safeGet<int>(_regularGroupRowsKey) ?? def.regularGroupRows,
       otherGroupRows: prefs.safeGet<int>(_otherGroupRowsKey) ?? def.otherGroupRows,
-      allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
+      showLastHistory: prefs.safeGet<bool>(_showLastHistoryKey) ?? def.showLastHistory,
       overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
       homepageShowMoreMangas: prefs.safeGet<bool>(_homepageShowMoreMangasKey) ?? def.homepageShowMoreMangas,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
@@ -208,6 +212,8 @@ class AppSettingPrefs {
       clickToSearch: prefs.safeGet<bool>(_clickToSearchKey) ?? def.clickToSearch,
       alwaysOpenNewListPage: prefs.safeGet<bool>(_alwaysOpenNewListPageKey) ?? def.alwaysOpenNewListPage,
       enableAutoCheckin: prefs.safeGet<bool>(_enableAutoCheckinKey) ?? def.enableAutoCheckin,
+      allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
+      showNotWifiHint: prefs.safeGet<bool>(_showNotWifiHintKey) ?? def.showNotWifiHint,
     );
   }
 
@@ -223,7 +229,7 @@ class AppSettingPrefs {
     await prefs.safeSet<int>(_readGroupBehaviorKey, setting.readGroupBehavior.toInt());
     await prefs.safeSet<int>(_regularGroupRowsKey, setting.regularGroupRows);
     await prefs.safeSet<int>(_otherGroupRowsKey, setting.otherGroupRows);
-    await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
+    await prefs.safeSet<bool>(_showLastHistoryKey, setting.showLastHistory);
     await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
     await prefs.safeSet<bool>(_homepageShowMoreMangasKey, setting.homepageShowMoreMangas);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
@@ -233,6 +239,8 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_clickToSearchKey, setting.clickToSearch);
     await prefs.safeSet<bool>(_alwaysOpenNewListPageKey, setting.alwaysOpenNewListPage);
     await prefs.safeSet<bool>(_enableAutoCheckinKey, setting.enableAutoCheckin);
+    await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
+    await prefs.safeSet<bool>(_showNotWifiHintKey, setting.showNotWifiHint);
   }
 
   // =============

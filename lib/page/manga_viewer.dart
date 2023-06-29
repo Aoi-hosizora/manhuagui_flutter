@@ -42,7 +42,6 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
-import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -467,7 +466,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _updateHistory();
 
       // 8. 显示网络使用提醒
-      if (widget.onlineMode && AppSetting.instance.view.showNotWifiHint) {
+      if (widget.onlineMode && AppSetting.instance.ui.showNotWifiHint) {
         var conn = await Connectivity().checkConnectivity();
         if (conn != ConnectivityResult.wifi) {
           ScaffoldMessenger.of(context).clearSnackBars();
@@ -1111,6 +1110,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 chapter: chapter,
                 chapterNeededData: neededData,
                 onHistoryUpdated: null /* 不显示，不会触发 */,
+                onFootprintAdded: null /* 不显示，不会触发 */,
                 onFootprintRemoved: null /* 不显示，不会触发 */,
                 allowDeletingHistory: false /* => 不显示 "删除阅读历史" */,
                 toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
@@ -1361,6 +1361,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       builder: (c) => SimpleDialog(
         title: Text('《${widget.mangaTitle}》${_data!.chapterTitle}'),
         children: [
+          IconTextDialogOption(icon: Icon(Icons.refresh), text: Text('重新加载本章节'), popWhenPress: c, onPressed: _loadData),
+          IconTextDialogOption(icon: Icon(Icons.share), text: Text('分享章节'), popWhenPress: c, onPressed: _toShareChapter),
+          IconTextDialogOption(icon: Icon(Icons.open_in_browser), text: Text('用浏览器打开'), popWhenPress: c, onPressed: () => launchInBrowser(context: context, url: _data?.chapterUrl ?? widget.mangaUrl)),
+          Divider(height: 16, thickness: 1),
           IconTextDialogOption(icon: Icon(Icons.loyalty), text: Text('查看订阅情况'), popWhenPress: c, onPressed: _toSubscribe),
           IconTextDialogOption(icon: Icon(Icons.menu), text: Text('查看章节列表'), popWhenPress: c, onPressed: _showToc),
           IconTextDialogOption(icon: Icon(Icons.download), text: Text('下载漫画'), popWhenPress: c, onPressed: _toDownloadManga),
@@ -1368,21 +1372,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           IconTextDialogOption(icon: Icon(Icons.subject), text: Text('查看章节详情'), popWhenPress: c, onPressed: _showDetails),
           IconTextDialogOption(icon: Icon(Icons.forum), text: Text('查看漫画评论'), popWhenPress: c, onPressed: _showComments),
           IconTextDialogOption(icon: Icon(CustomIcons.image_timeline), text: Text('打开页面一览'), popWhenPress: c, onPressed: _showOverview),
-          Divider(height: 16, thickness: 1),
-          IconTextDialogOption(icon: Icon(Icons.refresh), text: Text('重新加载本章节'), popWhenPress: c, onPressed: _loadData),
-          IconTextDialogOption(icon: Icon(Icons.share), text: Text('分享章节'), popWhenPress: c, onPressed: _toShareChapter),
-          IconTextDialogOption(icon: Icon(Icons.open_in_browser), text: Text('用浏览器打开'), popWhenPress: c, onPressed: () => launchInBrowser(context: context, url: _data?.chapterUrl ?? widget.mangaUrl)),
         ],
       ),
     );
-  }
-
-  void _toggleAppBarVisibility(int imageIndex /* start from 0 */) {
-    _ScreenHelper.toggleAppBarVisibility(
-      show: !_ScreenHelper.showAppBar,
-      fullscreen: _setting.fullscreen,
-    );
-    if (mounted) setState(() {});
   }
 
   double _getChapterAssistantBottomPosition() {
@@ -1393,6 +1385,45 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     );
     var extraPageTitleBoxHeight = _lastExtraPageKey.currentState?.getTitleBoxHeight();
     return (extraPageHeight ?? 0) - (extraPageTitleBoxHeight ?? 0);
+  }
+
+  Tuple3<String /* tooltip */, IconData /* button icon */, void Function() /* callback */ >? _decideAssistantAction({
+    bool leftTop = false,
+    bool rightTop = false,
+    bool leftBottom = false,
+    bool rightBottom = false,
+  }) {
+    return AppSetting.instance.view.assistantActionSetting.decideAction<Tuple3<String, IconData, void Function()>>(
+      leftTop: leftTop,
+      rightTop: rightTop,
+      leftBottom: leftBottom,
+      rightBottom: rightBottom,
+      rtlOperation: _isRtlOperation,
+      // ===========================
+      toc: Tuple3('打开漫画章节列表', Icons.menu, _showToc),
+      reverse: Tuple3('左右翻转阅读方向', Icons.swap_horiz, () async {
+        await updateViewSettingViewDirection(_setting.viewDirection.reverse());
+        if (mounted) setState(() {});
+      }),
+      config: Tuple3('更改阅读设置', Icons.settings, _showSettingDialog),
+      hideOnce: Tuple3('暂时隐藏 "单手章节跳转助手"', Icons.visibility_off, () {
+        _hideAssistantOnce = !_hideAssistantOnce;
+        if (mounted) setState(() {});
+      }),
+      disable: Tuple3('禁用 "单手章节跳转助手"', Icons.cancel_outlined, () async {
+        await updateViewSettingUseChapterAssistant(!_setting.useChapterAssistant);
+        if (mounted) setState(() {});
+      }),
+      pop: Tuple3('结束阅读', Icons.arrow_back, () => Navigator.of(context).maybePop()),
+    );
+  }
+
+  void _toggleAppBarVisibility(int imageIndex /* start from 0 */) {
+    _ScreenHelper.toggleAppBarVisibility(
+      show: !_ScreenHelper.showAppBar,
+      fullscreen: _setting.fullscreen,
+    );
+    if (mounted) setState(() {});
   }
 
   @override
@@ -1432,30 +1463,20 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                             title,
                             style: Theme.of(context).textTheme.subtitle1?.copyWith(color: Colors.white),
                           ),
-                          onLongPress: () {
-                            HapticFeedback.vibrate(); // TODO move to manga_dialog.dart
-                            showDialog(
-                              context: context,
-                              builder: (c) => SimpleDialog(
-                                title: Text(title),
-                                children: [
-                                  IconTextDialogOption(
-                                    icon: Icon(Icons.copy),
-                                    text: Text('复制标题'),
-                                    popWhenPress: c,
-                                    onPressed: () => copyText(title, showToast: true),
-                                  ),
-                                  if (_data != null)
-                                    IconTextDialogOption(
-                                      icon: Icon(Icons.subject),
-                                      text: Text('查看章节详情'),
-                                      popWhenPress: c,
-                                      onPressed: () => _showDetails(),
-                                    ),
-                                ],
-                              ),
-                            );
-                          },
+                          onTap: () => showPopupMenuForChapterTitle(
+                            context: context,
+                            mangaTitle: widget.mangaTitle,
+                            chapterTitle: title,
+                            onDetailsPressed: _showDetails,
+                            vibrate: false,
+                          ),
+                          onLongPress: () => showPopupMenuForChapterTitle(
+                            context: context,
+                            mangaTitle: widget.mangaTitle,
+                            chapterTitle: title,
+                            onDetailsPressed: _showDetails,
+                            vibrate: true,
+                          ),
                         ),
                       ),
                       leading: AppBarActionButton(
@@ -1518,16 +1539,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                               child: IconTextMenuItem(Icons.refresh, '重新加载本章节'),
                               onTap: () => _loadData(),
                             ),
-                            PopupMenuItem(
-                              child: GestureDetector(
-                                child: IconTextMenuItem(Icons.share, '分享本章节'),
-                                onLongPress: () async {
-                                  HapticFeedback.vibrate();
-                                  Navigator.of(context).pop(); // hide button menu
-                                  _toShareChapter(short: true);
-                                },
-                              ),
+                            LongPressablePopupMenuItem(
+                              child: IconTextMenuItem(Icons.share, '分享本章节'),
                               onTap: () => _toShareChapter(),
+                              onLongPressed: () async {
+                                HapticFeedback.vibrate();
+                                _toShareChapter(short: true);
+                              },
                             ),
                             PopupMenuItem(
                               child: IconTextMenuItem(Icons.open_in_browser, '用浏览器打开'),
@@ -1657,24 +1675,33 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 // ****************************************************************
                 // 单手章节跳转助手
                 // ****************************************************************
-                ...(({required bool left, required String text, String? disableText, required void Function() action, void Function()? longPress, required bool disable}) => //
+                ...(({
+                  required bool leftSide,
+                  required bool toPrevious,
+                  required String text,
+                  String? disableText,
+                  required void Function() action,
+                  void Function()? longPress,
+                  required bool disable,
+                }) =>
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           stops: const [0, 0.5, 1],
-                          colors: !disable
-                              ? [
-                                  Colors.orange[700]!.withOpacity(0.75),
-                                  Colors.orange[900]!.withOpacity(0.8),
-                                  Colors.orange[700]!.withOpacity(0.75),
-                                ]
-                              : [
-                                  Colors.orange[400]!.withOpacity(0.55),
-                                  Colors.orange[700]!.withOpacity(0.55),
-                                  Colors.orange[400]!.withOpacity(0.55),
-                                ],
+                          colors: [
+                            if (toPrevious) ...[
+                              Colors.blue[!disable ? 400 : 200]!.withOpacity(!disable ? 0.7 : 0.5),
+                              Colors.blue[!disable ? 700 : 400]!.withOpacity(!disable ? 0.8 : 0.5),
+                              Colors.blue[!disable ? 400 : 200]!.withOpacity(!disable ? 0.7 : 0.5),
+                            ],
+                            if (!toPrevious) ...[
+                              Colors.orange[!disable ? 600 : 400]!.withOpacity(!disable ? 0.7 : 0.5),
+                              Colors.orange[!disable ? 900 : 600]!.withOpacity(!disable ? 0.8 : 0.5),
+                              Colors.orange[!disable ? 600 : 400]!.withOpacity(!disable ? 0.7 : 0.5),
+                            ],
+                          ],
                         ),
                       ),
                       child: Material(
@@ -1687,23 +1714,20 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                           child: Column(
                             children: [
                               // top button
-                              // TODO buttons (left<->right, menu, config, hide_once, always_hide, pop)
-                              Padding(
-                                padding: EdgeInsets.only(top: 5),
-                                child: Tooltip(
-                                  message: left ? '结束阅读' : '暂时隐藏 "单手章节跳转助手"',
-                                  child: InkWell(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: Icon(left ? Icons.arrow_back : Icons.visibility_off, size: 20, color: Colors.white),
+                              _decideAssistantAction(leftTop: leftSide, rightTop: !leftSide)?.let(
+                                    (tup) => Tooltip(
+                                      message: tup.item1,
+                                      child: InkWell(
+                                        child: Padding(
+                                          padding: EdgeInsets.all((10 * 2 + 28 - 22) / 2),
+                                          child: Icon(tup.item2, size: 22, color: Colors.white),
+                                        ),
+                                        onTap: tup.item3,
+                                      ),
                                     ),
-                                    onTap: left //
-                                        ? () => Navigator.of(context).maybePop()
-                                        : () => mountedSetState(() => _hideAssistantOnce = !_hideAssistantOnce),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 5 + 8 * 2 + 20), // make column symmetric
+                                  ) ??
+                                  SizedBox(height: (10 * 2 + 28 - 22) + 22),
+
                               // main navigation
                               Expanded(
                                 child: Padding(
@@ -1713,7 +1737,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                     children: [
                                       if (!disable)
                                         Transform.rotate(
-                                          angle: left ? math.pi : 0,
+                                          angle: leftSide ? math.pi : 0,
                                           child: Icon(Icons.arrow_right_alt, size: 28, color: Colors.white),
                                         ),
                                       if (disable)
@@ -1733,20 +1757,21 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                                   ),
                                 ),
                               ),
+
                               // bottom button
-                              Padding(
-                                padding: EdgeInsets.only(bottom: 5),
-                                child: Tooltip(
-                                  message: '打开漫画章节列表',
-                                  child: InkWell(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: Icon(Icons.menu, size: 20, color: Colors.white),
+                              _decideAssistantAction(leftBottom: leftSide, rightBottom: !leftSide)?.let(
+                                    (tup) => Tooltip(
+                                      message: tup.item1,
+                                      child: InkWell(
+                                        child: Padding(
+                                          padding: EdgeInsets.all((10 * 2 + 28 - 22) / 2),
+                                          child: Icon(tup.item2, size: 22, color: Colors.white),
+                                        ),
+                                        onTap: tup.item3,
+                                      ),
                                     ),
-                                    onTap: _showToc,
-                                  ),
-                                ),
-                              ),
+                                  ) ??
+                                  SizedBox(height: (10 * 2 + 28 - 22) + 22),
                             ],
                           ),
                         ),
@@ -1762,7 +1787,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
                             ? const SizedBox.shrink() //
                             : buildHandler(
-                                left: true,
+                                leftSide: true,
+                                toPrevious: !_isRtlOperation,
                                 text: !_isRtlOperation ? '阅读上一章节' : '阅读下一章节',
                                 disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasPrevChapter != true : _data!.chapterNeighbor?.hasNextChapter != true,
                                 disableText: !_isRtlOperation ? '暂无上一章节' : '暂无下一章节',
@@ -1780,7 +1806,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         child: !(_data != null && _inLastExtraPage && !_hideAssistantOnce && _setting.useChapterAssistant)
                             ? const SizedBox.shrink() //
                             : buildHandler(
-                                left: false,
+                                leftSide: false,
+                                toPrevious: _isRtlOperation,
                                 text: !_isRtlOperation ? '阅读下一章节' : '阅读上一章节',
                                 disable: !_isRtlOperation ? _data!.chapterNeighbor?.hasNextChapter != true : _data!.chapterNeighbor?.hasPrevChapter != true,
                                 disableText: !_isRtlOperation ? '暂无下一章节' : '暂无上一章节',

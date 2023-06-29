@@ -94,40 +94,34 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
               ),
               itemBuilder: (_) => [
                 PopupMenuItem(
-                  child: IconTextMenuItem(Icons.refresh, '重新加载图片'),
+                  child: IconTextMenuItem(Icons.refresh, '重新加载图片　　'), // "　" for menu width
                   onTap: () => _photoViewKey.currentState?.reload(alsoEvict: true),
                 ),
-                PopupMenuItem(
-                  child: GestureDetector(
-                    child: IconTextMenuItem(Icons.share, '分享图片链接　　'), // 　 for width and long press
-                    onLongPress: () {
-                      HapticFeedback.vibrate();
-                      Navigator.of(context).pop(); // hide button menu
-                      shareText(text: url);
-                    },
-                  ),
+                LongPressablePopupMenuItem(
+                  child: IconTextMenuItem(Icons.share, '分享图片链接'),
                   onTap: () => shareText(text: '【${widget.title}】$url'),
+                  onLongPressed: () {
+                    HapticFeedback.vibrate();
+                    shareText(text: url);
+                  },
                 ),
-                PopupMenuItem(
-                  child: GestureDetector(
-                    child: IconTextMenuItem(MdiIcons.imageMove, '分享图片'),
-                    onLongPress: () async {
-                      HapticFeedback.vibrate();
-                      Navigator.of(context).pop(); // hide button menu
-                      var filepath = await getCachedOrDownloadedFilepath(url: url);
-                      if (filepath == null) {
-                        Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
-                      } else {
-                        await shareFile(filepath: filepath, type: 'image/*', text: '【${widget.title}】$url');
-                      }
-                    },
-                  ),
+                LongPressablePopupMenuItem(
+                  child: IconTextMenuItem(MdiIcons.imageMove, '分享图片'),
                   onTap: () async {
                     var filepath = await getCachedOrDownloadedFilepath(url: url);
                     if (filepath == null) {
                       Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
                     } else {
                       await shareFile(filepath: filepath, type: 'image/*');
+                    }
+                  },
+                  onLongPressed: () async {
+                    HapticFeedback.vibrate();
+                    var filepath = await getCachedOrDownloadedFilepath(url: url);
+                    if (filepath == null) {
+                      Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
+                    } else {
+                      await shareFile(filepath: filepath, type: 'image/*', text: '【${widget.title}】$url');
                     }
                   },
                 ),

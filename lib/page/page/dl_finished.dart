@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
+import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 下载管理页-已完成
 class DlFinishedSubPage extends StatefulWidget {
@@ -41,16 +44,19 @@ class DlFinishedSubPage extends StatefulWidget {
 
 class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKeepAliveClientMixin {
   final _msController = MultiSelectableController<ValueKey<int>>();
+  final _cancelHandlers = <VoidCallback>[];
 
   @override
   void initState() {
     super.initState();
     widget.actionController.addAction('exitMultiSelectionMode', () => _msController.exitMultiSelectionMode());
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
   }
 
   @override
   void dispose() {
     widget.actionController.removeAction('exitMultiSelectionMode');
+    _cancelHandlers.forEach((c) => c.call());
     _msController.dispose();
     super.dispose();
   }
@@ -110,6 +116,7 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                       showNewBadge: false,
                       highlightedChapters: [widget.history?.chapterId ?? 0],
                       highlighted2Chapters: [widget.history?.lastChapterId ?? 0],
+                      showHighlight2: AppSetting.instance.ui.showLastHistory,
                       faintedChapters: widget.footprints?.keys.toList() ?? [],
                       customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                         entity: widget.mangaEntity.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,

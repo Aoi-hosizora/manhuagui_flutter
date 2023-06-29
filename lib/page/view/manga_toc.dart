@@ -21,6 +21,9 @@ class MangaTocView extends StatefulWidget {
     this.highlighted2Chapters = const [],
     this.faintTextColor,
     this.faintedChapters = const [],
+    this.showHighlight = true,
+    this.showHighlight2 = true,
+    this.showFaintColor = true,
     this.showNewBadge = true,
     this.customBadgeBuilder,
     this.itemBuilder,
@@ -43,6 +46,9 @@ class MangaTocView extends StatefulWidget {
   final List<int> highlighted2Chapters;
   final Color? faintTextColor;
   final List<int> faintedChapters;
+  final bool showHighlight;
+  final bool showHighlight2;
+  final bool showFaintColor;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
@@ -144,6 +150,9 @@ class _MangaTocViewState extends State<MangaTocView> {
       highlighted2Chapters: widget.highlighted2Chapters,
       faintTextColor: widget.faintTextColor,
       faintedChapters: widget.faintedChapters,
+      showHighlight: widget.showHighlight,
+      showHighlight2: widget.showHighlight2,
+      showFaintColor: widget.showFaintColor,
       extrasInStack: (chapter) {
         if (chapter == null) {
           return [];

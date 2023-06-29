@@ -495,12 +495,15 @@ Future<int?> _copyToDB(DatabaseExecutor db, DatabaseExecutor db2, TableMetadata 
     }
     for (var r in results) {
       if (merge) {
+        if (metadata.primaryKeys.any((col) => r[col] == null)) {
+          continue; // null primary key, almost unreachable
+        }
         var whereStat = metadata.primaryKeys.map((col) => '$col == ?').join(' AND ');
         var whereArgs = metadata.primaryKeys.map((col) => r[col]!).toList();
         await db2.rawDelete('DELETE FROM ${metadata.tableName} WHERE $whereStat', whereArgs);
       }
       var valueStat = metadata.columns.map((_) => '?').join(', ');
-      var valueArgs = metadata.columns.map((col) => r[col]!).toList();
+      var valueArgs = metadata.columns.map((col) => r[col]).toList();
       await db2.rawInsert('INSERT INTO ${metadata.tableName} (${metadata.columns.join(', ')}) VALUES ($valueStat)', valueArgs);
     }
     return results.length;

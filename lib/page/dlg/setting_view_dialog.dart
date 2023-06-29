@@ -4,6 +4,7 @@ import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页-阅读设置 [showViewSettingDialog], [ViewSettingSubPage]
 
@@ -49,7 +50,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
   late var _appBarSwitchBehavior = widget.setting.appBarSwitchBehavior;
   late var _useChapterAssistant = widget.setting.useChapterAssistant;
-  late var _showNotWifiHint = widget.setting.showNotWifiHint;
+  late var _assistantActionSetting = widget.setting.assistantActionSetting;
 
   ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
@@ -65,7 +66,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         hideAppBarWhenEnter: _hideAppBarWhenEnter,
         appBarSwitchBehavior: _appBarSwitchBehavior,
         useChapterAssistant: _useChapterAssistant,
-        showNotWifiHint: _showNotWifiHint,
+        assistantActionSetting: _assistantActionSetting,
       );
 
   void _setToDefault() {
@@ -83,7 +84,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
     _appBarSwitchBehavior = setting.appBarSwitchBehavior;
     _useChapterAssistant = setting.useChapterAssistant;
-    _showNotWifiHint = setting.showNotWifiHint;
+    _assistantActionSetting = setting.assistantActionSetting;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -228,13 +229,16 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
-        SettingSwitcherView(
-          title: '使用非WIFI网络时提醒',
-          value: _showNotWifiHint,
-          onChanged: (b) {
-            _showNotWifiHint = b;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
+        SettingButtonView(
+          title: '章节跳转助手按钮动作',
+          buttonChild: Text('设置'),
+          onPressed: () async {
+            var result = await showAssistantSettingDialog(context: context, setting: _assistantActionSetting);
+            if (result != null) {
+              _assistantActionSetting = result;
+              widget.onSettingChanged.call(_newestSetting);
+              if (mounted) setState(() {});
+            }
           },
         ),
       ],
@@ -268,13 +272,13 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
               child: Text('恢复默认'),
               onPressed: () => action.invoke(),
             ),
+            if (anotherButtonBuilder != null) //
+              anotherButtonBuilder.call(c),
           ],
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (anotherButtonBuilder != null) //
-              anotherButtonBuilder.call(c),
             TextButton(
               child: Text('确定'),
               onPressed: () async {
@@ -293,4 +297,138 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
     ),
   );
   return ok ?? false;
+}
+
+Future<void> updateViewSettingViewDirection(ViewDirection viewDirection) async {
+  var setting = AppSetting.instance.view;
+  var newSetting = setting.copyWith(viewDirection: viewDirection);
+  AppSetting.instance.update(view: newSetting, alsoFireEvent: true);
+  await AppSettingPrefs.saveViewSetting();
+}
+
+Future<void> updateViewSettingUseChapterAssistant(bool useChapterAssistant) async {
+  var setting = AppSetting.instance.view;
+  var newSetting = setting.copyWith(useChapterAssistant: useChapterAssistant);
+  AppSetting.instance.update(view: newSetting, alsoFireEvent: true);
+  await AppSettingPrefs.saveViewSetting();
+}
+
+class AssistantSettingSubPage extends StatefulWidget {
+  const AssistantSettingSubPage({
+    Key? key,
+    required this.action,
+    required this.setting,
+    required this.onSettingChanged,
+  }) : super(key: key);
+
+  final ActionController action;
+  final AssistantActionSetting setting;
+  final void Function(AssistantActionSetting) onSettingChanged;
+
+  @override
+  State<AssistantSettingSubPage> createState() => _AssistantSettingSubPageState();
+}
+
+class _AssistantSettingSubPageState extends State<AssistantSettingSubPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.action.addAction(_setToDefault);
+  }
+
+  @override
+  void dispose() {
+    widget.action.removeAction();
+    super.dispose();
+  }
+
+  late var _leftTop = widget.setting.leftTop;
+  late var _rightTop = widget.setting.rightTop;
+  late var _leftBottom = widget.setting.leftBottom;
+  late var _rightBottom = widget.setting.rightBottom;
+  late var _allowReverse = widget.setting.allowReverse;
+
+  AssistantActionSetting get _newestSetting => AssistantActionSetting(
+        leftTop: _leftTop,
+        rightTop: _rightTop,
+        leftBottom: _leftBottom,
+        rightBottom: _rightBottom,
+        allowReverse: _allowReverse,
+      );
+
+  void _setToDefault() {
+    var setting = AssistantActionSetting.defaultSetting;
+    _leftTop = setting.leftTop;
+    _rightTop = setting.rightTop;
+    _leftBottom = setting.leftBottom;
+    _rightBottom = setting.rightBottom;
+    _allowReverse = setting.allowReverse;
+    widget.onSettingChanged.call(_newestSetting);
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingDialogView(
+      children: [
+        for (var t in [
+          Tuple3(_leftTop, (s) => _leftTop = s, !_allowReverse ? '左上角的按钮动作' : '"上一章节"上方的按钮动作'),
+          Tuple3(_rightTop, (s) => _rightTop = s, !_allowReverse ? '右上角的按钮动作' : '"下一章节"上方的按钮动作'),
+          Tuple3(_leftBottom, (s) => _leftBottom = s, !_allowReverse ? '左下角的按钮动作' : '"上一章节"下方的按钮动作'),
+          Tuple3(_rightBottom, (s) => _rightBottom = s, !_allowReverse ? '右下角的按钮动作' : '"下一章节"下方的按钮动作'),
+        ])
+          SettingComboBoxView<AssistantAction>(
+            title: t.item3,
+            value: t.item1,
+            values: AssistantAction.values,
+            textBuilder: (s) => s.toOptionTitle(),
+            onChanged: (s) {
+              t.item2.call(s);
+              widget.onSettingChanged.call(_newestSetting);
+              if (mounted) setState(() {});
+            },
+          ),
+        SettingSwitcherView(
+          title: '允许随着左右变更修改按钮动作',
+          value: _allowReverse,
+          onChanged: (b) {
+            _allowReverse = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+      ],
+    );
+  }
+}
+
+Future<AssistantActionSetting?> showAssistantSettingDialog({required BuildContext context, required AssistantActionSetting setting}) async {
+  var action = ActionController();
+  return await showDialog<AssistantActionSetting>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: IconText(
+        icon: Icon(MdiIcons.gestureTapButton, size: 26),
+        text: Text('章节跳转助手按钮动作设置'),
+        space: 12,
+      ),
+      scrollable: true,
+      content: AssistantSettingSubPage(
+        action: action,
+        setting: setting,
+        onSettingChanged: (s) => setting = s,
+      ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actions: [
+        TextButton(child: Text('恢复默认'), onPressed: () => action.invoke()),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(setting)),
+            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(null)),
+          ],
+        ),
+      ],
+    ),
+  );
 }

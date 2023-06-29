@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/user.dart';
+import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/later_manga.dart';
@@ -190,6 +191,34 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
       _checkining = false;
       if (mounted) setState(() {});
     }
+  }
+
+  void _showAutoCheckinPopupMenu() {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('自动登录签到'),
+        content: Text(
+          !AppSetting.instance.ui.enableAutoCheckin //
+              ? '当前自动登录签到功能尚未开启，是否开启该功能？\n\n注：只有在登录漫画柜时勾选 "保存密码" 才能自动登录签到。'
+              : '当前已经开启自动登录签到功能，是否关闭该功能？',
+        ),
+        actions: [
+          TextButton(
+            child: Text(!AppSetting.instance.ui.enableAutoCheckin ? '开启' : '关闭'),
+            onPressed: () async {
+              Navigator.of(c).pop();
+              await updateUiSettingEnableAutoCheckin(!AppSetting.instance.ui.enableAutoCheckin);
+              Fluttertoast.showToast(msg: '自动登录签到功能已' + (AppSetting.instance.ui.enableAutoCheckin ? '开启' : '关闭'));
+            },
+          ),
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(c).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _logout({bool sure = false}) async {
@@ -447,7 +476,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                 child: ActionRowView.four(
                   action1: ActionItem.simple('用户中心', Icons.account_circle, () => launchInBrowser(context: context, url: USER_CENTER_URL)),
                   action2: ActionItem.simple('站内信息', Icons.message, () => launchInBrowser(context: context, url: MESSAGE_URL)),
-                  action3: ActionItem.simple('登录签到', !_checkining ? Icons.event_available : null, () => _checkin(), enable: !_checkining), // TODO 长按弹框
+                  action3: ActionItem.simple('登录签到', !_checkining ? Icons.event_available : null, () => _checkin(), longPress: _showAutoCheckinPopupMenu, enable: !_checkining),
                   action4: ActionItem.simple('退出登录', Icons.logout, () => _logout(sure: false)),
                 ),
               ),

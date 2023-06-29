@@ -410,8 +410,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
             ),
           ),
           PageChangedListener(
-            callPageChangedAtEnd: false,
-            onPageChanged: (i) {
+            onPageChangedForScrollUpdate: (i) {
               if (!_controller.indexIsChanging /* for `swipe manually` */ || i == _controller.index /* for `select tabBar` */) {
                 _currentPageIndex = i;
                 if (mounted) setState(() {});

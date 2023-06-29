@@ -85,9 +85,10 @@ class ViewSetting {
     required this.hideAppBarWhenEnter,
     required this.appBarSwitchBehavior,
     required this.useChapterAssistant,
-    required this.showNotWifiHint,
+    required this.assistantActionSetting,
   });
 
+  // 常规设置
   final ViewDirection viewDirection; // 阅读方向
   final bool showPageHint; // 显示阅读页面提示
   final bool showClock; // 显示当前时间提示
@@ -96,12 +97,13 @@ class ViewSetting {
   final bool enablePageSpace; // 显示页面间空白
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
+  // 高级设置
   final int preloadCount; // 预加载章节页数
   final PageNoPosition pageNoPosition; // 每页显示额外页码
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
   final AppBarSwitchBehavior appBarSwitchBehavior; // 切换章节时标题栏行为
   final bool useChapterAssistant; // 使用单手章节跳转助手
-  final bool showNotWifiHint; // 使用非WIFI网络时提醒
+  final AssistantActionSetting assistantActionSetting; // 章节跳转助手按钮动作
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -117,7 +119,7 @@ class ViewSetting {
     hideAppBarWhenEnter: true,
     appBarSwitchBehavior: AppBarSwitchBehavior.keep,
     useChapterAssistant: true,
-    showNotWifiHint: true,
+    assistantActionSetting: AssistantActionSetting.defaultSetting,
   );
 
   ViewSetting copyWith({
@@ -134,7 +136,7 @@ class ViewSetting {
     bool? hideAppBarWhenEnter,
     AppBarSwitchBehavior? appBarSwitchBehavior,
     bool? useChapterAssistant,
-    bool? showNotWifiHint,
+    AssistantActionSetting? assistantActionSetting,
   }) {
     return ViewSetting(
       viewDirection: viewDirection ?? this.viewDirection,
@@ -150,7 +152,7 @@ class ViewSetting {
       hideAppBarWhenEnter: hideAppBarWhenEnter ?? this.hideAppBarWhenEnter,
       appBarSwitchBehavior: appBarSwitchBehavior ?? this.appBarSwitchBehavior,
       useChapterAssistant: useChapterAssistant ?? this.useChapterAssistant,
-      showNotWifiHint: showNotWifiHint ?? this.showNotWifiHint,
+      assistantActionSetting: assistantActionSetting ?? this.assistantActionSetting,
     );
   }
 }
@@ -201,6 +203,194 @@ extension ViewDirectionExtension on ViewDirection {
         return ViewDirection.topToBottomRtl;
     }
     return ViewDirection.leftToRight;
+  }
+
+  ViewDirection reverse() {
+    switch (this) {
+      case ViewDirection.leftToRight:
+        return ViewDirection.rightToLeft;
+      case ViewDirection.rightToLeft:
+        return ViewDirection.leftToRight;
+      case ViewDirection.topToBottom:
+        return ViewDirection.topToBottomRtl;
+      case ViewDirection.topToBottomRtl:
+        return ViewDirection.topToBottom;
+    }
+  }
+}
+
+enum AssistantAction {
+  none,
+  toc,
+  reverse,
+  config,
+  hideOnce,
+  disable,
+  pop,
+}
+
+extension AssistantActionExtension on AssistantAction {
+  String toOptionTitle() {
+    switch (this) {
+      case AssistantAction.none:
+        return '不显示';
+      case AssistantAction.toc:
+        return '漫画章节列表';
+      case AssistantAction.reverse:
+        return '左右翻转方向';
+      case AssistantAction.config:
+        return '阅读设置';
+      case AssistantAction.hideOnce:
+        return '暂时隐藏助手';
+      case AssistantAction.disable:
+        return '禁用助手';
+      case AssistantAction.pop:
+        return '结束阅读';
+    }
+  }
+
+  int toInt() {
+    switch (this) {
+      case AssistantAction.none:
+        return 0;
+      case AssistantAction.toc:
+        return 1;
+      case AssistantAction.reverse:
+        return 2;
+      case AssistantAction.config:
+        return 3;
+      case AssistantAction.hideOnce:
+        return 4;
+      case AssistantAction.disable:
+        return 5;
+      case AssistantAction.pop:
+        return 6;
+    }
+  }
+
+  static AssistantAction fromInt(int i) {
+    switch (i) {
+      case 0:
+        return AssistantAction.none;
+      case 1:
+        return AssistantAction.toc;
+      case 2:
+        return AssistantAction.reverse;
+      case 3:
+        return AssistantAction.config;
+      case 4:
+        return AssistantAction.hideOnce;
+      case 5:
+        return AssistantAction.disable;
+      case 6:
+        return AssistantAction.pop;
+    }
+    return AssistantAction.none;
+  }
+}
+
+class AssistantActionSetting {
+  const AssistantActionSetting({
+    required this.leftTop,
+    required this.rightTop,
+    required this.leftBottom,
+    required this.rightBottom,
+    required this.allowReverse,
+  });
+
+  final AssistantAction leftTop; // 左上角的按钮动作
+  final AssistantAction rightTop; // 右上角的按钮动作
+  final AssistantAction leftBottom; // 左下角的按钮动作
+  final AssistantAction rightBottom; // 右下角的按钮动作
+  final bool allowReverse; // 允许随着左右变更修改按钮动作
+
+  static const defaultSetting = AssistantActionSetting(
+    leftTop: AssistantAction.none,
+    rightTop: AssistantAction.none,
+    leftBottom: AssistantAction.none,
+    rightBottom: AssistantAction.none,
+    allowReverse: false,
+  );
+
+  AssistantActionSetting copyWith({
+    AssistantAction? leftTop,
+    AssistantAction? rightTop,
+    AssistantAction? leftBottom,
+    AssistantAction? rightBottom,
+    bool? allowReverse,
+  }) {
+    return AssistantActionSetting(
+      leftTop: leftTop ?? this.leftTop,
+      rightTop: rightTop ?? this.rightTop,
+      leftBottom: leftBottom ?? this.leftBottom,
+      rightBottom: rightBottom ?? this.rightBottom,
+      allowReverse: allowReverse ?? this.allowReverse,
+    );
+  }
+
+  List<String> toStringList() {
+    return [
+      leftTop.toInt().toString(),
+      rightTop.toInt().toString(),
+      leftBottom.toInt().toString(),
+      rightBottom.toInt().toString(),
+      allowReverse ? '1' : '0',
+    ];
+  }
+
+  static AssistantActionSetting fromStringList(List<String> list) {
+    AssistantAction getFromList(List<String> list, int i, AssistantAction fallback) {
+      if (list.length <= i) {
+        return fallback;
+      }
+      return int.tryParse(list[i])?.let((n) => AssistantActionExtension.fromInt(n)) ?? fallback;
+    }
+
+    return AssistantActionSetting(
+      leftTop: getFromList(list, 0, defaultSetting.leftTop),
+      rightTop: getFromList(list, 1, defaultSetting.rightTop),
+      leftBottom: getFromList(list, 2, defaultSetting.leftBottom),
+      rightBottom: getFromList(list, 3, defaultSetting.rightBottom),
+      allowReverse: list.length <= 4 ? false : list[4] == '1',
+    );
+  }
+
+  T? decideAction<T>({
+    bool leftTop = false,
+    bool rightTop = false,
+    bool leftBottom = false,
+    bool rightBottom = false,
+    bool rtlOperation = false,
+    T? toc,
+    T? reverse,
+    T? config,
+    T? hideOnce,
+    T? disable,
+    T? pop,
+  }) {
+    AssistantAction action;
+    if (!rtlOperation || !allowReverse) {
+      action = leftTop ? this.leftTop : (rightTop ? this.rightTop : (leftBottom ? this.leftBottom : (rightBottom ? this.rightBottom : AssistantAction.none)));
+    } else {
+      action = leftTop ? this.rightTop : (rightTop ? this.leftTop : (leftBottom ? this.rightBottom : (rightBottom ? this.leftBottom : AssistantAction.none)));
+    }
+
+    switch (action) {
+      case AssistantAction.none:
+        return null;
+      case AssistantAction.toc:
+        return toc;
+      case AssistantAction.reverse:
+        return reverse;
+      case AssistantAction.config:
+        return config;
+      case AssistantAction.hideOnce:
+        return hideOnce;
+      case AssistantAction.disable:
+        return disable;
+      case AssistantAction.pop:
+        return pop;
+    }
   }
 }
 
@@ -375,6 +565,7 @@ class UiSetting {
     required this.readGroupBehavior,
     required this.regularGroupRows,
     required this.otherGroupRows,
+    required this.showLastHistory,
     required this.allowErrorToast,
     required this.overviewLoadAll,
     required this.homepageShowMoreMangas,
@@ -385,29 +576,34 @@ class UiSetting {
     required this.clickToSearch,
     required this.alwaysOpenNewListPage,
     required this.enableAutoCheckin,
+    required this.showNotWifiHint,
   });
 
+  // 列表显示设置
   final bool showTwoColumns; // 以双列风格显示列表
   final MangaOrder defaultMangaOrder; // 漫画列表默认排序方式
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final bool highlightRecentMangas; // 高亮最近更新的漫画
+  // 漫画显示设置
   final ReadGroupBehavior readGroupBehavior; // 点击阅读章节分组行为
   final int regularGroupRows; // 单话章节分组显示行数
   final int otherGroupRows; // 其他章节分组显示行数
-  final bool allowErrorToast; // 阅读时允许弹出错误提示
-  // final bool showLastHistory; // 显示上上次阅读历史 // TODO
-  // final bool showFootprints; // 显示章节阅读足迹
+  final bool showLastHistory; // 显示上上次章节阅读历史
   final bool overviewLoadAll; // 章节一览页加载所有图片
+  // 首页显示设置
   final bool homepageShowMoreMangas; // 首页显示更多漫画
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
   final int audienceRankingRows; // 首页受众排行榜显示行数
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
   final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为
+  // 用户交互设置
   final bool clickToSearch; // 点击搜索历史立即搜索
   final bool alwaysOpenNewListPage; // 始终在新页面打开列表
   final bool enableAutoCheckin; // 启用自动登录签到功能
+  final bool allowErrorToast; // 阅读时允许弹出错误提示
+  final bool showNotWifiHint; // 使用非WIFI网络阅读时提醒
 
   static const defaultSetting = UiSetting(
     showTwoColumns: false,
@@ -419,7 +615,7 @@ class UiSetting {
     readGroupBehavior: ReadGroupBehavior.checkFinishReading,
     regularGroupRows: 3,
     otherGroupRows: 1,
-    allowErrorToast: true,
+    showLastHistory: true,
     overviewLoadAll: false,
     homepageShowMoreMangas: false,
     includeUnreadInHome: true,
@@ -429,6 +625,8 @@ class UiSetting {
     clickToSearch: true,
     alwaysOpenNewListPage: false,
     enableAutoCheckin: false,
+    allowErrorToast: true,
+    showNotWifiHint: true,
   );
 
   UiSetting copyWith({
@@ -441,7 +639,7 @@ class UiSetting {
     ReadGroupBehavior? readGroupBehavior,
     int? regularGroupRows,
     int? otherGroupRows,
-    bool? allowErrorToast,
+    bool? showLastHistory,
     bool? overviewLoadAll,
     bool? homepageShowMoreMangas,
     bool? includeUnreadInHome,
@@ -451,6 +649,8 @@ class UiSetting {
     bool? clickToSearch,
     bool? alwaysOpenNewListPage,
     bool? enableAutoCheckin,
+    bool? allowErrorToast,
+    bool? showNotWifiHint,
   }) {
     return UiSetting(
       showTwoColumns: showTwoColumns ?? this.showTwoColumns,
@@ -462,7 +662,7 @@ class UiSetting {
       readGroupBehavior: readGroupBehavior ?? this.readGroupBehavior,
       regularGroupRows: regularGroupRows ?? this.regularGroupRows,
       otherGroupRows: otherGroupRows ?? this.otherGroupRows,
-      allowErrorToast: allowErrorToast ?? this.allowErrorToast,
+      showLastHistory: showLastHistory ?? this.showLastHistory,
       overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
       homepageShowMoreMangas: homepageShowMoreMangas ?? this.homepageShowMoreMangas,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
@@ -472,6 +672,8 @@ class UiSetting {
       clickToSearch: clickToSearch ?? this.clickToSearch,
       alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
       enableAutoCheckin: enableAutoCheckin ?? this.enableAutoCheckin,
+      allowErrorToast: allowErrorToast ?? this.allowErrorToast,
+      showNotWifiHint: showNotWifiHint ?? this.showNotWifiHint,
     );
   }
 }

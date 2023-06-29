@@ -25,9 +25,10 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   late final _keys = List.generate(3, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(3, (_) => ActionController());
   late final _tabs = [
-    Tuple2('书架', ShelfSubPage(key: _keys[0], action: _actions[0])),
-    Tuple2('收藏', FavoriteSubPage(key: _keys[1], action: _actions[1])),
-    Tuple2('阅读历史', HistorySubPage(key: _keys[2], action: _actions[2])),
+    Tuple3('书架', ShelfSubPage(key: _keys[0], action: _actions[0]), true),
+    Tuple3('收藏', FavoriteSubPage(key: _keys[1], action: _actions[1]), false),
+    Tuple3('历史', HistorySubPage(key: _keys[2], action: _actions[2]), false),
+    // TODO add later tab
   ];
   var _currentPageIndex = 0; // for app bar actions only
   final _cancelHandlers = <VoidCallback>[];
@@ -36,6 +37,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
+    _controller.addListener(() => mountedSetState(() => _tabs[_controller.index].item3 = true)); // for lazy loading
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
@@ -111,8 +113,7 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
         ],
       ),
       body: PageChangedListener(
-        callPageChangedAtEnd: false,
-        onPageChanged: (i) {
+        onPageChangedForScrollUpdate: (i) {
           if (!_controller.indexIsChanging || i == _controller.index /* prevent setting to middle page */) {
             // 1. swipe manually => indexIsChanging is false
             // 2. select tabBar => index equals to target index
@@ -123,7 +124,13 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
         child: TabBarView(
           controller: _controller,
           physics: DefaultScrollPhysics.of(context),
-          children: _tabs.map((t) => t.item2).toList(),
+          children: [
+            for (var tab in _tabs)
+              PlaceholderText(
+                state: !tab.item3 ? PlaceholderState.loading : PlaceholderState.normal,
+                childBuilder: (c) => tab.item2,
+              ),
+          ],
         ),
       ),
     );

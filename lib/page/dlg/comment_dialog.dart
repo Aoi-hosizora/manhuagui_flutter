@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
+import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -110,16 +111,22 @@ void showCommentPopupMenuForListAndPage({
           text: Text('选择评论内容'),
           onPressed: () {
             Navigator.of(c).pop();
+            var linkRe = RegExp('https?://.+?(?=[^a-zA-Z0-9:/?=#%_.+~\\[\\]@!\$&*(),;\'\\-]|\$)');
+            var links = linkRe.allMatches(comment.content).map((e) => e.group(0)?.trim()).where((e) => e != null).map((e) => e!).toList();
             showDialog(
               context: context,
               builder: (c) => AlertDialog(
                 title: Text((comment.username == '-' ? '匿名用户' : '"${comment.username}" ') + '的评论内容'),
                 content: SelectableText(comment.content),
                 actions: [
-                  TextButton(
-                    child: Text('提取链接'),
-                    onPressed: () {}, // TODO
-                  ),
+                  if (links.isNotEmpty)
+                    TextButton(
+                      child: Text('提取链接'),
+                      onPressed: () {
+                        Navigator.of(c).pop();
+                        _showLinksDialog(context: context, title: '评论包含的链接', links: links);
+                      },
+                    ),
                   TextButton(
                     child: Text('复制内容'),
                     onPressed: () => copyText(comment.content, showToast: true),
@@ -150,6 +157,41 @@ void showCommentPopupMenuForListAndPage({
             );
           },
         ),
+      ],
+    ),
+  );
+}
+
+void _showLinksDialog({required BuildContext context, required String title, required List<String> links}) {
+  showDialog(
+    context: context,
+    builder: (c) => SimpleDialog(
+      title: Text(title),
+      children: [
+        for (var link in links)
+          TextDialogOption(
+            text: Text(link),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (c) => SimpleDialog(
+                title: Text(link),
+                children: [
+                  IconTextDialogOption(
+                    icon: Icon(Icons.copy),
+                    text: Text('复制链接'),
+                    popWhenPress: c,
+                    onPressed: () => copyText(link, showToast: true),
+                  ),
+                  IconTextDialogOption(
+                    icon: Icon(Icons.open_in_browser),
+                    text: Text('用浏览器打开'),
+                    popWhenPress: c,
+                    onPressed: () => launchInBrowser(context: context, url: link),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     ),
   );

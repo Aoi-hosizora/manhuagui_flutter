@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
@@ -44,6 +45,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
@@ -137,6 +139,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
                   columns: _columns,
                   highlightedChapters: [widget.currReadChapterId],
                   highlighted2Chapters: [widget.lastReadChapterId ?? 0],
+                  showHighlight2: AppSetting.instance.ui.showLastHistory,
                   faintedChapters: widget.footprintChapterIds ?? [],
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,

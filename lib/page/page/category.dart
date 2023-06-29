@@ -24,8 +24,8 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   late final _keys = List.generate(2, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(2, (_) => ActionController());
   late final _tabs = [
-    Tuple2('漫画类别', MangaCategorySubPage(key: _keys[0], action: _actions[0])),
-    Tuple2('作者类别', AuthorCategorySubPage(key: _keys[1], action: _actions[1])),
+    Tuple3('漫画类别', MangaCategorySubPage(key: _keys[0], action: _actions[0]), true),
+    Tuple3('作者类别', AuthorCategorySubPage(key: _keys[1], action: _actions[1]), false),
   ];
   var _currentPageIndex = 0; // for app bar actions only
   final _cancelHandlers = <VoidCallback>[];
@@ -34,6 +34,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
+    _controller.addListener(() => mountedSetState(() => _tabs[_controller.index].item3 = true)); // for lazy loading
     _actions[0].addAction('updateSubPage', () => mountedSetState(() {})); // for manga category page
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
@@ -105,8 +106,7 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
         ],
       ),
       body: PageChangedListener(
-        callPageChangedAtEnd: false,
-        onPageChanged: (i) {
+        onPageChangedForScrollUpdate: (i) {
           if (!_controller.indexIsChanging /* for `swipe manually` */ || i == _controller.index /* for `select tabBar` */) {
             _currentPageIndex = i;
             if (mounted) setState(() {});
@@ -115,7 +115,13 @@ class _CategorySubPageState extends State<CategorySubPage> with SingleTickerProv
         child: TabBarView(
           controller: _controller,
           physics: DefaultScrollPhysics.of(context),
-          children: _tabs.map((t) => t.item2).toList(),
+          children: [
+            for (var tab in _tabs)
+              PlaceholderText(
+                state: !tab.item3 ? PlaceholderState.loading : PlaceholderState.normal,
+                childBuilder: (c) => tab.item2,
+              ),
+          ],
         ),
       ),
     );

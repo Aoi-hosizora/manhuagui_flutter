@@ -46,7 +46,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _readGroupBehavior = widget.setting.readGroupBehavior;
   late var _regularGroupRows = widget.setting.regularGroupRows;
   late var _otherGroupRows = widget.setting.otherGroupRows;
-  late var _allowErrorToast = widget.setting.allowErrorToast;
+  late var _showLastHistory = widget.setting.showLastHistory;
   late var _overviewLoadAll = widget.setting.overviewLoadAll;
   late var _homepageShowMoreMangas = widget.setting.homepageShowMoreMangas;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
@@ -56,6 +56,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _clickToSearch = widget.setting.clickToSearch;
   late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
   late var _enableAutoCheckin = widget.setting.enableAutoCheckin;
+  late var _allowErrorToast = widget.setting.allowErrorToast;
+  late var _showNotWifiHint = widget.setting.showNotWifiHint;
 
   UiSetting get _newestSetting => UiSetting(
         showTwoColumns: _showTwoColumns,
@@ -67,7 +69,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         readGroupBehavior: _readGroupBehavior,
         regularGroupRows: _regularGroupRows,
         otherGroupRows: _otherGroupRows,
-        allowErrorToast: _allowErrorToast,
+        showLastHistory: _showLastHistory,
         overviewLoadAll: _overviewLoadAll,
         homepageShowMoreMangas: _homepageShowMoreMangas,
         includeUnreadInHome: _includeUnreadInHome,
@@ -77,6 +79,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         clickToSearch: _clickToSearch,
         alwaysOpenNewListPage: _alwaysOpenNewListPage,
         enableAutoCheckin: _enableAutoCheckin,
+        allowErrorToast: _allowErrorToast,
+        showNotWifiHint: _showNotWifiHint,
       );
 
   void _setToDefault() {
@@ -90,7 +94,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _readGroupBehavior = setting.readGroupBehavior;
     _regularGroupRows = setting.regularGroupRows;
     _otherGroupRows = setting.otherGroupRows;
-    _allowErrorToast = setting.allowErrorToast;
+    _showLastHistory = setting.showLastHistory;
     _overviewLoadAll = setting.overviewLoadAll;
     _homepageShowMoreMangas = setting.homepageShowMoreMangas;
     _includeUnreadInHome = setting.includeUnreadInHome;
@@ -100,6 +104,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _clickToSearch = setting.clickToSearch;
     _alwaysOpenNewListPage = setting.alwaysOpenNewListPage;
     _enableAutoCheckin = setting.enableAutoCheckin;
+    _allowErrorToast = setting.allowErrorToast;
+    _showNotWifiHint = setting.showNotWifiHint;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -180,7 +186,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingComboBoxView<ReadGroupBehavior>(
           title: '点击阅读章节分组行为',
-          width: 170,
+          width: 150,
           hint: '该选项会影响选择阅读章节分组中某章节时的行为，其中：\n\n'
               '1. 不检查阅读情况：选择任何章节都会直接打开阅读页面，从上次读过的页面开始，继续阅读所选章节；\n'
               '2. 部分阅读时确认：选择已开始阅读但未阅读完的章节时，会弹出选择框，确认是否需要继续阅读还是从头阅读；\n'
@@ -219,11 +225,10 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '阅读时允许弹出错误提示',
-          hint: '此处的错误信息包括："无法获取书架订阅情况"、"无法获取漫画章节列表"。',
-          value: _allowErrorToast,
+          title: '显示上上次章节阅读历史',
+          value: _showLastHistory,
           onChanged: (b) {
-            _allowErrorToast = b;
+            _showLastHistory = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
@@ -330,6 +335,25 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
             if (mounted) setState(() {});
           },
         ),
+        SettingSwitcherView(
+          title: '阅读时允许弹出错误提示',
+          hint: '此处的错误信息包括："无法获取书架订阅情况"、"无法获取漫画章节列表"。',
+          value: _allowErrorToast,
+          onChanged: (b) {
+            _allowErrorToast = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '使用非WIFI网络阅读时提醒',
+          value: _showNotWifiHint,
+          onChanged: (b) {
+            _showNotWifiHint = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
       ],
     );
   }
@@ -379,4 +403,11 @@ Future<bool> showUiSettingDialog({required BuildContext context}) async {
     ),
   );
   return ok ?? false;
+}
+
+Future<void> updateUiSettingEnableAutoCheckin(bool enableAutoCheckin) async {
+  var setting = AppSetting.instance.ui;
+  var newSetting = setting.copyWith(enableAutoCheckin: enableAutoCheckin);
+  AppSetting.instance.update(ui: newSetting, alsoFireEvent: true);
+  await AppSettingPrefs.saveDlSetting();
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
@@ -276,30 +275,18 @@ class _AuthorPageState extends State<AuthorPage> {
       appBar: AppBar(
         title: GestureDetector(
           child: Text(_data?.name ?? widget.name),
-          onLongPress: () {
-            HapticFeedback.vibrate(); // TODO move to author_dialog.dart
-            showDialog(
-              context: context,
-              builder: (c) => SimpleDialog(
-                title: Text(_data?.name ?? widget.name),
-                children: [
-                  IconTextDialogOption(
-                    icon: Icon(Icons.copy),
-                    text: Text('复制标题'),
-                    popWhenPress: c,
-                    onPressed: () => copyText(_data?.name ?? widget.name, showToast: true),
-                  ),
-                  if (_data != null)
-                    IconTextDialogOption(
-                      icon: Icon(Icons.subject),
-                      text: Text('查看作者详情'),
-                      popWhenPress: c,
-                      onPressed: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => AuthorDetailPage(data: _data!))),
-                    ),
-                ],
-              ),
-            );
-          },
+          onTap: () => showPopupMenuForAuthorName(
+            context: context,
+            author: _data,
+            fallbackName: widget.name,
+            vibrate: false,
+          ),
+          onLongPress: () => showPopupMenuForAuthorName(
+            context: context,
+            author: _data,
+            fallbackName: widget.name,
+            vibrate: true,
+          ),
         ),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [

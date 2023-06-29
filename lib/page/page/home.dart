@@ -26,10 +26,10 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
   late final _keys = List.generate(4, (_) => GlobalKey<State<StatefulWidget>>());
   late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
-    Tuple2('推荐', RecommendSubPage(key: _keys[0], action: _actions[0])),
-    Tuple2('更新', RecentSubPage(key: _keys[1], action: _actions[1])),
-    Tuple2('全部', OverallSubPage(key: _keys[2], action: _actions[2])),
-    Tuple2('排行', RankingSubPage(key: _keys[3], action: _actions[3])),
+    Tuple3('推荐', RecommendSubPage(key: _keys[0], action: _actions[0]), true),
+    Tuple3('更新', RecentSubPage(key: _keys[1], action: _actions[1]), false),
+    Tuple3('全部', OverallSubPage(key: _keys[2], action: _actions[2]), false),
+    Tuple3('排行', RankingSubPage(key: _keys[3], action: _actions[3]), false),
   ];
   final _cancelHandlers = <VoidCallback>[];
 
@@ -37,6 +37,7 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
   void initState() {
     super.initState();
     widget.action?.addAction(() => _actions[_controller.index].invoke());
+    _controller.addListener(() => mountedSetState(() => _tabs[_controller.index].item3 = true)); // for lazy loading
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) {
       _keys.where((k) => k.currentState?.mounted == true).forEach((k) => k.currentState?.setState(() {}));
       if (mounted) setState(() {});
@@ -94,10 +95,15 @@ class _HomeSubPageState extends State<HomeSubPage> with SingleTickerProviderStat
         ],
       ),
       body: TabBarView(
-        // TODO lazy load
         controller: _controller,
         physics: DefaultScrollPhysics.of(context),
-        children: _tabs.map((t) => t.item2).toList(),
+        children: [
+          for (var tab in _tabs)
+            PlaceholderText(
+              state: !tab.item3 ? PlaceholderState.loading : PlaceholderState.normal,
+              childBuilder: (c) => tab.item2,
+            ),
+        ],
       ),
     );
   }

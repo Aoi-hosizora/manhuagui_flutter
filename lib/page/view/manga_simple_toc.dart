@@ -17,6 +17,9 @@ class MangaSimpleTocView extends StatelessWidget {
     this.highlighted2Chapters = const [],
     this.faintTextColor,
     this.faintedChapters = const [],
+    this.showHighlight = true,
+    this.showHighlight2 = true,
+    this.showFaintColor = true,
     this.showNewBadge = true,
     this.customBadgeBuilder,
     this.itemBuilder,
@@ -34,6 +37,9 @@ class MangaSimpleTocView extends StatelessWidget {
   final List<int> highlighted2Chapters;
   final Color? faintTextColor;
   final List<int> faintedChapters;
+  final bool showHighlight;
+  final bool showHighlight2;
+  final bool showFaintColor;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
@@ -54,6 +60,9 @@ class MangaSimpleTocView extends StatelessWidget {
       highlighted2Chapters: highlighted2Chapters,
       faintTextColor: faintTextColor,
       faintedChapters: faintedChapters,
+      showHighlight: showHighlight,
+      showHighlight2: showHighlight2,
+      showFaintColor: showFaintColor,
       extrasInStack: (chapter) {
         if (chapter == null) {
           return [];

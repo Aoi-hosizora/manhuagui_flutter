@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/author.dart';
+import 'package:manhuagui_flutter/page/author_detail.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -18,6 +20,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 /// 作者收藏页-修改备注对话框 [showUpdateFavoriteAuthorRemarkDialog]
 /// 作者页-作者收藏对话框 [showPopupMenuForAuthorFavorite]
 /// 作者列表页/收藏作者页-寻找ID对话框 [showFindAuthorByIdDialog]
+/// 作者页-作者名对话框 [showPopupMenuForAuthorName]
 
 // => called by pages which contains author line view (tiny / favorite)
 void showPopupMenuForAuthorList({
@@ -220,6 +223,41 @@ Future<int?> showFindAuthorByIdDialog({
     return null;
   }
   return int.tryParse(controller.text.trim());
+}
+
+void showPopupMenuForAuthorName({required BuildContext context, required Author? author, required String fallbackName, bool vibrate = false}) {
+  if (vibrate) {
+    HapticFeedback.vibrate();
+  }
+
+  showDialog(
+    context: context,
+    builder: (c) => SimpleDialog(
+      title: Text(author?.name ?? fallbackName),
+      children: [
+        IconTextDialogOption(
+          icon: Icon(Icons.copy),
+          text: Text('复制作者名'),
+          popWhenPress: c,
+          onPressed: () => copyText(author?.name ?? fallbackName, showToast: true),
+        ),
+        if (author != null)
+          IconTextDialogOption(
+            icon: Icon(Icons.subject),
+            text: Text('查看作者详情'),
+            popWhenPress: c,
+            onPressed: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => AuthorDetailPage(
+                  data: author,
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 class _DialogHelper {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
@@ -46,6 +47,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
+    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
@@ -284,6 +286,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                     columns: _columns,
                     highlightedChapters: [_history?.chapterId ?? 0],
                     highlighted2Chapters: [_history?.lastChapterId ?? 0],
+                    showHighlight2: AppSetting.instance.ui.showLastHistory,
                     faintedChapters: _footprints?.keys.toList() ?? [],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
