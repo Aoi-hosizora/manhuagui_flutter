@@ -275,6 +275,10 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     super.build(context);
     return WillPopScope(
       onWillPop: () async {
+        if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
+          Navigator.of(context).pop(); // close drawer
+          return false;
+        }
         if (_msController.multiSelecting) {
           _msController.exitMultiSelectionMode();
           return false;

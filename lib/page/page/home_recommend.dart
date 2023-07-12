@@ -9,13 +9,13 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
-import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/manga_group.dart';
 import 'package:manhuagui_flutter/page/manga_random.dart';
 import 'package:manhuagui_flutter/page/sep_category.dart';
 import 'package:manhuagui_flutter/page/sep_favorite.dart';
 import 'package:manhuagui_flutter/page/sep_history.dart';
+import 'package:manhuagui_flutter/page/sep_later.dart';
 import 'package:manhuagui_flutter/page/sep_ranking.dart';
 import 'package:manhuagui_flutter/page/sep_recent.dart';
 import 'package:manhuagui_flutter/page/sep_shelf.dart';
@@ -385,6 +385,8 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
         EventBusManager.instance.fire(ToShelfRequestedEvent());
       } else if (page is SepFavoritePage) {
         EventBusManager.instance.fire(ToFavoriteRequestedEvent());
+      } else if (page is SepLaterPage) {
+        EventBusManager.instance.fire(ToLaterRequestedEvent());
       } else if (page is SepHistoryPage) {
         EventBusManager.instance.fire(ToHistoryRequestedEvent());
       } else if (page is SepRecentPage) {
@@ -432,7 +434,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             : () {
                 if (type == MangaCollectionType.recents) _openSepPage(SepRecentPage());
                 if (type == MangaCollectionType.histories) _openSepPage(SepHistoryPage());
-                if (type == MangaCollectionType.laters) Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()));
+                if (type == MangaCollectionType.laters) _openSepPage(SepLaterPage());
                 if (type == MangaCollectionType.shelves) _openSepPage(SepShelfPage());
                 if (type == MangaCollectionType.favorites) _openSepPage(SepFavoritePage());
                 if (type == MangaCollectionType.downloads) Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => DownloadPage()));
@@ -581,7 +583,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                       ActionRowView.four(
                         action1: ActionItem.simple('我的书架', MdiIcons.bookshelf, () => _openSepPage(SepShelfPage())),
                         action2: ActionItem.simple('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, () => _openSepPage(SepFavoritePage())),
-                        action3: ActionItem.simple('稍后阅读', MdiIcons.bookClockOutline, () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage()))),
+                        action3: ActionItem.simple('稍后阅读', MdiIcons.bookClockOutline, () => _openSepPage(SepLaterPage())),
                         action4: ActionItem.simple('阅读历史', Icons.history, () => _openSepPage(SepHistoryPage())),
                       ),
                       ActionRowView.four(

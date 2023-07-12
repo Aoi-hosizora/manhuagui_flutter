@@ -167,6 +167,17 @@ extension MangaChapterGroupListExtension on List<MangaChapterGroup> {
     return null;
   }
 
+  List<TinyMangaChapter> findWithOlderChapters(int cid) {
+    for (var group in this) {
+      for (var chapter in group.chapters) {
+        if (chapter.cid == cid) {
+          return group.chapters.where((c) => c.number <= chapter.number).toList();
+        }
+      }
+    }
+    return [];
+  }
+
   List<TinyMangaChapter> get allChapters {
     var out = expand((group) => group.chapters).toList();
     out.sort((a, b) => a.cid.compareTo(b.cid)); // sort through comparing with cid rather than number

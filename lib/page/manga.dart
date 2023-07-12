@@ -85,7 +85,7 @@ class _MangaPageState extends State<MangaPage> {
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) => _updateByEvent(shelfEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) => _updateByEvent(favoriteEvent: ev)));
-    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
   }
 
@@ -300,7 +300,7 @@ class _MangaPageState extends State<MangaPage> {
         _laterManga = newLater;
         await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
         if (changedExcludeCover) {
-          EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: _data!.mid, added: false, fromMangaPage: true));
+          EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: _data!.mid, added: false, fromMangaPage: true));
         }
         if (mounted) setState(() {});
       }
@@ -313,7 +313,7 @@ class _MangaPageState extends State<MangaPage> {
     DownloadUpdatedEvent? downloadEvent,
     ShelfUpdatedEvent? shelfEvent,
     FavoriteUpdatedEvent? favoriteEvent,
-    LaterMangaUpdatedEvent? laterEvent,
+    LaterUpdatedEvent? laterEvent,
     FootprintUpdatedEvent? footprintEvent,
   }) async {
     if (authEvent != null) {
@@ -985,7 +985,10 @@ class _MangaPageState extends State<MangaPage> {
       onFootprintAdded: forMangaPage //
           ? (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp)
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
-      onFootprintRemoved: forMangaPage //
+      onFootprintsAdded: forMangaPage //
+          ? (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp))
+          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
+      onFootprintsRemoved: forMangaPage //
           ? (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key)))
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
     );

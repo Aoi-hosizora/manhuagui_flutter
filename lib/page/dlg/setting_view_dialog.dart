@@ -409,7 +409,7 @@ Future<AssistantActionSetting?> showAssistantSettingDialog({required BuildContex
     builder: (c) => AlertDialog(
       title: IconText(
         icon: Icon(MdiIcons.gestureTapButton, size: 26),
-        text: Text('章节跳转助手按钮动作设置'),
+        text: Text('章节跳转助手按钮动作'),
         space: 12,
       ),
       scrollable: true,

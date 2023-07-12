@@ -39,6 +39,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToLaterRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((ev) => _jumpToPageByEvent(2, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToRecentRequestedEvent>((ev) => _jumpToPageByEvent(0, ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToCategoryRequestedEvent>((ev) => _jumpToPageByEvent(1, ev)));
@@ -65,6 +66,12 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
   DateTime? _lastBackPressedTime;
 
   Future<bool> _onWillPop() async {
+    // close drawer
+    if (_scaffoldKey.currentState?.isDrawerOpen == true || _scaffoldKey.currentState?.scaffoldState?.isDrawerOpen == true) {
+      _scaffoldKey.currentState?.closeDrawer();
+      return false;
+    }
+
     // call onWillPop for descendant elements
     var scopes = context.findDescendantElementsDFS<WillPopScope>(-1, (element) {
       if (element.widget is! WillPopScope) {
@@ -82,11 +89,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
       }
     }
 
-    // close drawer and show snack bar
-    if (_scaffoldKey.currentState?.isDrawerOpen == true || _scaffoldKey.currentState?.scaffoldState?.isDrawerOpen == true) {
-      _scaffoldKey.currentState?.closeDrawer();
-      return false;
-    }
+    // show snack bar
     var now = DateTime.now();
     if (_lastBackPressedTime == null || now.difference(_lastBackPressedTime!) > Duration(seconds: 2)) {
       _lastBackPressedTime = now;

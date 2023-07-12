@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_favorite.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_history.dart';
+import 'package:manhuagui_flutter/page/page/subscribe_later.dart';
 import 'package:manhuagui_flutter/page/page/subscribe_shelf.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 订阅
 class SubscribeSubPage extends StatefulWidget {
@@ -21,14 +23,14 @@ class SubscribeSubPage extends StatefulWidget {
 }
 
 class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerProviderStateMixin {
-  late final _controller = TabController(length: 3, vsync: this);
-  late final _keys = List.generate(3, (_) => GlobalKey<State<StatefulWidget>>());
-  late final _actions = List.generate(3, (_) => ActionController());
+  late final _controller = TabController(length: 4, vsync: this);
+  late final _keys = List.generate(4, (_) => GlobalKey<State<StatefulWidget>>());
+  late final _actions = List.generate(4, (_) => ActionController());
   late final _tabs = [
     Tuple3('书架', ShelfSubPage(key: _keys[0], action: _actions[0]), true),
     Tuple3('收藏', FavoriteSubPage(key: _keys[1], action: _actions[1]), false),
-    Tuple3('历史', HistorySubPage(key: _keys[2], action: _actions[2]), false),
-    // TODO add later tab
+    Tuple3('稍后', LaterSubPage(key: _keys[2], action: _actions[2]), false),
+    Tuple3('历史', HistorySubPage(key: _keys[3], action: _actions[3]), false),
   ];
   var _currentPageIndex = 0; // for app bar actions only
   final _cancelHandlers = <VoidCallback>[];
@@ -44,7 +46,8 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
     }));
     _cancelHandlers.add(EventBusManager.instance.listen<ToShelfRequestedEvent>((_) => _controller.animateTo(0)));
     _cancelHandlers.add(EventBusManager.instance.listen<ToFavoriteRequestedEvent>((_) => _controller.animateTo(1)));
-    _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) => _controller.animateTo(2)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToLaterRequestedEvent>((_) => _controller.animateTo(2)));
+    _cancelHandlers.add(EventBusManager.instance.listen<ToHistoryRequestedEvent>((_) => _controller.animateTo(3)));
   }
 
   @override
@@ -96,9 +99,15 @@ class _SubscribeSubPageState extends State<SubscribeSubPage> with SingleTickerPr
             ),
           if (_currentPageIndex == 2)
             AppBarActionButton(
+              icon: Icon(MdiIcons.calendarFilter),
+              tooltip: '按日期搜索稍后阅读',
+              onPressed: () => _actions[2].invoke('date'),
+            ),
+          if (_currentPageIndex == 3)
+            AppBarActionButton(
               icon: Icon(Icons.delete),
               tooltip: '清空阅读历史',
-              onPressed: () => _actions[2].invoke('clear'),
+              onPressed: () => _actions[3].invoke('clear'),
             ),
           AppBarActionButton(
             icon: Icon(Icons.search),

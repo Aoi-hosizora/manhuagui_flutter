@@ -7,7 +7,7 @@ const APP_LEGALESE = 'Copyright © 2020-2023 AoiHosizora';
 const APP_DESCRIPTION = //
     '第三方漫画柜 ($WEB_HOMEPAGE_URL) 安卓客户端，使用 Flutter 开发，当前版本为 $APP_VERSION。\n'
     '\n'
-    '开发者: GitHub @Aoi-hosizora (青いほしぞら) <aoihosizora@hotmail.com>\n'
+    '开发者: GitHub @Aoi-hosizora (青いほしぞら) <$AUTHOR_EMAIL>\n'
     '\n'
     '本应用仅供学习使用，客户端和服务端代码完全开源，仅供非商业用途。\n'
     '\n'
@@ -52,6 +52,7 @@ const DEFAULT_USER_AVATAR_URL = 'https://cf.hamreus.com/images/default.png';
 const DEFAULT_AUTHOR_COVER_URL = 'https://cf.hamreus.com/zpic/none.jpg';
 
 // website urls
+const AUTHOR_EMAIL = 'aoihosizora@hotmail.com';
 const WEB_HOMEPAGE_URL = 'https://www.manhuagui.com/';
 const USER_CENTER_URL = 'https://www.manhuagui.com/user/center/index';
 const MESSAGE_URL = 'https://www.manhuagui.com/user/message/system';

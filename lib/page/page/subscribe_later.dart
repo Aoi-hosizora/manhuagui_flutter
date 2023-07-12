@@ -5,8 +5,6 @@ import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/search.dart';
-import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
@@ -21,15 +19,22 @@ import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-/// 漫画稍后阅读页，查询并展示 [LaterManga] 列表信息，并提供列表整理功能
-class LaterMangaPage extends StatefulWidget {
-  const LaterMangaPage({Key? key}) : super(key: key);
+/// 订阅-稍后阅读
+class LaterSubPage extends StatefulWidget {
+  const LaterSubPage({
+    Key? key,
+    this.action,
+    this.isSepPage = false,
+  }) : super(key: key);
+
+  final ActionController? action;
+  final bool isSepPage;
 
   @override
-  State<LaterMangaPage> createState() => _LaterMangaPageState();
+  _LaterSubPageState createState() => _LaterSubPageState();
 }
 
-class _LaterMangaPageState extends State<LaterMangaPage> {
+class _LaterSubPageState extends State<LaterSubPage> {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -39,6 +44,8 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
   @override
   void initState() {
     super.initState();
+    widget.action?.addAction(() => _controller.scrollToTop());
+    widget.action?.addAction('date', () => _toSearchByDate());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) {
         _searchKeyword = ''; // 清空搜索关键词
@@ -48,12 +55,13 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
       }));
       await AuthManager.instance.check();
     });
-    _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
-    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) => _updateByEvent(ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
   void dispose() {
+    widget.action?.removeAction();
+    widget.action?.removeAction('date');
     _cancelHandlers.forEach((c) => c.call());
     _controller.dispose();
     _fabController.dispose();
@@ -94,14 +102,19 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     return PagedList(list: data, next: page + 1);
   }
 
-  void _updateByEvent(LaterMangaUpdatedEvent event) async {
+  void _updateByEvent(LaterUpdatedEvent event) async {
     if (event.added) {
       // 新增 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (!event.added && !event.fromLaterMangaPage) {
+    if (!event.added && !event.fromLaterPage) {
       // 非本页引起的删除 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (!widget.isSepPage && event.fromLaterPage) {
+      // 单独页引起的变更 => 显示有更新 (仅限主页子页)
       _isUpdated = true;
       if (mounted) setState(() {});
     }
@@ -222,6 +235,11 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
           _total--;
           _removed++;
           if (mounted) setState(() {});
+
+          // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
+          if (widget.isSepPage) {
+            EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
+          }
         }
       },
       laterSetter: (newLater) {
@@ -233,6 +251,11 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
           // _data.removeWhere((el) => el.mangaId == newLater.mangaId);
           // _data.insert(0, newLater); // => 取巧的做法，但不通用于其他更新
           if (mounted) setState(() {});
+
+          // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
+          if (widget.isSepPage) {
+            EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
+          }
         }
       },
     );
@@ -255,7 +278,12 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画置顶于稍后阅读列表')));
-    EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: true));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true));
+
+    // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
+    if (widget.isSepPage) {
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
+    }
   }
 
   Future<void> _deleteLaterMangas({required List<int> mangaIds}) async {
@@ -297,7 +325,14 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
     }
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: mangaId, added: false, fromLaterMangaPage: true));
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true));
+    }
+
+    // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
+    if (widget.isSepPage) {
+      for (var mangaId in mangaIds) {
+        EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
+      }
     }
   }
 
@@ -320,31 +355,6 @@ class _LaterMangaPageState extends State<LaterMangaPage> {
         return true;
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('稍后阅读列表'),
-          leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
-          actions: [
-            AppBarActionButton(
-              icon: Icon(MdiIcons.calendarFilter),
-              tooltip: '按日期搜索稍后阅读记录',
-              onPressed: () => _toSearchByDate(),
-            ),
-            AppBarActionButton(
-              icon: Icon(Icons.search),
-              tooltip: '搜索漫画',
-              onPressed: () => Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => SearchPage(),
-                ),
-              ),
-            ),
-          ],
-        ),
-        drawer: AppDrawer(
-          currentSelection: DrawerSelection.later,
-        ),
-        drawerEdgeDragWidth: MediaQuery.of(context).size.width,
         body: MultiSelectable<ValueKey<int>>(
           controller: _msController,
           stateSetter: () => mountedSetState(() {}),

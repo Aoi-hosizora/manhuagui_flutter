@@ -304,7 +304,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
         SettingGroupTitleView(
-          title: '用户交互设置',
+          title: '交互行为设置',
         ),
         SettingSwitcherView(
           title: '点击搜索历史立即搜索',

@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 
-/// 稍后阅读漫画行，在 [LaterMangaPage] 使用
+/// 稍后阅读漫画行，在 [LaterSubPage] 使用
 class LaterMangaLineView extends StatelessWidget {
   const LaterMangaLineView({
     Key? key,

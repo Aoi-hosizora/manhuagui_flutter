@@ -241,7 +241,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) => _updateByEvent(shelfEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) => _updateByEvent(favoriteEvent: ev)));
-    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
 
     // setting and screen related
@@ -574,7 +574,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     DownloadUpdatedEvent? downloadEvent,
     ShelfUpdatedEvent? shelfEvent,
     FavoriteUpdatedEvent? favoriteEvent,
-    LaterMangaUpdatedEvent? laterEvent,
+    LaterUpdatedEvent? laterEvent,
     FootprintUpdatedEvent? footprintEvent,
   }) async {
     if (authEvent != null) {
@@ -1111,7 +1111,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 chapterNeededData: neededData,
                 onHistoryUpdated: null /* 不显示，不会触发 */,
                 onFootprintAdded: null /* 不显示，不会触发 */,
-                onFootprintRemoved: null /* 不显示，不会触发 */,
+                onFootprintsAdded: null /* 不显示，不会触发 */,
+                onFootprintsRemoved: null /* 不显示，不会触发 */,
                 allowDeletingHistory: false /* => 不显示 "删除阅读历史" */,
                 toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
                 navigateWrapper: (navigate) async {
@@ -1550,6 +1551,10 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                             PopupMenuItem(
                               child: IconTextMenuItem(Icons.open_in_browser, '用浏览器打开'),
                               onTap: () => launchInBrowser(context: context, url: _data?.chapterUrl ?? widget.mangaUrl),
+                            ),
+                            PopupMenuItem(
+                              child: IconTextMenuItem(Icons.more_vert, '查看更多选项'),
+                              onTap: () => WidgetsBinding.instance?.addPostFrameCallback((_) => _showPopupMenuForActions()),
                             ),
                           ],
                         ),

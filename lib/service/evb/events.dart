@@ -14,6 +14,10 @@ class ToFavoriteRequestedEvent {
   const ToFavoriteRequestedEvent();
 }
 
+class ToLaterRequestedEvent {
+  const ToLaterRequestedEvent();
+}
+
 class ToHistoryRequestedEvent {
   const ToHistoryRequestedEvent();
 }
@@ -109,12 +113,13 @@ class FavoriteAuthorUpdatedEvent {
   final bool fromAuthorPage;
 }
 
-class LaterMangaUpdatedEvent {
-  const LaterMangaUpdatedEvent({required this.mangaId, required this.added, this.fromLaterMangaPage = false, this.fromMangaPage = false});
+class LaterUpdatedEvent {
+  const LaterUpdatedEvent({required this.mangaId, required this.added, this.fromLaterPage = false, this.fromSepLaterPage = false, this.fromMangaPage = false});
 
   final int mangaId;
   final bool added;
-  final bool fromLaterMangaPage;
+  final bool fromLaterPage;
+  final bool fromSepLaterPage;
   final bool fromMangaPage;
 }
 

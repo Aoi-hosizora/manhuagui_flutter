@@ -78,7 +78,7 @@ class MangaCornerFlagStorage {
       }));
     }
     if (!ignoreLaters) {
-      _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) async {
+      _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) async {
         await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryFavorites: false, queryHistories: false);
         stateSetter();
       }));

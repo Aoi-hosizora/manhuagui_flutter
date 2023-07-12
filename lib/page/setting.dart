@@ -276,7 +276,24 @@ class _SettingPageState extends State<SettingPage> {
           _item(
             title: '反馈及联系作者',
             icon: Icons.feedback,
-            action: () => launchInBrowser(context: context, url: FEEDBACK_URL),
+            action: () => showDialog(
+              context: context,
+              builder: (c) => SimpleDialog(
+                title: Text('反馈及联系作者'),
+                children: [
+                  IconTextDialogOption(
+                    icon: Icon(MdiIcons.github),
+                    text: Text('通过 GitHub 联系'),
+                    onPressed: () => launchInBrowser(context: context, url: FEEDBACK_URL),
+                  ),
+                  IconTextDialogOption(
+                    icon: Icon(Icons.email),
+                    text: Text('通过邮件联系'),
+                    onPressed: () => launchInEmail(email: AUTHOR_EMAIL, subject: '$APP_NAME 反馈'),
+                  ),
+                ],
+              ),
+            ),
           ),
           _divider(),
           _item(

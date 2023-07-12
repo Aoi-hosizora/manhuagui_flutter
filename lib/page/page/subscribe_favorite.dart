@@ -450,6 +450,10 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     super.build(context);
     return WillPopScope(
       onWillPop: () async {
+        if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
+          Navigator.of(context).pop(); // close drawer
+          return false;
+        }
         if (_scaffoldKey.currentState?.isEndDrawerOpen == true) {
           _scaffoldKey.currentState?.closeEndDrawer();
           return false;

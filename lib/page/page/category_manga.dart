@@ -169,6 +169,10 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
     super.build(context);
     return WillPopScope(
       onWillPop: () async {
+        if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
+          Navigator.of(context).pop(); // close drawer
+          return false;
+        }
         if (_chosen && _currGenre.curr != widget.defaultGenre) {
           _chooseCategory(toChoose: false); // only de-choose if pop when current genre is not the default genre
           return false;

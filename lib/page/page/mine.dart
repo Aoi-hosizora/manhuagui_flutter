@@ -7,11 +7,11 @@ import 'package:manhuagui_flutter/model/user.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
-import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/sep_favorite.dart';
 import 'package:manhuagui_flutter/page/sep_history.dart';
+import 'package:manhuagui_flutter/page/sep_later.dart';
 import 'package:manhuagui_flutter/page/sep_shelf.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
@@ -500,7 +500,9 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               _buildActionLine(
                 text: '稍后阅读',
                 icon: MdiIcons.bookClockOutline,
-                action: () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => LaterMangaPage())),
+                action: !AppSetting.instance.ui.alwaysOpenNewListPage //
+                    ? () => EventBusManager.instance.fire(ToLaterRequestedEvent())
+                    : () => Navigator.of(context).push(CustomPageRoute(context: context, builder: (c) => SepLaterPage())),
               ),
               _buildDivider(),
               _buildActionLine(

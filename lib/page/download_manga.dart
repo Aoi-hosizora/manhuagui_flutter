@@ -86,7 +86,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(entityEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
-    _cancelHandlers.add(EventBusManager.instance.listen<LaterMangaUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
   }
 
   @override
@@ -153,7 +153,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     DownloadUpdatedEvent? entityEvent,
     HistoryUpdatedEvent? historyEvent,
     FootprintUpdatedEvent? footprintEvent,
-    LaterMangaUpdatedEvent? laterEvent,
+    LaterUpdatedEvent? laterEvent,
   }) async {
     if (progressEvent != null && progressEvent.mangaId == widget.mangaId) {
       var task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);

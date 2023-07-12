@@ -3,12 +3,12 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/download.dart';
-import 'package:manhuagui_flutter/page/later_manga.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/sep_category.dart';
 import 'package:manhuagui_flutter/page/sep_favorite.dart';
 import 'package:manhuagui_flutter/page/sep_history.dart';
+import 'package:manhuagui_flutter/page/sep_later.dart';
 import 'package:manhuagui_flutter/page/sep_ranking.dart';
 import 'package:manhuagui_flutter/page/sep_recent.dart';
 import 'package:manhuagui_flutter/page/sep_shelf.dart';
@@ -30,7 +30,7 @@ enum DrawerSelection {
 
   shelf, // SepShelfPage
   favorite, // SepFavoritePage
-  later, // LaterMangaPage
+  later, // SepLaterPage
   history, // SepHistoryPage
   download, // SepDownloadPage
   recent, // SepRecentPage
@@ -99,6 +99,8 @@ class _AppDrawerState extends State<AppDrawer> {
         EventBusManager.instance.fire(ToShelfRequestedEvent());
       } else if (page is SepFavoritePage) {
         EventBusManager.instance.fire(ToFavoriteRequestedEvent());
+      } else if (page is SepLaterPage) {
+        EventBusManager.instance.fire(ToLaterRequestedEvent());
       } else if (page is SepHistoryPage) {
         EventBusManager.instance.fire(ToHistoryRequestedEvent());
       } else if (page is SepRecentPage) {
@@ -237,7 +239,7 @@ class _AppDrawerState extends State<AppDrawer> {
           Divider(thickness: 1),
           _buildItem('我的书架', MdiIcons.bookshelf, DrawerSelection.shelf, () => _gotoPage(SepShelfPage(), canReplace: true), longPress: () => _gotoPage(SepShelfPage())),
           _buildItem('本地收藏', MdiIcons.bookmarkBoxMultipleOutline, DrawerSelection.favorite, () => _gotoPage(SepFavoritePage(), canReplace: true), longPress: () => _gotoPage(SepFavoritePage())),
-          _buildItem('稍后阅读', MdiIcons.bookClockOutline, DrawerSelection.later, () => _gotoPage(LaterMangaPage(), canReplace: true), longPress: () => _gotoPage(LaterMangaPage())),
+          _buildItem('稍后阅读', MdiIcons.bookClockOutline, DrawerSelection.later, () => _gotoPage(SepLaterPage(), canReplace: true), longPress: () => _gotoPage(SepLaterPage())),
           _buildItem('阅读历史', Icons.history, DrawerSelection.history, () => _gotoPage(SepHistoryPage(), canReplace: true), longPress: () => _gotoPage(SepHistoryPage())),
           _buildItem('下载列表', Icons.download, DrawerSelection.download, () => _gotoPage(DownloadPage(), canReplace: true), longPress: () => _gotoPage(DownloadPage())),
           _buildItem('最近更新', Icons.cached, DrawerSelection.recent, () => _gotoPage(SepRecentPage(), canReplace: true), longPress: () => _gotoPage(SepRecentPage())),

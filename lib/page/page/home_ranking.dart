@@ -149,6 +149,10 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     super.build(context);
     return WillPopScope(
       onWillPop: () async {
+        if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
+          Navigator.of(context).pop(); // close drawer
+          return false;
+        }
         if (_chosen) {
           _chooseCategory(toChoose: false);
           return false;

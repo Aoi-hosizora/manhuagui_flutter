@@ -424,7 +424,7 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
       EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added));
     }
     if (counter.laterMangas > 0) {
-      EventBusManager.instance.fire(LaterMangaUpdatedEvent(mangaId: -1, added: true));
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: -1, added: true));
     }
   }
   await exportedDB.close();
