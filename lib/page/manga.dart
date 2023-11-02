@@ -1487,7 +1487,7 @@ class _MangaPageState extends State<MangaPage> {
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     highlighted2Chapters: [_history?.lastChapterId ?? 0],
-                    showHighlight2: AppSetting.instance.ui.showLastHistory,
+                    showHighlight2: AppSetting.instance.ui.showLastHistory, // TODO improve style, add chapter history page
                     faintedChapters: _footprints?.keys.toList() ?? [],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,

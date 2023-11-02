@@ -133,7 +133,14 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                             checkboxPosition: PositionArgument.fromLTRB(null, 0, 11, 0),
                             checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(tip: tip, backgroundColor: Colors.white),
                             useFullRipple: true,
-                            onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? widget.toAdjustChapter(key.value) : tip.toToggle?.call(),
+                            onFullRippleLongPressed: (c, key, tip) {
+                              if (_msController.selectedItems.length == 1 && tip.selected) {
+                                _msController.exitMultiSelectionMode();
+                                widget.toAdjustChapter(key.value);
+                              } else {
+                                tip.toToggle?.call();
+                              }
+                            },
                             itemBuilder: (_, key, tip) => Material(
                               color: Colors.white,
                               child: DownloadChapterLineView(
@@ -143,7 +150,7 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
                                 onPauseIconPressed: () => widget.toControlChapter.call(chapter.chapterId, start: false),
                                 onStartIconPressed: () => widget.toControlChapter.call(chapter.chapterId, start: true),
-                                onIconLongPressed: () => widget.toAdjustChapter.call(chapter.chapterId),
+                                onIconLongPressed: () => widget.toAdjustChapter.call(chapter.chapterId), // open popup directly
                               ),
                             ),
                           ),

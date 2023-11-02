@@ -134,8 +134,6 @@ void showPopupMenuForMangaList({
                 icon: Icon(MdiIcons.starCog),
                 text: Text('编辑我的书架'),
                 onPressed: () => _setState(() => expandShelfOptions = true),
-                popWhenLongPress: c,
-                predicateForLongPress: !nowInShelfCache ? null : () => helper.showCheckRemovingShelfDialog(),
                 onLongPressed: () => _setState(() => expandShelfOptions = true),
               ),
             if (expandShelfOptions)
@@ -289,7 +287,7 @@ void showPopupMenuForMangaList({
                       if (extraData != null && extraData.newestChapter != null && extraData.newestDate != null && extraData.newestChapter != laterManga.newestChapter)
                         IconTextDialogOption(
                           icon: Icon(CustomIcons.clock_sync),
-                          text: Text('更新记录至最新章节'),
+                          text: Text('更新记录至最新章节 (*)'),
                           popWhenPress: c,
                           onPressed: () => helper.updateLaterToNewestChapter(later: laterManga, onUpdated: laterSetter, fromLaterList: false, fromMangaPage: false),
                         ),
@@ -514,7 +512,7 @@ void showPopupMenuForMangaToc({
           ),
 
         /// 历史
-        if (allowDeletingHistory && isChapterRead)
+        if (allowDeletingHistory && isChapterRead) // TODO add history for subpage (allowDeletingHistory)
           IconTextDialogOption(
             icon: Icon(MdiIcons.deleteClock),
             text: Text('删除阅读历史'),
@@ -525,7 +523,7 @@ void showPopupMenuForMangaToc({
         if (allowDeletingHistory && !isChapterRead && isInFootprint)
           IconTextDialogOption(
             icon: Icon(MdiIcons.deleteClock),
-            text: Text('删除阅读足迹'),
+            text: Text('删除阅读历史'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: chapterNeededData.chapterGroups.findChapter(chapter.cid)?.title ?? '未知话'),
             onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintsRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
@@ -533,11 +531,11 @@ void showPopupMenuForMangaToc({
         if (allowDeletingHistory && !isChapterRead && !isInFootprint)
           IconTextDialogOption(
             icon: Icon(MdiIcons.footPrint),
-            text: Text('添加阅读足迹'),
+            text: Text('添加阅读历史'), // TODO 足迹？历史？
             popWhenPress: c,
             onPressed: () => helper.addChapterFootprint(chapterId: chapter.cid, onAdded: onFootprintAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
             onLongPressed: () => helper.addChapterFootprints(chapterId: chapter.cid, chapterNeededData: chapterNeededData, onAdded: onFootprintsAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
-          ),
+          ), // TODO improve interactive
 
         /// 查看信息
         IconTextDialogOption(

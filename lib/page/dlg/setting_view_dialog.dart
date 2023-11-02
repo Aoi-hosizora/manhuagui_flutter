@@ -221,7 +221,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           },
         ),
         SettingSwitcherView(
-          title: '使用单手章节跳转助手',
+          title: '显示单手章节跳转助手',
           value: _useChapterAssistant,
           onChanged: (b) {
             _useChapterAssistant = b;
@@ -232,6 +232,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         SettingButtonView(
           title: '章节跳转助手按钮动作',
           buttonChild: Text('设置'),
+          enable: _useChapterAssistant,
           onPressed: () async {
             var result = await showAssistantSettingDialog(context: context, setting: _assistantActionSetting);
             if (result != null) {
@@ -409,7 +410,7 @@ Future<AssistantActionSetting?> showAssistantSettingDialog({required BuildContex
     builder: (c) => AlertDialog(
       title: IconText(
         icon: Icon(MdiIcons.gestureTapButton, size: 26),
-        text: Text('章节跳转助手按钮动作'),
+        text: Text('章节跳转助手设置'),
         space: 12,
       ),
       scrollable: true,

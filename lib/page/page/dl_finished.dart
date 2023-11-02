@@ -135,7 +135,14 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                                 scaleAlignment: Alignment.bottomRight,
                               ),
                               useFullRipple: true,
-                              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? widget.toAdjustChapter(key.value) : tip.toToggle?.call(),
+                              onFullRippleLongPressed: (c, key, tip) {
+                                if (_msController.selectedItems.length == 1 && tip.selected) {
+                                  _msController.exitMultiSelectionMode();
+                                  widget.toAdjustChapter(key.value);
+                                } else {
+                                  tip.toToggle?.call();
+                                }
+                              },
                               itemBuilder: (_, key, tip) => itemWidget /* single grid */,
                             ),
                       onChapterPressed: widget.toReadChapter,

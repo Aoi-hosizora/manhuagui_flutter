@@ -223,6 +223,7 @@ class _SettingPageState extends State<SettingPage> {
             ),
           ],
           // *******************************************************
+          // TODO add tips to setting page
           _spacer(),
           _item(
             title: '打开漫画柜官网',
