@@ -164,7 +164,7 @@ class _SettingPageState extends State<SettingPage> {
           _item(
             icon: CustomIcons.opened_book_cog,
             title: '漫画阅读设置',
-            action: () => showViewSettingDialog(context: context),
+            action: () => showViewSettingDialog(context: context), // TODO change to use separated page
           ),
           _divider(),
           _item(

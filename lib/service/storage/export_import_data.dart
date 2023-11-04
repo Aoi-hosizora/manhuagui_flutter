@@ -76,7 +76,7 @@ Future<bool> deleteImportData(String name) async {
 enum ExportDataType {
   // from db
   readHistories, // 漫画阅读历史
-  chapterFootprints, // 章节阅读足迹
+  chapterFootprints, // 章节阅读历史
   downloadRecords, // 漫画下载记录
   favoriteMangas, // 本地收藏漫画
   favoriteAuthors, // 本地收藏作者
@@ -94,7 +94,7 @@ extension ExportDataTypeExtension on ExportDataType {
       case ExportDataType.readHistories:
         return '漫画阅读历史';
       case ExportDataType.chapterFootprints:
-        return '章节阅读足迹';
+        return '章节阅读历史';
       case ExportDataType.downloadRecords:
         return '漫画下载记录';
       case ExportDataType.favoriteMangas:
@@ -143,7 +143,7 @@ class ExportDataTypeCounter {
 
     var titles = [
       if (include(readHistories, ExportDataType.readHistories)) '$readHistories 条漫画阅读历史',
-      if (include(chapterFootprints, ExportDataType.chapterFootprints)) '$chapterFootprints 条章节阅读足迹',
+      if (include(chapterFootprints, ExportDataType.chapterFootprints)) '$chapterFootprints 条章节阅读历史',
       if (include(downloadRecords, ExportDataType.downloadRecords)) '$downloadRecords 条漫画下载记录',
       if (include(favoriteMangas, ExportDataType.favoriteMangas)) '$favoriteMangas 部本地收藏漫画',
       if (include(favoriteAuthors, ExportDataType.favoriteAuthors)) '$favoriteAuthors 位本地收藏作者',

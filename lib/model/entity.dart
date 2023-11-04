@@ -85,7 +85,7 @@ class MangaHistory {
   }
 }
 
-class ChapterFootprint {
+class ChapterFootprint { // TODO migrate to chapter history
   final int mangaId;
   final int chapterId;
   final DateTime createdAt;
@@ -589,7 +589,7 @@ class LaterManga {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final String? newestChapter;
+  final String? newestChapter; // TODO migrate to later chapter
   final String? newestDate;
   final DateTime createdAt;
 

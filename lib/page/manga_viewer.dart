@@ -302,7 +302,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     // 1. 先获取各种数据库信息 (收藏、下载)
     _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
-    _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节足迹
+    _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节历史
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId); // 本地收藏
     _inFavorite = _favoriteManga != null;
     _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId); // 稍后阅读
@@ -579,7 +579,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   }) async {
     if (authEvent != null) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
-      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节足迹
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节历史
       _subscribeCount = null;
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
       _inShelf = false;
@@ -660,7 +660,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           lastChapterTitle: oldHistory.chapterTitle,
           lastChapterPage: oldHistory.chapterPage,
           lastTime: nowDateTime /* 历史已更新 */,
-        ); // 更新历史
+        ); // 更新漫画历史
       }
       _history = newHistory;
       await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
@@ -668,7 +668,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         mangaId: widget.mangaId,
         chapterId: widget.chapterId,
         createdAt: nowDateTime /* 历史已更新 */,
-      ); // 更新足迹
+      ); // 更新章节历史
       var toUpdateFp = _footprints?.keys.contains(widget.chapterId) ?? false;
       (_footprints ??= {})[widget.chapterId] = newFootprint;
       await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
@@ -1077,51 +1077,52 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (c) => MediaQuery.removePadding(
-        context: context,
-        removeTop: true,
-        removeBottom: true,
-        child: Container(
-          height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
-          margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-          child: ViewTocSubPage(
-            mangaId: widget.mangaId,
-            mangaTitle: mangaTitle,
-            groups: neededData.chapterGroups,
-            currReadChapterId: widget.chapterId,
-            lastReadChapterId: _history?.lastChapterId ?? 0,
-            footprintChapterIds: _footprints?.keys.toList() ?? [],
-            onChapterPressed: (cid) => switchChapter(c, cid),
-            onChapterLongPressed: (cid) {
-              var chapter = neededData.chapterGroups.findChapter(cid);
-              if (chapter == null) {
-                Fluttertoast.showToast(msg: '未在漫画章节列表中找到章节'); // almost unreachable
-                return;
-              }
+      builder: (c) => StatefulBuilder(
+        builder: (c, _setState) => MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          removeBottom: true,
+          child: Container(
+            height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
+            margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+            child: ViewTocSubPage(
+              mangaId: widget.mangaId,
+              mangaTitle: mangaTitle,
+              groups: neededData.chapterGroups,
+              currReadChapterId: widget.chapterId,
+              lastReadChapterId: _history?.lastChapterId ?? 0,
+              footprintChapterIds: _footprints?.keys.toList() ?? [],
+              onChapterPressed: (cid) => switchChapter(c, cid),
+              onChapterLongPressed: (cid) {
+                var chapter = neededData.chapterGroups.findChapter(cid);
+                if (chapter == null) {
+                  Fluttertoast.showToast(msg: '未在漫画章节列表中找到章节'); // almost unreachable
+                  return;
+                }
 
-              // (更新数据库)、~~更新界面~~、(弹出提示)、(发送通知)
-              showPopupMenuForMangaToc(
-                context: context,
-                mangaId: widget.mangaId,
-                mangaTitle: mangaTitle,
-                mangaCover: mangaCover,
-                mangaUrl: mangaUrl,
-                fromMangaPage: false,
-                chapter: chapter,
-                chapterNeededData: neededData,
-                onHistoryUpdated: null /* 不显示，不会触发 */,
-                onFootprintAdded: null /* 不显示，不会触发 */,
-                onFootprintsAdded: null /* 不显示，不会触发 */,
-                onFootprintsRemoved: null /* 不显示，不会触发 */,
-                allowDeletingHistory: false /* => 不显示 "删除阅读历史" */,
-                toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
-                navigateWrapper: (navigate) async {
-                  await _ScreenHelper.restoreSystemUI();
-                  await navigate();
-                  await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
-                },
-              );
-            },
+                // (更新数据库)、~~更新界面~~、(弹出提示)、(发送通知)
+                showPopupMenuForMangaToc(
+                  context: context,
+                  mangaId: widget.mangaId,
+                  mangaTitle: mangaTitle,
+                  mangaCover: mangaCover,
+                  mangaUrl: mangaUrl,
+                  fromMangaPage: false,
+                  chapter: chapter,
+                  chapterNeededData: neededData,
+                  onHistoryUpdated: (h) => _setState(() => _history = h), // TODO test
+                  onFootprintAdded: (fp) => _setState(() => _footprints?[fp.chapterId] = fp),
+                  onFootprintsAdded: (fps) => _setState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
+                  onFootprintsRemoved: (cids) => _setState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
+                  toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
+                  navigateWrapper: (navigate) async {
+                    await _ScreenHelper.restoreSystemUI();
+                    await navigate();
+                    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+                  },
+                );
+              },
+            ),
           ),
         ),
       ),

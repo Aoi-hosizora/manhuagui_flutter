@@ -426,7 +426,6 @@ void showPopupMenuForMangaToc({
   required void Function(ChapterFootprint footprint)? onFootprintAdded,
   required void Function(List<ChapterFootprint> footprints)? onFootprintsAdded,
   required void Function(List<int> chapterIds)? onFootprintsRemoved,
-  bool allowDeletingHistory = true,
   void Function()? toSwitchChapter, // => only for switching chapter in MangaViewerPage
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
 }) async {
@@ -436,6 +435,7 @@ void showPopupMenuForMangaToc({
   var isChapterRead = historyEntity?.chapterId == chapter.cid || historyEntity?.lastChapterId == chapter.cid;
   var readChapterTitle = historyEntity?.chapterId == chapter.cid ? historyEntity!.chapterTitle : (historyEntity?.lastChapterId == chapter.cid ? historyEntity?.lastChapterTitle : null);
   var readChapterPage = historyEntity?.chapterId == chapter.cid ? historyEntity!.chapterPage : (historyEntity?.lastChapterId == chapter.cid ? historyEntity?.lastChapterPage : null);
+  var allowDeletingHistory = toSwitchChapter == null || historyEntity?.chapterId != chapter.cid;
   var isInFootprint = await HistoryDao.checkFootprintExistence(username: AuthManager.instance.username, mid: mangaId, cid: chapter.cid) ?? false;
 
   var helper = _DialogHelper(
@@ -512,7 +512,7 @@ void showPopupMenuForMangaToc({
           ),
 
         /// 历史
-        if (allowDeletingHistory && isChapterRead) // TODO add history for subpage (allowDeletingHistory)
+        if (allowDeletingHistory && isChapterRead) // TODO test
           IconTextDialogOption(
             icon: Icon(MdiIcons.deleteClock),
             text: Text('删除阅读历史'),
@@ -528,14 +528,15 @@ void showPopupMenuForMangaToc({
             predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: chapterNeededData.chapterGroups.findChapter(chapter.cid)?.title ?? '未知话'),
             onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintsRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
           ),
-        if (allowDeletingHistory && !isChapterRead && !isInFootprint)
+        if (!isChapterRead && !isInFootprint)
           IconTextDialogOption(
             icon: Icon(MdiIcons.footPrint),
-            text: Text('添加阅读历史'), // TODO 足迹？历史？
+            text: Text('添加阅读历史'),
             popWhenPress: c,
             onPressed: () => helper.addChapterFootprint(chapterId: chapter.cid, onAdded: onFootprintAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
-            onLongPressed: () => helper.addChapterFootprints(chapterId: chapter.cid, chapterNeededData: chapterNeededData, onAdded: onFootprintsAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
-          ), // TODO improve interactive
+            // onLongPressed: () => helper.addChapterFootprints(chapterId: chapter.cid, chapterNeededData: chapterNeededData, onAdded: onFootprintsAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
+            // TODO improve interactive
+          ),
 
         /// 查看信息
         IconTextDialogOption(
@@ -1630,7 +1631,7 @@ class _DialogHelper {
         lastChapterTitle: '',
         lastChapterPage: 1,
         lastTime: DateTime.now(),
-      ); // 删除历史/足迹
+      ); // 更新漫画历史
       removedFpCids.add(chapterId);
     } else if (oldHistory.lastChapterId == chapterId) {
       newHistory = oldHistory.copyWith(
@@ -1638,11 +1639,11 @@ class _DialogHelper {
         lastChapterTitle: '',
         lastChapterPage: 1,
         lastTime: DateTime.now(),
-      ); // 删除历史/足迹
+      ); // 更新漫画历史
       removedFpCids.add(chapterId);
     } else {
-      newHistory = null;
-      removedFpCids.add(chapterId); // 仅删除足迹
+      newHistory = null; // 无需更新漫画历史
+      removedFpCids.add(chapterId); // 仅删除章节历史
     }
 
     if (newHistory != null) {
@@ -1702,8 +1703,8 @@ class _DialogHelper {
 
     var ok = await showYesNoAlertDialog(
       context: context,
-      title: Text('添加章节阅读足迹'),
-      content: Text('是否添加 "${chapters[0].title}"、"${chapters[1].title}" 等${chapters.length}个章节 (所选章节及所有先前章节) 的阅读足迹？'),
+      title: Text('添加章节阅读历史'),
+      content: Text('是否添加 "${chapters[0].title}"、"${chapters[1].title}" 等${chapters.length}个章节 (所选章节及所有先前章节) 的阅读历史？'),
       yesText: Text('添加'),
       noText: Text('取消'),
     );

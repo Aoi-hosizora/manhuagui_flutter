@@ -181,9 +181,9 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       builder: (c) => AlertDialog(
         title: Text('删除确认'),
         content: histories.length == 1 //
-            ? Text('是否删除《${histories.first.mangaTitle}》阅读历史，包括所有的章节阅读足迹？')
+            ? Text('是否删除《${histories.first.mangaTitle}》阅读历史，包括所有的章节阅读历史？')
             : Text(
-                '是否删除以下 ${histories.length} 项阅读历史，包括所有的章节阅读足迹？\n\n' + //
+                '是否删除以下 ${histories.length} 项阅读历史，包括所有的章节阅读历史？\n\n' + //
                     [for (int i = 0; i < histories.length; i++) '${i + 1}. 《${histories[i].mangaTitle}》'].join('\n'),
               ),
         scrollable: true,

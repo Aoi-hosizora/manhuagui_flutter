@@ -146,7 +146,7 @@ class _MangaPageState extends State<MangaPage> {
 
     // 3. 获取数据库的各种信息
     _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id); // 阅读历史
-    _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 章节足迹
+    _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 章节历史
     _downloadEntity = await DownloadDao.getManga(mid: widget.id); // 下载记录
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id); // 本地收藏
     _inFavorite = _favoriteManga != null;
@@ -318,7 +318,7 @@ class _MangaPageState extends State<MangaPage> {
   }) async {
     if (authEvent != null) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id); // 阅读历史
-      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 章节足迹
+      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 章节历史
       _subscribeCount = null;
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id);
       _inShelf = false;
@@ -699,8 +699,8 @@ class _MangaPageState extends State<MangaPage> {
               ),
             IconTextDialogOption(
               icon: Icon(MdiIcons.footPrint),
-              text: Text('阅读过的章节数量/阅读足迹：${_footprints?.length ?? 0}'),
-              onPressed: () {},
+              text: Text('阅读过的漫画章节数量：${_footprints?.length ?? 0}'),
+              onPressed: () {}, // TODO add chapter history page, also include add chapter histories feature
             ),
           ],
           Divider(height: 16, thickness: 1),
@@ -711,8 +711,8 @@ class _MangaPageState extends State<MangaPage> {
           if (_history != null && _history!.read)
             IconTextDialogOption(
               icon: Icon(MdiIcons.bookClock),
-              text: Text('删除阅读历史/足迹，保留浏览历史'),
-              predicateForPress: () => showCheckDialog(msg: '确定删除漫画阅读历史 (包括章节阅读足迹)，且保留漫画浏览历史？'),
+              text: Text('删除所有章节阅读历史，保留漫画浏览历史'),
+              predicateForPress: () => showCheckDialog(msg: '确定删除漫画阅读历史 (包括章节阅读历史)，且保留漫画浏览历史？'),
               popWhenPress: c,
               onPressed: () async {
                 _history = _history!.copyWith(
@@ -723,7 +723,7 @@ class _MangaPageState extends State<MangaPage> {
                   lastChapterTitle: '',
                   lastChapterPage: 1,
                   lastTime: DateTime.now(),
-                ); // 仅删除足迹
+                ); // 仅删除章节阅读历史
                 await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
                 _footprints?.clear();
                 await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: widget.id);
@@ -735,8 +735,8 @@ class _MangaPageState extends State<MangaPage> {
           if (_history != null)
             IconTextDialogOption(
               icon: Icon(MdiIcons.deleteClock),
-              text: Text(!_history!.read ? '删除浏览历史' : '删除阅读历史/足迹、以及浏览历史'),
-              predicateForPress: () => showCheckDialog(msg: '确定删除' + (!_history!.read ? '漫画浏览历史？' : '漫画阅读历史 (包括章节阅读足迹)、以及漫画浏览历史？')),
+              text: Text(!_history!.read ? '删除浏览历史' : '删除所有章节阅读历史、以及漫画浏览历史'),
+              predicateForPress: () => showCheckDialog(msg: '确定删除' + (!_history!.read ? '漫画浏览历史？' : '漫画阅读历史 (包括章节阅读历史)、以及漫画浏览历史？')),
               popWhenPress: c,
               onPressed: () async {
                 _history = null; // 删除历史

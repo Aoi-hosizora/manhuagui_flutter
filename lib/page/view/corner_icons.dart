@@ -39,7 +39,7 @@ class MangaCornerFlags {
       if (inDownload) Icons.download,
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
-      if (inLater) Icons.watch_later, // TODO add later but updatable flag and icon
+      if (inLater) Icons.watch_later, // TODO add later but updatable flag and icon (for "可能有更新" hint)
       if (inHistory && AppSetting.instance.ui.showMangaReadIcon) ...[
         if (!historyRead) CustomIcons.opened_left_star_book,
         if (historyRead) CustomIcons.opened_blank_book, // icon offset is little higher than origin Icons.import_contacts
