@@ -24,6 +24,8 @@ class MangaTocView extends StatefulWidget {
     this.showHighlight = true,
     this.showHighlight2 = true,
     this.showFaintColor = true,
+    this.showTriText = false,
+    this.getTriText,
     this.showNewBadge = true,
     this.customBadgeBuilder,
     this.itemBuilder,
@@ -49,6 +51,8 @@ class MangaTocView extends StatefulWidget {
   final bool showHighlight;
   final bool showHighlight2;
   final bool showFaintColor;
+  final bool showTriText;
+  final String Function(TinyMangaChapter)? getTriText;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
@@ -153,6 +157,8 @@ class _MangaTocViewState extends State<MangaTocView> {
       showHighlight: widget.showHighlight,
       showHighlight2: widget.showHighlight2,
       showFaintColor: widget.showFaintColor,
+      showTriText: widget.showTriText,
+      getTriText: widget.getTriText,
       extrasInStack: (chapter) {
         if (chapter == null) {
           return [];
@@ -260,6 +266,8 @@ class NewBadge extends StatelessWidget {
     );
   }
 }
+
+// TODO move to new file "manga_toc_badge.dart"
 
 enum DownloadBadgeState {
   downloading,

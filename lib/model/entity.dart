@@ -85,9 +85,9 @@ class MangaHistory {
   }
 }
 
-class ChapterFootprint { // TODO migrate to chapter history
+class ChapterFootprint {
   final int mangaId;
-  final int chapterId;
+  final int chapterId; // 仅记录 cid，其他字段由 manga 的 chapter group 获取
   final DateTime createdAt;
 
   const ChapterFootprint({
@@ -95,6 +95,9 @@ class ChapterFootprint { // TODO migrate to chapter history
     required this.chapterId,
     required this.createdAt,
   });
+
+  String get formattedCreatedAt => //
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationOrDate);
 
   ChapterFootprint? copyWith({
     int? mangaId,

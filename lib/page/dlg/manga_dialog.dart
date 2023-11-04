@@ -512,30 +512,28 @@ void showPopupMenuForMangaToc({
           ),
 
         /// 历史
-        if (allowDeletingHistory && isChapterRead) // TODO test
+        if (allowDeletingHistory && isChapterRead)
           IconTextDialogOption(
             icon: Icon(MdiIcons.deleteClock),
-            text: Text('删除阅读历史'),
+            text: Text('删除阅读历史') /* 删除漫画阅读历史 */,
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: readChapterTitle),
             onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintsRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
           ),
         if (allowDeletingHistory && !isChapterRead && isInFootprint)
           IconTextDialogOption(
-            icon: Icon(MdiIcons.deleteClock),
-            text: Text('删除阅读历史'),
+            icon: Icon(CustomIcons.history_minus),
+            text: Text('删除阅读历史') /* 删除章节阅读历史 */,
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: chapterNeededData.chapterGroups.findChapter(chapter.cid)?.title ?? '未知话'),
             onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintsRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),
           ),
         if (!isChapterRead && !isInFootprint)
           IconTextDialogOption(
-            icon: Icon(MdiIcons.footPrint),
-            text: Text('添加阅读历史'),
+            icon: Icon(CustomIcons.history_plus),
+            text: Text('记录为已阅读') /* 添加章节阅读历史 */,
             popWhenPress: c,
             onPressed: () => helper.addChapterFootprint(chapterId: chapter.cid, onAdded: onFootprintAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
-            // onLongPressed: () => helper.addChapterFootprints(chapterId: chapter.cid, chapterNeededData: chapterNeededData, onAdded: onFootprintsAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
-            // TODO improve interactive
           ),
 
         /// 查看信息
@@ -1678,54 +1676,6 @@ class _DialogHelper {
     await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
     onAdded?.call(newFootprint);
     EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.added, fromMangaPage: fromMangaPage));
-  }
-
-  // => called by showPopupMenuForMangaToc
-  Future<void> addChapterFootprints({
-    required int chapterId,
-    required MangaChapterNeededData chapterNeededData,
-    required void Function(List<ChapterFootprint>)? onAdded,
-    required bool fromHistoryList,
-    required bool fromMangaPage,
-  }) async {
-    var chapters = chapterNeededData.chapterGroups.findWithOlderChapters(chapterId);
-    if (chapters.isEmpty) {
-      return; // unreachable
-    } else if (chapters.length == 1) {
-      await addChapterFootprint(
-        chapterId: chapterId,
-        onAdded: (fp) => onAdded?.call([fp]),
-        fromHistoryList: fromHistoryList,
-        fromMangaPage: fromMangaPage,
-      );
-      return;
-    }
-
-    var ok = await showYesNoAlertDialog(
-      context: context,
-      title: Text('添加章节阅读历史'),
-      content: Text('是否添加 "${chapters[0].title}"、"${chapters[1].title}" 等${chapters.length}个章节 (所选章节及所有先前章节) 的阅读历史？'),
-      yesText: Text('添加'),
-      noText: Text('取消'),
-    );
-    if (ok != true) {
-      return;
-    }
-    Navigator.of(context).pop(); // pop outer dialog
-    var now = DateTime.now();
-    var newFootprints = [
-      for (var c in chapters) ChapterFootprint(mangaId: mangaId, chapterId: c.cid, createdAt: now),
-    ];
-    var futures = [
-      for (var newFootprint in newFootprints)
-        HistoryDao.addOrUpdateFootprint(
-          username: AuthManager.instance.username,
-          footprint: newFootprint,
-        ),
-    ];
-    await Future.wait(futures);
-    onAdded?.call(newFootprints);
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: newFootprints.map((c) => c.chapterId).toList(), reason: UpdateReason.added, fromMangaPage: fromMangaPage));
   }
 
   // =========================

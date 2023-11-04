@@ -17,6 +17,7 @@ import 'package:manhuagui_flutter/page/favorite_author.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_detail.dart';
+import 'package:manhuagui_flutter/page/manga_history.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/sep_category.dart';
@@ -662,7 +663,7 @@ class _MangaPageState extends State<MangaPage> {
           /// 历史展示 (有阅读历史)
           if (_history != null && _history!.read) ...[
             IconTextDialogOption(
-              icon: Icon(Icons.history),
+              icon: Icon(CustomIcons.opened_book_clock),
               text: Flexible(
                 child: Text('最近阅读于 ${_history!.formattedLastTime}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
@@ -697,12 +698,27 @@ class _MangaPageState extends State<MangaPage> {
                 popWhenPress: c,
                 onPressed: () => _readChapter(chapterId: _history!.lastChapterId) /* 选择章节阅读 */,
               ),
-            IconTextDialogOption(
-              icon: Icon(MdiIcons.footPrint),
-              text: Text('阅读过的漫画章节数量：${_footprints?.length ?? 0}'),
-              onPressed: () {}, // TODO add chapter history page, also include add chapter histories feature
-            ),
           ],
+
+          /// 章节阅读历史
+          if (_history != null)
+            IconTextDialogOption(
+              icon: Icon(Icons.history),
+              text: Text('已阅读过 ${_footprints?.length ?? 0} 个漫画章节'),
+              onPressed: () => Navigator.of(context).push(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => MangaHistoryPage(
+                    mangaId: widget.id,
+                    mangaTitle: _data!.title,
+                    mangaCover: _data!.cover,
+                    mangaUrl: _data!.url,
+                    chapterGroups: _data!.chapterGroups,
+                    chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
+                  ),
+                ),
+              ),
+            ),
           Divider(height: 16, thickness: 1),
 
           /// 删除操作

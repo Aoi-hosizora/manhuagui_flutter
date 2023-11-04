@@ -8,7 +8,7 @@ class ChapterGridView extends StatelessWidget {
     Key? key,
     required this.chapters,
     required this.padding,
-    required this.showPageCount,
+    this.showPageCount = true,
     this.invertOrder = true,
     this.maxLines = -1,
     this.columns = 4,
@@ -21,6 +21,8 @@ class ChapterGridView extends StatelessWidget {
     this.showHighlight = true,
     this.showHighlight2 = true,
     this.showFaintColor = true,
+    this.showTriText = false,
+    this.getTriText,
     this.extrasInStack,
     this.itemBuilder,
     required this.onChapterPressed,
@@ -42,6 +44,8 @@ class ChapterGridView extends StatelessWidget {
   final bool showHighlight;
   final bool showHighlight2;
   final bool showFaintColor;
+  final bool showTriText;
+  final String Function(TinyMangaChapter)? getTriText;
   final List<Widget> Function(TinyMangaChapter? chapter)? extrasInStack;
   final Widget Function(BuildContext context, TinyMangaChapter? chapter, Widget itemWidget)? itemBuilder;
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
@@ -78,6 +82,16 @@ class ChapterGridView extends StatelessWidget {
                           ),
                     ),
                   ),
+                if (chapter != null && showTriText)
+                  Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Text(
+                      getTriText?.call(chapter) ?? '',
+                      style: Theme.of(context).textTheme.overline?.copyWith(
+                            color: Colors.black,
+                          ),
+                    ),
+                  ),
               ],
             ),
             style: OutlinedButton.styleFrom(
@@ -106,6 +120,7 @@ class ChapterGridView extends StatelessWidget {
 
     final width = (MediaQuery.of(context).size.width - 2 * padding.left - (columns - 1) * hSpace) / columns; // |   ▢ ▢ ▢ ▢   |
     const height = 36.0; // button's default height
+    final textLineHeight = TextSpan(text: '　', style: Theme.of(context).textTheme.overline).layoutSize(context).height;
 
     List<TinyMangaChapter?> shown = chapters.toList();
     if (!invertOrder) {
@@ -133,10 +148,7 @@ class ChapterGridView extends StatelessWidget {
           for (var chapter in shown)
             SizedBox(
               width: width,
-              height: height +
-                  (!showPageCount //
-                      ? 0
-                      : TextSpan(text: '　', style: Theme.of(context).textTheme.overline).layoutSize(context).height + 1),
+              height: height + (!showPageCount ? 0 : textLineHeight + 1) + (!showTriText ? 0 : textLineHeight + 2),
               child: _buildItem(
                 context: context,
                 chapter: chapter,

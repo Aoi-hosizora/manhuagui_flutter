@@ -43,4 +43,8 @@ class CustomIcons {
   static const IconData opened_book_arrow_right = IconData(0xe817, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData image_global = IconData(0xe818, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData earth_warning = IconData(0xe819, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData history_plus = IconData(0xe81a, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData history_minus = IconData(0xe81b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData eye_clock = IconData(0xe81c, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData eye_star = IconData(0xe81d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

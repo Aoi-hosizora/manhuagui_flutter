@@ -20,6 +20,8 @@ class MangaSimpleTocView extends StatelessWidget {
     this.showHighlight = true,
     this.showHighlight2 = true,
     this.showFaintColor = true,
+    this.showTriText = false,
+    this.getTriText,
     this.showNewBadge = true,
     this.customBadgeBuilder,
     this.itemBuilder,
@@ -40,6 +42,8 @@ class MangaSimpleTocView extends StatelessWidget {
   final bool showHighlight;
   final bool showHighlight2;
   final bool showFaintColor;
+  final bool showTriText;
+  final String Function(TinyMangaChapter)? getTriText;
   final bool showNewBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
@@ -63,6 +67,8 @@ class MangaSimpleTocView extends StatelessWidget {
       showHighlight: showHighlight,
       showHighlight2: showHighlight2,
       showFaintColor: showFaintColor,
+      showTriText: showTriText,
+      getTriText: getTriText,
       extrasInStack: (chapter) {
         if (chapter == null) {
           return [];

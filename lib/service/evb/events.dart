@@ -123,14 +123,17 @@ class LaterUpdatedEvent {
   final bool fromMangaPage;
 }
 
+// TODO check the fromXXXPage fields
+
 class FootprintUpdatedEvent {
-  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaViewerPage = false});
+  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
 
   final int mangaId;
   final List<int>? chapterIds;
   final UpdateReason reason;
   final bool fromMangaPage;
   final bool fromMangaViewerPage;
+  final bool fromMangaHistoryPage;
 }
 
 class MarkedCategoryUpdatedEvent {
