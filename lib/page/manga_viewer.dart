@@ -643,8 +643,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           lastTime: nowDateTime /* 历史已更新 */,
         ); // 更新历史
         if (newHistory.chapterId == newHistory.lastChapterId) {
-          // 额外的见擦汗，判断当前章节是否与last字段相等，如果相等则需要清空last字段
-          newHistory = newHistory.copyWith(lastChapterId: 0, lastChapterTitle: '', lastChapterPage: 1);
+          // 额外检查，判断当前章节是否与last字段相等，如果相等则需要清空last字段
+          newHistory = newHistory.copyWithNoLastChapterOnly(lastTime: DateTime.now()); // 更新漫画历史
         }
       } else {
         // 老历史不为空且当前章节不等于老历史的curr字段 => curr<-当前章节，last<-老历史的curr字段
@@ -1110,7 +1110,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   fromMangaPage: false,
                   chapter: chapter,
                   chapterNeededData: neededData,
-                  onHistoryUpdated: (h) => _setState(() => _history = h), // TODO test
+                  onHistoryUpdated: (h) => _setState(() => _history = h),
                   onFootprintAdded: (fp) => _setState(() => _footprints?[fp.chapterId] = fp),
                   onFootprintsAdded: (fps) => _setState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
                   onFootprintsRemoved: (cids) => _setState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),

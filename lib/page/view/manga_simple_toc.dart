@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
-import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 
 /// 漫画章节列表（给定章节分组列表，不包括正逆序等按钮），在 [DlFinishedSubPage] 使用
 class MangaSimpleTocView extends StatelessWidget {

@@ -7,8 +7,10 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
+import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -300,11 +302,11 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                                 ? CheckboxForSelectableItem(
                                     tip: tip,
                                     backgroundColor: chapterId == _history?.chapterId //
-                                        ? Colors.deepOrange.applyOpacity(0.3) // same as ChapterGridView
+                                        ? ChapterGridView.defaultHighlightAppliedColor
                                         : chapterId == _history?.lastChapterId
-                                            ? Colors.deepOrange.applyOpacity(0.08) // same as ChapterGridView
+                                            ? ChapterGridView.defaultHighlight2AppliedColor
                                             : Colors.white,
-                                    scale: 0.85,
+                                    scale: 0.85, // larger than dl toc
                                     scaleAlignment: Alignment.bottomRight,
                                   )
                                 : SizedBox.shrink(),

@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -22,7 +23,6 @@ class ViewTocSubPage extends StatefulWidget {
     this.footprintChapterIds,
     required this.onChapterPressed,
     this.onChapterLongPressed,
-    this.onManageHistoryPressed,
   }) : super(key: key);
 
   final int mangaId;
@@ -33,7 +33,6 @@ class ViewTocSubPage extends StatefulWidget {
   final List<int>? footprintChapterIds;
   final void Function(int cid) onChapterPressed;
   final void Function(int cid)? onChapterLongPressed;
-  final void Function()? onManageHistoryPressed;
 
   @override
   State<ViewTocSubPage> createState() => _ViewTocSubPageState();
@@ -107,15 +106,6 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
               ),
             ),
             itemBuilder: (_) => [
-              if (widget.onManageHistoryPressed != null) ...[
-                PopupMenuItem(
-                  child: IconTextMenuItem(CustomIcons.history_menu, '管理章节阅读历史'),
-                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
-                    (_) => widget.onManageHistoryPressed?.call(),
-                  ),
-                ),
-                PopupMenuDivider(),
-              ],
               for (var column in [2, 3, 4])
                 PopupMenuItem(
                   child: IconTextMenuItem(

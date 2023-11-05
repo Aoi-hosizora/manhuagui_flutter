@@ -546,7 +546,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // TODO 长截图 https://blog.csdn.net/weixin_38912070/article/details/126277033
+    // TODO 长截图 https://blog.csdn.net/weixin_38912070/article/details/126277033, https://pub.dev/packages/fit_system_screenshot
     return Scaffold(
       body: RefreshIndicator(
         key: _refreshIndicatorKey,

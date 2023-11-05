@@ -3,8 +3,9 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
-import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -128,9 +129,11 @@ class _DlFinishedSubPageState extends State<DlFinishedSubPage> with AutomaticKee
                               checkboxPosition: PositionArgument.fromLTRB(null, null, 0.9, 1),
                               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(
                                 tip: tip,
-                                backgroundColor: chapterId != widget.history?.chapterId //
-                                    ? Colors.white
-                                    : Theme.of(context).primaryColorLight.applyOpacity(0.6),
+                                backgroundColor: chapterId == widget.history?.chapterId //
+                                    ? ChapterGridView.defaultHighlightAppliedColor
+                                    : chapterId == widget.history?.lastChapterId
+                                        ? ChapterGridView.defaultHighlight2AppliedColor
+                                        : Colors.white,
                                 scale: 0.7,
                                 scaleAlignment: Alignment.bottomRight,
                               ),

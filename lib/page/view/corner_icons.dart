@@ -11,6 +11,7 @@ import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 构建用于各类漫画行和作者行的 Corner 图标列表，在各个列表和列表项使用
 
@@ -20,6 +21,7 @@ class MangaCornerFlags {
     required this.inShelf,
     required this.inFavorite,
     required this.inLater,
+    required this.lateUpdatable,
     required this.inHistory,
     required this.historyRead,
   });
@@ -28,6 +30,7 @@ class MangaCornerFlags {
   final bool inShelf;
   final bool inFavorite;
   final bool inLater;
+  final bool lateUpdatable;
   final bool inHistory;
   final bool historyRead;
 
@@ -39,10 +42,13 @@ class MangaCornerFlags {
       if (inDownload) Icons.download,
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
-      if (inLater) Icons.watch_later, // TODO add later but updatable flag and icon (for "可能有更新" hint)
+      if (inLater) ...[
+        if (!lateUpdatable) MdiIcons.clock, // use mdi rather than Icons.watch_later
+        if (lateUpdatable) MdiIcons.clockStarFourPoints,
+      ],
       if (inHistory && AppSetting.instance.ui.showMangaReadIcon) ...[
         if (!historyRead) CustomIcons.opened_left_star_book,
-        if (historyRead) CustomIcons.opened_blank_book, // icon offset is little higher than origin Icons.import_contacts
+        if (historyRead) CustomIcons.opened_blank_book, // use custom icons rather than Icons.import_contacts
       ],
     ];
   }
@@ -117,7 +123,7 @@ class MangaCornerFlagStorage {
   final _downloadsMap = <int, bool>{};
   final _shelvesMap = <int, bool>{};
   final _favoritesMap = <int, bool>{};
-  final _latersMap = <int, bool>{};
+  final _latersMap = <int, LaterManga?>{};
   final _historiesMap = <int, MangaHistory?>{};
 
   Future<void> queryAndStoreFlags({
@@ -141,7 +147,7 @@ class MangaCornerFlagStorage {
           _favoritesMap[mangaId] = (await FavoriteDao.checkExistence(username: AuthManager.instance.username, mid: mangaId)) ?? false;
         }
         if (queryLaters) {
-          _latersMap[mangaId] = (await LaterMangaDao.checkExistence(username: AuthManager.instance.username, mid: mangaId)) ?? false;
+          _latersMap[mangaId] = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: mangaId);
         }
         if (queryHistories) {
           _historiesMap[mangaId] = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
@@ -154,6 +160,7 @@ class MangaCornerFlagStorage {
 
   MangaCornerFlags getFlags({
     required int mangaId,
+    String? newestChapter, // TODO fill all usages, for "可能有更新" hint
     bool forceInDownload = false,
     bool forceInShelf = false,
     bool forceInFavorite = false,
@@ -164,7 +171,8 @@ class MangaCornerFlagStorage {
       inDownload: forceInDownload || (_downloadsMap[mangaId] ?? false),
       inShelf: forceInShelf || (_shelvesMap[mangaId] ?? false),
       inFavorite: forceInFavorite || (_favoritesMap[mangaId] ?? false),
-      inLater: forceInLater || (_latersMap[mangaId] ?? false),
+      inLater: forceInLater || (_latersMap[mangaId] != null),
+      lateUpdatable: _latersMap[mangaId]?.newestChapter != newestChapter,
       inHistory: forceInHistory || (_historiesMap[mangaId] != null),
       historyRead: _historiesMap[mangaId]?.read == true,
     );

@@ -412,7 +412,7 @@ void showUpdateFavoriteMangaRemarkDialog({
 
 void _navigateWrapper(Future<void> Function() navigate) => navigate();
 
-// => called in MangaPage (MangaTocPage) and MangaViewerPage (ViewTocSubPage)
+// => called in MangaPage (MangaTocPage), MangaViewerPage (ViewTocSubPage), MangaHistoryPage
 void showPopupMenuForMangaToc({
   required BuildContext context,
   required int mangaId,
@@ -1621,23 +1621,10 @@ class _DialogHelper {
     MangaHistory? newHistory;
     var removedFpCids = <int>[];
     if (oldHistory.chapterId == chapterId) {
-      newHistory = oldHistory.copyWith(
-        chapterId: oldHistory.lastChapterId /* last延续上来 */,
-        chapterTitle: oldHistory.lastChapterTitle,
-        chapterPage: oldHistory.lastChapterPage,
-        lastChapterId: 0 /* 未开始阅读 */,
-        lastChapterTitle: '',
-        lastChapterPage: 1,
-        lastTime: DateTime.now(),
-      ); // 更新漫画历史
+      newHistory = oldHistory.copyWithNoCurrChapterOnly(lastTime: DateTime.now()); // 更新漫画历史
       removedFpCids.add(chapterId);
     } else if (oldHistory.lastChapterId == chapterId) {
-      newHistory = oldHistory.copyWith(
-        lastChapterId: 0 /* 未开始阅读 */,
-        lastChapterTitle: '',
-        lastChapterPage: 1,
-        lastTime: DateTime.now(),
-      ); // 更新漫画历史
+      newHistory = oldHistory.copyWithNoLastChapterOnly(lastTime: DateTime.now()); // 更新漫画历史
       removedFpCids.add(chapterId);
     } else {
       newHistory = null; // 无需更新漫画历史

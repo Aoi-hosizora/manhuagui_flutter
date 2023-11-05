@@ -12,7 +12,7 @@ import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
-import 'package:manhuagui_flutter/page/view/manga_toc.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -259,29 +259,13 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
     _msController.exitMultiSelectionMode();
 
     // 2. 更新数据库
-    _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
-    MangaHistory? newHistory;
+    var history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
     var futures = <Future>[];
     for (var chapterId in chapterIds) {
-      if (_history?.chapterId == chapterId) {
-        newHistory = _history?.copyWith(
-          chapterId: _history?.lastChapterId /* last延续上来 */,
-          chapterTitle: _history?.lastChapterTitle,
-          chapterPage: _history?.lastChapterPage,
-          lastChapterId: 0 /* 未开始阅读 */,
-          lastChapterTitle: '',
-          lastChapterPage: 1,
-          lastTime: DateTime.now(),
-        ); // 更新漫画历史
-      } else if (_history?.lastChapterId == chapterId) {
-        newHistory = _history?.copyWith(
-          lastChapterId: 0 /* 未开始阅读 */,
-          lastChapterTitle: '',
-          lastChapterPage: 1,
-          lastTime: DateTime.now(),
-        ); // 更新漫画历史
-      } else {
-        newHistory = null; // 无需更新漫画历史，仅删除章节历史
+      if (history?.chapterId == chapterId) {
+        history = history?.copyWithNoCurrChapterOnly(lastTime: DateTime.now()); // 更新漫画历史
+      } else if (history?.lastChapterId == chapterId) {
+        history = history?.copyWithNoLastChapterOnly(lastTime: DateTime.now()); // 更新漫画历史
       }
       var f = HistoryDao.deleteFootprint(
         username: AuthManager.instance.username,
@@ -290,7 +274,11 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
       );
       futures.add(f);
     }
-
+    if (history != null && history != _history) {
+      await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: history);
+    } else {
+      history = null;
+    }
     await Future.wait(futures);
 
     // 3. 更新界面[↴]、弹出提示、发送通知
@@ -334,15 +322,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
     // 退出多选模式、更新数据库、更新界面[↴]、发送通知
     // 本页引起的删除 => 返回上一页
     _msController.exitMultiSelectionMode();
-    _history = _history!.copyWith(
-      chapterId: 0 /* 未开始阅读 */,
-      chapterTitle: '',
-      chapterPage: 1,
-      lastChapterId: 0 /* 未开始阅读 */,
-      lastChapterTitle: '',
-      lastChapterPage: 1,
-      lastTime: DateTime.now(),
-    ); // 删除章节阅读历史，保留漫画浏览历史
+    _history = _history!.copyWithNoCurrChapterAndLastChapter(lastTime: DateTime.now()); // 删除章节阅读历史，仅保留漫画浏览历史
     await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
     await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: widget.mangaId); // 删除章节阅读历史
     if (mounted) setState(() {});

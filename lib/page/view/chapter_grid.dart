@@ -90,16 +90,18 @@ class ChapterGridView extends StatelessWidget {
                           ),
                     ),
                   ),
-                if (chapter != null && showTriText)
+                if (chapter != null && showTriText) ...[
                   Padding(
-                    padding: EdgeInsets.only(top: 2.5),
-                    child: Text(
-                      getTriText?.call(chapter) ?? '',
-                      style: Theme.of(context).textTheme.overline?.copyWith(
-                            color: Colors.black, // no faint
-                          ),
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+                    child: Divider(height: 0, thickness: 1),
                   ),
+                  Text(
+                    getTriText?.call(chapter) ?? '',
+                    style: Theme.of(context).textTheme.overline?.copyWith(
+                          color: Colors.black, // never faint
+                        ),
+                  ),
+                ],
               ],
             ),
             style: OutlinedButton.styleFrom(
@@ -156,7 +158,7 @@ class ChapterGridView extends StatelessWidget {
           for (var chapter in shown)
             SizedBox(
               width: width,
-              height: height + (!showPageCount ? 0 : textLineHeight + 1) + (!showTriText ? 0 : textLineHeight + 2.5),
+              height: height + (!showPageCount ? 0 : textLineHeight + 1) + (!showTriText ? 0 : textLineHeight + 4 * 2),
               child: _buildItem(
                 context: context,
                 chapter: chapter,

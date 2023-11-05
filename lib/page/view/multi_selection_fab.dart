@@ -116,20 +116,19 @@ class MultiSelectionFabContainer extends StatelessWidget {
                 child: AnimatedFab(
                   show: multiSelectableController.multiSelecting && opt.show,
                   fab: wrapTooltipTheme(
-                    child: AbsorbPointer(
-                      absorbing: !opt.enable,
-                      child: FloatingActionButton(
-                        child: IconTheme(
-                          data: Theme.of(context).iconTheme.copyWith(
-                                color: opt.enable ? null : Colors.grey,
-                              ),
-                          child: opt.child,
+                    child: FloatingActionButton(
+                      child: IconTheme.merge(
+                        data: IconThemeData(
+                          color: opt.enable //
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onPrimary.withOpacity(0.4),
                         ),
-                        mini: true,
-                        heroTag: null,
-                        tooltip: opt.tooltip,
-                        onPressed: opt.enable ? opt.onPressed : null,
+                        child: opt.child,
                       ),
+                      mini: true,
+                      heroTag: null,
+                      tooltip: opt.tooltip,
+                      onPressed: opt.enable ? opt.onPressed : null,
                     ),
                   ),
                 ),

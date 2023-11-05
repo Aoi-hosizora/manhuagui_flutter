@@ -30,6 +30,7 @@ import 'package:manhuagui_flutter/page/view/later_manga_banner.dart';
 import 'package:manhuagui_flutter/page/view/manga_rating.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
+import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
@@ -47,7 +48,6 @@ import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 漫画页，网络请求并展示 [Manga] 和 [Comment] 信息
 class MangaPage extends StatefulWidget {
@@ -705,10 +705,8 @@ class _MangaPageState extends State<MangaPage> {
             IconTextDialogOption(
               icon: Icon(CustomIcons.history_menu),
               text: Text('已阅读 ${_footprints?.length ?? 0} 个章节，管理章节阅读历史'),
-              onPressed: () {
-                Navigator.of(c).pop();
-                _gotoHistoryPage();
-              },
+              popWhenPress: c,
+              onPressed: () => _gotoHistoryPage(),
             ),
           Divider(height: 16, thickness: 1),
 
@@ -722,15 +720,7 @@ class _MangaPageState extends State<MangaPage> {
               predicateForPress: () => showCheckDialog(msg: '确定删除漫画阅读历史 (包括章节阅读历史)，且保留漫画浏览历史？'),
               popWhenPress: c,
               onPressed: () async {
-                _history = _history!.copyWith(
-                  chapterId: 0 /* 未开始阅读 */,
-                  chapterTitle: '',
-                  chapterPage: 1,
-                  lastChapterId: 0 /* 未开始阅读 */,
-                  lastChapterTitle: '',
-                  lastChapterPage: 1,
-                  lastTime: DateTime.now(),
-                ); // 仅删除章节阅读历史
+                _history = _history!.copyWithNoCurrChapterAndLastChapter(lastTime: DateTime.now()); // 删除章节阅读历史，仅保留漫画浏览历史
                 await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
                 _footprints?.clear();
                 await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: widget.id);
@@ -1043,26 +1033,20 @@ class _MangaPageState extends State<MangaPage> {
           IconTextDialogOption(
             icon: Icon(Icons.notes),
             text: Text('查看全部漫画章节'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              _gotoTocPage();
-            },
+            popWhenPress: c,
+            onPressed: () => _gotoTocPage(),
           ),
           IconTextDialogOption(
             icon: Icon(CustomIcons.history_menu),
             text: Text('管理章节阅读历史'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              _gotoHistoryPage();
-            },
+            popWhenPress: c,
+            onPressed: () => _gotoHistoryPage(),
           ),
           IconTextDialogOption(
             icon: Icon(Icons.settings),
             text: Text('漫画章节列表显示设置'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              showUiSettingDialog(context: context);
-            },
+            popWhenPress: c,
+            onPressed: () => showUiSettingDialog(context: context),
           ),
         ],
       ),

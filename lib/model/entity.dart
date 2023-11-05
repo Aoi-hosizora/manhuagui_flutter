@@ -73,6 +73,39 @@ class MangaHistory {
     );
   }
 
+  MangaHistory copyWithNoCurrChapterOnly({DateTime? lastTime}) {
+    return copyWith(
+      chapterId: lastChapterId /* last延续上来 */,
+      chapterTitle: lastChapterTitle,
+      chapterPage: lastChapterPage,
+      lastChapterId: 0 /* 未开始阅读 */,
+      lastChapterTitle: '',
+      lastChapterPage: 1,
+      lastTime: lastTime,
+    );
+  }
+
+  MangaHistory copyWithNoLastChapterOnly({DateTime? lastTime}) {
+    return copyWith(
+      lastChapterId: 0 /* 未开始阅读 */,
+      lastChapterTitle: '',
+      lastChapterPage: 1,
+      lastTime: lastTime,
+    );
+  }
+
+  MangaHistory copyWithNoCurrChapterAndLastChapter({DateTime? lastTime}) {
+    return copyWith(
+      chapterId: 0 /* 未开始阅读 */,
+      chapterTitle: '',
+      chapterPage: 1,
+      lastChapterId: 0 /* 未开始阅读 */,
+      lastChapterTitle: '',
+      lastChapterPage: 1,
+      lastTime: lastTime,
+    );
+  }
+
   bool equals(MangaHistory o, {bool includeCover = true}) {
     return mangaId == o.mangaId && //
         mangaTitle == o.mangaTitle &&

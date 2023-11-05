@@ -105,7 +105,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
         itemBuilder: (c, _, item) => MangaRankingLineView(
           manga: item,
           history: _flagStorage.getHistory(mangaId: item.mid),
-          flags: _flagStorage.getFlags(mangaId: item.mid),
+          flags: _flagStorage.getFlags(mangaId: item.mid, newestChapter: item.newestChapter),
           twoColumns: AppSetting.instance.ui.showTwoColumns,
           highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
         ),

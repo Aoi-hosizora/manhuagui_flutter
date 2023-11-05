@@ -273,7 +273,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        ..._flagStorage.getFlags(mangaId: manga.mid).buildIcons().let((flags) {
+                        ..._flagStorage.getFlags(mangaId: manga.mid, newestChapter: manga.newestChapter).buildIcons().let((flags) {
                           if (flags.isEmpty) return [];
                           return [
                             Container(
