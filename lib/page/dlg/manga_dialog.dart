@@ -304,7 +304,7 @@ void showPopupMenuForMangaList({
                   if (mangaHistory != null)
                     [
                       IconTextDialogOption(
-                        icon: Icon(MdiIcons.deleteClock),
+                        icon: Icon(CustomIcons.history_delete),
                         text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读与浏览历史'),
                         popWhenPress: c,
                         predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: mangaHistory.read),
@@ -514,8 +514,8 @@ void showPopupMenuForMangaToc({
         /// 历史
         if (allowDeletingHistory && isChapterRead)
           IconTextDialogOption(
-            icon: Icon(MdiIcons.deleteClock),
-            text: Text('删除阅读历史') /* 删除漫画阅读历史 */,
+            icon: Icon(CustomIcons.history_minus),
+            text: Text('删除阅读历史') /* 删除章节阅读历史 */,
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: true, chapterTitle: readChapterTitle),
             onPressed: () => helper.removeChapterHistory(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintsRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage),

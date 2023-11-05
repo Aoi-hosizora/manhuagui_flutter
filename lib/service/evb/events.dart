@@ -41,7 +41,7 @@ class ToRankingRequestedEvent {
 enum UpdateReason { added, updated, deleted }
 
 class HistoryUpdatedEvent {
-  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.fromHistoryPage = false, this.fromSepHistoryPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false});
+  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.fromHistoryPage = false, this.fromSepHistoryPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
 
   final int mangaId;
   final UpdateReason reason;
@@ -49,6 +49,7 @@ class HistoryUpdatedEvent {
   final bool fromSepHistoryPage;
   final bool fromMangaPage;
   final bool fromMangaViewerPage;
+  final bool fromMangaHistoryPage;
 }
 
 class ShelfUpdatedEvent {

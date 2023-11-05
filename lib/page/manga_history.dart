@@ -6,9 +6,12 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
+import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -16,7 +19,9 @@ import 'package:manhuagui_flutter/service/db/history.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
+/// 漫画历史管理页，查询并展示 [MangaHistory] 以及 [ChapterFootprint] 信息
 class MangaHistoryPage extends StatefulWidget {
   const MangaHistoryPage({
     Key? key,
@@ -37,6 +42,12 @@ class MangaHistoryPage extends StatefulWidget {
 
   @override
   State<MangaHistoryPage> createState() => _MangaHistoryPageState();
+}
+
+enum _MangaHistoryPageMode {
+  readOnly,
+  unreadOnly,
+  showAll,
 }
 
 class _MangaHistoryPageState extends State<MangaHistoryPage> {
@@ -67,18 +78,19 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
   Map<int, ChapterFootprint>? _footprints;
   DownloadedManga? _downloadEntity;
   var _columns = 4; // default to four columns
+  var _orderInDefault = true; // default to order by number
+  var _invertOrder = true; // default to order desc
 
   List<MangaChapterGroup>? _readGroups;
   List<MangaChapterGroup>? _unreadGroups;
   Set<int>? _readChapterIds;
   Set<int>? _unreadChapterIds;
-  var _readOnly = true;
-  var _unreadOnly = false;
+  var _mode = _MangaHistoryPageMode.readOnly;
 
   List<MangaChapterGroup> get _currGroups => //
-      _readOnly
+      _mode == _MangaHistoryPageMode.readOnly
           ? (_readGroups ?? [])
-          : _unreadOnly
+          : _mode == _MangaHistoryPageMode.unreadOnly
               ? (_unreadGroups ?? [])
               : widget.chapterGroups;
 
@@ -114,7 +126,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
   }
 
   Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent, FootprintUpdatedEvent? footprintEvent}) async {
-    if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
+    if (historyEvent != null && historyEvent.mangaId == widget.mangaId && !historyEvent.fromMangaHistoryPage) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
@@ -129,11 +141,39 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
     }
   }
 
+  void _switchToMode(_MangaHistoryPageMode mode) {
+    if (_mode != mode) {
+      _mode = mode;
+      _msController.exitMultiSelectionMode(); // 同时退出多选模式
+      if (mounted) setState(() {});
+    }
+  }
+
+  int Function(TinyMangaChapter a, TinyMangaChapter b) _getChapterCompareTo() {
+    if (_orderInDefault || _mode != _MangaHistoryPageMode.readOnly) {
+      return (a, b) {
+        return a.number.compareTo(b.number); // sort using default method (see ChapterGridView)
+      };
+    }
+
+    return (a, b) {
+      var fpa = _footprints?[a.cid];
+      var fpb = _footprints?[b.cid];
+      if (fpa == null) {
+        return -1; // fpa < fpb
+      }
+      if (fpb == null) {
+        return 1; // fpa > fpb
+      }
+      return fpa.createdAt.compareTo(fpb.createdAt); // sort with createdAt field
+    };
+  }
+
   Future<void> _addChapterFootprints({required List<int> chapterIds}) async {
     chapterIds = chapterIds.where((el) => _unreadChapterIds?.contains(el) == true).toList();
     if (chapterIds.isEmpty) {
       Fluttertoast.showToast(msg: '所选章节都已被标记为已阅读');
-      return; // there is no chapter need to be added
+      return;
     }
 
     // 不退出多选模式、先弹出对话框
@@ -188,8 +228,8 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
   Future<void> _removeChapterFootprints({required List<int> chapterIds}) async {
     chapterIds = chapterIds.where((el) => _readChapterIds?.contains(el) == true).toList();
     if (chapterIds.isEmpty) {
-      Fluttertoast.showToast(msg: '所选章节都未被阅读');
-      return; // there is no chapter need to be removed
+      Fluttertoast.showToast(msg: '所选章节都还未被阅读');
+      return;
     }
 
     // 不退出多选模式、先弹出对话框
@@ -252,9 +292,6 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
     }
 
     await Future.wait(futures);
-    if (newHistory != null) {
-      await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
-    }
 
     // 3. 更新界面[↴]、弹出提示、发送通知
     // 本页引起的删除 => 更新列表显示
@@ -262,14 +299,56 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
       _footprints?.remove(chapterId);
     }
     _loadDataForGroups();
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已经删除 ${chapterIds.length} 条章节阅读历史')));
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: chapterIds, reason: UpdateReason.deleted, fromMangaHistoryPage: true));
-    if (newHistory != null) {
-      // _history = newHistory; => 交给 evb 更新
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromHistoryPage: false, fromMangaPage: false));
+    if (history != null) {
+      _history = history;
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromMangaHistoryPage: true));
     }
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已删除 ${chapterIds.length} 条章节阅读历史')));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: chapterIds, reason: UpdateReason.deleted, fromMangaHistoryPage: true));
     if (mounted) setState(() {});
+  }
+
+  Future<void> _deleteHistory() async {
+    if (_history == null) {
+      return;
+    }
+
+    // 不退出多选模式、先弹出对话框
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('删除确认'),
+        content: Text('是否删除《${_history!.mangaTitle}》阅读历史，以及所有章节的阅读历史？'),
+        scrollable: true,
+        actions: [
+          TextButton(child: Text('删除'), onPressed: () => Navigator.of(c).pop(true)),
+          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
+        ],
+      ),
+    );
+    if (ok != true) {
+      return;
+    }
+
+    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
+    // 本页引起的删除 => 返回上一页
+    _msController.exitMultiSelectionMode();
+    _history = _history!.copyWith(
+      chapterId: 0 /* 未开始阅读 */,
+      chapterTitle: '',
+      chapterPage: 1,
+      lastChapterId: 0 /* 未开始阅读 */,
+      lastChapterTitle: '',
+      lastChapterPage: 1,
+      lastTime: DateTime.now(),
+    ); // 删除章节阅读历史，保留漫画浏览历史
+    await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
+    await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: widget.mangaId); // 删除章节阅读历史
+    if (mounted) setState(() {});
+    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromMangaHistoryPage: true));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: null, reason: UpdateReason.deleted, fromMangaHistoryPage: true));
+    Navigator.of(context).pop();
   }
 
   void _showPopupMenu({required int chapterId}) {
@@ -315,23 +394,9 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
           leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
           actions: [
             AppBarActionButton(
-              icon: Icon(_readOnly ? CustomIcons.eye_clock : (_unreadOnly ? CustomIcons.eye_star : CustomIcons.eye_menu)),
-              tooltip: _readOnly ? '当前仅显示已阅读的章节' : (_unreadOnly ? '当前仅显示未阅读的章节' : '当前显示着全部章节'),
-              onPressed: () {
-                // TODO show more options in page, maybe use MangaSimpleTocView
-                if (_readOnly) {
-                  _readOnly = false;
-                  _unreadOnly = true;
-                } else if (_unreadOnly) {
-                  _unreadOnly = false;
-                  _readOnly = false;
-                } else {
-                  _readOnly = true;
-                  _unreadOnly = false;
-                }
-                _msController.exitMultiSelectionMode();
-                if (mounted) setState(() {});
-              },
+              icon: Icon(CustomIcons.history_delete),
+              tooltip: '删除漫画阅读历史',
+              onPressed: () => _deleteHistory(),
             ),
             PopupMenuButton(
               child: Builder(
@@ -373,14 +438,53 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
                 padding: EdgeInsets.zero,
                 physics: AlwaysScrollableScrollPhysics(),
                 children: [
+                  Container(
+                    color: Colors.white,
+                    child: ActionRowView.five(
+                      action1: ActionItem.simple(
+                        '仅已阅读',
+                        CustomIcons.eye_clock,
+                        () => _switchToMode(_MangaHistoryPageMode.readOnly),
+                        color: _mode == _MangaHistoryPageMode.readOnly ? Colors.deepOrange : null,
+                      ),
+                      action2: ActionItem.simple(
+                        '仅未阅读',
+                        CustomIcons.eye_star,
+                        () => _switchToMode(_MangaHistoryPageMode.unreadOnly),
+                        color: _mode == _MangaHistoryPageMode.unreadOnly ? Colors.deepOrange : null,
+                      ),
+                      action3: ActionItem.simple(
+                        '全部章节',
+                        CustomIcons.eye_menu,
+                        () => _switchToMode(_MangaHistoryPageMode.showAll),
+                        color: _mode == _MangaHistoryPageMode.showAll ? Colors.deepOrange : null,
+                      ),
+                      action4: _mode != _MangaHistoryPageMode.readOnly // sort by date only when readOnly
+                          ? ActionItem.simple('默认排序', CustomIcons.sort_book_descending, null, enable: false)
+                          : ActionItem.simple(
+                              _orderInDefault ? '默认排序' : '时间排序',
+                              _orderInDefault ? CustomIcons.sort_book_descending : MdiIcons.sortClockDescendingOutline,
+                              () => mountedSetState(() => _orderInDefault = !_orderInDefault),
+                            ),
+                      action5: ActionItem.simple(
+                        _invertOrder ? '逆序显示' : '正序显示',
+                        _invertOrder ? MdiIcons.sortDescending : MdiIcons.sortAscending,
+                        () => mountedSetState(() => _invertOrder = !_invertOrder),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: 12,
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                  ),
                   MultiSelectable<ValueKey<int>>(
                     controller: _msController,
                     stateSetter: () => mountedSetState(() {}),
                     onModeChanged: (_) => mountedSetState(() {}),
-                    child: MangaTocView(
+                    child: MangaSimpleTocView(
                       groups: _currGroups,
-                      full: true,
-                      tocTitle: _readOnly ? '章节列表 (已阅读)' : (_unreadOnly ? '章节列表 (未阅读)' : '章节列表'),
+                      invertOrder: _invertOrder,
+                      compareTo: _getChapterCompareTo(),
                       columns: _columns,
                       highlightedChapters: [_history?.chapterId ?? 0],
                       highlighted2Chapters: [_history?.lastChapterId ?? 0],
@@ -399,11 +503,11 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
                               checkboxBuilder: (_, __, tip) => CheckboxForSelectableItem(
                                 tip: tip,
                                 backgroundColor: chapterId == _history?.chapterId //
-                                    ? Colors.deepOrange.applyOpacity(0.3) // same as ChapterGridView
+                                    ? ChapterGridView.defaultHighlightAppliedColor
                                     : chapterId == _history?.lastChapterId
-                                        ? Colors.deepOrange.applyOpacity(0.08) // same as ChapterGridView
+                                        ? ChapterGridView.defaultHighlight2AppliedColor
                                         : Colors.white,
-                                scale: 0.85,
+                                scale: 0.7,
                                 scaleAlignment: Alignment.bottomRight,
                               ),
                               useFullRipple: true,
@@ -426,9 +530,10 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
             : MultiSelectionFabContainer(
                 multiSelectableController: _msController,
                 onCounterPressed: () {
+                  var allChapters = (_currGroups.allChapters..sort(_getChapterCompareTo())).let((l) => !_invertOrder ? l : l.reversed.toList());
                   var chapterIds = _msController.selectedItems.map((e) => e.value).toList();
-                  var titles = _currGroups.allChapters.where((el) => chapterIds.contains(el.cid)).map((m) => '《${m.title}》').toList();
-                  var allKeys = _currGroups.allChapters.map((el) => ValueKey(el.cid)).toList();
+                  var titles = allChapters.where((el) => chapterIds.contains(el.cid)).map((m) => '《${m.title}》').toList();
+                  var allKeys = allChapters.map((el) => ValueKey(el.cid)).toList();
                   MultiSelectionFabContainer.showCounterDialog(context, controller: _msController, selected: titles, allKeys: allKeys);
                 },
                 fabForMultiSelection: [
@@ -441,11 +546,13 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
                   MultiSelectionFabOption(
                     child: Icon(CustomIcons.history_plus),
                     tooltip: '标记为已阅读',
+                    enable: _mode == _MangaHistoryPageMode.unreadOnly || _mode == _MangaHistoryPageMode.showAll,
                     onPressed: () => _addChapterFootprints(chapterIds: _msController.selectedItems.map((el) => el.value).toList()),
                   ),
                   MultiSelectionFabOption(
                     child: Icon(CustomIcons.history_minus),
                     tooltip: '删除阅读历史',
+                    enable: _mode == _MangaHistoryPageMode.readOnly || _mode == _MangaHistoryPageMode.showAll,
                     onPressed: () => _removeChapterFootprints(chapterIds: _msController.selectedItems.map((el) => el.value).toList()),
                   ),
                 ],

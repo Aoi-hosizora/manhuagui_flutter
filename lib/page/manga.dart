@@ -663,7 +663,7 @@ class _MangaPageState extends State<MangaPage> {
           /// 历史展示 (有阅读历史)
           if (_history != null && _history!.read) ...[
             IconTextDialogOption(
-              icon: Icon(CustomIcons.opened_book_clock),
+              icon: Icon(Icons.history),
               text: Flexible(
                 child: Text('最近阅读于 ${_history!.formattedLastTime}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
@@ -703,21 +703,12 @@ class _MangaPageState extends State<MangaPage> {
           /// 章节阅读历史
           if (_history != null)
             IconTextDialogOption(
-              icon: Icon(Icons.history),
-              text: Text('已阅读过 ${_footprints?.length ?? 0} 个漫画章节'),
-              onPressed: () => Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => MangaHistoryPage(
-                    mangaId: widget.id,
-                    mangaTitle: _data!.title,
-                    mangaCover: _data!.cover,
-                    mangaUrl: _data!.url,
-                    chapterGroups: _data!.chapterGroups,
-                    chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
-                  ),
-                ),
-              ),
+              icon: Icon(CustomIcons.history_menu),
+              text: Text('已阅读 ${_footprints?.length ?? 0} 个章节，管理章节阅读历史'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                _gotoHistoryPage();
+              },
             ),
           Divider(height: 16, thickness: 1),
 
@@ -726,7 +717,7 @@ class _MangaPageState extends State<MangaPage> {
           // 本页引起的更新 => 更新历史相关的界面
           if (_history != null && _history!.read)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.bookClock),
+              icon: Icon(CustomIcons.history_delete),
               text: Text('删除所有章节阅读历史，保留漫画浏览历史'),
               predicateForPress: () => showCheckDialog(msg: '确定删除漫画阅读历史 (包括章节阅读历史)，且保留漫画浏览历史？'),
               popWhenPress: c,
@@ -750,7 +741,7 @@ class _MangaPageState extends State<MangaPage> {
             ),
           if (_history != null)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.deleteClock),
+              icon: Icon(CustomIcons.history_delete),
               text: Text(!_history!.read ? '删除浏览历史' : '删除所有章节阅读历史、以及漫画浏览历史'),
               predicateForPress: () => showCheckDialog(msg: '确定删除' + (!_history!.read ? '漫画浏览历史？' : '漫画阅读历史 (包括章节阅读历史)、以及漫画浏览历史？')),
               popWhenPress: c,
@@ -766,7 +757,7 @@ class _MangaPageState extends State<MangaPage> {
             ),
           if (_history == null)
             IconTextDialogOption(
-              icon: Icon(MdiIcons.bookClock),
+              icon: Icon(CustomIcons.history_plus),
               text: Text('保留漫画浏览历史'),
               popWhenPress: c,
               onPressed: () async {
@@ -1021,6 +1012,23 @@ class _MangaPageState extends State<MangaPage> {
           groups: _data!.chapterGroups,
           onChapterPressed: (cid) => _readChapter(chapterId: cid),
           onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: false),
+          onManageHistoryPressed: () => _gotoHistoryPage(),
+        ),
+      ),
+    );
+  }
+
+  void _gotoHistoryPage() {
+    Navigator.of(context).push(
+      CustomPageRoute(
+        context: context,
+        builder: (c) => MangaHistoryPage(
+          mangaId: widget.id,
+          mangaTitle: _data!.title,
+          mangaCover: _data!.cover,
+          mangaUrl: _data!.url,
+          chapterGroups: _data!.chapterGroups,
+          chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
         ),
       ),
     );
@@ -1038,6 +1046,14 @@ class _MangaPageState extends State<MangaPage> {
             onPressed: () {
               Navigator.of(c).pop();
               _gotoTocPage();
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(CustomIcons.history_menu),
+            text: Text('管理章节阅读历史'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              _gotoHistoryPage();
             },
           ),
           IconTextDialogOption(
@@ -1503,7 +1519,7 @@ class _MangaPageState extends State<MangaPage> {
                     gridPadding: EdgeInsets.symmetric(horizontal: 12),
                     highlightedChapters: [_history?.chapterId ?? 0],
                     highlighted2Chapters: [_history?.lastChapterId ?? 0],
-                    showHighlight2: AppSetting.instance.ui.showLastHistory, // TODO improve style, add chapter history page
+                    showHighlight2: AppSetting.instance.ui.showLastHistory,
                     faintedChapters: _footprints?.keys.toList() ?? [],
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,

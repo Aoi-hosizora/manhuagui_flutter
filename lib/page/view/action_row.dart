@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
 class ActionItem {
-  const ActionItem({required this.text, required this.icon, required this.action, this.longPress, this.enable = true, this.rotateAngle = 0});
+  const ActionItem({required this.text, required this.icon, required this.action, this.longPress, this.enable = true, this.rotateAngle = 0, this.color});
 
-  const ActionItem.simple(this.text, this.icon, this.action, {this.longPress, this.enable = true, this.rotateAngle = 0});
+  const ActionItem.simple(this.text, this.icon, this.action, {this.longPress, this.enable = true, this.rotateAngle = 0, this.color});
 
   final String text;
   final IconData? icon;
@@ -12,6 +12,7 @@ class ActionItem {
   final void Function()? longPress;
   final bool enable;
   final double rotateAngle;
+  final Color? color;
 }
 
 /// 一排按钮（四个/五个），在 [RecommendSubPage] / [MineSubPage] / [MangaPage] / [MangaViewerPage] / [ViewExtraSubPage] / [DownloadMangaPage] 使用
@@ -106,7 +107,7 @@ class ActionRowView extends StatelessWidget {
                     ? Icon(
                         action.icon,
                         color: action.enable
-                            ? (iconColor ?? Colors.black54) // enabled
+                            ? (action.color ?? iconColor ?? Colors.black54) // enabled
                             : (disabledIconColor ?? Colors.grey) /* disabled */,
                       )
                     : Padding(
@@ -125,7 +126,7 @@ class ActionRowView extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText1!.copyWith(
                   fontSize: 16,
                   color: action.enable
-                      ? (textColor ?? Colors.black) // enabled
+                      ? (action.color ?? textColor ?? Colors.black) // enabled
                       : (disabledTextColor ?? Colors.grey) /* disabled */,
                 ),
           ),

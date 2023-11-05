@@ -8,12 +8,14 @@ class MultiSelectionFabOption {
     this.tooltip,
     this.show = true,
     required this.onPressed,
+    this.enable = true,
   });
 
   final Widget child;
   final String? tooltip;
   final bool show;
   final VoidCallback onPressed;
+  final bool enable;
 }
 
 /// 用于多选列表的 Fab 容器，在 [HistorySubPage]、[DownloadPage]、[DlFinishedSubPage]、[DlUnfinishedSubPage] 使用
@@ -52,7 +54,16 @@ class MultiSelectionFabContainer extends StatelessWidget {
               controller.select(allKeys);
             },
           ),
-          if (selected.isNotEmpty)
+          if (selected.isNotEmpty) ...[
+            IconTextDialogOption(
+              icon: Icon(MdiIcons.selectOff),
+              text: Text('取消选择'),
+              onPressed: () {
+                Navigator.of(c).pop();
+                controller.exitMultiSelectionMode();
+              },
+            ),
+            Divider(height: 16, thickness: 1),
             IconTextDialogOption(
               icon: Icon(MdiIcons.selectSearch),
               text: Text('查看已选择项'),
@@ -69,15 +80,7 @@ class MultiSelectionFabContainer extends StatelessWidget {
                 );
               },
             ),
-          if (selected.isNotEmpty)
-            IconTextDialogOption(
-              icon: Icon(MdiIcons.selectOff),
-              text: Text('取消选择'),
-              onPressed: () {
-                Navigator.of(c).pop();
-                controller.exitMultiSelectionMode();
-              },
-            ),
+          ],
         ],
       ),
     );
@@ -113,12 +116,20 @@ class MultiSelectionFabContainer extends StatelessWidget {
                 child: AnimatedFab(
                   show: multiSelectableController.multiSelecting && opt.show,
                   fab: wrapTooltipTheme(
-                    child: FloatingActionButton(
-                      child: opt.child,
-                      mini: true,
-                      heroTag: null,
-                      tooltip: opt.tooltip,
-                      onPressed: opt.onPressed,
+                    child: AbsorbPointer(
+                      absorbing: !opt.enable,
+                      child: FloatingActionButton(
+                        child: IconTheme(
+                          data: Theme.of(context).iconTheme.copyWith(
+                                color: opt.enable ? null : Colors.grey,
+                              ),
+                          child: opt.child,
+                        ),
+                        mini: true,
+                        heroTag: null,
+                        tooltip: opt.tooltip,
+                        onPressed: opt.enable ? opt.onPressed : null,
+                      ),
                     ),
                   ),
                 ),

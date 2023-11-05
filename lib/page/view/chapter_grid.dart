@@ -10,6 +10,7 @@ class ChapterGridView extends StatelessWidget {
     required this.padding,
     this.showPageCount = true,
     this.invertOrder = true,
+    this.compareTo,
     this.maxLines = -1,
     this.columns = 4,
     this.highlightColor,
@@ -33,6 +34,7 @@ class ChapterGridView extends StatelessWidget {
   final EdgeInsets padding;
   final bool showPageCount;
   final bool invertOrder; // true means desc
+  final int Function(TinyMangaChapter a, TinyMangaChapter b)? compareTo;
   final int maxLines; // -1 means full
   final int columns;
   final Color? highlightColor;
@@ -51,6 +53,12 @@ class ChapterGridView extends StatelessWidget {
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
   final void Function(TinyMangaChapter? chapter)? onChapterLongPressed;
 
+  static final Color defaultFaintTextColor = Colors.grey[600]!.withOpacity(0.7);
+  static final Color defaultHighlightColor = Colors.deepOrange.withOpacity(0.3);
+  static final Color defaultHighlight2Color = Colors.deepOrange.withOpacity(0.06);
+  static final Color defaultHighlightAppliedColor = Colors.deepOrange.applyOpacity(0.3);
+  static final Color defaultHighlight2AppliedColor = Colors.deepOrange.applyOpacity(0.06);
+
   Widget _buildItem({required BuildContext context, required TinyMangaChapter? chapter}) {
     return Stack(
       children: [
@@ -63,9 +71,9 @@ class ChapterGridView extends StatelessWidget {
                 Text(
                   chapter?.title ?? '...',
                   style: Theme.of(context).textTheme.button?.copyWith(
-                        color: !faintedChapters.contains(chapter?.cid) //
+                        color: !showFaintColor || !faintedChapters.contains(chapter?.cid) //
                             ? Colors.black
-                            : (faintTextColor ?? Colors.grey[600]!.withOpacity(0.7)),
+                            : (faintTextColor ?? defaultFaintTextColor),
                       ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -76,19 +84,19 @@ class ChapterGridView extends StatelessWidget {
                     child: Text(
                       '共${chapter.pageCount}页',
                       style: Theme.of(context).textTheme.overline?.copyWith(
-                            color: showFaintColor && faintedChapters.contains(chapter.cid) //
-                                ? (faintTextColor ?? Colors.grey[600]!.withOpacity(0.7))
-                                : Colors.grey[800],
+                            color: !showFaintColor || faintedChapters.contains(chapter.cid) //
+                                ? Colors.grey[800]
+                                : (faintTextColor ?? defaultFaintTextColor),
                           ),
                     ),
                   ),
                 if (chapter != null && showTriText)
                   Padding(
-                    padding: EdgeInsets.only(top: 2),
+                    padding: EdgeInsets.only(top: 2.5),
                     child: Text(
                       getTriText?.call(chapter) ?? '',
                       style: Theme.of(context).textTheme.overline?.copyWith(
-                            color: Colors.black,
+                            color: Colors.black, // no faint
                           ),
                     ),
                   ),
@@ -97,9 +105,9 @@ class ChapterGridView extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               backgroundColor: showHighlight && highlightedChapters.contains(chapter?.cid)
-                  ? (highlightColor ?? Colors.deepOrange.withOpacity(0.3)) //
+                  ? (highlightColor ?? defaultHighlightColor) //
                   : showHighlight2 && highlighted2Chapters.contains(chapter?.cid)
-                      ? (highlight2Color ?? Colors.deepOrange.withOpacity(0.08)) //
+                      ? (highlight2Color ?? defaultHighlight2Color) //
                       : null,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -124,9 +132,9 @@ class ChapterGridView extends StatelessWidget {
 
     List<TinyMangaChapter?> shown = chapters.toList();
     if (!invertOrder) {
-      shown.sort((i, j) => i!.number.compareTo(j!.number)); // sort through comparing with number
+      shown.sort((i, j) => compareTo?.call(i!, j!) ?? i!.number.compareTo(j!.number)); // sort through comparing with number in default
     } else {
-      shown.sort((i, j) => j!.number.compareTo(i!.number));
+      shown.sort((i, j) => compareTo?.call(i!, j!).let((b) => -b) ?? j!.number.compareTo(i!.number));
     }
 
     if (maxLines > 0) {
@@ -148,7 +156,7 @@ class ChapterGridView extends StatelessWidget {
           for (var chapter in shown)
             SizedBox(
               width: width,
-              height: height + (!showPageCount ? 0 : textLineHeight + 1) + (!showTriText ? 0 : textLineHeight + 2),
+              height: height + (!showPageCount ? 0 : textLineHeight + 1) + (!showTriText ? 0 : textLineHeight + 2.5),
               child: _buildItem(
                 context: context,
                 chapter: chapter,

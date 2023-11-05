@@ -11,6 +11,7 @@ class MangaSimpleTocView extends StatelessWidget {
     this.columns = 4,
     this.gridPadding,
     this.invertOrder = true,
+    this.compareTo,
     this.highlightColor,
     this.highlightedChapters = const [],
     this.highlight2Color,
@@ -33,6 +34,7 @@ class MangaSimpleTocView extends StatelessWidget {
   final int columns;
   final EdgeInsets? gridPadding;
   final bool invertOrder;
+  final int Function(TinyMangaChapter a, TinyMangaChapter b)? compareTo;
   final Color? highlightColor;
   final List<int> highlightedChapters;
   final Color? highlight2Color;
@@ -56,6 +58,7 @@ class MangaSimpleTocView extends StatelessWidget {
       padding: gridPadding ?? EdgeInsets.symmetric(horizontal: 12),
       showPageCount: true,
       invertOrder: invertOrder /* true means desc */,
+      compareTo: compareTo,
       maxLines: -1 /* show all chapters */,
       columns: columns,
       highlightColor: highlightColor,

@@ -47,4 +47,8 @@ class CustomIcons {
   static const IconData history_minus = IconData(0xe81b, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData eye_clock = IconData(0xe81c, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData eye_star = IconData(0xe81d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData history_delete = IconData(0xe81e, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData history_menu = IconData(0xe81f, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData sort_book_ascending = IconData(0xe820, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData sort_book_descending = IconData(0xe821, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

@@ -22,6 +22,7 @@ class MangaTocPage extends StatefulWidget {
     required this.groups,
     required this.onChapterPressed,
     this.onChapterLongPressed,
+    this.onManageHistoryPressed,
   }) : super(key: key);
 
   final int mangaId;
@@ -29,6 +30,7 @@ class MangaTocPage extends StatefulWidget {
   final List<MangaChapterGroup> groups;
   final void Function(int cid) onChapterPressed;
   final void Function(int cid)? onChapterLongPressed;
+  final void Function()? onManageHistoryPressed;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
@@ -107,7 +109,7 @@ class _MangaTocPageState extends State<MangaTocPage> {
             tooltip: _downloadOnly ? '当前仅显示下载章节' : '当前显示着全部章节',
             onPressed: () => mountedSetState(() => _downloadOnly = !_downloadOnly),
           ),
-          PopupMenuButton(
+          PopupMenuButton<dynamic>(
             child: Builder(
               builder: (c) => AppBarActionButton(
                 icon: Icon(Icons.more_vert),
@@ -116,6 +118,15 @@ class _MangaTocPageState extends State<MangaTocPage> {
               ),
             ),
             itemBuilder: (_) => [
+              if (widget.onManageHistoryPressed != null) ...[
+                PopupMenuItem(
+                  child: IconTextMenuItem(CustomIcons.history_menu, '管理章节阅读历史'),
+                  onTap: () => WidgetsBinding.instance?.addPostFrameCallback(
+                    (_) => widget.onManageHistoryPressed?.call(),
+                  ),
+                ),
+                PopupMenuDivider(),
+              ],
               for (var column in [2, 3, 4])
                 PopupMenuItem(
                   child: IconTextMenuItem(
