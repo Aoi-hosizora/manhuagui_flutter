@@ -160,7 +160,7 @@ class MangaCornerFlagStorage {
 
   MangaCornerFlags getFlags({
     required int mangaId,
-    String? newestChapter, // TODO fill all usages, for "可能有更新" hint
+    String? newestChapter,
     bool forceInDownload = false,
     bool forceInShelf = false,
     bool forceInFavorite = false,
@@ -172,7 +172,7 @@ class MangaCornerFlagStorage {
       inShelf: forceInShelf || (_shelvesMap[mangaId] ?? false),
       inFavorite: forceInFavorite || (_favoritesMap[mangaId] ?? false),
       inLater: forceInLater || (_latersMap[mangaId] != null),
-      lateUpdatable: _latersMap[mangaId]?.newestChapter != newestChapter,
+      lateUpdatable: newestChapter != null && _latersMap[mangaId]?.newestChapter != newestChapter,
       inHistory: forceInHistory || (_historiesMap[mangaId] != null),
       historyRead: _historiesMap[mangaId]?.read == true,
     );

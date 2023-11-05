@@ -175,7 +175,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           },
         ),
         SettingGroupTitleView(
-          title: '高级设置',
+          title: '高级设置', // TODO hide advanced setting in dialog
         ),
         SettingComboBoxView<int>(
           title: '预加载章节页数',

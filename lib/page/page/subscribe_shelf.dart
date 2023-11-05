@@ -228,7 +228,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           manga: item,
           history: _flagStorage.getHistory(mangaId: item.mid),
           useLocalHistory: _useLocalHistory,
-          flags: _flagStorage.getFlags(mangaId: item.mid, forceInShelf: true),
+          flags: _flagStorage.getFlags(mangaId: item.mid, newestChapter: item.newestChapter, forceInShelf: true),
           twoColumns: AppSetting.instance.ui.showTwoColumns,
           highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
           onLongPressed: () => _showPopupMenu(manga: item),

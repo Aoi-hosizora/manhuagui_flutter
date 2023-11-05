@@ -225,7 +225,7 @@ class _SearchPageState extends State<SearchPage> {
                   itemBuilder: (c, _, item) => SmallMangaLineView(
                     manga: item.toSmaller(),
                     history: _flagStorage.getHistory(mangaId: item.mid),
-                    flags: _flagStorage.getFlags(mangaId: item.mid),
+                    flags: _flagStorage.getFlags(mangaId: item.mid, newestChapter: item.newestChapter),
                     twoColumns: AppSetting.instance.ui.showTwoColumns,
                     highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
                   ),

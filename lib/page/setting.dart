@@ -223,7 +223,6 @@ class _SettingPageState extends State<SettingPage> {
             ),
           ],
           // *******************************************************
-          // TODO add tips to setting page
           _spacer(),
           _item(
             title: '打开漫画柜官网',
@@ -246,6 +245,12 @@ class _SettingPageState extends State<SettingPage> {
                 builder: (c) => ResourceDetailPage(),
               ),
             ),
+          ),
+          _divider(),
+          _item(
+            title: '使用小贴士',
+            icon: MdiIcons.lightbulbMultipleOutline,
+            action: () {}, // TODO add tips to setting page
           ),
           // *******************************************************
           _spacer(),

@@ -245,7 +245,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
             itemBuilder: (c, _, item) => TinyMangaLineView(
               manga: item,
               history: _flagStorage.getHistory(mangaId: item.mid),
-              flags: _flagStorage.getFlags(mangaId: item.mid),
+              flags: _flagStorage.getFlags(mangaId: item.mid, newestChapter: item.newestChapter),
               twoColumns: AppSetting.instance.ui.showTwoColumns,
               highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
             ),

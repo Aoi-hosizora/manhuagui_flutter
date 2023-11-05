@@ -108,7 +108,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         itemBuilder: (c, _, item) => SmallMangaLineView(
           manga: item,
           history: _flagStorage.getHistory(mangaId: item.mid),
-          flags: _flagStorage.getFlags(mangaId: item.mid),
+          flags: _flagStorage.getFlags(mangaId: item.mid, newestChapter: item.newestChapter),
           twoColumns: AppSetting.instance.ui.showTwoColumns,
           highlightRecent: AppSetting.instance.ui.highlightRecentMangas,
         ),
