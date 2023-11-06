@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
@@ -34,7 +35,7 @@ class ShelfSubPage extends StatefulWidget {
   _ShelfSubPageState createState() => _ShelfSubPageState();
 }
 
-class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin {
+class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -169,6 +170,12 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   bool get wantKeepAlive => true;
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+    scrollViewKey: _pdvKey,
+    scrollController: _controller,
+  );
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     if (_authChecking || _authError.isNotEmpty || !AuthManager.instance.logined) {
@@ -281,7 +288,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
             ),
           ],
         ),
-      ),
+      ).fitSystemScreenshot(this),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
         scrollController: _controller,

@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/page/view/shelf_cache_line.dart';
@@ -273,7 +274,7 @@ class MangaShelfCachePage extends StatefulWidget {
   }
 }
 
-class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
+class _MangaShelfCachePageState extends State<MangaShelfCachePage> with FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -530,6 +531,12 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -687,7 +694,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> {
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: MultiSelectionFabContainer(
           multiSelectableController: _msController,

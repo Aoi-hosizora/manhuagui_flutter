@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -34,7 +35,7 @@ class LaterSubPage extends StatefulWidget {
   _LaterSubPageState createState() => _LaterSubPageState();
 }
 
-class _LaterSubPageState extends State<LaterSubPage> {
+class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -337,6 +338,15 @@ class _LaterSubPageState extends State<LaterSubPage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -476,7 +486,7 @@ class _LaterSubPageState extends State<LaterSubPage> {
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: MultiSelectionFabContainer(
           multiSelectableController: _msController,

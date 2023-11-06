@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -38,7 +39,8 @@ class ViewTocSubPage extends StatefulWidget {
   State<ViewTocSubPage> createState() => _ViewTocSubPageState();
 }
 
-class _ViewTocSubPageState extends State<ViewTocSubPage> {
+class _ViewTocSubPageState extends State<ViewTocSubPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
   final _cancelHandlers = <VoidCallback>[];
 
@@ -86,6 +88,12 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -129,6 +137,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
             mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
+              key: _listViewKey,
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
@@ -149,7 +158,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> {
                   onChapterLongPressed: widget.onChapterLongPressed,
                 ),
               ],
-            ),
+            ).fitSystemScreenshot(this),
           ),
         ),
       ),

@@ -16,6 +16,7 @@ import 'package:manhuagui_flutter/page/sep_shelf.dart';
 import 'package:manhuagui_flutter/page/setting.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/login_first.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -42,7 +43,8 @@ class MineSubPage extends StatefulWidget {
   _MineSubPageState createState() => _MineSubPageState();
 }
 
-class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin {
+class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   late final _controller = ScrollController()..addListener(() => mountedSetState(() {}));
   final _cancelHandlers = <VoidCallback>[];
@@ -338,6 +340,12 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
   bool get wantKeepAlive => true;
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
 
@@ -416,6 +424,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => ListView(
+            key: _listViewKey,
             controller: _controller,
             padding: EdgeInsets.zero,
             physics: AlwaysScrollableScrollPhysics(),
@@ -544,7 +553,7 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
               ),
               SizedBox(height: 12),
             ],
-          ),
+          ).fitSystemScreenshot(this),
         ),
       ),
     );

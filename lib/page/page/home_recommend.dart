@@ -22,6 +22,7 @@ import 'package:manhuagui_flutter/page/sep_shelf.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/category_chip_list.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
 import 'package:manhuagui_flutter/page/view/manga_carousel.dart';
@@ -54,8 +55,9 @@ class RecommendSubPage extends StatefulWidget {
   _RecommendSubPageState createState() => _RecommendSubPageState();
 }
 
-class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepAliveClientMixin {
+class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final _listViewKey = GlobalKey<State<StatefulWidget>>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
@@ -544,9 +546,14 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   bool get wantKeepAlive => true;
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
-    // TODO 长截图 https://blog.csdn.net/weixin_38912070/article/details/126277033, https://pub.dev/packages/fit_system_screenshot
     return Scaffold(
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
@@ -564,6 +571,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
             mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
+              key: _listViewKey,
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
@@ -643,7 +651,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
                   ),
                 ),
               ],
-            ),
+            ).fitSystemScreenshot(this),
           ),
         ),
       ),

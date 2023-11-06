@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_aud_ranking.dart';
@@ -34,7 +35,8 @@ class MangaAudRankingPage extends StatefulWidget {
   State<MangaAudRankingPage> createState() => _MangaAudRankingPageState();
 }
 
-class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
+class _MangaAudRankingPageState extends State<MangaAudRankingPage> with FitSystemScreenshotMixin {
+  final _rdvKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
@@ -69,6 +71,12 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _rdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -80,6 +88,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: RefreshableDataView<MangaRanking>(
+        key: _rdvKey,
         style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
         data: widget.rankings,
         getData: null,
@@ -117,7 +126,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> {
             ),
           ],
         ),
-      ),
+      ).fitSystemScreenshot(this),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
         scrollController: _controller,

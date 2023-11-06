@@ -12,6 +12,7 @@ class CategoryGridListView extends StatelessWidget {
     this.title,
     required this.genres, // need genre list only
     this.markedCategoryNames,
+    this.listViewKey,
     required this.controller,
     required this.onChoose,
     this.onLongPressed,
@@ -23,6 +24,7 @@ class CategoryGridListView extends StatelessWidget {
   final String? title;
   final List<TinyCategory> genres;
   final List<String>? markedCategoryNames;
+  final Key? listViewKey;
   final ScrollController controller;
   final Function({TinyCategory? genre, TinyCategory? age, TinyCategory? zone}) onChoose;
   final Function({TinyCategory? genre, TinyCategory? age, TinyCategory? zone})? onLongPressed;
@@ -142,6 +144,7 @@ class CategoryGridListView extends StatelessWidget {
             mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
+              key: listViewKey,
               controller: controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),

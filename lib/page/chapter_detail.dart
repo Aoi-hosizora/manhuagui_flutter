@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/page/view/detail_table.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 
 /// 漫画章节详情页，展示所给 [TinyMangaChapter] 信息
 class ChapterDetailPage extends StatefulWidget {
@@ -30,7 +31,8 @@ class ChapterDetailPage extends StatefulWidget {
   _ChapterDetailPageState createState() => _ChapterDetailPageState();
 }
 
-class _ChapterDetailPageState extends State<ChapterDetailPage> {
+class _ChapterDetailPageState extends State<ChapterDetailPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
 
   @override
@@ -38,6 +40,12 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
     _controller.dispose();
     super.dispose();
   }
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +60,7 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
         mainAxisMargin: 2,
         crossAxisMargin: 2,
         child: ListView(
+          key: _listViewKey,
           controller: _controller,
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           physics: AlwaysScrollableScrollPhysics(),
@@ -82,7 +91,7 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
               tableWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal - 40,
             ),
           ],
-        ),
+        ).fitSystemScreenshot(this),
       ),
       floatingActionButton: ScrollAnimatedFab(
         scrollController: _controller,

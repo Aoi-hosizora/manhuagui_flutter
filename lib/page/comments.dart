@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
@@ -28,7 +29,7 @@ class CommentsPage extends StatefulWidget {
   _CommentsPageState createState() => _CommentsPageState();
 }
 
-class _CommentsPageState extends State<CommentsPage> {
+class _CommentsPageState extends State<CommentsPage> with FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -52,6 +53,12 @@ class _CommentsPageState extends State<CommentsPage> {
     if (mounted) setState(() {});
     return PagedList(list: result.data.data, next: result.data.page + 1);
   }
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +156,7 @@ class _CommentsPageState extends State<CommentsPage> {
             ),
           ],
         ),
-      ),
+      ).fitSystemScreenshot(this),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
         scrollController: _controller,

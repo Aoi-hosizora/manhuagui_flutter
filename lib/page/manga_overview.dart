@@ -4,6 +4,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
@@ -42,7 +43,8 @@ class MangaOverviewPage extends StatefulWidget {
   State<MangaOverviewPage> createState() => _MangaOverviewPageState();
 }
 
-class _MangaOverviewPageState extends State<MangaOverviewPage> {
+class _MangaOverviewPageState extends State<MangaOverviewPage> with FitSystemScreenshotMixin {
+  final _gridViewKey = GlobalKey();
   final _controller = ScrollController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   var _columns = 3; // default to three columns
@@ -280,6 +282,12 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+    scrollViewKey: _gridViewKey,
+    scrollController: _controller,
+  );
+
+  @override
   Widget build(BuildContext context) {
     const hPadding = 18.0;
     const vPadding = 12.0;
@@ -368,6 +376,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
                   stateSetter: () => mountedSetState(() {}),
                   onModeChanged: (_) => mountedSetState(() {}),
                   child: GridView(
+                    key: _gridViewKey,
                     controller: _controller,
                     padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
                     physics: AlwaysScrollableScrollPhysics(),
@@ -398,7 +407,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> {
                           ),
                         ),
                     ],
-                  ),
+                  ).fitSystemScreenshot(this),
                 ),
               ),
             ),

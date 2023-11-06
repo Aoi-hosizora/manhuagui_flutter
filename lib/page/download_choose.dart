@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/download.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
@@ -40,7 +41,8 @@ class DownloadChoosePage extends StatefulWidget {
   State<DownloadChoosePage> createState() => _DownloadChoosePageState();
 }
 
-class _DownloadChoosePageState extends State<DownloadChoosePage> {
+class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
@@ -189,6 +191,12 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -266,6 +274,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
             mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
+              key: _listViewKey,
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
@@ -318,7 +327,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> {
                   ),
                 ),
               ],
-            ),
+            ).fitSystemScreenshot(this),
           ),
         ),
       ),

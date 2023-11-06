@@ -5,6 +5,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/favorite_reorder_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
@@ -24,7 +25,8 @@ class FavoriteGroupPage extends StatefulWidget {
   State<FavoriteGroupPage> createState() => _FavoriteGroupPageState();
 }
 
-class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
+class _FavoriteGroupPageState extends State<FavoriteGroupPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
 
   @override
@@ -271,6 +273,12 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -321,6 +329,7 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
           mainAxisMargin: 2,
           crossAxisMargin: 2,
           child: ReorderableListView.builder(
+            key: _listViewKey,
             scrollController: _controller,
             padding: EdgeInsets.zero,
             physics: AlwaysScrollableScrollPhysics(),
@@ -376,7 +385,7 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> {
               _groups.insert(newIndex, item);
               if (mounted) setState(() {});
             },
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: Stack(
           children: [

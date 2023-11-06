@@ -10,6 +10,7 @@ import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/favorite_author_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
@@ -28,7 +29,7 @@ class FavoriteAuthorPage extends StatefulWidget {
   State<FavoriteAuthorPage> createState() => _FavoriteAuthorPageState();
 }
 
-class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
+class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -241,6 +242,12 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -409,7 +416,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> {
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: MultiSelectionFabContainer(
           multiSelectableController: _msController,

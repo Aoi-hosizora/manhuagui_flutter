@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
 
 /// 漫画分组页，展示所给 [MangaGroupList] (三个 [MangaGroup]) 信息
@@ -17,7 +19,8 @@ class MangaGroupPage extends StatefulWidget {
   _MangaGroupPageState createState() => _MangaGroupPageState();
 }
 
-class _MangaGroupPageState extends State<MangaGroupPage> {
+class _MangaGroupPageState extends State<MangaGroupPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
   final _physicsController = CustomScrollPhysicsController();
 
@@ -26,6 +29,12 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
     _controller.dispose();
     super.dispose();
   }
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +55,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
         mainAxisMargin: 2,
         crossAxisMargin: 2,
         child: ListView(
+          key: _listViewKey,
           controller: _controller,
           padding: EdgeInsets.zero,
           physics: AlwaysScrollableScrollPhysics(),
@@ -58,7 +68,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> {
               ),
             ),
           ],
-        ),
+        ).fitSystemScreenshot(this),
       ),
       floatingActionButton: ScrollAnimatedFab(
         scrollController: _controller,

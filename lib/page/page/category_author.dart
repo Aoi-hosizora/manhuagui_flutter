@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/view/category_popup.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -33,7 +34,7 @@ class AuthorCategorySubPage extends StatefulWidget {
   _AuthorCategorySubPageState createState() => _AuthorCategorySubPageState();
 }
 
-class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with AutomaticKeepAliveClientMixin {
+class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -144,6 +145,12 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
   bool get wantKeepAlive => true;
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
@@ -242,7 +249,7 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
               ),
             ],
           ),
-        ),
+        ).fitSystemScreenshot(this),
       ),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,

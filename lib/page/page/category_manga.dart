@@ -9,6 +9,7 @@ import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/view/category_grid_list.dart';
 import 'package:manhuagui_flutter/page/view/category_popup.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -35,7 +36,7 @@ class MangaCategorySubPage extends StatefulWidget {
   _MangaCategorySubPageState createState() => _MangaCategorySubPageState();
 }
 
-class _MangaCategorySubPageState extends State<MangaCategorySubPage> with AutomaticKeepAliveClientMixin {
+class _MangaCategorySubPageState extends State<MangaCategorySubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controllerForCategory = ScrollController();
   final _fabControllerForCategory = AnimatedFabController();
@@ -163,6 +164,12 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +302,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: Stack(
           children: [

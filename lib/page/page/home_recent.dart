@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/small_manga_line.dart';
@@ -24,7 +25,8 @@ class RecentSubPage extends StatefulWidget {
   _RecentSubPageState createState() => _RecentSubPageState();
 }
 
-class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveClientMixin {
+class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
+  final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -67,10 +69,17 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
   bool get wantKeepAlive => true;
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
       body: PaginationDataView<SmallerManga>(
+        key: _pdvKey,
         data: _data,
         style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
         getData: ({indicator}) => _getData(page: indicator),
@@ -118,7 +127,7 @@ class _RecentSubPageState extends State<RecentSubPage> with AutomaticKeepAliveCl
             ),
           ],
         ),
-      ),
+      ).fitSystemScreenshot(this),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
         scrollController: _controller,

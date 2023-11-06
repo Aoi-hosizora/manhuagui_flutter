@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/view/category_grid_list.dart';
 import 'package:manhuagui_flutter/page/view/category_popup.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_ranking_line.dart';
@@ -31,7 +32,7 @@ class RankingSubPage extends StatefulWidget {
   _RankingSubPageState createState() => _RankingSubPageState();
 }
 
-class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin {
+class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _rdvKey = GlobalKey<RefreshableDataViewState>();
   final _controllerForCategory = ScrollController();
   final _fabControllerForCategory = AnimatedFabController();
@@ -143,6 +144,12 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _rdvKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +270,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: Stack(
           children: [

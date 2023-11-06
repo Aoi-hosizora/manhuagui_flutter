@@ -25,6 +25,7 @@ import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_banner.dart';
 import 'package:manhuagui_flutter/page/view/manga_rating.dart';
@@ -66,8 +67,9 @@ class MangaPage extends StatefulWidget {
   _MangaPageState createState() => _MangaPageState();
 }
 
-class _MangaPageState extends State<MangaPage> {
+class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
@@ -1054,6 +1056,12 @@ class _MangaPageState extends State<MangaPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -1103,6 +1111,7 @@ class _MangaPageState extends State<MangaPage> {
             mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
+              key: _listViewKey,
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
@@ -1640,7 +1649,7 @@ class _MangaPageState extends State<MangaPage> {
                   ),
                 ),
               ],
-            ),
+            ).fitSystemScreenshot(this),
           ),
         ),
       ),

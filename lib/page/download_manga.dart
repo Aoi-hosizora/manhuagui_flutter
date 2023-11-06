@@ -17,6 +17,7 @@ import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/later_manga_banner.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
@@ -67,12 +68,13 @@ class DownloadMangaPage extends StatefulWidget {
   }
 }
 
-class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTickerProviderStateMixin {
+class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTickerProviderStateMixin, FitSystemScreenshotMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _tabBarKey = GlobalKey<State<StatefulWidget>>();
   late final _tabController = TabController(length: 2, vsync: this);
   final _physicsController = CustomScrollPhysicsController();
   final _actionControllers = [ActionController(), ActionController()];
+  final _scrollViewKey = GlobalKey();
   final _scrollController = ScrollController();
   final _cancelHandlers = <VoidCallback>[];
 
@@ -476,6 +478,12 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+    scrollViewKey: _scrollViewKey,
+    scrollController: _scrollController,
+  );
+
+  @override
   Widget build(BuildContext context) {
     return DrawerScaffold(
       appBar: AppBar(
@@ -551,6 +559,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => ExtendedNestedScrollView(
+            key: _scrollViewKey,
             controller: _scrollController,
             headerSliverBuilder: (context, _) => [
               SliverToBoxAdapter(
@@ -735,7 +744,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
       ),
     );

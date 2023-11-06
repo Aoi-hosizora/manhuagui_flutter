@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/resource_detail.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -27,7 +28,9 @@ class SettingPage extends StatefulWidget {
   _SettingPageState createState() => _SettingPageState();
 }
 
-class _SettingPageState extends State<SettingPage> {
+class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey<State<StatefulWidget>>();
+  final _scrollController = ScrollController();
   final _cancelHandlers = <VoidCallback>[];
 
   @override
@@ -73,6 +76,12 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _scrollController,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -84,6 +93,8 @@ class _SettingPageState extends State<SettingPage> {
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: ListView(
+        key: _listViewKey,
+        controller: _scrollController,
         padding: EdgeInsets.zero,
         physics: AlwaysScrollableScrollPhysics(),
         children: [
@@ -348,7 +359,7 @@ class _SettingPageState extends State<SettingPage> {
           ),
           _spacer(),
         ],
-      ),
+      ).fitSystemScreenshot(this),
     );
   }
 }

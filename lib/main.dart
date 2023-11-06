@@ -5,6 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/index.dart';
 import 'package:manhuagui_flutter/page/splash.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
 
 Future<void> main() async {
@@ -16,8 +17,25 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    initFitSystemScreenshot();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    releaseFitSystemScreenshot();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +62,9 @@ class MyApp extends StatelessWidget {
         Locale('zh', 'CN'),
       ],
       home: SplashPage(home: IndexPage()),
+      navigatorObservers: [
+        fitSystemScreenshotObserver,
+      ],
       builder: (context, child) => CustomPageRouteTheme(
         data: CustomPageRouteThemeData(
           transitionDuration: Duration(milliseconds: 400),

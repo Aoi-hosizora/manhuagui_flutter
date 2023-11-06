@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/manga_history_line.dart';
@@ -31,7 +32,7 @@ class HistorySubPage extends StatefulWidget {
   _HistorySubPageState createState() => _HistorySubPageState();
 }
 
-class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAliveClientMixin {
+class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -271,6 +272,12 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
   bool get wantKeepAlive => true;
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     return WillPopScope(
@@ -401,7 +408,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: MultiSelectionFabContainer(
           multiSelectableController: _msController,

@@ -11,6 +11,7 @@ import 'package:manhuagui_flutter/page/favorite_reorder.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/favorite_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
@@ -36,7 +37,7 @@ class FavoriteSubPage extends StatefulWidget {
   _FavoriteSubPageState createState() => _FavoriteSubPageState();
 }
 
-class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAliveClientMixin {
+class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _scaffoldKey = GlobalKey<DrawerScaffoldState>();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
@@ -446,6 +447,12 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
   bool get wantKeepAlive => true;
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _pdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     return WillPopScope(
@@ -708,7 +715,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: MultiSelectionFabContainer(
           multiSelectableController: _msController,

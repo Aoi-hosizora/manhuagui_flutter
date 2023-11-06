@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/detail_table.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
 import 'package:manhuagui_flutter/service/dio/retrofit.dart';
 import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
@@ -65,7 +66,8 @@ class ResourceDetail {
   }
 }
 
-class _ResourceDetailPageState extends State<ResourceDetailPage> {
+class _ResourceDetailPageState extends State<ResourceDetailPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _controller = ScrollController();
 
@@ -110,6 +112,12 @@ class _ResourceDetailPageState extends State<ResourceDetailPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+    scrollViewKey: _listViewKey,
+    scrollController: _controller,
+  );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -131,6 +139,7 @@ class _ResourceDetailPageState extends State<ResourceDetailPage> {
             mainAxisMargin: 2,
             crossAxisMargin: 2,
             child: ListView(
+              key: _listViewKey,
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
@@ -156,7 +165,7 @@ class _ResourceDetailPageState extends State<ResourceDetailPage> {
                   ),
                 ),
               ],
-            ),
+            ).fitSystemScreenshot(this),
           ),
         ),
       ),

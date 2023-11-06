@@ -5,6 +5,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/view/favorite_reorder_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
@@ -24,7 +25,8 @@ class FavoriteReorderPage extends StatefulWidget {
   State<FavoriteReorderPage> createState() => _FavoriteReorderPageState();
 }
 
-class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
+class _FavoriteReorderPageState extends State<FavoriteReorderPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
 
   @override
@@ -87,6 +89,12 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -145,6 +153,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
                   mainAxisMargin: 2,
                   crossAxisMargin: 2,
                   child: ReorderableListView.builder(
+                    key: _listViewKey,
                     scrollController: _controller,
                     padding: EdgeInsets.zero,
                     physics: AlwaysScrollableScrollPhysics(),
@@ -221,7 +230,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> {
                       _favorites.insert(newIndex, item);
                       if (mounted) setState(() {});
                     },
-                  ),
+                  ).fitSystemScreenshot(this),
                 ),
               ),
             ),

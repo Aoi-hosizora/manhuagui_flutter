@@ -11,6 +11,7 @@ import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/manga_simple_toc.dart';
 import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
@@ -50,7 +51,8 @@ enum _MangaHistoryPageMode {
   showAll,
 }
 
-class _MangaHistoryPageState extends State<MangaHistoryPage> {
+class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
   final _msController = MultiSelectableController<ValueKey<int>>();
   final _cancelHandlers = <VoidCallback>[];
@@ -359,6 +361,12 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -414,6 +422,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
               mainAxisMargin: 2,
               crossAxisMargin: 2,
               child: ListView(
+                key: _listViewKey,
                 controller: _controller,
                 padding: EdgeInsets.zero,
                 physics: AlwaysScrollableScrollPhysics(),
@@ -501,7 +510,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> {
                     ),
                   ),
                 ],
-              ),
+              ).fitSystemScreenshot(this),
             ),
           ),
         ),

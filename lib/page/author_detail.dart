@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/page/view/detail_table.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 
 /// 作者详情页，展示所给 [Author] 信息
 class AuthorDetailPage extends StatefulWidget {
@@ -16,7 +17,8 @@ class AuthorDetailPage extends StatefulWidget {
   _AuthorDetailPageState createState() => _AuthorDetailPageState();
 }
 
-class _AuthorDetailPageState extends State<AuthorDetailPage> {
+class _AuthorDetailPageState extends State<AuthorDetailPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
 
   @override
@@ -24,6 +26,12 @@ class _AuthorDetailPageState extends State<AuthorDetailPage> {
     _controller.dispose();
     super.dispose();
   }
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +46,7 @@ class _AuthorDetailPageState extends State<AuthorDetailPage> {
         mainAxisMargin: 2,
         crossAxisMargin: 2,
         child: ListView(
+          key: _listViewKey,
           controller: _controller,
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           physics: AlwaysScrollableScrollPhysics(),
@@ -61,7 +70,7 @@ class _AuthorDetailPageState extends State<AuthorDetailPage> {
               tableWidth: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.horizontal - 40,
             ),
           ],
-        ),
+        ).fitSystemScreenshot(this),
       ),
       floatingActionButton: ScrollAnimatedFab(
         scrollController: _controller,

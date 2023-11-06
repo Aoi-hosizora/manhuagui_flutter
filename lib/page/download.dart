@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
@@ -31,7 +32,7 @@ class DownloadPage extends StatefulWidget {
   State<DownloadPage> createState() => _DownloadPageState();
 }
 
-class _DownloadPageState extends State<DownloadPage> {
+class _DownloadPageState extends State<DownloadPage> with FitSystemScreenshotMixin {
   final _rdvKey = GlobalKey<RefreshableDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -319,6 +320,12 @@ class _DownloadPageState extends State<DownloadPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _rdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -444,7 +451,7 @@ class _DownloadPageState extends State<DownloadPage> {
                 ),
               ],
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
         floatingActionButton: MultiSelectionFabContainer(
           multiSelectableController: _msController,

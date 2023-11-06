@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/model/message.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/message_line.dart';
 import 'package:manhuagui_flutter/service/dio/dio_manager.dart';
@@ -19,7 +20,7 @@ class MessagePage extends StatefulWidget {
   State<MessagePage> createState() => _MessagePageState();
 }
 
-class _MessagePageState extends State<MessagePage> {
+class _MessagePageState extends State<MessagePage> with FitSystemScreenshotMixin {
   final _rdvKey = GlobalKey<RefreshableDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -113,6 +114,12 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _rdvKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -170,7 +177,7 @@ class _MessagePageState extends State<MessagePage> {
             ),
           ],
         ),
-      ),
+      ).fitSystemScreenshot(this),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
         scrollController: _controller,

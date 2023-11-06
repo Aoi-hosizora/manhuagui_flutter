@@ -337,6 +337,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "6.1.4"
+  fit_system_screenshot:
+    dependency: "direct main"
+    description:
+      name: fit_system_screenshot
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.9"
   fixnum:
     dependency: transitive
     description:

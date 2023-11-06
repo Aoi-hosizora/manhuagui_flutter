@@ -13,6 +13,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
@@ -49,8 +50,9 @@ class AuthorPage extends StatefulWidget {
   _AuthorPageState createState() => _AuthorPageState();
 }
 
-class _AuthorPageState extends State<AuthorPage> {
+class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final _scrollViewKey = GlobalKey<PaginationDataViewState>();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
@@ -270,6 +272,12 @@ class _AuthorPageState extends State<AuthorPage> {
   }
 
   @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _scrollViewKey,
+        scrollController: _controller,
+      );
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -315,6 +323,7 @@ class _AuthorPageState extends State<AuthorPage> {
           setting: PlaceholderSetting().copyWithChinese(),
           onRefresh: () => _loadData(),
           childBuilder: (c) => NestedScrollView(
+            key: _scrollViewKey,
             headerSliverBuilder: (c, o) => [
               // ****************************************************************
               // 头部框
@@ -675,7 +684,7 @@ class _AuthorPageState extends State<AuthorPage> {
                 ),
               ),
             ),
-          ),
+          ).fitSystemScreenshot(this),
         ),
       ),
       floatingActionButton: ScrollAnimatedFab(

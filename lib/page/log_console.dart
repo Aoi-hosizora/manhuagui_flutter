@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logger/logger.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 class _PlainOutputEvent {
@@ -55,7 +56,8 @@ class LogConsolePage extends StatefulWidget {
   }
 }
 
-class _LogConsolePageState extends State<LogConsolePage> {
+class _LogConsolePageState extends State<LogConsolePage> with FitSystemScreenshotMixin {
+  final _scrollViewKey = GlobalKey();
   final _scrollController = ScrollController();
   final _filterController = TextEditingController();
 
@@ -99,6 +101,12 @@ class _LogConsolePageState extends State<LogConsolePage> {
       });
     }
   }
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _scrollViewKey,
+        scrollController: _scrollController,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +164,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                     child: Text('当前日志为空'),
                   )
                 : ExtendedScrollbar(
+                    key: _scrollViewKey,
                     controller: _scrollController,
                     interactive: true,
                     isAlwaysShown: true,
@@ -175,7 +184,7 @@ class _LogConsolePageState extends State<LogConsolePage> {
                           ),
                         ),
                       ),
-                    ),
+                    ).fitSystemScreenshot(this),
                   ),
           ),
           BottomAppBar(

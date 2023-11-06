@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/option_popup.dart';
@@ -28,7 +29,7 @@ class SearchPage extends StatefulWidget {
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends State<SearchPage> with FitSystemScreenshotMixin {
   final _searchController = FloatingSearchBarController();
   final _searchScrollController = ScrollController();
   final _scrollController = ScrollController();
@@ -153,6 +154,13 @@ class _SearchPageState extends State<SearchPage> {
 
   double get appBarHeight => Theme.of(context).appBarTheme.toolbarHeight!;
 
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+    scrollViewKey: _pdvKey,
+    scrollController: _scrollController,
+  );
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -249,7 +257,7 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                     ],
                   ),
-                ),
+                ).fitSystemScreenshot(this),
               ),
             ),
             Positioned(

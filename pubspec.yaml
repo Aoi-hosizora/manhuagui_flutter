@@ -30,6 +30,7 @@ dependencies:
   connectivity_plus: 2.3.6+1
   flutter_local_notifications: 9.9.1
   flutter_native_splash: 2.1.6
+  fit_system_screenshot: ^1.0.9
 
   # widgets
   # flutter_ahlib: ^1.3.0

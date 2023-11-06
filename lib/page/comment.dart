@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/model/comment.dart';
 import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/comment_line.dart';
+import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 
 /// 漫画评论详情页，展示所给 [Comment] 信息
@@ -22,7 +23,8 @@ class CommentPage extends StatefulWidget {
   _CommentPageState createState() => _CommentPageState();
 }
 
-class _CommentPageState extends State<CommentPage> {
+class _CommentPageState extends State<CommentPage> with FitSystemScreenshotMixin {
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -49,6 +51,12 @@ class _CommentPageState extends State<CommentPage> {
       },
     );
   }
+
+  @override
+  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
+        scrollViewKey: _listViewKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +94,7 @@ class _CommentPageState extends State<CommentPage> {
         mainAxisMargin: 2,
         crossAxisMargin: 2,
         child: ListView(
+          key: _listViewKey,
           controller: _controller,
           padding: EdgeInsets.zero,
           physics: AlwaysScrollableScrollPhysics(),
@@ -138,7 +147,7 @@ class _CommentPageState extends State<CommentPage> {
               ],
             ],
           ],
-        ),
+        ).fitSystemScreenshot(this),
       ),
       floatingActionButton: ScrollAnimatedFab(
         controller: _fabController,
