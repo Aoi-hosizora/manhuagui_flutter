@@ -44,6 +44,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   late var _showDebugErrorMsg = widget.setting.showDebugErrorMsg;
   late var _useNativeShareSheet = widget.setting.useNativeShareSheet;
   late var _useHttpForImage = widget.setting.useHttpForImage;
+  late var _useEmulatedLongScreenshot = widget.setting.useEmulatedLongScreenshot;
 
   OtherSetting get _newestSetting => OtherSetting(
         timeoutBehavior: _timeoutBehavior,
@@ -53,6 +54,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
         showDebugErrorMsg: _showDebugErrorMsg,
         useNativeShareSheet: _useNativeShareSheet,
         useHttpForImage: _useHttpForImage,
+        useEmulatedLongScreenshot: _useEmulatedLongScreenshot,
       );
 
   void _setToDefault() {
@@ -64,6 +66,7 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
     _showDebugErrorMsg = setting.showDebugErrorMsg;
     _useNativeShareSheet = setting.useNativeShareSheet;
     _useHttpForImage = setting.useHttpForImage;
+    _useEmulatedLongScreenshot = setting.useEmulatedLongScreenshot;
     widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
@@ -168,6 +171,16 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _useHttpForImage,
           onChanged: (b) {
             _useHttpForImage = b;
+            widget.onSettingChanged.call(_newestSetting);
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          title: '开启模拟的长截图功能',
+          hint: '本应用在一些安卓设备上可能不支持原生的长截图功能，可以通过开启该选项来解决这个问题，但注意该功能可能会降低列表的显示性能。',
+          value: _useEmulatedLongScreenshot,
+          onChanged: (b) {
+            _useEmulatedLongScreenshot = b;
             widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },

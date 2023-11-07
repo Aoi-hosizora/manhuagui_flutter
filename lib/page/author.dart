@@ -642,6 +642,7 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
                 data: _mangas,
                 getData: ({indicator}) => _getMangas(page: indicator),
                 scrollController: PrimaryScrollController.of(c),
+                onStyleChanged: (_, __) => updatePageAttaching(),
                 paginationSetting: PaginationSetting(
                   initialIndicator: 1,
                   nothingIndicator: 0,

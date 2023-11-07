@@ -121,8 +121,8 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
     _currDuration.select(allRankingDurations[0], sameLast: true);
 
     _data.clear();
+    updatePageAttaching(); // for long screenshot supported
     if (mounted) setState(() {});
-    WidgetsBinding.instance?.addPostFrameCallback((_) => updatePageAttaching()); // TODO <<<
   }
 
   final _data = <MangaRanking>[];
@@ -201,6 +201,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
             getData: () => _getData(),
             scrollViewKey: _scrollViewKey,
             scrollController: _controller,
+            onStyleChanged: (_, __) => updatePageAttaching(),
             setting: UpdatableDataViewSetting(
               padding: EdgeInsets.symmetric(vertical: 0),
               interactiveScrollbar: true,

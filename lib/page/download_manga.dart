@@ -709,10 +709,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             ],
             innerControllerCount: _tabController.length,
             activeControllerIndex: _tabController.index,
-            onActiveIndexChanged: (i, j) {
-              globalLogger.i('$i $j');
-              updatePageAttaching(); // TODO <<<
-            },
+            onActiveIndexChanged: (i, j) => updatePageAttaching() /* for long screenshot supported */,
             bodyBuilder: (c, controllers) => TabBarView(
               controller: _tabController,
               physics: CustomScrollPhysics(controller: _physicsController),

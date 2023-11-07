@@ -869,6 +869,7 @@ class OtherSetting {
     required this.showDebugErrorMsg,
     required this.useNativeShareSheet,
     required this.useHttpForImage,
+    required this.useEmulatedLongScreenshot,
   });
 
   final TimeoutBehavior timeoutBehavior; // 网络请求超时时间
@@ -878,6 +879,7 @@ class OtherSetting {
   final bool showDebugErrorMsg; // 使用更详细的错误信息
   final bool useNativeShareSheet; // 使用原生的分享菜单
   final bool useHttpForImage; // 禁用HTTPS加载图片
+  final bool useEmulatedLongScreenshot; // 开启模拟的长截图功能
 
   static const defaultSetting = OtherSetting(
     timeoutBehavior: TimeoutBehavior.normal,
@@ -887,6 +889,7 @@ class OtherSetting {
     showDebugErrorMsg: false,
     useNativeShareSheet: true,
     useHttpForImage: false,
+    useEmulatedLongScreenshot: false,
   );
 
   OtherSetting copyWith({
@@ -898,6 +901,7 @@ class OtherSetting {
     bool? useNativeShareSheet,
     bool? reverseDialogActions,
     bool? useHttpForImage,
+    bool? useEmulatedLongScreenshot,
   }) {
     return OtherSetting(
       timeoutBehavior: timeoutBehavior ?? this.timeoutBehavior,
@@ -907,6 +911,7 @@ class OtherSetting {
       showDebugErrorMsg: showDebugErrorMsg ?? this.showDebugErrorMsg,
       useNativeShareSheet: useNativeShareSheet ?? this.useNativeShareSheet,
       useHttpForImage: useHttpForImage ?? this.useHttpForImage,
+      useEmulatedLongScreenshot: useEmulatedLongScreenshot ?? this.useEmulatedLongScreenshot,
     );
   }
 }

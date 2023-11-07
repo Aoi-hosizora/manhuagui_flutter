@@ -95,6 +95,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> with FitSyste
         getData: null,
         scrollViewKey: _scrollViewKey,
         scrollController: _controller,
+        onStyleChanged: (_, __) => updatePageAttaching(),
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
           interactiveScrollbar: true,

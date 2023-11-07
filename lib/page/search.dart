@@ -193,6 +193,7 @@ class _SearchPageState extends State<SearchPage> with FitSystemScreenshotMixin {
                   getData: ({indicator}) => _getData(page: indicator),
                   scrollViewKey: _scrollViewKey,
                   scrollController: _scrollController,
+                  onStyleChanged: (_, __) => updatePageAttaching(),
                   paginationSetting: PaginationSetting(
                     initialIndicator: 1,
                     nothingIndicator: 0,

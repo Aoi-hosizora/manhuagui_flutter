@@ -254,6 +254,7 @@ class AppSettingPrefs {
   static const _showDebugErrorMsgKey = BoolKey('AppSettingPrefs_showDebugErrorMsg');
   static const _useNativeShareSheetKey = BoolKey('AppSettingPrefs_useNativeShareSheet');
   static const _useHttpForImageKey = BoolKey('AppSettingPrefs_useHttpForImage');
+  static const _useEmulatedLongScreenshotKey = BoolKey('AppSettingPrefs_useEmulatedLongScreenshot');
 
   static List<TypedKey> get otherSettingKeys => [
         _timeoutBehaviorKey,
@@ -263,6 +264,7 @@ class AppSettingPrefs {
         _showDebugErrorMsgKey,
         _useNativeShareSheetKey,
         _useHttpForImageKey,
+        _useEmulatedLongScreenshotKey,
       ];
 
   static Future<OtherSetting> _loadOtherSetting() async {
@@ -276,6 +278,7 @@ class AppSettingPrefs {
       showDebugErrorMsg: prefs.safeGet<bool>(_showDebugErrorMsgKey) ?? def.showDebugErrorMsg,
       useNativeShareSheet: prefs.safeGet<bool>(_useNativeShareSheetKey) ?? def.useNativeShareSheet,
       useHttpForImage: prefs.safeGet<bool>(_useHttpForImageKey) ?? def.useHttpForImage,
+      useEmulatedLongScreenshot: prefs.safeGet<bool>(_useEmulatedLongScreenshotKey) ?? def.useEmulatedLongScreenshot,
     );
   }
 
@@ -289,6 +292,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_showDebugErrorMsgKey, setting.showDebugErrorMsg);
     await prefs.safeSet<bool>(_useNativeShareSheetKey, setting.useNativeShareSheet);
     await prefs.safeSet<bool>(_useHttpForImageKey, setting.useHttpForImage);
+    await prefs.safeSet<bool>(_useEmulatedLongScreenshotKey, setting.useEmulatedLongScreenshot);
   }
 
   // ===

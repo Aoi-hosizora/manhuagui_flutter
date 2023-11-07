@@ -3,16 +3,19 @@ import 'dart:io';
 import 'package:fit_system_screenshot/fit_system_screenshot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 
 // References:
 // - https://pub.dev/packages/fit_system_screenshot
 // - https://github.com/YangLang116/fit_system_screenshot/blob/main/example/lib/case/nest_scroll_usage_page.dart
 // - https://stackoverflow.com/questions/70116389/flutter-how-to-listen-for-navigation-event
 
+// Used in MyApp.
 void initFitSystemScreenshot() {
   fitSystemScreenshot.init();
 }
 
+// Used in MyApp.
 void releaseFitSystemScreenshot() {
   fitSystemScreenshot.release();
 }
@@ -73,8 +76,6 @@ class FitSystemScreenshotData {
   }
 }
 
-// TODO add switcher to setting "使用模拟的长截图功能"
-
 mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements RouteAware {
   FitSystemScreenshotData get fitSystemScreenshotData;
 
@@ -91,11 +92,12 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
   }
 
   void updatePageAttaching() {
-    globalLogger.i('[$T] updatePageAttaching');
+    if (!AppSetting.instance.other.useEmulatedLongScreenshot) {
+      return; // 开启模拟的长截图功能
+    }
 
     // 1. 当A页面的数据加载完成后，需要重新调用该方法
     // 2. 当A页面打开B页面再退回到A页面时，需要重新调用该方法
-
     disposeScreenshot(); // dispose first
     _screenshotDisposer = _attachToNativePage();
   }
@@ -109,21 +111,17 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      globalLogger.i('[$T] initState');
       var route = _route;
       if (route != null && route is PageRoute) {
         fitSystemScreenshotObserver.subscribe(this, route);
       }
-
       await Future.delayed(Duration(milliseconds: 500)); // <<< CustomPageRouteThemeData.transitionDuration
-      globalLogger.i('[$T] initState.updatePageAttaching');
       updatePageAttaching();
     });
   }
 
   @override
   void dispose() {
-    globalLogger.i('[$T] dispose');
     // => DO NOT call `disposeScreenshot` here! DO this through `didPopNext`!
     fitSystemScreenshotObserver.unsubscribe(this);
     super.dispose();
@@ -138,8 +136,6 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
   void didPushNext() {
     var scrollAreaRect = _getScrollAreaRectFromKey(fitSystemScreenshotData.scrollViewKey);
     if (scrollAreaRect != null) {
-      // only not null rect represents the correct page in navigation
-      globalLogger.i('[$T] didPushNext');
       disposeScreenshot();
     }
   }
@@ -148,8 +144,6 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
   void didPopNext() {
     var scrollAreaRect = _getScrollAreaRectFromKey(fitSystemScreenshotData.scrollViewKey);
     if (scrollAreaRect != null) {
-      // only not null rect represents the correct page in navigation
-      globalLogger.i('[$T] didPopNext');
       updatePageAttaching();
     }
   }
@@ -229,9 +223,6 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
       }
     }
     if (controller.hasClients) {
-      if (offset > controller.position.maxScrollExtent) {
-        globalLogger.e('$offset > ${controller.position.maxScrollExtent}');
-      }
       offset = offset.clamp(controller.position.minScrollExtent, controller.position.maxScrollExtent);
       controller.jumpTo(offset);
     }
@@ -251,42 +242,9 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
       return () {};
     }
 
-    // double? lastScrollLength;
-    //
-    // void refreshScrollLength() {
-    //   double currScrollLength;
-    //   if (!isNestedScrollView && !isExtendedNestedScrollView) {
-    //     if (!scrollController.hasClients) return;
-    //     var position = scrollController.position;
-    //     currScrollLength = position.viewportDimension + position.maxScrollExtent;
-    //   } else {
-    //     ScrollPosition innerPosition, outerPosition;
-    //     if (isNestedScrollView) {
-    //       var state = scrollViewKey.currentState as NestedScrollViewState?;
-    //       if (state == null || !state.innerController.hasClients || !state.outerController.hasClients) return;
-    //       innerPosition = state.innerController.position;
-    //       outerPosition = state.outerController.position;
-    //     } else {
-    //       var state = scrollViewKey.currentState as ExtendedNestedScrollViewState?;
-    //       if (state == null || !state.activeInnerController.hasClients || !state.outerController.hasClients) return;
-    //       innerPosition = state.activeInnerController.position;
-    //       outerPosition = state.outerController.position;
-    //     }
-    //     currScrollLength = innerPosition.viewportDimension + innerPosition.maxScrollExtent + outerPosition.maxScrollExtent;
-    //   }
-    // }
-    //
-    // void onScrollListener() {
-    //   refreshScrollLength();
-    //   if (!fitSystemScreenshot.isScreenShot && scrollController.hasClients) {
-    //     fitSystemScreenshot.updateScrollPosition(scrollController.offset);
-    //   }
-    // }
-
-    // WidgetsBinding.instance?.addPostFrameCallback((_) async {
     Future.delayed(Duration(milliseconds: 200)).then((_) {
       // wait for scroll controller position binding
-      _lastScrollLength = null;
+      _lastScrollLength = null; // remember to reset these states
       _lastScrollOffset = null;
       fitSystemScreenshot.onScreenShotScroll = _screenshotScroll;
       var data = fitSystemScreenshotData;
@@ -305,11 +263,9 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
         }
       }
     });
-    // });
-    // if (mounted) setState(() {});
 
     return () {
-      _lastScrollLength = null;
+      _lastScrollLength = null; // remember to reset these states
       _lastScrollOffset = null;
       fitSystemScreenshot.onScreenShotScroll = null;
       var data = fitSystemScreenshotData;
@@ -362,12 +318,10 @@ extension FitSystemScreenshotExtension on Widget {
       child: this,
       mixin: mixin,
       onNotification: (isInit) {
-        globalLogger.i('[$runtimeType] onNotification');
         WidgetsBinding.instance?.addPostFrameCallback((_) async {
           if (isInit) {
             await Future.delayed(Duration(milliseconds: 500)); // <<< CustomPageRouteThemeData.transitionDuration
           }
-          globalLogger.i('[$runtimeType] onNotification.updatePageAttaching');
           mixin.updatePageAttaching();
         });
       },
@@ -396,52 +350,6 @@ class _FitSystemScreenshotListenerState extends State<_FitSystemScreenshotListen
   bool? _lastCanScrollDown;
 
   bool _onNotification(Notification n) {
-    // if (!data.scrollController.hasClients) {
-    //   return false;
-    // }
-    //
-    // // var scrollOffset = widget.scrollController.offset;
-    // // double maxScrollExtent;
-    // // if (n is ScrollMetricsNotification) {
-    // //   maxScrollExtent = n.metrics.maxScrollExtent;
-    // // } else if (n is ScrollUpdateNotification) {
-    // // maxScrollExtent = n.metrics.maxScrollExtent;
-    // // print('$maxScrollExtent $scrollOffset ${n.depth}');
-    // // } else {
-    // // return false;
-    // // }
-    // //
-    // // var canScrollDown = scrollOffset < maxScrollExtent;
-    //
-    // bool canScrollDown;
-    // if (n is! ScrollMetricsNotification && n is! ScrollUpdateNotification) {
-    //   return false;
-    // }
-    //
-    // // var scrollOffset = widget.scrollController.offset;
-    // // var maxScrollExtent = widget.scrollController.position.maxScrollExtent;
-    // // print('1 $scrollOffset -> $maxScrollExtent');
-    // canScrollDown = !widget.scrollController.position.atBottomEdge();
-    // if (!canScrollDown && widget.outerScrollController != null) {
-    //   // scrollOffset = widget.outerScrollController!.offset;
-    //   // maxScrollExtent = widget.outerScrollController!.position.maxScrollExtent;
-    //   // print('2 $scrollOffset -> $maxScrollExtent');
-    //   canScrollDown = !widget.outerScrollController!.position.atBottomEdge();
-    // }
-    // if (!canScrollDown && widget.innerScrollController != null) {
-    //   // scrollOffset = widget.innerScrollController!.offset;
-    //   // maxScrollExtent = widget.innerScrollController!.position.maxScrollExtent;
-    //   // print('3 $scrollOffset -> $maxScrollExtent');
-    //   canScrollDown = !widget.innerScrollController!.position.atBottomEdge();
-    // }
-    //
-    // if (_lastCanScrollDown == null || _lastCanScrollDown != canScrollDown) {
-    //   globalLogger.d('canScrollDown: $_lastCanScrollDown -> $canScrollDown');
-    //   _lastCanScrollDown = canScrollDown;
-    //   widget.onNotification?.call();
-    // }
-    // return false;
-
     if (n is! ScrollMetricsNotification && n is! ScrollUpdateNotification) {
       return false;
     }
@@ -458,8 +366,8 @@ class _FitSystemScreenshotListenerState extends State<_FitSystemScreenshotListen
     } else {
       return false;
     }
+
     if (_lastCanScrollDown == null || _lastCanScrollDown != canScrollDown) {
-      globalLogger.d('[${widget.mixin.runtimeType}] canScrollDown: $_lastCanScrollDown -> $canScrollDown');
       _lastCanScrollDown = canScrollDown;
       widget.onNotification?.call(_lastCanScrollDown == null);
     }

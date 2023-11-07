@@ -312,6 +312,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
             getData: ({indicator}) => _getData(page: indicator),
             scrollViewKey: _scrollViewKey,
             scrollController: _controller,
+            onStyleChanged: (_, __) => updatePageAttaching(),
             paginationSetting: PaginationSetting(
               initialIndicator: 1,
               nothingIndicator: 0,

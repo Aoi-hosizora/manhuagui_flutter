@@ -136,9 +136,9 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
 
     _data.clear();
     _total = 0;
+    updatePageAttaching(); // for long screenshot supported
     widget.action?.invoke('updateSubPage'); // update CategorySubPage or SepCategoryPage
     if (mounted) setState(() {});
-    WidgetsBinding.instance?.addPostFrameCallback((_) => updatePageAttaching()); // TODO <<<
   }
 
   final _data = <TinyManga>[];
@@ -221,6 +221,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
             getData: ({indicator}) => _getData(page: indicator),
             scrollViewKey: _scrollViewKey,
             scrollController: _controller,
+            onStyleChanged: (_, __) => updatePageAttaching(),
             paginationSetting: PaginationSetting(
               initialIndicator: 1,
               nothingIndicator: 0,
