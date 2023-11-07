@@ -57,7 +57,7 @@ class RecommendSubPage extends StatefulWidget {
 
 class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
-  final _listViewKey = GlobalKey<State<StatefulWidget>>();
+  final _listViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];

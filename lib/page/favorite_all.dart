@@ -31,6 +31,7 @@ class FavoriteAllPage extends StatefulWidget {
 
 class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _scrollViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
@@ -251,7 +252,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _pdvKey,
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
       );
 
@@ -309,6 +310,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
             style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
             data: _data,
             getData: ({indicator}) => _getData(page: indicator),
+            scrollViewKey: _scrollViewKey,
             scrollController: _controller,
             paginationSetting: PaginationSetting(
               initialIndicator: 1,

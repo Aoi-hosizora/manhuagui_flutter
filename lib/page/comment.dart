@@ -63,7 +63,7 @@ class _CommentPageState extends State<CommentPage> with FitSystemScreenshotMixin
     return Scaffold(
       appBar: AppBar(
         title: Text('评论详情'),
-        leading: AppBarActionButton.leading(context: context),
+        leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
         actions: [
           AppBarActionButton(
             icon: Icon(Icons.reply),

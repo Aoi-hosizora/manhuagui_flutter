@@ -38,6 +38,8 @@ class MangaCategorySubPage extends StatefulWidget {
 
 class _MangaCategorySubPageState extends State<MangaCategorySubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _scrollViewKeyForCategory = GlobalKey();
+  final _scrollViewKey = GlobalKey();
   final _controllerForCategory = ScrollController();
   final _fabControllerForCategory = AnimatedFabController();
   final _controller = ScrollController();
@@ -136,6 +138,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
     _total = 0;
     widget.action?.invoke('updateSubPage'); // update CategorySubPage or SepCategoryPage
     if (mounted) setState(() {});
+    WidgetsBinding.instance?.addPostFrameCallback((_) => updatePageAttaching()); // TODO <<<
   }
 
   final _data = <TinyManga>[];
@@ -167,8 +170,8 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _pdvKey,
-        scrollController: _controller,
+        scrollViewKey: !_chosen ? _scrollViewKeyForCategory : _scrollViewKey,
+        scrollController: !_chosen ? _controllerForCategory : _controller,
       );
 
   @override
@@ -201,6 +204,7 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
                     title: '选择一个漫画类别来筛选漫画',
                     genres: _genres,
                     markedCategoryNames: _markedCategoryNames,
+                    listViewKey: _scrollViewKeyForCategory,
                     controller: _controllerForCategory,
                     onChoose: ({genre, age, zone}) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
                     onLongPressed: ({genre, age, zone}) => showCategoryPopupMenu(
@@ -208,13 +212,14 @@ class _MangaCategorySubPageState extends State<MangaCategorySubPage> with Automa
                       category: genre ?? age ?? zone ?? allGenres[0],
                       onSelected: (_) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
                     ),
-                  ),
+                  ).fitSystemScreenshot(this),
           ).copyWithChinese(),
           childBuilder: (c) => PaginationDataView<TinyManga>(
             key: _pdvKey,
             style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
             data: _data,
             getData: ({indicator}) => _getData(page: indicator),
+            scrollViewKey: _scrollViewKey,
             scrollController: _controller,
             paginationSetting: PaginationSetting(
               initialIndicator: 1,

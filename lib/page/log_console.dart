@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logger/logger.dart';
-import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 
 class _PlainOutputEvent {
@@ -56,8 +55,7 @@ class LogConsolePage extends StatefulWidget {
   }
 }
 
-class _LogConsolePageState extends State<LogConsolePage> with FitSystemScreenshotMixin {
-  final _scrollViewKey = GlobalKey();
+class _LogConsolePageState extends State<LogConsolePage> {
   final _scrollController = ScrollController();
   final _filterController = TextEditingController();
 
@@ -103,12 +101,6 @@ class _LogConsolePageState extends State<LogConsolePage> with FitSystemScreensho
   }
 
   @override
-  FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _scrollViewKey,
-        scrollController: _scrollController,
-      );
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -123,7 +115,8 @@ class _LogConsolePageState extends State<LogConsolePage> with FitSystemScreensho
               builder: (c) => SimpleDialog(
                 title: const Text('导出日志'),
                 children: [
-                  TextDialogOption(
+                  IconTextDialogOption(
+                    icon: const Icon(Icons.copy),
                     text: const Text('复制所有日志'),
                     onPressed: () async {
                       Navigator.of(c).pop();
@@ -132,7 +125,8 @@ class _LogConsolePageState extends State<LogConsolePage> with FitSystemScreensho
                       Fluttertoast.showToast(msg: '调试日志已复制');
                     },
                   ),
-                  TextDialogOption(
+                  IconTextDialogOption(
+                    icon: const Icon(Icons.copy),
                     text: const Text('仅复制过滤后的日志'),
                     onPressed: () async {
                       Navigator.of(c).pop();
@@ -164,7 +158,6 @@ class _LogConsolePageState extends State<LogConsolePage> with FitSystemScreensho
                     child: Text('当前日志为空'),
                   )
                 : ExtendedScrollbar(
-                    key: _scrollViewKey,
                     controller: _scrollController,
                     interactive: true,
                     isAlwaysShown: true,
@@ -184,7 +177,7 @@ class _LogConsolePageState extends State<LogConsolePage> with FitSystemScreensho
                           ),
                         ),
                       ),
-                    ).fitSystemScreenshot(this),
+                    ),
                   ),
           ),
           BottomAppBar(

@@ -65,6 +65,14 @@ class _MangaGroupPageState extends State<MangaGroupPage> with FitSystemScreensho
               child: MangaGroupView(
                 groupList: widget.groupList,
                 style: MangaGroupViewStyle.normalFull,
+                onLongPressed: (manga) => showPopupMenuForMangaList(
+                  context: context,
+                  mangaId: manga.mid,
+                  mangaTitle: manga.title,
+                  mangaCover: manga.cover,
+                  mangaUrl: manga.url,
+                  extraData: null,
+                ),
               ),
             ),
           ],

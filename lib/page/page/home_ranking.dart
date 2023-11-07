@@ -34,6 +34,8 @@ class RankingSubPage extends StatefulWidget {
 
 class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _rdvKey = GlobalKey<RefreshableDataViewState>();
+  final _scrollViewKeyForCategory = GlobalKey();
+  final _scrollViewKey = GlobalKey();
   final _controllerForCategory = ScrollController();
   final _fabControllerForCategory = AnimatedFabController();
   final _controller = ScrollController();
@@ -120,6 +122,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
 
     _data.clear();
     if (mounted) setState(() {});
+    WidgetsBinding.instance?.addPostFrameCallback((_) => updatePageAttaching()); // TODO <<<
   }
 
   final _data = <MangaRanking>[];
@@ -147,8 +150,8 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _rdvKey,
-        scrollController: _controller,
+        scrollViewKey: !_chosen ? _scrollViewKeyForCategory : _scrollViewKey,
+        scrollController: !_chosen ? _controllerForCategory : _controller,
       );
 
   @override
@@ -181,6 +184,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                     title: '选择一个漫画类别来查看排行榜',
                     genres: _genres,
                     markedCategoryNames: _markedCategoryNames,
+                    listViewKey: _scrollViewKeyForCategory,
                     controller: _controllerForCategory,
                     onChoose: ({genre, age, zone}) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
                     onLongPressed: ({genre, age, zone}) => showCategoryPopupMenu(
@@ -188,13 +192,14 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
                       category: genre ?? age ?? zone ?? allGenres[0],
                       onSelected: (_) => _chooseCategory(toChoose: true, genre: genre, age: age, zone: zone),
                     ),
-                  ),
+                  ).fitSystemScreenshot(this),
           ).copyWithChinese(),
           childBuilder: (c) => RefreshableDataView<MangaRanking>(
             key: _rdvKey,
             style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
             data: _data,
             getData: () => _getData(),
+            scrollViewKey: _scrollViewKey,
             scrollController: _controller,
             setting: UpdatableDataViewSetting(
               padding: EdgeInsets.symmetric(vertical: 0),

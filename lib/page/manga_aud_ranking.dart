@@ -37,6 +37,7 @@ class MangaAudRankingPage extends StatefulWidget {
 
 class _MangaAudRankingPageState extends State<MangaAudRankingPage> with FitSystemScreenshotMixin {
   final _rdvKey = GlobalKey();
+  final _scrollViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
@@ -72,7 +73,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> with FitSyste
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _rdvKey,
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
       );
 
@@ -92,6 +93,7 @@ class _MangaAudRankingPageState extends State<MangaAudRankingPage> with FitSyste
         style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
         data: widget.rankings,
         getData: null,
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),

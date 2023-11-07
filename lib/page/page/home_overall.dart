@@ -27,6 +27,7 @@ class OverallSubPage extends StatefulWidget {
 
 class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _scrollViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -70,9 +71,9 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-    scrollViewKey: _pdvKey,
-    scrollController: _controller,
-  );
+        scrollViewKey: _scrollViewKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +84,7 @@ class _OverallSubPageState extends State<OverallSubPage> with AutomaticKeepAlive
         style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
         paginationSetting: PaginationSetting(
           initialIndicator: 1,

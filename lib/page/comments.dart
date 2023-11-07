@@ -31,6 +31,7 @@ class CommentsPage extends StatefulWidget {
 
 class _CommentsPageState extends State<CommentsPage> with FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _scrollViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -56,7 +57,7 @@ class _CommentsPageState extends State<CommentsPage> with FitSystemScreenshotMix
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _pdvKey,
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
       );
 
@@ -96,6 +97,7 @@ class _CommentsPageState extends State<CommentsPage> with FitSystemScreenshotMix
         key: _pdvKey,
         data: _data,
         getData: ({indicator}) => _getData(page: indicator),
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
         paginationSetting: PaginationSetting(
           initialIndicator: 1,

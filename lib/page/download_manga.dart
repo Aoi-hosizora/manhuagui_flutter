@@ -71,10 +71,11 @@ class DownloadMangaPage extends StatefulWidget {
 class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTickerProviderStateMixin, FitSystemScreenshotMixin {
   final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final _tabBarKey = GlobalKey<State<StatefulWidget>>();
-  late final _tabController = TabController(length: 2, vsync: this);
+  late final _tabController = TabController(length: 2, vsync: this)..addListener(() => mountedSetState(() {}));
   final _physicsController = CustomScrollPhysicsController();
   final _actionControllers = [ActionController(), ActionController()];
-  final _scrollViewKey = GlobalKey();
+  final _scrollViewKey = GlobalKey<ExtendedNestedScrollViewState>();
+  final _headerSliverKey = GlobalKey();
   final _scrollController = ScrollController();
   final _cancelHandlers = <VoidCallback>[];
 
@@ -479,9 +480,11 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-    scrollViewKey: _scrollViewKey,
-    scrollController: _scrollController,
-  );
+        scrollViewKey: _scrollViewKey,
+        scrollController: _scrollController,
+        isNestedScrollView: true,
+        headerSliverHeight: _headerSliverKey.currentContext?.findRenderBox()?.size.height ?? 0.0,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -564,6 +567,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             headerSliverBuilder: (context, _) => [
               SliverToBoxAdapter(
                 child: Column(
+                  key: _headerSliverKey,
                   children: [
                     // ****************************************************************
                     // 漫画下载信息头部
@@ -705,6 +709,10 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             ],
             innerControllerCount: _tabController.length,
             activeControllerIndex: _tabController.index,
+            onActiveIndexChanged: (i, j) {
+              globalLogger.i('$i $j');
+              updatePageAttaching(); // TODO <<<
+            },
             bodyBuilder: (c, controllers) => TabBarView(
               controller: _tabController,
               physics: CustomScrollPhysics(controller: _physicsController),

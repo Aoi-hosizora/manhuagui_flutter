@@ -34,6 +34,7 @@ class _SearchPageState extends State<SearchPage> with FitSystemScreenshotMixin {
   final _searchScrollController = ScrollController();
   final _scrollController = ScrollController();
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _scrollViewKey = GlobalKey();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
 
@@ -154,12 +155,11 @@ class _SearchPageState extends State<SearchPage> with FitSystemScreenshotMixin {
 
   double get appBarHeight => Theme.of(context).appBarTheme.toolbarHeight!;
 
-
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-    scrollViewKey: _pdvKey,
-    scrollController: _scrollController,
-  );
+        scrollViewKey: _scrollViewKey,
+        scrollController: _scrollController,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +191,7 @@ class _SearchPageState extends State<SearchPage> with FitSystemScreenshotMixin {
                   style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
                   data: _data,
                   getData: ({indicator}) => _getData(page: indicator),
+                  scrollViewKey: _scrollViewKey,
                   scrollController: _scrollController,
                   paginationSetting: PaginationSetting(
                     initialIndicator: 1,

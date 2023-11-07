@@ -29,7 +29,7 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin {
-  final _listViewKey = GlobalKey<State<StatefulWidget>>();
+  final _listViewKey = GlobalKey();
   final _scrollController = ScrollController();
   final _cancelHandlers = <VoidCallback>[];
 
@@ -256,12 +256,6 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
                 builder: (c) => ResourceDetailPage(),
               ),
             ),
-          ),
-          _divider(),
-          _item(
-            title: '使用小贴士',
-            icon: MdiIcons.lightbulbMultipleOutline,
-            action: () {}, // TODO add tips to setting page
           ),
           // *******************************************************
           _spacer(),

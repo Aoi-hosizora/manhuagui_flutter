@@ -34,6 +34,7 @@ class DownloadPage extends StatefulWidget {
 
 class _DownloadPageState extends State<DownloadPage> with FitSystemScreenshotMixin {
   final _rdvKey = GlobalKey<RefreshableDataViewState>();
+  final _scrollViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _msController = MultiSelectableController<ValueKey<int>>();
@@ -321,7 +322,7 @@ class _DownloadPageState extends State<DownloadPage> with FitSystemScreenshotMix
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _rdvKey,
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
       );
 
@@ -401,6 +402,7 @@ class _DownloadPageState extends State<DownloadPage> with FitSystemScreenshotMix
             key: _rdvKey,
             data: _data,
             getData: () => _getData(),
+            scrollViewKey: _scrollViewKey,
             scrollController: _controller,
             setting: UpdatableDataViewSetting(
               padding: EdgeInsets.symmetric(vertical: 0),

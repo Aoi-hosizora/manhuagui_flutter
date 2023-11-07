@@ -36,6 +36,7 @@ class AuthorCategorySubPage extends StatefulWidget {
 
 class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with AutomaticKeepAliveClientMixin, FitSystemScreenshotMixin {
   final _pdvKey = GlobalKey<PaginationDataViewState>();
+  final _scrollViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
   final _cancelHandlers = <VoidCallback>[];
@@ -146,7 +147,7 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _pdvKey,
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
       );
 
@@ -166,6 +167,7 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
           style: !AppSetting.instance.ui.showTwoColumns ? UpdatableDataViewStyle.listView : UpdatableDataViewStyle.gridView,
           data: _data,
           getData: ({indicator}) => _getData(page: indicator),
+          scrollViewKey: _scrollViewKey,
           scrollController: _controller,
           paginationSetting: PaginationSetting(
             initialIndicator: 1,

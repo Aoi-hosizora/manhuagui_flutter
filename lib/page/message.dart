@@ -22,6 +22,7 @@ class MessagePage extends StatefulWidget {
 
 class _MessagePageState extends State<MessagePage> with FitSystemScreenshotMixin {
   final _rdvKey = GlobalKey<RefreshableDataViewState>();
+  final _scrollViewKey = GlobalKey();
   final _controller = ScrollController();
   final _fabController = AnimatedFabController();
 
@@ -115,7 +116,7 @@ class _MessagePageState extends State<MessagePage> with FitSystemScreenshotMixin
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-        scrollViewKey: _rdvKey,
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
       );
 
@@ -146,6 +147,7 @@ class _MessagePageState extends State<MessagePage> with FitSystemScreenshotMixin
         key: _rdvKey,
         data: _data,
         getData: () => _getData(),
+        scrollViewKey: _scrollViewKey,
         scrollController: _controller,
         setting: UpdatableDataViewSetting(
           padding: EdgeInsets.symmetric(vertical: 0),
