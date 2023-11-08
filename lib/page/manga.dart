@@ -467,14 +467,18 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
             ),
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'), // TODO handle overflow
+              text: Flexible(
+                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
               popWhenPress: c,
               onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
             ),
             if (historyPage > 1)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_book_replay),
-                text: Text('从头阅读该章节 ($historyTitle 第1页)'),
+                text: Flexible(
+                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
               ),
@@ -499,27 +503,35 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
             if (neighbor?.nextSameGroupChapter != null)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_left_star_book),
-                text: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title} 第1页)'),
+                text: Flexible(
+                  child: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: neighbor.nextSameGroupChapter!.cid, page: 1),
               ),
             if (neighbor?.nextDiffGroupChapter != null)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_left_star_book),
-                text: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title} 第1页)'),
+                text: Flexible(
+                  child: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: neighbor.nextDiffGroupChapter!.cid, page: 1),
               ),
             if (historyPage > 1)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_book_replay),
-                text: Text('从头阅读该章节 ($historyTitle 第1页)'),
+                text: Flexible(
+                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
               ),
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
+              text: Flexible(
+                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
               popWhenPress: c,
               onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
             ),
@@ -565,14 +577,18 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
             ),
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
+              text: Flexible(
+                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
               popWhenPress: c,
               onPressed: () => __gotoViewerPage(cid: historyCid, page: historyPage),
             ),
             if (historyPage > 1)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_book_replay),
-                text: Text('从头阅读该章节 ($historyTitle 第1页)'),
+                text: Flexible(
+                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: historyCid, page: 1),
               ),
@@ -597,27 +613,35 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
             if (neighbor?.nextSameGroupChapter != null)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_left_star_book),
-                text: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title} 第1页)'),
+                text: Flexible(
+                  child: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: neighbor.nextSameGroupChapter!.cid, page: 1),
               ),
             if (neighbor?.nextDiffGroupChapter != null)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_left_star_book),
-                text: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title} 第1页)'),
+                text: Flexible(
+                  child: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: neighbor.nextDiffGroupChapter!.cid, page: 1),
               ),
             if (historyPage > 1)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_book_replay),
-                text: Text('从头阅读该章节 ($historyTitle 第1页)'),
+                text: Flexible(
+                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: historyCid, page: 1),
               ),
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
+              text: Flexible(
+                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
               popWhenPress: c,
               onPressed: () => __gotoViewerPage(cid: historyCid, page: historyPage),
             ),
@@ -678,7 +702,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                   checkIsChapterFinished(chapterId: _history!.chapterId, chapterPage: _history!.chapterPage).let(
                     (fin) => '上次阅读到 ${_history!.chapterTitle} 第${_history!.chapterPage}页${fin ? ' 完' : ''}',
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -693,7 +717,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                     checkIsChapterFinished(chapterId: _history!.lastChapterId, chapterPage: _history!.lastChapterPage).let(
                       (fin) => '上上次阅读到 ${_history!.lastChapterTitle} 第${_history!.lastChapterPage}页${fin ? ' 完' : ''}',
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -718,7 +742,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           if (_history != null && _history!.read)
             IconTextDialogOption(
               icon: Icon(CustomIcons.history_delete),
-              text: Text('删除所有章节阅读历史，保留漫画浏览历史'),
+              text: Text('删除所有阅读历史，保留漫画浏览历史'),
               predicateForPress: () => showCheckDialog(msg: '确定删除漫画阅读历史 (包括章节阅读历史)，且保留漫画浏览历史？'),
               popWhenPress: c,
               onPressed: () async {
@@ -734,7 +758,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           if (_history != null)
             IconTextDialogOption(
               icon: Icon(CustomIcons.history_delete),
-              text: Text(!_history!.read ? '删除浏览历史' : '删除所有章节阅读历史、以及漫画浏览历史'),
+              text: Text(!_history!.read ? '删除浏览历史' : '删除所有阅读历史、以及漫画浏览历史'),
               predicateForPress: () => showCheckDialog(msg: '确定删除' + (!_history!.read ? '漫画浏览历史？' : '漫画阅读历史 (包括章节阅读历史)、以及漫画浏览历史？')),
               popWhenPress: c,
               onPressed: () async {
@@ -803,7 +827,9 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           for (var author in _data!.authors)
             IconTextDialogOption(
               icon: Icon(Icons.person),
-              text: Text(author.name),
+              text: Flexible(
+                child: Text(author.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
               popWhenPress: c,
               onPressed: () => Navigator.of(context).push(
                 CustomPageRoute(

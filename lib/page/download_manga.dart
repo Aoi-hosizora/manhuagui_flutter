@@ -381,26 +381,24 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
             ...([
               IconTextDialogOption(
                 icon: Icon(CustomIcons.opened_book_arrow_right),
-                text: Text('继续阅读所选章节 ($historyTitle 第$historyPage页)'),
+                text: Flexible(
+                  child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                ),
                 popWhenPress: c,
                 onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
               ),
               if (historyPage > 1)
                 IconTextDialogOption(
                   icon: Icon(CustomIcons.opened_book_replay),
-                  text: Text('从头阅读所选章节 ($historyTitle 第1页)'),
+                  text: Flexible(
+                    child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ),
                   popWhenPress: c,
                   onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
                 ),
             ].let(
               (opt) => checkNotfin ? opt /* 未阅读完 */ : opt.reversed /* 已阅读完 */,
             )),
-            IconTextDialogOption(
-              icon: Icon(Icons.menu),
-              text: Text('选择其他章节'),
-              popWhenPress: c,
-              onPressed: () {}, // <<< 此处不提供新章节供选择阅读
-            ),
           ],
         ),
       );

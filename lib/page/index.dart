@@ -77,16 +77,14 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
       if (element.widget is! WillPopScope) {
         return null;
       }
-
       var renderBox = element.findRenderBox();
       if (renderBox != null) {
         var rect = renderBox.localToGlobal(Offset.zero) & renderBox.size;
         if (!rect.isFinite || rect.isEmpty) {
-          return null; // TODO test
+          return null;
         }
       }
-
-      return element.widget as WillPopScope; // TODO 需要过滤掉未显示的页面的 WillPopScope
+      return element.widget as WillPopScope; // TODO 需要过滤掉未显示的页面的 WillPopScope，尤其是 TabBarView
     });
     if (scopes.isNotEmpty) {
       scopes.removeAt(0); // remove the first WillPopScope

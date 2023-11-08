@@ -11,6 +11,7 @@ import 'package:manhuagui_flutter/service/db/favorite.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 调整收藏顺序页，根据所给分组名查询 [FavoriteManga] 列表并进行排序，以及保存到数据库
 class FavoriteReorderPage extends StatefulWidget {
@@ -123,7 +124,7 @@ class _FavoriteReorderPageState extends State<FavoriteReorderPage> with FitSyste
           leading: AppBarActionButton.leading(context: context),
           actions: [
             AppBarActionButton(
-              icon: Icon(Icons.settings_backup_restore),
+              icon: Icon(MdiIcons.restore),
               tooltip: '还原修改',
               onPressed: _saving ? null : () => _loadData(),
             ),

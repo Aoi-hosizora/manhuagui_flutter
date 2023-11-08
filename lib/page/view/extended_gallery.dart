@@ -168,6 +168,7 @@ class VerticalGalleryView extends StatefulWidget {
 }
 
 const _kMaskAnimDuration = Duration(milliseconds: 150);
+const _minimumViewportPageSpace = 10.0;
 
 class VerticalGalleryViewState extends State<VerticalGalleryView> {
   late final _controller = ScrollController()..addListener(_onScrollChanged);
@@ -236,14 +237,35 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
       'VerticalGalleryView is not allowed for dynamic image pages! '
       '(previous image count: ${oldWidget.imageCount}, current image count: ${widget.imageCount})',
     );
+
     if (widget.viewportPageSpace != oldWidget.viewportPageSpace) {
+      // viewport page space has been changed, need to update height, and adjust offset
       var pageIndex = _currentPageIndex;
+      var pixels = _controller.offset;
       if (mounted) setState(() {}); // <<< update gallery state
+
       WidgetsBinding.instance?.addPostFrameCallback((_) async {
         for (var pageIndex = 0; pageIndex < widget.imageCount + 2; pageIndex++) {
           updatePageHeight(pageIndex); // update height of all pages, including extra pages
         }
-        await jumpToPage(pageIndex, masked: false); // adjust offset
+        if (pixels <= _firstPageHeight /* do not use `_currentPageIndex == 0` here */) {
+          return; // do nothing if current page is the first page, which is extra page
+        }
+
+        // compute pixel offset's difference
+        double diff;
+        if (oldWidget.viewportPageSpace < widget.viewportPageSpace) {
+          diff = (widget.viewportPageSpace - oldWidget.viewportPageSpace) * (pageIndex - 1) + (widget.viewportPageSpace - _minimumViewportPageSpace); // show space
+        } else {
+          diff = (oldWidget.viewportPageSpace - widget.viewportPageSpace) * (pageIndex - 1) + (oldWidget.viewportPageSpace - _minimumViewportPageSpace); // hide space
+          diff = -diff; // need to scroll back in negative direction
+        }
+        await _jumpLock.synchronized(() async {
+          _jumping = true;
+          _controller.position.correctPixels(pixels + diff); // correct pixels by diff (maybe `jumpTo` can also be used here)
+          await WidgetsBinding.instance?.endOfFrame;
+          _jumping = false;
+        });
       });
     }
   }
@@ -254,7 +276,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
       return _firstPageHeight - 0 /* extra padding */;
     }
     if (pageIndex == _totalPageCount - 1) {
-      return _lastPageHeight - math.max(widget.viewportPageSpace, 10) /* extra padding */;
+      return _lastPageHeight - math.max(widget.viewportPageSpace, _minimumViewportPageSpace) /* extra padding */;
     }
     return _imagePageHeights[pageIndex - 1] - widget.viewportPageSpace /* extra padding */;
   }
@@ -380,38 +402,55 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     if (mounted) setState(() {});
   }
 
-  void _onImageViewLoadingStateChanged(int imageIndex) {
+  void _onImageStateChanged(int imageIndex, Size? size) {
     // !!! 当图片页状态 (加载/正常/错误) 变更时，更新高度，并且限制滚动偏移防止页面跳转
+
+    // 1. jump back when the height of previous page has been changed (must before the layout updated)
+    var pageIndex = imageIndex + 1;
+    if (size != null && !size.isEmpty && !size.isInfinite) {
+      if (widget.imageCount > 1 && _currentPageIndex > pageIndex) { // TODO _currentPageIndex
+        var oldHeight = _imagePageHeights[imageIndex];
+        var newHeight = (size.height * (MediaQuery.of(context).size.width) / size.width) + _getPaddingForPages(pageIndex: imageIndex + 1).vertical;
+        if (oldHeight != newHeight) {
+          // Reference: https://github.com/flutter/flutter/issues/99158#issuecomment-1381740815
+          _controller.position.correctPixels(_controller.offset + (newHeight - oldHeight)); // jump back to the previous offset (use correct pixels here)
+        }
+      }
+    }
+
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      // 1. check whether image page height is changed
+      // 2. check whether image page height is changed after the layout updated
       var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
       var newHeight = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
       var oldHeight = _imagePageHeights[imageIndex];
       if (oldHeight == newHeight) {
         return; // height does not change
       }
-      // print('Image ${imageIndex + 1} new height: $oldHeight -> $newHeight');
       _imagePageHeights[imageIndex] = newHeight;
 
-      // 2. jump back when the height of previous page has been changed
-      if (widget.imageCount > 1 && _currentPageIndex > imageIndex) { // TODO test
-        // if (widget.imageCount > 1 && _currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
-        await _jumpLock.synchronized(() async {
-          _jumping = true;
-          _controller.jumpTo(_controller.offset + (newHeight - oldHeight)); // jump back to the previous offset
-          await WidgetsBinding.instance?.endOfFrame;
-          _jumping = false;
-        });
-      }
-
-      // 3. update page index and invoke callback if needed
-      var pageIndex = imageIndex + 1;
-      if (_currentPageIndex != pageIndex) {
-        _currentPageIndex = pageIndex;
-        widget.onPageChanged?.call(pageIndex); // TODO test
-      }
+      // 3. update page index and invoke page changed callback, if needed
       _onScrollChanged();
     });
+  }
+
+  EdgeInsets _getPaddingForPages({required int pageIndex}) {
+    final viewportSpace = widget.viewportPageSpace;
+
+    var imageIndex = pageIndex - 1;
+    if (imageIndex >= 0 && imageIndex < widget.imageCount) {
+      return EdgeInsets.only(
+        top: imageIndex == 0
+            ? math.max(viewportSpace, _minimumViewportPageSpace) // for first image page (page space must be larger than 10)
+            : viewportSpace, // for remaining image pages (just use viewport page space as its top padding)
+      );
+    }
+
+    if (pageIndex == 0) {
+      return EdgeInsets.only(top: 0); // for first extra page (have no top padding in all cases)
+    }
+    return EdgeInsets.only(
+      top: math.max(viewportSpace, _minimumViewportPageSpace), // for last extra page (page space must be larger than 10)
+    );
   }
 
   Widget _buildImageView({required BuildContext context, required int imageIndex, bool onlyForPlaceholder = false}) {
@@ -449,7 +488,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
         tightMode: true,
         wantKeepAlive: options.wantKeepAlive,
         customBuilder /* <<< this property is added in process_deps.sh */ : (c, view) => widget.customPageBuilder?.call(c, view, imageIndex) ?? view,
-        onLoadingStateChanged /* <<< this property is added in process_deps.sh */ : () => _onImageViewLoadingStateChanged(imageIndex),
+        onLoadingStateChanged /* <<< this property is added in process_deps.sh */ : (size) => _onImageStateChanged(imageIndex, size),
       ),
     );
   }
@@ -474,7 +513,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                   // 1
                   Padding(
                     key: _firstPageKey,
-                    padding: EdgeInsets.only(top: 0),
+                    padding: _getPaddingForPages(pageIndex: 0),
                     child: widget.firstPageBuilder(context),
                   ),
 
@@ -489,11 +528,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                           ? null
                           : () => widget.onImageLongPressed!(imageIndex) /* exclude extra pages, start from 0 */,
                       child: Padding(
-                        padding: EdgeInsets.only(
-                          top: imageIndex == 0
-                              ? math.max(widget.viewportPageSpace, 10) // for first page (page space must be larger than 10)
-                              : widget.viewportPageSpace, // for remaining pages (use viewport page space as top padding)
-                        ),
+                        padding: _getPaddingForPages(pageIndex: imageIndex + 1),
                         child: _imageViewWidgets[imageIndex], // TODO 竖直滚动的 GalleryView 的缩放效果问题待修复
                       ),
                     ),
@@ -501,9 +536,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
                   // 3
                   Padding(
                     key: _lastPageKey,
-                    padding: EdgeInsets.only(
-                      top: math.max(widget.viewportPageSpace, 10), // for last page (page space must be larger than 10)
-                    ),
+                    padding: _getPaddingForPages(pageIndex: widget.imageCount + 1),
                     child: widget.lastPageBuilder(context),
                   ),
                 ],

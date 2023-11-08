@@ -176,7 +176,9 @@ void _showLinksDialog({required BuildContext context, required String title, req
       children: [
         for (var link in links)
           TextDialogOption(
-            text: Text(link),
+            text: Flexible(
+              child: Text(link, maxLines: 3, overflow: TextOverflow.ellipsis),
+            ),
             onPressed: () => showDialog(
               context: context,
               builder: (c) => SimpleDialog(

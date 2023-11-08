@@ -312,7 +312,7 @@ class _FavoriteGroupPageState extends State<FavoriteGroupPage> with FitSystemScr
               onPressed: _saving ? null : () => _addGroup(),
             ),
             AppBarActionButton(
-              icon: Icon(Icons.settings_backup_restore),
+              icon: Icon(MdiIcons.restore),
               tooltip: '还原修改',
               onPressed: _saving ? null : () => _restore(),
             ),

@@ -812,7 +812,9 @@ void showPopupMenuForLaterManga({
         if (later != null && extraData != null && extraData.newestChapter != null && extraData.newestDate != null && extraData.newestChapter != later.newestChapter)
           IconTextDialogOption(
             icon: Icon(CustomIcons.clock_sync),
-            text: Text('更新记录至最新章节 (${extraData.newestChapter})'),
+            text: Flexible(
+              child: Text('更新记录至最新章节 (${extraData.newestChapter})', maxLines: 2, overflow: TextOverflow.ellipsis),
+            ),
             popWhenPress: c,
             onPressed: () => helper.updateLaterToNewestChapter(later: later, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
