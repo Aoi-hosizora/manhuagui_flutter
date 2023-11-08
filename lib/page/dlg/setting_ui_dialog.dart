@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/setting_line.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 
 /// 设置页-界面与交互设置 [showUiSettingDialog], [UiSettingSubPage]
@@ -13,12 +13,10 @@ class UiSettingSubPage extends StatefulWidget {
     Key? key,
     required this.action,
     required this.setting,
-    required this.onSettingChanged,
   }) : super(key: key);
 
   final ActionController action;
   final UiSetting setting;
-  final void Function(UiSetting) onSettingChanged;
 
   @override
   State<UiSettingSubPage> createState() => _UiSettingSubPageState();
@@ -28,12 +26,14 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   @override
   void initState() {
     super.initState();
-    widget.action.addAction(_setToDefault);
+    widget.action.addAction(() => _newestSetting);
+    widget.action.addAction('default', _setToDefault);
   }
 
   @override
   void dispose() {
     widget.action.removeAction();
+    widget.action.removeAction('default');
     super.dispose();
   }
 
@@ -106,7 +106,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _enableAutoCheckin = setting.enableAutoCheckin;
     _allowErrorToast = setting.allowErrorToast;
     _showNotWifiHint = setting.showNotWifiHint;
-    widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
 
@@ -114,7 +113,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   Widget build(BuildContext context) {
     return SettingDialogView(
       children: [
-        SettingGroupTitleView(
+        SettingTitleView(
           title: '列表显示设置',
         ),
         SettingSwitcherView(
@@ -122,7 +121,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _showTwoColumns,
           onChanged: (b) {
             _showTwoColumns = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -133,7 +131,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => s.toTitle(),
           onChanged: (s) {
             _defaultMangaOrder = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -144,7 +141,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => s.toTitle(),
           onChanged: (s) {
             _defaultAuthorOrder = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -157,7 +153,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _enableCornerIcons,
           onChanged: (b) {
             _enableCornerIcons = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -167,7 +162,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           enable: _enableCornerIcons,
           onChanged: (b) {
             _showMangaReadIcon = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -177,11 +171,10 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           enable: _enableCornerIcons,
           onChanged: (b) {
             _highlightRecentMangas = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        SettingGroupTitleView(
+        SettingTitleView(
           title: '漫画显示设置',
         ),
         SettingComboBoxView<ReadGroupBehavior>(
@@ -196,7 +189,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _readGroupBehavior = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -208,7 +200,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => '$s行',
           onChanged: (c) {
             _regularGroupRows = c.clamp(1, 8);
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -220,7 +211,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => '$s行',
           onChanged: (c) {
             _otherGroupRows = c.clamp(1, 5);
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -229,7 +219,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _showLastHistory,
           onChanged: (b) {
             _showLastHistory = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -242,11 +231,10 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _overviewLoadAll,
           onChanged: (b) {
             _overviewLoadAll = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        SettingGroupTitleView(
+        SettingTitleView(
           title: '首页显示设置',
         ),
         SettingSwitcherView(
@@ -254,7 +242,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _homepageShowMoreMangas,
           onChanged: (b) {
             _homepageShowMoreMangas = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -263,7 +250,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _includeUnreadInHome,
           onChanged: (b) {
             _includeUnreadInHome = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -275,7 +261,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => '$s行',
           onChanged: (c) {
             _audienceMangaRows = c.clamp(4, 10);
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -287,7 +272,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _homepageFavorite = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -299,11 +283,10 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _homepageRefreshData = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
-        SettingGroupTitleView(
+        SettingTitleView(
           title: '交互行为设置',
         ),
         SettingSwitcherView(
@@ -311,7 +294,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _clickToSearch,
           onChanged: (b) {
             _clickToSearch = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -321,7 +303,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _alwaysOpenNewListPage,
           onChanged: (b) {
             _alwaysOpenNewListPage = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -331,7 +312,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _enableAutoCheckin,
           onChanged: (b) {
             _enableAutoCheckin = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -341,7 +321,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _allowErrorToast,
           onChanged: (b) {
             _allowErrorToast = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -350,7 +329,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _showNotWifiHint,
           onChanged: (b) {
             _showNotWifiHint = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -361,7 +339,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
 
 Future<bool> showUiSettingDialog({required BuildContext context}) async {
   var action = ActionController();
-  var setting = AppSetting.instance.ui;
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
@@ -373,8 +350,7 @@ Future<bool> showUiSettingDialog({required BuildContext context}) async {
       scrollable: true,
       content: UiSettingSubPage(
         action: action,
-        setting: setting,
-        onSettingChanged: (s) => setting = s,
+        setting: AppSetting.instance.ui,
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
@@ -388,9 +364,12 @@ Future<bool> showUiSettingDialog({required BuildContext context}) async {
             TextButton(
               child: Text('确定'),
               onPressed: () async {
-                AppSetting.instance.update(ui: setting, alsoFireEvent: true);
-                await AppSettingPrefs.saveUiSetting();
-                Navigator.of(c).pop(true);
+                var setting = action.invoke<UiSetting>();
+                if (setting != null) {
+                  AppSetting.instance.update(ui: setting, alsoFireEvent: true);
+                  await AppSettingPrefs.saveUiSetting();
+                  Navigator.of(c).pop(true);
+                }
               },
             ),
             TextButton(

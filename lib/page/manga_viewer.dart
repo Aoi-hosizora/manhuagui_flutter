@@ -875,6 +875,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
         },
       ),
+      navigateWrapper: (navigate) async {
+        await _ScreenHelper.restoreSystemUI();
+        var ok = await navigate();
+        await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+        return ok;
+      },
     );
 
     // apply settings to screen

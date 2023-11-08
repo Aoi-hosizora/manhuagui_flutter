@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_data_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_other_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/resource_detail.dart';
+import 'package:manhuagui_flutter/page/setting_ui.dart';
+import 'package:manhuagui_flutter/page/setting_view.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
@@ -175,7 +176,12 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
           _item(
             icon: CustomIcons.opened_book_cog,
             title: '漫画阅读设置',
-            action: () => showViewSettingDialog(context: context), // TODO change to use separated page
+            action: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => ViewSettingPage(setting: AppSetting.instance.view),
+              ),
+            ),
           ),
           _divider(),
           _item(
@@ -187,7 +193,12 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
           _item(
             title: '界面与交互设置',
             icon: CustomIcons.application_star_cog,
-            action: () => showUiSettingDialog(context: context),
+            action: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => UiSettingPage(setting: AppSetting.instance.ui),
+              ),
+            ),
           ),
           _divider(),
           _item(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 
-/// 与设置相关的 [SettingDialogView] 和各种 [_SettingView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [UiSettingSubPage] / [OtherSettingSubPage] 使用
+/// 与设置相关的 [SettingDialogView] 和各种 [_SettingLineView]，在 [ViewSettingSubPage] / [DlSettingSubPage] / [UiSettingSubPage] / [OtherSettingSubPage] / [ExportDataSubPage] 使用
 class SettingDialogView extends StatelessWidget {
   const SettingDialogView({
     Key? key,
@@ -24,8 +24,8 @@ class SettingDialogView extends StatelessWidget {
   }
 }
 
-abstract class _SettingView extends StatelessWidget {
-  const _SettingView({
+abstract class _SettingLineView extends StatelessWidget {
+  const _SettingLineView({
     Key? key,
     required this.title,
     this.hint,
@@ -77,7 +77,7 @@ abstract class _SettingView extends StatelessWidget {
   }
 }
 
-class SettingComboBoxView<T extends Object> extends _SettingView {
+class SettingComboBoxView<T extends Object> extends _SettingLineView {
   const SettingComboBoxView({
     Key? key,
     required String title,
@@ -118,7 +118,7 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
       );
 }
 
-class SettingSwitcherView extends _SettingView {
+class SettingSwitcherView extends _SettingLineView {
   const SettingSwitcherView({
     Key? key,
     required String title,
@@ -147,7 +147,7 @@ class SettingSwitcherView extends _SettingView {
       );
 }
 
-class SettingButtonView extends _SettingView {
+class SettingButtonView extends _SettingLineView {
   const SettingButtonView({
     Key? key,
     required String title,
@@ -181,8 +181,8 @@ class SettingButtonView extends _SettingView {
       );
 }
 
-class SettingGroupTitleView extends StatelessWidget {
-  const SettingGroupTitleView({
+class SettingTitleView extends StatelessWidget {
+  const SettingTitleView({
     Key? key,
     required this.title,
     this.padding = const EdgeInsets.symmetric(vertical: 5),

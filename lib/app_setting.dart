@@ -155,6 +155,23 @@ class ViewSetting {
       assistantActionSetting: assistantActionSetting ?? this.assistantActionSetting,
     );
   }
+
+  bool equals(ViewSetting other) {
+    return viewDirection == other.viewDirection && //
+        showPageHint == other.showPageHint &&
+        showClock == other.showClock &&
+        showNetwork == other.showNetwork &&
+        showBattery == other.showBattery &&
+        enablePageSpace == other.enablePageSpace &&
+        keepScreenOn == other.keepScreenOn &&
+        fullscreen == other.fullscreen &&
+        preloadCount == other.preloadCount &&
+        pageNoPosition == other.pageNoPosition &&
+        hideAppBarWhenEnter == other.hideAppBarWhenEnter &&
+        appBarSwitchBehavior == other.appBarSwitchBehavior &&
+        useChapterAssistant == other.useChapterAssistant &&
+        assistantActionSetting.equals(other.assistantActionSetting);
+  }
 }
 
 enum ViewDirection {
@@ -326,6 +343,14 @@ class AssistantActionSetting {
       rightBottom: rightBottom ?? this.rightBottom,
       allowReverse: allowReverse ?? this.allowReverse,
     );
+  }
+
+  bool equals(AssistantActionSetting other) {
+    return leftTop == other.leftTop && //
+        rightTop == other.rightTop &&
+        leftBottom == other.leftBottom &&
+        rightBottom == other.rightBottom &&
+        allowReverse == other.allowReverse;
   }
 
   List<String> toStringList() {
@@ -548,6 +573,14 @@ class DlSetting {
       usingDownloadedPage: usingDownloadedPage ?? this.usingDownloadedPage,
     );
   }
+
+  bool equals(DlSetting other) {
+    return invertDownloadOrder == other.invertDownloadOrder && //
+        defaultToDeleteFiles == other.defaultToDeleteFiles &&
+        downloadPagesTogether == other.downloadPagesTogether &&
+        defaultToOnlineMode == other.defaultToOnlineMode &&
+        usingDownloadedPage == other.usingDownloadedPage;
+  }
 }
 
 // =========
@@ -675,6 +708,30 @@ class UiSetting {
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
       showNotWifiHint: showNotWifiHint ?? this.showNotWifiHint,
     );
+  }
+
+  bool equals(UiSetting other) {
+    return showTwoColumns == other.showTwoColumns && //
+        defaultMangaOrder == other.defaultMangaOrder &&
+        defaultAuthorOrder == other.defaultAuthorOrder &&
+        enableCornerIcons == other.enableCornerIcons &&
+        showMangaReadIcon == other.showMangaReadIcon &&
+        highlightRecentMangas == other.highlightRecentMangas &&
+        readGroupBehavior == other.readGroupBehavior &&
+        regularGroupRows == other.regularGroupRows &&
+        otherGroupRows == other.otherGroupRows &&
+        showLastHistory == other.showLastHistory &&
+        allowErrorToast == other.allowErrorToast &&
+        overviewLoadAll == other.overviewLoadAll &&
+        homepageShowMoreMangas == other.homepageShowMoreMangas &&
+        includeUnreadInHome == other.includeUnreadInHome &&
+        audienceRankingRows == other.audienceRankingRows &&
+        homepageFavorite == other.homepageFavorite &&
+        homepageRefreshData == other.homepageRefreshData &&
+        clickToSearch == other.clickToSearch &&
+        alwaysOpenNewListPage == other.alwaysOpenNewListPage &&
+        enableAutoCheckin == other.enableAutoCheckin &&
+        showNotWifiHint == other.showNotWifiHint;
   }
 }
 
@@ -913,6 +970,17 @@ class OtherSetting {
       useHttpForImage: useHttpForImage ?? this.useHttpForImage,
       useEmulatedLongScreenshot: useEmulatedLongScreenshot ?? this.useEmulatedLongScreenshot,
     );
+  }
+
+  bool equals(OtherSetting other) {
+    return timeoutBehavior == other.timeoutBehavior && //
+        dlTimeoutBehavior == other.dlTimeoutBehavior &&
+        imgTimeoutBehavior == other.imgTimeoutBehavior &&
+        enableLogger == other.enableLogger &&
+        showDebugErrorMsg == other.showDebugErrorMsg &&
+        useNativeShareSheet == other.useNativeShareSheet &&
+        useHttpForImage == other.useHttpForImage &&
+        useEmulatedLongScreenshot == other.useEmulatedLongScreenshot;
   }
 }
 

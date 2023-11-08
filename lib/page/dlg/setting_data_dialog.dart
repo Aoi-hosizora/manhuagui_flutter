@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/setting_line.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/export_import_data.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
@@ -16,16 +16,28 @@ import 'package:manhuagui_flutter/service/storage/storage.dart';
 class ExportDataSubPage extends StatefulWidget {
   const ExportDataSubPage({
     Key? key,
-    required this.onTypesChanged,
+    required this.action,
   }) : super(key: key);
 
-  final void Function(List<ExportDataType> types) onTypesChanged;
+  final ActionController action;
 
   @override
   State<ExportDataSubPage> createState() => _ExportDataSubPageState();
 }
 
 class _ExportDataSubPageState extends State<ExportDataSubPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.action.addAction(() => _newestTypes);
+  }
+
+  @override
+  void dispose() {
+    widget.action.removeAction();
+    super.dispose();
+  }
+
   var _readHistories = true;
   var _chapterFootprints = true;
   var _downloadRecords = true;
@@ -62,7 +74,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _readHistories,
           onChanged: (b) {
             _readHistories = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -71,7 +82,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _chapterFootprints,
           onChanged: (b) {
             _chapterFootprints = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -80,7 +90,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _downloadRecords,
           onChanged: (b) {
             _downloadRecords = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -89,7 +98,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _favoriteMangas,
           onChanged: (b) {
             _favoriteMangas = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -98,7 +106,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _favoriteAuthors,
           onChanged: (b) {
             _favoriteAuthors = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -107,7 +114,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _laterMangas,
           onChanged: (b) {
             _laterMangas = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -116,7 +122,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _searchHistories,
           onChanged: (b) {
             _searchHistories = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -125,7 +130,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _markedCategories,
           onChanged: (b) {
             _markedCategories = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -134,7 +138,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _appSetting,
           onChanged: (b) {
             _appSetting = b;
-            widget.onTypesChanged.call(_newestTypes);
             if (mounted) setState(() {});
           },
         ),
@@ -144,21 +147,24 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
 }
 
 Future<void> showExportDataDialog({required BuildContext context}) async {
-  var allTypes = ExportDataType.values.toList();
+  List<ExportDataType>? typeList;
+  var action = ActionController();
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
       title: Text('导出数据'),
       scrollable: true,
       content: ExportDataSubPage(
-        onTypesChanged: (t) => allTypes = t,
+        action: action,
       ),
       actions: [
         TextButton(
           child: Text('导出'),
           onPressed: () {
-            if (allTypes.isEmpty) {
+            typeList = action.invoke<List<ExportDataType>>();
+            if (typeList == null || typeList!.isEmpty) {
               Fluttertoast.showToast(msg: '没有指定需要导出的数据');
+              typeList = null;
             } else {
               Navigator.of(c).pop(true);
             }
@@ -171,12 +177,12 @@ Future<void> showExportDataDialog({required BuildContext context}) async {
       ],
     ),
   );
-  if (ok != true) {
+  if (ok != true || typeList == null || typeList!.isEmpty) {
     return;
   }
 
   await _showFakeProgressDialog(context, '导出数据中...');
-  var nameAndCounter = await exportData(allTypes);
+  var nameAndCounter = await exportData(typeList!);
   Navigator.of(context).pop(); // dismiss progress dialog
   if (nameAndCounter == null) {
     Fluttertoast.showToast(msg: '导出数据失败');
@@ -185,7 +191,7 @@ Future<void> showExportDataDialog({required BuildContext context}) async {
 
   var name = nameAndCounter.item1;
   var counter = nameAndCounter.item2;
-  var resultString = counter.formatToString(includeZero: true, includeTypes: allTypes);
+  var resultString = counter.formatToString(includeZero: true, includeTypes: typeList!);
   showDialog(
     context: context,
     builder: (c) => AlertDialog(

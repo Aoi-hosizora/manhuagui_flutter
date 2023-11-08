@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/setting_line.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/clipboard.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
@@ -16,12 +16,10 @@ class DlSettingSubPage extends StatefulWidget {
     Key? key,
     required this.action,
     required this.setting,
-    required this.onSettingChanged,
   }) : super(key: key);
 
   final ActionController action;
   final DlSetting setting;
-  final void Function(DlSetting) onSettingChanged;
 
   @override
   State<DlSettingSubPage> createState() => _DlSettingSubPageState();
@@ -37,12 +35,14 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
       _lowerThanAndroidR = await lowerThanAndroidR();
       if (mounted) setState(() {});
     });
-    widget.action.addAction(_setToDefault);
+    widget.action.addAction(() => _newestSetting);
+    widget.action.addAction('default', _setToDefault);
   }
 
   @override
   void dispose() {
     widget.action.removeAction();
+    widget.action.removeAction('default');
     super.dispose();
   }
 
@@ -67,7 +67,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
     _downloadPagesTogether = setting.downloadPagesTogether;
     _defaultToOnlineMode = setting.defaultToOnlineMode;
     _usingDownloadedPage = setting.usingDownloadedPage;
-    widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
 
@@ -82,7 +81,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           textBuilder: (s) => !s ? '正序 (旧到新)' : '逆序 (新到旧)',
           onChanged: (c) {
             _invertDownloadOrder = c;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -91,7 +89,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           value: _defaultToDeleteFiles,
           onChanged: (b) {
             _defaultToDeleteFiles = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -104,7 +101,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           textBuilder: (s) => '$s页',
           onChanged: (c) {
             _downloadPagesTogether = c.clamp(1, 6);
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -114,7 +110,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           value: _defaultToOnlineMode,
           onChanged: (b) {
             _defaultToOnlineMode = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -124,7 +119,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           value: _usingDownloadedPage,
           onChanged: (b) {
             _usingDownloadedPage = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -166,7 +160,6 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
 
 Future<bool> showDlSettingDialog({required BuildContext context}) async {
   var action = ActionController();
-  var setting = AppSetting.instance.dl;
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
@@ -178,8 +171,7 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
       scrollable: true,
       content: DlSettingSubPage(
         action: action,
-        setting: setting,
-        onSettingChanged: (s) => setting = s,
+        setting: AppSetting.instance.dl,
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
@@ -193,9 +185,12 @@ Future<bool> showDlSettingDialog({required BuildContext context}) async {
             TextButton(
               child: Text('确定'),
               onPressed: () async {
-                AppSetting.instance.update(dl: setting, alsoFireEvent: true);
-                await AppSettingPrefs.saveDlSetting();
-                Navigator.of(c).pop(true);
+                var setting = action.invoke<DlSetting>();
+                if (setting != null) {
+                  AppSetting.instance.update(dl: setting, alsoFireEvent: true);
+                  await AppSettingPrefs.saveDlSetting();
+                  Navigator.of(c).pop(true);
+                }
               },
             ),
             TextButton(

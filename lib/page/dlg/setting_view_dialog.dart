@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
+import 'package:manhuagui_flutter/page/setting_view.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/setting_line.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -13,12 +14,12 @@ class ViewSettingSubPage extends StatefulWidget {
     Key? key,
     required this.action,
     required this.setting,
-    required this.onSettingChanged,
+    this.navigateWrapper,
   }) : super(key: key);
 
   final ActionController action;
   final ViewSetting setting;
-  final void Function(ViewSetting) onSettingChanged;
+  final Future<bool?> Function(Future<bool?> Function())? navigateWrapper;
 
   @override
   State<ViewSettingSubPage> createState() => _ViewSettingSubPageState();
@@ -28,12 +29,14 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   @override
   void initState() {
     super.initState();
-    widget.action.addAction(_setToDefault);
+    widget.action.addAction(() => _newestSetting);
+    widget.action.addAction('default', _setToDefault);
   }
 
   @override
   void dispose() {
     widget.action.removeAction();
+    widget.action.removeAction('default');
     super.dispose();
   }
 
@@ -45,12 +48,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _enablePageSpace = widget.setting.enablePageSpace;
   late var _keepScreenOn = widget.setting.keepScreenOn;
   late var _fullscreen = widget.setting.fullscreen;
-  late var _preloadCount = widget.setting.preloadCount;
-  late var _pageNoPosition = widget.setting.pageNoPosition;
-  late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
-  late var _appBarSwitchBehavior = widget.setting.appBarSwitchBehavior;
-  late var _useChapterAssistant = widget.setting.useChapterAssistant;
-  late var _assistantActionSetting = widget.setting.assistantActionSetting;
 
   ViewSetting get _newestSetting => ViewSetting(
         viewDirection: _viewDirection,
@@ -61,12 +58,12 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         enablePageSpace: _enablePageSpace,
         keepScreenOn: _keepScreenOn,
         fullscreen: _fullscreen,
-        preloadCount: _preloadCount,
-        pageNoPosition: _pageNoPosition,
-        hideAppBarWhenEnter: _hideAppBarWhenEnter,
-        appBarSwitchBehavior: _appBarSwitchBehavior,
-        useChapterAssistant: _useChapterAssistant,
-        assistantActionSetting: _assistantActionSetting,
+        preloadCount: widget.setting.preloadCount,
+        pageNoPosition: widget.setting.pageNoPosition,
+        hideAppBarWhenEnter: widget.setting.hideAppBarWhenEnter,
+        appBarSwitchBehavior: widget.setting.appBarSwitchBehavior,
+        useChapterAssistant: widget.setting.useChapterAssistant,
+        assistantActionSetting: widget.setting.assistantActionSetting,
       );
 
   void _setToDefault() {
@@ -79,13 +76,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _enablePageSpace = setting.enablePageSpace;
     _keepScreenOn = setting.keepScreenOn;
     _fullscreen = setting.fullscreen;
-    _preloadCount = setting.preloadCount;
-    _pageNoPosition = setting.pageNoPosition;
-    _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
-    _appBarSwitchBehavior = setting.appBarSwitchBehavior;
-    _useChapterAssistant = setting.useChapterAssistant;
-    _assistantActionSetting = setting.assistantActionSetting;
-    widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
 
@@ -93,9 +83,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   Widget build(BuildContext context) {
     return SettingDialogView(
       children: [
-        SettingGroupTitleView(
-          title: '常规设置',
-        ),
         SettingComboBoxView<ViewDirection>(
           title: '阅读方向',
           width: 150,
@@ -104,7 +91,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _viewDirection = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -113,7 +99,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _showPageHint,
           onChanged: (b) {
             _showPageHint = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -123,7 +108,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           enable: _showPageHint,
           onChanged: (b) {
             _showClock = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -133,7 +117,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           enable: _showPageHint,
           onChanged: (b) {
             _showNetwork = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -143,7 +126,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           enable: _showPageHint,
           onChanged: (b) {
             _showBattery = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -152,7 +134,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _enablePageSpace,
           onChanged: (b) {
             _enablePageSpace = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -161,7 +142,6 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _keepScreenOn,
           onChanged: (b) {
             _keepScreenOn = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -170,75 +150,27 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
           value: _fullscreen,
           onChanged: (b) {
             _fullscreen = b;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingGroupTitleView(
-          title: '高级设置', // TODO hide advanced setting in dialog
-        ),
-        SettingComboBoxView<int>(
-          title: '预加载章节页数',
-          value: _preloadCount.clamp(0, 6),
-          values: const [0, 1, 2, 3, 4, 5, 6],
-          textBuilder: (s) => s == 0 ? '禁用预加载' : '前后$s页',
-          onChanged: (c) {
-            _preloadCount = c.clamp(0, 6);
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingComboBoxView<PageNoPosition>(
-          title: '每页显示额外页码',
-          value: _pageNoPosition,
-          values: const [PageNoPosition.hide, PageNoPosition.topLeft, PageNoPosition.topCenter, PageNoPosition.topRight, PageNoPosition.bottomLeft, PageNoPosition.bottomCenter, PageNoPosition.bottomRight],
-          enable: _viewDirection == ViewDirection.topToBottom || _viewDirection == ViewDirection.topToBottomRtl,
-          textBuilder: (s) => s.toOptionTitle(),
-          onChanged: (s) {
-            _pageNoPosition = s;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          title: '进入时隐藏标题栏',
-          value: _hideAppBarWhenEnter,
-          onChanged: (b) {
-            _hideAppBarWhenEnter = b;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingComboBoxView<AppBarSwitchBehavior>(
-          title: '切换章节时标题栏行为',
-          value: _appBarSwitchBehavior,
-          values: const [AppBarSwitchBehavior.keep, AppBarSwitchBehavior.show, AppBarSwitchBehavior.hide],
-          textBuilder: (s) => s.toOptionTitle(),
-          onChanged: (s) {
-            _appBarSwitchBehavior = s;
-            widget.onSettingChanged.call(_newestSetting);
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          title: '显示单手章节跳转助手',
-          value: _useChapterAssistant,
-          onChanged: (b) {
-            _useChapterAssistant = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
         SettingButtonView(
-          title: '章节跳转助手按钮动作',
+          title: '查看更多设置',
           buttonChild: Text('设置'),
-          enable: _useChapterAssistant,
           onPressed: () async {
-            var result = await showAssistantSettingDialog(context: context, setting: _assistantActionSetting);
-            if (result != null) {
-              _assistantActionSetting = result;
-              widget.onSettingChanged.call(_newestSetting);
-              if (mounted) setState(() {});
+            var wrapper = widget.navigateWrapper ?? //
+                (Future<bool?> Function() navigate) => navigate();
+            var ok = await wrapper(
+              () => Navigator.of(context).push<bool>(
+                CustomPageRoute(
+                  context: context,
+                  builder: (c) => ViewSettingPage(
+                    setting: widget.setting,
+                  ),
+                ),
+              ),
+            );
+            if (ok == true) {
+              Navigator.of(context).pop(true);
             }
           },
         ),
@@ -247,9 +179,12 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   }
 }
 
-Future<bool> showViewSettingDialog({required BuildContext context, Widget Function(BuildContext)? anotherButtonBuilder}) async {
+Future<bool> showViewSettingDialog({
+  required BuildContext context,
+  Widget Function(BuildContext)? anotherButtonBuilder,
+  Future<bool?> Function(Future<bool?> Function())? navigateWrapper,
+}) async {
   var action = ActionController();
-  var setting = AppSetting.instance.view;
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
@@ -261,8 +196,8 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
       scrollable: true,
       content: ViewSettingSubPage(
         action: action,
-        setting: setting,
-        onSettingChanged: (s) => setting = s,
+        setting: AppSetting.instance.view,
+        navigateWrapper: navigateWrapper,
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
@@ -271,7 +206,7 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
           children: [
             TextButton(
               child: Text('恢复默认'),
-              onPressed: () => action.invoke(),
+              onPressed: () => action.invoke('default'),
             ),
             if (anotherButtonBuilder != null) //
               anotherButtonBuilder.call(c),
@@ -283,9 +218,12 @@ Future<bool> showViewSettingDialog({required BuildContext context, Widget Functi
             TextButton(
               child: Text('确定'),
               onPressed: () async {
-                AppSetting.instance.update(view: setting, alsoFireEvent: true);
-                await AppSettingPrefs.saveViewSetting();
-                Navigator.of(c).pop(true);
+                var setting = action.invoke<ViewSetting>();
+                if (setting != null) {
+                  AppSetting.instance.update(view: setting, alsoFireEvent: true);
+                  await AppSettingPrefs.saveViewSetting();
+                  Navigator.of(c).pop(true);
+                }
               },
             ),
             TextButton(
@@ -319,12 +257,10 @@ class AssistantSettingSubPage extends StatefulWidget {
     Key? key,
     required this.action,
     required this.setting,
-    required this.onSettingChanged,
   }) : super(key: key);
 
   final ActionController action;
   final AssistantActionSetting setting;
-  final void Function(AssistantActionSetting) onSettingChanged;
 
   @override
   State<AssistantSettingSubPage> createState() => _AssistantSettingSubPageState();
@@ -334,7 +270,8 @@ class _AssistantSettingSubPageState extends State<AssistantSettingSubPage> {
   @override
   void initState() {
     super.initState();
-    widget.action.addAction(_setToDefault);
+    widget.action.addAction(() => _newestSetting);
+    widget.action.addAction('default', _setToDefault);
   }
 
   @override
@@ -364,7 +301,6 @@ class _AssistantSettingSubPageState extends State<AssistantSettingSubPage> {
     _leftBottom = setting.leftBottom;
     _rightBottom = setting.rightBottom;
     _allowReverse = setting.allowReverse;
-    widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
 
@@ -385,7 +321,6 @@ class _AssistantSettingSubPageState extends State<AssistantSettingSubPage> {
             textBuilder: (s) => s.toOptionTitle(),
             onChanged: (s) {
               t.item2.call(s);
-              widget.onSettingChanged.call(_newestSetting);
               if (mounted) setState(() {});
             },
           ),
@@ -394,7 +329,6 @@ class _AssistantSettingSubPageState extends State<AssistantSettingSubPage> {
           value: _allowReverse,
           onChanged: (b) {
             _allowReverse = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -417,16 +351,24 @@ Future<AssistantActionSetting?> showAssistantSettingDialog({required BuildContex
       content: AssistantSettingSubPage(
         action: action,
         setting: setting,
-        onSettingChanged: (s) => setting = s,
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        TextButton(child: Text('恢复默认'), onPressed: () => action.invoke()),
+        TextButton(
+          child: Text('恢复默认'),
+          onPressed: () => action.invoke('default'),
+        ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(setting)),
-            TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(null)),
+            TextButton(
+              child: Text('确定'),
+              onPressed: () => Navigator.of(c).pop(action.invoke<AssistantActionSetting>()),
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).pop(null),
+            ),
           ],
         ),
       ],

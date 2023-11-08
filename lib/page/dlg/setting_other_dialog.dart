@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
-import 'package:manhuagui_flutter/page/view/setting_dialog.dart';
+import 'package:manhuagui_flutter/page/view/setting_line.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -13,12 +13,10 @@ class OtherSettingSubPage extends StatefulWidget {
     Key? key,
     required this.action,
     required this.setting,
-    required this.onSettingChanged,
   }) : super(key: key);
 
   final ActionController action;
   final OtherSetting setting;
-  final void Function(OtherSetting) onSettingChanged;
 
   @override
   State<OtherSettingSubPage> createState() => _OtherSettingSubPageState();
@@ -28,12 +26,14 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
   @override
   void initState() {
     super.initState();
-    widget.action.addAction(_setToDefault);
+    widget.action.addAction(() => _newestSetting);
+    widget.action.addAction('default', _setToDefault);
   }
 
   @override
   void dispose() {
     widget.action.removeAction();
+    widget.action.removeAction('default');
     super.dispose();
   }
 
@@ -67,7 +67,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
     _useNativeShareSheet = setting.useNativeShareSheet;
     _useHttpForImage = setting.useHttpForImage;
     _useEmulatedLongScreenshot = setting.useEmulatedLongScreenshot;
-    widget.onSettingChanged.call(_newestSetting);
     if (mounted) setState(() {});
   }
 
@@ -90,7 +89,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _timeoutBehavior = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -109,7 +107,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _dlTimeoutBehavior = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -130,7 +127,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _imgTimeoutBehavior = s;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -140,7 +136,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _enableLogger,
           onChanged: (b) {
             _enableLogger = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -151,7 +146,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _showDebugErrorMsg,
           onChanged: (b) {
             _showDebugErrorMsg = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -161,7 +155,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _useNativeShareSheet,
           onChanged: (b) {
             _useNativeShareSheet = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -171,7 +164,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _useHttpForImage,
           onChanged: (b) {
             _useHttpForImage = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -181,7 +173,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
           value: _useEmulatedLongScreenshot,
           onChanged: (b) {
             _useEmulatedLongScreenshot = b;
-            widget.onSettingChanged.call(_newestSetting);
             if (mounted) setState(() {});
           },
         ),
@@ -192,7 +183,6 @@ class _OtherSettingSubPageState extends State<OtherSettingSubPage> {
 
 Future<bool> showOtherSettingDialog({required BuildContext context}) async {
   var action = ActionController();
-  var setting = AppSetting.instance.other;
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
@@ -204,8 +194,7 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
       scrollable: true,
       content: OtherSettingSubPage(
         action: action,
-        setting: setting,
-        onSettingChanged: (s) => setting = s,
+        setting: AppSetting.instance.other,
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
@@ -219,9 +208,12 @@ Future<bool> showOtherSettingDialog({required BuildContext context}) async {
             TextButton(
               child: Text('确定'),
               onPressed: () async {
-                AppSetting.instance.update(other: setting, alsoFireEvent: true);
-                await AppSettingPrefs.saveOtherSetting();
-                Navigator.of(c).pop(true);
+                var setting = action.invoke<OtherSetting>();
+                if (setting != null) {
+                  AppSetting.instance.update(other: setting, alsoFireEvent: true);
+                  await AppSettingPrefs.saveOtherSetting();
+                  Navigator.of(c).pop(true);
+                }
               },
             ),
             TextButton(
