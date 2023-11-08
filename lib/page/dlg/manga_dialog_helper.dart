@@ -635,13 +635,15 @@ class _DialogHelper {
   }) async {
     var topmost = await showDialog(
       context: context,
-      builder: (c) => AlertDialog(
+      builder: (c) => SimpleDialog(
         title: Text('更新稍后阅读记录'),
-        content: Text('即将更新稍后阅读记录为本漫画的最新章节，是否同时置顶稍后阅读记录？'),
-        actions: [
-          TextButton(child: Text('置顶'), onPressed: () => Navigator.of(c).pop(true)),
-          TextButton(child: Text('不置顶'), onPressed: () => Navigator.of(c).pop(false)),
-          TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(null)),
+        children: [
+          SubtitleDialogOption(
+            text: Text('确定将《${later.mangaTitle}》的稍后阅读记录最新为最新章节 "${extraData?.newestChapter}"？'),
+          ),
+          IconTextDialogOption(icon: Icon(CustomIcons.clock_topmost), text: Text('更新且置顶'), onPressed: () => Navigator.of(c).pop(true)),
+          IconTextDialogOption(icon: Icon(CustomIcons.clock_sync), text: Text('更新且不置顶'), onPressed: () => Navigator.of(c).pop(false)),
+          IconTextDialogOption(icon: Icon(Icons.do_not_disturb), text: Text('不更新'), onPressed: () => Navigator.of(c).pop(null)),
         ],
       ),
     );

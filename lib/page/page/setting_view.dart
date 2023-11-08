@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
-import 'package:manhuagui_flutter/page/setting_view.dart';
 import 'package:manhuagui_flutter/page/view/setting_view.dart';
 
 /// 设置-漫画阅读设置，用于 [ViewSettingPage] / [showViewSettingDialog] / [showAssistantSettingDialog]
@@ -12,13 +11,13 @@ class ViewSettingSubPage extends StatefulWidget {
     required this.action,
     required this.setting,
     required this.style,
-    this.navigateWrapper,
+    this.extraButtonsBuilder,
   }) : super(key: key);
 
   final ActionController action;
   final ViewSetting setting;
   final SettingViewStyle style;
-  final Future<bool?> Function(Future<bool?> Function())? navigateWrapper;
+  final List<Tuple3<String, String, VoidCallback>> Function(BuildContext)? extraButtonsBuilder;
 
   @override
   State<ViewSettingSubPage> createState() => _ViewSettingSubPageState();
@@ -229,7 +228,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         SettingButtonView(
           style: widget.style,
           title: '章节跳转助手动作设置',
-          buttonChild: Text('设置'),
+          child: Text('设置'),
           enable: _useChapterAssistant,
           onPressed: () async {
             var result = await showAssistantSettingDialog(
@@ -247,28 +246,22 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
 
     var children = <Widget>[];
     if (widget.style == SettingViewStyle.line) {
-      children.addAll(map['常规设置']!);
-      children.add(
-        SettingButtonView(
-          style: widget.style,
-          title: '查看更多阅读设置',
-          buttonChild: Text('设置'),
-          onPressed: () async {
-            var wrapper = widget.navigateWrapper ?? (navigate) => navigate();
-            var ok = await wrapper(
-              () => Navigator.of(context).push<bool>(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => ViewSettingPage(),
-                ),
+      var extraChildren = [
+        if (widget.extraButtonsBuilder != null)
+          ...widget.extraButtonsBuilder!.call(context).let(
+                (widgets) => [
+                  for (var w in widgets)
+                    SettingButtonView(
+                      style: widget.style,
+                      title: w.item1,
+                      child: Text(w.item2),
+                      onPressed: w.item3,
+                    ),
+                ],
               ),
-            );
-            if (ok == true) {
-              Navigator.of(context).pop(true);
-            }
-          },
-        ),
-      );
+      ];
+      children.addAll(map['常规设置']!);
+      children.addAll(extraChildren);
     } else {
       for (var key in map.keys) {
         children.add(

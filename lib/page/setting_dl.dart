@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/page/page/setting_dl.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/setting_view.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页-漫画下载设置页
 class DlSettingPage extends StatefulWidget {
@@ -32,17 +33,23 @@ class _DlSettingPageState extends State<DlSettingPage> with FitSystemScreenshotM
     return WillPopScope(
       onWillPop: () async {
         var setting = _action.invoke<DlSetting>();
-        if (setting == null || setting.equals(AppSetting.instance.dl)) {
+        if (setting == null) {
+          return false;
+        }
+        if (setting.equals(AppSetting.instance.dl)) {
           return true;
         }
         var ok = await showYesNoAlertDialog(
           context: context,
           title: Text('漫画下载设置'),
           content: Text('当前设置已修改，是否保存并应用？'),
-          yesText: Text('去保存'),
-          noText: Text('不保存'),
+          yesText: Text('离开'),
+          noText: Text('去保存'),
         );
-        return ok != true;
+        if (ok != true) {
+          return false;
+        }
+        return true;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -50,7 +57,7 @@ class _DlSettingPageState extends State<DlSettingPage> with FitSystemScreenshotM
           leading: AppBarActionButton.leading(context: context),
           actions: [
             AppBarActionButton(
-              icon: Icon(Icons.settings_backup_restore),
+              icon: Icon(MdiIcons.restore),
               tooltip: '恢复默认',
               onPressed: () => _action.invoke('default'),
             ),

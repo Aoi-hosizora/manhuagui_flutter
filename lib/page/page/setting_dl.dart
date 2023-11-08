@@ -132,7 +132,7 @@ class _DlSettingSubPageState extends State<DlSettingSubPage> {
           hint: _lowerThanAndroidR == null || _lowerThanAndroidR == true
               ? null //
               : '当前设备搭载着 Android 11 或以上版本的系统。\n\n由于 Android 系统限制，漫画将被下载至应用私有沙盒存储中。若需要在卸载本应用时保留已下载的漫画，请选择保留本应用的数据。',
-          buttonChild: Text('查看'),
+          child: Text('查看'),
           onPressed: () async {
             var directoryPath = await getDownloadedMangaDirectoryPath();
             if (directoryPath == null) {

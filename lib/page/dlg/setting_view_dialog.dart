@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/page/setting_view.dart';
+import 'package:manhuagui_flutter/page/setting_view.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_view.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
@@ -14,7 +15,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 Future<bool> showViewSettingDialog({
   required BuildContext context,
-  Widget Function(BuildContext)? anotherButtonBuilder,
+  List<Tuple3<String, String, VoidCallback>> Function(BuildContext)? extraButtonsBuilder,
   Future<bool?> Function(Future<bool?> Function())? navigateWrapper,
 }) async {
   var action = ActionController();
@@ -33,21 +34,33 @@ Future<bool> showViewSettingDialog({
           action: action,
           setting: AppSetting.instance.view,
           style: SettingViewStyle.line,
-          navigateWrapper: navigateWrapper,
+          extraButtonsBuilder: (c) => [
+            if (extraButtonsBuilder != null) //
+              ...extraButtonsBuilder.call(c),
+            Tuple3(
+              '查看更多阅读设置',
+              '设置',
+              () async {
+                var wrapper = navigateWrapper ?? (navigate) => navigate();
+                var ok = await wrapper(
+                  () => Navigator.of(context).push<bool>(
+                    CustomPageRoute(context: context, builder: (c) => ViewSettingPage()),
+                  ),
+                );
+                if (ok == true) {
+                  await Future.delayed(Duration(milliseconds: 75));
+                  Navigator.of(context).pop(ok);
+                }
+              },
+            ),
+          ],
         ),
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextButton(
-              child: Text('恢复默认'),
-              onPressed: () => action.invoke('default'),
-            ),
-            if (anotherButtonBuilder != null) //
-              anotherButtonBuilder.call(c),
-          ],
+        TextButton(
+          child: Text('恢复默认'),
+          onPressed: () => action.invoke('default'),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,

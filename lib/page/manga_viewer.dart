@@ -866,15 +866,18 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   Future<void> _showSettingDialog() async {
     var ok = await showViewSettingDialog(
       context: context,
-      anotherButtonBuilder: (c) => TextButton(
-        child: Text('操作'),
-        onPressed: () {
-          Navigator.of(c).pop();
-          _showHelpRegion = true;
-          if (mounted) setState(() {});
-          _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
-        },
-      ),
+      extraButtonsBuilder: (c) => [
+        Tuple3(
+          '查看页面操作区域',
+          '查看',
+          () {
+            Navigator.of(c).pop();
+            _showHelpRegion = true;
+            if (mounted) setState(() {});
+            _ScreenHelper.toggleAppBarVisibility(show: false, fullscreen: _setting.fullscreen);
+          },
+        ),
+      ],
       navigateWrapper: (navigate) async {
         await _ScreenHelper.restoreSystemUI();
         var ok = await navigate();

@@ -24,6 +24,13 @@ void showCommentPopupMenuForListAndPage({
   void Function(AddedComment)? onReplied,
   void Function(Future<void> Function() navigate)? pushNavigateWrapper,
 }) {
+  var links = RegExp('https?://.+?(?=[^a-zA-Z0-9:/?=#%_.+~\\[\\]@!\$&*(),;\'\\-]|\$)') //
+      .allMatches(comment.content)
+      .map((e) => e.group(0)?.trim())
+      .where((e) => e != null)
+      .map((e) => e!)
+      .toList();
+
   showDialog(
     context: context,
     builder: (c) => SimpleDialog(
@@ -130,16 +137,15 @@ void showCommentPopupMenuForListAndPage({
             );
           },
         ),
-        IconTextDialogOption(
-          icon: Icon(Icons.link),
-          text: Text('提取链接'),
-          onPressed: () {
-            Navigator.of(c).pop();
-            var linkRe = RegExp('https?://.+?(?=[^a-zA-Z0-9:/?=#%_.+~\\[\\]@!\$&*(),;\'\\-]|\$)');
-            var links = linkRe.allMatches(comment.content).map((e) => e.group(0)?.trim()).where((e) => e != null).map((e) => e!).toList();
-            _showLinksDialog(context: context, title: '评论包含的链接', links: links); // TODO test
-          },
-        ),
+        if (links.isNotEmpty)
+          IconTextDialogOption(
+            icon: Icon(Icons.link),
+            text: Text('提取超链接'),
+            onPressed: () {
+              Navigator.of(c).pop();
+              _showLinksDialog(context: context, title: '评论包含的链接', links: links);
+            },
+          ),
         IconTextDialogOption(
           icon: Icon(Icons.account_circle),
           text: Text('查看用户头像'),

@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/page/page/setting_ui.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/setting_view.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 设置页-界面与交互设置页
 class UiSettingPage extends StatefulWidget {
@@ -32,17 +33,23 @@ class _UiSettingPageState extends State<UiSettingPage> with FitSystemScreenshotM
     return WillPopScope(
       onWillPop: () async {
         var setting = _action.invoke<UiSetting>();
-        if (setting == null || setting.equals(AppSetting.instance.ui)) {
+        if (setting == null) {
+          return false;
+        }
+        if (setting.equals(AppSetting.instance.ui)) {
           return true;
         }
         var ok = await showYesNoAlertDialog(
           context: context,
           title: Text('界面与交互设置'),
           content: Text('当前设置已修改，是否保存并应用？'),
-          yesText: Text('去保存'),
-          noText: Text('不保存'),
+          yesText: Text('离开'),
+          noText: Text('去保存'),
         );
-        return ok != true;
+        if (ok != true) {
+          return false;
+        }
+        return true;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -50,7 +57,7 @@ class _UiSettingPageState extends State<UiSettingPage> with FitSystemScreenshotM
           leading: AppBarActionButton.leading(context: context),
           actions: [
             AppBarActionButton(
-              icon: Icon(Icons.settings_backup_restore),
+              icon: Icon(MdiIcons.restore),
               tooltip: '恢复默认',
               onPressed: () => _action.invoke('default'),
             ),
@@ -58,9 +65,9 @@ class _UiSettingPageState extends State<UiSettingPage> with FitSystemScreenshotM
               icon: Icon(Icons.check),
               tooltip: '保存设置',
               onPressed: () async {
-                var setting = _action.invoke<ViewSetting>();
+                var setting = _action.invoke<UiSetting>();
                 if (setting != null) {
-                  AppSetting.instance.update(view: setting, alsoFireEvent: true);
+                  AppSetting.instance.update(ui: setting, alsoFireEvent: true);
                   await AppSettingPrefs.saveViewSetting();
                   Navigator.of(context).pop(true);
                 }

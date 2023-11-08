@@ -36,14 +36,14 @@ abstract class _SettingView extends StatelessWidget {
     required this.title,
     this.hint,
     this.width,
-    this.height = 38,
+    this.height,
   }) : super(key: key);
 
   final SettingViewStyle style;
   final String title;
   final String? hint;
   final double? width;
-  final double height;
+  final double? height;
 
   Widget buildRightWidget(BuildContext context);
 
@@ -103,7 +103,10 @@ abstract class _SettingView extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [left, right],
+                children: [
+                  left,
+                  AbsorbPointer(absorbing: true, child: right),
+                ],
               ),
             ),
           ),
@@ -118,8 +121,8 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
     required SettingViewStyle style,
     required String title,
     String? hint,
-    double width = 120,
-    double height = 38,
+    double? width,
+    double? height,
     this.enable = true,
     required this.value,
     required this.values,
@@ -130,8 +133,8 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
           style: style,
           title: title,
           hint: hint,
-          width: width,
-          height: height,
+          width: width ?? 120,
+          height: height ?? (style == SettingViewStyle.line ? 38 : 45),
         );
 
   final bool enable;
@@ -191,7 +194,7 @@ class SettingSwitcherView extends _SettingView {
     required String title,
     String? hint,
     double? width,
-    double height = 38,
+    double? height,
     this.enable = true,
     required this.value,
     required this.onChanged,
@@ -201,7 +204,7 @@ class SettingSwitcherView extends _SettingView {
           title: title,
           hint: hint,
           width: width,
-          height: height,
+          height: height ?? 38,
         );
 
   final bool enable;
@@ -230,10 +233,10 @@ class SettingButtonView extends _SettingView {
     required String title,
     String? hint,
     double? width,
-    double height = 38,
+    double? height,
     this.enable = true,
-    this.buttonPadding = const EdgeInsets.fromLTRB(0, 5, 9, 5),
-    required this.buttonChild,
+    this.padding = const EdgeInsets.fromLTRB(0, 5, 9, 5),
+    required this.child,
     required this.onPressed,
   }) : super(
           key: key,
@@ -241,19 +244,25 @@ class SettingButtonView extends _SettingView {
           title: title,
           hint: hint,
           width: width,
-          height: height,
+          height: height ?? (style == SettingViewStyle.line ? 38 : 42),
         );
 
   final bool enable;
-  final EdgeInsets buttonPadding;
-  final Widget buttonChild;
+  final EdgeInsets padding;
+  final Widget child;
   final void Function() onPressed;
 
   @override
   Widget buildRightWidget(BuildContext context) => Padding(
-        padding: buttonPadding,
+        padding: padding,
         child: ElevatedButton(
-          child: buttonChild,
+          child: DefaultTextStyle(
+            style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                  fontWeight: FontWeight.normal,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+            child: child,
+          ),
           onPressed: enable ? onPressed : null,
         ),
       );
