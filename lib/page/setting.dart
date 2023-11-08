@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
-import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_data_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/setting_other_dialog.dart';
 import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/page/login.dart';
 import 'package:manhuagui_flutter/page/message.dart';
 import 'package:manhuagui_flutter/page/resource_detail.dart';
+import 'package:manhuagui_flutter/page/setting_dl.dart';
+import 'package:manhuagui_flutter/page/setting_other.dart';
 import 'package:manhuagui_flutter/page/setting_ui.dart';
 import 'package:manhuagui_flutter/page/setting_view.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
@@ -179,7 +178,7 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
             action: () => Navigator.of(context).push(
               CustomPageRoute(
                 context: context,
-                builder: (c) => ViewSettingPage(setting: AppSetting.instance.view),
+                builder: (c) => ViewSettingPage(),
               ),
             ),
           ),
@@ -187,7 +186,12 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
           _item(
             icon: CustomIcons.download_cog,
             title: '漫画下载设置',
-            action: () => showDlSettingDialog(context: context),
+            action: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => DlSettingPage(),
+              ),
+            ),
           ),
           _divider(),
           _item(
@@ -196,7 +200,7 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
             action: () => Navigator.of(context).push(
               CustomPageRoute(
                 context: context,
-                builder: (c) => UiSettingPage(setting: AppSetting.instance.ui),
+                builder: (c) => UiSettingPage(),
               ),
             ),
           ),
@@ -204,7 +208,12 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
           _item(
             title: '其他设置',
             icon: MdiIcons.cogs,
-            action: () => showOtherSettingDialog(context: context),
+            action: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => OtherSettingPage(),
+              ),
+            ),
           ),
           // *******************************************************
           _spacer(),

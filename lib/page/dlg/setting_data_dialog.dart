@@ -3,7 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
-import 'package:manhuagui_flutter/page/view/setting_line.dart';
+import 'package:manhuagui_flutter/page/view/setting_view.dart';
 import 'package:manhuagui_flutter/service/storage/download.dart';
 import 'package:manhuagui_flutter/service/storage/export_import_data.dart';
 import 'package:manhuagui_flutter/service/storage/storage.dart';
@@ -62,7 +62,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SettingDialogView(
+    return SettingColumnView(
       children: [
         Text(
           '提醒：导出的数据可供当前版本或更新版本的APP导入使用，但无法导入至更老版本的APP。',
@@ -70,6 +70,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
         ),
         SizedBox(height: 8),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.readHistories.toTypeTitle(),
           value: _readHistories,
           onChanged: (b) {
@@ -78,6 +79,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.chapterFootprints.toTypeTitle(),
           value: _chapterFootprints,
           onChanged: (b) {
@@ -86,6 +88,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.downloadRecords.toTypeTitle(),
           value: _downloadRecords,
           onChanged: (b) {
@@ -94,6 +97,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.favoriteMangas.toTypeTitle(),
           value: _favoriteMangas,
           onChanged: (b) {
@@ -102,6 +106,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.favoriteAuthors.toTypeTitle(),
           value: _favoriteAuthors,
           onChanged: (b) {
@@ -110,6 +115,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.laterMangas.toTypeTitle(),
           value: _laterMangas,
           onChanged: (b) {
@@ -118,6 +124,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.searchHistories.toTypeTitle(),
           value: _searchHistories,
           onChanged: (b) {
@@ -126,6 +133,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.markedCategories.toTypeTitle(),
           value: _markedCategories,
           onChanged: (b) {
@@ -134,6 +142,7 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           },
         ),
         SettingSwitcherView(
+          style: SettingViewStyle.line,
           title: ExportDataType.appSetting.toTypeTitle(),
           value: _appSetting,
           onChanged: (b) {
@@ -154,8 +163,11 @@ Future<void> showExportDataDialog({required BuildContext context}) async {
     builder: (c) => AlertDialog(
       title: Text('导出数据'),
       scrollable: true,
-      content: ExportDataSubPage(
-        action: action,
+      content: SizedBox(
+        width: getDialogContentMaxWidth(context),
+        child: ExportDataSubPage(
+          action: action,
+        ),
       ),
       actions: [
         TextButton(

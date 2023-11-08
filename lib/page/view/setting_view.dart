@@ -2,46 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 
-/// 与设置相关的 [SettingPageListView] 和各种 [_SettingTileView]，在 [ViewSettingPage] / [DlSettingPage] / [UiSettingPage] / [OtherSettingPage] 使用
-class SettingPageListView extends StatelessWidget {
-  const SettingPageListView({
+/// 与设置相关的 [SettingColumnView]，以及各种 [_SettingView]
+/// 在 [ViewSettingSubPage] / [DlSettingSubPage] / [UiSettingSubPage] / [OtherSettingSubPage] / [ExportDataSubPage] 使用
+
+class SettingColumnView extends StatelessWidget {
+  const SettingColumnView({
     Key? key,
-    required this.controller,
-    this.listViewKey,
     required this.children,
   }) : super(key: key);
 
-  final ScrollController controller;
-  final GlobalKey? listViewKey;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return ExtendedScrollbar(
-      controller: controller,
-      interactive: true,
-      mainAxisMargin: 2,
-      crossAxisMargin: 2,
-      child: ListView(
-        key: listViewKey,
-        controller: controller,
-        padding: EdgeInsets.zero,
-        physics: AlwaysScrollableScrollPhysics(),
-        children: children,
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: children,
     );
   }
 }
 
-abstract class _SettingTileView extends StatelessWidget {
-  const _SettingTileView({
+enum SettingViewStyle {
+  line, // for dialog
+  tile, // for page
+}
+
+abstract class _SettingView extends StatelessWidget {
+  const _SettingView({
     Key? key,
+    required this.style,
     required this.title,
     this.hint,
     this.width,
     this.height = 38,
   }) : super(key: key);
 
+  final SettingViewStyle style;
   final String title;
   final String? hint;
   final double? width;
@@ -49,59 +47,75 @@ abstract class _SettingTileView extends StatelessWidget {
 
   Widget buildRightWidget(BuildContext context);
 
-  void Function()? getInkWellOnTap(BuildContext context);
+  void Function()? getInkWellOnTap(BuildContext context) => null;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: InkWell(
-        onTap: getInkWellOnTap(context),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 13),
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.subtitle1?.copyWith(fontWeight: FontWeight.normal),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (hint != null)
-                      Padding(
-                        padding: EdgeInsets.only(left: 2),
-                        child: HelpIconView.forSettingDlg(
-                          title: title,
-                          hint: hint!,
-                        ),
-                      ),
-                  ],
-                ),
+    var left = Flexible(
+      child: Row(
+        children: [
+          Flexible(
+            child: Padding(
+              padding: style == SettingViewStyle.line //
+                  ? EdgeInsets.zero
+                  : EdgeInsets.symmetric(vertical: 13),
+              child: Text(
+                title,
+                style: style == SettingViewStyle.line //
+                    ? Theme.of(context).textTheme.bodyText1?.copyWith(fontWeight: FontWeight.normal)
+                    : Theme.of(context).textTheme.subtitle1?.copyWith(fontWeight: FontWeight.normal),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              Container(
-                height: height,
-                width: width,
-                margin: EdgeInsets.only(left: 4),
-                child: buildRightWidget(context),
-              ),
-            ],
+            ),
           ),
-        ),
+          if (hint != null)
+            Padding(
+              padding: EdgeInsets.only(left: 2),
+              child: HelpIconView.forSettingDlg(
+                title: title,
+                hint: hint!,
+              ),
+            ),
+        ],
       ),
     );
+
+    var right = Container(
+      height: height,
+      width: width,
+      margin: EdgeInsets.only(left: 4),
+      child: buildRightWidget(context),
+    );
+
+    switch (style) {
+      case SettingViewStyle.line:
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [left, right],
+        );
+      case SettingViewStyle.tile:
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: getInkWellOnTap(context),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [left, right],
+              ),
+            ),
+          ),
+        );
+    }
   }
 }
 
-class SettingComboBoxTileView<T extends Object> extends _SettingTileView {
-  const SettingComboBoxTileView({
+class SettingComboBoxView<T extends Object> extends _SettingView {
+  const SettingComboBoxView({
     Key? key,
+    required SettingViewStyle style,
     required String title,
     String? hint,
     double width = 120,
@@ -113,6 +127,7 @@ class SettingComboBoxTileView<T extends Object> extends _SettingTileView {
     required this.onChanged,
   }) : super(
           key: key,
+          style: style,
           title: title,
           hint: hint,
           width: width,
@@ -169,9 +184,10 @@ class SettingComboBoxTileView<T extends Object> extends _SettingTileView {
   }
 }
 
-class SettingSwitcherTileView extends _SettingTileView {
-  const SettingSwitcherTileView({
+class SettingSwitcherView extends _SettingView {
+  const SettingSwitcherView({
     Key? key,
+    required SettingViewStyle style,
     required String title,
     String? hint,
     double? width,
@@ -181,6 +197,7 @@ class SettingSwitcherTileView extends _SettingTileView {
     required this.onChanged,
   }) : super(
           key: key,
+          style: style,
           title: title,
           hint: hint,
           width: width,
@@ -206,19 +223,21 @@ class SettingSwitcherTileView extends _SettingTileView {
   }
 }
 
-class SettingButtonTileView extends _SettingTileView {
-  const SettingButtonTileView({
+class SettingButtonView extends _SettingView {
+  const SettingButtonView({
     Key? key,
+    required SettingViewStyle style,
     required String title,
     String? hint,
     double? width,
     double height = 38,
     this.enable = true,
-    this.buttonPadding = const EdgeInsets.fromLTRB(0, 4, 9, 4),
+    this.buttonPadding = const EdgeInsets.fromLTRB(0, 5, 9, 5),
     required this.buttonChild,
     required this.onPressed,
   }) : super(
           key: key,
+          style: style,
           title: title,
           hint: hint,
           width: width,
@@ -245,43 +264,53 @@ class SettingButtonTileView extends _SettingTileView {
   }
 }
 
-class SettingPageDividerView extends StatelessWidget {
-  const SettingPageDividerView({
+class SettingTitleView extends StatelessWidget {
+  const SettingTitleView({
     Key? key,
+    required this.style,
+    required this.title,
+    this.color = Colors.transparent,
   }) : super(key: key);
+
+  final SettingViewStyle style;
+  final String title;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      child: Divider(height: 0, thickness: 1),
-    );
-  }
-}
-
-class SettingPageTitleView extends StatelessWidget {
-  const SettingPageTitleView({
-    Key? key,
-    required this.title,
-    this.padding = const EdgeInsets.symmetric(vertical: 13),
-  }) : super(key: key);
-
-  final String title;
-  final EdgeInsets padding;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: padding,
+      color: color,
+      padding: style == SettingViewStyle.line //
+          ? EdgeInsets.symmetric(vertical: 5)
+          : EdgeInsets.symmetric(vertical: 13),
       child: Center(
         child: Text(
           '・$title・',
-          style: Theme.of(context).textTheme.subtitle1?.copyWith(fontWeight: FontWeight.normal),
+          style: style == SettingViewStyle.line //
+              ? Theme.of(context).textTheme.bodyText1?.copyWith(fontWeight: FontWeight.normal)
+              : Theme.of(context).textTheme.subtitle1?.copyWith(fontWeight: FontWeight.normal),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
       ),
+    );
+  }
+}
+
+class SettingDividerView extends StatelessWidget {
+  const SettingDividerView({
+    Key? key,
+    this.color = Colors.transparent,
+  }) : super(key: key);
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: color,
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      child: Divider(height: 0, thickness: 1),
     );
   }
 }

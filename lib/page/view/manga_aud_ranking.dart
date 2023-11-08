@@ -19,7 +19,7 @@ enum MangaAudRankingType {
   shaonv,
 }
 
-/// 漫画受众排行榜，在 [RecommendSubPage] / [MangaAudRankingPage] 使用
+/// 漫画受众排行榜，在 [RecommendSubPage] 使用
 class MangaAudRankingView extends StatefulWidget {
   const MangaAudRankingView({
     Key? key,
