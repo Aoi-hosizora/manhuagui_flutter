@@ -53,11 +53,11 @@ class ChapterGridView extends StatelessWidget {
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
   final void Function(TinyMangaChapter? chapter)? onChapterLongPressed;
 
-  static final Color defaultFaintTextColor = Colors.grey[600]!.withOpacity(0.7);
+  static final Color defaultFaintTextColor = Colors.grey[600]!.withOpacity(0.6); // TODO update colors for faint and highlight2
   static final Color defaultHighlightColor = Colors.deepOrange.withOpacity(0.3);
-  static final Color defaultHighlight2Color = Colors.deepOrange.withOpacity(0.06);
+  static final Color defaultHighlight2Color = Colors.deepOrange.withOpacity(0.05);
   static final Color defaultHighlightAppliedColor = Colors.deepOrange.applyOpacity(0.3);
-  static final Color defaultHighlight2AppliedColor = Colors.deepOrange.applyOpacity(0.06);
+  static final Color defaultHighlight2AppliedColor = Colors.deepOrange.applyOpacity(0.05);
 
   Widget _buildItem({required BuildContext context, required TinyMangaChapter? chapter}) {
     return Stack(

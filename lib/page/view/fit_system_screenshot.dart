@@ -176,6 +176,8 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
     } else {
       return;
     }
+
+    scrollLength = scrollLength.round().toDouble();
     if (_lastScrollLength == null || _lastScrollLength != scrollLength) {
       _lastScrollLength = scrollLength;
       fitSystemScreenshot.updateScrollLength(scrollLength);
@@ -199,6 +201,8 @@ mixin FitSystemScreenshotMixin<T extends StatefulWidget> on State<T> implements 
     } else {
       return;
     }
+
+    scrollOffset = scrollOffset.round().toDouble();
     if (_lastScrollOffset == null || _lastScrollOffset != scrollOffset) {
       if (!fitSystemScreenshot.isScreenShot) {
         fitSystemScreenshot.updateScrollPosition(scrollOffset);

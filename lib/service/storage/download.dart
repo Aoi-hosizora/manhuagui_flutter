@@ -78,6 +78,7 @@ Future<String?> getCachedOrDownloadedChapterPageFilePath({required int mangaId, 
 // ==============
 
 Future<File?> downloadImageToGallery(String url, {File? precheck}) async {
+  // TODO convert webp to jpg or png
   try {
     var filepath = await _getDownloadImageFilePath(url);
     File f;

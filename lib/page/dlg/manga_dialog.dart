@@ -791,7 +791,17 @@ void showPopupMenuForLaterManga({
       title: Text('稍后阅读'),
       children: [
         SubtitleDialogOption(
-          text: Text('《$mangaTitle》(${laterManga.newestChapter ?? '未知话'}) 在 ${laterManga.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。'),
+          text: Text(
+            // '《$mangaTitle》(${laterManga.newestChapter ?? '未知话'}) 在 ${laterManga.formattedCreatedAtAndFullDuration} 被添加至稍后阅读列表中。',
+            [
+              '漫画:《$mangaTitle》',
+              if (extraData == null || laterManga.newestChapter == extraData.newestChapter) //
+                '最新章节: ${laterManga.newestChapter ?? '未知话'}',
+              if (extraData != null && laterManga.newestChapter != extraData.newestChapter) //
+                '最新章节: ${laterManga.newestChapter ?? '未知话'} (可以更新为 ${extraData.newestChapter})',
+              '添加时间: ${laterManga.formattedCreatedAtAndFullDuration}',
+            ].join('\n'), // TODO test
+          ),
         ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.clockMinus),

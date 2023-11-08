@@ -467,7 +467,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
             ),
             IconTextDialogOption(
               icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'),
+              text: Text('继续阅读该章节 ($historyTitle 第$historyPage页)'), // TODO handle overflow
               popWhenPress: c,
               onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
             ),

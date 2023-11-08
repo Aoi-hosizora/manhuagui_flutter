@@ -383,6 +383,7 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
   void _onImageViewLoadingStateChanged(int imageIndex) {
     // !!! 当图片页状态 (加载/正常/错误) 变更时，更新高度，并且限制滚动偏移防止页面跳转
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      // 1. check whether image page height is changed
       var renderBox = _imagePageKeys[imageIndex].currentContext?.findRenderBox();
       var newHeight = renderBox != null && renderBox.hasSize ? renderBox.size.height : 0.0;
       var oldHeight = _imagePageHeights[imageIndex];
@@ -392,15 +393,24 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
       // print('Image ${imageIndex + 1} new height: $oldHeight -> $newHeight');
       _imagePageHeights[imageIndex] = newHeight;
 
-      if (widget.imageCount > 1 && _currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
-        // <<< some pages before current page has its height changed, need to jump back to the previous offset
+      // 2. jump back when the height of previous page has been changed
+      if (widget.imageCount > 1 && _currentPageIndex > imageIndex) { // TODO test
+        // if (widget.imageCount > 1 && _currentPageIndex > imageIndex + 1 && newHeight != oldHeight) {
         await _jumpLock.synchronized(() async {
           _jumping = true;
-          _controller.jumpTo(_controller.offset + (newHeight - oldHeight));
+          _controller.jumpTo(_controller.offset + (newHeight - oldHeight)); // jump back to the previous offset
           await WidgetsBinding.instance?.endOfFrame;
           _jumping = false;
         });
       }
+
+      // 3. update page index and invoke callback if needed
+      var pageIndex = imageIndex + 1;
+      if (_currentPageIndex != pageIndex) {
+        _currentPageIndex = pageIndex;
+        widget.onPageChanged?.call(pageIndex); // TODO test
+      }
+      _onScrollChanged();
     });
   }
 

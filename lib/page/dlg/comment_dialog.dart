@@ -111,24 +111,14 @@ void showCommentPopupMenuForListAndPage({
           text: Text('选择评论内容'),
           onPressed: () {
             Navigator.of(c).pop();
-            var linkRe = RegExp('https?://.+?(?=[^a-zA-Z0-9:/?=#%_.+~\\[\\]@!\$&*(),;\'\\-]|\$)');
-            var links = linkRe.allMatches(comment.content).map((e) => e.group(0)?.trim()).where((e) => e != null).map((e) => e!).toList();
             showDialog(
               context: context,
               builder: (c) => AlertDialog(
                 title: Text((comment.username == '-' ? '匿名用户' : '"${comment.username}" ') + '的评论内容'),
                 content: SelectableText(comment.content),
                 actions: [
-                  if (links.isNotEmpty)
-                    TextButton(
-                      child: Text('提取链接'),
-                      onPressed: () {
-                        Navigator.of(c).pop();
-                        _showLinksDialog(context: context, title: '评论包含的链接', links: links);
-                      },
-                    ),
                   TextButton(
-                    child: Text('复制内容'),
+                    child: Text('复制全部'),
                     onPressed: () => copyText(comment.content, showToast: true),
                   ),
                   TextButton(
@@ -138,6 +128,16 @@ void showCommentPopupMenuForListAndPage({
                 ],
               ),
             );
+          },
+        ),
+        IconTextDialogOption(
+          icon: Icon(Icons.link),
+          text: Text('提取链接'),
+          onPressed: () {
+            Navigator.of(c).pop();
+            var linkRe = RegExp('https?://.+?(?=[^a-zA-Z0-9:/?=#%_.+~\\[\\]@!\$&*(),;\'\\-]|\$)');
+            var links = linkRe.allMatches(comment.content).map((e) => e.group(0)?.trim()).where((e) => e != null).map((e) => e!).toList();
+            _showLinksDialog(context: context, title: '评论包含的链接', links: links); // TODO test
           },
         ),
         IconTextDialogOption(
