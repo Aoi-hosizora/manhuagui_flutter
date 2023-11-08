@@ -356,32 +356,56 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     _onScrollChanged();
   }
 
-  // !!!
-  void _onScrollChanged() {
-    if (_jumping) {
-      return; // ignore scroll changed when jumping
+  int _calcCurrentPageIndex([bool needShownCompletely = false]) {
+    if (_controller.offset <= 0) {
+      return 0;
+    }
+    if (_controller.offset >= _controller.position.maxScrollExtent) {
+      return _totalPageCount - 1;
     }
 
-    // 1. update _currentPageIndex and call onPageChanged (by checking offset and cumulating offset)
-    var newPageIndex = 0;
-    if (_controller.offset == 0) {
-      newPageIndex = 0;
-    } else if (_controller.offset == _controller.position.maxScrollExtent) {
-      newPageIndex = _totalPageCount - 1;
-    } else {
-      var currentOffset = _controller.offset;
-      var cumulatedOffset = _firstPageHeight;
-      var pageIndex = widget.imageCount;
+    // calculate page index, by checking offset and cumulating offset
+    var currentOffset = _controller.offset;
+    var cumulatedOffset = _firstPageHeight;
+    var pageIndex = widget.imageCount;
+
+    // 1. normal page index
+    if (!needShownCompletely) {
       for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
-        cumulatedOffset += _imagePageHeights[imageIndex]; // cumulate offset
+        var thisPageHeight = _imagePageHeights[imageIndex];
+        cumulatedOffset += thisPageHeight; // cumulate offset
         if (cumulatedOffset > currentOffset) {
           // <<< itemRect.top <= scrollRect.top && itemRect.bottom > scrollRect.top
           pageIndex = imageIndex + 1;
           break;
         }
       }
-      newPageIndex = pageIndex.clamp(1, widget.imageCount);
     }
+
+    // 2. special page index, which requires page to be shown completely (is larger than or equals to _currentPageIndex)
+    if (needShownCompletely) {
+      for (var imageIndex = 0; imageIndex < widget.imageCount; imageIndex++) {
+        var thisPageHeight = _imagePageHeights[imageIndex];
+        cumulatedOffset += thisPageHeight; // cumulate offset
+        if (cumulatedOffset - (thisPageHeight - widget.viewportPageSpace) >= currentOffset - 2 /* small offset */) {
+          // <<< lastItemRect.top <= scrollRect.top && thisItemRect.top >= scrollRect.top && thisItemRect.bottom > scrollRect.top
+          pageIndex = imageIndex + 1;
+          break;
+        }
+      }
+    }
+
+    return pageIndex.clamp(1, widget.imageCount);
+  }
+
+  // !!!
+  void _onScrollChanged() {
+    if (_jumping) {
+      return; // ignore scroll changed when jumping
+    }
+
+    // 1. update _currentPageIndex and call onPageChanged
+    var newPageIndex = _calcCurrentPageIndex();
     if (_currentPageIndex != newPageIndex) {
       _currentPageIndex = newPageIndex;
       widget.onPageChanged?.call(newPageIndex); // include extra pages, start from 0
@@ -406,14 +430,14 @@ class VerticalGalleryViewState extends State<VerticalGalleryView> {
     // !!! 当图片页状态 (加载/正常/错误) 变更时，更新高度，并且限制滚动偏移防止页面跳转
 
     // 1. jump back when the height of previous page has been changed (must before the layout updated)
-    var pageIndex = imageIndex + 1;
-    if (size != null && !size.isEmpty && !size.isInfinite) {
-      if (widget.imageCount > 1 && _currentPageIndex > pageIndex) { // TODO _currentPageIndex
+    var currentShownImageIndex = _calcCurrentPageIndex(true) - 1;
+    if (size != null && size.isFinite && !size.isEmpty) {
+      if (widget.imageCount > 1 && currentShownImageIndex > 0 && imageIndex < currentShownImageIndex) {
         var oldHeight = _imagePageHeights[imageIndex];
         var newHeight = (size.height * (MediaQuery.of(context).size.width) / size.width) + _getPaddingForPages(pageIndex: imageIndex + 1).vertical;
         if (oldHeight != newHeight) {
           // Reference: https://github.com/flutter/flutter/issues/99158#issuecomment-1381740815
-          _controller.position.correctPixels(_controller.offset + (newHeight - oldHeight)); // jump back to the previous offset (use correct pixels here)
+          _controller.position.correctPixels(_controller.offset + (newHeight - oldHeight)); // jump back to the previous offset (use `correctPixels` here)
         }
       }
     }

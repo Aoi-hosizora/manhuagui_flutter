@@ -312,3 +312,44 @@ class IconTextMenuItem extends StatelessWidget {
     );
   }
 }
+
+Future<bool> checkWillPopFromChildren(BuildContext context, {WillPopCallback? currentOnWillPop}) async {
+  var scopes = context.findDescendantElementsDFS<WillPopScope>(
+    -1,
+    (element) {
+      if (element.widget is! WillPopScope) {
+        return null;
+      }
+
+      var renderBox = element.findRenderBox();
+      if (renderBox != null) {
+        var rect = renderBox.localToGlobal(Offset.zero) & renderBox.size;
+        if (!rect.isFinite || rect.isEmpty) {
+          // only pick visible WillPopScope widget
+          return null;
+        }
+      }
+
+      return element.widget as WillPopScope;
+    },
+    reverse: true,
+  );
+
+  if (scopes.isNotEmpty) {
+    scopes.removeLast(); // remove the last WillPopScope, which is the current page
+  }
+
+  for (var s in scopes) {
+    if (s.onWillPop == null || s.onWillPop == currentOnWillPop) {
+      continue; // check equality to prevent recursive
+    }
+
+    // test onWillPop of descendants
+    var willPop = await s.onWillPop?.call();
+    if (willPop == false) {
+      return false;
+    }
+  }
+
+  return true; // current page can be popped
+}

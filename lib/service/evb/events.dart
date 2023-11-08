@@ -124,7 +124,7 @@ class LaterUpdatedEvent {
   final bool fromMangaPage;
 }
 
-// TODO check the fromXXXPage fields
+// TODO improve checking fromXXXPage fields
 
 class FootprintUpdatedEvent {
   const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});

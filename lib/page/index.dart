@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/page/home.dart';
 import 'package:manhuagui_flutter/page/page/mine.dart';
 import 'package:manhuagui_flutter/page/page/subscribe.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
+import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 
@@ -73,27 +74,9 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     }
 
     // call onWillPop for descendant elements
-    var scopes = context.findDescendantElementsDFS<WillPopScope>(-1, (element) {
-      if (element.widget is! WillPopScope) {
-        return null;
-      }
-      var renderBox = element.findRenderBox();
-      if (renderBox != null) {
-        var rect = renderBox.localToGlobal(Offset.zero) & renderBox.size;
-        if (!rect.isFinite || rect.isEmpty) {
-          return null;
-        }
-      }
-      return element.widget as WillPopScope; // TODO 需要过滤掉未显示的页面的 WillPopScope，尤其是 TabBarView
-    });
-    if (scopes.isNotEmpty) {
-      scopes.removeAt(0); // remove the first WillPopScope
-    }
-    for (var s in scopes) {
-      var willPop = await s.onWillPop?.call(); // test onWillPop of descendants
-      if (willPop != null && willPop == false) {
-        return false;
-      }
+    var ok = await checkWillPopFromChildren(context, currentOnWillPop: _onWillPop);
+    if (!ok) {
+      return false;
     }
 
     // show snack bar

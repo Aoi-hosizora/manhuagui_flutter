@@ -476,6 +476,16 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
   }
 
+  Future<bool> _onWillPop() async {
+    // call onWillPop for descendant elements
+    var ok = await checkWillPopFromChildren(context, currentOnWillPop: _onWillPop);
+    if (!ok) {
+      return false;
+    }
+    Navigator.of(context).pop(); // must call `pop` here
+    return true;
+  }
+
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
         scrollViewKey: _scrollViewKey,
@@ -487,6 +497,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return DrawerScaffold(
+      onWillPop: _onWillPop,
       appBar: AppBar(
         title: Text('漫画下载管理'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: false),
