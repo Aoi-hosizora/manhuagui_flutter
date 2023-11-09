@@ -625,7 +625,7 @@ class LaterManga {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final String? newestChapter; // TODO migrate to later chapter
+  final String? newestChapter; // TODO add isUpdated field and update silently, and add later chapter table
   final String? newestDate;
   final DateTime createdAt;
 

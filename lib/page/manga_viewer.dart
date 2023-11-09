@@ -776,9 +776,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             children: [
               for (var ch in [neighbor.prevSameGroupChapter!, neighbor.prevDiffGroupChapter!]) //
                 TextDialogOption(
-                  text: Flexible(
-                    child: Text('【${ch.group}】${ch.title}', maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ),
+                  text: Text('【${ch.group}】${ch.title}', maxLines: 2, overflow: TextOverflow.ellipsis),
                   onPressed: () => Navigator.of(c).pop(ch.cid),
                 ),
             ],
@@ -798,9 +796,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             children: [
               for (var ch in [neighbor.nextSameGroupChapter!, neighbor.nextDiffGroupChapter!]) //
                 TextDialogOption(
-                  text: Flexible(
-                    child: Text('【${ch.group}】${ch.title}', maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ),
+                  text: Text('【${ch.group}】${ch.title}', maxLines: 2, overflow: TextOverflow.ellipsis),
                   onPressed: () => Navigator.of(c).pop(ch.cid),
                 ),
             ],
@@ -1305,10 +1301,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     Future<void> _download(int imageIndex) async {
       var tuple = await _getPageUrlAndPrecheckFile(imageIndex);
-      if (tuple == null) return;
-      var url = tuple.item1, file = tuple.item2;
-      var f = await downloadImageToGallery(url, precheck: file, convertFromWebp: AppSetting.instance.ui.convertWebpWhenSave);
-      Fluttertoast.showToast(msg: f != null ? '第${imageIndex + 1}页已保存至 ${f.path}' : '无法保存第${imageIndex + 1}页');
+      if (tuple != null) {
+        var url = tuple.item1, file = tuple.item2;
+        var f = await downloadImageToGallery(url, precheck: file, convertFromWebp: AppSetting.instance.ui.convertWebpWhenSave);
+        Fluttertoast.showToast(msg: f != null ? '第${imageIndex + 1}页已保存至 ${f.path}' : '无法保存第${imageIndex + 1}页');
+      }
     }
 
     void _sharePage(int imageIndex, {bool short = false}) {
@@ -1320,40 +1317,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       }
     }
 
-    Future<void> _shapeImage(int imageIndex, {bool short = false}) async {
+    Future<void> _shareImage(int imageIndex, {bool short = false}) async {
       var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
       var filepath = (await getCachedOrDownloadedChapterPageFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url))?.path;
       if (filepath == null) {
         Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
-        return;
-      }
-      if (AppSetting.instance.ui.convertWebpWhenShare && isWebpImageFile(File(filepath))) {
-        var ok = await showDialog<bool>(
-          context: context,
-          builder: (c) => SimpleDialog(
-            title: Text('分享图片'),
-            children: [
-              SubtitleDialogOption(text: Text('当前所选图片格式为 webp，是否保存为 jpg 格式后再分享？')),
-              IconTextDialogOption(icon: Icon(MdiIcons.imageMove), text: Text('直接分享webp图片'), onPressed: () => Navigator.of(c).pop(false)),
-              IconTextDialogOption(icon: Icon(CustomIcons.image_jpg_move), text: Text('保存为jpg图片后再分享'), onPressed: () => Navigator.of(c).pop(true)),
-              IconTextDialogOption(icon: Icon(Icons.do_not_disturb), text: Text('取消分享'), onPressed: () => Navigator.of(c).pop(null)),
-            ],
-          ),
-        );
-        if (ok == null) return;
-        if (ok == true) {
-          var newFile = await saveImageFileWithExpectFormat(File(filepath), convertFromWebp: AppSetting.instance.ui.convertWebpWhenShare);
-          if (newFile == null) {
-            Fluttertoast.showToast(msg: '无法将图片保存为jpg格式');
-            return;
-          }
-          filepath = newFile.path;
-        }
-      }
-      if (short) {
-        await shareFile(filepath: filepath, type: 'image/*');
       } else {
-        await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第${imageIndex + 1}页 $url');
+        if (short) {
+          await shareFile(filepath: filepath, type: 'image/*');
+        } else {
+          await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第${imageIndex + 1}页 $url');
+        }
       }
     }
 
@@ -1373,8 +1347,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             text: Text('保存该页'),
             popWhenPress: c,
             onPressed: () => _download(imageIndex),
-            popWhenLongPress: _data!.pageCount <= 1 ? null : c,
-            onLongPressed: _data!.pageCount <= 1 ? null : () => _showConcatImagePopupMenu(imageIndex),
+          ),
+          if (_data!.pageCount > 1)
+          IconTextDialogOption(
+            icon: Icon(CustomIcons.image_multiple_plus),
+            text: Text('合并图片保存'),
+            popWhenPress: c,
+            onPressed: () => _showConcatImagePopupMenu(imageIndex),
           ),
           IconTextDialogOption(
             icon: Icon(Icons.share),
@@ -1388,9 +1367,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             icon: Icon(MdiIcons.imageMove),
             text: Text('分享该页图片'),
             popWhenPress: c,
-            onPressed: () => _shapeImage(imageIndex, short: true),
+            onPressed: () => _shareImage(imageIndex, short: true),
             popWhenLongPress: c,
-            onLongPressed: () => _shapeImage(imageIndex),
+            onLongPressed: () => _shareImage(imageIndex),
           ),
         ],
       ),
@@ -1459,11 +1438,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 onPressed: () => _setState(() => concatMode = tuple.item2),
               ),
             Divider(height: 16, thickness: 1),
-            IconTextDialogOption(
-              icon: Icon(Icons.image),
-              text: Text('当前选中第${imageIndex + 1}页'),
-              onPressed: () {},
-            ),
             if (imageIndex > 0)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.image_concat_left),
@@ -1471,6 +1445,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 popWhenPress: c,
                 onPressed: () => _concat(imageIndex - 1, imageIndex, concatMode),
               ),
+            IconTextDialogOption(
+              icon: Icon(Icons.image),
+              text: Text('当前选中第${imageIndex + 1}页'),
+              onPressed: () {},
+            ),
             if (imageIndex < _data!.pageCount - 1)
               IconTextDialogOption(
                 icon: Icon(CustomIcons.image_concat_right),

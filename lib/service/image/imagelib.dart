@@ -38,7 +38,7 @@ enum ConcatImageMode {
   verticalReverse,
 }
 
-Future<bool> concatTwoImages(File f1, File f2, ConcatImageMode mode, File newFile) async {
+Future<bool> concatTwoImagesToJpg(File f1, File f2, ConcatImageMode mode, File newFile) async {
   Future<Tuple1<List<int>?>> func(Tuple2<File, File> fileTuple) async {
     try {
       var f1 = fileTuple.item1, f2 = fileTuple.item2;

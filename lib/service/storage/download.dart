@@ -15,11 +15,15 @@ import 'package:manhuagui_flutter/service/storage/storage.dart';
 // path
 // ====
 
-String _getExtensionFromUrl(String? url) {
-  return PathUtils.getExtension((url ?? 'xxx.webp').split('?')[0]); // include "."
+String _getExtensionFromUrl(String? url, {String defaultExtension = '.webp'}) {
+  if (url == null) {
+    return defaultExtension;
+  }
+  return PathUtils.getExtension(url.split('?')[0]); // include "."
 }
 
-Future<String> _getDownloadImageFilePath(String extension) async {
+// This method is used by `downloadImageToGallery` and `downloadAndConcatImagesToGallery`.
+Future<String> _generateDownloadImageFilePath(String extension) async {
   var basename = getTimestampTokenForFilename();
   var filename = '$basename$extension';
   var directoryPath = await lowerThanAndroidR()
@@ -41,12 +45,14 @@ Future<String> _getDownloadMangaDirectoryPath([int? mangaId, int? chapterId]) as
   return PathUtils.joinPath([directoryPath, 'manhuagui_download', mangaId.toString(), chapterId.toString()]);
 }
 
+// This method is only used by `download.dart`, for chapter page image related.
 Future<String> _getDownloadedChapterPageFilePath({required int mangaId, required int chapterId, required int pageIndex, required String extension}) async {
   var basename = (pageIndex + 1).toString().padLeft(4, '0');
   var filename = '$basename$extension';
   return PathUtils.joinPath([await _getDownloadMangaDirectoryPath(mangaId, chapterId), filename]);
 }
 
+// This method is only used by DlSettingSubPage, for showing dialog.
 Future<String?> getDownloadedMangaDirectoryPath() async {
   try {
     return await _getDownloadMangaDirectoryPath();
@@ -56,6 +62,7 @@ Future<String?> getDownloadedMangaDirectoryPath() async {
   }
 }
 
+// This method is only used by MangaViewerPage, for `_fileFutures` list.
 Future<File?> getDownloadedChapterPageFile({required int mangaId, required int chapterId, required int pageIndex, required String? url}) async {
   try {
     var extension = _getExtensionFromUrl(url);
@@ -67,6 +74,7 @@ Future<File?> getDownloadedChapterPageFile({required int mangaId, required int c
   }
 }
 
+// This method is used by MangaViewerPage and MangaOverviewPage, for pre-checking and image-sharing.
 Future<File?> getCachedOrDownloadedChapterPageFile({required int mangaId, required int chapterId, required int pageIndex, required String? url}) async {
   try {
     var extension = _getExtensionFromUrl(url);
@@ -85,7 +93,7 @@ Future<File?> getCachedOrDownloadedChapterPageFile({required int mangaId, requir
 
 Future<File?> downloadImageToGallery(String url, {File? precheck, bool convertFromWebp = false, bool alsoAddToGallery = true}) async {
   try {
-    var filepath = await _getDownloadImageFilePath(_getExtensionFromUrl(url));
+    var filepath = await _generateDownloadImageFilePath(_getExtensionFromUrl(url));
     File newFile;
     if (precheck != null && await precheck.exists()) {
       // copy given file directly
@@ -123,11 +131,11 @@ Future<File?> downloadImageToGallery(String url, {File? precheck, bool convertFr
 
     var isWebp = PathUtils.getExtension(filepath).toLowerCase() == '.webp';
     if (isWebp && convertFromWebp) {
-      var f = File('${PathUtils.getWithoutExtension(filepath)}.jpg');
-      var ok = await convertFromWebpToJpg(newFile, f);
+      var jpgFile = File('${PathUtils.getWithoutExtension(filepath)}.jpg');
+      var ok = await convertFromWebpToJpg(newFile, jpgFile);
       if (ok) {
         await newFile.safeDelete();
-        newFile = f;
+        newFile = jpgFile;
       }
     }
 
@@ -137,39 +145,6 @@ Future<File?> downloadImageToGallery(String url, {File? precheck, bool convertFr
     return newFile;
   } catch (e, s) {
     globalLogger.e('downloadImageToGallery', e, s);
-    return null;
-  }
-}
-
-bool isWebpImageFile(File file) {
-  return _getExtensionFromUrl(file.path) == '.webp';
-}
-
-Future<File?> saveImageFileWithExpectFormat(File file, {bool convertFromWebp = false, bool alsoAddToGallery = true}) async {
-  try {
-    if (!(await file.exists())) {
-      return null;
-    }
-
-    File newFile;
-    var extension = _getExtensionFromUrl(file.path);
-    var webp = extension == '.webp';
-    if (!webp || !convertFromWebp) {
-      newFile = File(await _getDownloadImageFilePath(extension));
-      await file.copy(newFile.path);
-    } else {
-      newFile = File(await _getDownloadImageFilePath('.jpg'));
-      if (!await convertFromWebpToJpg(file, newFile)) {
-        return null;
-      }
-    }
-
-    if (alsoAddToGallery) {
-      await addToGallery(newFile);
-    }
-    return newFile;
-  } catch (e, s) {
-    globalLogger.e('saveImageFileAsCorrectFormat', e, s);
     return null;
   }
 }
@@ -185,13 +160,14 @@ Future<File?> downloadAndConcatImagesToGallery(String url1, String url2, ConcatI
   }
 
   try {
-    var filepath = await _getDownloadImageFilePath('.jpg');
+    var filepath = await _generateDownloadImageFilePath('.jpg');
     var dir = Directory(PathUtils.getDirname(filepath));
     if (!(await dir.exists())) {
       await dir.create(recursive: true);
     }
     var newFile = File(filepath);
-    var ok = await concatTwoImages(f1, f2, mode, newFile);
+
+    var ok = await concatTwoImagesToJpg(f1, f2, mode, newFile);
     if (!ok) {
       return null;
     }

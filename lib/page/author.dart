@@ -182,9 +182,7 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
         children: [
           for (var author in _data!.relatedAuthors)
             TextDialogOption(
-              text: Flexible(
-                child: Text('${author.name} (${author.zone})', maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
+              text: Text('${author.name} (${author.zone})', maxLines: 1, overflow: TextOverflow.ellipsis),
               onPressed: () {
                 Navigator.of(c).pop();
                 Navigator.of(context).push(

@@ -689,7 +689,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           /// 历史展示 (有阅读历史)
           if (_history != null && _history!.read) ...[
             IconTextDialogOption(
-              icon: Icon(Icons.history),
+              icon: Icon(CustomIcons.history_clock),
               text: Flexible(
                 child: Text('最近阅读于 ${_history!.formattedLastTime}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
@@ -1374,29 +1374,31 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                     onTap: () => _startOrContinueToRead(),
                     onLongPress: () => _showHistoryPopupMenu(),
                     child: IconText(
-                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 9), // | ▢° ▢▢ |
-                      space: 14 /* 14 + 2 <= 16 (narrow than horizontal_padding_18) */,
+                      space: 0, // | ▢° ▢▢ |
                       icon: InkWell(
                         onTap: () => _showHistoryPopupMenu(),
-                        onLongPress: () => _showHistoryPopupMenu(), // TODO test, adjust layout
-                        child: Stack(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(right: 2),
-                              child: Icon(Icons.import_contacts, size: 26, color: Colors.black54),
-                            ),
-                            if (_history == null || !_history!.read)
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: Container(
-                                  height: 11,
-                                  width: 11,
-                                  decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                  child: _history != null ? null : Icon(Icons.close, size: 9.0, color: Colors.white),
-                                ),
+                        onLongPress: () => _showHistoryPopupMenu(),
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 18, right: 16 /* 18 - 2 */, top: 16, bottom: 16),
+                          child: Stack(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(right: 2),
+                                child: Icon(Icons.import_contacts, size: 26, color: Colors.black54),
                               ),
-                          ],
+                              if (_history == null || !_history!.read)
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  child: Container(
+                                    height: 11,
+                                    width: 11,
+                                    decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                    child: _history != null ? null : Icon(Icons.close, size: 9.0, color: Colors.white),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                       text: Flexible(
@@ -1413,7 +1415,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            SizedBox(height: 1),
+                            SizedBox(height: 2),
                             Text(
                               _history == null || !_history!.read //
                                   ? '无阅读历史${_history == null ? '，且不保留浏览历史' : ''}'

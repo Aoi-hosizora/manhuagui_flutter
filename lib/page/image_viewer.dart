@@ -108,7 +108,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                 LongPressablePopupMenuItem(
                   child: IconTextMenuItem(MdiIcons.imageMove, '分享图片'),
                   onTap: () async {
-                    var filepath = await getCachedOrDownloadedFilepath(url: url); // usually be jpeg, never be webp
+                    var filepath = await getCachedOrDownloadedFilepath(url: url);
                     if (filepath == null) {
                       Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
                     } else {

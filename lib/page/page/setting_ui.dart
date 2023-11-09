@@ -57,7 +57,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _enableAutoCheckin = widget.setting.enableAutoCheckin;
   late var _allowErrorToast = widget.setting.allowErrorToast;
   late var _convertWebpWhenSave = widget.setting.convertWebpWhenSave;
-  late var _convertWebpWhenShare = widget.setting.convertWebpWhenShare;
 
   UiSetting get _newestSetting => UiSetting(
         showTwoColumns: _showTwoColumns,
@@ -81,7 +80,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         enableAutoCheckin: _enableAutoCheckin,
         allowErrorToast: _allowErrorToast,
         convertWebpWhenSave: _convertWebpWhenSave,
-        convertWebpWhenShare: _convertWebpWhenShare,
       );
 
   void _setToDefault() {
@@ -107,7 +105,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _enableAutoCheckin = setting.enableAutoCheckin;
     _allowErrorToast = setting.allowErrorToast;
     _convertWebpWhenSave = setting.convertWebpWhenSave;
-    _convertWebpWhenShare = setting.convertWebpWhenShare;
     if (mounted) setState(() {});
   }
 
@@ -346,15 +343,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _convertWebpWhenSave,
           onChanged: (b) {
             _convertWebpWhenSave = b;
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          style: widget.style,
-          title: '分享webp图片时转换格式',
-          value: _convertWebpWhenShare,
-          onChanged: (b) {
-            _convertWebpWhenShare = b;
             if (mounted) setState(() {});
           },
         ),

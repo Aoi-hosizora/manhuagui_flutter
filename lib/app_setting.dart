@@ -616,7 +616,6 @@ class UiSetting {
     required this.alwaysOpenNewListPage,
     required this.enableAutoCheckin,
     required this.convertWebpWhenSave,
-    required this.convertWebpWhenShare,
   });
 
   // 列表页设置
@@ -644,7 +643,6 @@ class UiSetting {
   final bool enableAutoCheckin; // 启用自动登录签到功能
   final bool allowErrorToast; // 允许后台弹出漫画错误提示
   final bool convertWebpWhenSave; // 保存webp图片时转换格式
-  final bool convertWebpWhenShare; // 分享webp图片时转换格式
 
   static const defaultSetting = UiSetting(
     showTwoColumns: false,
@@ -668,7 +666,6 @@ class UiSetting {
     enableAutoCheckin: false,
     allowErrorToast: true,
     convertWebpWhenSave: false,
-    convertWebpWhenShare: false,
   );
 
   UiSetting copyWith({
@@ -693,7 +690,6 @@ class UiSetting {
     bool? enableAutoCheckin,
     bool? allowErrorToast,
     bool? convertWebpWhenSave,
-    bool? convertWebpWhenShare,
   }) {
     return UiSetting(
       showTwoColumns: showTwoColumns ?? this.showTwoColumns,
@@ -717,7 +713,6 @@ class UiSetting {
       enableAutoCheckin: enableAutoCheckin ?? this.enableAutoCheckin,
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
       convertWebpWhenSave: convertWebpWhenSave ?? this.convertWebpWhenSave,
-      convertWebpWhenShare: convertWebpWhenShare ?? this.convertWebpWhenShare,
     );
   }
 
@@ -742,8 +737,7 @@ class UiSetting {
         clickToSearch == other.clickToSearch &&
         alwaysOpenNewListPage == other.alwaysOpenNewListPage &&
         enableAutoCheckin == other.enableAutoCheckin &&
-        convertWebpWhenSave == other.convertWebpWhenSave &&
-        convertWebpWhenShare == other.convertWebpWhenShare;
+        convertWebpWhenSave == other.convertWebpWhenSave;
   }
 }
 

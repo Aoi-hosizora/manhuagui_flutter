@@ -40,6 +40,27 @@ class ToRankingRequestedEvent {
 
 enum UpdateReason { added, updated, deleted }
 
+// TODO improve checking event source and event fields
+
+enum EventSource {
+  shelfPage,
+  sepShelfPage,
+  favoritePage,
+  sepFavoritePage,
+  laterPage,
+  sepLaterPage,
+  historyPage,
+  sepHistoryPage,
+  mangaPage,
+  mangaViewerPage,
+  mangaHistoryPage,
+  authorPage,
+  authorFavoritePage,
+  downloadPage,
+  downloadMangaPage,
+  shelfCachePage,
+}
+
 class HistoryUpdatedEvent {
   const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.fromHistoryPage = false, this.fromSepHistoryPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
 
@@ -123,8 +144,6 @@ class LaterUpdatedEvent {
   final bool fromSepLaterPage;
   final bool fromMangaPage;
 }
-
-// TODO improve checking fromXXXPage fields
 
 class FootprintUpdatedEvent {
   const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});

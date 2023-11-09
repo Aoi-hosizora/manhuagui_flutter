@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 
-/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [SubtitleDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem]
+/// 一些通用简单的控件，包括 [HelpIconView] / [CheckBoxDialogOption] / [SubtitleDialogOption] / [CustomComboboxItem] / [WarningTextView] / [IconTextMenuItem] / [checkWillPopFromChildren]
 
 class HelpIconView extends StatelessWidget {
   const HelpIconView({
