@@ -56,6 +56,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
   late var _enableAutoCheckin = widget.setting.enableAutoCheckin;
   late var _allowErrorToast = widget.setting.allowErrorToast;
+  late var _convertWebpWhenSave = widget.setting.convertWebpWhenSave;
+  late var _convertWebpWhenShare = widget.setting.convertWebpWhenShare;
 
   UiSetting get _newestSetting => UiSetting(
         showTwoColumns: _showTwoColumns,
@@ -78,6 +80,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         alwaysOpenNewListPage: _alwaysOpenNewListPage,
         enableAutoCheckin: _enableAutoCheckin,
         allowErrorToast: _allowErrorToast,
+        convertWebpWhenSave: _convertWebpWhenSave,
+        convertWebpWhenShare: _convertWebpWhenShare,
       );
 
   void _setToDefault() {
@@ -102,6 +106,8 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _alwaysOpenNewListPage = setting.alwaysOpenNewListPage;
     _enableAutoCheckin = setting.enableAutoCheckin;
     _allowErrorToast = setting.allowErrorToast;
+    _convertWebpWhenSave = setting.convertWebpWhenSave;
+    _convertWebpWhenShare = setting.convertWebpWhenShare;
     if (mounted) setState(() {});
   }
 
@@ -326,11 +332,29 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingSwitcherView(
           style: widget.style,
-          title: '阅读时允许弹出错误提示',
-          hint: '此处的错误信息包括："无法获取书架订阅情况"、"无法获取漫画章节列表"。',
+          title: '允许后台弹出漫画错误提示',
+          hint: '该选项涉及漫画页与章节阅读页，错误信息包括 "无法获取书架订阅情况" 与 "无法获取漫画章节列表"。',
           value: _allowErrorToast,
           onChanged: (b) {
             _allowErrorToast = b;
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          style: widget.style,
+          title: '保存webp图片时转换格式',
+          value: _convertWebpWhenSave,
+          onChanged: (b) {
+            _convertWebpWhenSave = b;
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          style: widget.style,
+          title: '分享webp图片时转换格式',
+          value: _convertWebpWhenShare,
+          onChanged: (b) {
+            _convertWebpWhenShare = b;
             if (mounted) setState(() {});
           },
         ),

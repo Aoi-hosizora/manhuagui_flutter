@@ -40,6 +40,7 @@ import 'package:manhuagui_flutter/service/dio/wrap_error.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/image/imagelib.dart';
 import 'package:manhuagui_flutter/service/native/android.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
 import 'package:manhuagui_flutter/service/native/system_ui.dart';
@@ -1295,8 +1296,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       Fluttertoast.showToast(msg: '当前处于离线模式，但未在下载列表中获取到第${imageIndex + 1}页链接'); // also show toast
       return null;
     }
-    var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
-    return Tuple2(url, filepath == null ? null : File(filepath));
+    var precheckFile = await getCachedOrDownloadedChapterPageFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
+    return Tuple2(url, precheckFile);
   }
 
   void _showPopupMenu(int imageIndex /* start from 0 */) {
@@ -1306,7 +1307,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       var tuple = await _getPageUrlAndPrecheckFile(imageIndex);
       if (tuple == null) return;
       var url = tuple.item1, file = tuple.item2;
-      var f = await downloadImageToGallery(url, precheck: file, convertFromWebp: true); // TODO test webp
+      var f = await downloadImageToGallery(url, precheck: file, convertFromWebp: AppSetting.instance.ui.convertWebpWhenSave);
       Fluttertoast.showToast(msg: f != null ? '第${imageIndex + 1}页已保存至 ${f.path}' : '无法保存第${imageIndex + 1}页');
     }
 
@@ -1321,15 +1322,38 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     Future<void> _shapeImage(int imageIndex, {bool short = false}) async {
       var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
-      var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
+      var filepath = (await getCachedOrDownloadedChapterPageFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url))?.path;
       if (filepath == null) {
         Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
-      } else {
-        if (short) {
-          await shareFile(filepath: filepath, type: 'image/*');
-        } else {
-          await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第${imageIndex + 1}页 $url');
+        return;
+      }
+      if (AppSetting.instance.ui.convertWebpWhenShare && isWebpImageFile(File(filepath))) {
+        var ok = await showDialog<bool>(
+          context: context,
+          builder: (c) => SimpleDialog(
+            title: Text('分享图片'),
+            children: [
+              SubtitleDialogOption(text: Text('当前所选图片格式为 webp，是否保存为 jpg 格式后再分享？')),
+              IconTextDialogOption(icon: Icon(MdiIcons.imageMove), text: Text('直接分享webp图片'), onPressed: () => Navigator.of(c).pop(false)),
+              IconTextDialogOption(icon: Icon(CustomIcons.image_jpg_move), text: Text('保存为jpg图片后再分享'), onPressed: () => Navigator.of(c).pop(true)),
+              IconTextDialogOption(icon: Icon(Icons.do_not_disturb), text: Text('取消分享'), onPressed: () => Navigator.of(c).pop(null)),
+            ],
+          ),
+        );
+        if (ok == null) return;
+        if (ok == true) {
+          var newFile = await saveImageFileWithExpectFormat(File(filepath), convertFromWebp: AppSetting.instance.ui.convertWebpWhenShare);
+          if (newFile == null) {
+            Fluttertoast.showToast(msg: '无法将图片保存为jpg格式');
+            return;
+          }
+          filepath = newFile.path;
         }
+      }
+      if (short) {
+        await shareFile(filepath: filepath, type: 'image/*');
+      } else {
+        await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第${imageIndex + 1}页 $url');
       }
     }
 
@@ -1379,13 +1403,36 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
 
     Future<void> _concat(int imageIndex1, int imageIndex2, ConcatImageMode mode) async {
-      var tuple = await (await _getPageUrlAndPrecheckFile(imageIndex1))?.let((t1) async => (await _getPageUrlAndPrecheckFile(imageIndex2))?.let((t2) => Tuple2(t1, t2)));
-      if (tuple == null) return;
-      var url1 = tuple.item1.item1, file1 = tuple.item1.item2;
-      var url2 = tuple.item2.item1, file2 = tuple.item2.item2;
-      var f = await downloadAndConcatImagesToGallery(url1, url2, mode, precheck1: file1, precheck2: file2); // TODO test concat
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            contentPadding: EdgeInsets.zero,
+            content: CircularProgressDialogOption(
+              progress: CircularProgressIndicator(),
+              child: Text('正在合并第${imageIndex1 + 1}页与第${imageIndex2 + 1}页...'),
+            ),
+          ),
+        ),
+      );
+
+      Tuple2<String, File?>? tuple1, tuple2;
+      tuple1 = await _getPageUrlAndPrecheckFile(imageIndex1);
+      if (tuple1 != null) {
+        tuple2 = await _getPageUrlAndPrecheckFile(imageIndex2);
+      }
+      if (tuple1 == null || tuple2 == null) {
+        return;
+      }
+
+      var url1 = tuple1.item1, file1 = tuple1.item2;
+      var url2 = tuple2.item1, file2 = tuple2.item2;
+      var f = await downloadAndConcatImagesToGallery(url1, url2, mode, precheck1: file1, precheck2: file2);
+      Navigator.of(context).pop(); // dismiss progress dialog
       if (f != null) {
-        Fluttertoast.showToast(msg: '第${imageIndex1 + 1}页与第${imageIndex2 + 1}的图片合并结果已保存至 ${f.path}');
+        Fluttertoast.showToast(msg: '第${imageIndex1 + 1}页与第${imageIndex2 + 1}页的图片合并结果已保存至 ${f.path}');
       } else {
         Fluttertoast.showToast(msg: '无法下载第${imageIndex1 + 1}页与第${imageIndex2 + 1}页');
       }
@@ -1398,7 +1445,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         builder: (c, _setState) => SimpleDialog(
           title: Text('合并保存图片'),
           children: [
-            Divider(height: 16, thickness: 1),
             for (var tuple in [
               Tuple2('左右合并', ConcatImageMode.horizontal),
               Tuple2('上下合并', ConcatImageMode.vertical),

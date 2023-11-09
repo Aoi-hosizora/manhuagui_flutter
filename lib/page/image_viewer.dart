@@ -49,7 +49,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
   }
 
   Future<void> _download(String url) async {
-    var f = await downloadImageToGallery(url, convertFromWebp: true); // TODO test webp
+    var f = await downloadImageToGallery(url, convertFromWebp: AppSetting.instance.ui.convertWebpWhenSave);
     if (f != null) {
       Fluttertoast.showToast(msg: '图片已保存至 ${f.path}');
     } else {
@@ -108,7 +108,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                 LongPressablePopupMenuItem(
                   child: IconTextMenuItem(MdiIcons.imageMove, '分享图片'),
                   onTap: () async {
-                    var filepath = await getCachedOrDownloadedFilepath(url: url);
+                    var filepath = await getCachedOrDownloadedFilepath(url: url); // usually be jpeg, never be webp
                     if (filepath == null) {
                       Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
                     } else {

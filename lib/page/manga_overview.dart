@@ -2,6 +2,7 @@ import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
@@ -61,9 +62,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> with FitSystemScr
       ? List.generate(widget.imageUrls.length, (_) => Future.value(null)) // no need for this file list when want to load all images
       : [
           for (var i = 0; i < widget.imageUrls.length; i++) //
-            getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: i, url: widget.imageUrls[i]).then(
-              (filepath) => filepath == null ? null : File(filepath),
-            ),
+            getCachedOrDownloadedChapterPageFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: i, url: widget.imageUrls[i]),
         ];
 
   Future<void> _toLoadAllImages() async {
@@ -163,8 +162,8 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> with FitSystemScr
         results.add('第${i + 1}页：已取消');
       } else {
         var url = widget.imageUrls[i];
-        var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: i, url: url);
-        var f = await downloadImageToGallery(url, precheck: filepath == null ? null : File(filepath), convertFromWebp: true); // TODO test webp
+        var precheckFile = await getCachedOrDownloadedChapterPageFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: i, url: url);
+        var f = await downloadImageToGallery(url, precheck: precheckFile, convertFromWebp: AppSetting.instance.ui.convertWebpWhenSave);
         if (f != null) {
           results.add('第${i + 1}页：已保存至 ${f.path}');
         } else {
@@ -198,7 +197,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> with FitSystemScr
     indices.sort();
     var filepaths = <String>[];
     for (var index in indices) {
-      var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: index, url: widget.imageUrls[index]);
+      var filepath = (await getCachedOrDownloadedChapterPageFile(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: index, url: widget.imageUrls[index]))?.path;
       if (filepath == null) {
         Fluttertoast.showToast(msg: '第${index + 1}页未加载完成，无法分享图片');
         return;

@@ -171,8 +171,8 @@ class SettingComboBoxView<T extends Object> extends _SettingView {
             for (var value in values)
               IconTextDialogOption(
                 icon: this.value == value //
-                    ? Icon(Icons.radio_button_checked, color: Theme.of(context).primaryColor)
-                    : Icon(Icons.radio_button_unchecked),
+                    ? Icon(Icons.radio_button_on, color: Theme.of(context).primaryColor)
+                    : Icon(Icons.radio_button_off),
                 text: Text(
                   textBuilder(value),
                   style: Theme.of(context).textTheme.bodyText2,

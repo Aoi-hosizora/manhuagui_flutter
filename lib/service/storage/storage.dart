@@ -85,6 +85,21 @@ class PathUtils {
   }
 }
 
+// =========
+// extension
+// =========
+
+extension FileExtension on File {
+  Future<bool> safeDelete({bool recursive = false}) async {
+    try {
+      await delete(recursive: recursive);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+}
+
 // =====
 // cache
 // =====

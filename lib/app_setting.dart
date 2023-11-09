@@ -615,32 +615,36 @@ class UiSetting {
     required this.clickToSearch,
     required this.alwaysOpenNewListPage,
     required this.enableAutoCheckin,
+    required this.convertWebpWhenSave,
+    required this.convertWebpWhenShare,
   });
 
-  // 列表显示设置
+  // 列表页设置
   final bool showTwoColumns; // 以双列风格显示列表
   final MangaOrder defaultMangaOrder; // 漫画列表默认排序方式
   final AuthorOrder defaultAuthorOrder; // 作者列表默认排序方式
   final bool enableCornerIcons; // 列表内显示右下角图标
   final bool showMangaReadIcon; // 漫画列表内显示阅读图标
   final bool highlightRecentMangas; // 高亮最近更新的漫画
-  // 漫画显示设置
+  // 漫画页设置
   final ReadGroupBehavior readGroupBehavior; // 点击阅读章节分组行为
   final int regularGroupRows; // 单话分组章节显示数量
   final int otherGroupRows; // 其他分组章节显示数量
   final bool showLastHistory; // 显示上上次章节阅读历史
   final bool overviewLoadAll; // 章节一览页加载所有图片
-  // 首页显示设置
+  // 首页设置
   final bool homepageShowMoreMangas; // 首页显示更多漫画
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
   final int audienceRankingRows; // 首页受众排行榜显示数量
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
   final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为
-  // 用户交互设置
+  // 其他页设置
   final bool clickToSearch; // 点击搜索历史立即搜索
   final bool alwaysOpenNewListPage; // 始终在新页面打开列表
   final bool enableAutoCheckin; // 启用自动登录签到功能
-  final bool allowErrorToast; // 阅读时允许弹出错误提示
+  final bool allowErrorToast; // 允许后台弹出漫画错误提示
+  final bool convertWebpWhenSave; // 保存webp图片时转换格式
+  final bool convertWebpWhenShare; // 分享webp图片时转换格式
 
   static const defaultSetting = UiSetting(
     showTwoColumns: false,
@@ -663,6 +667,8 @@ class UiSetting {
     alwaysOpenNewListPage: false,
     enableAutoCheckin: false,
     allowErrorToast: true,
+    convertWebpWhenSave: false,
+    convertWebpWhenShare: false,
   );
 
   UiSetting copyWith({
@@ -686,6 +692,8 @@ class UiSetting {
     bool? alwaysOpenNewListPage,
     bool? enableAutoCheckin,
     bool? allowErrorToast,
+    bool? convertWebpWhenSave,
+    bool? convertWebpWhenShare,
   }) {
     return UiSetting(
       showTwoColumns: showTwoColumns ?? this.showTwoColumns,
@@ -708,6 +716,8 @@ class UiSetting {
       alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
       enableAutoCheckin: enableAutoCheckin ?? this.enableAutoCheckin,
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
+      convertWebpWhenSave: convertWebpWhenSave ?? this.convertWebpWhenSave,
+      convertWebpWhenShare: convertWebpWhenShare ?? this.convertWebpWhenShare,
     );
   }
 
@@ -731,7 +741,9 @@ class UiSetting {
         homepageRefreshData == other.homepageRefreshData &&
         clickToSearch == other.clickToSearch &&
         alwaysOpenNewListPage == other.alwaysOpenNewListPage &&
-        enableAutoCheckin == other.enableAutoCheckin;
+        enableAutoCheckin == other.enableAutoCheckin &&
+        convertWebpWhenSave == other.convertWebpWhenSave &&
+        convertWebpWhenShare == other.convertWebpWhenShare;
   }
 }
 

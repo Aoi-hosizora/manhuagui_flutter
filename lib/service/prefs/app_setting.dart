@@ -167,6 +167,8 @@ class AppSettingPrefs {
   static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
   static const _enableAutoCheckinKey = BoolKey('AppSettingPrefs_enableAutoCheckin');
   static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
+  static const _convertWebpWhenSaveKey = BoolKey('AppSettingPrefs_convertWebpWhenSave');
+  static const _convertWebpWhenShareKey = BoolKey('AppSettingPrefs_convertWebpWhenShare');
 
   static List<TypedKey> get uiSettingKeys => [
         _showTwoColumnsKey,
@@ -189,6 +191,8 @@ class AppSettingPrefs {
         _alwaysOpenNewListPageKey,
         _enableAutoCheckinKey,
         _allowErrorToastKey,
+        _convertWebpWhenSaveKey,
+        _convertWebpWhenShareKey,
       ];
 
   static Future<UiSetting> _loadUiSetting() async {
@@ -215,6 +219,8 @@ class AppSettingPrefs {
       alwaysOpenNewListPage: prefs.safeGet<bool>(_alwaysOpenNewListPageKey) ?? def.alwaysOpenNewListPage,
       enableAutoCheckin: prefs.safeGet<bool>(_enableAutoCheckinKey) ?? def.enableAutoCheckin,
       allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
+      convertWebpWhenSave: prefs.safeGet<bool>(_convertWebpWhenSaveKey) ?? def.convertWebpWhenSave,
+      convertWebpWhenShare: prefs.safeGet<bool>(_convertWebpWhenShareKey) ?? def.convertWebpWhenShare,
     );
   }
 
@@ -241,6 +247,8 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_alwaysOpenNewListPageKey, setting.alwaysOpenNewListPage);
     await prefs.safeSet<bool>(_enableAutoCheckinKey, setting.enableAutoCheckin);
     await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
+    await prefs.safeSet<bool>(_convertWebpWhenSaveKey, setting.convertWebpWhenSave);
+    await prefs.safeSet<bool>(_convertWebpWhenShareKey, setting.convertWebpWhenShare);
   }
 
   // =============

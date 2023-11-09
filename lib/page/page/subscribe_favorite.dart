@@ -555,7 +555,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
                 for (var g in _groups ?? <FavoriteGroup>[]) ...[
                   ListTile(
                     title: Text(g.checkedGroupName, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    leading: _currentGroup == g.groupName ? Icon(Icons.radio_button_checked) : Icon(Icons.radio_button_unchecked),
+                    leading: Icon(_currentGroup == g.groupName ? Icons.radio_button_on : Icons.radio_button_off),
                     trailing: Text((_groupsLengths?[g.groupName] ?? 0).toString()),
                     selected: _currentGroup == g.groupName,
                     onTap: () => _switchGroup(g),
