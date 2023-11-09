@@ -10,7 +10,6 @@ import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
 import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/favorite_author.dart';
@@ -21,6 +20,7 @@ import 'package:manhuagui_flutter/page/manga_history.dart';
 import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/sep_category.dart';
+import 'package:manhuagui_flutter/page/setting_ui.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
@@ -1074,7 +1074,12 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
             icon: Icon(Icons.settings),
             text: Text('漫画章节列表显示设置'),
             popWhenPress: c,
-            onPressed: () => showUiSettingDialog(context: context),
+            onPressed: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => UiSettingPage(),
+              ),
+            ),
           ),
         ],
       ),
@@ -1371,24 +1376,28 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                     child: IconText(
                       padding: EdgeInsets.symmetric(horizontal: 18, vertical: 9), // | ▢° ▢▢ |
                       space: 14 /* 14 + 2 <= 16 (narrow than horizontal_padding_18) */,
-                      icon: Stack(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(right: 2),
-                            child: Icon(Icons.import_contacts, size: 26, color: Colors.black54),
-                          ),
-                          if (_history == null || !_history!.read)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                height: 11,
-                                width: 11,
-                                decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                child: _history != null ? null : Icon(Icons.close, size: 9.0, color: Colors.white),
-                              ),
+                      icon: InkWell(
+                        onTap: () => _showHistoryPopupMenu(),
+                        onLongPress: () => _showHistoryPopupMenu(), // TODO test, adjust layout
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(right: 2),
+                              child: Icon(Icons.import_contacts, size: 26, color: Colors.black54),
                             ),
-                        ],
+                            if (_history == null || !_history!.read)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  height: 11,
+                                  width: 11,
+                                  decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                  child: _history != null ? null : Icon(Icons.close, size: 9.0, color: Colors.white),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                       text: Flexible(
                         child: Column(

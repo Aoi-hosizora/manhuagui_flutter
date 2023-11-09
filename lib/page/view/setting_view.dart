@@ -58,7 +58,7 @@ abstract class _SettingView extends StatelessWidget {
             child: Padding(
               padding: style == SettingViewStyle.line //
                   ? EdgeInsets.zero
-                  : EdgeInsets.symmetric(vertical: 13),
+                  : EdgeInsets.symmetric(vertical: 14),
               child: Text(
                 title,
                 style: style == SettingViewStyle.line //
@@ -291,7 +291,7 @@ class SettingTitleView extends StatelessWidget {
       color: color,
       padding: style == SettingViewStyle.line //
           ? EdgeInsets.symmetric(vertical: 5)
-          : EdgeInsets.symmetric(vertical: 13),
+          : EdgeInsets.symmetric(vertical: 14),
       child: Center(
         child: Text(
           '・$title・',

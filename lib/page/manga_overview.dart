@@ -164,7 +164,7 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> with FitSystemScr
       } else {
         var url = widget.imageUrls[i];
         var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: i, url: url);
-        var f = await downloadImageToGallery(url, precheck: filepath == null ? null : File(filepath));
+        var f = await downloadImageToGallery(url, precheck: filepath == null ? null : File(filepath), convertFromWebp: true); // TODO test webp
         if (f != null) {
           results.add('第${i + 1}页：已保存至 ${f.path}');
         } else {
@@ -283,9 +283,9 @@ class _MangaOverviewPageState extends State<MangaOverviewPage> with FitSystemScr
 
   @override
   FitSystemScreenshotData get fitSystemScreenshotData => FitSystemScreenshotData(
-    scrollViewKey: _gridViewKey,
-    scrollController: _controller,
-  );
+        scrollViewKey: _gridViewKey,
+        scrollController: _controller,
+      );
 
   @override
   Widget build(BuildContext context) {

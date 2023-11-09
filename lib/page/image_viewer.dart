@@ -49,7 +49,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
   }
 
   Future<void> _download(String url) async {
-    var f = await downloadImageToGallery(url);
+    var f = await downloadImageToGallery(url, convertFromWebp: true); // TODO test webp
     if (f != null) {
       Fluttertoast.showToast(msg: '图片已保存至 ${f.path}');
     } else {

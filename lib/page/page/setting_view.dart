@@ -48,6 +48,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
   late var _fullscreen = widget.setting.fullscreen;
   late var _preloadCount = widget.setting.preloadCount;
   late var _pageNoPosition = widget.setting.pageNoPosition;
+  late var _showNotWifiHint = widget.setting.showNotWifiHint;
   late var _hideAppBarWhenEnter = widget.setting.hideAppBarWhenEnter;
   late var _appBarSwitchBehavior = widget.setting.appBarSwitchBehavior;
   late var _useChapterAssistant = widget.setting.useChapterAssistant;
@@ -64,6 +65,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         fullscreen: _fullscreen,
         preloadCount: _preloadCount,
         pageNoPosition: _pageNoPosition,
+        showNotWifiHint: _showNotWifiHint,
         hideAppBarWhenEnter: _hideAppBarWhenEnter,
         appBarSwitchBehavior: _appBarSwitchBehavior,
         useChapterAssistant: _useChapterAssistant,
@@ -82,6 +84,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
     _fullscreen = setting.fullscreen;
     _preloadCount = setting.preloadCount;
     _pageNoPosition = setting.pageNoPosition;
+    _showNotWifiHint = setting.showNotWifiHint;
     _hideAppBarWhenEnter = setting.hideAppBarWhenEnter;
     _appBarSwitchBehavior = setting.appBarSwitchBehavior;
     _useChapterAssistant = setting.useChapterAssistant;
@@ -175,7 +178,7 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
       '高级设置': [
         SettingComboBoxView<int>(
           style: widget.style,
-          title: '预加载章节页数',
+          title: '预加载页数',
           value: _preloadCount.clamp(0, 6),
           values: const [0, 1, 2, 3, 4, 5, 6],
           textBuilder: (s) => s == 0 ? '禁用预加载' : '前后$s页',
@@ -186,13 +189,22 @@ class _ViewSettingSubPageState extends State<ViewSettingSubPage> {
         ),
         SettingComboBoxView<PageNoPosition>(
           style: widget.style,
-          title: '每页显示额外页码',
+          title: '每页单独显示页码',
           value: _pageNoPosition,
           values: const [PageNoPosition.hide, PageNoPosition.topLeft, PageNoPosition.topCenter, PageNoPosition.topRight, PageNoPosition.bottomLeft, PageNoPosition.bottomCenter, PageNoPosition.bottomRight],
           enable: _viewDirection == ViewDirection.topToBottom || _viewDirection == ViewDirection.topToBottomRtl,
           textBuilder: (s) => s.toOptionTitle(),
           onChanged: (s) {
             _pageNoPosition = s;
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          style: widget.style,
+          title: '非WIFI网络阅读提醒',
+          value: _showNotWifiHint,
+          onChanged: (b) {
+            _showNotWifiHint = b;
             if (mounted) setState(() {});
           },
         ),
@@ -367,7 +379,7 @@ class _AssistantSettingSubPageState extends State<AssistantSettingSubPage> {
           ),
         SettingSwitcherView(
           style: style,
-          title: '允许随着左右变更修改按钮动作',
+          title: '允许随着左右变更调整按钮动作',
           value: _allowReverse,
           onChanged: (b) {
             _allowReverse = b;

@@ -466,7 +466,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _updateHistory();
 
       // 8. 显示网络使用提醒
-      if (widget.onlineMode && AppSetting.instance.ui.showNotWifiHint) {
+      if (widget.onlineMode && AppSetting.instance.view.showNotWifiHint) {
         var conn = await Connectivity().checkConnectivity();
         if (conn != ConnectivityResult.wifi) {
           ScaffoldMessenger.of(context).clearSnackBars();
@@ -1289,87 +1289,151 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
   }
 
-  void _toShareChapterPage({required int imageIndex, bool short = false}) {
-    var url = _data!.chapterPageHtmlUrl(imageIndex /* start from 0 */);
-    if (short) {
-      shareText(text: url);
-    } else {
-      shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第${imageIndex + 1}页 $url');
+  Future<Tuple2<String, File?>?> _getPageUrlAndPrecheckFile(int imageIndex) async {
+    var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
+    if (url == null) {
+      Fluttertoast.showToast(msg: '当前处于离线模式，但未在下载列表中获取到第${imageIndex + 1}页链接'); // also show toast
+      return null;
     }
+    var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
+    return Tuple2(url, filepath == null ? null : File(filepath));
   }
 
   void _showPopupMenu(int imageIndex /* start from 0 */) {
     HapticFeedback.vibrate();
-    var imageIndexP1 = imageIndex + 1; // start from 1
+
+    Future<void> _download(int imageIndex) async {
+      var tuple = await _getPageUrlAndPrecheckFile(imageIndex);
+      if (tuple == null) return;
+      var url = tuple.item1, file = tuple.item2;
+      var f = await downloadImageToGallery(url, precheck: file, convertFromWebp: true); // TODO test webp
+      Fluttertoast.showToast(msg: f != null ? '第${imageIndex + 1}页已保存至 ${f.path}' : '无法保存第${imageIndex + 1}页');
+    }
+
+    void _sharePage(int imageIndex, {bool short = false}) {
+      var url = _data!.chapterPageHtmlUrl(imageIndex /* start from 0 */);
+      if (short) {
+        shareText(text: url);
+      } else {
+        shareText(text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第${imageIndex + 1}页 $url');
+      }
+    }
+
+    Future<void> _shapeImage(int imageIndex, {bool short = false}) async {
+      var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
+      var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
+      if (filepath == null) {
+        Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
+      } else {
+        if (short) {
+          await shareFile(filepath: filepath, type: 'image/*');
+        } else {
+          await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第${imageIndex + 1}页 $url');
+        }
+      }
+    }
+
     showDialog(
       context: context,
       builder: (c) => SimpleDialog(
-        title: Text('第$imageIndexP1页'),
+        title: Text('第${imageIndex + 1}页'),
         children: [
           IconTextDialogOption(
             icon: Icon(Icons.refresh),
             text: Text('重新加载'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              _mangaGalleryViewKey.currentState?.reloadImage(imageIndex); // start from 0
-            },
+            popWhenPress: c,
+            onPressed: () => _mangaGalleryViewKey.currentState?.reloadImage(imageIndex),
           ),
           IconTextDialogOption(
             icon: Icon(Icons.download),
             text: Text('保存该页'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
-              if (url == null) {
-                Fluttertoast.showToast(msg: '当前处于离线模式，但未在下载列表中获取到第$imageIndexP1页链接');
-              } else {
-                var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
-                var f = await downloadImageToGallery(url, precheck: filepath == null ? null : File(filepath));
-                if (f != null) {
-                  Fluttertoast.showToast(msg: '第$imageIndexP1页已保存至 ${f.path}');
-                } else {
-                  Fluttertoast.showToast(msg: '无法保存第$imageIndexP1页');
-                }
-              }
-            },
+            popWhenPress: c,
+            onPressed: () => _download(imageIndex),
+            popWhenLongPress: _data!.pageCount <= 1 ? null : c,
+            onLongPressed: _data!.pageCount <= 1 ? null : () => _showConcatImagePopupMenu(imageIndex),
           ),
           IconTextDialogOption(
             icon: Icon(Icons.share),
             text: Text('分享该页链接'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              _toShareChapterPage(imageIndex: imageIndex);
-            },
-            onLongPressed: () {
-              Navigator.of(c).pop();
-              _toShareChapterPage(imageIndex: imageIndex, short: true);
-            },
+            popWhenPress: c,
+            onPressed: () => _sharePage(imageIndex),
+            popWhenLongPress: c,
+            onLongPressed: () => _sharePage(imageIndex, short: true),
           ),
           IconTextDialogOption(
             icon: Icon(MdiIcons.imageMove),
             text: Text('分享该页图片'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
-              var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
-              if (filepath == null) {
-                Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
-              } else {
-                await shareFile(filepath: filepath, type: 'image/*');
-              }
-            },
-            onLongPressed: () async {
-              Navigator.of(c).pop();
-              var url = _pageUrls![imageIndex]; // maybe invalid when offline => null
-              var filepath = await getCachedOrDownloadedChapterPageFilePath(mangaId: widget.mangaId, chapterId: widget.chapterId, pageIndex: imageIndex, url: url);
-              if (filepath == null) {
-                Fluttertoast.showToast(msg: '图片未加载完成，无法分享图片');
-              } else {
-                await shareFile(filepath: filepath, type: 'image/*', text: '【${_data!.mangaTitle} ${_data!.chapterTitle}】第$imageIndexP1页 $url');
-              }
-            },
+            popWhenPress: c,
+            onPressed: () => _shapeImage(imageIndex, short: true),
+            popWhenLongPress: c,
+            onLongPressed: () => _shapeImage(imageIndex),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showConcatImagePopupMenu(int imageIndex /* start from 0 */) {
+    if (_data!.pageCount <= 1) {
+      return;
+    }
+
+    Future<void> _concat(int imageIndex1, int imageIndex2, ConcatImageMode mode) async {
+      var tuple = await (await _getPageUrlAndPrecheckFile(imageIndex1))?.let((t1) async => (await _getPageUrlAndPrecheckFile(imageIndex2))?.let((t2) => Tuple2(t1, t2)));
+      if (tuple == null) return;
+      var url1 = tuple.item1.item1, file1 = tuple.item1.item2;
+      var url2 = tuple.item2.item1, file2 = tuple.item2.item2;
+      var f = await downloadAndConcatImagesToGallery(url1, url2, mode, precheck1: file1, precheck2: file2); // TODO test concat
+      if (f != null) {
+        Fluttertoast.showToast(msg: '第${imageIndex1 + 1}页与第${imageIndex2 + 1}的图片合并结果已保存至 ${f.path}');
+      } else {
+        Fluttertoast.showToast(msg: '无法下载第${imageIndex1 + 1}页与第${imageIndex2 + 1}页');
+      }
+    }
+
+    var concatMode = ConcatImageMode.horizontal;
+    showDialog(
+      context: context,
+      builder: (c) => StatefulBuilder(
+        builder: (c, _setState) => SimpleDialog(
+          title: Text('合并保存图片'),
+          children: [
+            Divider(height: 16, thickness: 1),
+            for (var tuple in [
+              Tuple2('左右合并', ConcatImageMode.horizontal),
+              Tuple2('上下合并', ConcatImageMode.vertical),
+              Tuple2('左右反向合并', ConcatImageMode.horizontalReverse),
+              Tuple2('上下反向合并', ConcatImageMode.verticalReverse),
+            ])
+              IconTextDialogOption(
+                icon: concatMode == tuple.item2 //
+                    ? Icon(Icons.radio_button_on, color: Theme.of(context).primaryColor)
+                    : Icon(Icons.radio_button_off),
+                text: Text(tuple.item1),
+                onPressed: () => _setState(() => concatMode = tuple.item2),
+              ),
+            Divider(height: 16, thickness: 1),
+            IconTextDialogOption(
+              icon: Icon(Icons.image),
+              text: Text('当前选中第${imageIndex + 1}页'),
+              onPressed: () {},
+            ),
+            if (imageIndex > 0)
+              IconTextDialogOption(
+                icon: Icon(CustomIcons.image_concat_left),
+                text: Text('与第${imageIndex + 1 - 1}页合并保存'),
+                popWhenPress: c,
+                onPressed: () => _concat(imageIndex - 1, imageIndex, concatMode),
+              ),
+            if (imageIndex < _data!.pageCount - 1)
+              IconTextDialogOption(
+                icon: Icon(CustomIcons.image_concat_right),
+                text: Text('与第${imageIndex + 1 + 1}页合并保存'),
+                popWhenPress: c,
+                onPressed: () => _concat(imageIndex, imageIndex + 1, concatMode),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1673,6 +1737,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                         if (byOpt) {
                           _mangaGalleryViewKey.currentState?.jumpToPage(_data!.pageCount + 1, animated: true);
                         }
+                        if (mounted) setState(() {}); // also set state to update assistant height
                       },
                       callbacks: extraCallbacks as ViewExtraSubPageCallbacks,
                     ),

@@ -341,9 +341,6 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
 
     // 退出多选模式、弹出菜单
     _msController.exitMultiSelectionMode();
-
-    // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-    // 本页引起的更新 => 更新历史相关的界面
     showPopupMenuForMangaToc(
       context: context,
       mangaId: widget.mangaId,
@@ -353,6 +350,9 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       fromMangaPage: false,
       chapter: chapter,
       chapterNeededData: widget.chapterNeededData,
+
+      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+      // 本页引起的更新 => 更新相关界面
       onHistoryUpdated: (h) => mountedSetState(() => _history = h),
       onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
       onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
@@ -500,7 +500,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
                                 scaleAlignment: Alignment.bottomRight,
                               ),
                               useFullRipple: true,
-                              onFullRippleLongPressed: (_, key, tip) => tip.toToggle?.call(),
+                              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(chapterId: key.value) :tip.toToggle?.call(),
                               itemBuilder: (_, key, tip) => itemWidget /* single grid */,
                             ),
                       onChapterPressed: (cid) => _showPopupMenu(chapterId: cid),

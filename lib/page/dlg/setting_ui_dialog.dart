@@ -6,7 +6,7 @@ import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/setting_view.dart';
 import 'package:manhuagui_flutter/service/prefs/app_setting.dart';
 
-/// 漫画页/推荐(漫画受众排行榜)-界面与交互设置 [showUiSettingDialog]
+/// 暂无-界面与交互设置 [showUiSettingDialog]
 /// 我的页-自动登录签到 [updateUiSettingEnableAutoCheckin]
 
 Future<bool> showUiSettingDialog({required BuildContext context}) async {

@@ -82,6 +82,7 @@ class ViewSetting {
     required this.fullscreen,
     required this.preloadCount,
     required this.pageNoPosition,
+    required this.showNotWifiHint,
     required this.hideAppBarWhenEnter,
     required this.appBarSwitchBehavior,
     required this.useChapterAssistant,
@@ -98,12 +99,13 @@ class ViewSetting {
   final bool keepScreenOn; // 屏幕常亮
   final bool fullscreen; // 全屏阅读
   // 高级设置
-  final int preloadCount; // 预加载章节页数
-  final PageNoPosition pageNoPosition; // 每页显示额外页码
+  final int preloadCount; // 预加载页数
+  final PageNoPosition pageNoPosition; // 每页单独显示页码
+  final bool showNotWifiHint; // 非WIFI网络阅读提醒
   final bool hideAppBarWhenEnter; // 进入时隐藏标题栏
   final AppBarSwitchBehavior appBarSwitchBehavior; // 切换章节时标题栏行为
   final bool useChapterAssistant; // 使用单手章节跳转助手
-  final AssistantActionSetting assistantActionSetting; // 章节跳转助手按钮动作
+  final AssistantActionSetting assistantActionSetting; // 章节跳转助手动作设置
 
   static const defaultSetting = ViewSetting(
     viewDirection: ViewDirection.leftToRight,
@@ -116,6 +118,7 @@ class ViewSetting {
     fullscreen: false,
     preloadCount: 3,
     pageNoPosition: PageNoPosition.hide,
+    showNotWifiHint: true,
     hideAppBarWhenEnter: true,
     appBarSwitchBehavior: AppBarSwitchBehavior.keep,
     useChapterAssistant: true,
@@ -133,6 +136,7 @@ class ViewSetting {
     bool? fullscreen,
     int? preloadCount,
     PageNoPosition? pageNoPosition,
+    bool? showNotWifiHint,
     bool? hideAppBarWhenEnter,
     AppBarSwitchBehavior? appBarSwitchBehavior,
     bool? useChapterAssistant,
@@ -149,6 +153,7 @@ class ViewSetting {
       fullscreen: fullscreen ?? this.fullscreen,
       preloadCount: preloadCount ?? this.preloadCount,
       pageNoPosition: pageNoPosition ?? this.pageNoPosition,
+      showNotWifiHint: showNotWifiHint ?? this.showNotWifiHint,
       hideAppBarWhenEnter: hideAppBarWhenEnter ?? this.hideAppBarWhenEnter,
       appBarSwitchBehavior: appBarSwitchBehavior ?? this.appBarSwitchBehavior,
       useChapterAssistant: useChapterAssistant ?? this.useChapterAssistant,
@@ -167,6 +172,7 @@ class ViewSetting {
         fullscreen == other.fullscreen &&
         preloadCount == other.preloadCount &&
         pageNoPosition == other.pageNoPosition &&
+        showNotWifiHint == other.showNotWifiHint &&
         hideAppBarWhenEnter == other.hideAppBarWhenEnter &&
         appBarSwitchBehavior == other.appBarSwitchBehavior &&
         useChapterAssistant == other.useChapterAssistant &&
@@ -319,7 +325,7 @@ class AssistantActionSetting {
   final AssistantAction rightTop; // 右上角的按钮动作
   final AssistantAction leftBottom; // 左下角的按钮动作
   final AssistantAction rightBottom; // 右下角的按钮动作
-  final bool allowReverse; // 允许随着左右变更修改按钮动作
+  final bool allowReverse; // 允许随着左右变更调整按钮动作
 
   static const defaultSetting = AssistantActionSetting(
     leftTop: AssistantAction.none,
@@ -609,7 +615,6 @@ class UiSetting {
     required this.clickToSearch,
     required this.alwaysOpenNewListPage,
     required this.enableAutoCheckin,
-    required this.showNotWifiHint,
   });
 
   // 列表显示设置
@@ -621,14 +626,14 @@ class UiSetting {
   final bool highlightRecentMangas; // 高亮最近更新的漫画
   // 漫画显示设置
   final ReadGroupBehavior readGroupBehavior; // 点击阅读章节分组行为
-  final int regularGroupRows; // 单话章节分组显示行数
-  final int otherGroupRows; // 其他章节分组显示行数
+  final int regularGroupRows; // 单话分组章节显示数量
+  final int otherGroupRows; // 其他分组章节显示数量
   final bool showLastHistory; // 显示上上次章节阅读历史
   final bool overviewLoadAll; // 章节一览页加载所有图片
   // 首页显示设置
   final bool homepageShowMoreMangas; // 首页显示更多漫画
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
-  final int audienceRankingRows; // 首页受众排行榜显示行数
+  final int audienceRankingRows; // 首页受众排行榜显示数量
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
   final HomepageRefreshData homepageRefreshData; // 首页下拉刷新行为
   // 用户交互设置
@@ -636,7 +641,6 @@ class UiSetting {
   final bool alwaysOpenNewListPage; // 始终在新页面打开列表
   final bool enableAutoCheckin; // 启用自动登录签到功能
   final bool allowErrorToast; // 阅读时允许弹出错误提示
-  final bool showNotWifiHint; // 使用非WIFI网络阅读时提醒
 
   static const defaultSetting = UiSetting(
     showTwoColumns: false,
@@ -659,7 +663,6 @@ class UiSetting {
     alwaysOpenNewListPage: false,
     enableAutoCheckin: false,
     allowErrorToast: true,
-    showNotWifiHint: true,
   );
 
   UiSetting copyWith({
@@ -683,7 +686,6 @@ class UiSetting {
     bool? alwaysOpenNewListPage,
     bool? enableAutoCheckin,
     bool? allowErrorToast,
-    bool? showNotWifiHint,
   }) {
     return UiSetting(
       showTwoColumns: showTwoColumns ?? this.showTwoColumns,
@@ -706,7 +708,6 @@ class UiSetting {
       alwaysOpenNewListPage: alwaysOpenNewListPage ?? this.alwaysOpenNewListPage,
       enableAutoCheckin: enableAutoCheckin ?? this.enableAutoCheckin,
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
-      showNotWifiHint: showNotWifiHint ?? this.showNotWifiHint,
     );
   }
 
@@ -730,8 +731,7 @@ class UiSetting {
         homepageRefreshData == other.homepageRefreshData &&
         clickToSearch == other.clickToSearch &&
         alwaysOpenNewListPage == other.alwaysOpenNewListPage &&
-        enableAutoCheckin == other.enableAutoCheckin &&
-        showNotWifiHint == other.showNotWifiHint;
+        enableAutoCheckin == other.enableAutoCheckin;
   }
 }
 

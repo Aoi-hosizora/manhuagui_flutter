@@ -37,6 +37,7 @@ class AppSettingPrefs {
   static const _fullscreenKey = BoolKey('AppSettingPrefs_fullscreen');
   static const _preloadCountKey = IntKey('AppSettingPrefs_preloadCount');
   static const _pageNoPositionKey = IntKey('AppSettingPrefs_pageNoPosition');
+  static const _showNotWifiHintKey = BoolKey('AppSettingPrefs_showNotWifiHint');
   static const _hideAppBarWhenEnterKey = BoolKey('AppSettingPrefs_hideAppBarWhenEnter');
   static const _appBarSwitchBehaviorKey = IntKey('AppSettingPrefs_appBarSwitchBehavior');
   static const _useChapterAssistantKey = BoolKey('AppSettingPrefs_useChapterAssistant');
@@ -53,6 +54,7 @@ class AppSettingPrefs {
         _fullscreenKey,
         _preloadCountKey,
         _pageNoPositionKey,
+        _showNotWifiHintKey,
         _hideAppBarWhenEnterKey,
         _appBarSwitchBehaviorKey,
         _useChapterAssistantKey,
@@ -73,6 +75,7 @@ class AppSettingPrefs {
       fullscreen: prefs.safeGet<bool>(_fullscreenKey) ?? def.fullscreen,
       preloadCount: prefs.safeGet<int>(_preloadCountKey) ?? def.preloadCount,
       pageNoPosition: PageNoPositionExtension.fromInt(prefs.safeGet<int>(_pageNoPositionKey) ?? def.pageNoPosition.toInt()),
+      showNotWifiHint: prefs.safeGet<bool>(_showNotWifiHintKey) ?? def.showNotWifiHint,
       hideAppBarWhenEnter: prefs.safeGet<bool>(_hideAppBarWhenEnterKey) ?? def.hideAppBarWhenEnter,
       appBarSwitchBehavior: AppBarSwitchBehaviorExtension.fromInt(prefs.safeGet<int>(_appBarSwitchBehaviorKey) ?? def.appBarSwitchBehavior.toInt()),
       useChapterAssistant: prefs.safeGet<bool>(_useChapterAssistantKey) ?? def.useChapterAssistant,
@@ -93,6 +96,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_fullscreenKey, setting.fullscreen);
     await prefs.safeSet<int>(_preloadCountKey, setting.preloadCount);
     await prefs.safeSet<int>(_pageNoPositionKey, setting.pageNoPosition.toInt());
+    await prefs.safeSet<bool>(_showNotWifiHintKey, setting.showNotWifiHint);
     await prefs.safeSet<bool>(_hideAppBarWhenEnterKey, setting.hideAppBarWhenEnter);
     await prefs.safeSet<int>(_appBarSwitchBehaviorKey, setting.appBarSwitchBehavior.toInt());
     await prefs.safeSet<bool>(_useChapterAssistantKey, setting.useChapterAssistant);
@@ -163,7 +167,6 @@ class AppSettingPrefs {
   static const _alwaysOpenNewListPageKey = BoolKey('AppSettingPrefs_alwaysOpenNewListPage');
   static const _enableAutoCheckinKey = BoolKey('AppSettingPrefs_enableAutoCheckin');
   static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
-  static const _showNotWifiHintKey = BoolKey('AppSettingPrefs_showNotWifiHint');
 
   static List<TypedKey> get uiSettingKeys => [
         _showTwoColumnsKey,
@@ -186,7 +189,6 @@ class AppSettingPrefs {
         _alwaysOpenNewListPageKey,
         _enableAutoCheckinKey,
         _allowErrorToastKey,
-        _showNotWifiHintKey,
       ];
 
   static Future<UiSetting> _loadUiSetting() async {
@@ -213,7 +215,6 @@ class AppSettingPrefs {
       alwaysOpenNewListPage: prefs.safeGet<bool>(_alwaysOpenNewListPageKey) ?? def.alwaysOpenNewListPage,
       enableAutoCheckin: prefs.safeGet<bool>(_enableAutoCheckinKey) ?? def.enableAutoCheckin,
       allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
-      showNotWifiHint: prefs.safeGet<bool>(_showNotWifiHintKey) ?? def.showNotWifiHint,
     );
   }
 
@@ -240,7 +241,6 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_alwaysOpenNewListPageKey, setting.alwaysOpenNewListPage);
     await prefs.safeSet<bool>(_enableAutoCheckinKey, setting.enableAutoCheckin);
     await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
-    await prefs.safeSet<bool>(_showNotWifiHintKey, setting.showNotWifiHint);
   }
 
   // =============

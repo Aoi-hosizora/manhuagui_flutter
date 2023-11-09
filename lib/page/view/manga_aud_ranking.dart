@@ -5,8 +5,8 @@ import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/setting_ui_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
+import 'package:manhuagui_flutter/page/setting_ui.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
@@ -171,18 +171,19 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
           IconTextDialogOption(
             icon: Icon(Icons.whatshot),
             text: Text('查看完整的排行榜'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              widget.onFullListPressed?.call(type);
-            },
+            popWhenPress: c,
+            onPressed: () => widget.onFullListPressed?.call(type),
           ),
           IconTextDialogOption(
             icon: Icon(Icons.settings),
             text: Text('受众排行榜显示设置'),
-            onPressed: () {
-              Navigator.of(c).pop();
-              showUiSettingDialog(context: context);
-            },
+            popWhenPress: c,
+            onPressed: () => Navigator.of(context).push(
+              CustomPageRoute(
+                context: context,
+                builder: (c) => UiSettingPage(),
+              ),
+            ),
           ),
         ],
       ),

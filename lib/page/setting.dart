@@ -51,7 +51,7 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
       color: Colors.white,
       child: InkWell(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: IconText(
             icon: Icon(icon, color: Colors.black54),
             text: Text(title, style: Theme.of(context).textTheme.subtitle1),

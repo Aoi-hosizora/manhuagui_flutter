@@ -121,7 +121,7 @@ class MultiSelectionFabContainer extends StatelessWidget {
                         data: IconThemeData(
                           color: opt.enable //
                               ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context).colorScheme.onPrimary.withOpacity(0.4),
+                              : Theme.of(context).colorScheme.onPrimary.withOpacity(0.35),
                         ),
                         child: opt.child,
                       ),

@@ -51,4 +51,6 @@ class CustomIcons {
   static const IconData history_menu = IconData(0xe81f, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData sort_book_ascending = IconData(0xe820, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData sort_book_descending = IconData(0xe821, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData image_concat_right = IconData(0xe822, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData image_concat_left = IconData(0xe823, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

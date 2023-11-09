@@ -56,7 +56,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _alwaysOpenNewListPage = widget.setting.alwaysOpenNewListPage;
   late var _enableAutoCheckin = widget.setting.enableAutoCheckin;
   late var _allowErrorToast = widget.setting.allowErrorToast;
-  late var _showNotWifiHint = widget.setting.showNotWifiHint;
 
   UiSetting get _newestSetting => UiSetting(
         showTwoColumns: _showTwoColumns,
@@ -79,7 +78,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         alwaysOpenNewListPage: _alwaysOpenNewListPage,
         enableAutoCheckin: _enableAutoCheckin,
         allowErrorToast: _allowErrorToast,
-        showNotWifiHint: _showNotWifiHint,
       );
 
   void _setToDefault() {
@@ -104,14 +102,13 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _alwaysOpenNewListPage = setting.alwaysOpenNewListPage;
     _enableAutoCheckin = setting.enableAutoCheckin;
     _allowErrorToast = setting.allowErrorToast;
-    _showNotWifiHint = setting.showNotWifiHint;
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     var map = <String, List<Widget>>{
-      '列表显示设置': [
+      '列表页设置': [
         SettingSwitcherView(
           style: widget.style,
           title: '以双列风格显示列表',
@@ -147,7 +144,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           style: widget.style,
           title: '列表内显示右下角图标',
           hint: '该选项影响漫画列表与漫画作者列表，其中：\n\n'
-              '1. 漫画列表右下角图标含义为："在下载列表中"、"在我的书架上"、"在本地收藏中"、"已被阅读或浏览"；\n'
+              '1. 漫画列表右下角图标含义为："在下载列表中"、"在我的书架上"、"在本地收藏中"、"在稍后阅读列表中"、"已被阅读或浏览"；\n'
               '2. 漫画作者列表右下角图标含义为："在本地收藏中"。\n\n'
               '提示：上述信息都来源于本地记录或同步的数据，显示这些图标并不会增加网络请求次数。',
           value: _enableCornerIcons,
@@ -177,7 +174,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
       ],
-      '漫画显示设置': [
+      '漫画页设置': [
         SettingComboBoxView<ReadGroupBehavior>(
           style: widget.style,
           title: '点击阅读章节分组行为',
@@ -196,7 +193,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingComboBoxView<int>(
           style: widget.style,
-          title: '单话章节分组显示行数',
+          title: '单话分组章节显示数量',
           width: 75,
           value: _regularGroupRows.clamp(1, 8),
           values: const [1, 2, 3, 4, 5, 6, 7, 8],
@@ -208,7 +205,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingComboBoxView<int>(
           style: widget.style,
-          title: '其他章节分组显示行数',
+          title: '其他分组章节显示数量',
           width: 75,
           value: _otherGroupRows.clamp(1, 5),
           values: const [1, 2, 3, 4, 5],
@@ -220,7 +217,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingSwitcherView(
           style: widget.style,
-          title: '显示上上次章节阅读历史',
+          title: '高亮上上次章节阅读历史',
           value: _showLastHistory,
           onChanged: (b) {
             _showLastHistory = b;
@@ -241,7 +238,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
       ],
-      '首页显示设置': [
+      '首页设置': [
         SettingSwitcherView(
           style: widget.style,
           title: '首页显示更多漫画',
@@ -262,7 +259,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         ),
         SettingComboBoxView<int>(
           style: widget.style,
-          title: '首页受众排行榜显示行数',
+          title: '首页受众排行榜显示数量',
           width: 75,
           value: _audienceMangaRows.clamp(4, 10),
           values: const [4, 5, 6, 7, 8, 9, 10],
@@ -297,7 +294,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           },
         ),
       ],
-      '交互行为设置': [
+      '其他页设置': [
         SettingSwitcherView(
           style: widget.style,
           title: '点击搜索历史立即搜索',
@@ -334,15 +331,6 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _allowErrorToast,
           onChanged: (b) {
             _allowErrorToast = b;
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          style: widget.style,
-          title: '使用非WIFI网络阅读时提醒',
-          value: _showNotWifiHint,
-          onChanged: (b) {
-            _showNotWifiHint = b;
             if (mounted) setState(() {});
           },
         ),
