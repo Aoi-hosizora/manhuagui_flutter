@@ -28,6 +28,33 @@ class NewBadge extends StatelessWidget {
   }
 }
 
+class LaterBadge extends StatelessWidget {
+  const LaterBadge({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      right: 0,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
+        decoration: BoxDecoration(
+          color: Colors.blueGrey,
+          borderRadius: BorderRadius.all(Radius.circular(2.0)),
+        ),
+        child: Text(
+          'LATER', // TODO improve badge style
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 enum DownloadBadgeState {
   downloading,
   done,

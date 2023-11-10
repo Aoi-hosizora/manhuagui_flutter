@@ -740,6 +740,30 @@ class _DialogHelper {
     EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.added, fromMangaPage: fromMangaPage));
   }
 
+  // => called by showPopupMenuForMangaToc
+  Future<void> markChapterLater({
+    required int chapterId,
+    required String chapterTitle,
+    required void Function(LaterChapter)? onAdded,
+    required bool fromMangaPage,
+  }) async {
+    var newLater = LaterChapter(mangaId: mangaId, chapterId: chapterId, chapterTitle: chapterTitle, createdAt: DateTime.now());
+    await LaterMangaDao.addOrUpdateLaterChapter(username: AuthManager.instance.username, chapter: newLater);
+    onAdded?.call(newLater);
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: true, fromMangaPage: fromMangaPage));
+  }
+
+  // => called by showPopupMenuForMangaToc
+  Future<void> unmarkChapterLater({
+    required int chapterId,
+    required void Function(int)? onRemoved,
+    required bool fromMangaPage,
+  }) async {
+    await LaterMangaDao.deleteLaterChapter(username: AuthManager.instance.username, mid: mangaId, cid: chapterId);
+    onRemoved?.call(chapterId);
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: false, fromMangaPage: fromMangaPage));
+  }
+
   // =========================
   // methods (update favorite)
   // =========================

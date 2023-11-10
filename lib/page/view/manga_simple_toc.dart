@@ -24,6 +24,8 @@ class MangaSimpleTocView extends StatelessWidget {
     this.showTriText = false,
     this.getTriText,
     this.showNewBadge = true,
+    this.laterChecker,
+    this.showLaterBadge = true,
     this.customBadgeBuilder,
     this.itemBuilder,
     required this.onChapterPressed,
@@ -47,6 +49,8 @@ class MangaSimpleTocView extends StatelessWidget {
   final bool showTriText;
   final String Function(TinyMangaChapter)? getTriText;
   final bool showNewBadge;
+  final bool Function(int cid)? laterChecker;
+  final bool showLaterBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
   final void Function(int cid) onChapterPressed;
@@ -77,9 +81,11 @@ class MangaSimpleTocView extends StatelessWidget {
           return [];
         }
         var newBadge = showNewBadge && chapter.isNew ? NewBadge() : null;
+        var laterBadge = showLaterBadge && laterChecker?.call(chapter.cid) == true ? LaterBadge() : null;
         var customBadge = customBadgeBuilder?.call(chapter.cid);
         return [
           if (newBadge != null) newBadge,
+          if (laterBadge != null) laterBadge,
           if (customBadge != null) customBadge,
         ];
       },

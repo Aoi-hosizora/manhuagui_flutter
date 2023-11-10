@@ -1132,6 +1132,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   onFootprintAdded: (fp) => _setState(() => _footprints?[fp.chapterId] = fp),
                   onFootprintsAdded: (fps) => _setState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
                   onFootprintsRemoved: (cids) => _setState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
+                  onLaterMarked: null /* 本页暂不显示稍后阅读的章节 */,
+                  onLaterUnmarked: null,
                   toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
                   navigateWrapper: (navigate) async {
                     await _ScreenHelper.restoreSystemUI();

@@ -39,7 +39,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
   }
 
   var _readHistories = true;
-  var _chapterFootprints = true;
   var _downloadRecords = true;
   var _favoriteMangas = true;
   var _favoriteAuthors = true;
@@ -50,7 +49,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
 
   List<ExportDataType> get _newestTypes => [
         if (_readHistories) ExportDataType.readHistories,
-        if (_chapterFootprints) ExportDataType.chapterFootprints,
         if (_downloadRecords) ExportDataType.downloadRecords,
         if (_favoriteMangas) ExportDataType.favoriteMangas,
         if (_favoriteAuthors) ExportDataType.favoriteAuthors,
@@ -75,15 +73,6 @@ class _ExportDataSubPageState extends State<ExportDataSubPage> {
           value: _readHistories,
           onChanged: (b) {
             _readHistories = b;
-            if (mounted) setState(() {});
-          },
-        ),
-        SettingSwitcherView(
-          style: SettingViewStyle.line,
-          title: ExportDataType.chapterFootprints.toTypeTitle(),
-          value: _chapterFootprints,
-          onChanged: (b) {
-            _chapterFootprints = b;
             if (mounted) setState(() {});
           },
         ),

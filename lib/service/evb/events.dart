@@ -156,6 +156,15 @@ class FootprintUpdatedEvent {
   final bool fromMangaHistoryPage;
 }
 
+class LaterChapterUpdatedEvent {
+  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.fromMangaPage = false});
+
+  final int mangaId;
+  final int chapterId;
+  final bool added;
+  final bool fromMangaPage;
+}
+
 class MarkedCategoryUpdatedEvent {
   const MarkedCategoryUpdatedEvent({required this.categoryName, required this.added});
 

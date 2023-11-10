@@ -428,6 +428,8 @@ void showPopupMenuForMangaToc({
   required void Function(ChapterFootprint footprint)? onFootprintAdded,
   required void Function(List<ChapterFootprint> footprints)? onFootprintsAdded,
   required void Function(List<int> chapterIds)? onFootprintsRemoved,
+  required void Function(LaterChapter later)? onLaterMarked,
+  required void Function(int chapterId)? onLaterUnmarked,
   void Function()? toSwitchChapter, // => only for switching chapter in MangaViewerPage
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
 }) async {
@@ -439,6 +441,7 @@ void showPopupMenuForMangaToc({
   var readChapterPage = historyEntity?.chapterId == chapter.cid ? historyEntity!.chapterPage : (historyEntity?.lastChapterId == chapter.cid ? historyEntity?.lastChapterPage : null);
   var allowDeletingHistory = toSwitchChapter == null || historyEntity?.chapterId != chapter.cid;
   var isInFootprint = await HistoryDao.checkFootprintExistence(username: AuthManager.instance.username, mid: mangaId, cid: chapter.cid) ?? false;
+  var isLaterChapter = await LaterMangaDao.checkChapterExistence(username: AuthManager.instance.username, mid: mangaId, cid: chapter.cid) ?? false;
 
   var helper = _DialogHelper(
     context: context,
@@ -536,6 +539,22 @@ void showPopupMenuForMangaToc({
             text: Text('记录为已阅读') /* 添加章节阅读历史 */,
             popWhenPress: c,
             onPressed: () => helper.addChapterFootprint(chapterId: chapter.cid, onAdded: onFootprintAdded, fromHistoryList: false, fromMangaPage: fromMangaPage),
+          ),
+
+        /// 稍后
+        if (!isLaterChapter)
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.clockPlus),
+            text: Text('标记为稍后阅读'),
+            popWhenPress: c,
+            onPressed: () => helper.markChapterLater(chapterId: chapter.cid, chapterTitle: chapter.title, onAdded: onLaterMarked, fromMangaPage: fromMangaPage),
+          ),
+        if (isLaterChapter)
+          IconTextDialogOption(
+            icon: Icon(MdiIcons.clockMinus),
+            text: Text('取消标记稍后阅读'),
+            popWhenPress: c,
+            onPressed: () => helper.unmarkChapterLater(chapterId: chapter.cid, onRemoved: onLaterUnmarked, fromMangaPage: fromMangaPage),
           ),
 
         /// 查看信息

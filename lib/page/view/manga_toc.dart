@@ -27,6 +27,8 @@ class MangaTocView extends StatefulWidget {
     this.showTriText = false,
     this.getTriText,
     this.showNewBadge = true,
+    this.laterChecker,
+    this.showLaterBadge = true,
     this.customBadgeBuilder,
     this.itemBuilder,
     required this.onChapterPressed,
@@ -54,6 +56,8 @@ class MangaTocView extends StatefulWidget {
   final bool showTriText;
   final String Function(TinyMangaChapter)? getTriText;
   final bool showNewBadge;
+  final bool Function(int cid)? laterChecker;
+  final bool showLaterBadge;
   final Widget? Function(int cid)? customBadgeBuilder;
   final Widget Function(BuildContext context, int? cid, Widget itemWidget)? itemBuilder;
   final void Function(int cid) onChapterPressed;
@@ -164,9 +168,11 @@ class _MangaTocViewState extends State<MangaTocView> {
           return [];
         }
         var newBadge = widget.showNewBadge && chapter.isNew ? NewBadge() : null;
+        var laterBadge = widget.showLaterBadge && widget.laterChecker?.call(chapter.cid) == true ? LaterBadge() : null;
         var customBadge = widget.customBadgeBuilder?.call(chapter.cid);
         return [
           if (newBadge != null) newBadge,
+          if (laterBadge != null) laterBadge,
           if (customBadge != null) customBadge,
         ];
       },

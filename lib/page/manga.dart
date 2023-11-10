@@ -90,6 +90,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) => _updateByEvent(favoriteEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterChapterUpdatedEvent>((ev) => _updateByEvent(laterChapterEvent: ev)));
   }
 
   @override
@@ -106,6 +107,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
   TinyMangaChapter? _firstChapter;
   MangaHistory? _history;
   Map<int, ChapterFootprint>? _footprints;
+  Map<int, LaterChapter>? _laterChapters;
   DownloadedManga? _downloadEntity;
 
   int? _subscribeCount;
@@ -152,6 +154,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
     _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 章节历史
     _downloadEntity = await DownloadDao.getManga(mid: widget.id); // 下载记录
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id); // 本地收藏
+    _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 稍后阅读
     _inFavorite = _favoriteManga != null;
     _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id); // 稍后阅读
 
@@ -318,12 +321,14 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
     FavoriteUpdatedEvent? favoriteEvent,
     LaterUpdatedEvent? laterEvent,
     FootprintUpdatedEvent? footprintEvent,
+    LaterChapterUpdatedEvent? laterChapterEvent,
   }) async {
     if (authEvent != null) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id); // 阅读历史
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 章节历史
       _subscribeCount = null;
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id);
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 稍后阅读
       _inShelf = false;
       _inFavorite = _favoriteManga != null;
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id); // 稍后阅读
@@ -358,6 +363,11 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
 
     if (footprintEvent != null && !footprintEvent.fromMangaPage && footprintEvent.mangaId == widget.id) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {};
+      if (mounted) setState(() {});
+    }
+
+    if (laterChapterEvent != null && !laterChapterEvent.fromMangaPage && laterChapterEvent.mangaId == widget.id) {
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -1016,6 +1026,12 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       onFootprintsRemoved: forMangaPage //
           ? (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key)))
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
+      onLaterMarked: forMangaPage //
+          ? (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l)
+          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
+      onLaterUnmarked: forMangaPage //
+          ? (cid) => mountedSetState(() => _laterChapters?.remove(cid))
+          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
     );
   }
 
@@ -1550,6 +1566,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                     highlighted2Chapters: [_history?.lastChapterId ?? 0],
                     showHighlight2: AppSetting.instance.ui.showLastHistory,
                     faintedChapters: _footprints?.keys.toList() ?? [],
+                    laterChecker: (cid) => _laterChapters?.containsKey(cid) == true,
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                     ),

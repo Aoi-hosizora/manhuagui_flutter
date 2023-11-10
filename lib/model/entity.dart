@@ -130,7 +130,7 @@ class ChapterFootprint {
   });
 
   String get formattedCreatedAt => // for manga chapter history page
-      formatDatetimeAndDuration(createdAt, FormatPattern.durationOneDayOrDatetimeNoYrNoSec); // TODO test
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationOneDayOrDatetimeNoYrNoSec);
 
   ChapterFootprint? copyWith({
     int? mangaId,
@@ -670,5 +670,40 @@ class LaterManga {
         createdAt == o.createdAt &&
         newestChapter == o.newestChapter &&
         newestDate == o.newestDate;
+  }
+}
+
+class LaterChapter {
+  final int mangaId;
+  final int chapterId;
+  final String chapterTitle;
+  final DateTime createdAt;
+
+  const LaterChapter({
+    required this.mangaId,
+    required this.chapterId,
+    required this.chapterTitle,
+    required this.createdAt,
+  });
+
+  LaterChapter copyWith({
+    int? mangaId,
+    int? chapterId,
+    String? chapterTitle,
+    DateTime? createdAt,
+  }) {
+    return LaterChapter(
+      mangaId: mangaId ?? this.mangaId,
+      chapterId: chapterId ?? this.chapterId,
+      chapterTitle: chapterTitle ?? this.chapterTitle,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  bool equals(LaterChapter o) {
+    return mangaId == o.mangaId && //
+        chapterId == o.chapterId &&
+        chapterTitle == o.chapterTitle &&
+        createdAt == o.createdAt;
   }
 }

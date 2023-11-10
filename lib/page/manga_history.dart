@@ -357,6 +357,8 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
       onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
       onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
+      onLaterMarked: null /* 本页不显示稍后阅读的章节 */,
+      onLaterUnmarked: null,
     );
   }
 
@@ -500,7 +502,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
                                 scaleAlignment: Alignment.bottomRight,
                               ),
                               useFullRipple: true,
-                              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(chapterId: key.value) :tip.toToggle?.call(),
+                              onFullRippleLongPressed: (c, key, tip) => _msController.selectedItems.length == 1 && tip.selected ? _showPopupMenu(chapterId: key.value) : tip.toToggle?.call(),
                               itemBuilder: (_, key, tip) => itemWidget /* single grid */,
                             ),
                       onChapterPressed: (cid) => _showPopupMenu(chapterId: cid),

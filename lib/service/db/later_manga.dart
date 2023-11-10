@@ -10,19 +10,32 @@ class LaterMangaDao {
   LaterMangaDao._();
 
   static const _tblLaterManga = 'tbl_later_manga';
-  static const _colUsername = 'username';
-  static const _colMangaId = 'id';
-  static const _colMangaTitle = 'manga_title';
-  static const _colMangaCover = 'manga_cover';
-  static const _colMangaUrl = 'manga_url';
-  static const _colNewestChapter = 'newest_chapter';
-  static const _colNewestDate = 'newest_date';
-  static const _colCreatedAt = 'created_at';
+  static const _colLmUsername = 'username';
+  static const _colLmMangaId = 'id';
+  static const _colLmMangaTitle = 'manga_title';
+  static const _colLmMangaCover = 'manga_cover';
+  static const _colLmMangaUrl = 'manga_url';
+  static const _colLmNewestChapter = 'newest_chapter';
+  static const _colLmNewestDate = 'newest_date';
+  static const _colLmCreatedAt = 'created_at';
 
   static const laterMangaMetadata = TableMetadata(
     tableName: _tblLaterManga,
-    primaryKeys: [_colUsername, _colMangaId],
-    columns: [_colUsername, _colMangaId, _colMangaTitle, _colMangaCover, _colMangaUrl, _colNewestChapter, _colNewestDate, _colCreatedAt],
+    primaryKeys: [_colLmUsername, _colLmMangaId],
+    columns: [_colLmUsername, _colLmMangaId, _colLmMangaTitle, _colLmMangaCover, _colLmMangaUrl, _colLmNewestChapter, _colLmNewestDate, _colLmCreatedAt],
+  );
+
+  static const _tblLaterChapter = 'tbl_later_chapter';
+  static const _colLcUsername = 'username';
+  static const _colLcMangaId = 'manga_id';
+  static const _colLcChapterId = 'chapter_id';
+  static const _colLcChapterTitle = 'chapter_title';
+  static const _colLcCreatedAt = 'created_at';
+
+  static const laterChapterMetadata = TableMetadata(
+    tableName: _tblLaterChapter,
+    primaryKeys: [_colLcUsername, _colLcMangaId, _colLcChapterId],
+    columns: [_colLcUsername, _colLcMangaId, _colLcChapterId, _colLcChapterTitle, _colLcCreatedAt],
   );
 
   static Future<void> createForVer1(Database db) async {
@@ -44,21 +57,33 @@ class LaterMangaDao {
   static Future<void> upgradeFromVer4To5(Database db) async {
     await db.safeExecute('''
       CREATE TABLE $_tblLaterManga(
-        $_colUsername VARCHAR(1023),
-        $_colMangaId INTEGER,
-        $_colMangaTitle VARCHAR(1023),
-        $_colMangaCover VARCHAR(1023),
-        $_colMangaUrl VARCHAR(1023),
-        $_colNewestChapter VARCHAR(1023),
-        $_colNewestDate VARCHAR(1023),
-        $_colCreatedAt DATETIME,
-        PRIMARY KEY ($_colUsername, $_colMangaId)
+        $_colLmUsername VARCHAR(1023),
+        $_colLmMangaId INTEGER,
+        $_colLmMangaTitle VARCHAR(1023),
+        $_colLmMangaCover VARCHAR(1023),
+        $_colLmMangaUrl VARCHAR(1023),
+        $_colLmNewestChapter VARCHAR(1023),
+        $_colLmNewestDate VARCHAR(1023),
+        $_colLmCreatedAt DATETIME,
+        PRIMARY KEY ($_colLmUsername, $_colLmMangaId)
+      )''');
+  }
+
+  static Future<void> upgradeFromVer5To6(Database db) async {
+    await db.safeExecute('''
+      CREATE TABLE $_tblLaterChapter(
+        $_colLcUsername VARCHAR(1023),
+        $_colLcMangaId INTEGER,
+        $_colLcChapterId INTEGER,
+        $_colLcChapterTitle VARCHAR(1023),
+        $_colLcCreatedAt DATETIME,
+        PRIMARY KEY ($_colLcUsername, $_colLcMangaId, $_colLcChapterId)
       )''');
   }
 
   static Tuple2<String, List<String>>? _buildLikeStatement({String? keyword, bool pureSearch = false, bool includeWHERE = false, bool includeAND = false}) {
     return QueryHelper.buildLikeStatement(
-      [_colMangaTitle, if (!pureSearch) _colMangaId],
+      [_colLmMangaTitle, if (!pureSearch) _colLmMangaId],
       keyword,
       includeWHERE: includeWHERE,
       includeAND: includeAND,
@@ -68,9 +93,9 @@ class LaterMangaDao {
   static String _buildOrderByStatement({required SortMethod sortMethod, bool includeORDERBY = false}) {
     return QueryHelper.buildOrderByStatement(
           sortMethod,
-          idColumn: _colMangaId,
-          nameColumn: _colMangaTitle,
-          timeColumn: _colCreatedAt,
+          idColumn: _colLmMangaId,
+          nameColumn: _colLmMangaTitle,
+          timeColumn: _colLmCreatedAt,
           orderColumn: null,
           includeORDERBY: includeORDERBY,
         ) ??
@@ -83,8 +108,22 @@ class LaterMangaDao {
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblLaterManga
-         WHERE $_colUsername = ? ${like?.item1 ?? ''}''',
+         WHERE $_colLmUsername = ? ${like?.item1 ?? ''}''',
       [username, ...(like?.item2 ?? [])],
+    );
+    if (results == null) {
+      return null;
+    }
+    return firstIntValue(results);
+  }
+
+  static Future<int?> getLaterChapterCount({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblLaterChapter
+         WHERE $_colLcUsername = ? AND $_colLcMangaId = ?''',
+      [username, mid],
     );
     if (results == null) {
       return null;
@@ -95,11 +134,26 @@ class LaterMangaDao {
   static Future<bool?> checkExistence({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
-      '''SELECT COUNT($_colMangaId)
+      '''SELECT COUNT($_colLmMangaId)
          FROM $_tblLaterManga
-         WHERE $_colUsername = ? AND $_colMangaId = ?
-         ORDER BY $_colCreatedAt DESC''',
+         WHERE $_colLmUsername = ? AND $_colLmMangaId = ?
+         ORDER BY $_colLmCreatedAt DESC''',
       [username, mid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    return firstIntValue(results)! > 0;
+  }
+
+  static Future<bool?> checkChapterExistence({required String username, required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT($_colLcChapterId)
+         FROM $_tblLaterChapter
+         WHERE $_colLcUsername = ? AND $_colLcMangaId = ? AND $_colLcChapterId = ?
+         ORDER BY $_colLcCreatedAt DESC''',
+      [username, mid, cid],
     );
     if (results == null || results.isEmpty) {
       return null;
@@ -116,10 +170,10 @@ class LaterMangaDao {
       offset = 0;
     }
     var results = await db.safeRawQuery(
-      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt
+      '''SELECT $_colLmMangaId, $_colLmMangaTitle, $_colLmMangaCover, $_colLmMangaUrl, $_colLmNewestChapter, $_colLmNewestDate, $_colLmCreatedAt
          FROM $_tblLaterManga
-         WHERE $_colUsername = ? ${like?.item1 ?? ''}
-         ORDER BY $orderBy, $_colCreatedAt DESC
+         WHERE $_colLmUsername = ? ${like?.item1 ?? ''}
+         ORDER BY $orderBy, $_colLmCreatedAt DESC
          LIMIT $limit OFFSET $offset''',
       [username, ...(like?.item2 ?? [])],
     );
@@ -129,25 +183,58 @@ class LaterMangaDao {
     var out = <LaterManga>[];
     for (var r in results) {
       out.add(LaterManga(
-        mangaId: r[_colMangaId]! as int,
-        mangaTitle: r[_colMangaTitle]! as String,
-        mangaCover: r[_colMangaCover]! as String,
-        mangaUrl: r[_colMangaUrl]! as String,
-        newestChapter: r[_colNewestChapter] as String?,
-        newestDate: r[_colNewestDate] as String?,
-        createdAt: DateTime.parse(r[_colCreatedAt]! as String),
+        mangaId: r[_colLmMangaId]! as int,
+        mangaTitle: r[_colLmMangaTitle]! as String,
+        mangaCover: r[_colLmMangaCover]! as String,
+        mangaUrl: r[_colLmMangaUrl]! as String,
+        newestChapter: r[_colLmNewestChapter] as String?,
+        newestDate: r[_colLmNewestDate] as String?,
+        createdAt: DateTime.parse(r[_colLmCreatedAt]! as String),
       ));
     }
     return out;
   }
 
+  static Future<List<LaterChapter>?> getLaterChapters({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT $_colLcChapterId, $_colLcChapterTitle, $_colLcCreatedAt
+         FROM $_tblLaterChapter
+         WHERE $_colLcUsername = ? AND $_colLcMangaId = ?
+         ORDER BY $_colLcCreatedAt DESC, $_colLcChapterId DESC''',
+      [username, mid],
+    );
+    if (results == null) {
+      return null;
+    }
+    var out = <LaterChapter>[];
+    for (var r in results) {
+      out.add(LaterChapter(
+        mangaId: mid,
+        chapterId: r[_colLcChapterId]! as int,
+        chapterTitle: r[_colLcChapterTitle]! as String,
+        createdAt: DateTime.parse(r[_colLcCreatedAt]! as String),
+      ));
+    }
+    return out;
+  }
+
+  static Future<Map<int, LaterChapter>?> getLaterChaptersSet({required String username, required int mid}) async {
+    var laters = await getLaterChapters(username: username, mid: mid);
+    if (laters == null) {
+      return null;
+    }
+    return <int, LaterChapter>{for (var l in laters) l.chapterId: l};
+  }
+
+
   static Future<LaterManga?> getLaterManga({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
-      '''SELECT $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt
+      '''SELECT $_colLmMangaTitle, $_colLmMangaCover, $_colLmMangaUrl, $_colLmNewestChapter, $_colLmNewestDate, $_colLmCreatedAt
          FROM $_tblLaterManga
-         WHERE $_colUsername = ? AND $_colMangaId = ?
-         ORDER BY $_colCreatedAt DESC
+         WHERE $_colLmUsername = ? AND $_colLmMangaId = ?
+         ORDER BY $_colLmCreatedAt DESC
          LIMIT 1''',
       [username, mid],
     );
@@ -157,22 +244,22 @@ class LaterMangaDao {
     var r = results.first;
     return LaterManga(
       mangaId: mid,
-      mangaTitle: r[_colMangaTitle]! as String,
-      mangaCover: r[_colMangaCover]! as String,
-      mangaUrl: r[_colMangaUrl]! as String,
-      newestChapter: r[_colNewestChapter] as String?,
-      newestDate: r[_colNewestDate] as String?,
-      createdAt: DateTime.parse(r[_colCreatedAt]! as String),
+      mangaTitle: r[_colLmMangaTitle]! as String,
+      mangaCover: r[_colLmMangaCover]! as String,
+      mangaUrl: r[_colLmMangaUrl]! as String,
+      newestChapter: r[_colLmNewestChapter] as String?,
+      newestDate: r[_colLmNewestDate] as String?,
+      createdAt: DateTime.parse(r[_colLmCreatedAt]! as String),
     );
   }
 
   static Future<List<DateTime>> getLaterMangaDates({required String username}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
-      '''SELECT DISTINCT DATE($_colCreatedAt) AS date
+      '''SELECT DISTINCT DATE($_colLmCreatedAt) AS date
          FROM $_tblLaterManga
-         WHERE $_colUsername = ?
-         ORDER BY $_colCreatedAt DESC''',
+         WHERE $_colLmUsername = ?
+         ORDER BY $_colLmCreatedAt DESC''',
       [username],
     );
     if (results == null) {
@@ -191,7 +278,7 @@ class LaterMangaDao {
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblLaterManga
-         WHERE $_colUsername = ? AND DATE($_colCreatedAt) = ?''',
+         WHERE $_colLmUsername = ? AND DATE($_colLmCreatedAt) = ?''',
       [username, formatDatetimeAndDuration(datetime, FormatPattern.barredDate)],
     );
     if (results == null) {
@@ -208,10 +295,10 @@ class LaterMangaDao {
       offset = 0;
     }
     var results = await db.safeRawQuery(
-      '''SELECT $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt
+      '''SELECT $_colLmMangaId, $_colLmMangaTitle, $_colLmMangaCover, $_colLmMangaUrl, $_colLmNewestChapter, $_colLmNewestDate, $_colLmCreatedAt
          FROM $_tblLaterManga
-         WHERE $_colUsername = ? AND DATE($_colCreatedAt) = ?
-         ORDER BY $orderBy, $_colCreatedAt DESC
+         WHERE $_colLmUsername = ? AND DATE($_colLmCreatedAt) = ?
+         ORDER BY $orderBy, $_colLmCreatedAt DESC
          LIMIT $limit OFFSET $offset''',
       [username, formatDatetimeAndDuration(datetime, FormatPattern.barredDate)],
     );
@@ -221,16 +308,38 @@ class LaterMangaDao {
     var out = <LaterManga>[];
     for (var r in results) {
       out.add(LaterManga(
-        mangaId: r[_colMangaId]! as int,
-        mangaTitle: r[_colMangaTitle]! as String,
-        mangaCover: r[_colMangaCover]! as String,
-        mangaUrl: r[_colMangaUrl]! as String,
-        newestChapter: r[_colNewestChapter] as String?,
-        newestDate: r[_colNewestDate] as String?,
-        createdAt: DateTime.parse(r[_colCreatedAt]! as String),
+        mangaId: r[_colLmMangaId]! as int,
+        mangaTitle: r[_colLmMangaTitle]! as String,
+        mangaCover: r[_colLmMangaCover]! as String,
+        mangaUrl: r[_colLmMangaUrl]! as String,
+        newestChapter: r[_colLmNewestChapter] as String?,
+        newestDate: r[_colLmNewestDate] as String?,
+        createdAt: DateTime.parse(r[_colLmCreatedAt]! as String),
       ));
     }
     return out;
+  }
+
+  static Future<LaterChapter?> getLaterChapter({required String username, required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT $_colLcChapterTitle, $_colLcCreatedAt
+         FROM $_tblLaterChapter
+         WHERE $_colLcUsername = ? AND $_colLcMangaId = ? AND $_colLcChapterId = ?
+         ORDER BY $_colLcCreatedAt DESC
+         LIMIT 1''',
+      [username, mid, cid],
+    );
+    if (results == null || results.isEmpty) {
+      return null;
+    }
+    var r = results.first;
+    return LaterChapter(
+      mangaId: mid,
+      chapterId: cid,
+      chapterTitle: r[_colLcChapterTitle]! as String,
+      createdAt: DateTime.parse(r[_colLcCreatedAt]! as String),
+    );
   }
 
   static Future<bool> addOrUpdateLaterManga({required String username, required LaterManga manga}) async {
@@ -238,7 +347,7 @@ class LaterMangaDao {
     var results = await db.safeRawQuery(
       '''SELECT COUNT(*)
          FROM $_tblLaterManga
-         WHERE $_colUsername = ? AND $_colMangaId = ?''',
+         WHERE $_colLmUsername = ? AND $_colLmMangaId = ?''',
       [username, manga.mangaId],
     );
     if (results == null) {
@@ -249,16 +358,47 @@ class LaterMangaDao {
     int? rows = 0;
     if (count == 0) {
       rows = await db.safeRawInsert(
-        '''INSERT INTO $_tblLaterManga ($_colUsername, $_colMangaId, $_colMangaTitle, $_colMangaCover, $_colMangaUrl, $_colNewestChapter, $_colNewestDate, $_colCreatedAt)
+        '''INSERT INTO $_tblLaterManga ($_colLmUsername, $_colLmMangaId, $_colLmMangaTitle, $_colLmMangaCover, $_colLmMangaUrl, $_colLmNewestChapter, $_colLmNewestDate, $_colLmCreatedAt)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
         [username, manga.mangaId, manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.newestChapter, manga.newestDate, manga.createdAt.toIso8601String()],
       );
     } else {
       rows = await db.safeRawUpdate(
         '''UPDATE $_tblLaterManga
-           SET $_colMangaTitle = ?, $_colMangaCover = ?, $_colMangaUrl = ?, $_colNewestChapter = ?, $_colNewestDate = ?, $_colCreatedAt = ?
-           WHERE $_colUsername = ? AND $_colMangaId = ?''',
+           SET $_colLmMangaTitle = ?, $_colLmMangaCover = ?, $_colLmMangaUrl = ?, $_colLmNewestChapter = ?, $_colLmNewestDate = ?, $_colLmCreatedAt = ?
+           WHERE $_colLmUsername = ? AND $_colLmMangaId = ?''',
         [manga.mangaTitle, manga.mangaCover, manga.mangaUrl, manga.newestChapter, manga.newestDate, manga.createdAt.toIso8601String(), username, manga.mangaId],
+      );
+    }
+    return rows != null && rows >= 1;
+  }
+
+  static Future<bool> addOrUpdateLaterChapter({required String username, required LaterChapter chapter}) async {
+    final db = await DBManager.instance.getDB();
+    var results = await db.safeRawQuery(
+      '''SELECT COUNT(*)
+         FROM $_tblLaterChapter
+         WHERE $_colLcUsername = ? AND $_colLcMangaId = ? AND $_colLcChapterId = ?''',
+      [username, chapter.mangaId, chapter.chapterId],
+    );
+    if (results == null) {
+      return false;
+    }
+    var count = firstIntValue(results);
+
+    int? rows = 0;
+    if (count == 0) {
+      rows = await db.safeRawInsert(
+        '''INSERT INTO $_tblLaterChapter ($_colLcUsername, $_colLcMangaId, $_colLcChapterId, $_colLcChapterTitle, $_colLcCreatedAt)
+           VALUES (?, ?, ?, ?, ?)''',
+        [username, chapter.mangaId, chapter.chapterId, chapter.chapterTitle, chapter.createdAt.toIso8601String()],
+      );
+    } else {
+      rows = await db.safeRawUpdate(
+        '''UPDATE $_tblLaterChapter
+           SET $_colLcChapterTitle = ?, $_colLcCreatedAt = ?
+           WHERE $_colLcUsername = ? AND $_colLcMangaId = ? AND $_colLcChapterId = ?''',
+        [chapter.chapterTitle, chapter.createdAt.toIso8601String(), username, chapter.mangaId, chapter.chapterId],
       );
     }
     return rows != null && rows >= 1;
@@ -268,7 +408,7 @@ class LaterMangaDao {
     final db = await DBManager.instance.getDB();
     var rows = await db.safeRawDelete(
       '''DELETE FROM $_tblLaterManga
-         WHERE $_colUsername = ?''',
+         WHERE $_colLmUsername = ?''',
       [username],
     );
     return rows != null && rows >= 1;
@@ -278,8 +418,28 @@ class LaterMangaDao {
     final db = await DBManager.instance.getDB();
     var rows = await db.safeRawDelete(
       '''DELETE FROM $_tblLaterManga
-         WHERE $_colUsername = ? AND $_colMangaId = ?''',
+         WHERE $_colLmUsername = ? AND $_colLmMangaId = ?''',
       [username, mid],
+    );
+    return rows != null && rows >= 1;
+  }
+
+  static Future<bool> clearLaterChapters({required String username, required int mid}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblLaterChapter
+         WHERE $_colLcUsername = ? AND $_colLcMangaId''',
+      [username, mid],
+    );
+    return rows != null && rows >= 1;
+  }
+
+  static Future<bool> deleteLaterChapter({required String username, required int mid, required int cid}) async {
+    final db = await DBManager.instance.getDB();
+    var rows = await db.safeRawDelete(
+      '''DELETE FROM $_tblLaterChapter
+         WHERE $_colLcUsername = ? AND $_colLcMangaId = ? AND $_colLcChapterId = ?''',
+      [username, mid, cid],
     );
     return rows != null && rows >= 1;
   }
