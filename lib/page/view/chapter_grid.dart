@@ -84,7 +84,7 @@ class ChapterGridView extends StatelessWidget {
                     child: Text(
                       '共${chapter.pageCount}页',
                       style: Theme.of(context).textTheme.overline?.copyWith(
-                            color: !showFaintColor || faintedChapters.contains(chapter.cid) //
+                            color: !showFaintColor || !faintedChapters.contains(chapter.cid) //
                                 ? Colors.grey[800]
                                 : (faintTextColor ?? defaultFaintTextColor),
                           ),
@@ -95,11 +95,16 @@ class ChapterGridView extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 5, vertical: 4),
                     child: Divider(height: 0, thickness: 1),
                   ),
-                  Text(
-                    getTriText?.call(chapter) ?? '',
-                    style: Theme.of(context).textTheme.overline?.copyWith(
-                          color: Colors.black, // never faint
-                        ),
+                  SizedBox(
+                    height: TextSpan(text: '　', style: Theme.of(context).textTheme.overline).layoutSize(context).height,
+                    child: Center(
+                      child: Text(
+                        getTriText?.call(chapter) ?? '',
+                        style: Theme.of(context).textTheme.overline?.copyWith(
+                              color: Colors.black, // never faint
+                            ),
+                      ),
+                    ),
                   ),
                 ],
               ],

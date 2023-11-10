@@ -138,8 +138,8 @@ class MangaViewerPageData {
 
   String chapterPageHtmlUrl(int imageIndex /* start from 0 */) => '$chapterUrl#p=${imageIndex + 1}';
 
-  String get formattedMetadataUpdatedAt => //
-      metadataUpdatedAt?.let((dt) => formatDatetimeAndDuration(dt, FormatPattern.datetimeDuration)) ?? '未知时间';
+  String get formattedMetadataUpdatedAt => // for view extra subpage offline download metadata banner
+      metadataUpdatedAt?.let((dt) => formatDatetimeAndDuration(dt, FormatPattern.datetimeNoSecDuration)) ?? '未知时间';
 
   MangaViewerPageData updateNeededData({required MangaChapterNeededData? neededData, required bool? getMangaFailed}) {
     return MangaViewerPageData(
@@ -561,10 +561,14 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         prevCid: _data!.chapterNeighbor?.prevChapter?.cid ?? 0 /* 0 => 没有下一章节 (仅在线模式才会更新数据) */,
         updatedAt: DateTime.now(),
       );
-      if (!newData.equals(data) /* updatedAt is ignored */ || data.updatedAt == null /* need to record updatedAt */) {
+      var needToUpdate = !newData.equals(data, ignoreUpdatedAt: true, ignorePages: false) || data.updatedAt == null;
+      var needToToast = !newData.equals(data, ignoreUpdatedAt: true, ignorePages: true) || data.updatedAt == null; // <<< 貌似 pages 偶尔会变化，这种情况下不弹出提醒
+      if (needToUpdate) {
         // no need to update _data, because this method will only be invoked in online mode, which _data is always newest
         await writeMetadataFile(mangaId: widget.mangaId, chapterId: widget.chapterId, metadata: newData);
-        Fluttertoast.showToast(msg: '漫画章节 (${_data!.chapterTitle}) 下载数据已更新');
+        if (needToToast) {
+          Fluttertoast.showToast(msg: '漫画章节 (${_data!.chapterTitle}) 下载数据已更新');
+        }
       }
     }
   }
@@ -1299,12 +1303,15 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   void _showPopupMenu(int imageIndex /* start from 0 */) {
     HapticFeedback.vibrate();
 
-    Future<void> _download(int imageIndex) async {
+    Future<void> _download(int imageIndex, {bool alsoShare = false}) async {
       var tuple = await _getPageUrlAndPrecheckFile(imageIndex);
       if (tuple != null) {
         var url = tuple.item1, file = tuple.item2;
         var f = await downloadImageToGallery(url, precheck: file, convertFromWebp: AppSetting.instance.ui.convertWebpWhenSave);
         Fluttertoast.showToast(msg: f != null ? '第${imageIndex + 1}页已保存至 ${f.path}' : '无法保存第${imageIndex + 1}页');
+        if (f != null && alsoShare) {
+          await shareFile(filepath: f.path, type: 'image/*'); // 保存后分享
+        }
       }
     }
 
@@ -1347,14 +1354,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             text: Text('保存该页'),
             popWhenPress: c,
             onPressed: () => _download(imageIndex),
+            onLongPressed: () => showYesNoAlertDialog(context: context, title: Text('保存并分享'), content: Text('是否保存第${imageIndex + 1}页并分享图片？'), yesText: Text('确定'), noText: Text('取消')) //
+                .then((r) => r?.ifTrue(() => //
+                    callAll([() => Navigator.of(c).pop(), () => _download(imageIndex, alsoShare: true)]))),
           ),
           if (_data!.pageCount > 1)
-          IconTextDialogOption(
-            icon: Icon(CustomIcons.image_multiple_plus),
-            text: Text('合并图片保存'),
-            popWhenPress: c,
-            onPressed: () => _showConcatImagePopupMenu(imageIndex),
-          ),
+            IconTextDialogOption(
+              icon: Icon(CustomIcons.image_multiple_plus),
+              text: Text('合并图片保存'),
+              popWhenPress: c,
+              onPressed: () => _showConcatImagePopupMenu(imageIndex),
+            ),
           IconTextDialogOption(
             icon: Icon(Icons.share),
             text: Text('分享该页链接'),
@@ -1381,7 +1391,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       return;
     }
 
-    Future<void> _concat(int imageIndex1, int imageIndex2, ConcatImageMode mode) async {
+    Future<void> _concat(int imageIndex1, int imageIndex2, ConcatImageMode mode, {bool alsoShare = false}) async {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -1410,10 +1420,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       var url2 = tuple2.item1, file2 = tuple2.item2;
       var f = await downloadAndConcatImagesToGallery(url1, url2, mode, precheck1: file1, precheck2: file2);
       Navigator.of(context).pop(); // dismiss progress dialog
-      if (f != null) {
-        Fluttertoast.showToast(msg: '第${imageIndex1 + 1}页与第${imageIndex2 + 1}页的图片合并结果已保存至 ${f.path}');
-      } else {
+      if (f == null) {
         Fluttertoast.showToast(msg: '无法下载第${imageIndex1 + 1}页与第${imageIndex2 + 1}页');
+      } else {
+        Fluttertoast.showToast(msg: '第${imageIndex1 + 1}页与第${imageIndex2 + 1}页的图片合并结果已保存至 ${f.path}');
+        if (alsoShare) {
+          await shareFile(filepath: f.path, type: 'image/*'); // 合并后分享
+        }
       }
     }
 
@@ -1444,6 +1457,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 text: Text('与第${imageIndex + 1 - 1}页合并保存'),
                 popWhenPress: c,
                 onPressed: () => _concat(imageIndex - 1, imageIndex, concatMode),
+                onLongPressed: () => showYesNoAlertDialog(context: context, title: Text('保存并分享'), content: Text('是否合并保存后分享合并后的图片？'), yesText: Text('确定'), noText: Text('取消')) //
+                    .then((r) => r?.ifTrue(() => //
+                        callAll([() => Navigator.of(c).pop(), () => _concat(imageIndex - 1, imageIndex, concatMode, alsoShare: true)]))),
               ),
             IconTextDialogOption(
               icon: Icon(Icons.image),
@@ -1456,6 +1472,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 text: Text('与第${imageIndex + 1 + 1}页合并保存'),
                 popWhenPress: c,
                 onPressed: () => _concat(imageIndex, imageIndex + 1, concatMode),
+                onLongPressed: () => showYesNoAlertDialog(context: context, title: Text('保存并分享'), content: Text('是否合并保存后分享合并后的图片？'), yesText: Text('确定'), noText: Text('取消')) //
+                    .then((r) => r?.ifTrue(() => //
+                callAll([() => Navigator.of(c).pop(), () => _concat(imageIndex, imageIndex + 1, concatMode, alsoShare: true)]))),
               ),
           ],
         ),

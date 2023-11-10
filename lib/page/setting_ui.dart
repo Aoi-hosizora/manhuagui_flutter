@@ -68,7 +68,7 @@ class _UiSettingPageState extends State<UiSettingPage> with FitSystemScreenshotM
                 var setting = _action.invoke<UiSetting>();
                 if (setting != null) {
                   AppSetting.instance.update(ui: setting, alsoFireEvent: true);
-                  await AppSettingPrefs.saveViewSetting();
+                  await AppSettingPrefs.saveUiSetting();
                   Navigator.of(context).pop(true);
                 }
               },
