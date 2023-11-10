@@ -23,7 +23,8 @@ class Comment {
 
   Map<String, dynamic> toJson() => _$CommentToJson(this);
 
-  String get formattedCommentTime => commentTime.replaceAll('-', '/');
+  String get formattedCommentTime => // for comment line
+      parseDatetimeStringAndTrimSecond(commentTime);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -43,8 +44,6 @@ class RepliedComment {
   factory RepliedComment.fromJson(Map<String, dynamic> json) => _$RepliedCommentFromJson(json);
 
   Map<String, dynamic> toJson() => _$RepliedCommentToJson(this);
-
-  String get formattedCommentTime => commentTime.replaceAll('-', '/');
 
   Comment toComment() {
     return Comment(cid: cid, uid: uid, username: username, avatar: avatar, gender: gender, content: content, likeCount: likeCount, replyCount: replyCount, commentTime: commentTime, replyTimeline: []);

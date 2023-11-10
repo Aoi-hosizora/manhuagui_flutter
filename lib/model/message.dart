@@ -18,11 +18,11 @@ class Message {
 
   Map<String, dynamic> toJson() => _$MessageToJson(this);
 
-  String get createdAtString => //
-      formatDatetimeAndDuration(createdAt.toLocal(), FormatPattern.datetime);
+  String get createdAtString => // for message line and message popup dialog
+      formatDatetimeAndDuration(createdAt.toLocal(), FormatPattern.datetimeNoSec);
 
-  String get updatedAtString => //
-      formatDatetimeAndDuration(updatedAt.toLocal(), FormatPattern.datetime);
+  String get updatedAtString => // for message popup dialog
+      formatDatetimeAndDuration(updatedAt.toLocal(), FormatPattern.datetimeNoSec);
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

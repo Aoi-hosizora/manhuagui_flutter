@@ -278,7 +278,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                '${manga.newestChapter}・${manga.formattedNewestDurationOrTime}',
+                '${manga.newestChapter}・${manga.formattedNewestDurationOrDate}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyText2?.copyWith(fontSize: 12, color: Colors.grey[600]),

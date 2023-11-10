@@ -33,16 +33,16 @@ class MangaHistory {
 
   String get shortChapterTitle => chapterTitle.trim().split(' ')[0];
 
-  String get formattedLastTime => // for manga page
-      formatDatetimeAndDuration(lastTime, FormatPattern.datetime);
+  String get formattedLastTime => // for manga page history banner popup menu
+      formatDatetimeAndDuration(lastTime, FormatPattern.datetimeNoSec);
 
   String get formattedLastTimeWithDuration => // for history line
-      formatDatetimeAndDuration(lastTime, FormatPattern.durationDatetimeOrDateTime);
+      formatDatetimeAndDuration(lastTime, FormatPattern.durationDatetimeOrDateTimeNoSec);
 
-  String get formattedLastTimeAndFullDuration => // for manga page
-      formatDatetimeAndDuration(lastTime, FormatPattern.datetimeDuration);
+  String get formattedLastTimeAndFullDuration => // for manga page history banner
+      formatDatetimeAndDuration(lastTime, FormatPattern.datetimeNoSecDuration);
 
-  String get formattedLastTimeOrDuration => // for favorite line and shelf line
+  String get formattedLastTimeOrDuration => // for shelf manga line, favorite manga line, tiny manga line, later manga line
       formatDatetimeAndDuration(lastTime, FormatPattern.durationOrDate);
 
   MangaHistory copyWith({
@@ -129,8 +129,8 @@ class ChapterFootprint {
     required this.createdAt,
   });
 
-  String get formattedCreatedAt => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.durationOrDate);
+  String get formattedCreatedAt => // for manga chapter history page
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationOneDayOrDatetimeNoYrNoSec); // TODO test
 
   ChapterFootprint? copyWith({
     int? mangaId,
@@ -166,7 +166,7 @@ class ShelfCache {
     required this.cachedAt,
   });
 
-  String get formattedCachedAt => //
+  String get formattedCachedAt => // for shelf cache line
       formatDatetimeAndDuration(cachedAt, FormatPattern.datetimeNoSec);
 
   ShelfCache copyWith({
@@ -217,11 +217,11 @@ class FavoriteManga {
 
   String get checkedGroupName => groupName.trim().isEmpty ? '默认分组' : groupName.trim();
 
-  String get formattedCreatedAt => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.datetime);
+  String get formattedCreatedAt => // for favorite reorder line
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetimeNoSec);
 
-  String get formattedCreatedAtWithDuration => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
+  String get formattedCreatedAtWithDuration => // for favorite line
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTimeNoSec);
 
   FavoriteManga copyWith({
     int? mangaId,
@@ -272,11 +272,8 @@ class FavoriteGroup {
 
   static bool isValidName(String s) => s.trim().isNotEmpty && s.trim() != '默认' && s.trim() != '默认分组';
 
-  String get formattedCreatedAt => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.datetime);
-
-  String get formattedCreatedAtWithDuration => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
+  String get formattedCreatedAt => // for favorite group reorder line
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetimeNoSec);
 
   FavoriteGroup copyWith({
     String? groupName,
@@ -316,11 +313,8 @@ class FavoriteAuthor {
     required this.createdAt,
   });
 
-  String get formattedCreatedAt => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.datetime);
-
-  String get formattedCreatedAtWithDuration => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
+  String get formattedCreatedAtWithDuration => // for favorite author line
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTimeNoSec);
 
   FavoriteAuthor copyWith({
     int? authorId,
@@ -374,11 +368,8 @@ class DownloadedManga {
     required this.needUpdate,
   });
 
-  String get formattedUpdatedAt => //
-      formatDatetimeAndDuration(updatedAt, FormatPattern.datetime);
-
-  String get formattedUpdatedAtWithDuration => //
-      formatDatetimeAndDuration(updatedAt, FormatPattern.durationDatetimeOrDateTime);
+  String get formattedUpdatedAtWithDuration => // for download manga line
+      formatDatetimeAndDuration(updatedAt, FormatPattern.durationDatetimeOrDateTimeNoSec);
 
   // chapter related
 
@@ -611,12 +602,12 @@ class DownloadChapterMetadata {
     );
   }
 
-  bool equals(DownloadChapterMetadata o) {
+  bool equals(DownloadChapterMetadata o, {bool ignoreUpdatedAt = true, bool ignorePages = false}) {
     return o.nextCid == nextCid && //
         o.prevCid == prevCid &&
-        // o.updatedAt == updatedAt &&
+        (ignoreUpdatedAt || o.updatedAt == updatedAt) &&
         o.pages.length == pages.length &&
-        o.pages.join(',,,') == pages.join(',,,');
+        (ignorePages || o.pages.join(',,,') == pages.join(',,,'));
   }
 }
 
@@ -639,17 +630,17 @@ class LaterManga {
     required this.createdAt,
   });
 
-  String get formattedNewestDateOrDuration => //
-      parseDurationOrDateString(newestDate ?? '').let((r) => r.duration ?? r.date);
+  String get formattedNewestDateWithDuration => // for later manga line
+      parseDurationOrDateString(newestDate ?? '').let((r) => r.duration ?? r.date); // "xxx天前" or "2023/02/02"
 
-  String get formattedCreatedAt => //
+  String get formattedCreatedAt => // for later manga banner
       formatDatetimeAndDuration(createdAt, FormatPattern.datetimeNoSec);
 
-  String get formattedCreatedAtWithDuration => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTime);
+  String get formattedCreatedAtWithDuration => // for later manga line
+      formatDatetimeAndDuration(createdAt, FormatPattern.durationDatetimeOrDateTimeNoSec);
 
-  String get formattedCreatedAtAndFullDuration => //
-      formatDatetimeAndDuration(createdAt, FormatPattern.datetimeDuration);
+  String get formattedCreatedAtAndFullDuration => // for later manga banner popup menu
+      formatDatetimeAndDuration(createdAt, FormatPattern.datetimeNoSecDuration);
 
   LaterManga copyWith({
     int? mangaId,

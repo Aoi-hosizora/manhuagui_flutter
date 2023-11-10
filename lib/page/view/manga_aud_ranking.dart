@@ -348,7 +348,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
                   : _currentPageIndex == 1 //
                       ? widget.qingnianRankingsDateTime //
                       : widget.shaonvRankingsDateTime //
-              ) ?? DateTime.now(), FormatPattern.dateNoYear)} 更新)',
+              ) ?? DateTime.now(), FormatPattern.dateNoYr)} 更新)',
       icon: Icons.emoji_events,
       onRefreshPressed: () => widget.onRefreshPressed?.call(_indexToType(_currentPageIndex)),
       onRefreshLongPressed: widget.onRefreshLongPressed,

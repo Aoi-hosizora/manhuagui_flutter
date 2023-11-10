@@ -9,16 +9,14 @@ class LaterMangaBannerView extends StatelessWidget {
     Key? key,
     required this.manga,
     required this.currentNewestChapter,
-    required this.currentNewestDate,
     this.action,
   }) : super(key: key);
 
   final LaterManga manga;
   final String? currentNewestChapter;
-  final String? currentNewestDate;
   final VoidCallback? action;
 
-  bool get _canUpdateChapter => currentNewestChapter != null && currentNewestDate != null && currentNewestChapter != manga.newestChapter;
+  bool get _canUpdateChapter => currentNewestChapter != null && currentNewestChapter != manga.newestChapter;
 
   @override
   Widget build(BuildContext context) {

@@ -598,7 +598,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                         child: LaterMangaBannerView(
                           manga: _later!,
                           currentNewestChapter: _mangaData?.newestChapter,
-                          currentNewestDate: _mangaData?.formattedNewestDate,
                           action: () => showPopupMenuForLaterManga(
                             context: context,
                             mangaId: _data!.mangaId,

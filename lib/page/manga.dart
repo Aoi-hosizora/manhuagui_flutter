@@ -1299,7 +1299,6 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                   LaterMangaBannerView(
                     manga: _laterManga!,
                     currentNewestChapter: _data!.newestChapter,
-                    currentNewestDate: _data!.formattedNewestDate,
                     action: () => _showLaterMangaDialog(),
                   ),
                 // ****************************************************************

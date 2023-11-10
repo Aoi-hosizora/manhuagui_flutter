@@ -74,8 +74,10 @@ class _MangaDetailPageState extends State<MangaDetailPage> with FitSystemScreens
                 DetailRow('章节分组数', widget.data.chapterGroups.length.toString()),
                 for (var group in widget.data.chapterGroups) //
                   DetailRow('【${group.title}】章节数', group.chapters.length.toString()),
-                DetailRow('包含色情暴力', widget.data.banned ? '是' : '否', canCopy: false),
-                DetailRow('拥有版权', widget.data.copyright ? '是' : '否', canCopy: false),
+                DetailRow('屏蔽下架', widget.data.downed ? '是' : '否', canCopy: false),
+                DetailRow('存在版权问题', !widget.data.copyright ? '是' : '否', canCopy: false),
+                DetailRow('包含色情暴力', widget.data.violent ? '是' : '否', canCopy: false),
+                DetailRow('违反法律法规', widget.data.lawblocked ? '是' : '否', canCopy: false),
                 DetailRow('漫画排名', widget.data.mangaRank),
                 DetailRow('平均得分', widget.data.averageScore.toStringAsFixed(1)),
                 DetailRow('评分人数', widget.data.scoreCount.toString()),

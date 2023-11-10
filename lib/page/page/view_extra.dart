@@ -514,7 +514,6 @@ class ViewExtraSubPageState extends State<ViewExtraSubPage> {
                 child: LaterMangaBannerView(
                   manga: widget.laterManga!,
                   currentNewestChapter: widget.data.newestChapter,
-                  currentNewestDate: widget.data.newestDate,
                   action: () => widget.callbacks.toShowLaters.call(),
                 ),
               ),

@@ -29,7 +29,7 @@ class LaterMangaLineView extends StatelessWidget {
       imageUrl: manga.mangaCover,
       title: manga.mangaTitle,
       icon1: Icons.notes,
-      text1: '添加时更新至 ' + (manga.newestChapter == null || manga.newestDate == null ? '未知' : '${manga.newestChapter} (${manga.formattedNewestDateOrDuration})'),
+      text1: '添加时更新至 ' + (manga.newestChapter == null || manga.newestDate == null ? '未知' : '${manga.newestChapter} (${manga.formattedNewestDateWithDuration})'),
       icon2: history == null || !history!.read ? CustomIcons.opened_left_star_book : Icons.import_contacts,
       text2: (history == null ? '未浏览' : (!history!.read ? '未开始阅读 仅浏览' : '最近阅读至 ${history!.chapterTitle}')) + (history == null ? '' : ' (${history!.formattedLastTimeOrDuration})'),
       icon3: Icons.access_time,

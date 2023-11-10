@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
@@ -28,17 +29,20 @@ class Manga {
   final double averageScore;
   final int scoreCount;
   final List<String> perScores;
-  final bool banned;
+  final bool downed;
   final bool copyright;
+  final bool violent;
+  final bool lawblocked;
   final List<MangaChapterGroup> chapterGroups;
 
-  const Manga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.aliases, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction, required this.introduction, required this.mangaRank, required this.averageScore, required this.scoreCount, required this.perScores, required this.banned, required this.copyright, required this.chapterGroups});
+  const Manga({required this.mid, required this.title, required this.cover, required this.url, required this.publishYear, required this.mangaZone, required this.genres, required this.authors, required this.aliases, required this.finished, required this.newestChapter, required this.newestDate, required this.briefIntroduction, required this.introduction, required this.mangaRank, required this.averageScore, required this.scoreCount, required this.perScores, required this.downed, required this.copyright, required this.violent, required this.lawblocked, required this.chapterGroups});
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
 
   Map<String, dynamic> toJson() => _$MangaToJson(this);
 
-  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+  String get formattedNewestDate => // for manga page, manga detail page, manga viewer page, and manga dialogs
+      parseDurationOrDateString(newestDate).date;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -62,24 +66,8 @@ class SmallManga {
 
   Map<String, dynamic> toJson() => _$SmallMangaToJson(this);
 
-  String get formattedNewestDate => newestDate.replaceAll('-', '/');
-
-  String get formattedNewestDateWithDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    if (result.duration == null) {
-      return result.date;
-    }
-    return '${result.duration} (${result.date})';
-  }
-
-  int? get newestDateDayDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    return result.dayDiff;
-  }
-
-  TinyManga toTiny() {
-    return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
-  }
+  String get formattedNewestDate => // for manga dialogs
+      parseDurationOrDateString(newestDate).date;
 
   SmallerManga toSmaller() {
     return SmallerManga(mid: mid, title: title, cover: cover, url: url, finished: finished, authors: authors.map((a) => a.name).toList(), genres: genres.map((g) => g.name).toList(), newestChapter: newestChapter, newestDate: newestDate);
@@ -106,24 +94,14 @@ class SmallerManga {
 
   Map<String, dynamic> toJson() => _$SmallerMangaToJson(this);
 
-  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+  String get formattedNewestDate => // for manga dialogs
+      parseDurationOrDateString(newestDate).date;
 
-  String get formattedNewestDateWithDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    if (result.duration == null) {
-      return result.date;
-    }
-    return '${result.duration} (${result.date})';
-  }
+  String get formattedNewestDateWithDuration => // for small manga line
+      parseDurationOrDateString(newestDate).durationDate;
 
-  int? get newestDateDayDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    return result.dayDiff;
-  }
-
-  TinyManga toTiny() {
-    return TinyManga(mid: mid, title: title, cover: cover, url: url, finished: finished, newestChapter: newestChapter, newestDate: newestDate);
-  }
+  int? get newestDateDayDuration => // for small manga line's color
+      parseDurationOrDateString(newestDate).dayDiff;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -144,20 +122,14 @@ class TinyManga {
 
   Map<String, dynamic> toJson() => _$TinyMangaToJson(this);
 
-  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+  String get formattedNewestDate => // for manga dialogs
+      parseDurationOrDateString(newestDate).date;
 
-  String get formattedNewestDateWithDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    if (result.duration == null) {
-      return result.date;
-    }
-    return '${result.duration} (${result.date})';
-  }
+  String get formattedNewestDateWithDuration => // for tiny manga line
+      parseDurationOrDateString(newestDate).durationDate;
 
-  int? get newestDateDayDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    return result.dayDiff;
-  }
+  int? get newestDateDayDuration => // for tiny manga line's color
+      parseDurationOrDateString(newestDate).dayDiff;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -313,25 +285,17 @@ class MangaRanking {
 
   Map<String, dynamic> toJson() => _$MangaRankingToJson(this);
 
-  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+  String get formattedNewestDate => // for manga dialogs
+      parseDurationOrDateString(newestDate).date;
 
-  String get formattedNewestDateWithDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    if (result.duration == null) {
-      return result.date;
-    }
-    return '${result.duration} (${result.date})';
-  }
+  String get formattedNewestDateWithDuration => // for manga ranking line
+      parseDurationOrDateString(newestDate).durationDate;
 
-  String get formattedNewestDurationOrDate {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    return result.duration ?? result.date;
-  }
+  String get formattedNewestDurationOrDate => // for manga aud-ranking line
+      parseDurationOrDateString(newestDate).let((r) => r.duration ?? r.date);
 
-  int? get newestDateDayDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    return result.dayDiff;
-  }
+  int? get newestDateDayDuration => // for manga ranking line and manga aud-ranking line's color
+      parseDurationOrDateString(newestDate).dayDiff;
 
   TinyBlockManga toTinyBlock() {
     return TinyBlockManga(
@@ -362,33 +326,20 @@ class ShelfManga {
 
   Map<String, dynamic> toJson() => _$ShelfMangaToJson(this);
 
-  String get formattedNewestDate {
-    var result = parseDurationOrDateString(lastDuration);
-    return result.date; // "2023/02/02"
-  }
+  String get formattedNewestDate => // for manga dialogs
+      parseDurationOrDateString(lastDuration).date; // "2023/02/02"
 
-  String get formattedLastDurationOrTime {
-    var result = parseDurationOrDateString(lastDuration);
-    return result.duration ?? result.date; // "xxx天前" or "2023/02/02"
-  }
+  String get formattedLastDurationOrDate => // for shelf magna line
+      parseDurationOrDateString(lastDuration).let((r) => r.duration ?? r.date); // "xxx天前" or "2023/02/02"
 
-  String get formattedNewestDurationOrTime {
-    var result = parseDurationOrDateString(newestDuration);
-    return result.duration ?? result.date; // "xxx天前" or "2023/02/02"
-  }
+  String get formattedNewestDurationOrDate => // for manga collection view
+      parseDurationOrDateString(newestDuration).let((r) => r.duration ?? r.date); // "xxx天前" or "2023/02/02"
 
-  String get formattedNewestTimeWithDuration {
-    var result = parseDurationOrDateString(newestDuration);
-    if (result.duration == null) {
-      return result.date;
-    }
-    return '${result.duration} (${result.date})'; // "xxx天前 (2023/02/02)" or "2023-02-02"
-  }
+  String get formattedNewestDateWithDuration => // for shelf magna line
+      parseDurationOrDateString(newestDuration).durationDate; // "xxx天前 (2023/02/02)" or "2023-02-02"
 
-  int? get newestDateDayDuration {
-    var result = parseDurationOrDateString(newestDuration);
-    return result.dayDiff;
-  }
+  int? get newestDateDayDuration => // for shelf magna line's color
+      parseDurationOrDateString(newestDuration).dayDiff;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

@@ -31,7 +31,8 @@ class Author {
 
   Map<String, dynamic> toJson() => _$AuthorToJson(this);
 
-  String get formattedNewestDate => newestDate.replaceAll('-', '/');
+  String get formattedNewestDate => // for author page and author detail page
+      parseDurationOrDateString(newestDate).date;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -50,15 +51,8 @@ class SmallAuthor {
 
   Map<String, dynamic> toJson() => _$SmallAuthorToJson(this);
 
-  String get formattedNewestDate => newestDate.replaceAll('-', '/');
-
-  String get formattedNewestDateWithDuration {
-    var result = parseDurationOrDateString(formattedNewestDate);
-    if (result.duration == null) {
-      return result.date;
-    }
-    return '${result.duration} (${result.date})';
-  }
+  String get formattedNewestDateWithDuration => // for small author line
+      parseDurationOrDateString(newestDate).durationDate;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

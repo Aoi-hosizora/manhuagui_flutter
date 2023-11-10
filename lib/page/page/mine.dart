@@ -551,7 +551,6 @@ class _MineSubPageState extends State<MineSubPage> with AutomaticKeepAliveClient
                   '上回登录IP：${_data!.lastLoginIp}',
                 ],
               ),
-              SizedBox(height: 12),
             ],
           ).fitSystemScreenshot(this),
         ),
