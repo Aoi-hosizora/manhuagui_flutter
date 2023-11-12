@@ -168,6 +168,7 @@ class AppSettingPrefs {
   static const _enableAutoCheckinKey = BoolKey('AppSettingPrefs_enableAutoCheckin');
   static const _allowErrorToastKey = BoolKey('AppSettingPrefs_allowErrorToast');
   static const _convertWebpWhenSaveKey = BoolKey('AppSettingPrefs_convertWebpWhenSave');
+  static const _defaultConcatModeKey = IntKey('AppSettingPrefs_defaultConcatMode');
 
   static List<TypedKey> get uiSettingKeys => [
         _showTwoColumnsKey,
@@ -191,6 +192,7 @@ class AppSettingPrefs {
         _enableAutoCheckinKey,
         _allowErrorToastKey,
         _convertWebpWhenSaveKey,
+        _defaultConcatModeKey,
       ];
 
   static Future<UiSetting> _loadUiSetting() async {
@@ -218,6 +220,7 @@ class AppSettingPrefs {
       enableAutoCheckin: prefs.safeGet<bool>(_enableAutoCheckinKey) ?? def.enableAutoCheckin,
       allowErrorToast: prefs.safeGet<bool>(_allowErrorToastKey) ?? def.allowErrorToast,
       convertWebpWhenSave: prefs.safeGet<bool>(_convertWebpWhenSaveKey) ?? def.convertWebpWhenSave,
+      defaultConcatMode: ConcatImageModeExtension.fromInt(prefs.safeGet<int>(_defaultConcatModeKey) ?? def.defaultConcatMode.toInt()),
     );
   }
 
@@ -245,6 +248,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_enableAutoCheckinKey, setting.enableAutoCheckin);
     await prefs.safeSet<bool>(_allowErrorToastKey, setting.allowErrorToast);
     await prefs.safeSet<bool>(_convertWebpWhenSaveKey, setting.convertWebpWhenSave);
+    await prefs.safeSet<int>(_defaultConcatModeKey, setting.defaultConcatMode.toInt());
   }
 
   // =============

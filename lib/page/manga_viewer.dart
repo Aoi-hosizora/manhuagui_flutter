@@ -291,6 +291,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   var _inShelf = false; // 书架
   var _inFavorite = false; // 收藏
   LaterManga? _laterManga; // 稍后阅读
+  Map<int, LaterChapter>? _laterChapters;
   DownloadedManga? _downloadEntity;
   DownloadedChapter? _downloadChapter;
 
@@ -307,6 +308,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId); // 本地收藏
     _inFavorite = _favoriteManga != null;
     _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId); // 稍后阅读
+    _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 稍后阅读
     _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId); // 下载记录
     _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
 
@@ -581,6 +583,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     FavoriteUpdatedEvent? favoriteEvent,
     LaterUpdatedEvent? laterEvent,
     FootprintUpdatedEvent? footprintEvent,
+    LaterChapterUpdatedEvent? laterChapterEvent,
   }) async {
     if (authEvent != null) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
@@ -615,13 +618,18 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       if (mounted) setState(() {});
     }
 
-    if (laterEvent != null && laterEvent.mangaId == widget.mangaId) {
+    if (laterEvent != null && !laterEvent.fromMangaViewerPage && laterEvent.mangaId == widget.mangaId) {
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
 
     if (footprintEvent != null && !footprintEvent.fromMangaViewerPage && footprintEvent.mangaId == widget.mangaId) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
+      if (mounted) setState(() {});
+    }
+
+    if (laterChapterEvent != null && !laterChapterEvent.fromMangaViewerPage && laterChapterEvent.mangaId == widget.mangaId) {
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -1110,6 +1118,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
               currReadChapterId: widget.chapterId,
               lastReadChapterId: _history?.lastChapterId ?? 0,
               footprintChapterIds: _footprints?.keys.toList() ?? [],
+              laterChapterIds: _laterChapters?.keys.toList() ?? [],
               onChapterPressed: (cid) => switchChapter(c, cid),
               onChapterLongPressed: (cid) {
                 var chapter = neededData.chapterGroups.findChapter(cid);
@@ -1126,14 +1135,17 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   mangaCover: mangaCover,
                   mangaUrl: mangaUrl,
                   fromMangaPage: false,
+                  fromMangaViewerPage: false,
+                  fromMangaHistoryPage: false,
                   chapter: chapter,
                   chapterNeededData: neededData,
                   onHistoryUpdated: (h) => _setState(() => _history = h),
                   onFootprintAdded: (fp) => _setState(() => _footprints?[fp.chapterId] = fp),
                   onFootprintsAdded: (fps) => _setState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
                   onFootprintsRemoved: (cids) => _setState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
-                  onLaterMarked: null /* 本页暂不显示稍后阅读的章节 */,
-                  onLaterUnmarked: null,
+                  onLaterAdded: (l) => mountedSetState(() => _laterManga = l),
+                  onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
+                  onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
                   toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
                   navigateWrapper: (navigate) async {
                     await _ScreenHelper.restoreSystemUI();
@@ -1222,6 +1234,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         _laterManga = l;
         if (mounted) setState(() {});
       },
+      onLcCleared: null /* 该页暂不显示稍后阅读章节 */,
       navigateWrapper: (navigate) async {
         await _ScreenHelper.restoreSystemUI();
         await navigate();
@@ -1432,25 +1445,20 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       }
     }
 
-    var concatMode = ConcatImageMode.horizontal;
+    var concatMode = AppSetting.instance.ui.defaultConcatMode; // ConcatImageMode.horizontal
     showDialog(
       context: context,
       builder: (c) => StatefulBuilder(
         builder: (c, _setState) => SimpleDialog(
           title: Text('合并保存图片'),
           children: [
-            for (var tuple in [
-              Tuple2('左右合并', ConcatImageMode.horizontal),
-              Tuple2('上下合并', ConcatImageMode.vertical),
-              Tuple2('左右反向合并', ConcatImageMode.horizontalReverse),
-              Tuple2('上下反向合并', ConcatImageMode.verticalReverse),
-            ])
+            for (var mode in [ConcatImageMode.horizontal, ConcatImageMode.vertical, ConcatImageMode.horizontalReverse, ConcatImageMode.verticalReverse])
               IconTextDialogOption(
-                icon: concatMode == tuple.item2 //
+                icon: concatMode == mode //
                     ? Icon(Icons.radio_button_on, color: Theme.of(context).primaryColor)
                     : Icon(Icons.radio_button_off),
-                text: Text(tuple.item1),
-                onPressed: () => _setState(() => concatMode = tuple.item2),
+                text: Text(mode.toOptionTitle()),
+                onPressed: () => _setState(() => concatMode = mode),
               ),
             Divider(height: 16, thickness: 1),
             if (imageIndex > 0)
@@ -1476,7 +1484,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 onPressed: () => _concat(imageIndex, imageIndex + 1, concatMode),
                 onLongPressed: () => showYesNoAlertDialog(context: context, title: Text('保存并分享'), content: Text('是否合并保存后分享合并后的图片？'), yesText: Text('确定'), noText: Text('取消')) //
                     .then((r) => r?.ifTrue(() => //
-                callAll([() => Navigator.of(c).pop(), () => _concat(imageIndex, imageIndex + 1, concatMode, alsoShare: true)]))),
+                        callAll([() => Navigator.of(c).pop(), () => _concat(imageIndex, imageIndex + 1, concatMode, alsoShare: true)]))),
               ),
           ],
         ),

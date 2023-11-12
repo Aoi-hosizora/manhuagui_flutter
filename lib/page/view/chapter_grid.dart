@@ -48,7 +48,7 @@ class ChapterGridView extends StatelessWidget {
   final bool showFaintColor;
   final bool showTriText;
   final String Function(TinyMangaChapter)? getTriText;
-  final List<Widget> Function(TinyMangaChapter? chapter)? extrasInStack;
+  final List<Widget> Function(BuildContext context, TinyMangaChapter? chapter)? extrasInStack;
   final Widget Function(BuildContext context, TinyMangaChapter? chapter, Widget itemWidget)? itemBuilder;
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
   final void Function(TinyMangaChapter? chapter)? onChapterLongPressed;
@@ -123,7 +123,7 @@ class ChapterGridView extends StatelessWidget {
           ),
         ),
         if (extrasInStack != null) //
-          ...extrasInStack!.call(chapter),
+          ...extrasInStack!.call(context, chapter),
       ],
     );
   }

@@ -616,7 +616,7 @@ class LaterManga {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final String? newestChapter; // TODO add isUpdated field and update silently, and add later chapter table
+  final String? newestChapter;
   final String? newestDate;
   final DateTime createdAt;
 
@@ -675,27 +675,23 @@ class LaterManga {
 
 class LaterChapter {
   final int mangaId;
-  final int chapterId;
-  final String chapterTitle;
+  final int chapterId; // 仅记录 cid，其他字段由 manga 的 chapter group 获取
   final DateTime createdAt;
 
   const LaterChapter({
     required this.mangaId,
     required this.chapterId,
-    required this.chapterTitle,
     required this.createdAt,
   });
 
   LaterChapter copyWith({
     int? mangaId,
     int? chapterId,
-    String? chapterTitle,
     DateTime? createdAt,
   }) {
     return LaterChapter(
       mangaId: mangaId ?? this.mangaId,
       chapterId: chapterId ?? this.chapterId,
-      chapterTitle: chapterTitle ?? this.chapterTitle,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -703,7 +699,6 @@ class LaterChapter {
   bool equals(LaterChapter o) {
     return mangaId == o.mangaId && //
         chapterId == o.chapterId &&
-        chapterTitle == o.chapterTitle &&
         createdAt == o.createdAt;
   }
 }

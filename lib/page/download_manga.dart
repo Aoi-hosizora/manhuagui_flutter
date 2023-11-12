@@ -90,6 +90,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterChapterUpdatedEvent>((ev) => _updateByEvent(laterChapterEvent: ev)));
   }
 
   @override
@@ -108,6 +109,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   var _byte = 0;
   MangaHistory? _history;
   Map<int, ChapterFootprint>? _footprints;
+  Map<int, LaterChapter>? _laterChapters;
   LaterManga? _later;
   Manga? _mangaData; // loaded in background
   var _onlineMode = AppSetting.instance.dl.defaultToOnlineMode;
@@ -121,6 +123,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     _byte = 0;
     _history = null;
     _footprints = null;
+    _laterChapters = null;
     _later = null;
     _mangaData = null;
     if (mounted) setState(() {});
@@ -142,6 +145,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       _task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 在每次刷新时都重新统计文件大小
     } else {
@@ -157,6 +161,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
     HistoryUpdatedEvent? historyEvent,
     FootprintUpdatedEvent? footprintEvent,
     LaterUpdatedEvent? laterEvent,
+    LaterChapterUpdatedEvent? laterChapterEvent,
   }) async {
     if (progressEvent != null && progressEvent.mangaId == widget.mangaId) {
       var task = QueueManager.instance.getDownloadMangaQueueTask(widget.mangaId);
@@ -190,6 +195,11 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
 
     if (laterEvent != null && laterEvent.mangaId == widget.mangaId) {
       _later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
+      if (mounted) setState(() {});
+    }
+
+    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId) {
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -612,6 +622,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                               _later = l;
                               if (mounted) setState(() {});
                             },
+                            onLcCleared: null /* 该页暂不显示稍后阅读章节 */,
                           ),
                         ),
                       ),
@@ -734,6 +745,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                   invertOrder: _invertOrder,
                   history: _history,
                   footprints: _footprints,
+                  laterChapters: _laterChapters,
                   toReadChapter: _readChapter,
                   toDeleteChapters: _deleteChapters,
                   toAdjustChapter: _adjustChapterDetails,

@@ -33,7 +33,7 @@ class DBManager {
     _database = null;
   }
 
-  static const _newestVersion = 5;
+  static const _newestVersion = 6;
 
   Future<Database> openDB(String filepath) async {
     return await openDatabase(
@@ -87,6 +87,14 @@ class DBManager {
       await FavoriteDao.upgradeFromVer4To5(db);
       await ShelfCacheDao.upgradeFromVer4To5(db);
       await LaterMangaDao.upgradeFromVer4To5(db);
+    }
+    if (version == 5) {
+      version = 6; // 5 -> 6 upgrade
+      // await HistoryDao.upgradeFromVer5To6(db);
+      // await DownloadDao.upgradeFromVer5To6(db);
+      // await FavoriteDao.upgradeFromVer5To6(db);
+      // await ShelfCacheDao.upgradeFromVer5To6(db);
+      await LaterMangaDao.upgradeFromVer5To6(db);
     }
   }
 }

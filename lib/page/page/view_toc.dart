@@ -22,6 +22,7 @@ class ViewTocSubPage extends StatefulWidget {
     required this.currReadChapterId,
     this.lastReadChapterId,
     this.footprintChapterIds,
+    this.laterChapterIds,
     required this.onChapterPressed,
     this.onChapterLongPressed,
   }) : super(key: key);
@@ -32,6 +33,7 @@ class ViewTocSubPage extends StatefulWidget {
   final int currReadChapterId;
   final int? lastReadChapterId;
   final List<int>? footprintChapterIds;
+  final List<int>? laterChapterIds;
   final void Function(int cid) onChapterPressed;
   final void Function(int cid)? onChapterLongPressed;
 
@@ -151,6 +153,7 @@ class _ViewTocSubPageState extends State<ViewTocSubPage> with FitSystemScreensho
                   highlighted2Chapters: [widget.lastReadChapterId ?? 0],
                   showHighlight2: AppSetting.instance.ui.showLastHistory,
                   faintedChapters: widget.footprintChapterIds ?? [],
+                  laterChecker: (cid) => widget.laterChapterIds?.contains(cid) == true,
                   customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),

@@ -136,13 +136,15 @@ class FavoriteAuthorUpdatedEvent {
 }
 
 class LaterUpdatedEvent {
-  const LaterUpdatedEvent({required this.mangaId, required this.added, this.fromLaterPage = false, this.fromSepLaterPage = false, this.fromMangaPage = false});
+  const LaterUpdatedEvent({required this.mangaId, required this.added, this.fromLaterPage = false, this.fromSepLaterPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
 
   final int mangaId;
   final bool added;
   final bool fromLaterPage;
   final bool fromSepLaterPage;
   final bool fromMangaPage;
+  final bool fromMangaViewerPage;
+  final bool fromMangaHistoryPage;
 }
 
 class FootprintUpdatedEvent {
@@ -157,12 +159,14 @@ class FootprintUpdatedEvent {
 }
 
 class LaterChapterUpdatedEvent {
-  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.fromMangaPage = false});
+  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
 
   final int mangaId;
   final int chapterId;
   final bool added;
   final bool fromMangaPage;
+  final bool fromMangaViewerPage;
+  final bool fromMangaHistoryPage;
 }
 
 class MarkedCategoryUpdatedEvent {

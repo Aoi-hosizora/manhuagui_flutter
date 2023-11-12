@@ -328,10 +328,10 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 章节历史
       _subscribeCount = null;
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id);
-      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 稍后阅读
       _inShelf = false;
       _inFavorite = _favoriteManga != null;
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id); // 稍后阅读
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 稍后阅读
       if (mounted) setState(() {});
     }
 
@@ -812,20 +812,23 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
 
   Future<void> _showLaterMangaDialog() async {
     showPopupMenuForLaterManga(
-      context: context,
-      mangaId: _data!.mid,
-      mangaTitle: _data!.title,
-      mangaCover: _data!.cover,
-      mangaUrl: _data!.url,
-      extraData: MangaExtraDataForDialog.fromManga(_data!),
-      fromMangaPage: true,
-      laterManga: _laterManga!,
-      inLaterSetter: (l) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        _laterManga = l;
-        if (mounted) setState(() {});
-      },
-    );
+        context: context,
+        mangaId: _data!.mid,
+        mangaTitle: _data!.title,
+        mangaCover: _data!.cover,
+        mangaUrl: _data!.url,
+        extraData: MangaExtraDataForDialog.fromManga(_data!),
+        fromMangaPage: true,
+        laterManga: _laterManga!,
+        inLaterSetter: (l) {
+          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+          _laterManga = l;
+          if (mounted) setState(() {});
+        },
+        onLcCleared: () {
+          _laterChapters?.clear();
+          if (mounted) setState(() {});
+        });
   }
 
   void _showAuthorDialog() {
@@ -1012,6 +1015,8 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
       fromMangaPage: forMangaPage,
+      fromMangaViewerPage: false,
+      fromMangaHistoryPage: false,
       chapter: chapter,
       chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
       onHistoryUpdated: forMangaPage //
@@ -1025,6 +1030,9 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
       onFootprintsRemoved: forMangaPage //
           ? (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key)))
+          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
+      onLaterAdded: forMangaPage //
+          ? (l) => mountedSetState(() => _laterManga = l)
           : null /* MangaTocPage 内的界面更新由 evb 处理 */,
       onLaterMarked: forMangaPage //
           ? (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l)

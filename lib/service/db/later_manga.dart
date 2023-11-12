@@ -29,13 +29,12 @@ class LaterMangaDao {
   static const _colLcUsername = 'username';
   static const _colLcMangaId = 'manga_id';
   static const _colLcChapterId = 'chapter_id';
-  static const _colLcChapterTitle = 'chapter_title';
   static const _colLcCreatedAt = 'created_at';
 
   static const laterChapterMetadata = TableMetadata(
     tableName: _tblLaterChapter,
     primaryKeys: [_colLcUsername, _colLcMangaId, _colLcChapterId],
-    columns: [_colLcUsername, _colLcMangaId, _colLcChapterId, _colLcChapterTitle, _colLcCreatedAt],
+    columns: [_colLcUsername, _colLcMangaId, _colLcChapterId, _colLcCreatedAt],
   );
 
   static Future<void> createForVer1(Database db) async {
@@ -75,7 +74,6 @@ class LaterMangaDao {
         $_colLcUsername VARCHAR(1023),
         $_colLcMangaId INTEGER,
         $_colLcChapterId INTEGER,
-        $_colLcChapterTitle VARCHAR(1023),
         $_colLcCreatedAt DATETIME,
         PRIMARY KEY ($_colLcUsername, $_colLcMangaId, $_colLcChapterId)
       )''');
@@ -198,7 +196,7 @@ class LaterMangaDao {
   static Future<List<LaterChapter>?> getLaterChapters({required String username, required int mid}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
-      '''SELECT $_colLcChapterId, $_colLcChapterTitle, $_colLcCreatedAt
+      '''SELECT $_colLcChapterId, $_colLcCreatedAt
          FROM $_tblLaterChapter
          WHERE $_colLcUsername = ? AND $_colLcMangaId = ?
          ORDER BY $_colLcCreatedAt DESC, $_colLcChapterId DESC''',
@@ -212,7 +210,6 @@ class LaterMangaDao {
       out.add(LaterChapter(
         mangaId: mid,
         chapterId: r[_colLcChapterId]! as int,
-        chapterTitle: r[_colLcChapterTitle]! as String,
         createdAt: DateTime.parse(r[_colLcCreatedAt]! as String),
       ));
     }
@@ -323,7 +320,7 @@ class LaterMangaDao {
   static Future<LaterChapter?> getLaterChapter({required String username, required int mid, required int cid}) async {
     final db = await DBManager.instance.getDB();
     var results = await db.safeRawQuery(
-      '''SELECT $_colLcChapterTitle, $_colLcCreatedAt
+      '''SELECT $_colLcCreatedAt
          FROM $_tblLaterChapter
          WHERE $_colLcUsername = ? AND $_colLcMangaId = ? AND $_colLcChapterId = ?
          ORDER BY $_colLcCreatedAt DESC
@@ -337,7 +334,6 @@ class LaterMangaDao {
     return LaterChapter(
       mangaId: mid,
       chapterId: cid,
-      chapterTitle: r[_colLcChapterTitle]! as String,
       createdAt: DateTime.parse(r[_colLcCreatedAt]! as String),
     );
   }
@@ -389,16 +385,16 @@ class LaterMangaDao {
     int? rows = 0;
     if (count == 0) {
       rows = await db.safeRawInsert(
-        '''INSERT INTO $_tblLaterChapter ($_colLcUsername, $_colLcMangaId, $_colLcChapterId, $_colLcChapterTitle, $_colLcCreatedAt)
-           VALUES (?, ?, ?, ?, ?)''',
-        [username, chapter.mangaId, chapter.chapterId, chapter.chapterTitle, chapter.createdAt.toIso8601String()],
+        '''INSERT INTO $_tblLaterChapter ($_colLcUsername, $_colLcMangaId, $_colLcChapterId, $_colLcCreatedAt)
+           VALUES (?, ?, ?, ?)''',
+        [username, chapter.mangaId, chapter.chapterId, chapter.createdAt.toIso8601String()],
       );
     } else {
       rows = await db.safeRawUpdate(
         '''UPDATE $_tblLaterChapter
-           SET $_colLcChapterTitle = ?, $_colLcCreatedAt = ?
+           SET $_colLcCreatedAt = ?
            WHERE $_colLcUsername = ? AND $_colLcMangaId = ? AND $_colLcChapterId = ?''',
-        [chapter.chapterTitle, chapter.createdAt.toIso8601String(), username, chapter.mangaId, chapter.chapterId],
+        [chapter.createdAt.toIso8601String(), username, chapter.mangaId, chapter.chapterId],
       );
     }
     return rows != null && rows >= 1;
@@ -428,7 +424,7 @@ class LaterMangaDao {
     final db = await DBManager.instance.getDB();
     var rows = await db.safeRawDelete(
       '''DELETE FROM $_tblLaterChapter
-         WHERE $_colLcUsername = ? AND $_colLcMangaId''',
+         WHERE $_colLcUsername = ? AND $_colLcMangaId = ?''',
       [username, mid],
     );
     return rows != null && rows >= 1;

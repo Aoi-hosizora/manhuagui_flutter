@@ -17,6 +17,7 @@ import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -78,6 +79,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
   var _loading = true; // initialize to true, fake loading flag
   MangaHistory? _history;
   Map<int, ChapterFootprint>? _footprints;
+  Map<int, LaterChapter>? _laterChapters;
   DownloadedManga? _downloadEntity;
   var _columns = 4; // default to four columns
   var _orderInDefault = true; // default to order by number
@@ -104,6 +106,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       await Future.delayed(Duration(milliseconds: 400)); // fake loading
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 漫画历史
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节历史
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 稍后阅读
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId); // 下载数据
       _loadDataForGroups();
     } finally {
@@ -127,7 +130,12 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     _unreadChapterIds = _unreadGroups!.allChapterIds.toSet();
   }
 
-  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent, FootprintUpdatedEvent? footprintEvent}) async {
+  Future<void> _updateByEvent({
+    HistoryUpdatedEvent? historyEvent,
+    DownloadUpdatedEvent? downloadEvent,
+    FootprintUpdatedEvent? footprintEvent,
+    LaterChapterUpdatedEvent? laterChapterEvent,
+  }) async {
     if (historyEvent != null && historyEvent.mangaId == widget.mangaId && !historyEvent.fromMangaHistoryPage) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
@@ -139,6 +147,10 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.fromMangaHistoryPage) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _loadDataForGroups();
+      if (mounted) setState(() {});
+    }
+    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.fromMangaHistoryPage) {
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -348,6 +360,8 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
       fromMangaPage: false,
+      fromMangaViewerPage: false,
+      fromMangaHistoryPage: true,
       chapter: chapter,
       chapterNeededData: widget.chapterNeededData,
 
@@ -357,8 +371,9 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
       onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
       onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
-      onLaterMarked: null /* 本页不显示稍后阅读的章节 */,
-      onLaterUnmarked: null,
+      onLaterAdded: null /* 本页不显示稍后阅读的漫画 */,
+      onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
+      onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
     );
   }
 
@@ -434,7 +449,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
                     child: ActionRowView.five(
                       action1: ActionItem.simple(
                         '仅已阅读',
-                        CustomIcons.eye_clock,
+                        CustomIcons.eye_history,
                         () => _switchToMode(_MangaHistoryPageMode.readOnly),
                         color: _mode == _MangaHistoryPageMode.readOnly ? Colors.deepOrange : null,
                       ),
@@ -481,6 +496,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
                       highlighted2Chapters: [_history?.lastChapterId ?? 0],
                       showHighlight2: AppSetting.instance.ui.showLastHistory,
                       faintedChapters: _footprints?.keys.toList() ?? [],
+                      laterChecker: (cid) => _laterChapters?.containsKey(cid) == true,
                       showTriText: true,
                       getTriText: (c) => _footprints?[c.cid]?.formattedCreatedAt ?? '暂未阅读',
                       customBadgeBuilder: (cid) => DownloadBadge.fromEntity(

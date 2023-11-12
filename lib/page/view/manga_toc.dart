@@ -163,12 +163,12 @@ class _MangaTocViewState extends State<MangaTocView> {
       showFaintColor: widget.showFaintColor,
       showTriText: widget.showTriText,
       getTriText: widget.getTriText,
-      extrasInStack: (chapter) {
+      extrasInStack: (ctx, chapter) {
         if (chapter == null) {
           return [];
         }
         var newBadge = widget.showNewBadge && chapter.isNew ? NewBadge() : null;
-        var laterBadge = widget.showLaterBadge && widget.laterChecker?.call(chapter.cid) == true ? LaterBadge() : null;
+        var laterBadge = widget.showLaterBadge && widget.laterChecker?.call(chapter.cid) == true ? LaterBadge(extraTop: newBadge?.getHeight(ctx) ?? 0) : null;
         var customBadge = widget.customBadgeBuilder?.call(chapter.cid);
         return [
           if (newBadge != null) newBadge,

@@ -76,12 +76,12 @@ class MangaSimpleTocView extends StatelessWidget {
       showFaintColor: showFaintColor,
       showTriText: showTriText,
       getTriText: getTriText,
-      extrasInStack: (chapter) {
+      extrasInStack: (ctx, chapter) {
         if (chapter == null) {
           return [];
         }
         var newBadge = showNewBadge && chapter.isNew ? NewBadge() : null;
-        var laterBadge = showLaterBadge && laterChecker?.call(chapter.cid) == true ? LaterBadge() : null;
+        var laterBadge = showLaterBadge && laterChecker?.call(chapter.cid) == true ? LaterBadge(extraTop: newBadge?.getHeight(ctx) ?? 0) : null;
         var customBadge = customBadgeBuilder?.call(chapter.cid);
         return [
           if (newBadge != null) newBadge,

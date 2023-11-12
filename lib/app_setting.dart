@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/page/log_console.dart';
 import 'package:manhuagui_flutter/service/db/query_helper.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
+import 'package:manhuagui_flutter/service/image/imagelib.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 import 'package:manhuagui_flutter/service/storage/queue_manager.dart';
 
@@ -616,6 +617,7 @@ class UiSetting {
     required this.alwaysOpenNewListPage,
     required this.enableAutoCheckin,
     required this.convertWebpWhenSave,
+    required this.defaultConcatMode,
   });
 
   // 列表页设置
@@ -643,6 +645,7 @@ class UiSetting {
   final bool enableAutoCheckin; // 启用自动登录签到功能
   final bool allowErrorToast; // 允许后台弹出漫画错误提示
   final bool convertWebpWhenSave; // 保存webp图片时转换格式
+  final ConcatImageMode defaultConcatMode; // 合并图片默认模式
 
   static const defaultSetting = UiSetting(
     showTwoColumns: false,
@@ -666,6 +669,7 @@ class UiSetting {
     enableAutoCheckin: false,
     allowErrorToast: true,
     convertWebpWhenSave: false,
+    defaultConcatMode: ConcatImageMode.horizontal,
   );
 
   UiSetting copyWith({
@@ -690,6 +694,7 @@ class UiSetting {
     bool? enableAutoCheckin,
     bool? allowErrorToast,
     bool? convertWebpWhenSave,
+    ConcatImageMode? defaultConcatMode,
   }) {
     return UiSetting(
       showTwoColumns: showTwoColumns ?? this.showTwoColumns,
@@ -713,6 +718,7 @@ class UiSetting {
       enableAutoCheckin: enableAutoCheckin ?? this.enableAutoCheckin,
       allowErrorToast: allowErrorToast ?? this.allowErrorToast,
       convertWebpWhenSave: convertWebpWhenSave ?? this.convertWebpWhenSave,
+      defaultConcatMode: defaultConcatMode ?? this.defaultConcatMode,
     );
   }
 
@@ -737,7 +743,8 @@ class UiSetting {
         clickToSearch == other.clickToSearch &&
         alwaysOpenNewListPage == other.alwaysOpenNewListPage &&
         enableAutoCheckin == other.enableAutoCheckin &&
-        convertWebpWhenSave == other.convertWebpWhenSave;
+        convertWebpWhenSave == other.convertWebpWhenSave &&
+        defaultConcatMode == other.defaultConcatMode;
   }
 }
 
@@ -916,6 +923,48 @@ extension HomepageRefreshDatarExtension on HomepageRefreshData {
         return HomepageRefreshData.allData;
     }
     return HomepageRefreshData.onlyRecommend;
+  }
+}
+
+extension ConcatImageModeExtension on ConcatImageMode {
+  String toOptionTitle() {
+    switch (this) {
+      case ConcatImageMode.horizontal:
+        return '左右合并';
+      case ConcatImageMode.vertical:
+        return '上下合并';
+      case ConcatImageMode.horizontalReverse:
+        return '左右反向合并';
+      case ConcatImageMode.verticalReverse:
+        return '上下反向合并';
+    }
+  }
+
+  int toInt() {
+    switch (this) {
+      case ConcatImageMode.horizontal:
+        return 0;
+      case ConcatImageMode.vertical:
+        return 1;
+      case ConcatImageMode.horizontalReverse:
+        return 2;
+      case ConcatImageMode.verticalReverse:
+        return 3;
+    }
+  }
+
+  static ConcatImageMode fromInt(int i) {
+    switch (i) {
+      case 0:
+        return ConcatImageMode.horizontal;
+      case 1:
+        return ConcatImageMode.vertical;
+      case 2:
+        return ConcatImageMode.horizontalReverse;
+      case 3:
+        return ConcatImageMode.verticalReverse;
+    }
+    return ConcatImageMode.horizontal;
   }
 }
 

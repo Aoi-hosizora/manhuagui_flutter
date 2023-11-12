@@ -3,6 +3,7 @@ import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/order.dart';
 import 'package:manhuagui_flutter/page/view/setting_view.dart';
+import 'package:manhuagui_flutter/service/image/imagelib.dart';
 
 /// 设置-界面与交互设置，用于 [UiSettingPage] / [showUiSettingDialog]
 class UiSettingSubPage extends StatefulWidget {
@@ -57,6 +58,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _enableAutoCheckin = widget.setting.enableAutoCheckin;
   late var _allowErrorToast = widget.setting.allowErrorToast;
   late var _convertWebpWhenSave = widget.setting.convertWebpWhenSave;
+  late var _defaultConcatMode = widget.setting.defaultConcatMode;
 
   UiSetting get _newestSetting => UiSetting(
         showTwoColumns: _showTwoColumns,
@@ -80,6 +82,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         enableAutoCheckin: _enableAutoCheckin,
         allowErrorToast: _allowErrorToast,
         convertWebpWhenSave: _convertWebpWhenSave,
+        defaultConcatMode: _defaultConcatMode,
       );
 
   void _setToDefault() {
@@ -105,6 +108,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _enableAutoCheckin = setting.enableAutoCheckin;
     _allowErrorToast = setting.allowErrorToast;
     _convertWebpWhenSave = setting.convertWebpWhenSave;
+    _defaultConcatMode = setting.defaultConcatMode;
     if (mounted) setState(() {});
   }
 
@@ -343,6 +347,18 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _convertWebpWhenSave,
           onChanged: (b) {
             _convertWebpWhenSave = b;
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingComboBoxView<ConcatImageMode>(
+          style: widget.style,
+          title: '合并图片默认模式',
+          width: 150,
+          value: _defaultConcatMode,
+          values: ConcatImageMode.values,
+          textBuilder: (s) => s.toOptionTitle(),
+          onChanged: (s) {
+            _defaultConcatMode = s;
             if (mounted) setState(() {});
           },
         ),

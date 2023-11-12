@@ -74,6 +74,7 @@ void showPopupMenuForMangaList({
   var nowInShelfCache = await ShelfCacheDao.checkExistence(username: AuthManager.instance.username, mid: mangaId) ?? false;
   var laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: mangaId);
   var nowInLater = laterManga != null;
+  var lcCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
   var mangaHistory = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
   var expandShelfOptions = false;
 
@@ -192,8 +193,8 @@ void showPopupMenuForMangaList({
             icon: Icon(!nowInLater ? MdiIcons.clockPlus : MdiIcons.clockMinus),
             text: Text(!nowInLater ? '添加至稍后阅读列表' : '移出稍后阅读列表'),
             popWhenPress: c,
-            predicateForPress: !nowInLater ? null : () => helper.showCheckRemovingLaterDialog(),
-            onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: (l) => inLaterSetter?.call(l != null), fromLaterList: fromLaterList, fromMangaPage: false),
+            predicateForPress: !nowInLater ? null : () => helper.showCheckRemovingLaterDialog(lcCount: lcCount),
+            onPressed: () => helper.addOrRemoveLater(toAdd: !nowInLater, onUpdated: (l) => inLaterSetter?.call(l != null), onLcCleared: null, fromLaterList: fromLaterList, fromMangaPage: false),
           ),
 
           /// 更多选项
@@ -422,12 +423,15 @@ void showPopupMenuForMangaToc({
   required String mangaCover,
   required String mangaUrl,
   required bool fromMangaPage,
+  required bool fromMangaViewerPage,
+  required bool fromMangaHistoryPage,
   required TinyMangaChapter chapter,
   required MangaChapterNeededData chapterNeededData,
   required void Function(MangaHistory history)? onHistoryUpdated,
   required void Function(ChapterFootprint footprint)? onFootprintAdded,
   required void Function(List<ChapterFootprint> footprints)? onFootprintsAdded,
   required void Function(List<int> chapterIds)? onFootprintsRemoved,
+  required void Function(LaterManga later)? onLaterAdded,
   required void Function(LaterChapter later)? onLaterMarked,
   required void Function(int chapterId)? onLaterUnmarked,
   void Function()? toSwitchChapter, // => only for switching chapter in MangaViewerPage
@@ -547,14 +551,14 @@ void showPopupMenuForMangaToc({
             icon: Icon(MdiIcons.clockPlus),
             text: Text('标记为稍后阅读'),
             popWhenPress: c,
-            onPressed: () => helper.markChapterLater(chapterId: chapter.cid, chapterTitle: chapter.title, onAdded: onLaterMarked, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.markChapterLater(chapterId: chapter.cid, chapterNeededData: chapterNeededData, onLmAdded: onLaterAdded, onAdded: onLaterMarked, fromMangaPage: fromMangaPage, fromMangaViewerPage: fromMangaViewerPage, fromMangaHistoryPage: fromMangaHistoryPage),
           ),
         if (isLaterChapter)
           IconTextDialogOption(
             icon: Icon(MdiIcons.clockMinus),
             text: Text('取消标记稍后阅读'),
             popWhenPress: c,
-            onPressed: () => helper.unmarkChapterLater(chapterId: chapter.cid, onRemoved: onLaterUnmarked, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.unmarkChapterLater(chapterId: chapter.cid, onRemoved: onLaterUnmarked, fromMangaPage: fromMangaPage, fromMangaViewerPage: fromMangaViewerPage, fromMangaHistoryPage: fromMangaHistoryPage),
           ),
 
         /// 查看信息
@@ -588,7 +592,7 @@ void showPopupMenuForSubscribing({
   required void Function(bool inShelf) inShelfSetter,
   required void Function(FavoriteManga? favorite) inFavoriteSetter,
   required void Function(LaterManga? later) inLaterSetter,
-}) {
+}) async {
   var helper = _DialogHelper(
     context: context,
     mangaId: mangaId,
@@ -597,6 +601,8 @@ void showPopupMenuForSubscribing({
     mangaUrl: mangaUrl,
     extraData: extraData,
   );
+
+  var lcCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
 
   showDialog(
     context: context,
@@ -643,15 +649,15 @@ void showPopupMenuForSubscribing({
             icon: Icon(MdiIcons.clockPlus),
             text: Text('添加至稍后阅读列表'),
             popWhenPress: c,
-            onPressed: () => helper.addOrRemoveLater(toAdd: true, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.addOrRemoveLater(toAdd: true, onUpdated: inLaterSetter, onLcCleared: null, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
         if (nowInLater)
           IconTextDialogOption(
             icon: Icon(MdiIcons.clockMinus),
             text: Text('移出稍后阅读列表'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckRemovingLaterDialog(),
-            onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+            predicateForPress: () => helper.showCheckRemovingLaterDialog(lcCount: lcCount),
+            onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, onLcCleared: null, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
 
         /// 额外选项
@@ -791,7 +797,8 @@ void showPopupMenuForLaterManga({
   required MangaExtraDataForDialog? extraData,
   required bool fromMangaPage,
   required LaterManga laterManga,
-  required void Function(LaterManga? later) inLaterSetter,
+  required void Function(LaterManga? later)? inLaterSetter,
+  required void Function()? onLcCleared,
   void Function(Future<void> Function()) navigateWrapper = _navigateWrapper, // => to update system ui, for MangaViewerPage
 }) async {
   var helper = _DialogHelper(
@@ -803,6 +810,7 @@ void showPopupMenuForLaterManga({
     extraData: extraData,
   );
   var later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: mangaId);
+  var lcCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
 
   showDialog(
     context: context,
@@ -825,8 +833,8 @@ void showPopupMenuForLaterManga({
           icon: Icon(MdiIcons.clockMinus),
           text: Text('移出稍后阅读列表'),
           popWhenPress: c,
-          predicateForPress: () => helper.showCheckRemovingLaterDialog(),
-          onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+          predicateForPress: () => helper.showCheckRemovingLaterDialog(lcCount: lcCount),
+          onPressed: () => helper.addOrRemoveLater(toAdd: false, onUpdated: inLaterSetter, onLcCleared: null, fromLaterList: false, fromMangaPage: fromMangaPage),
         ),
         if (later != null && extraData != null && extraData.newestChapter != null && extraData.newestDate != null && extraData.newestChapter != later.newestChapter)
           IconTextDialogOption(
@@ -843,6 +851,14 @@ void showPopupMenuForLaterManga({
             text: Text('置顶于稍后阅读列表'),
             popWhenPress: c,
             onPressed: () => helper.topmostLater(later: later, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+          ),
+        if (lcCount > 0)
+          IconTextDialogOption(
+            icon: Icon(CustomIcons.clock_delete),
+            text: Text('取消章节的稍后阅读标记 (共 $lcCount 个)'),
+            popWhenPress: c,
+            predicateForPress: () => helper.showCheckUnmarkingLaterChapterDialog(lcCount: lcCount),
+            onPressed: () => helper.clearChapterLaters(onCleared: onLcCleared, fromMangaPage: fromMangaPage),
           ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.bookClock),

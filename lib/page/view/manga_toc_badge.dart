@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 
 class NewBadge extends StatelessWidget {
   const NewBadge({Key? key}) : super(key: key);
+
+  double getHeight(BuildContext context) =>
+      2 +
+      TextSpan(
+        text: 'NEW',
+        style: TextStyle(
+          fontSize: 9,
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
+      ).layoutSize(context).height;
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +25,10 @@ class NewBadge extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
         decoration: BoxDecoration(
           color: Colors.red,
-          borderRadius: BorderRadius.all(Radius.circular(2.0)),
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(2.0),
+            bottomLeft: Radius.circular(2.0),
+          ),
         ),
         child: Text(
           'NEW',
@@ -29,27 +44,28 @@ class NewBadge extends StatelessWidget {
 }
 
 class LaterBadge extends StatelessWidget {
-  const LaterBadge({Key? key}) : super(key: key);
+  const LaterBadge({
+    Key? key,
+    this.extraTop = 0,
+  }) : super(key: key);
+
+  final double extraTop;
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 0,
+      top: extraTop,
       right: 0,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
+        padding: EdgeInsets.symmetric(vertical: 1, horizontal: 5),
         decoration: BoxDecoration(
           color: Colors.blueGrey,
-          borderRadius: BorderRadius.all(Radius.circular(2.0)),
-        ),
-        child: Text(
-          'LATER', // TODO improve badge style
-          style: TextStyle(
-            fontSize: 9,
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
+          borderRadius: BorderRadius.only(
+            topRight: extraTop == 0 ? Radius.circular(2.0) : Radius.zero,
+            bottomLeft: Radius.circular(2.0),
           ),
         ),
+        child: Icon(Icons.schedule, size: 11, color: Colors.white),
       ),
     );
   }
