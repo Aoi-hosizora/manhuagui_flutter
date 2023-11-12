@@ -570,11 +570,10 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                               _later = l;
                               if (l == null) {
                                 _laterChapters?.clear();
-                                _laterChapters = null;
                               }
                               if (mounted) setState(() {});
                             },
-                            onLcCleared: null /* 该页暂不显示稍后阅读章节 */,
+                            onLaterChapterCleared: null /* 该页暂不显示稍后阅读章节 */,
                           ),
                         ),
                       ),

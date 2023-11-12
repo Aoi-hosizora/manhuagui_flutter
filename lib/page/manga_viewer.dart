@@ -887,6 +887,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         _laterManga = l;
         if (mounted) setState(() {});
       },
+      onLaterChapterCleared: null /* 本页暂不显示稍后阅读章节 */,
     );
   }
 
@@ -1105,7 +1106,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         _laterManga = l;
         if (mounted) setState(() {});
       },
-      onLcCleared: null /* 该页暂不显示稍后阅读章节 */,
+      onLaterChapterCleared: null /* 该页暂不显示稍后阅读章节 */,
       navigateWrapper: (navigate) async {
         await _ScreenHelper.restoreSystemUI();
         await navigate();

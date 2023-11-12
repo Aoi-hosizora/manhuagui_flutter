@@ -203,8 +203,8 @@ class _DialogHelper {
     return ok ?? false;
   }
 
-  Future<bool> showCheckRemovingLaterDialog({required int lcCount}) async {
-    var tip = lcCount == 0 ? '' : '，并取消所有章节的稍后阅读标记';
+  Future<bool> showCheckRemovingLaterDialog({required int laterChapterCount}) async {
+    var tip = laterChapterCount == 0 ? '' : '，并取消所有章节的稍后阅读标记';
     var ok = await showYesNoAlertDialog(context: context, title: Text('稍后阅读确认'), content: Text('确定将《$mangaTitle》移出稍后阅读列表$tip？'), yesText: Text('移出'), noText: Text('取消'));
     return ok ?? false;
   }
@@ -214,8 +214,8 @@ class _DialogHelper {
     return ok ?? false;
   }
 
-  Future<bool> showCheckClearingLaterChapterDialog({required int lcCount}) async {
-    var ok = await showYesNoAlertDialog(context: context, title: Text('稍后阅读确认'), content: Text('当前共 $lcCount 个章节标记着稍后阅读，是否取消标记？'), yesText: Text('确定'), noText: Text('取消'));
+  Future<bool> showCheckClearingLaterChapterDialog({required int laterChapterCount}) async {
+    var ok = await showYesNoAlertDialog(context: context, title: Text('稍后阅读确认'), content: Text('当前共 $laterChapterCount 个章节标记着稍后阅读，是否取消标记？'), yesText: Text('确定'), noText: Text('取消'));
     return ok ?? false;
   }
 
@@ -353,7 +353,7 @@ class _DialogHelper {
     }
   }
 
-  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing
   Future<void> addLater({
     required void Function(LaterManga later)? onAdded,
     required bool fromLaterList,
@@ -380,21 +380,22 @@ class _DialogHelper {
   // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
   Future<void> removeLater({
     required void Function()? onRemoved,
-    required void Function()? onLcCleared,
+    required void Function()? onLaterChapterCleared,
     required bool fromLaterList,
     required bool fromMangaPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
     await LaterMangaDao.clearLaterChapters(username: AuthManager.instance.username, mid: mangaId);
-    onLcCleared?.call();
+    onLaterChapterCleared?.call();
     await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: mangaId);
     onRemoved?.call();
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已从稍后阅读列表中移出')));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, added: false, fromMangaPage: fromMangaPage));
     EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
-  // => called by showPopupMenuForSubscribing, showPopupMenuForLaterManga
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
   Future<void> topmostLater({
     required LaterManga later,
     required void Function(LaterManga? later)? onUpdated,
@@ -410,7 +411,7 @@ class _DialogHelper {
     EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
-  // => called by showPopupMenuForLaterManga
+  // => called by showPopupMenuForMangaList, showPopupMenuForLaterManga
   Future<void> updateLaterToNewestChapterWithDlg({
     required LaterManga later,
     required void Function(LaterManga? later)? onUpdated,

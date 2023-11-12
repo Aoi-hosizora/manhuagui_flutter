@@ -424,8 +424,11 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _laterManga = l;
         if (l == null) {
           _laterChapters?.clear();
-          _laterChapters = null;
         }
+        if (mounted) setState(() {});
+      },
+      onLaterChapterCleared: () {
+        _laterChapters?.clear();
         if (mounted) setState(() {});
       },
     );
@@ -639,13 +642,11 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _laterManga = l;
         if (l == null) {
           _laterChapters?.clear();
-          _laterChapters = null;
         }
         if (mounted) setState(() {});
       },
-      onLcCleared: () {
+      onLaterChapterCleared: () {
         _laterChapters?.clear();
-        _laterChapters = null;
         if (mounted) setState(() {});
       },
     );

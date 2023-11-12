@@ -82,7 +82,7 @@ Future<void> showPopupMenuForMangaList({
   var nowInShelfCache = await ShelfCacheDao.checkExistence(username: AuthManager.instance.username, mid: mangaId) ?? false;
   var laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: mangaId);
   var nowInLater = laterManga != null;
-  var lcCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
+  var laterChapterCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
   var mangaHistory = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: mangaId);
   var expandShelfOptions = false;
 
@@ -201,10 +201,10 @@ Future<void> showPopupMenuForMangaList({
             icon: Icon(!nowInLater ? MdiIcons.clockPlus : MdiIcons.clockMinus),
             text: Text(!nowInLater ? '添加至稍后阅读列表' : '移出稍后阅读列表'),
             popWhenPress: c,
-            predicateForPress: !nowInLater ? null : () => helper.showCheckRemovingLaterDialog(lcCount: lcCount),
+            predicateForPress: !nowInLater ? null : () => helper.showCheckRemovingLaterDialog(laterChapterCount: laterChapterCount),
             onPressed: () => !nowInLater //
                 ? helper.addLater(onAdded: (l) => inLaterSetter?.call(true), fromLaterList: fromLaterList, fromMangaPage: false)
-                : helper.removeLater(onRemoved: () => inLaterSetter?.call(false), onLcCleared: null, fromLaterList: fromLaterList, fromMangaPage: false),
+                : helper.removeLater(onRemoved: () => inLaterSetter?.call(false), onLaterChapterCleared: null, fromLaterList: fromLaterList, fromMangaPage: false),
           ),
 
           /// 更多选项
@@ -602,10 +602,11 @@ Future<void> showPopupMenuForSubscribing({
   required int? subscribeCount,
   required FavoriteManga? favoriteManga,
   required LaterManga? laterManga,
-  required void Function(bool subscribing) subscribing,
-  required void Function(bool inShelf) inShelfSetter,
-  required void Function(FavoriteManga? favorite) inFavoriteSetter,
-  required void Function(LaterManga? later) inLaterSetter,
+  required void Function(bool subscribing)? subscribing,
+  required void Function(bool inShelf)? inShelfSetter,
+  required void Function(FavoriteManga? favorite)? inFavoriteSetter,
+  required void Function(LaterManga? later)? inLaterSetter,
+  required void Function()? onLaterChapterCleared,
 }) async {
   var helper = _DialogHelper(
     context: context,
@@ -616,7 +617,7 @@ Future<void> showPopupMenuForSubscribing({
     extraData: extraData,
   );
 
-  var lcCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
+  var laterChapterCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
   showDialog(
     context: context,
     builder: (c) => SimpleDialog(
@@ -653,7 +654,7 @@ Future<void> showPopupMenuForSubscribing({
             text: Text('取消本地收藏'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingFavoriteDialog(),
-            onPressed: () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter(null), fromFavoriteList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter?.call(null), fromFavoriteList: false, fromMangaPage: fromMangaPage),
           ),
 
         /// 稍后阅读
@@ -669,8 +670,8 @@ Future<void> showPopupMenuForSubscribing({
             icon: Icon(MdiIcons.clockMinus),
             text: Text('移出稍后阅读列表'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckRemovingLaterDialog(lcCount: lcCount),
-            onPressed: () => helper.removeLater(onRemoved: () => inLaterSetter(null), onLcCleared: null, fromLaterList: false, fromMangaPage: fromMangaPage),
+            predicateForPress: () => helper.showCheckRemovingLaterDialog(laterChapterCount: laterChapterCount),
+            onPressed: () => helper.removeLater(onRemoved: () => inLaterSetter?.call(null), onLaterChapterCleared: onLaterChapterCleared, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
 
         /// 额外选项
@@ -738,7 +739,7 @@ Future<void> showPopupMenuForLaterManga({
   required bool fromMangaPage,
   required LaterManga laterManga,
   required void Function(LaterManga? later)? onLaterUpdated,
-  required void Function()? onLcCleared,
+  required void Function()? onLaterChapterCleared,
   NavigateWrapper? navigateWrapper, // => to update system ui, for MangaViewerPage
 }) async {
   var helper = _DialogHelper(
@@ -750,7 +751,7 @@ Future<void> showPopupMenuForLaterManga({
     extraData: extraData,
   );
   var later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: mangaId);
-  var lcCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
+  var laterChapterCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
 
   navigateWrapper ??= _navigateWrapper;
   showDialog(
@@ -774,8 +775,8 @@ Future<void> showPopupMenuForLaterManga({
           icon: Icon(MdiIcons.clockMinus),
           text: Text('移出稍后阅读列表'),
           popWhenPress: c,
-          predicateForPress: () => helper.showCheckRemovingLaterDialog(lcCount: lcCount),
-          onPressed: () => helper.removeLater(onRemoved: () => onLaterUpdated?.call(null), onLcCleared: null, fromLaterList: false, fromMangaPage: fromMangaPage),
+          predicateForPress: () => helper.showCheckRemovingLaterDialog(laterChapterCount: laterChapterCount),
+          onPressed: () => helper.removeLater(onRemoved: () => onLaterUpdated?.call(null), onLaterChapterCleared: onLaterChapterCleared, fromLaterList: false, fromMangaPage: fromMangaPage),
         ),
         if (later != null && extraData != null && extraData.newestChapter != null && extraData.newestDate != null && extraData.newestChapter != later.newestChapter)
           IconTextDialogOption(
@@ -793,13 +794,13 @@ Future<void> showPopupMenuForLaterManga({
             popWhenPress: c,
             onPressed: () => helper.topmostLater(later: later, onUpdated: onLaterUpdated, fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
-        if (lcCount > 0)
+        if (laterChapterCount > 0)
           IconTextDialogOption(
             icon: Icon(CustomIcons.clock_delete),
-            text: Text('取消章节的稍后阅读标记 (共 $lcCount 个)'),
+            text: Text('取消章节的稍后阅读标记 (共 $laterChapterCount 个)'),
             popWhenPress: c,
-            predicateForPress: () => helper.showCheckClearingLaterChapterDialog(lcCount: lcCount),
-            onPressed: () => helper.clearChapterLaters(onCleared: onLcCleared, fromMangaPage: fromMangaPage),
+            predicateForPress: () => helper.showCheckClearingLaterChapterDialog(laterChapterCount: laterChapterCount),
+            onPressed: () => helper.clearChapterLaters(onCleared: onLaterChapterCleared, fromMangaPage: fromMangaPage),
           ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.bookClock),
