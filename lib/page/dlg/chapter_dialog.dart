@@ -15,7 +15,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 /// 漫画下载管理页-阅读章节对话框 [checkAndShowSwitchChapterDialogForDownload]
 /// 用于获取上下章节的章节分组列表扩展 [MangaChapterGroupListExtension.findChapterNeighbor]
 
-// => MangaPage
+// => called in MangaPage
 Future<void> checkAndShowSwitchChapterDialogForMangaReadChapter({
   required BuildContext context,
   required int mangaId,
@@ -129,7 +129,7 @@ Future<void> checkAndShowSwitchChapterDialogForMangaReadChapter({
   }
 }
 
-// => MangaPage
+// => called in MangaPage
 Future<void> checkAndShowSwitchChapterDialogForMangaContinueToRead({
   required BuildContext context,
   required int mangaId,
@@ -243,7 +243,7 @@ Future<void> checkAndShowSwitchChapterDialogForMangaContinueToRead({
   }
 }
 
-// => MangaViewerPage
+// => called in MangaViewerPage
 Future<void> checkAndShowSwitchChapterDialogForViewer({
   required BuildContext context,
   required int mangaId,
@@ -317,7 +317,7 @@ Future<void> checkAndShowSwitchChapterDialogForViewer({
   }
 }
 
-// => DownloadMangaPage
+// => called in DownloadMangaPage
 Future<void> checkAndShowSwitchChapterDialogForDownload({
   required BuildContext context,
   required int mangaId,

@@ -51,8 +51,12 @@ typedef NavigateWrapper = Future<void> Function(Future<void> Function());
 
 Future<void> _navigateWrapper(Future<void> Function() navigate) => navigate();
 
+// ==================
+// manga list related
+// ==================
+
 // => called by pages which contains manga line view (tiny / ranking / *shelf* / *favorite* / *history* / *later* / download / aud_ranking) and DownloadMangaPage
-void showPopupMenuForMangaList({
+Future<void> showPopupMenuForMangaList({
   required BuildContext context,
   required int mangaId,
   required String mangaTitle,
@@ -369,8 +373,12 @@ void showPopupMenuForMangaList({
   );
 }
 
+// ================
+// favorite related
+// ================
+
 // => called in FavoriteSubPage and FavoriteAllPage
-void showUpdateFavoriteMangasGroupDialog({
+Future<void> showUpdateFavoriteMangasGroupDialog({
   required BuildContext context,
   required List<FavoriteManga> favorites,
   required String? selectedGroupName,
@@ -396,7 +404,7 @@ void showUpdateFavoriteMangasGroupDialog({
 }
 
 // => called in FavoriteSubPage and FavoriteAllPage
-void showUpdateFavoriteMangaRemarkDialog({
+Future<void> showUpdateFavoriteMangaRemarkDialog({
   required BuildContext context,
   required FavoriteManga favorite,
   bool fromFavoriteList = false,
@@ -419,8 +427,12 @@ void showUpdateFavoriteMangaRemarkDialog({
   );
 }
 
+// =================
+// manga toc related
+// =================
+
 // => called in MangaPage, MangaTocPage (for MangaPage and MangaViewerPage), MangaHistoryPage
-void showPopupMenuForMangaToc({
+Future<void> showPopupMenuForMangaToc({
   required BuildContext context,
   required int mangaId,
   required String mangaTitle,
@@ -571,8 +583,12 @@ void showPopupMenuForMangaToc({
   );
 }
 
+// ===========================
+// subscribe and later related
+// ===========================
+
 // => called in MangaPage and MangaViewerPage
-void showPopupMenuForSubscribing({
+Future<void> showPopupMenuForSubscribing({
   required BuildContext context,
   required int mangaId,
   required String mangaTitle,
@@ -601,7 +617,6 @@ void showPopupMenuForSubscribing({
   );
 
   var lcCount = await LaterMangaDao.getLaterChapterCount(username: AuthManager.instance.username, mid: mangaId) ?? 0;
-
   showDialog(
     context: context,
     builder: (c) => SimpleDialog(
@@ -712,81 +727,8 @@ void showPopupMenuForSubscribing({
   );
 }
 
-// => called in ShelfSubPage and MangaShelfCachePage
-void showPopupMenuForShelfCache({
-  required BuildContext context,
-  required bool fromCachePage,
-  void Function()? customSyncer,
-}) {
-  if (!AuthManager.instance.logined) {
-    Fluttertoast.showToast(msg: '用户未登录');
-    return;
-  }
-
-  showDialog(
-    context: context,
-    builder: (c) => SimpleDialog(
-      title: Text('同步'),
-      children: [
-        IconTextDialogOption(
-          icon: Icon(Icons.sync),
-          text: Text('同步我的书架'),
-          onPressed: () async {
-            var ok = await showYesNoAlertDialog(
-              context: context,
-              title: Text('同步确认'),
-              content: Text('是否检索并同步我的书架上的漫画？'),
-              yesText: Text('同步'),
-              noText: Text('取消'),
-            );
-            if (ok ?? false) {
-              Navigator.of(c).pop();
-              if (customSyncer != null) {
-                customSyncer.call();
-              } else {
-                MangaShelfCachePage.syncShelfCaches(context);
-              }
-            }
-          },
-        ),
-        if (!fromCachePage)
-          IconTextDialogOption(
-            icon: Icon(CustomIcons.star_sync),
-            text: Text('查看已同步的书架记录'),
-            onPressed: () async {
-              Navigator.of(c).pop();
-              Navigator.of(context).push(
-                CustomPageRoute(
-                  context: context,
-                  builder: (c) => MangaShelfCachePage(),
-                ),
-              );
-            },
-          ),
-        IconTextDialogOption(
-          icon: Icon(CustomIcons.bookmark_plus),
-          text: Text('添加所有记录至本地收藏'),
-          onPressed: () async {
-            var ok = await showYesNoAlertDialog(
-              context: context,
-              title: Text('添加确认'),
-              content: Text('是否将已同步的所有书架记录添加至本地收藏？'),
-              yesText: Text('添加'),
-              noText: Text('取消'),
-            );
-            if (ok ?? false) {
-              Navigator.of(c).pop();
-              MangaShelfCachePage.addAllToFavorite(context);
-            }
-          },
-        ),
-      ],
-    ),
-  );
-}
-
 // => called in MangaPage and MangaViewerPage and DownloadedMangaPage
-void showPopupMenuForLaterManga({
+Future<void> showPopupMenuForLaterManga({
   required BuildContext context,
   required int mangaId,
   required String mangaTitle,
@@ -870,7 +812,17 @@ void showPopupMenuForLaterManga({
   );
 }
 
-void showPopupMenuForMangaTitle({required BuildContext context, required Manga? manga, required String fallbackTitle, bool vibrate = false}) {
+// ================
+// misc popup menus
+// ================
+
+// => called in MangaPage
+void showPopupMenuForMangaTitle({
+  required BuildContext context,
+  required Manga? manga,
+  required String fallbackTitle,
+  bool vibrate = false,
+}) {
   if (vibrate) {
     HapticFeedback.vibrate();
   }
@@ -904,11 +856,12 @@ void showPopupMenuForMangaTitle({required BuildContext context, required Manga? 
   );
 }
 
+// => called in MangaViewerPage
 void showPopupMenuForChapterTitle({
   required BuildContext context,
   required String mangaTitle,
   required String chapterTitle,
-  required void Function()? onDetailsPressed,
+  void Function()? onDetailsPressed,
   bool vibrate = false,
 }) {
   if (vibrate) {

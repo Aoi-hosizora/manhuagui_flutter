@@ -18,253 +18,9 @@ class _DialogHelper {
   final String mangaUrl;
   final MangaExtraDataForDialog? extraData;
 
-  // ============================
-  // static methods (show dialog)
-  // ============================
-
-  static Future<Tuple3<String, String, bool>?> showAddToFavoriteDialog({
-    required BuildContext context,
-    required List<FavoriteGroup> groups,
-  }) async {
-    var groupName = ''; // group
-    var controller = TextEditingController(); // remark
-    var addToTop = false; // order, 默认添加到末尾
-
-    var ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => WillPopScope(
-        onWillPop: () async {
-          if (controller.text.trim().isEmpty) {
-            return true;
-          }
-          var ok = await showYesNoAlertDialog(
-            context: context,
-            title: Text('收藏漫画'),
-            content: Text('是否放弃当前的输入并不做任何变更？'),
-            yesText: Text('放弃'),
-            noText: Text('继续编辑'),
-            reverseYesNoOrder: true,
-          );
-          return ok == true;
-        },
-        child: StatefulBuilder(
-          builder: (c, _setState) => AlertDialog(
-            title: Text('收藏漫画'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: getDialogContentMaxWidth(context),
-                  padding: EdgeInsets.only(left: 5, right: 5, bottom: 12),
-                  child: CustomCombobox<String>(
-                    value: groupName,
-                    items: [
-                      for (var group in groups)
-                        CustomComboboxItem(
-                          value: group.groupName,
-                          text: group.checkedGroupName,
-                        ),
-                    ],
-                    onChanged: (v) => v?.let((v) => _setState(() => groupName = v)),
-                    textStyle: Theme.of(context).textTheme.subtitle1,
-                  ),
-                ),
-                Container(
-                  width: getDialogContentMaxWidth(context),
-                  padding: EdgeInsets.only(left: 8, right: 12, bottom: 12),
-                  child: TextField(
-                    controller: controller,
-                    maxLines: 1,
-                    autofocus: false,
-                    decoration: InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(vertical: 5),
-                      labelText: '漫画备注',
-                      icon: Padding(
-                        padding: EdgeInsets.only(right: 2),
-                        child: Icon(MdiIcons.commentBookmarkOutline),
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  width: getDialogContentMaxWidth(context),
-                  padding: EdgeInsets.only(top: 3),
-                  child: CheckboxListTile(
-                    title: Text('添加至收藏顶部'),
-                    value: addToTop,
-                    onChanged: (v) => _setState(() => addToTop = v ?? false),
-                    visualDensity: VisualDensity(horizontal: -4, vertical: -4),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
-              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).maybePop(false)),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (ok != true) {
-      return null;
-    }
-
-    return Tuple3(
-      groupName, // group
-      controller.text.trim(), // remark, empty-able
-      addToTop, // order
-    );
-  }
-
-  static Future<Tuple2<FavoriteGroup, bool>?> showChooseFavoriteGroupDialog({
-    required BuildContext context,
-    required List<FavoriteGroup> groups,
-    required String? selectedGroupName,
-  }) async {
-    var addToTop = false; // order, 默认添加到末尾
-    var group = await showDialog<FavoriteGroup>(
-      context: context,
-      builder: (c) => SimpleDialog(
-        title: Text('移动收藏至分组'),
-        children: [
-          CheckBoxDialogOption(
-            initialValue: addToTop,
-            onChanged: (v) => addToTop = v,
-            text: '添加至收藏顶部',
-          ),
-          Divider(thickness: 1),
-          for (var group in groups)
-            TextDialogOption(
-              text: Text(
-                group.checkedGroupName,
-                style: selectedGroupName == null || group.groupName != selectedGroupName //
-                    ? null
-                    : TextStyle(color: Theme.of(context).primaryColor),
-              ),
-              onPressed: () {
-                if (group.groupName == selectedGroupName && !addToTop) {
-                  // pass
-                } else {
-                  Navigator.of(c).pop(group);
-                }
-              },
-            ),
-        ],
-      ),
-    );
-    if (group == null) {
-      return null;
-    }
-
-    return Tuple2(
-      group, // group
-      addToTop, // order
-    );
-  }
-
-  static Future<Tuple1<String>?> showEditFavoriteRemarkDialog({
-    required BuildContext context,
-    required String remark,
-  }) async {
-    var controller = TextEditingController()..text = remark; // remark
-    var ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => WillPopScope(
-        onWillPop: () async {
-          if (controller.text.trim() == remark) {
-            return true;
-          }
-          var ok = await showYesNoAlertDialog(
-            context: context,
-            title: Text('修改收藏备注'),
-            content: Text('是否放弃当前的输入并不做任何变更？'),
-            yesText: Text('放弃'),
-            noText: Text('继续编辑'),
-            reverseYesNoOrder: true,
-          );
-          return ok == true;
-        },
-        child: AlertDialog(
-          title: Text('修改收藏备注'),
-          content: SizedBox(
-            width: getDialogContentMaxWidth(context),
-            child: TextField(
-              controller: controller,
-              maxLines: 1,
-              autofocus: true,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(vertical: 5),
-                labelText: '漫画备注',
-                icon: Icon(MdiIcons.commentBookmarkOutline),
-              ),
-            ),
-          ),
-          actions: [
-            if (remark.isNotEmpty)
-              TextButton(
-                child: Text('查看原备注'),
-                onPressed: () => showYesNoAlertDialog(
-                  context: context,
-                  title: Text('收藏备注'),
-                  content: Text(remark),
-                  yesText: Text('复制'),
-                  noText: Text('关闭'),
-                  yesOnPressed: (c) => copyText(remark, showToast: true),
-                ),
-              ),
-            TextButton(
-              child: Text('确定'),
-              onPressed: () async {
-                if (controller.text.trim() == remark) {
-                  Fluttertoast.showToast(msg: '备注没有变更');
-                } else {
-                  Navigator.of(c).pop(true);
-                }
-              },
-            ),
-            TextButton(
-              child: Text('取消'),
-              onPressed: () => Navigator.of(c).maybePop(false),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (ok != true) {
-      return null;
-    }
-
-    return Tuple1(
-      controller.text.trim(), // remark, empty-able
-    );
-  }
-
-  static Future<bool> showFavoriteRemarkDialog({
-    required BuildContext context,
-    required String mangaTitle,
-    required String remark,
-  }) async {
-    var ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text('《$mangaTitle》备注'),
-        content: SelectableText(remark == '' ? '暂无备注' : remark),
-        actions: [
-          TextButton(child: Text('修改'), onPressed: () => Navigator.of(c).pop(true)),
-          if (remark != '') TextButton(child: Text('复制'), onPressed: () => copyText(remark, showToast: true)),
-          TextButton(child: Text('关闭'), onPressed: () => Navigator.of(c).pop()),
-        ],
-      ),
-    );
-    return ok ?? false;
-  }
-
-  // =======================
-  // helper methods (others)
-  // =======================
+  // =====================
+  // helper methods (misc)
+  // =====================
 
   void gotoMangaPage() {
     Navigator.of(context).push(
@@ -710,6 +466,21 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForMangaToc
+  Future<void> addFootprint({
+    required int chapterId,
+    required void Function(ChapterFootprint)? onAdded,
+    required bool fromHistoryList,
+    required bool fromMangaPage,
+    required bool fromMangaTocPage,
+    required bool fromMangaHistoryPage,
+  }) async {
+    var newFootprint = ChapterFootprint(mangaId: mangaId, chapterId: chapterId, createdAt: DateTime.now());
+    await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
+    onAdded?.call(newFootprint);
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.added, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
+  }
+
+  // => called by showPopupMenuForMangaToc
   Future<void> removeFootprint({
     required MangaHistory oldHistory,
     required int chapterId,
@@ -740,21 +511,6 @@ class _DialogHelper {
     await HistoryDao.deleteFootprint(username: AuthManager.instance.username, mid: mangaId, cid: chapterId);
     onFpRemoved?.call([chapterId]);
     EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.deleted, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
-  }
-
-  // => called by showPopupMenuForMangaToc
-  Future<void> addFootprint({
-    required int chapterId,
-    required void Function(ChapterFootprint)? onAdded,
-    required bool fromHistoryList,
-    required bool fromMangaPage,
-    required bool fromMangaTocPage,
-    required bool fromMangaHistoryPage,
-  }) async {
-    var newFootprint = ChapterFootprint(mangaId: mangaId, chapterId: chapterId, createdAt: DateTime.now());
-    await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
-    onAdded?.call(newFootprint);
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.added, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
   }
 
   // => called by showPopupMenuForMangaToc
@@ -801,6 +557,250 @@ class _DialogHelper {
     await LaterMangaDao.clearLaterChapters(username: AuthManager.instance.username, mid: mangaId);
     onCleared?.call();
     EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, added: false, fromMangaPage: fromMangaPage, fromMangaTocPage: false));
+  }
+
+  // =================================
+  // static methods (favorite dialogs)
+  // =================================
+
+  static Future<Tuple3<String, String, bool>?> showAddToFavoriteDialog({
+    required BuildContext context,
+    required List<FavoriteGroup> groups
+  }) async {
+    var groupName = ''; // group
+    var controller = TextEditingController(); // remark
+    var addToTop = false; // order, 默认添加到末尾
+
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => WillPopScope(
+        onWillPop: () async {
+          if (controller.text.trim().isEmpty) {
+            return true;
+          }
+          var ok = await showYesNoAlertDialog(
+            context: context,
+            title: Text('收藏漫画'),
+            content: Text('是否放弃当前的输入并不做任何变更？'),
+            yesText: Text('放弃'),
+            noText: Text('继续编辑'),
+            reverseYesNoOrder: true,
+          );
+          return ok == true;
+        },
+        child: StatefulBuilder(
+          builder: (c, _setState) => AlertDialog(
+            title: Text('收藏漫画'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: getDialogContentMaxWidth(context),
+                  padding: EdgeInsets.only(left: 5, right: 5, bottom: 12),
+                  child: CustomCombobox<String>(
+                    value: groupName,
+                    items: [
+                      for (var group in groups)
+                        CustomComboboxItem(
+                          value: group.groupName,
+                          text: group.checkedGroupName,
+                        ),
+                    ],
+                    onChanged: (v) => v?.let((v) => _setState(() => groupName = v)),
+                    textStyle: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                Container(
+                  width: getDialogContentMaxWidth(context),
+                  padding: EdgeInsets.only(left: 8, right: 12, bottom: 12),
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 1,
+                    autofocus: false,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(vertical: 5),
+                      labelText: '漫画备注',
+                      icon: Padding(
+                        padding: EdgeInsets.only(right: 2),
+                        child: Icon(MdiIcons.commentBookmarkOutline),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: getDialogContentMaxWidth(context),
+                  padding: EdgeInsets.only(top: 3),
+                  child: CheckboxListTile(
+                    title: Text('添加至收藏顶部'),
+                    value: addToTop,
+                    onChanged: (v) => _setState(() => addToTop = v ?? false),
+                    visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(child: Text('确定'), onPressed: () => Navigator.of(c).pop(true)),
+              TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).maybePop(false)),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (ok != true) {
+      return null;
+    }
+
+    return Tuple3(
+      groupName, // group
+      controller.text.trim(), // remark, empty-able
+      addToTop, // order
+    );
+  }
+
+  static Future<Tuple2<FavoriteGroup, bool>?> showChooseFavoriteGroupDialog({
+    required BuildContext context,
+    required List<FavoriteGroup> groups,
+    required String? selectedGroupName,
+  }) async {
+    var addToTop = false; // order, 默认添加到末尾
+    var group = await showDialog<FavoriteGroup>(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: Text('移动收藏至分组'),
+        children: [
+          CheckBoxDialogOption(
+            initialValue: addToTop,
+            onChanged: (v) => addToTop = v,
+            text: '添加至收藏顶部',
+          ),
+          Divider(thickness: 1),
+          for (var group in groups)
+            TextDialogOption(
+              text: Text(
+                group.checkedGroupName,
+                style: selectedGroupName == null || group.groupName != selectedGroupName //
+                    ? null
+                    : TextStyle(color: Theme.of(context).primaryColor),
+              ),
+              onPressed: () {
+                if (group.groupName == selectedGroupName && !addToTop) {
+                  // pass
+                } else {
+                  Navigator.of(c).pop(group);
+                }
+              },
+            ),
+        ],
+      ),
+    );
+    if (group == null) {
+      return null;
+    }
+
+    return Tuple2(
+      group, // group
+      addToTop, // order
+    );
+  }
+
+  static Future<Tuple1<String>?> showEditFavoriteRemarkDialog({
+    required BuildContext context,
+    required String remark,
+  }) async {
+    var controller = TextEditingController()..text = remark; // remark
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => WillPopScope(
+        onWillPop: () async {
+          if (controller.text.trim() == remark) {
+            return true;
+          }
+          var ok = await showYesNoAlertDialog(
+            context: context,
+            title: Text('修改收藏备注'),
+            content: Text('是否放弃当前的输入并不做任何变更？'),
+            yesText: Text('放弃'),
+            noText: Text('继续编辑'),
+            reverseYesNoOrder: true,
+          );
+          return ok == true;
+        },
+        child: AlertDialog(
+          title: Text('修改收藏备注'),
+          content: SizedBox(
+            width: getDialogContentMaxWidth(context),
+            child: TextField(
+              controller: controller,
+              maxLines: 1,
+              autofocus: true,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(vertical: 5),
+                labelText: '漫画备注',
+                icon: Icon(MdiIcons.commentBookmarkOutline),
+              ),
+            ),
+          ),
+          actions: [
+            if (remark.isNotEmpty)
+              TextButton(
+                child: Text('查看原备注'),
+                onPressed: () => showYesNoAlertDialog(
+                  context: context,
+                  title: Text('收藏备注'),
+                  content: Text(remark),
+                  yesText: Text('复制'),
+                  noText: Text('关闭'),
+                  yesOnPressed: (c) => copyText(remark, showToast: true),
+                ),
+              ),
+            TextButton(
+              child: Text('确定'),
+              onPressed: () async {
+                if (controller.text.trim() == remark) {
+                  Fluttertoast.showToast(msg: '备注没有变更');
+                } else {
+                  Navigator.of(c).pop(true);
+                }
+              },
+            ),
+            TextButton(
+              child: Text('取消'),
+              onPressed: () => Navigator.of(c).maybePop(false),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) {
+      return null;
+    }
+
+    return Tuple1(
+      controller.text.trim(), // remark, empty-able
+    );
+  }
+
+  static Future<bool> showFavoriteRemarkDialog({
+    required BuildContext context,
+    required String mangaTitle,
+    required String remark,
+  }) async {
+    var ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('《$mangaTitle》备注'),
+        content: SelectableText(remark == '' ? '暂无备注' : remark),
+        actions: [
+          TextButton(child: Text('修改'), onPressed: () => Navigator.of(c).pop(true)),
+          if (remark != '') TextButton(child: Text('复制'), onPressed: () => copyText(remark, showToast: true)),
+          TextButton(child: Text('关闭'), onPressed: () => Navigator.of(c).pop()),
+        ],
+      ),
+    );
+    return ok ?? false;
   }
 
   // =========================

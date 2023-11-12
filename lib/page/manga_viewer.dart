@@ -58,21 +58,19 @@ class MangaViewerPage extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
-    required MangaExtraDataForViewer? extraData,
+    required this.extraData,
     required this.onlineMode,
     required this.initialPage, // start from 1
     this.onMangaGot, // for download manga page
     this.replacing = false,
-  })  : neededData = extraData,
-        // 在Viewer页，保留旧变量名 neededData
-        super(key: key);
+  }) : super(key: key);
 
   final int mangaId;
   final int chapterId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final MangaExtraDataForViewer? neededData;
+  final MangaExtraDataForViewer? extraData;
   final bool onlineMode;
   final int initialPage;
   final void Function(Manga)? onMangaGot;
@@ -320,8 +318,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         // => (I) 在线模式，通过网络获取漫画数据 (同步获取漫画数据)
         // I.5. 异步请求漫画数据
         Future<TaskResult<MangaExtraDataForViewer, Object>> neededDataFuture;
-        if (widget.neededData != null) {
-          neededDataFuture = Future.value(Ok(widget.neededData!));
+        if (widget.extraData != null) {
+          neededDataFuture = Future.value(Ok(widget.extraData!));
         } else {
           neededDataFuture = Future.microtask(() async {
             try {
@@ -385,25 +383,25 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             chapterUrl: chapter.chapterUrl,
             pageCount: chapter.totalPageCount,
             pages: metadata.pages,
-            chapterNeighbor: widget.neededData?.chapterGroups.findChapterNeighbor(widget.chapterId, prev: true, next: true) ??
+            chapterNeighbor: widget.extraData?.chapterGroups.findChapterNeighbor(widget.chapterId, prev: true, next: true) ??
                 MangaChapterNeighbor(
                   // => use download metadata as chapter neighbor
                   notLoaded: metadata.prevCid == null || metadata.nextCid == null /* null => 未找到数据, notLoaded == true */,
                   prevChapter: (metadata.prevCid ?? 0) <= 0 ? null : TinierMangaChapter(cid: metadata.prevCid!, title: '未知章节', group: '未知分组') /* null => 没有上一章节 */,
                   nextChapter: (metadata.nextCid ?? 0) <= 0 ? null : TinierMangaChapter(cid: metadata.nextCid!, title: '未知章节', group: '未知分组') /* null => 没有下一章节 */,
                 ),
-            chapterGroups: widget.neededData?.chapterGroups /* maybe null */,
-            mangaAuthors: widget.neededData?.mangaAuthors /* maybe null */,
-            newestChapter: widget.neededData?.newestChapter /* maybe null */,
-            newestDate: widget.neededData?.newestDate /* maybe null */,
-            isMangaFinished: widget.neededData?.isMangaFinished /* maybe null */,
+            chapterGroups: widget.extraData?.chapterGroups /* maybe null */,
+            mangaAuthors: widget.extraData?.mangaAuthors /* maybe null */,
+            newestChapter: widget.extraData?.newestChapter /* maybe null */,
+            newestDate: widget.extraData?.newestDate /* maybe null */,
+            isMangaFinished: widget.extraData?.isMangaFinished /* maybe null */,
             getMangaFailed: null /* getting manga */,
             metadataUpdatedAt: metadata.updatedAt /* maybe null */,
           );
           _preparePageValues(); // 初始化页码和页面列表
 
           // II.6. 异步请求漫画数据
-          if (widget.neededData == null) {
+          if (widget.extraData == null) {
             Future.microtask(() async {
               try {
                 var result = await client.getManga(mid: widget.mangaId);
@@ -694,7 +692,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             mangaTitle: _data?.mangaTitle ?? widget.mangaTitle,
             mangaCover: _data?.mangaCover ?? widget.mangaCover,
             mangaUrl: _data?.mangaUrl ?? widget.mangaUrl,
-            extraData: _data?.neededData ?? widget.neededData,
+            extraData: _data?.neededData ?? widget.extraData,
             initialPage: _currentPage /* initial page index starts from 1 */,
             onlineMode: true,
             replacing: true,
@@ -956,8 +954,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaTitle = widget.mangaTitle;
       mangaCover = widget.mangaCover;
       mangaUrl = widget.mangaUrl;
-      if (widget.neededData != null) {
-        neededData = widget.neededData!;
+      if (widget.extraData != null) {
+        neededData = widget.extraData!;
       } else {
         Fluttertoast.showToast(msg: '当前处于离线模式，但未获取到漫画章节列表'); // <<< for _offlineError
         return;
@@ -1467,7 +1465,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   : AppBar(
                       backgroundColor: Colors.black.withOpacity(0.7),
                       elevation: 0,
-                      title: (_data?.chapterTitle ?? widget.neededData?.chapterGroups.findChapter(widget.chapterId)?.title ?? '未知章节').let(
+                      title: (_data?.chapterTitle ?? widget.extraData?.chapterGroups.findChapter(widget.chapterId)?.title ?? '未知章节').let(
                         (title) => GestureDetector(
                           child: Text(
                             title,

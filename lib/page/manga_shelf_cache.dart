@@ -4,11 +4,11 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/page/dlg/list_assist_dialog.dart';
-import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/search.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
+import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/list_hint.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
@@ -511,23 +511,55 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> with FitSyste
   }
 
   void _showSyncPopupMenus() {
-    // menu options:
-    // - 同步我的书架
-    // - 添加所有记录至本地收藏
-    showPopupMenuForShelfCache(
+    showDialog(
       context: context,
-      fromCachePage: true,
-      customSyncer: () {
-        // 退出多选模式、(网络请求)、(更新数据库)、(发送通知)、更新界面[↴]
-        // 本页引起的新增 => 刷新列表
-        // 本页引起的删除 => 刷新列表
-        _msController.exitMultiSelectionMode();
-        MangaShelfCachePage.syncShelfCaches(
-          context,
-          onFinish: () => _pdvKey.currentState?.refresh(),
-          fromShelfCachePage: true,
-        );
-      },
+      builder: (c) => SimpleDialog(
+        title: Text('同步'),
+        children: [
+          IconTextDialogOption(
+            icon: Icon(Icons.sync),
+            text: Text('同步我的书架'),
+            onPressed: () async {
+              var ok = await showYesNoAlertDialog(
+                context: context,
+                title: Text('同步确认'),
+                content: Text('是否检索并同步我的书架上的漫画？'),
+                yesText: Text('同步'),
+                noText: Text('取消'),
+              );
+              if (ok ?? false) {
+                Navigator.of(c).pop();
+                // 退出多选模式、(网络请求)、(更新数据库)、(发送通知)、更新界面[↴]
+                // 本页引起的新增 => 刷新列表
+                // 本页引起的删除 => 刷新列表
+                _msController.exitMultiSelectionMode();
+                MangaShelfCachePage.syncShelfCaches(
+                  context,
+                  onFinish: () => _pdvKey.currentState?.refresh(),
+                  fromShelfCachePage: true,
+                );
+              }
+            },
+          ),
+          IconTextDialogOption(
+            icon: Icon(CustomIcons.bookmark_plus),
+            text: Text('添加所有记录至本地收藏'),
+            onPressed: () async {
+              var ok = await showYesNoAlertDialog(
+                context: context,
+                title: Text('添加确认'),
+                content: Text('是否将已同步的所有书架记录添加至本地收藏？'),
+                yesText: Text('添加'),
+                noText: Text('取消'),
+              );
+              if (ok ?? false) {
+                Navigator.of(c).pop();
+                MangaShelfCachePage.addAllToFavorite(context);
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 
