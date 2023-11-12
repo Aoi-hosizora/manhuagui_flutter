@@ -4,8 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
@@ -27,8 +27,7 @@ class MangaTocPage extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
-    required this.chapterNeededData,
-    required this.groups,
+    required this.extraData,
     this.showAppDrawer = true,
     required this.onChapterPressed,
     this.onManageHistoryPressed,
@@ -41,8 +40,7 @@ class MangaTocPage extends StatefulWidget {
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final MangaChapterNeededData chapterNeededData;
-  final List<MangaChapterGroup> groups;
+  final MangaExtraDataForViewer extraData;
   final bool showAppDrawer;
   final void Function(int cid) onChapterPressed;
   final void Function()? onManageHistoryPressed;
@@ -96,7 +94,7 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
+      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.extraData.chapterGroups);
     } finally {
       _loading = false;
       if (mounted) setState(() {});
@@ -115,7 +113,7 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
     }
     if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
-      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
+      _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.extraData.chapterGroups);
       if (mounted) setState(() {});
     }
     if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.fromMangaTocPage) {
@@ -129,7 +127,7 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
   }
 
   void _showChapterPopupMenu(int chapterId) {
-    var chapter = widget.groups.findChapter(chapterId);
+    var chapter = widget.extraData.chapterGroups.findChapter(chapterId);
     if (chapter == null) {
       Fluttertoast.showToast(msg: '未在漫画章节列表中找到章节'); // almost unreachable
       return;
@@ -145,7 +143,7 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
       fromMangaTocPage: true,
       fromMangaHistoryPage: false,
       chapter: chapter,
-      chapterNeededData: widget.chapterNeededData,
+      extraData: widget.extraData,
       onHistoryUpdated: (h) => mountedSetState(() => _history = h),
       onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
       onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
@@ -230,7 +228,7 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
               physics: AlwaysScrollableScrollPhysics(),
               children: [
                 MangaTocView(
-                  groups: !_downloadOnly ? widget.groups : (_downloadedChapters ?? []),
+                  groups: !_downloadOnly ? widget.extraData.chapterGroups : (_downloadedChapters ?? []),
                   full: true,
                   tocTitle: !_downloadOnly ? '章节列表' : '章节列表 (仅下载)',
                   columns: _columns,

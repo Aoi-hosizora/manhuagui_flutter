@@ -18,6 +18,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/chapter_detail.dart';
 import 'package:manhuagui_flutter/page/comments.dart';
+import 'package:manhuagui_flutter/page/dlg/chapter_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_view_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
@@ -57,19 +58,21 @@ class MangaViewerPage extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
-    required this.neededData,
+    required MangaExtraDataForViewer? extraData,
     required this.onlineMode,
     required this.initialPage, // start from 1
     this.onMangaGot, // for download manga page
     this.replacing = false,
-  }) : super(key: key);
+  })  : neededData = extraData,
+        // 在Viewer页，保留旧变量名 neededData
+        super(key: key);
 
   final int mangaId;
   final int chapterId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final MangaChapterNeededData? neededData;
+  final MangaExtraDataForViewer? neededData;
   final bool onlineMode;
   final int initialPage;
   final void Function(Manga)? onMangaGot;
@@ -79,7 +82,7 @@ class MangaViewerPage extends StatefulWidget {
   _MangaViewerPageState createState() => _MangaViewerPageState();
 }
 
-/// 页面数据，基本覆盖 [TinyMangaChapter]，并展开 [MangaChapterNeededData] 的所有字段，在 [MangaViewerPage] / [ViewExtraSubPage] 使用
+/// 页面数据，基本覆盖 [TinyMangaChapter]，并展开 [MangaExtraDataForViewer] 的所有字段，在 [MangaViewerPage] / [ViewExtraSubPage] 使用
 class MangaViewerPageData {
   const MangaViewerPageData({
     required this.mangaId,
@@ -126,9 +129,9 @@ class MangaViewerPageData {
 
   String get chapterCover => pages.isNotEmpty ? pages.first : '';
 
-  MangaChapterNeededData? get neededData => chapterGroups == null || mangaAuthors == null || newestChapter == null || newestDate == null || isMangaFinished == null
+  MangaExtraDataForViewer? get neededData => chapterGroups == null || mangaAuthors == null || newestChapter == null || newestDate == null || isMangaFinished == null
       ? null
-      : MangaChapterNeededData(
+      : MangaExtraDataForViewer(
           chapterGroups: chapterGroups!,
           mangaAuthors: mangaAuthors!,
           newestChapter: newestChapter!,
@@ -141,7 +144,7 @@ class MangaViewerPageData {
   String get formattedMetadataUpdatedAt => // for view extra subpage offline download metadata banner
       metadataUpdatedAt?.let((dt) => formatDatetimeAndDuration(dt, FormatPattern.datetimeNoSecDuration)) ?? '未知时间';
 
-  MangaViewerPageData updateNeededData({required MangaChapterNeededData? neededData, required bool? getMangaFailed}) {
+  MangaViewerPageData updateNeededData({required MangaExtraDataForViewer? neededData, required bool? getMangaFailed}) {
     return MangaViewerPageData(
       mangaId: mangaId,
       mangaTitle: mangaTitle,
@@ -161,40 +164,6 @@ class MangaViewerPageData {
       getMangaFailed: getMangaFailed,
       metadataUpdatedAt: metadataUpdatedAt,
     );
-  }
-}
-
-/// 漫画章节阅读页所需的一些额外的漫画数据，字段均来自 [Manga]，在 [MangaViewerPage] 使用
-class MangaChapterNeededData {
-  const MangaChapterNeededData({
-    required this.chapterGroups,
-    required this.mangaAuthors,
-    required this.newestChapter,
-    required this.newestDate,
-    required this.isMangaFinished,
-  });
-
-  final List<MangaChapterGroup> chapterGroups;
-  final List<TinyAuthor> mangaAuthors;
-  final String newestChapter;
-  final String newestDate;
-  final bool isMangaFinished;
-
-  static MangaChapterNeededData fromMangaData(Manga manga) {
-    return MangaChapterNeededData(
-      chapterGroups: manga.chapterGroups,
-      mangaAuthors: manga.authors,
-      newestChapter: manga.newestChapter,
-      newestDate: manga.formattedNewestDate,
-      isMangaFinished: manga.finished,
-    );
-  }
-
-  static MangaChapterNeededData? fromNullableMangaData(Manga? manga) {
-    if (manga == null) {
-      return null;
-    }
-    return fromMangaData(manga);
   }
 }
 
@@ -282,7 +251,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   List<Future<String?>>? _urlFutures;
   List<Future<File?>>? _fileFutures;
 
-  MangaHistory? _history;
+  MangaHistory? _history; // ignore: unused_field
   int? _subscribeCount;
   FavoriteManga? _favoriteManga;
   var _subscribing = false; // 执行订阅操作中
@@ -350,7 +319,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       if (widget.onlineMode) {
         // => (I) 在线模式，通过网络获取漫画数据 (同步获取漫画数据)
         // I.5. 异步请求漫画数据
-        Future<TaskResult<MangaChapterNeededData, Object>> neededDataFuture;
+        Future<TaskResult<MangaExtraDataForViewer, Object>> neededDataFuture;
         if (widget.neededData != null) {
           neededDataFuture = Future.value(Ok(widget.neededData!));
         } else {
@@ -364,7 +333,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                 throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
               }
               widget.onMangaGot?.call(result.data); // 将漫画数据保存至 DownloadMangaPage
-              return Ok(MangaChapterNeededData.fromMangaData(result.data));
+              return Ok(MangaExtraDataForViewer.fromMangaData(result.data));
             } catch (e) {
               return Err(e); // ignore stack trace
             }
@@ -445,7 +414,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                   throw SpecialException('未知错误'); // <<< 获取的漫画数据有问题
                 }
                 widget.onMangaGot?.call(result.data); // 将漫画数据保存至 DownloadMangaPage
-                _data = _data?.updateNeededData(neededData: MangaChapterNeededData.fromMangaData(result.data), getMangaFailed: false);
+                _data = _data?.updateNeededData(neededData: MangaExtraDataForViewer.fromMangaData(result.data), getMangaFailed: false);
                 if (mounted) setState(() {});
               } catch (e, s) {
                 var we = wrapError(e, s);
@@ -725,7 +694,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
             mangaTitle: _data?.mangaTitle ?? widget.mangaTitle,
             mangaCover: _data?.mangaCover ?? widget.mangaCover,
             mangaUrl: _data?.mangaUrl ?? widget.mangaUrl,
-            neededData: _data?.neededData ?? widget.neededData,
+            extraData: _data?.neededData ?? widget.neededData,
             initialPage: _currentPage /* initial page index starts from 1 */,
             onlineMode: true,
             replacing: true,
@@ -812,7 +781,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           mangaTitle: _data!.mangaTitle,
           mangaCover: _data!.mangaCover,
           mangaUrl: _data!.mangaUrl,
-          neededData: _data!.neededData,
+          extraData: _data!.neededData,
           initialPage: 1 /* always turn to the first page */,
           onlineMode: widget.onlineMode,
           replacing: true,
@@ -968,7 +937,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   Future<void> _showToc() async {
     // 由于 _showToc 有可能在 _offlineError 时被调用，所以方法内不使用 _data 来获取这些数据
     String mangaTitle, mangaCover, mangaUrl;
-    MangaChapterNeededData neededData;
+    MangaExtraDataForViewer neededData;
     if (!_offlineError) {
       mangaTitle = _data!.mangaTitle;
       mangaCover = _data!.mangaCover;
@@ -996,88 +965,38 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     }
 
     void switchChapter(BuildContext c, int chapterId) {
-      void __gotoViewerPage({required int cid, required int page}) {
-        _updateHistory(); // update history before push route
-        Navigator.of(c).pop(); // close bottom sheet
-        Navigator.of(context).pushReplacement(
-          CustomPageRoute.fromTheme(
-            themeData: CustomPageRouteTheme.of(context),
-            builder: (c) => MangaViewerPage(
-              mangaId: widget.mangaId,
-              chapterId: cid /* <<< */,
-              mangaTitle: mangaTitle,
-              mangaCover: mangaCover,
-              mangaUrl: mangaUrl,
-              neededData: neededData,
-              initialPage: page /* <<< */,
-              onlineMode: widget.onlineMode,
-              replacing: true,
-            ),
-          ),
-        );
-      }
-
       if (chapterId == widget.chapterId) {
         // (1) 所选章节是当前正在阅读的章节 => 显示提示
         Fluttertoast.showToast(msg: '当前正在阅读 ${neededData.chapterGroups.findChapter(chapterId)?.title ?? '该章节'}');
         return;
       }
-      if (_history == null || _history!.lastChapterId != chapterId) {
-        // (2) 所选章节不是上上次阅读的章节 => 直接从第一页阅读
-        __gotoViewerPage(cid: chapterId, page: 1);
-        return;
-      }
-
-      // (3) 所选章节在上上次被阅读 => 弹出选项判断是否需要阅读
-      var historyTitle = _history!.lastChapterTitle;
-      var historyPage = _history!.lastChapterPage;
-      var chapter = neededData.chapterGroups.findChapter(chapterId);
-      if (chapter == null) {
-        showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
-        return; // actually unreachable
-      }
-      var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.pageCount); // 是否检查"未阅读完"
-      var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter.pageCount); // 是否检查"已阅读完"
-      if (!checkNotfin && !checkFinish) {
-        // (3.1) 所选章节无需弹出提示 => 继续阅读
-        __gotoViewerPage(cid: chapterId, page: historyPage);
-      } else {
-        // (3.2) 所选章节需要弹出提示 (未阅读完/已阅读完) => 根据所选选项来确定阅读行为
-        showDialog(
-          context: context,
-          builder: (c) => SimpleDialog(
-            title: Text('章节阅读'),
-            children: [
-              SubtitleDialogOption(
-                text: checkNotfin //
-                    ? Text('所选章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.pageCount}页)，是否继续阅读该页？') // 未阅读完
-                    : Text('所选章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)，是否选择其他章节阅读？'), // 已阅读完
+      checkAndShowSwitchChapterDialogForViewer(
+        context: context,
+        mangaId: widget.mangaId,
+        chapterId: chapterId,
+        currentChapterId: widget.chapterId,
+        chapterGroups: neededData.chapterGroups,
+        toReadChapter: ({required int cid, required int page}) {
+          _updateHistory(); // update history before push route
+          Navigator.of(c).pop(); // close bottom sheet
+          Navigator.of(context).pushReplacement(
+            CustomPageRoute.fromTheme(
+              themeData: CustomPageRouteTheme.of(context),
+              builder: (c) => MangaViewerPage(
+                mangaId: widget.mangaId,
+                chapterId: cid /* <<< */,
+                mangaTitle: mangaTitle,
+                mangaCover: mangaCover,
+                mangaUrl: mangaUrl,
+                extraData: neededData,
+                initialPage: page /* <<< */,
+                onlineMode: widget.onlineMode,
+                replacing: true,
               ),
-              ...([
-                IconTextDialogOption(
-                  icon: Icon(CustomIcons.opened_book_arrow_right),
-                  text: Flexible(
-                    child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ),
-                  popWhenPress: c,
-                  onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
-                ),
-                if (historyPage > 1)
-                  IconTextDialogOption(
-                    icon: Icon(CustomIcons.opened_book_replay),
-                    text: Flexible(
-                      child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ),
-                    popWhenPress: c,
-                    onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
-                  ),
-              ].let(
-                (opt) => checkNotfin ? opt /* 未阅读完 */ : opt.reversed /* 已阅读完 */,
-              )),
-            ],
-          ),
-        );
-      }
+            ),
+          );
+        },
+      );
     }
 
     // >>>
@@ -1097,8 +1016,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
               mangaTitle: mangaTitle,
               mangaCover: mangaCover,
               mangaUrl: mangaUrl,
-              chapterNeededData: neededData,
-              groups: neededData.chapterGroups,
+              extraData: neededData,
               showAppDrawer: false,
               onManageHistoryPressed: null,
               onChapterPressed: (cid) => switchChapter(c, cid),
@@ -1184,7 +1102,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
       fromMangaPage: false,
       laterManga: _laterManga!,
-      inLaterSetter: (l) {
+      onLaterUpdated: (l) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         _laterManga = l;
         if (mounted) setState(() {});

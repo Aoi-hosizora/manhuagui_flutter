@@ -38,7 +38,7 @@ class _SepLaterPageState extends State<SepLaterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('阅读历史'),
+        title: Text('稍后阅读'),
         leading: AppBarActionButton.leading(context: context, allowDrawerButton: true),
         actions: [
           AppBarActionButton(

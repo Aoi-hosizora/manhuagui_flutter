@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
+import 'package:manhuagui_flutter/page/dlg/chapter_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/setting_dl_dialog.dart';
 import 'package:manhuagui_flutter/page/download.dart';
@@ -14,7 +15,6 @@ import 'package:manhuagui_flutter/page/page/dl_unfinished.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
-import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/download_chapter_line.dart';
 import 'package:manhuagui_flutter/page/view/download_manga_line.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
@@ -337,82 +337,30 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
   void _readChapter(int chapterId) {
     // 此处不异步请求漫画数据，由 MangaViewerPage 请求并回传更新 _mangaData，从而避免重复请求
     // _loadMangaDataAsync(forceRefresh: false);
-
-    void __gotoViewerPage({required int cid, required int page}) {
-      Navigator.of(context).push(
-        CustomPageRoute(
-          context: context,
-          builder: (c) => MangaViewerPage(
-            mangaId: widget.mangaId,
-            chapterId: cid /* <<< */,
-            mangaTitle: _data!.mangaTitle,
-            mangaCover: _data!.mangaCover,
-            mangaUrl: _data!.mangaUrl,
-            neededData: MangaChapterNeededData.fromNullableMangaData(_mangaData) /* nullable */,
-            initialPage: page /* <<< */,
-            onlineMode: _onlineMode,
-            onMangaGot: (manga) => _mangaData = manga,
-          ),
-        ),
-      );
-    }
-
-    if (_history == null || (_history!.chapterId != chapterId && _history!.lastChapterId != chapterId)) {
-      // (1) 所选章节不是上次/上上次阅读的章节 => 直接从第一页阅读
-      __gotoViewerPage(cid: chapterId, page: 1);
-      return;
-    }
-
-    // (2) 所选章节在上次/上上次被阅读 => 弹出选项判断是否需要阅读
-    var historyTitle = _history!.chapterId == chapterId ? _history!.chapterTitle : _history!.lastChapterTitle;
-    var historyPage = _history!.chapterId == chapterId ? _history!.chapterPage : _history!.lastChapterPage;
-    var chapter = _data!.downloadedChapters.where((c) => c.chapterId == chapterId).firstOrNull;
-    if (chapter == null) {
-      showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
-      return; // actually unreachable
-    }
-    var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"未阅读完"
-    var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter.totalPageCount); // 是否检查"已阅读完"
-    if (!checkNotfin && !checkFinish) {
-      // (2.1) 所选章节无需弹出提示 => 继续阅读
-      __gotoViewerPage(cid: chapterId, page: historyPage);
-    } else {
-      // (2.2) 所选章节需要弹出提示 (未阅读完/已阅读完) => 根据所选选项来确定阅读行为
-      showDialog(
-        context: context,
-        builder: (c) => SimpleDialog(
-          title: Text('章节阅读'),
-          children: [
-            SubtitleDialogOption(
-              text: checkNotfin //
-                  ? Text('所选章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.totalPageCount}页)，是否继续阅读该页？') // 未阅读完
-                  : Text('所选章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)，是否选择其他章节阅读？'), // 已阅读完
+    checkAndShowSwitchChapterDialogForDownload(
+      context: context,
+      mangaId: widget.mangaId,
+      chapterId: chapterId,
+      downloadedChapters: _data!.downloadedChapters,
+      toReadChapter: ({required int cid, required int page}) {
+        Navigator.of(context).push(
+          CustomPageRoute(
+            context: context,
+            builder: (c) => MangaViewerPage(
+              mangaId: widget.mangaId,
+              chapterId: cid /* <<< */,
+              mangaTitle: _data!.mangaTitle,
+              mangaCover: _data!.mangaCover,
+              mangaUrl: _data!.mangaUrl,
+              extraData: MangaExtraDataForViewer.fromNullableMangaData(_mangaData) /* nullable */,
+              initialPage: page /* <<< */,
+              onlineMode: _onlineMode,
+              onMangaGot: (manga) => _mangaData = manga,
             ),
-            ...([
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_book_arrow_right),
-                text: Flexible(
-                  child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
-              ),
-              if (historyPage > 1)
-                IconTextDialogOption(
-                  icon: Icon(CustomIcons.opened_book_replay),
-                  text: Flexible(
-                    child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ),
-                  popWhenPress: c,
-                  onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
-                ),
-            ].let(
-              (opt) => checkNotfin ? opt /* 未阅读完 */ : opt.reversed /* 已阅读完 */,
-            )),
-          ],
-        ),
-      );
-    }
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _deleteChapters({required List<int> chapterIds}) async {
@@ -617,9 +565,13 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
                             fromMangaPage: false,
                             laterManga: _later!,
-                            inLaterSetter: (l) {
+                            onLaterUpdated: (l) {
                               // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
                               _later = l;
+                              if (l == null) {
+                                _laterChapters?.clear();
+                                _laterChapters = null;
+                              }
                               if (mounted) setState(() {});
                             },
                             onLcCleared: null /* 该页暂不显示稍后阅读章节 */,

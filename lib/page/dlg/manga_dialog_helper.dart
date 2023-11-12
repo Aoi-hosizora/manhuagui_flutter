@@ -302,7 +302,7 @@ class _DialogHelper {
 
   void gotoChapterPage({
     required int chapterId,
-    required MangaChapterNeededData chapterNeededData,
+    required MangaExtraDataForViewer extraData,
     required MangaHistory? history,
     required bool readFirstPage,
     required bool onlineMode,
@@ -316,7 +316,7 @@ class _DialogHelper {
           mangaTitle: mangaTitle,
           mangaCover: mangaCover,
           mangaUrl: mangaUrl,
-          neededData: chapterNeededData,
+          extraData: extraData,
           initialPage: readFirstPage
               ? 1 // require to read first page
               : history?.chapterId == chapterId
@@ -353,8 +353,8 @@ class _DialogHelper {
     );
   }
 
-  Future<void> gotoChapterDetailsPage({required TinyMangaChapter chapter, required MangaChapterNeededData chapterNeededData}) async {
-    var groupLength = chapterNeededData.chapterGroups.where((el) => el.title == chapter.group).firstOrNull?.chapters.length;
+  Future<void> gotoChapterDetailsPage({required TinyMangaChapter chapter, required MangaExtraDataForViewer extraData}) async {
+    var groupLength = extraData.chapterGroups.where((el) => el.title == chapter.group).firstOrNull?.chapters.length;
     await Navigator.of(context).push(
       CustomPageRoute(
         context: context,
@@ -365,7 +365,7 @@ class _DialogHelper {
           mangaTitle: mangaTitle,
           mangaCover: mangaCover,
           mangaUrl: mangaUrl,
-          mangaAuthors: chapterNeededData.mangaAuthors.map((a) => a.name).toList(),
+          mangaAuthors: extraData.mangaAuthors.map((a) => a.name).toList(),
           isTocLoaded: true,
         ),
       ),
@@ -433,9 +433,9 @@ class _DialogHelper {
     }
   }
 
-  // ========================
-  // methods (check removing)
-  // ========================
+  // ======================
+  // methods (check dialog)
+  // ======================
 
   Future<bool> showCheckRemovingShelfDialog() async {
     var ok = await showYesNoAlertDialog(context: context, title: Text('移出书架确认'), content: Text('确定将《$mangaTitle》移出书架？'), yesText: Text('移出'), noText: Text('取消'));
@@ -598,35 +598,44 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
-  Future<void> addOrRemoveLater({
-    required bool toAdd,
-    required void Function(LaterManga? later)? onUpdated,
+  Future<void> addLater({
+    required void Function(LaterManga later)? onAdded,
+    required bool fromLaterList,
+    required bool fromMangaPage,
+  }) async {
+    // 更新数据库、(更新界面)、弹出提示、发送通知
+    var newLaterManga = LaterManga(
+      mangaId: mangaId,
+      mangaTitle: mangaTitle,
+      mangaCover: mangaCover,
+      mangaUrl: mangaUrl,
+      newestChapter: extraData?.newestChapter?.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c) /* null => 未知 */,
+      newestDate: extraData?.newestDate /* null => 未知 */,
+      createdAt: DateTime.now(),
+    );
+    await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLaterManga);
+    onAdded?.call(newLaterManga);
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已添加至稍后阅读列表')));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: true, fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
+  }
+
+  // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
+  Future<void> removeLater({
+    required void Function()? onRemoved,
     required void Function()? onLcCleared,
     required bool fromLaterList,
     required bool fromMangaPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
-    if (toAdd) {
-      var newLaterManga = LaterManga(
-        mangaId: mangaId,
-        mangaTitle: mangaTitle,
-        mangaCover: mangaCover,
-        mangaUrl: mangaUrl,
-        newestChapter: extraData?.newestChapter?.let((c) => RegExp('^[0-9]').hasMatch(c) ? '第$c' : c) /* null => 未知 */,
-        newestDate: extraData?.newestDate /* null => 未知 */,
-        createdAt: DateTime.now(),
-      );
-      await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLaterManga);
-      onUpdated?.call(newLaterManga);
-    } else {
-      await LaterMangaDao.clearLaterChapters(username: AuthManager.instance.username, mid: mangaId);
-      onLcCleared?.call();
-      await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: mangaId);
-      onUpdated?.call(null);
-    }
+    await LaterMangaDao.clearLaterChapters(username: AuthManager.instance.username, mid: mangaId);
+    onLcCleared?.call();
+    await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: mangaId);
+    onRemoved?.call();
     ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toAdd ? '已添加至稍后阅读列表' : '已从稍后阅读列表中移出')));
-    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: toAdd, fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已从稍后阅读列表中移出')));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
   // => called by showPopupMenuForSubscribing, showPopupMenuForLaterManga
@@ -646,7 +655,7 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForLaterManga
-  Future<void> updateLaterToNewestChapter({
+  Future<void> updateLaterToNewestChapterWithDlg({
     required LaterManga later,
     required void Function(LaterManga? later)? onUpdated,
     required bool fromLaterList,
@@ -657,9 +666,7 @@ class _DialogHelper {
       builder: (c) => SimpleDialog(
         title: Text('更新稍后阅读记录'),
         children: [
-          SubtitleDialogOption(
-            text: Text('确定将《${later.mangaTitle}》的稍后阅读记录最新为最新章节 "${extraData?.newestChapter}"？'),
-          ),
+          SubtitleDialogOption(text: Text('确定将《${later.mangaTitle}》的稍后阅读记录最新为最新章节 "${extraData?.newestChapter}"？')),
           IconTextDialogOption(icon: Icon(CustomIcons.clock_topmost), text: Text('更新且置顶'), onPressed: () => Navigator.of(c).pop(true)),
           IconTextDialogOption(icon: Icon(CustomIcons.clock_sync), text: Text('更新且不置顶'), onPressed: () => Navigator.of(c).pop(false)),
           IconTextDialogOption(icon: Icon(Icons.do_not_disturb), text: Text('不更新'), onPressed: () => Navigator.of(c).pop(null)),
@@ -703,7 +710,7 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForMangaToc
-  Future<void> removeChapterFootprint({
+  Future<void> removeFootprint({
     required MangaHistory oldHistory,
     required int chapterId,
     required void Function(MangaHistory newHistory)? onUpdated,
@@ -715,41 +722,28 @@ class _DialogHelper {
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
     MangaHistory? newHistory;
-    var removedFpCids = <int>[];
     if (oldHistory.chapterId == chapterId) {
       newHistory = oldHistory.copyWithNoCurrChapterOnly(lastTime: DateTime.now()); // 更新漫画历史
-      removedFpCids.add(chapterId);
     } else if (oldHistory.lastChapterId == chapterId) {
       newHistory = oldHistory.copyWithNoLastChapterOnly(lastTime: DateTime.now()); // 更新漫画历史
-      removedFpCids.add(chapterId);
     } else {
-      newHistory = null; // 无需更新漫画历史
-      removedFpCids.add(chapterId); // 仅删除章节历史
+      newHistory = null; // 无需更新漫画历史，仅删除章节历史
     }
 
     if (newHistory != null) {
       await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
       onUpdated?.call(newHistory);
-    }
-    if (removedFpCids.isNotEmpty) {
-      for (var cid in removedFpCids) {
-        await HistoryDao.deleteFootprint(username: AuthManager.instance.username, mid: mangaId, cid: cid);
-      }
-      onFpRemoved?.call(removedFpCids);
-    }
-
-    if (newHistory != null) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('章节阅读历史已删除')));
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage, fromMangaHistoryPage: fromMangaHistoryPage));
     }
-    if (removedFpCids.isNotEmpty) {
-      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: removedFpCids, reason: UpdateReason.deleted, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
-    }
+    await HistoryDao.deleteFootprint(username: AuthManager.instance.username, mid: mangaId, cid: chapterId);
+    onFpRemoved?.call([chapterId]);
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.deleted, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
   }
 
   // => called by showPopupMenuForMangaToc
-  Future<void> addChapterFootprint({
+  Future<void> addFootprint({
     required int chapterId,
     required void Function(ChapterFootprint)? onAdded,
     required bool fromHistoryList,
@@ -766,7 +760,7 @@ class _DialogHelper {
   // => called by showPopupMenuForMangaToc
   Future<void> markChapterLater({
     required int chapterId,
-    required MangaChapterNeededData chapterNeededData,
+    required MangaExtraDataForViewer extraData,
     required void Function(LaterManga)? onLmAdded,
     required void Function(LaterChapter)? onAdded,
     required bool fromMangaPage,
@@ -775,7 +769,7 @@ class _DialogHelper {
   }) async {
     var inLater = await LaterMangaDao.checkExistence(username: AuthManager.instance.username, mid: mangaId) ?? false;
     if (!inLater) {
-      var newLater = LaterManga(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, newestChapter: chapterNeededData.newestChapter, newestDate: chapterNeededData.newestDate, createdAt: DateTime.now());
+      var newLater = LaterManga(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, newestChapter: extraData.newestChapter, newestDate: extraData.newestDate, createdAt: DateTime.now());
       await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
       onLmAdded?.call(newLater);
       EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: true, fromMangaPage: fromMangaPage));
@@ -814,7 +808,7 @@ class _DialogHelper {
   // =========================
 
   // => called by showPopupMenuForSubscribing
-  Future<void> updateFavGroup({
+  Future<void> updateFavGroupWithDlg({
     required FavoriteManga oldFavorite,
     required void Function(FavoriteManga newFavorite)? onUpdated,
     required bool showSnackBar,
@@ -845,7 +839,7 @@ class _DialogHelper {
   }
 
   // => called by showUpdateFavoritesGroupDialog
-  Future<void> updateFavsGroup({
+  Future<void> updateFavsGroupWithDlg({
     required List<FavoriteManga> oldFavorites, // 按照收藏列表从上到下的顺序
     required String? selectedGroupName,
     required void Function(List<FavoriteManga> newFavorites, bool addToTop)? onUpdated,
@@ -890,7 +884,7 @@ class _DialogHelper {
   }
 
   // => called by showUpdateFavoriteRemarkDialog
-  Future<void> updateFavRemark({
+  Future<void> updateFavRemarkWithDlg({
     required FavoriteManga oldFavorite,
     required void Function(FavoriteManga newFavorite)? onUpdated,
     required bool showSnackBar,
@@ -915,7 +909,7 @@ class _DialogHelper {
   }
 
   // => called by showPopupMenuForSubscribing
-  Future<void> showAndUpdateFavRemark({
+  Future<void> showAndUpdateFavRemarkWithDlg({
     required FavoriteManga favorite,
     required void Function(FavoriteManga newFavorite)? onUpdated,
     required bool showSnackBar,
@@ -924,7 +918,7 @@ class _DialogHelper {
   }) async {
     var toEdit = await showFavoriteRemarkDialog(context: context, remark: favorite.remark.trim(), mangaTitle: mangaTitle);
     if (toEdit) {
-      await updateFavRemark(
+      await updateFavRemarkWithDlg(
         oldFavorite: favorite,
         onUpdated: onUpdated,
         showSnackBar: showSnackBar,

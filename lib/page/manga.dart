@@ -8,6 +8,7 @@ import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/comment.dart';
+import 'package:manhuagui_flutter/page/dlg/chapter_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/comment_dialog.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/download_choose.dart';
@@ -23,7 +24,6 @@ import 'package:manhuagui_flutter/page/sep_category.dart';
 import 'package:manhuagui_flutter/page/setting_ui.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
-import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/full_ripple.dart';
@@ -422,6 +422,10 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       },
       inLaterSetter: (l) {
         _laterManga = l;
+        if (l == null) {
+          _laterChapters?.clear();
+          _laterChapters = null;
+        }
         if (mounted) setState(() {});
       },
     );
@@ -437,7 +441,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
           mangaUrl: _data!.url,
-          neededData: MangaChapterNeededData.fromMangaData(_data!),
+          extraData: MangaExtraDataForViewer.fromMangaData(_data!),
           initialPage: page /* <<< */,
           onlineMode: true,
         ),
@@ -446,219 +450,29 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
   }
 
   void _readChapter({required int chapterId}) {
-    if (_history == null || (_history!.chapterId != chapterId && _history!.lastChapterId != chapterId)) {
-      // (1) 所选章节不是上次/上上次阅读的章节 => 直接从第一页阅读
-      __gotoViewerPage(cid: chapterId, page: 1);
-      return;
-    }
-
-    // (2) 所选章节在上次/上上次被阅读 => 弹出选项判断是否需要阅读
-    var historyTitle = _history!.chapterId == chapterId ? _history!.chapterTitle : _history!.lastChapterTitle;
-    var historyPage = _history!.chapterId == chapterId ? _history!.chapterPage : _history!.lastChapterPage;
-    var chapter = _data!.chapterGroups.findChapter(chapterId);
-    if (chapter == null) {
-      showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
-      return; // actually unreachable
-    }
-    var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.pageCount); // 是否检查"未阅读完"
-    var checkFinish = AppSetting.instance.ui.readGroupBehavior.needCheckFinish(currentPage: historyPage, totalPage: chapter.pageCount); // 是否检查"已阅读完"
-    if (!checkNotfin && !checkFinish) {
-      // (2.1) 所选章节无需弹出提示 => 继续阅读
-      __gotoViewerPage(cid: chapterId, page: historyPage);
-    } else if (checkNotfin) {
-      // (2.2) 所选章节需要弹出提示 (未阅读完) => 根据所选选项来确定阅读行为
-      showDialog(
-        context: context,
-        builder: (c) => SimpleDialog(
-          title: Text('章节阅读'),
-          children: [
-            SubtitleDialogOption(
-              text: Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.pageCount}页)，是否继续阅读该页？'),
-            ),
-            IconTextDialogOption(
-              icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Flexible(
-                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-              ),
-              popWhenPress: c,
-              onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
-            ),
-            if (historyPage > 1)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_book_replay),
-                text: Flexible(
-                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
-              ),
-          ],
-        ),
-      );
-    } else {
-      // (2.3) 所选章节需要弹出提示 (已阅读完) => 寻找下一章节，再根据所选选项来确定阅读行为
-      var neighbor = _data!.chapterGroups.findNextChapter(chapterId); // 从全部分组的章节中选取上下章节
-      showDialog(
-        context: context,
-        builder: (c) => SimpleDialog(
-          title: Text('章节阅读'),
-          children: [
-            SubtitleDialogOption(
-              text: Text(
-                neighbor != null && neighbor.hasNextChapter
-                    ? '该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)，是否继续下一章节该页？' // 已找到下一个章节 (可能会找到两个)
-                    : '该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)，且暂无下一章节，是否继续阅读该章节？', // 未找到下一个章节
-              ),
-            ),
-            if (neighbor?.nextSameGroupChapter != null)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_left_star_book),
-                text: Flexible(
-                  child: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: neighbor.nextSameGroupChapter!.cid, page: 1),
-              ),
-            if (neighbor?.nextDiffGroupChapter != null)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_left_star_book),
-                text: Flexible(
-                  child: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: neighbor.nextDiffGroupChapter!.cid, page: 1),
-              ),
-            if (historyPage > 1)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_book_replay),
-                text: Flexible(
-                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: chapterId, page: 1),
-              ),
-            IconTextDialogOption(
-              icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Flexible(
-                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-              ),
-              popWhenPress: c,
-              onPressed: () => __gotoViewerPage(cid: chapterId, page: historyPage),
-            ),
-          ],
-        ),
-      );
-    }
+    checkAndShowSwitchChapterDialogForMangaReadChapter(
+      context: context,
+      mangaId: widget.id,
+      chapterId: chapterId,
+      chapterGroups: _data!.chapterGroups,
+      toReadChapter: __gotoViewerPage,
+    );
   }
 
   void _startOrContinueToRead() {
-    if (_history == null || !_history!.read) {
-      // (1) 未访问 or 未开始阅读 => 开始阅读
-      _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // 首要选【单话】分组，否则选首个拥有非空章节的分组
-      if (mounted) setState(() {});
-      if (_firstChapter != null) {
-        __gotoViewerPage(cid: _firstChapter!.cid, page: 1);
-      }
-      return;
-    }
-
-    // (2) 存在阅读历史 => 进一步判断阅读状态
-    var historyCid = _history!.chapterId;
-    var historyTitle = _history!.chapterTitle;
-    var historyPage = _history!.chapterPage;
-    var chapter = _data!.chapterGroups.findChapter(historyCid);
-    if (chapter == null) {
-      showYesNoAlertDialog(context: context, title: Text('章节阅读'), content: Text('未找到所选章节，无法阅读。'), yesText: Text('确定'), noText: null);
-      return; // actually unreachable
-    }
-    var checkNotfin = AppSetting.instance.ui.readGroupBehavior.needCheckNotfin(currentPage: historyPage, totalPage: chapter.pageCount); // 是否检查"未阅读完"
-    if (chapter.pageCount != historyPage && !checkNotfin) {
-      // (2.1) 章节未阅读完，且无需弹出提示 => 继续阅读
-      __gotoViewerPage(cid: historyCid, page: historyPage); // 继续阅读
-    } else if (chapter.pageCount != historyPage && checkNotfin) {
-      // (2.2) 章节未阅读完，且需要弹出提示 => 根据所选选项来确定阅读行为
-      showDialog(
-        context: context,
-        builder: (c) => SimpleDialog(
-          title: Text('继续阅读'),
-          children: [
-            SubtitleDialogOption(
-              text: Text('该章节 ($historyTitle) 已阅读至第$historyPage页 (共${chapter.pageCount}页)，是否继续阅读该页？'),
-            ),
-            IconTextDialogOption(
-              icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Flexible(
-                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-              ),
-              popWhenPress: c,
-              onPressed: () => __gotoViewerPage(cid: historyCid, page: historyPage),
-            ),
-            if (historyPage > 1)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_book_replay),
-                text: Flexible(
-                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: historyCid, page: 1),
-              ),
-          ],
-        ),
-      );
-    } else {
-      // (2.3) 该章节已阅读完 => 寻找下一章节，再根据所选选项来确定阅读行为
-      var neighbor = _data!.chapterGroups.findNextChapter(historyCid); // 从全部分组的章节中选取上下章节
-      showDialog(
-        context: context,
-        builder: (c) => SimpleDialog(
-          title: Text('继续阅读'),
-          children: [
-            SubtitleDialogOption(
-              text: Text(
-                neighbor != null && neighbor.hasNextChapter
-                    ? '该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)，是否继续下一章节该页？' // 已找到下一个章节 (可能会找到两个)
-                    : '该章节 ($historyTitle) 已阅读至最后一页 (第$historyPage页)，且暂无下一章节，是否继续阅读该章节？', // 未找到下一个章节
-              ),
-            ),
-            if (neighbor?.nextSameGroupChapter != null)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_left_star_book),
-                text: Flexible(
-                  child: Text('开始阅读新章节 (${neighbor!.nextSameGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: neighbor.nextSameGroupChapter!.cid, page: 1),
-              ),
-            if (neighbor?.nextDiffGroupChapter != null)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_left_star_book),
-                text: Flexible(
-                  child: Text('开始阅读新章节 (${neighbor!.nextDiffGroupChapter!.title} 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: neighbor.nextDiffGroupChapter!.cid, page: 1),
-              ),
-            if (historyPage > 1)
-              IconTextDialogOption(
-                icon: Icon(CustomIcons.opened_book_replay),
-                text: Flexible(
-                  child: Text('从头阅读该章节 ($historyTitle 第1页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-                ),
-                popWhenPress: c,
-                onPressed: () => __gotoViewerPage(cid: historyCid, page: 1),
-              ),
-            IconTextDialogOption(
-              icon: Icon(CustomIcons.opened_book_arrow_right),
-              text: Flexible(
-                child: Text('继续阅读该章节 ($historyTitle 第$historyPage页)', maxLines: 2, overflow: TextOverflow.ellipsis),
-              ),
-              popWhenPress: c,
-              onPressed: () => __gotoViewerPage(cid: historyCid, page: historyPage),
-            ),
-          ],
-        ),
-      );
-    }
+    checkAndShowSwitchChapterDialogForMangaContinueToRead(
+      context: context,
+      mangaId: widget.id,
+      chapterGroups: _data!.chapterGroups,
+      toReadFirstChapter: () {
+        _firstChapter = _data!.chapterGroups.getFirstNotEmptyGroup()?.chapters.lastOrNull; // 首要选【单话】分组，否则选首个拥有非空章节的分组
+        if (mounted) setState(() {});
+        if (_firstChapter != null) {
+          __gotoViewerPage(cid: _firstChapter!.cid, page: 1);
+        }
+      },
+      toReadChapter: __gotoViewerPage,
+    );
   }
 
   void _showHistoryPopupMenu() {
@@ -812,23 +626,29 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
 
   Future<void> _showLaterMangaDialog() async {
     showPopupMenuForLaterManga(
-        context: context,
-        mangaId: _data!.mid,
-        mangaTitle: _data!.title,
-        mangaCover: _data!.cover,
-        mangaUrl: _data!.url,
-        extraData: MangaExtraDataForDialog.fromManga(_data!),
-        fromMangaPage: true,
-        laterManga: _laterManga!,
-        inLaterSetter: (l) {
-          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-          _laterManga = l;
-          if (mounted) setState(() {});
-        },
-        onLcCleared: () {
+      context: context,
+      mangaId: _data!.mid,
+      mangaTitle: _data!.title,
+      mangaCover: _data!.cover,
+      mangaUrl: _data!.url,
+      extraData: MangaExtraDataForDialog.fromManga(_data!),
+      fromMangaPage: true,
+      laterManga: _laterManga!,
+      onLaterUpdated: (l) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        _laterManga = l;
+        if (l == null) {
           _laterChapters?.clear();
-          if (mounted) setState(() {});
-        });
+          _laterChapters = null;
+        }
+        if (mounted) setState(() {});
+      },
+      onLcCleared: () {
+        _laterChapters?.clear();
+        _laterChapters = null;
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   void _showAuthorDialog() {
@@ -1018,7 +838,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       fromMangaTocPage: false,
       fromMangaHistoryPage: false,
       chapter: chapter,
-      chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
+      extraData: MangaExtraDataForViewer.fromMangaData(_data!),
       onHistoryUpdated: (h) => mountedSetState(() => _history = h),
       onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
       onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
@@ -1039,8 +859,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
           mangaUrl: _data!.url,
-          chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
-          groups: _data!.chapterGroups,
+          extraData: MangaExtraDataForViewer.fromMangaData(_data!),
           onChapterPressed: (cid) => _readChapter(chapterId: cid),
           onManageHistoryPressed: () => _gotoHistoryPage(),
         ),
@@ -1057,8 +876,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
           mangaTitle: _data!.title,
           mangaCover: _data!.cover,
           mangaUrl: _data!.url,
-          chapterGroups: _data!.chapterGroups,
-          chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
+          extraData: MangaExtraDataForViewer.fromMangaData(_data!),
         ),
       ),
     );

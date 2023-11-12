@@ -4,8 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
-import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
@@ -31,16 +31,14 @@ class MangaHistoryPage extends StatefulWidget {
     required this.mangaTitle,
     required this.mangaCover,
     required this.mangaUrl,
-    required this.chapterGroups,
-    required this.chapterNeededData,
+    required this.extraData,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
   final String mangaCover;
   final String mangaUrl;
-  final List<MangaChapterGroup> chapterGroups;
-  final MangaChapterNeededData chapterNeededData;
+  final MangaExtraDataForViewer extraData;
 
   @override
   State<MangaHistoryPage> createState() => _MangaHistoryPageState();
@@ -97,7 +95,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
           ? (_readGroups ?? [])
           : _mode == _MangaHistoryPageMode.unreadOnly
               ? (_unreadGroups ?? [])
-              : widget.chapterGroups;
+              : widget.extraData.chapterGroups;
 
   Future<void> _loadData() async {
     _loading = true;
@@ -117,12 +115,12 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
   }
 
   void _loadDataForGroups() {
-    _readGroups = widget.chapterGroups // preserve the original order
+    _readGroups = widget.extraData.chapterGroups // preserve the original order
         .map((group) => MangaChapterGroup(title: group.title, chapters: group.chapters.where((c) => _footprints!.containsKey(c.cid)).toList()))
         .where((group) => group.chapters.isNotEmpty)
         .toList();
 
-    _unreadGroups = widget.chapterGroups // preserve the original order
+    _unreadGroups = widget.extraData.chapterGroups // preserve the original order
         .map((group) => MangaChapterGroup(title: group.title, chapters: group.chapters.where((c) => !_footprints!.containsKey(c.cid)).toList()))
         .where((group) => group.chapters.isNotEmpty)
         .toList();
@@ -364,7 +362,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       fromMangaTocPage: false,
       fromMangaHistoryPage: true,
       chapter: chapter,
-      chapterNeededData: widget.chapterNeededData,
+      extraData: widget.extraData,
 
       // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
       // 本页引起的更新 => 更新相关界面

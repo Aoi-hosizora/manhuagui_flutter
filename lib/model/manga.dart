@@ -6,6 +6,8 @@ import 'package:manhuagui_flutter/model/author.dart';
 import 'package:manhuagui_flutter/model/category.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/common.dart';
+import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/manga_viewer.dart';
 
 part 'manga.g.dart';
 
@@ -353,4 +355,79 @@ class ShelfStatus {
   factory ShelfStatus.fromJson(Map<String, dynamic> json) => _$ShelfStatusFromJson(json);
 
   Map<String, dynamic> toJson() => _$ShelfStatusToJson(this);
+}
+
+/// 漫画弹出菜单所需的一些额外的漫画数据，在 [manga_dialog.dart] 中使用
+class MangaExtraDataForDialog {
+  const MangaExtraDataForDialog({this.mangaAuthors, this.newestChapter, this.newestDate});
+
+  final List<String>? mangaAuthors;
+  final String? newestChapter;
+  final String? newestDate;
+
+  factory MangaExtraDataForDialog.fromManga(Manga manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.authors.map((a) => a.name).toList(), newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromMangaViewer(MangaViewerPageData manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.mangaAuthors?.map((a) => a.name).toList(), newestChapter: manga.newestChapter, newestDate: manga.newestDate);
+
+  factory MangaExtraDataForDialog.fromSmallManga(SmallManga manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.authors.map((a) => a.name).toList(), newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromSmallerManga(SmallerManga manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.authors, newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromTinyManga(TinyManga manga) => //
+      MangaExtraDataForDialog(newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromMangaRanking(MangaRanking manga) => //
+      MangaExtraDataForDialog(mangaAuthors: manga.authors.map((a) => a.name).toList(), newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromShelfManga(ShelfManga manga) => //
+      MangaExtraDataForDialog(newestChapter: manga.newestChapter, newestDate: manga.formattedNewestDate);
+
+  factory MangaExtraDataForDialog.fromLaterManga(LaterManga manga) => //
+      MangaExtraDataForDialog(newestChapter: manga.newestChapter, newestDate: manga.newestDate);
+}
+
+/// 漫画章节阅读页所需的一些额外的漫画数据，字段均来自 [Manga]，在 [MangaViewerPage] 使用
+class MangaExtraDataForViewer {
+  const MangaExtraDataForViewer({
+    required this.chapterGroups,
+    required this.mangaAuthors,
+    required this.newestChapter,
+    required this.newestDate,
+    required this.isMangaFinished,
+  });
+
+  final List<MangaChapterGroup> chapterGroups;
+  final List<TinyAuthor> mangaAuthors;
+  final String newestChapter;
+  final String newestDate;
+  final bool isMangaFinished;
+
+  MangaExtraDataForDialog toExtraDataForDialog() {
+    return MangaExtraDataForDialog(
+      mangaAuthors: mangaAuthors.map((a) => a.name).toList(),
+      newestChapter: newestChapter,
+      newestDate: newestDate,
+    );
+  }
+
+  static MangaExtraDataForViewer fromMangaData(Manga manga) {
+    return MangaExtraDataForViewer(
+      chapterGroups: manga.chapterGroups,
+      mangaAuthors: manga.authors,
+      newestChapter: manga.newestChapter,
+      newestDate: manga.formattedNewestDate,
+      isMangaFinished: manga.finished,
+    );
+  }
+
+  static MangaExtraDataForViewer? fromNullableMangaData(Manga? manga) {
+    if (manga == null) {
+      return null;
+    }
+    return fromMangaData(manga);
+  }
 }
