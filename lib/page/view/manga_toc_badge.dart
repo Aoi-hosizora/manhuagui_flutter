@@ -44,28 +44,25 @@ class NewBadge extends StatelessWidget {
 }
 
 class LaterBadge extends StatelessWidget {
-  const LaterBadge({
-    Key? key,
-    this.extraTop = 0,
-  }) : super(key: key);
-
-  final double extraTop;
+  const LaterBadge({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: extraTop,
       right: 0,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 1, horizontal: 5),
-        decoration: BoxDecoration(
-          color: Colors.blueGrey,
-          borderRadius: BorderRadius.only(
-            topRight: extraTop == 0 ? Radius.circular(2.0) : Radius.zero,
-            bottomLeft: Radius.circular(2.0),
-          ),
+      bottom: 0,
+      child: OverflowClipBox(
+        useOverflowBox: true,
+        useClipRect: true,
+        direction: OverflowDirection.all,
+        alignment: Alignment.topLeft,
+        height: 80 * 0.68,
+        width: 80 * 0.75,
+        child: Icon(
+          Icons.schedule,
+          size: 80,
+          color: Colors.blueGrey.withOpacity(0.15),
         ),
-        child: Icon(Icons.schedule, size: 11, color: Colors.white),
       ),
     );
   }

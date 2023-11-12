@@ -999,7 +999,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
     );
   }
 
-  void _showChapterPopupMenu({required int chapterId, required bool forMangaPage}) {
+  void _showChapterPopupMenu({required int chapterId}) {
     var chapter = _data!.chapterGroups.findChapter(chapterId);
     if (chapter == null) {
       Fluttertoast.showToast(msg: '未从漫画章节列表中找到章节'); // almost unreachable
@@ -1007,39 +1007,25 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
     }
 
     // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-    // 本页引起的更新 => 更新历史相关的界面
+    // 本页引起的更新 => 更新和历史与稍后阅读相关的界面
     showPopupMenuForMangaToc(
       context: context,
       mangaId: _data!.mid,
       mangaTitle: _data!.title,
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
-      fromMangaPage: forMangaPage,
-      fromMangaViewerPage: false,
+      fromMangaPage: true,
+      fromMangaTocPage: false,
       fromMangaHistoryPage: false,
       chapter: chapter,
       chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
-      onHistoryUpdated: forMangaPage //
-          ? (h) => mountedSetState(() => _history = h)
-          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
-      onFootprintAdded: forMangaPage //
-          ? (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp)
-          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
-      onFootprintsAdded: forMangaPage //
-          ? (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp))
-          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
-      onFootprintsRemoved: forMangaPage //
-          ? (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key)))
-          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
-      onLaterAdded: forMangaPage //
-          ? (l) => mountedSetState(() => _laterManga = l)
-          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
-      onLaterMarked: forMangaPage //
-          ? (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l)
-          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
-      onLaterUnmarked: forMangaPage //
-          ? (cid) => mountedSetState(() => _laterChapters?.remove(cid))
-          : null /* MangaTocPage 内的界面更新由 evb 处理 */,
+      onHistoryUpdated: (h) => mountedSetState(() => _history = h),
+      onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
+      onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
+      onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
+      onLaterAdded: (l) => mountedSetState(() => _laterManga = l),
+      onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
+      onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
     );
   }
 
@@ -1051,9 +1037,11 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         builder: (c) => MangaTocPage(
           mangaId: _data!.mid,
           mangaTitle: _data!.title,
+          mangaCover: _data!.cover,
+          mangaUrl: _data!.url,
+          chapterNeededData: MangaChapterNeededData.fromMangaData(_data!),
           groups: _data!.chapterGroups,
           onChapterPressed: (cid) => _readChapter(chapterId: cid),
-          onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: false),
           onManageHistoryPressed: () => _gotoHistoryPage(),
         ),
       ),
@@ -1579,7 +1567,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                     ),
                     onChapterPressed: (cid) => _readChapter(chapterId: cid),
-                    onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid, forMangaPage: true),
+                    onChapterLongPressed: (cid) => _showChapterPopupMenu(chapterId: cid),
                     onMoreChaptersPressed: () => _gotoTocPage(),
                     onMoreChaptersLongPressed: () => _showMoreChaptersPopupMenu(),
                   ),

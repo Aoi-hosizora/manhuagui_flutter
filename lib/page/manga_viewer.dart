@@ -24,8 +24,8 @@ import 'package:manhuagui_flutter/page/download_choose.dart';
 import 'package:manhuagui_flutter/page/download_manga.dart';
 import 'package:manhuagui_flutter/page/image_viewer.dart';
 import 'package:manhuagui_flutter/page/manga_overview.dart';
+import 'package:manhuagui_flutter/page/manga_toc.dart';
 import 'package:manhuagui_flutter/page/page/view_extra.dart';
-import 'package:manhuagui_flutter/page/page/view_toc.dart';
 import 'package:manhuagui_flutter/page/view/action_row.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
@@ -243,7 +243,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     _cancelHandlers.add(EventBusManager.instance.listen<ShelfUpdatedEvent>((ev) => _updateByEvent(shelfEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) => _updateByEvent(favoriteEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) => _updateByEvent(laterEvent: ev)));
-    _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
 
     // setting and screen related
     _ScreenHelper.initialize(
@@ -284,14 +283,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   List<Future<File?>>? _fileFutures;
 
   MangaHistory? _history;
-  Map<int, ChapterFootprint>? _footprints;
   int? _subscribeCount;
   FavoriteManga? _favoriteManga;
   var _subscribing = false; // 执行订阅操作中
   var _inShelf = false; // 书架
   var _inFavorite = false; // 收藏
   LaterManga? _laterManga; // 稍后阅读
-  Map<int, LaterChapter>? _laterChapters;
   DownloadedManga? _downloadEntity;
   DownloadedChapter? _downloadChapter;
 
@@ -304,11 +301,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     // 1. 先获取各种数据库信息 (收藏、下载)
     _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
-    _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节历史
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId); // 本地收藏
     _inFavorite = _favoriteManga != null;
     _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId); // 稍后阅读
-    _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 稍后阅读
     _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId); // 下载记录
     _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
 
@@ -582,12 +577,9 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     ShelfUpdatedEvent? shelfEvent,
     FavoriteUpdatedEvent? favoriteEvent,
     LaterUpdatedEvent? laterEvent,
-    FootprintUpdatedEvent? footprintEvent,
-    LaterChapterUpdatedEvent? laterChapterEvent,
   }) async {
     if (authEvent != null) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
-      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {}; // 章节历史
       _subscribeCount = null;
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
       _inShelf = false;
@@ -618,18 +610,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       if (mounted) setState(() {});
     }
 
-    if (laterEvent != null && !laterEvent.fromMangaViewerPage && laterEvent.mangaId == widget.mangaId) {
+    if (laterEvent != null && laterEvent.mangaId == widget.mangaId) {
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
-      if (mounted) setState(() {});
-    }
-
-    if (footprintEvent != null && !footprintEvent.fromMangaViewerPage && footprintEvent.mangaId == widget.mangaId) {
-      _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
-      if (mounted) setState(() {});
-    }
-
-    if (laterChapterEvent != null && !laterChapterEvent.fromMangaViewerPage && laterChapterEvent.mangaId == widget.mangaId) {
-      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -682,12 +664,11 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         chapterId: widget.chapterId,
         createdAt: nowDateTime /* 历史已更新 */,
       ); // 更新章节历史
-      var toUpdateFp = _footprints?.keys.contains(widget.chapterId) ?? false;
-      (_footprints ??= {})[widget.chapterId] = newFootprint;
+      var toUpdateFp = await HistoryDao.checkFootprintExistence(username: AuthManager.instance.username, mid: widget.mangaId, cid: widget.chapterId) ?? false;
       await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
       if (mounted) setState(() {});
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromMangaViewerPage: true));
-      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: [widget.chapterId], reason: !toUpdateFp ? UpdateReason.added : UpdateReason.updated, fromMangaViewerPage: true));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: [widget.chapterId], reason: !toUpdateFp ? UpdateReason.added : UpdateReason.updated));
     }
   }
 
@@ -1111,48 +1092,22 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
           child: Container(
             height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.vertical - Theme.of(context).appBarTheme.toolbarHeight!,
             margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-            child: ViewTocSubPage(
+            child: MangaTocPage(
               mangaId: widget.mangaId,
               mangaTitle: mangaTitle,
+              mangaCover: mangaCover,
+              mangaUrl: mangaUrl,
+              chapterNeededData: neededData,
               groups: neededData.chapterGroups,
-              currReadChapterId: widget.chapterId,
-              lastReadChapterId: _history?.lastChapterId ?? 0,
-              footprintChapterIds: _footprints?.keys.toList() ?? [],
-              laterChapterIds: _laterChapters?.keys.toList() ?? [],
+              showAppDrawer: false,
+              onManageHistoryPressed: null,
               onChapterPressed: (cid) => switchChapter(c, cid),
-              onChapterLongPressed: (cid) {
-                var chapter = neededData.chapterGroups.findChapter(cid);
-                if (chapter == null) {
-                  Fluttertoast.showToast(msg: '未在漫画章节列表中找到章节'); // almost unreachable
-                  return;
-                }
-
-                // (更新数据库)、~~更新界面~~、(弹出提示)、(发送通知)
-                showPopupMenuForMangaToc(
-                  context: context,
-                  mangaId: widget.mangaId,
-                  mangaTitle: mangaTitle,
-                  mangaCover: mangaCover,
-                  mangaUrl: mangaUrl,
-                  fromMangaPage: false,
-                  fromMangaViewerPage: false,
-                  fromMangaHistoryPage: false,
-                  chapter: chapter,
-                  chapterNeededData: neededData,
-                  onHistoryUpdated: (h) => _setState(() => _history = h),
-                  onFootprintAdded: (fp) => _setState(() => _footprints?[fp.chapterId] = fp),
-                  onFootprintsAdded: (fps) => _setState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
-                  onFootprintsRemoved: (cids) => _setState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
-                  onLaterAdded: (l) => mountedSetState(() => _laterManga = l),
-                  onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
-                  onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
-                  toSwitchChapter: () => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
-                  navigateWrapper: (navigate) async {
-                    await _ScreenHelper.restoreSystemUI();
-                    await navigate();
-                    await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
-                  },
-                );
+              canOperateHistory: (cid) => widget.chapterId != cid /* => 不允许删除当前章节的历史 */,
+              toSwitchChapter: (cid) => switchChapter(c, cid) /* => 仅显示 "切换为该章节" */,
+              navigateWrapper: (navigate) async {
+                await _ScreenHelper.restoreSystemUI();
+                await navigate();
+                await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
               },
             ),
           ),

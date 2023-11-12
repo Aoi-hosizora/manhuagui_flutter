@@ -17,6 +17,9 @@ class DlUnfinishedSubPage extends StatefulWidget {
     required this.downloadTask,
     required this.showAllChapters,
     required this.invertOrder,
+    required this.history,
+    required this.footprints,
+    required this.laterChapters,
     required this.toReadChapter,
     required this.toDeleteChapters,
     required this.toControlChapter,
@@ -31,6 +34,9 @@ class DlUnfinishedSubPage extends StatefulWidget {
   final DownloadMangaQueueTask? downloadTask;
   final bool showAllChapters;
   final bool invertOrder;
+  final MangaHistory? history;
+  final Map<int, ChapterFootprint>? footprints;
+  final Map<int, LaterChapter>? laterChapters;
   final void Function(int cid) toReadChapter;
   final void Function({required List<int> chapterIds}) toDeleteChapters;
   final void Function(int cid, {required bool start}) toControlChapter;
@@ -146,6 +152,10 @@ class _DlUnfinishedSubPageState extends State<DlUnfinishedSubPage> with Automati
                               child: DownloadChapterLineView(
                                 chapterEntity: chapter,
                                 downloadTask: widget.downloadTask,
+                                highlighted: widget.history?.chapterId == chapter.chapterId,
+                                highlighted2: widget.history?.lastChapterId == chapter.chapterId,
+                                fainted: widget.footprints?.containsKey(chapter.chapterId) == true,
+                                showLater: widget.laterChapters?.containsKey(chapter.chapterId) ?? false,
                                 onPressed: () => widget.toReadChapter.call(chapter.chapterId),
                                 onLongPressed: !tip.isNormal ? null : () => _msController.enterMultiSelectionMode(alsoSelect: [key]),
                                 onPauseIconPressed: () => widget.toControlChapter.call(chapter.chapterId, start: false),

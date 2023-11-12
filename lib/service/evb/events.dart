@@ -136,36 +136,35 @@ class FavoriteAuthorUpdatedEvent {
 }
 
 class LaterUpdatedEvent {
-  const LaterUpdatedEvent({required this.mangaId, required this.added, this.fromLaterPage = false, this.fromSepLaterPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
-
   final int mangaId;
+
+  const LaterUpdatedEvent({required this.mangaId, required this.added, this.fromLaterPage = false, this.fromSepLaterPage = false, this.fromMangaPage = false});
+
   final bool added;
   final bool fromLaterPage;
   final bool fromSepLaterPage;
   final bool fromMangaPage;
-  final bool fromMangaViewerPage;
-  final bool fromMangaHistoryPage;
 }
 
 class FootprintUpdatedEvent {
-  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
+  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaTocPage = false, this.fromMangaHistoryPage = false});
 
   final int mangaId;
   final List<int>? chapterIds;
   final UpdateReason reason;
   final bool fromMangaPage;
-  final bool fromMangaViewerPage;
+  final bool fromMangaTocPage;
   final bool fromMangaHistoryPage;
 }
 
 class LaterChapterUpdatedEvent {
-  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
+  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.fromMangaPage = false, this.fromMangaTocPage = false, this.fromMangaHistoryPage = false});
 
   final int mangaId;
   final int chapterId;
   final bool added;
   final bool fromMangaPage;
-  final bool fromMangaViewerPage;
+  final bool fromMangaTocPage;
   final bool fromMangaHistoryPage;
 }
 

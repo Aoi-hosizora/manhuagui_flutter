@@ -24,6 +24,7 @@ class ChapterGridView extends StatelessWidget {
     this.showFaintColor = true,
     this.showTriText = false,
     this.getTriText,
+    this.extrasPreStack,
     this.extrasInStack,
     this.itemBuilder,
     required this.onChapterPressed,
@@ -48,6 +49,7 @@ class ChapterGridView extends StatelessWidget {
   final bool showFaintColor;
   final bool showTriText;
   final String Function(TinyMangaChapter)? getTriText;
+  final List<Widget> Function(BuildContext context, TinyMangaChapter? chapter)? extrasPreStack;
   final List<Widget> Function(BuildContext context, TinyMangaChapter? chapter)? extrasInStack;
   final Widget Function(BuildContext context, TinyMangaChapter? chapter, Widget itemWidget)? itemBuilder;
   final void Function(TinyMangaChapter? chapter) onChapterPressed;
@@ -56,12 +58,17 @@ class ChapterGridView extends StatelessWidget {
   static final Color defaultFaintTextColor = Colors.grey[600]!.withOpacity(0.6);
   static final Color defaultHighlightColor = Colors.deepOrange.withOpacity(0.3);
   static final Color defaultHighlight2Color = Colors.deepOrange.withOpacity(0.06);
+  static final Color defaultFaintTextAppliedColor = Colors.grey[600]!.applyOpacity(0.6);
   static final Color defaultHighlightAppliedColor = Colors.deepOrange.applyOpacity(0.3);
   static final Color defaultHighlight2AppliedColor = Colors.deepOrange.applyOpacity(0.06);
+  static final Color defaultHighlightDeeperColor = Colors.deepOrange.withOpacity(0.8);
+  static final Color defaultHighlight2DeeperColor = Colors.deepOrange.withOpacity(0.4);
 
   Widget _buildItem({required BuildContext context, required TinyMangaChapter? chapter}) {
     return Stack(
       children: [
+        if (extrasPreStack != null) //
+          ...extrasPreStack!.call(context, chapter),
         Positioned.fill(
           child: OutlinedButton(
             child: Column(
@@ -92,7 +99,7 @@ class ChapterGridView extends StatelessWidget {
                   ),
                 if (chapter != null && showTriText) ...[
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+                    padding: EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 3),
                     child: Divider(height: 0, thickness: 1),
                   ),
                   SizedBox(

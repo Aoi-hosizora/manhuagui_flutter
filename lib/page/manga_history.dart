@@ -66,6 +66,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterChapterUpdatedEvent>((ev) => _updateByEvent(laterChapterEvent: ev)));
   }
 
   @override
@@ -360,7 +361,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
       fromMangaPage: false,
-      fromMangaViewerPage: false,
+      fromMangaTocPage: false,
       fromMangaHistoryPage: true,
       chapter: chapter,
       chapterNeededData: widget.chapterNeededData,

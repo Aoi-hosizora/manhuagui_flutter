@@ -15,6 +15,7 @@ import 'package:manhuagui_flutter/page/view/manga_toc_badge.dart';
 import 'package:manhuagui_flutter/page/view/multi_selection_fab.dart';
 import 'package:manhuagui_flutter/service/db/download.dart';
 import 'package:manhuagui_flutter/service/db/history.dart';
+import 'package:manhuagui_flutter/service/db/later_manga.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
@@ -55,6 +56,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
     _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) => _updateByEvent(historyEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) => _updateByEvent(downloadEvent: ev)));
     _cancelHandlers.add(EventBusManager.instance.listen<FootprintUpdatedEvent>((ev) => _updateByEvent(footprintEvent: ev)));
+    _cancelHandlers.add(EventBusManager.instance.listen<LaterChapterUpdatedEvent>((ev) => _updateByEvent(laterChapterEvent: ev)));
   }
 
   @override
@@ -69,6 +71,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
   late final _allChapterIds = widget.groups.allChapterIds;
   MangaHistory? _history;
   Map<int, ChapterFootprint>? _footprints;
+  Map<int, LaterChapter>? _laterChapters;
   DownloadedManga? _downloadEntity;
   var _columns = 4; // default to four columns
 
@@ -80,6 +83,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
       await Future.delayed(Duration(milliseconds: 400)); // fake loading
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
     } finally {
       _loading = false;
@@ -88,7 +92,12 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
     }
   }
 
-  Future<void> _updateByEvent({HistoryUpdatedEvent? historyEvent, DownloadUpdatedEvent? downloadEvent, FootprintUpdatedEvent? footprintEvent}) async {
+  Future<void> _updateByEvent({
+    HistoryUpdatedEvent? historyEvent,
+    DownloadUpdatedEvent? downloadEvent,
+    FootprintUpdatedEvent? footprintEvent,
+    LaterChapterUpdatedEvent? laterChapterEvent,
+  }) async {
     if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
@@ -99,6 +108,10 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
     }
     if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
+      if (mounted) setState(() {});
+    }
+    if (laterChapterEvent != null && !laterChapterEvent.fromMangaHistoryPage) {
+      _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
   }
@@ -299,6 +312,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
                     highlighted2Chapters: [_history?.lastChapterId ?? 0],
                     showHighlight2: AppSetting.instance.ui.showLastHistory,
                     faintedChapters: _footprints?.keys.toList() ?? [],
+                    laterChecker: (cid) => _laterChapters?.containsKey(cid) == true,
                     customBadgeBuilder: (cid) => DownloadBadge.fromEntity(
                       entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                     ),

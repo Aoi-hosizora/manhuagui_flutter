@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ahlib/flutter_ahlib.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/model/chapter.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
+import 'package:manhuagui_flutter/page/manga_viewer.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/common_widgets.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
@@ -22,18 +25,30 @@ class MangaTocPage extends StatefulWidget {
     Key? key,
     required this.mangaId,
     required this.mangaTitle,
+    required this.mangaCover,
+    required this.mangaUrl,
+    required this.chapterNeededData,
     required this.groups,
+    this.showAppDrawer = true,
     required this.onChapterPressed,
-    this.onChapterLongPressed,
     this.onManageHistoryPressed,
+    this.canOperateHistory,
+    this.toSwitchChapter,
+    this.navigateWrapper,
   }) : super(key: key);
 
   final int mangaId;
   final String mangaTitle;
+  final String mangaCover;
+  final String mangaUrl;
+  final MangaChapterNeededData chapterNeededData;
   final List<MangaChapterGroup> groups;
+  final bool showAppDrawer;
   final void Function(int cid) onChapterPressed;
-  final void Function(int cid)? onChapterLongPressed;
   final void Function()? onManageHistoryPressed;
+  final bool Function(int cid)? canOperateHistory;
+  final void Function(int cid)? toSwitchChapter;
+  final NavigateWrapper? navigateWrapper;
 
   @override
   _MangaTocPageState createState() => _MangaTocPageState();
@@ -103,14 +118,45 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
       _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.groups);
       if (mounted) setState(() {});
     }
-    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId) {
+    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.fromMangaTocPage) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
-    if (laterChapterEvent != null && !laterChapterEvent.fromMangaHistoryPage) {
+    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.fromMangaTocPage) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
+  }
+
+  void _showChapterPopupMenu(int chapterId) {
+    var chapter = widget.groups.findChapter(chapterId);
+    if (chapter == null) {
+      Fluttertoast.showToast(msg: '未在漫画章节列表中找到章节'); // almost unreachable
+      return;
+    }
+
+    showPopupMenuForMangaToc(
+      context: context,
+      mangaId: widget.mangaId,
+      mangaTitle: widget.mangaTitle,
+      mangaCover: widget.mangaCover,
+      mangaUrl: widget.mangaUrl,
+      fromMangaPage: false,
+      fromMangaTocPage: true,
+      fromMangaHistoryPage: false,
+      chapter: chapter,
+      chapterNeededData: widget.chapterNeededData,
+      onHistoryUpdated: (h) => mountedSetState(() => _history = h),
+      onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
+      onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
+      onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
+      onLaterAdded: null /* 本页不显示 later banner */,
+      onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
+      onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
+      canOperateHistory: widget.canOperateHistory,
+      toSwitchChapter: widget.toSwitchChapter == null ? null : () => widget.toSwitchChapter?.call(chapterId),
+      navigateWrapper: widget.navigateWrapper,
+    );
   }
 
   @override
@@ -161,9 +207,11 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
           ),
         ],
       ),
-      drawer: AppDrawer(
-        currentSelection: DrawerSelection.none,
-      ),
+      drawer: !widget.showAppDrawer
+          ? null
+          : AppDrawer(
+              currentSelection: DrawerSelection.none,
+            ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       body: PlaceholderText(
         state: _loading ? PlaceholderState.loading : PlaceholderState.normal,
@@ -195,7 +243,7 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
                     entity: _downloadEntity?.downloadedChapters.where((el) => el.chapterId == cid).firstOrNull,
                   ),
                   onChapterPressed: widget.onChapterPressed,
-                  onChapterLongPressed: widget.onChapterLongPressed,
+                  onChapterLongPressed: (cid) => _showChapterPopupMenu(cid),
                 ),
               ],
             ).fitSystemScreenshot(this),

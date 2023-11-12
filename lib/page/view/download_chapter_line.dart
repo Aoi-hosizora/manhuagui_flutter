@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ahlib/flutter_ahlib.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
+import 'package:manhuagui_flutter/page/view/chapter_grid.dart';
 import 'package:manhuagui_flutter/service/storage/download_task.dart';
 
 /// 章节下载行，在 [DlUnfinishedSubPage] 使用，功能上实现了包括下载完和未下载完的所有状态
@@ -8,6 +10,10 @@ class DownloadChapterLineView extends StatelessWidget {
     Key? key,
     required this.chapterEntity,
     required this.downloadTask,
+    this.highlighted = false,
+    this.highlighted2 = false,
+    this.fainted = false,
+    this.showLater = false,
     required this.onPressed,
     this.onLongPressed,
     required this.onPauseIconPressed,
@@ -17,6 +23,10 @@ class DownloadChapterLineView extends StatelessWidget {
 
   final DownloadedChapter chapterEntity;
   final DownloadMangaQueueTask? downloadTask;
+  final bool highlighted;
+  final bool highlighted2;
+  final bool fainted;
+  final bool showLater;
   final void Function() onPressed;
   final void Function()? onLongPressed;
   final void Function() onPauseIconPressed;
@@ -45,7 +55,37 @@ class DownloadChapterLineView extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Flexible(
+                        child: TextGroup.normal(
+                          texts: [
+                            PlainTextItem(text: title),
+                            if (showLater)
+                              SpanItem(
+                                span: WidgetSpan(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: 5),
+                                    child: Icon(
+                                      Icons.schedule,
+                                      size: 18,
+                                      color: Colors.blueGrey.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: highlighted
+                                ? ChapterGridView.defaultHighlightDeeperColor
+                                : highlighted2
+                                    ? ChapterGridView.defaultHighlight2DeeperColor
+                                    : fainted
+                                        ? ChapterGridView.defaultFaintTextAppliedColor
+                                        : Colors.black,
+                          ),
+                        ),
+                      ),
                       Text(subTitle, style: Theme.of(context).textTheme.bodyText2),
                     ],
                   ),

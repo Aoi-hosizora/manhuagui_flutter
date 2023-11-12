@@ -453,15 +453,24 @@ class _DialogHelper {
     return ok ?? false;
   }
 
-  Future<bool> showCheckUnmarkingLaterChapterDialog({required int lcCount}) async {
+  Future<bool> showCheckUnmarkingLaterChapterDialog({required String chapterTitle}) async {
+    var ok = await showYesNoAlertDialog(context: context, title: Text('稍后阅读确认'), content: Text('确定取消 "$chapterTitle" 的稍后阅读标记？'), yesText: Text('确定'), noText: Text('取消'));
+    return ok ?? false;
+  }
+
+  Future<bool> showCheckClearingLaterChapterDialog({required int lcCount}) async {
     var ok = await showYesNoAlertDialog(context: context, title: Text('稍后阅读确认'), content: Text('当前共 $lcCount 个章节标记着稍后阅读，是否取消标记？'), yesText: Text('确定'), noText: Text('取消'));
     return ok ?? false;
   }
 
-  Future<bool> showCheckRemovingHistoryDialog({required bool read, String? chapterTitle}) async {
-    var verb = read ? '阅读' : '浏览';
-    var tip = read ? '，包括所有的章节阅读历史' : '';
-    var ok = await showYesNoAlertDialog(context: context, title: Text('删除历史确认'), content: Text('确定删除《${chapterTitle ?? mangaTitle}》的$verb历史$tip？'), yesText: Text('删除'), noText: Text('取消'));
+  Future<bool> showCheckRemovingHistoryDialog({required bool read}) async {
+    var tip = read ? '阅读历史，包括所有的章节阅读历史' : '浏览历史';
+    var ok = await showYesNoAlertDialog(context: context, title: Text('删除历史确认'), content: Text('确定删除《$mangaTitle》的$tip？'), yesText: Text('删除'), noText: Text('取消'));
+    return ok ?? false;
+  }
+
+  Future<bool> showCheckRemovingFootprintDialog({required String chapterTitle}) async {
+    var ok = await showYesNoAlertDialog(context: context, title: Text('删除历史确认'), content: Text('确定删除 "$chapterTitle" 的章节阅读历史？'), yesText: Text('删除'), noText: Text('取消'));
     return ok ?? false;
   }
 
@@ -690,17 +699,19 @@ class _DialogHelper {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(oldHistory.read ? '漫画阅读历史已删除' : '漫画浏览历史已删除')));
     EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage));
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, fromMangaPage: fromMangaPage, fromMangaTocPage: false));
   }
 
   // => called by showPopupMenuForMangaToc
-  Future<void> removeChapterHistory({
+  Future<void> removeChapterFootprint({
     required MangaHistory oldHistory,
     required int chapterId,
     required void Function(MangaHistory newHistory)? onUpdated,
     required void Function(List<int> chapterIds)? onFpRemoved,
     required bool fromHistoryList,
     required bool fromMangaPage,
+    required bool fromMangaTocPage,
+    required bool fromMangaHistoryPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
     MangaHistory? newHistory;
@@ -730,10 +741,10 @@ class _DialogHelper {
     if (newHistory != null) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('章节阅读历史已删除')));
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, fromHistoryPage: fromHistoryList, fromMangaPage: fromMangaPage, fromMangaHistoryPage: fromMangaHistoryPage));
     }
     if (removedFpCids.isNotEmpty) {
-      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: removedFpCids, reason: UpdateReason.deleted, fromMangaPage: fromMangaPage));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: removedFpCids, reason: UpdateReason.deleted, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
     }
   }
 
@@ -743,11 +754,13 @@ class _DialogHelper {
     required void Function(ChapterFootprint)? onAdded,
     required bool fromHistoryList,
     required bool fromMangaPage,
+    required bool fromMangaTocPage,
+    required bool fromMangaHistoryPage,
   }) async {
     var newFootprint = ChapterFootprint(mangaId: mangaId, chapterId: chapterId, createdAt: DateTime.now());
     await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
     onAdded?.call(newFootprint);
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.added, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: [chapterId], reason: UpdateReason.added, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
   }
 
   // => called by showPopupMenuForMangaToc
@@ -757,7 +770,7 @@ class _DialogHelper {
     required void Function(LaterManga)? onLmAdded,
     required void Function(LaterChapter)? onAdded,
     required bool fromMangaPage,
-    required bool fromMangaViewerPage,
+    required bool fromMangaTocPage,
     required bool fromMangaHistoryPage,
   }) async {
     var inLater = await LaterMangaDao.checkExistence(username: AuthManager.instance.username, mid: mangaId) ?? false;
@@ -765,12 +778,12 @@ class _DialogHelper {
       var newLater = LaterManga(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, newestChapter: chapterNeededData.newestChapter, newestDate: chapterNeededData.newestDate, createdAt: DateTime.now());
       await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
       onLmAdded?.call(newLater);
-      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: true, fromMangaPage: fromMangaPage, fromMangaViewerPage: fromMangaViewerPage, fromMangaHistoryPage: fromMangaHistoryPage));
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: true, fromMangaPage: fromMangaPage));
     }
     var newLater = LaterChapter(mangaId: mangaId, chapterId: chapterId, createdAt: DateTime.now());
     await LaterMangaDao.addOrUpdateLaterChapter(username: AuthManager.instance.username, chapter: newLater);
     onAdded?.call(newLater);
-    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: true, fromMangaPage: fromMangaPage, fromMangaViewerPage: fromMangaViewerPage, fromMangaHistoryPage: fromMangaHistoryPage));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: true, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
   }
 
   // => called by showPopupMenuForMangaToc
@@ -778,12 +791,12 @@ class _DialogHelper {
     required int chapterId,
     required void Function(int)? onRemoved,
     required bool fromMangaPage,
-    required bool fromMangaViewerPage,
+    required bool fromMangaTocPage,
     required bool fromMangaHistoryPage,
   }) async {
     await LaterMangaDao.deleteLaterChapter(username: AuthManager.instance.username, mid: mangaId, cid: chapterId);
     onRemoved?.call(chapterId);
-    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: false, fromMangaPage: fromMangaPage, fromMangaViewerPage: fromMangaViewerPage, fromMangaHistoryPage: fromMangaHistoryPage));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: false, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
   }
 
   // => called by showPopupMenuForMangaToc
@@ -793,7 +806,7 @@ class _DialogHelper {
   }) async {
     await LaterMangaDao.clearLaterChapters(username: AuthManager.instance.username, mid: mangaId);
     onCleared?.call();
-    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, added: false, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, added: false, fromMangaPage: fromMangaPage, fromMangaTocPage: false));
   }
 
   // =========================
