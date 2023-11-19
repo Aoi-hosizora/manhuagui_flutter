@@ -260,7 +260,7 @@ class GeneralLineIconText extends StatelessWidget {
           for (var i = 0; i < (cornerIcons?.length ?? 0); i++)
             Padding(
               padding: EdgeInsets.only(
-                left: i > 0 ? (cornerSpace ?? 2.5) : 0,
+                left: i > 0 ? (cornerSpace ?? 1.8) : 0,
               ),
               child: Icon(
                 cornerIcons![i],

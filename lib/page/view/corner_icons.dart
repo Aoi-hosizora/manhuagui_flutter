@@ -11,7 +11,6 @@ import 'package:manhuagui_flutter/service/db/shelf_cache.dart';
 import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 /// 构建用于各类漫画行和作者行的 Corner 图标列表，在各个列表和列表项使用
 
@@ -39,16 +38,16 @@ class MangaCornerFlags {
       return [];
     }
     return [
-      if (inDownload) Icons.download,
-      if (inShelf) Icons.star,
-      if (inFavorite) Icons.bookmark,
+      if (inDownload) CustomIcons.corner_download,
+      if (inShelf) CustomIcons.corner_star,
+      if (inFavorite) CustomIcons.corner_bookmark,
       if (inLater) ...[
-        if (!lateUpdatable) CustomIcons.clock_normal_smaller, // this is a small Icons.watch_later
-        if (lateUpdatable) CustomIcons.clock_star_smaller, // this is a small MdiIcons.clockStarFourPoints
+        if (!lateUpdatable) CustomIcons.corner_clock,
+        if (lateUpdatable) CustomIcons.corner_clock_star,
       ],
       if (inHistory && AppSetting.instance.ui.showMangaReadIcon) ...[
-        if (!historyRead) CustomIcons.opened_left_star_book,
-        if (historyRead) CustomIcons.opened_blank_book, // use custom icons rather than Icons.import_contacts
+        if (!historyRead) CustomIcons.corner_opened_left_star_book,
+        if (historyRead) CustomIcons.corner_opened_blank_book,
       ],
     ];
   }
@@ -195,7 +194,7 @@ class AuthorCornerFlags {
       return [];
     }
     return [
-      if (inFavorite) Icons.bookmark,
+      if (inFavorite) CustomIcons.corner_bookmark,
     ];
   }
 }
