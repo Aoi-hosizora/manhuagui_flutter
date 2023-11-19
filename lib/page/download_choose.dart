@@ -110,7 +110,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
-    if (laterChapterEvent != null && !laterChapterEvent.fromMangaHistoryPage) {
+    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }

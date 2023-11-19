@@ -131,16 +131,16 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (!event.added && !event.fromShelfPage) {
+    if (!event.added && ((!widget.isSepPage && !event.source.isShelfPage()) || (widget.isSepPage && !event.source.isSepShelfPage()))) {
       // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (!widget.isSepPage && event.fromSepShelfPage) {
-      // 单独页引起的变更 => 显示有更新 (仅限主页子页)
-      _isUpdated = true;
-      if (mounted) setState(() {});
-    }
+    // if (!widget.isSepPage && event.fromSepShelfPage) {
+    //   // 单独页引起的变更 => 显示有更新 (仅限主页子页)
+    //   _isUpdated = true;
+    //   if (mounted) setState(() {});
+    // }
   }
 
   void _showPopupMenuForCache() {
@@ -167,7 +167,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
               );
               if (ok ?? false) {
                 Navigator.of(c).pop();
-                MangaShelfCachePage.syncShelfCaches(context);
+                MangaShelfCachePage.syncShelfCaches(context, eventSource: EventSource.shelfPage);
               }
             },
           ),
@@ -214,7 +214,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       mangaCover: manga.cover,
       mangaUrl: manga.url,
       extraData: MangaExtraDataForDialog.fromShelfManga(manga),
-      fromShelfList: true,
+      // fromShelfList: true,
+      eventSource: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage,
       inShelfSetter: (inShelf) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
@@ -223,10 +224,10 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           _total--; // no "removed++"
           if (mounted) setState(() {});
 
-          // 独立页时发送额外通知，让主页子页显示有更新 (fromSepShelfPage)
-          if (widget.isSepPage) {
-            EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: manga.mid, added: false, fromShelfPage: true, fromSepShelfPage: true));
-          }
+          // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepShelfPage)
+          // if (widget.isSepPage) {
+          //   EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: manga.mid, added: false, fromShelfPage: true, fromSepShelfPage: true));
+          // }
         }
       },
     );

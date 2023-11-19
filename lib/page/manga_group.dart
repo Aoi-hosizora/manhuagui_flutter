@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/view/app_drawer.dart';
 import 'package:manhuagui_flutter/page/view/fit_system_screenshot.dart';
 import 'package:manhuagui_flutter/page/view/manga_group.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 漫画分组页，展示所给 [MangaGroupList] (三个 [MangaGroup]) 信息
 class MangaGroupPage extends StatefulWidget {
@@ -72,6 +73,7 @@ class _MangaGroupPageState extends State<MangaGroupPage> with FitSystemScreensho
                   mangaCover: manga.cover,
                   mangaUrl: manga.url,
                   extraData: null,
+                  eventSource: EventSource.general,
                 ),
               ),
             ),

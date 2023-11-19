@@ -32,7 +32,7 @@ class MangaShelfCachePage extends StatefulWidget {
   State<MangaShelfCachePage> createState() => _MangaShelfCachePageState();
 
   /// 同步书架缓存，在 [ShelfSubPage] 使用
-  static Future<void> syncShelfCaches(BuildContext context, {void Function()? onFinish, bool fromShelfCachePage = false}) async {
+  static Future<void> syncShelfCaches(BuildContext context, {void Function()? onFinish, required EventSource eventSource}) async {
     var caches = <ShelfCache>[];
     var currPage = 1;
     int? totalPages;
@@ -167,13 +167,13 @@ class MangaShelfCachePage extends StatefulWidget {
       var toDelete = oldCaches.where((el) => newCaches.where((el2) => el2.mangaId == el.mangaId).isEmpty).toList();
       for (var item in toDelete) {
         await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: item.mangaId);
-        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: false, fromShelfCachePage: fromShelfCachePage));
+        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: false, source: eventSource));
       }
     }
     // >>> 更新所有新记录
     for (var item in newCaches) {
       await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: item);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: true, fromShelfCachePage: fromShelfCachePage));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: item.mangaId, added: true, source: eventSource));
     }
     Navigator.of(context).pop(); // 关闭"正在处理"对话框
     onFinish?.call(); // 更新界面
@@ -328,12 +328,12 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> with FitSyste
   }
 
   void _updateByEvent(ShelfCacheUpdatedEvent event) async {
-    if (event.added && !event.fromShelfCachePage) {
+    if (event.added && !event.source.isShelfCachePage()) {
       // 非本页引起的新增 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (!event.added && !event.fromShelfCachePage) {
+    if (!event.added && !event.source.isShelfCachePage()) {
       // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
@@ -428,7 +428,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> with FitSyste
               _total--;
               _removed++;
               if (mounted) setState(() {});
-              EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, fromShelfCachePage: true));
+              EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, source: EventSource.shelfCachePage));
             },
           ),
         ],
@@ -475,7 +475,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> with FitSyste
     }
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, fromShelfCachePage: true));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, source: EventSource.shelfCachePage));
     }
   }
 
@@ -506,7 +506,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> with FitSyste
     _removed = mangaIds.length;
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, fromShelfCachePage: true));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, source: EventSource.shelfCachePage));
     }
   }
 
@@ -536,7 +536,7 @@ class _MangaShelfCachePageState extends State<MangaShelfCachePage> with FitSyste
                 MangaShelfCachePage.syncShelfCaches(
                   context,
                   onFinish: () => _pdvKey.currentState?.refresh(),
-                  fromShelfCachePage: true,
+                  eventSource: EventSource.shelfCachePage,
                 );
               }
             },

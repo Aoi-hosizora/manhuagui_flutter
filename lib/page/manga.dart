@@ -237,7 +237,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _history = newHistory;
         await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: newHistory);
         if (changedExcludeCover) {
-          EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: toAdd ? UpdateReason.added : UpdateReason.updated, fromMangaPage: true));
+          EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: toAdd ? UpdateReason.added : UpdateReason.updated, source: EventSource.mangaPage));
         }
         if (mounted) setState(() {});
       }
@@ -257,7 +257,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _downloadEntity = newDownload;
         await DownloadDao.addOrUpdateManga(manga: newDownload);
         if (changedExcludeCover) {
-          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, fromMangaPage: true));
+          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, source: EventSource.mangaPage));
         }
         if (mounted) setState(() {});
       }
@@ -287,7 +287,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _favoriteManga = newFavorite;
         await FavoriteDao.addOrUpdateFavorite(username: AuthManager.instance.username, favorite: newFavorite);
         if (changedExcludeCover) {
-          EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: _data!.mid, group: newFavorite.groupName, reason: UpdateReason.updated, fromMangaPage: true));
+          EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: _data!.mid, group: newFavorite.groupName, reason: UpdateReason.updated, source: EventSource.mangaPage));
         }
         if (mounted) setState(() {});
       }
@@ -306,7 +306,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _laterManga = newLater;
         await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
         if (changedExcludeCover) {
-          EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: _data!.mid, added: false, fromMangaPage: true));
+          EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: _data!.mid, added: false, source: EventSource.mangaPage));
         }
         if (mounted) setState(() {});
       }
@@ -335,38 +335,38 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       if (mounted) setState(() {});
     }
 
-    if (historyEvent != null && !historyEvent.fromMangaPage && historyEvent.mangaId == widget.id) {
+    if (historyEvent != null && !historyEvent.source.isMangaPage() && historyEvent.mangaId == widget.id) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
       if (mounted) setState(() {});
     }
 
-    if (downloadEvent != null && !downloadEvent.fromMangaPage && downloadEvent.mangaId == widget.id) {
+    if (downloadEvent != null && !downloadEvent.source.isMangaPage() && downloadEvent.mangaId == widget.id) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.id);
       if (mounted) setState(() {});
     }
 
-    if (shelfEvent != null && !shelfEvent.fromMangaPage && shelfEvent.mangaId == widget.id) {
+    if (shelfEvent != null && !shelfEvent.source.isMangaPage() && shelfEvent.mangaId == widget.id) {
       _inShelf = shelfEvent.added;
       if (mounted) setState(() {});
     }
 
-    if (favoriteEvent != null && !favoriteEvent.fromMangaPage && favoriteEvent.mangaId == widget.id) {
+    if (favoriteEvent != null && !favoriteEvent.source.isMangaPage() && favoriteEvent.mangaId == widget.id) {
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: favoriteEvent.mangaId);
       _inFavorite = _favoriteManga != null;
       if (mounted) setState(() {});
     }
 
-    if (laterEvent != null && !laterEvent.fromMangaPage && laterEvent.mangaId == widget.id) {
+    if (laterEvent != null && !laterEvent.source.isMangaPage() && laterEvent.mangaId == widget.id) {
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id);
       if (mounted) setState(() {});
     }
 
-    if (footprintEvent != null && !footprintEvent.fromMangaPage && footprintEvent.mangaId == widget.id) {
+    if (footprintEvent != null && !footprintEvent.source.isMangaPage() && footprintEvent.mangaId == widget.id) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.id) ?? {};
       if (mounted) setState(() {});
     }
 
-    if (laterChapterEvent != null && !laterChapterEvent.fromMangaPage && laterChapterEvent.mangaId == widget.id) {
+    if (laterChapterEvent != null && !laterChapterEvent.source.isMangaPage() && laterChapterEvent.mangaId == widget.id) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {};
       if (mounted) setState(() {});
     }
@@ -406,7 +406,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
       extraData: MangaExtraDataForDialog.fromManga(_data!),
-      fromMangaPage: true,
+      eventSource: EventSource.mangaPage,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
       nowInLater: _laterManga != null,
@@ -578,8 +578,8 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                 _footprints?.clear();
                 await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: widget.id);
                 if (mounted) setState(() {});
-                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.updated, fromMangaPage: true));
-                EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: _data!.mid, chapterIds: null, reason: UpdateReason.deleted, fromMangaPage: true));
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.updated, source: EventSource.mangaPage));
+                EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: _data!.mid, chapterIds: null, reason: UpdateReason.deleted, source: EventSource.mangaPage));
               },
             ),
           if (_history != null)
@@ -594,8 +594,8 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                 _footprints?.clear();
                 await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: widget.id);
                 if (mounted) setState(() {});
-                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.deleted, fromMangaPage: true));
-                EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: _data!.mid, chapterIds: null, reason: UpdateReason.deleted, fromMangaPage: true));
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.deleted, source: EventSource.mangaPage));
+                EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: _data!.mid, chapterIds: null, reason: UpdateReason.deleted, source: EventSource.mangaPage));
               },
             ),
           if (_history == null)
@@ -619,7 +619,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                 ); // 还原历史
                 await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
                 if (mounted) setState(() {});
-                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.added, fromMangaPage: true));
+                EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.added, source: EventSource.mangaPage));
               },
             ),
         ],
@@ -635,7 +635,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
       extraData: MangaExtraDataForDialog.fromManga(_data!),
-      fromMangaPage: true,
+      eventSource: EventSource.mangaPage,
       laterManga: _laterManga!,
       onLaterUpdated: (l) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
@@ -835,9 +835,9 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       mangaTitle: _data!.title,
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
-      fromMangaPage: true,
-      fromMangaTocPage: false,
-      fromMangaHistoryPage: false,
+      eventSource: EventSource.mangaPage,
+      // fromMangaTocPage: false,
+      // fromMangaHistoryPage: false,
       chapter: chapter,
       extraData: MangaExtraDataForViewer.fromMangaData(_data!),
       onHistoryUpdated: (h) => mountedSetState(() => _history = h),

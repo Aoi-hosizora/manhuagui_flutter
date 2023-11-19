@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 漫画排名行，在 [RankingSubPage] / [MangaAudRankingPage] 使用
 class MangaRankingLineView extends StatelessWidget {
@@ -112,6 +113,7 @@ class MangaRankingLineView extends StatelessWidget {
         mangaCover: manga.cover,
         mangaUrl: manga.url,
         extraData: MangaExtraDataForDialog.fromMangaRanking(manga),
+        eventSource: EventSource.general,
       ),
     );
   }

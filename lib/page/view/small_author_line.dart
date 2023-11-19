@@ -5,6 +5,7 @@ import 'package:manhuagui_flutter/page/author.dart';
 import 'package:manhuagui_flutter/page/dlg/author_dialog.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 作者行，[SmallAuthor]，在 [AuthorCategorySubPage] 使用
 class SmallAuthorLineView extends StatelessWidget {
@@ -49,6 +50,7 @@ class SmallAuthorLineView extends StatelessWidget {
         authorCover: author.cover,
         authorUrl: author.url,
         authorZone: author.zone,
+        eventSource: EventSource.general,
       ),
     );
   }

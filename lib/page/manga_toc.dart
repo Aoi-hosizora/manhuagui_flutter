@@ -116,11 +116,11 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
       _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.extraData.chapterGroups);
       if (mounted) setState(() {});
     }
-    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.fromMangaTocPage) {
+    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.source.isMangaTocPage()) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
-    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.fromMangaTocPage) {
+    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.source.isMangaTocPage()) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
@@ -139,11 +139,12 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
       mangaTitle: widget.mangaTitle,
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
-      fromMangaPage: false,
-      fromMangaTocPage: true,
-      fromMangaHistoryPage: false,
+      // fromMangaPage: false,
+      // fromMangaTocPage: true,
+      // fromMangaHistoryPage: false,
       chapter: chapter,
       extraData: widget.extraData,
+      eventSource: EventSource.mangaTocPage,
       onHistoryUpdated: (h) => mountedSetState(() => _history = h),
       onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
       onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),

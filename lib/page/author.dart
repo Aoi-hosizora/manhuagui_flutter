@@ -73,7 +73,7 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
 
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
     _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) async {
-      if (!ev.fromAuthorPage && ev.authorId == widget.id) {
+      if (!ev.source.isAuthorPage() && ev.authorId == widget.id) {
         _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: ev.authorId);
         if (mounted) setState(() {});
       }
@@ -128,7 +128,7 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
         if (!newAuthor.equals(_favoriteAuthor!)) {
           _favoriteAuthor = newAuthor;
           await FavoriteDao.addOrUpdateAuthor(username: AuthManager.instance.username, author: newAuthor);
-          EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: _data!.aid, reason: UpdateReason.updated, fromAuthorPage: true));
+          EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: _data!.aid, reason: UpdateReason.updated, source: EventSource.authorPage));
           if (mounted) setState(() {});
         }
       }
@@ -167,6 +167,7 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
       authorUrl: _data!.url,
       authorZone: _data!.zone,
       favoriteAuthor: _favoriteAuthor,
+      eventSource: EventSource.authorPage,
       favoriteSetter: (f) {
         _favoriteAuthor = f;
         if (mounted) setState(() {});

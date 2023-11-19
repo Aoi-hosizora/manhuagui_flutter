@@ -7,6 +7,7 @@ import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/custom_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 漫画行，[TinyManga]，在 [MangaCategorySubPage] 使用
 class TinyMangaLineView extends StatelessWidget {
@@ -63,6 +64,7 @@ class TinyMangaLineView extends StatelessWidget {
         mangaCover: manga.cover,
         mangaUrl: manga.url,
         extraData: MangaExtraDataForDialog.fromTinyManga(manga),
+        eventSource: EventSource.general,
       ),
     );
   }

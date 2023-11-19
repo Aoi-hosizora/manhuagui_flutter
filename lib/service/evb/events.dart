@@ -34,15 +34,16 @@ class ToRankingRequestedEvent {
   const ToRankingRequestedEvent();
 }
 
-// =================
-// XXX Updated Event
-// =================
+// =============
+// related enums
+// =============
 
 enum UpdateReason { added, updated, deleted }
 
 // TODO improve checking event source and event fields
 
 enum EventSource {
+  general,
   shelfPage,
   sepShelfPage,
   favoritePage,
@@ -52,6 +53,7 @@ enum EventSource {
   historyPage,
   sepHistoryPage,
   mangaPage,
+  mangaTocPage,
   mangaViewerPage,
   mangaHistoryPage,
   authorPage,
@@ -61,56 +63,87 @@ enum EventSource {
   shelfCachePage,
 }
 
+extension EventSourceExtension on EventSource {
+  bool isGeneral() => this == EventSource.general;
+
+  bool isShelfPage() => this == EventSource.shelfPage;
+
+  bool isSepShelfPage() => this == EventSource.sepShelfPage;
+
+  bool isFavoritePage() => this == EventSource.favoritePage;
+
+  bool isSepFavoritePage() => this == EventSource.sepFavoritePage;
+
+  bool isLaterPage() => this == EventSource.laterPage;
+
+  bool isSepLaterPage() => this == EventSource.sepLaterPage;
+
+  bool isHistoryPage() => this == EventSource.historyPage;
+
+  bool isSepHistoryPage() => this == EventSource.sepHistoryPage;
+
+  bool isMangaPage() => this == EventSource.mangaPage;
+
+  bool isMangaTocPage() => this == EventSource.mangaTocPage;
+
+  bool isMangaViewerPage() => this == EventSource.mangaViewerPage;
+
+  bool isMangaHistoryPage() => this == EventSource.mangaHistoryPage;
+
+  bool isAuthorPage() => this == EventSource.authorPage;
+
+  bool isAuthorFavoritePage() => this == EventSource.authorFavoritePage;
+
+  bool isDownloadPage() => this == EventSource.downloadPage;
+
+  bool isDownloadMangaPage() => this == EventSource.downloadMangaPage;
+
+  bool isShelfCachePage() => this == EventSource.shelfCachePage;
+}
+
+// =================
+// XXX Updated Event
+// =================
+
 class HistoryUpdatedEvent {
-  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.fromHistoryPage = false, this.fromSepHistoryPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromMangaHistoryPage = false});
+  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.source = EventSource.general});
 
   final int mangaId;
   final UpdateReason reason;
-  final bool fromHistoryPage;
-  final bool fromSepHistoryPage;
-  final bool fromMangaPage;
-  final bool fromMangaViewerPage;
-  final bool fromMangaHistoryPage;
+  final EventSource source; // HistoryPage | SepHistoryPage | MangaPage | MangaViewerPage | MangaHistoryPage
 }
 
 class ShelfUpdatedEvent {
-  const ShelfUpdatedEvent({required this.mangaId, required this.added, this.fromShelfPage = false, this.fromSepShelfPage = false, this.fromMangaPage = false});
+  const ShelfUpdatedEvent({required this.mangaId, required this.added, this.source = EventSource.general});
 
   final int mangaId;
   final bool added;
-  final bool fromShelfPage;
-  final bool fromSepShelfPage;
-  final bool fromMangaPage;
+  final EventSource source; // ShelfPage | SepShelfPage | MangaPage
 }
 
 class FavoriteUpdatedEvent {
-  const FavoriteUpdatedEvent({required this.mangaId, required this.group, this.oldGroup, required this.reason, this.fromFavoritePage = false, this.fromSepFavoritePage = false, this.fromMangaPage = false});
+  const FavoriteUpdatedEvent({required this.mangaId, required this.group, this.oldGroup, required this.reason, this.source = EventSource.general});
 
   final int mangaId;
   final String group;
   final String? oldGroup; // means move to group
   final UpdateReason reason;
-  final bool fromFavoritePage;
-  final bool fromSepFavoritePage;
-  final bool fromMangaPage;
+  final EventSource source; // FavoritePage | SepFavoritePage | MangaPage
 }
 
 class DownloadUpdatedEvent {
-  const DownloadUpdatedEvent({required this.mangaId, this.fromDownloadPage = false, this.fromMangaPage = false, this.fromMangaViewerPage = false, this.fromDownloadMangaPage = false});
+  const DownloadUpdatedEvent({required this.mangaId, this.source = EventSource.general});
 
   final int mangaId;
-  final bool fromDownloadPage;
-  final bool fromMangaPage;
-  final bool fromMangaViewerPage;
-  final bool fromDownloadMangaPage;
+  final EventSource source; // DownloadPage | MangaPage | MangaViewerPage | DownloadMangaPage
 }
 
 class ShelfCacheUpdatedEvent {
-  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added, this.fromShelfCachePage = false});
+  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added, this.source = EventSource.general});
 
   final int mangaId;
   final bool added;
-  final bool fromShelfCachePage;
+  final EventSource source; // ShelfCachePage
 }
 
 class FavoriteOrderUpdatedEvent {
@@ -127,45 +160,37 @@ class FavoriteGroupUpdatedEvent {
 }
 
 class FavoriteAuthorUpdatedEvent {
-  const FavoriteAuthorUpdatedEvent({required this.authorId, required this.reason, this.fromFavoritePage = false, this.fromAuthorPage = false});
+  const FavoriteAuthorUpdatedEvent({required this.authorId, required this.reason, this.source = EventSource.general});
 
   final int authorId;
   final UpdateReason reason;
-  final bool fromFavoritePage;
-  final bool fromAuthorPage;
+  final EventSource source; // FavoriteAuthorPage | AuthorPage
 }
 
 class LaterUpdatedEvent {
+  const LaterUpdatedEvent({required this.mangaId, required this.added, this.source = EventSource.general});
+
   final int mangaId;
-
-  const LaterUpdatedEvent({required this.mangaId, required this.added, this.fromLaterPage = false, this.fromSepLaterPage = false, this.fromMangaPage = false});
-
   final bool added;
-  final bool fromLaterPage;
-  final bool fromSepLaterPage;
-  final bool fromMangaPage;
+  final EventSource source; // LaterPage | SepLaterPage | MangaPage
 }
 
 class FootprintUpdatedEvent {
-  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.fromMangaPage = false, this.fromMangaTocPage = false, this.fromMangaHistoryPage = false});
+  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.source = EventSource.general});
 
   final int mangaId;
   final List<int>? chapterIds;
   final UpdateReason reason;
-  final bool fromMangaPage;
-  final bool fromMangaTocPage;
-  final bool fromMangaHistoryPage;
+  final EventSource source; // MangaPage | MangaTocPage | MangaHistoryPage
 }
 
 class LaterChapterUpdatedEvent {
-  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.fromMangaPage = false, this.fromMangaTocPage = false, this.fromMangaHistoryPage = false});
+  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.source = EventSource.general});
 
   final int mangaId;
   final int chapterId;
   final bool added;
-  final bool fromMangaPage;
-  final bool fromMangaTocPage;
-  final bool fromMangaHistoryPage;
+  final EventSource source; // MangaPage | MangaTocPage | MangaHistoryPage
 }
 
 class MarkedCategoryUpdatedEvent {

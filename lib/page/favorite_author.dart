@@ -91,12 +91,12 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.updated && !event.fromFavoritePage) {
+    if (event.reason == UpdateReason.updated && !event.source.isAuthorFavoritePage()) {
       // 非本页引起的更新 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.deleted && !event.fromFavoritePage) {
+    if (event.reason == UpdateReason.deleted && !event.source.isAuthorFavoritePage()) {
       // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
@@ -165,7 +165,8 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
       authorCover: author.authorCover,
       authorUrl: author.authorUrl,
       authorZone: author.authorZone,
-      fromFavoriteList: true,
+      // fromFavoriteList: true,
+      eventSource: EventSource.authorFavoritePage,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
@@ -189,6 +190,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
     showUpdateFavoriteAuthorRemarkDialog(
       context: context,
       favoriteAuthor: oldFavorite,
+      eventSource: EventSource.authorFavoritePage,
       onUpdated: (newFavorite) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -238,7 +240,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
     }
     if (mounted) setState(() {});
     for (var authorId in authorIds) {
-      EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, fromFavoritePage: true));
+      EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, source: EventSource.authorFavoritePage));
     }
   }
 

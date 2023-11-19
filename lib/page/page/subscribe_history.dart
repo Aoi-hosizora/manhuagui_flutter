@@ -97,21 +97,21 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.updated && !event.fromHistoryPage) {
+    if (event.reason == UpdateReason.updated && ((!widget.isSepPage && !event.source.isHistoryPage()) || (widget.isSepPage && !event.source.isSepHistoryPage()))) {
       // 非本页引起的更新 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.deleted && !event.fromHistoryPage) {
+    if (event.reason == UpdateReason.deleted && ((!widget.isSepPage && !event.source.isHistoryPage()) || (widget.isSepPage && !event.source.isSepHistoryPage()))) {
       // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (!widget.isSepPage && event.fromSepHistoryPage) {
-      // 单独页引起的变更 => 显示有更新 (仅限主页子页)
-      _isUpdated = true;
-      if (mounted) setState(() {});
-    }
+    // if (!widget.isSepPage && event.fromSepHistoryPage) {
+    //   // 单独页引起的变更 => 显示有更新 (仅限主页子页)
+    //   _isUpdated = true;
+    //   if (mounted) setState(() {});
+    // }
   }
 
   Future<void> _toSearch() async {
@@ -152,7 +152,8 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       mangaCover: history.mangaCover,
       mangaUrl: history.mangaUrl,
       extraData: null,
-      fromHistoryList: true,
+      // fromHistoryList: true,
+      eventSource: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage,
       inHistorySetter: (inHistory) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
@@ -162,10 +163,10 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
           _removed++;
           if (mounted) setState(() {});
 
-          // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
-          if (widget.isSepPage) {
-            EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
-          }
+          // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
+          // if (widget.isSepPage) {
+          //   EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
+          // }
         }
       },
     );
@@ -211,16 +212,16 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     }
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
-      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted)); // currently no need for fromHistoryPage flag
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage)); // x fromHistoryPage: true));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
     }
 
-    // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
-    if (widget.isSepPage) {
-      for (var mangaId in mangaIds) {
-        EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
-      }
-    }
+    // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
+    // if (widget.isSepPage) {
+    //   for (var mangaId in mangaIds) {
+    //     EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
+    //   }
+    // }
   }
 
   Future<void> _clearHistories() async {
@@ -257,16 +258,16 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     _removed = mangaIds.length;
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage)); // x fromHistoryPage: true));
       EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted)); // currently no need for fromHistoryPage flag
     }
 
-    // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
-    if (widget.isSepPage) {
-      for (var mangaId in mangaIds) {
-        EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
-      }
-    }
+    // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepHistoryPage)
+    // if (widget.isSepPage) {
+    //   for (var mangaId in mangaIds) {
+    //     EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, fromHistoryPage: true, fromSepHistoryPage: true));
+    //   }
+    // }
   }
 
   @override

@@ -135,7 +135,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     FootprintUpdatedEvent? footprintEvent,
     LaterChapterUpdatedEvent? laterChapterEvent,
   }) async {
-    if (historyEvent != null && historyEvent.mangaId == widget.mangaId && !historyEvent.fromMangaHistoryPage) {
+    if (historyEvent != null && historyEvent.mangaId == widget.mangaId && !historyEvent.source.isMangaHistoryPage()) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
@@ -143,12 +143,12 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
       if (mounted) setState(() {});
     }
-    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.fromMangaHistoryPage) {
+    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.source.isMangaHistoryPage()) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       _loadDataForGroups();
       if (mounted) setState(() {});
     }
-    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.fromMangaHistoryPage) {
+    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.source.isMangaHistoryPage()) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
@@ -235,7 +235,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     }
     _loadDataForGroups();
     if (mounted) setState(() {});
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: chapterIds, reason: UpdateReason.added, fromMangaHistoryPage: true));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: chapterIds, reason: UpdateReason.added, source: EventSource.mangaHistoryPage));
   }
 
   Future<void> _removeChapterFootprints({required List<int> chapterIds}) async {
@@ -302,11 +302,11 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     _loadDataForGroups();
     if (history != null) {
       _history = history;
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromMangaHistoryPage: true));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.mangaHistoryPage));
     }
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已删除 ${chapterIds.length} 条章节阅读历史')));
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: chapterIds, reason: UpdateReason.deleted, fromMangaHistoryPage: true));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: chapterIds, reason: UpdateReason.deleted, source: EventSource.mangaHistoryPage));
     if (mounted) setState(() {});
   }
 
@@ -339,8 +339,8 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     await HistoryDao.addOrUpdateHistory(username: AuthManager.instance.username, history: _history!);
     await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: widget.mangaId); // 删除章节阅读历史
     if (mounted) setState(() {});
-    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromMangaHistoryPage: true));
-    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: null, reason: UpdateReason.deleted, fromMangaHistoryPage: true));
+    EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.mangaHistoryPage));
+    EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: null, reason: UpdateReason.deleted, source: EventSource.mangaHistoryPage));
     Navigator.of(context).pop();
   }
 
@@ -358,11 +358,12 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       mangaTitle: widget.mangaTitle,
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
-      fromMangaPage: false,
-      fromMangaTocPage: false,
-      fromMangaHistoryPage: true,
+      // fromMangaPage: false,
+      // fromMangaTocPage: false,
+      // fromMangaHistoryPage: true,
       chapter: chapter,
       extraData: widget.extraData,
+      eventSource: EventSource.mangaHistoryPage,
 
       // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
       // 本页引起的更新 => 更新相关界面

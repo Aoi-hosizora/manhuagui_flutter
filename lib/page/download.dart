@@ -240,7 +240,7 @@ class _DownloadPageState extends State<DownloadPage> with FitSystemScreenshotMix
       mangaCover: manga.mangaCover,
       mangaUrl: manga.mangaUrl,
       extraData: null,
-      fromDownloadList: true,
+      eventSource: EventSource.downloadPage,
     );
   }
 
@@ -316,7 +316,7 @@ class _DownloadPageState extends State<DownloadPage> with FitSystemScreenshotMix
       }
     }
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, fromDownloadPage: true));
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, source: EventSource.downloadPage));
     }
   }
 

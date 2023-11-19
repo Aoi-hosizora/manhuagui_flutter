@@ -145,7 +145,8 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       mangaCover: favorite.mangaCover,
       mangaUrl: favorite.mangaUrl,
       extraData: null,
-      fromFavoriteList: false /* <<< */,
+      // fromFavoriteList: false /* <<< */,
+      eventSource: EventSource.general,
       inFavoriteSetter: (inFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
@@ -169,7 +170,8 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     showUpdateFavoriteMangaRemarkDialog(
       context: context,
       favorite: oldFavorite,
-      fromFavoriteList: false /* <<< */,
+      // fromFavoriteList: false /* <<< */,
+      eventSource: EventSource.general,
       onUpdated: (newFavorite) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -191,7 +193,8 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       context: context,
       favorites: oldFavorites,
       selectedGroupName: null,
-      fromFavoriteList: false /* <<< */,
+      // fromFavoriteList: false /* <<< */,
+      eventSource: EventSource.general,
       onUpdated: (newFavorites, addToTop) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -245,7 +248,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     for (var mangaId in mangaIds) {
       var groupName = favorites.where((f) => f.mangaId == mangaId).firstOrNull?.groupName;
       if (groupName != null) {
-        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.deleted, fromFavoritePage: false));
+        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.deleted, source: EventSource.general));
       }
     }
   }

@@ -466,6 +466,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           mangaCover: mangaCover,
           mangaUrl: mangaUrl,
           extraData: extraData,
+          eventSource: EventSource.general,
           inShelfSetter: (i) => i ? null : mountedSetState(() => _shelves?.removeWhere((el) => el.mid == mangaId)),
           inFavoriteSetter: (i) => i ? null : mountedSetState(() => _favorites?.removeWhere((el) => el.mangaId == mangaId)),
           inLaterSetter: (i) => i ? null : mountedSetState(() => _laters?.removeWhere((el) => el.mangaId == mangaId)),
@@ -555,6 +556,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           mangaCover: manga.cover,
           mangaUrl: manga.url,
           extraData: null,
+          eventSource: EventSource.general,
         ),
       ),
     );

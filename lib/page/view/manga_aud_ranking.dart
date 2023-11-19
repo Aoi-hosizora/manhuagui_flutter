@@ -12,6 +12,7 @@ import 'package:manhuagui_flutter/page/view/full_ripple.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
 import 'package:manhuagui_flutter/page/view/homepage_column.dart';
 import 'package:manhuagui_flutter/page/view/network_image.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 enum MangaAudRankingType {
   all,
@@ -211,6 +212,7 @@ class _MangaAudRankingViewState extends State<MangaAudRankingView> with SingleTi
         mangaCover: manga.cover,
         mangaUrl: manga.url,
         extraData: MangaExtraDataForDialog.fromMangaRanking(manga),
+        eventSource: EventSource.general,
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20 /* 15 */, vertical: 6), // | ▢ ▢▢ |

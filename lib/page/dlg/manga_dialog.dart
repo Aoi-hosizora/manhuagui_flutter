@@ -63,12 +63,14 @@ Future<void> showPopupMenuForMangaList({
   required String mangaCover,
   required String mangaUrl,
   required MangaExtraDataForDialog? extraData,
-  bool fromShelfList = false,
-  bool fromFavoriteList = false,
-  bool fromLaterList = false,
-  bool fromHistoryList = false,
-  bool fromDownloadList = false,
-  bool fromDownloadPage = false,
+  required EventSource eventSource,
+  ListenerIdentifier? listenerIdentifier /* <<< */,
+  // bool fromShelfList = false,
+  // bool fromFavoriteList = false,
+  // bool fromLaterList = false,
+  // bool fromHistoryList = false,
+  // bool fromDownloadList = false,
+  // bool fromDownloadPage = false,
   void Function(bool inShelf)? inShelfSetter,
   void Function(bool inFavorite)? inFavoriteSetter,
   void Function(bool inLater)? inLaterSetter,
@@ -122,7 +124,7 @@ Future<void> showPopupMenuForMangaList({
           Divider(height: 16, thickness: 1),
 
           /// 下载
-          if (nowInDownload && !fromDownloadPage)
+          if (nowInDownload && eventSource != EventSource.downloadPage)
             IconTextDialogOption(
               icon: Icon(Icons.downloading),
               text: Text('查看下载详情'),
@@ -131,15 +133,15 @@ Future<void> showPopupMenuForMangaList({
             ),
 
           /// 书架
-          if (AuthManager.instance.logined && fromShelfList)
+          if (AuthManager.instance.logined && eventSource == EventSource.shelfPage)
             IconTextDialogOption(
               icon: Icon(MdiIcons.starMinus),
               text: Text('移出我的书架'),
               popWhenPress: c,
               predicateForPress: () => helper.showCheckRemovingShelfDialog(),
-              onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+              onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, eventSource: eventSource), // x fromShelfList: fromShelfList, fromMangaPage: false),
             ),
-          if (AuthManager.instance.logined && !fromShelfList) ...[
+          if (AuthManager.instance.logined && eventSource != EventSource.shelfPage) ...[
             if (!expandShelfOptions)
               IconTextDialogOption(
                 icon: Icon(MdiIcons.starCog),
@@ -169,7 +171,7 @@ Future<void> showPopupMenuForMangaList({
                         text: Text('放入我的书架' + (!nowInShelfCache ? ' (*)' : '')),
                         padding: optionPadding,
                         popWhenPress: c,
-                        onPressed: () => helper.addOrRemoveShelf(toAdd: true, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+                        onPressed: () => helper.addOrRemoveShelf(toAdd: true, subscribing: null, onUpdated: inShelfSetter, eventSource: eventSource), // x fromShelfList: fromShelfList, fromMangaPage: false),
                       ),
                       IconTextDialogOption(
                         icon: Icon(MdiIcons.starMinus),
@@ -177,7 +179,7 @@ Future<void> showPopupMenuForMangaList({
                         padding: optionPadding,
                         popWhenPress: c,
                         predicateForPress: () => helper.showCheckRemovingShelfDialog(),
-                        onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, fromShelfList: fromShelfList, fromMangaPage: false),
+                        onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: null, onUpdated: inShelfSetter, eventSource: eventSource), // x fromShelfList: fromShelfList, fromMangaPage: false),
                       ),
                     ],
                   ),
@@ -192,8 +194,8 @@ Future<void> showPopupMenuForMangaList({
             popWhenPress: c,
             predicateForPress: !nowInFavorite ? null : () => helper.showCheckRemovingFavoriteDialog(),
             onPressed: () => !nowInFavorite //
-                ? helper.addFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromMangaPage: false)
-                : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromMangaPage: false),
+                ? helper.addFavorite(subscribing: null, onAdded: (_) => inFavoriteSetter?.call(true), eventSource: eventSource) // x fromFavoriteList: fromFavoriteList, fromMangaPage: false)
+                : helper.removeFavorite(subscribing: null, onRemoved: () => inFavoriteSetter?.call(false), eventSource: eventSource), // x fromFavoriteList: fromFavoriteList, fromMangaPage: false),
           ),
 
           /// 稍后阅读
@@ -203,8 +205,8 @@ Future<void> showPopupMenuForMangaList({
             popWhenPress: c,
             predicateForPress: !nowInLater ? null : () => helper.showCheckRemovingLaterDialog(laterChapterCount: laterChapterCount),
             onPressed: () => !nowInLater //
-                ? helper.addLater(onAdded: (l) => inLaterSetter?.call(true), fromLaterList: fromLaterList, fromMangaPage: false)
-                : helper.removeLater(onRemoved: () => inLaterSetter?.call(false), onLaterChapterCleared: null, fromLaterList: fromLaterList, fromMangaPage: false),
+                ? helper.addLater(onAdded: (l) => inLaterSetter?.call(true), eventSource: eventSource) // x fromLaterList: fromLaterList, fromMangaPage: false)
+                : helper.removeLater(onRemoved: () => inLaterSetter?.call(false), onLaterChapterCleared: null, eventSource: eventSource), // x fromLaterList: fromLaterList, fromMangaPage: false),
           ),
 
           /// 更多选项
@@ -230,14 +232,14 @@ Future<void> showPopupMenuForMangaList({
                   /// 下载
                   if (nowInDownload)
                     [
-                      if (!fromDownloadPage)
+                      if (eventSource != EventSource.downloadPage)
                         IconTextDialogOption(
                           icon: Icon(Icons.downloading),
                           text: Text('查看下载详情'),
                           popWhenPress: c,
                           onPressed: () => helper.gotoDownloadMangaPage(),
                         ),
-                      if (!fromDownloadList)
+                      if (eventSource != EventSource.downloadPage)
                         IconTextDialogOption(
                           icon: Icon(MdiIcons.downloadMultiple),
                           text: Text('查看漫画下载列表'),
@@ -255,7 +257,7 @@ Future<void> showPopupMenuForMangaList({
                         popWhenPress: c,
                         onPressed: () => helper.gotoShelfCachePage(),
                       ),
-                      if (!fromShelfList)
+                      if (eventSource != EventSource.shelfPage)
                         IconTextDialogOption(
                           icon: Icon(MdiIcons.bookshelf),
                           text: Text('查看我的书架列表'),
@@ -271,15 +273,15 @@ Future<void> showPopupMenuForMangaList({
                         icon: Icon(Icons.folder),
                         text: Flexible(child: Text('修改收藏分组 - ${favoriteManga.checkedGroupName}', maxLines: 1, overflow: TextOverflow.ellipsis)),
                         popWhenPress: c,
-                        onPressed: () => helper.updateFavGroupWithDlg(oldFavorite: favoriteManga, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: fromFavoriteList, fromMangaPage: false),
+                        onPressed: () => helper.updateFavGroupWithDlg(oldFavorite: favoriteManga, onUpdated: favoriteSetter, showSnackBar: true, eventSource: eventSource), // x fromFavoriteList: fromFavoriteList, fromMangaPage: false),
                       ),
                       IconTextDialogOption(
                         icon: Icon(MdiIcons.commentBookmark),
                         text: Text('查看或修改收藏备注'),
                         popWhenPress: c,
-                        onPressed: () => helper.showAndUpdateFavRemarkWithDlg(favorite: favoriteManga, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: fromFavoriteList, fromMangaPage: false),
+                        onPressed: () => helper.showAndUpdateFavRemarkWithDlg(favorite: favoriteManga, onUpdated: favoriteSetter, showSnackBar: true, eventSource: eventSource), // x fromFavoriteList: fromFavoriteList, fromMangaPage: false),
                       ),
-                      if (!fromFavoriteList)
+                      if (eventSource != EventSource.favoritePage)
                         IconTextDialogOption(
                           icon: Icon(CustomIcons.bookmark_multiple),
                           text: Text('查看漫画收藏列表'),
@@ -295,16 +297,16 @@ Future<void> showPopupMenuForMangaList({
                         icon: Icon(CustomIcons.clock_topmost),
                         text: Text('置顶于稍后阅读列表'),
                         popWhenPress: c,
-                        onPressed: () => helper.topmostLater(later: laterManga, onUpdated: laterSetter, fromLaterList: fromLaterList, fromMangaPage: false),
+                        onPressed: () => helper.topmostLater(later: laterManga, onUpdated: laterSetter, eventSource: eventSource), // x fromLaterList: fromLaterList, fromMangaPage: false),
                       ),
                       if (extraData != null && extraData.newestChapter != null && extraData.newestDate != null && extraData.newestChapter != laterManga.newestChapter)
                         IconTextDialogOption(
                           icon: Icon(CustomIcons.clock_sync),
                           text: Text('更新记录至最新章节 (*)'),
                           popWhenPress: c,
-                          onPressed: () => helper.updateLaterToNewestChapterWithDlg(later: laterManga, onUpdated: laterSetter, fromLaterList: false, fromMangaPage: false),
+                          onPressed: () => helper.updateLaterToNewestChapterWithDlg(later: laterManga, onUpdated: laterSetter, eventSource: eventSource), // x fromLaterList: false, fromMangaPage: false),
                         ),
-                      if (!fromLaterList)
+                      if (eventSource != EventSource.laterPage)
                         IconTextDialogOption(
                           icon: Icon(MdiIcons.bookClock),
                           text: Text('查看稍后阅读列表'),
@@ -321,9 +323,9 @@ Future<void> showPopupMenuForMangaList({
                         text: Text(!mangaHistory.read ? '删除浏览历史' : '删除阅读与浏览历史'),
                         popWhenPress: c,
                         predicateForPress: () => helper.showCheckRemovingHistoryDialog(read: mangaHistory.read),
-                        onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), onFpCleared: null, fromHistoryList: fromHistoryList, fromMangaPage: false),
+                        onPressed: () => helper.removeHistory(oldHistory: mangaHistory, onRemoved: () => inHistorySetter?.call(false), onFpCleared: null, eventSource: eventSource), // x fromHistoryList: fromHistoryList, fromMangaPage: false),
                       ),
-                      if (!fromHistoryList)
+                      if (eventSource != EventSource.historyPage)
                         IconTextDialogOption(
                           icon: Icon(Icons.history),
                           text: Text('查看漫画历史列表'),
@@ -345,12 +347,14 @@ Future<void> showPopupMenuForMangaList({
                         mangaCover: mangaCover,
                         mangaUrl: mangaUrl,
                         extraData: extraData,
-                        fromShelfList: fromShelfList,
-                        fromFavoriteList: fromFavoriteList,
-                        fromLaterList: fromLaterList,
-                        fromHistoryList: fromHistoryList,
-                        fromDownloadList: fromDownloadList,
-                        fromDownloadPage: fromDownloadPage,
+                        eventSource: eventSource,
+                        listenerIdentifier: listenerIdentifier,
+                        // fromShelfList: fromShelfList,
+                        // fromFavoriteList: fromFavoriteList,
+                        // fromLaterList: fromLaterList,
+                        // fromHistoryList: fromHistoryList,
+                        // fromDownloadList: fromDownloadList,
+                        // fromDownloadPage: fromDownloadPage,
                         inShelfSetter: inShelfSetter,
                         inFavoriteSetter: inFavoriteSetter,
                         inLaterSetter: inLaterSetter,
@@ -382,7 +386,8 @@ Future<void> showUpdateFavoriteMangasGroupDialog({
   required BuildContext context,
   required List<FavoriteManga> favorites,
   required String? selectedGroupName,
-  bool fromFavoriteList = false,
+  required EventSource eventSource,
+  // bool fromFavoriteList = false,
   required void Function(List<FavoriteManga> newFavorites, bool addToTop) onUpdated,
 }) async {
   var helper = _DialogHelper(
@@ -397,9 +402,10 @@ Future<void> showUpdateFavoriteMangasGroupDialog({
     oldFavorites: favorites,
     selectedGroupName: selectedGroupName,
     onUpdated: onUpdated,
+    eventSource: eventSource,
     showToast: true,
-    fromFavoriteList: fromFavoriteList,
-    fromMangaPage: false,
+    // fromFavoriteList: fromFavoriteList,
+    // fromMangaPage: false,
   );
 }
 
@@ -407,7 +413,8 @@ Future<void> showUpdateFavoriteMangasGroupDialog({
 Future<void> showUpdateFavoriteMangaRemarkDialog({
   required BuildContext context,
   required FavoriteManga favorite,
-  bool fromFavoriteList = false,
+  required EventSource eventSource,
+  // bool fromFavoriteList = false,
   required void Function(FavoriteManga newFavorite) onUpdated,
 }) async {
   var helper = _DialogHelper(
@@ -421,9 +428,10 @@ Future<void> showUpdateFavoriteMangaRemarkDialog({
   await helper.updateFavRemarkWithDlg(
     oldFavorite: favorite,
     onUpdated: onUpdated,
+    eventSource: eventSource,
     showSnackBar: false,
-    fromFavoriteList: fromFavoriteList,
-    fromMangaPage: false,
+    // fromFavoriteList: fromFavoriteList,
+    // fromMangaPage: false,
   );
 }
 
@@ -438,11 +446,12 @@ Future<void> showPopupMenuForMangaToc({
   required String mangaTitle,
   required String mangaCover,
   required String mangaUrl,
-  required bool fromMangaPage,
-  required bool fromMangaTocPage,
-  required bool fromMangaHistoryPage,
+  // required bool fromMangaPage,
+  // required bool fromMangaTocPage,
+  // required bool fromMangaHistoryPage,
   required TinyMangaChapter chapter,
   required MangaExtraDataForViewer extraData,
+  required EventSource eventSource,
   required void Function(MangaHistory history)? onHistoryUpdated,
   required void Function(ChapterFootprint footprint)? onFootprintAdded,
   required void Function(List<ChapterFootprint> footprints)? onFootprintsAdded,
@@ -544,14 +553,14 @@ Future<void> showPopupMenuForMangaToc({
             text: Text('取消标记稍后阅读'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckUnmarkingLaterChapterDialog(chapterTitle: chapter.title),
-            onPressed: () => helper.unmarkChapterLater(chapterId: chapter.cid, onRemoved: onLaterUnmarked, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
+            onPressed: () => helper.unmarkChapterLater(chapterId: chapter.cid, onRemoved: onLaterUnmarked, eventSource: eventSource), // x fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
           ),
         if (!isLaterChapter)
           IconTextDialogOption(
             icon: Icon(MdiIcons.clockPlus),
             text: Text('标记为稍后阅读'),
             popWhenPress: c,
-            onPressed: () => helper.markChapterLater(chapterId: chapter.cid, extraData: extraData, onLmAdded: onLaterAdded, onAdded: onLaterMarked, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
+            onPressed: () => helper.markChapterLater(chapterId: chapter.cid, extraData: extraData, onLmAdded: onLaterAdded, onAdded: onLaterMarked, eventSource: eventSource), // x fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
           ),
 
         /// 历史
@@ -561,14 +570,14 @@ Future<void> showPopupMenuForMangaToc({
             text: Text('删除阅读历史'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingFootprintDialog(chapterTitle: chapter.title),
-            onPressed: () => helper.removeFootprint(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintsRemoved, fromHistoryList: false, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
+            onPressed: () => helper.removeFootprint(oldHistory: historyEntity!, chapterId: chapter.cid, onUpdated: onHistoryUpdated, onFpRemoved: onFootprintsRemoved, eventSource: eventSource), // x fromHistoryList: false, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
           ),
         if (allowOperatingHistory && !(isInHistory || isInFootprint))
           IconTextDialogOption(
             icon: Icon(CustomIcons.history_plus),
             text: Text('记录为已阅读'),
             popWhenPress: c,
-            onPressed: () => helper.addFootprint(chapterId: chapter.cid, onAdded: onFootprintAdded, fromHistoryList: false, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
+            onPressed: () => helper.addFootprint(chapterId: chapter.cid, onAdded: onFootprintAdded, eventSource: eventSource), // x fromHistoryList: false, fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage),
           ),
 
         /// 查看信息
@@ -595,7 +604,8 @@ Future<void> showPopupMenuForSubscribing({
   required String mangaCover,
   required String mangaUrl,
   required MangaExtraDataForDialog? extraData,
-  required bool fromMangaPage,
+  required EventSource eventSource,
+  // required bool fromMangaPage,
   required bool nowInShelf,
   required bool nowInFavorite,
   required bool nowInLater,
@@ -629,7 +639,7 @@ Future<void> showPopupMenuForSubscribing({
             icon: Icon(MdiIcons.starPlus),
             text: Text('放入我的书架'),
             popWhenPress: c,
-            onPressed: () => helper.addOrRemoveShelf(toAdd: true, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.addOrRemoveShelf(toAdd: true, subscribing: subscribing, onUpdated: inShelfSetter, eventSource: eventSource), // x fromShelfList: false, fromMangaPage: fromMangaPage),
           ),
         if (AuthManager.instance.logined && nowInShelf)
           IconTextDialogOption(
@@ -637,7 +647,7 @@ Future<void> showPopupMenuForSubscribing({
             text: Text('移出我的书架'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingShelfDialog(),
-            onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter, fromShelfList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.addOrRemoveShelf(toAdd: false, subscribing: subscribing, onUpdated: inShelfSetter, eventSource: eventSource), // x fromShelfList: false, fromMangaPage: fromMangaPage),
           ),
 
         /// 收藏
@@ -646,7 +656,7 @@ Future<void> showPopupMenuForSubscribing({
             icon: Icon(CustomIcons.bookmark_plus),
             text: Text('添加本地收藏'),
             popWhenPress: c,
-            onPressed: () => helper.addFavorite(subscribing: subscribing, onAdded: inFavoriteSetter, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.addFavorite(subscribing: subscribing, onAdded: inFavoriteSetter, eventSource: eventSource), // x fromFavoriteList: false, fromMangaPage: fromMangaPage),
           ),
         if (nowInFavorite)
           IconTextDialogOption(
@@ -654,7 +664,7 @@ Future<void> showPopupMenuForSubscribing({
             text: Text('取消本地收藏'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingFavoriteDialog(),
-            onPressed: () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter?.call(null), fromFavoriteList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.removeFavorite(subscribing: subscribing, onRemoved: () => inFavoriteSetter?.call(null), eventSource: eventSource), // x fromFavoriteList: false, fromMangaPage: fromMangaPage),
           ),
 
         /// 稍后阅读
@@ -663,7 +673,7 @@ Future<void> showPopupMenuForSubscribing({
             icon: Icon(MdiIcons.clockPlus),
             text: Text('添加至稍后阅读列表'),
             popWhenPress: c,
-            onPressed: () => helper.addLater(onAdded: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.addLater(onAdded: inLaterSetter, eventSource: eventSource), // x fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
         if (nowInLater)
           IconTextDialogOption(
@@ -671,7 +681,7 @@ Future<void> showPopupMenuForSubscribing({
             text: Text('移出稍后阅读列表'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingLaterDialog(laterChapterCount: laterChapterCount),
-            onPressed: () => helper.removeLater(onRemoved: () => inLaterSetter?.call(null), onLaterChapterCleared: onLaterChapterCleared, fromLaterList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.removeLater(onRemoved: () => inLaterSetter?.call(null), onLaterChapterCleared: onLaterChapterCleared, eventSource: eventSource), // x fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
 
         /// 额外选项
@@ -697,7 +707,7 @@ Future<void> showPopupMenuForSubscribing({
                 child: Text('当前收藏分组：${favoriteManga.checkedGroupName}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               popWhenPress: c,
-              onPressed: () => helper.updateFavGroupWithDlg(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+              onPressed: () => helper.updateFavGroupWithDlg(oldFavorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, eventSource: eventSource), // x fromFavoriteList: false, fromMangaPage: fromMangaPage),
             ),
           if (favoriteManga != null)
             IconTextDialogOption(
@@ -706,14 +716,14 @@ Future<void> showPopupMenuForSubscribing({
                 child: Text('当前收藏备注：${favoriteManga.remark.trim().isEmpty ? '暂无' : favoriteManga.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               popWhenPress: c,
-              onPressed: () => helper.showAndUpdateFavRemarkWithDlg(favorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, fromFavoriteList: false, fromMangaPage: fromMangaPage),
+              onPressed: () => helper.showAndUpdateFavRemarkWithDlg(favorite: favoriteManga, onUpdated: inFavoriteSetter, showSnackBar: true, eventSource: eventSource), // x fromFavoriteList: false, fromMangaPage: fromMangaPage),
             ),
           if (laterManga != null)
             IconTextDialogOption(
               icon: Icon(CustomIcons.clock_topmost),
               text: Text('置顶于稍后阅读列表'),
               popWhenPress: c,
-              onPressed: () => helper.topmostLater(later: laterManga, onUpdated: inLaterSetter, fromLaterList: false, fromMangaPage: fromMangaPage),
+              onPressed: () => helper.topmostLater(later: laterManga, onUpdated: inLaterSetter, eventSource: eventSource), // x fromLaterList: false, fromMangaPage: fromMangaPage),
             ),
           if (laterManga != null)
             IconTextDialogOption(
@@ -736,8 +746,9 @@ Future<void> showPopupMenuForLaterManga({
   required String mangaCover,
   required String mangaUrl,
   required MangaExtraDataForDialog? extraData,
-  required bool fromMangaPage,
+  // required bool fromMangaPage,
   required LaterManga laterManga,
+  required EventSource eventSource,
   required void Function(LaterManga? later)? onLaterUpdated,
   required void Function()? onLaterChapterCleared,
   NavigateWrapper? navigateWrapper, // => to update system ui, for MangaViewerPage
@@ -776,7 +787,7 @@ Future<void> showPopupMenuForLaterManga({
           text: Text('移出稍后阅读列表'),
           popWhenPress: c,
           predicateForPress: () => helper.showCheckRemovingLaterDialog(laterChapterCount: laterChapterCount),
-          onPressed: () => helper.removeLater(onRemoved: () => onLaterUpdated?.call(null), onLaterChapterCleared: onLaterChapterCleared, fromLaterList: false, fromMangaPage: fromMangaPage),
+          onPressed: () => helper.removeLater(onRemoved: () => onLaterUpdated?.call(null), onLaterChapterCleared: onLaterChapterCleared, eventSource: eventSource), // x fromLaterList: false, fromMangaPage: fromMangaPage),
         ),
         if (later != null && extraData != null && extraData.newestChapter != null && extraData.newestDate != null && extraData.newestChapter != later.newestChapter)
           IconTextDialogOption(
@@ -785,14 +796,14 @@ Future<void> showPopupMenuForLaterManga({
               child: Text('更新记录至最新章节 (${extraData.newestChapter})', maxLines: 2, overflow: TextOverflow.ellipsis),
             ),
             popWhenPress: c,
-            onPressed: () => helper.updateLaterToNewestChapterWithDlg(later: later, onUpdated: onLaterUpdated, fromLaterList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.updateLaterToNewestChapterWithDlg(later: later, onUpdated: onLaterUpdated, eventSource: eventSource), // x fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
         if (later != null)
           IconTextDialogOption(
             icon: Icon(CustomIcons.clock_topmost),
             text: Text('置顶于稍后阅读列表'),
             popWhenPress: c,
-            onPressed: () => helper.topmostLater(later: later, onUpdated: onLaterUpdated, fromLaterList: false, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.topmostLater(later: later, onUpdated: onLaterUpdated, eventSource: eventSource), // x fromLaterList: false, fromMangaPage: fromMangaPage),
           ),
         if (laterChapterCount > 0)
           IconTextDialogOption(
@@ -800,7 +811,7 @@ Future<void> showPopupMenuForLaterManga({
             text: Text('取消章节的稍后阅读标记 (共 $laterChapterCount 个)'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckClearingLaterChapterDialog(laterChapterCount: laterChapterCount),
-            onPressed: () => helper.clearChapterLaters(onCleared: onLaterChapterCleared, fromMangaPage: fromMangaPage),
+            onPressed: () => helper.clearChapterLaters(onCleared: onLaterChapterCleared, eventSource: eventSource), // x fromMangaPage: fromMangaPage),
           ),
         IconTextDialogOption(
           icon: Icon(MdiIcons.bookClock),

@@ -175,7 +175,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       }
     }
 
-    if (entityEvent != null && entityEvent.mangaId == widget.mangaId && !entityEvent.fromDownloadMangaPage) {
+    if (entityEvent != null && entityEvent.mangaId == widget.mangaId && !entityEvent.source.isDownloadMangaPage()) {
       var entity = await DownloadDao.getManga(mid: widget.mangaId);
       if (entity != null) {
         mountedSetState(() => _data = entity);
@@ -287,7 +287,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       await DownloadDao.addOrUpdateChapter(chapter: newChapter);
       _data?.downloadedChapters.replaceWhere((item) => item.chapterId == chapterId, (_) => newChapter);
       if (mounted) setState(() {});
-      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.downloadMangaPage));
     }
 
     await showDialog(
@@ -431,7 +431,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       }
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 删除文件后遍历统计文件大小
     }
-    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
+    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.downloadMangaPage));
   }
 
   Future<bool> _onWillPop() async {
@@ -505,7 +505,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     await DownloadDao.addOrUpdateManga(manga: newEntity);
                     _data = newEntity;
                     if (mounted) setState(() {});
-                    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromDownloadMangaPage: true));
+                    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.downloadMangaPage));
                   },
                 ),
             ],
@@ -563,7 +563,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
-                            fromMangaPage: false,
+                            // fromMangaPage: false,
+                            eventSource: EventSource.downloadMangaPage,
                             laterManga: _later!,
                             onLaterUpdated: (l) {
                               // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
@@ -604,7 +605,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
-                            fromDownloadPage: true,
+                            // fromDownloadPage: true,
+                            eventSource: EventSource.downloadMangaPage,
                           ),
                         ),
                         action2: ActionItem.simple(

@@ -6,6 +6,7 @@ import 'package:manhuagui_flutter/page/dlg/manga_dialog.dart';
 import 'package:manhuagui_flutter/page/manga.dart';
 import 'package:manhuagui_flutter/page/view/corner_icons.dart';
 import 'package:manhuagui_flutter/page/view/general_line.dart';
+import 'package:manhuagui_flutter/service/evb/events.dart';
 
 /// 帶作者信息的漫画行，[SmallManga] / [SmallerManga]，在 [SearchPage] / [AuthorPage] / [RecentSubPage] / [OverallSubPage] 使用
 class SmallMangaLineView extends StatelessWidget {
@@ -63,6 +64,7 @@ class SmallMangaLineView extends StatelessWidget {
         mangaCover: manga.cover,
         mangaUrl: manga.url,
         extraData: MangaExtraDataForDialog.fromSmallerManga(manga),
+        eventSource: EventSource.general,
       ),
     );
   }

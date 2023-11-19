@@ -1,5 +1,6 @@
 part of 'author_dialog.dart';
 
+/// 一个 Helper 类，仅被 [author_dialog.dart] 使用
 class _DialogHelper {
   const _DialogHelper({
     required this.context,
@@ -210,8 +211,9 @@ class _DialogHelper {
   // => called by showPopupMenuForAuthorList, showPopupMenuForAuthorFavorite
   Future<void> addFavoriteWithDlg({
     required void Function(FavoriteAuthor newFavorite)? onAdded,
-    required bool fromFavoriteList,
-    required bool fromAuthorPage,
+    required EventSource eventSource,
+    // required bool fromFavoriteList,
+    // required bool fromAuthorPage,
   }) async {
     var remark = await showAddToFavoriteDialog(context: context);
     if (remark == null) {
@@ -232,30 +234,32 @@ class _DialogHelper {
     onAdded?.call(newFavorite);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已收藏漫画作者')));
-    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.added, fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
+    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.added, source: eventSource)); // x fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
   }
 
   // => called by showPopupMenuForAuthorList, showPopupMenuForAuthorFavorite
   Future<void> removeFavorite({
     required void Function()? onRemoved,
-    required bool fromFavoriteList,
-    required bool fromAuthorPage,
+    required EventSource eventSource,
+    // required bool fromFavoriteList,
+    // required bool fromAuthorPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
     await FavoriteDao.deleteAuthor(username: AuthManager.instance.username, aid: authorId);
     onRemoved?.call();
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已取消收藏漫画作者')));
-    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
+    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, source: eventSource)); // x fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
   }
 
   // => called by showUpdateFavoriteAuthorRemarkDialog
   Future<void> updateFavRemarkWithDlg({
     required FavoriteAuthor oldFavorite,
     required void Function(FavoriteAuthor newFavorite) onUpdated,
+    required EventSource eventSource,
     required bool showSnackBar,
-    required bool fromFavoriteList,
-    required bool fromAuthorPage,
+    // required bool fromFavoriteList,
+    // required bool fromAuthorPage,
   }) async {
     var remark = await showEditFavoriteRemarkDialog(context: context, remark: oldFavorite.remark.trim());
     if (remark == null) {
@@ -270,25 +274,27 @@ class _DialogHelper {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(remark == '' ? '已删除收藏备注' : '已将备注修改为 "$remark"')));
     }
-    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.updated, fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
+    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.updated, source: eventSource)); // x fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
   }
 
   // => called by showPopupMenuForAuthorFavorite
   Future<void> showAndUpdateFavRemarkWithDlg({
     required FavoriteAuthor favorite,
     required void Function(FavoriteAuthor newFavorite) onUpdated,
+    required EventSource eventSource,
     required bool showSnackBar,
-    required bool fromFavoriteList,
-    required bool fromAuthorPage,
+    // required bool fromFavoriteList,
+    // required bool fromAuthorPage,
   }) async {
     var toEdit = await showFavoriteRemarkDialog(context: context, remark: favorite.remark.trim(), authorName: authorName);
     if (toEdit) {
       await updateFavRemarkWithDlg(
         oldFavorite: favorite,
         onUpdated: onUpdated,
+        eventSource: eventSource,
         showSnackBar: showSnackBar,
-        fromFavoriteList: fromFavoriteList,
-        fromAuthorPage: fromAuthorPage,
+        // fromFavoriteList: fromFavoriteList,
+        // fromAuthorPage: fromAuthorPage,
       );
     }
   }

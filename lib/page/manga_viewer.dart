@@ -511,7 +511,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         _downloadChapter = newDownload;
         _downloadEntity!.downloadedChapters.replaceWhere((el) => el.chapterId == widget.chapterId, (_) => newDownload);
         await DownloadDao.addOrUpdateChapter(chapter: newDownload);
-        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, fromMangaViewerPage: true));
+        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.mangaViewerPage));
         if (mounted) setState(() {});
       }
     }
@@ -555,12 +555,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       if (mounted) setState(() {});
     }
 
-    if (historyEvent != null && !historyEvent.fromMangaViewerPage && historyEvent.mangaId == widget.mangaId) {
+    if (historyEvent != null && !historyEvent.source.isMangaViewerPage() && historyEvent.mangaId == widget.mangaId) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
 
-    if (downloadEvent != null && !downloadEvent.fromMangaViewerPage && downloadEvent.mangaId == widget.mangaId) {
+    if (downloadEvent != null && !downloadEvent.source.isMangaViewerPage() && downloadEvent.mangaId == widget.mangaId) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
       _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
       if (mounted) setState(() {});
@@ -634,7 +634,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       var toUpdateFp = await HistoryDao.checkFootprintExistence(username: AuthManager.instance.username, mid: widget.mangaId, cid: widget.chapterId) ?? false;
       await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
       if (mounted) setState(() {});
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, fromMangaViewerPage: true));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.mangaViewerPage));
       EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: [widget.chapterId], reason: !toUpdateFp ? UpdateReason.added : UpdateReason.updated));
     }
   }
@@ -869,7 +869,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaCover: _data!.mangaCover,
       mangaUrl: _data!.mangaUrl,
       extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
-      fromMangaPage: false,
+      // fromMangaPage: false,
+      eventSource: EventSource.mangaViewerPage,
       nowInShelf: _inShelf,
       nowInFavorite: _inFavorite,
       nowInLater: _laterManga != null,
@@ -1099,7 +1100,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaCover: _data!.mangaCover,
       mangaUrl: _data!.mangaUrl,
       extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
-      fromMangaPage: false,
+      // fromMangaPage: false,
+      eventSource: EventSource.mangaViewerPage,
       laterManga: _laterManga!,
       onLaterUpdated: (l) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)

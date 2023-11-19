@@ -32,7 +32,8 @@ Future<void> showPopupMenuForAuthorList({
   required String authorCover,
   required String authorUrl,
   required String authorZone,
-  bool fromFavoriteList = false,
+  required EventSource eventSource,
+  // bool fromFavoriteList = false,
   void Function(bool inFavorite)? inFavoriteSetter,
 }) async {
   var nowInFavorite = await FavoriteDao.checkAuthorExistence(username: AuthManager.instance.username, aid: authorId) ?? false;
@@ -76,8 +77,8 @@ Future<void> showPopupMenuForAuthorList({
           popWhenPress: c,
           predicateForPress: !nowInFavorite ? null : () => helper.showCheckRemovingFavoriteDialog(),
           onPressed: () => !nowInFavorite //
-              ? helper.addFavoriteWithDlg(onAdded: (_) => inFavoriteSetter?.call(true), fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
-              : helper.removeFavorite(onRemoved: () => inFavoriteSetter?.call(false), fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
+              ? helper.addFavoriteWithDlg(onAdded: (_) => inFavoriteSetter?.call(true), eventSource: eventSource) // x fromFavoriteList: fromFavoriteList, fromAuthorPage: false)
+              : helper.removeFavorite(onRemoved: () => inFavoriteSetter?.call(false), eventSource: eventSource), // x fromFavoriteList: fromFavoriteList, fromAuthorPage: false),
         ),
       ],
     ),
@@ -88,6 +89,7 @@ Future<void> showPopupMenuForAuthorList({
 Future<void> showUpdateFavoriteAuthorRemarkDialog({
   required BuildContext context,
   required FavoriteAuthor favoriteAuthor,
+  required EventSource eventSource,
   required void Function(FavoriteAuthor newFavorite) onUpdated,
 }) async {
   var helper = _DialogHelper(
@@ -102,8 +104,9 @@ Future<void> showUpdateFavoriteAuthorRemarkDialog({
     oldFavorite: favoriteAuthor,
     onUpdated: onUpdated,
     showSnackBar: false,
-    fromFavoriteList: true /* <<< only for favorite list */,
-    fromAuthorPage: false,
+    eventSource: eventSource,
+    // fromFavoriteList: true /* <<< only for favorite list */,
+    // fromAuthorPage: false,
   );
 }
 
@@ -116,6 +119,7 @@ void showPopupMenuForAuthorFavorite({
   required String authorUrl,
   required String authorZone,
   required FavoriteAuthor? favoriteAuthor,
+  required EventSource eventSource,
   required void Function(FavoriteAuthor? favorite) favoriteSetter,
 }) {
   var helper = _DialogHelper(
@@ -138,7 +142,7 @@ void showPopupMenuForAuthorFavorite({
             icon: Icon(Icons.bookmark_border),
             text: Text('添加本地收藏'),
             popWhenPress: c,
-            onPressed: () => helper.addFavoriteWithDlg(onAdded: favoriteSetter, fromFavoriteList: false, fromAuthorPage: true),
+            onPressed: () => helper.addFavoriteWithDlg(onAdded: favoriteSetter, eventSource: eventSource), // x fromFavoriteList: false, fromAuthorPage: true),
           ),
         if (favoriteAuthor != null)
           IconTextDialogOption(
@@ -146,7 +150,7 @@ void showPopupMenuForAuthorFavorite({
             text: Text('取消本地收藏'),
             popWhenPress: c,
             predicateForPress: () => helper.showCheckRemovingFavoriteDialog(),
-            onPressed: () => helper.removeFavorite(onRemoved: () => favoriteSetter(null), fromFavoriteList: false, fromAuthorPage: true),
+            onPressed: () => helper.removeFavorite(onRemoved: () => favoriteSetter(null), eventSource: eventSource), // x fromFavoriteList: false, fromAuthorPage: true),
           ),
         Divider(thickness: 1),
 
@@ -158,7 +162,7 @@ void showPopupMenuForAuthorFavorite({
               child: Text('当前收藏备注：${favoriteAuthor.remark.trim().isEmpty ? '暂无' : favoriteAuthor.remark.trim()}', maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             popWhenPress: c,
-            onPressed: () => helper.showAndUpdateFavRemarkWithDlg(favorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, fromFavoriteList: false, fromAuthorPage: true),
+            onPressed: () => helper.showAndUpdateFavRemarkWithDlg(favorite: favoriteAuthor, onUpdated: favoriteSetter, showSnackBar: true, eventSource: eventSource), // x fromFavoriteList: false, fromAuthorPage: true),
           ),
         IconTextDialogOption(
           icon: Icon(Icons.people),
