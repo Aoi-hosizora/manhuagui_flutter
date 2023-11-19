@@ -43,8 +43,8 @@ class MangaCornerFlags {
       if (inShelf) Icons.star,
       if (inFavorite) Icons.bookmark,
       if (inLater) ...[
-        if (!lateUpdatable) MdiIcons.clock, // use mdi rather than Icons.watch_later
-        if (lateUpdatable) MdiIcons.clockStarFourPoints,
+        if (!lateUpdatable) CustomIcons.clock_normal_smaller, // this is a small Icons.watch_later
+        if (lateUpdatable) CustomIcons.clock_star_smaller, // this is a small MdiIcons.clockStarFourPoints
       ],
       if (inHistory && AppSetting.instance.ui.showMangaReadIcon) ...[
         if (!historyRead) CustomIcons.opened_left_star_book,

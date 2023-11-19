@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:manhuagui_flutter/app_setting.dart';
 import 'package:manhuagui_flutter/config.dart';
 import 'package:manhuagui_flutter/model/category.dart';
+import 'package:manhuagui_flutter/model/common.dart';
 import 'package:manhuagui_flutter/model/entity.dart';
 import 'package:manhuagui_flutter/model/manga.dart';
 import 'package:manhuagui_flutter/page/dlg/category_dialog.dart';
@@ -39,6 +40,7 @@ import 'package:manhuagui_flutter/service/evb/auth_manager.dart';
 import 'package:manhuagui_flutter/service/evb/evb_manager.dart';
 import 'package:manhuagui_flutter/service/evb/events.dart';
 import 'package:manhuagui_flutter/service/native/browser.dart';
+import 'package:manhuagui_flutter/service/prefs/auth.dart';
 import 'package:manhuagui_flutter/service/prefs/marked_category.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -109,15 +111,31 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
     _error = '';
     if (mounted) setState(() {});
 
-    // 如果未登录，刷新时异步检查登录状态
-    if (!AuthManager.instance.logined) {
-      Future.microtask(() async {
+    // 如果未登录，刷新时异步检查登录状态；如果能够登录，则在必要时登录签到
+    Future.microtask(() async {
+      if (!AuthManager.instance.logined) {
         var r = await AuthManager.instance.check();
         if (!r.logined && r.error != null) {
           Fluttertoast.showToast(msg: '无法检查登录状态：${r.error!.text}');
         }
-      });
-    }
+      }
+      if (AuthManager.instance.logined && AppSetting.instance.ui.enableAutoCheckin) {
+        var lastDateTime = await AuthPrefs.getLoginDateTime(), nowDateTime = DateTime.now();
+        if (lastDateTime == null || lastDateTime.month != nowDateTime.month || lastDateTime.day != nowDateTime.day) {
+          var password = await AuthPrefs.getUserPassword(AuthManager.instance.username);
+          if (password != null && password.isNotEmpty) {
+            final client = RestClient(DioManager.instance.dio);
+            try {
+              await client.login(username: AuthManager.instance.username, password: password);
+              await AuthPrefs.setLoginDateTime(DateTime.now());
+              Fluttertoast.showToast(msg: '每日登录签到成功 (${formatDatetimeAndDuration(nowDateTime, FormatPattern.date)})');
+            } catch (e, s) {
+              wrapError(e, s); // ignored
+            }
+          }
+        }
+      }
+    });
 
     // 针对除漫画分组以外的数据 (下拉刷新)
     var refreshData = AppSetting.instance.ui.homepageRefreshData;

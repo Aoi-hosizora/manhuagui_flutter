@@ -123,11 +123,16 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildRankingItem(BuildContext context, MangaRanking manga) {
+  Widget _buildRankingItem(BuildContext context, MangaRanking manga, {Tuple1<double>? outHeight}) {
     final count = !widget.showMore ? 3 : 4;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢|
     final height = width / 3 * 4;
     final extraData = MangaExtraDataForDialog.fromMangaRanking(manga);
+
+    outHeight?.item = height + //
+        2 +
+        TextSpan(text: '　', style: DefaultTextStyle.of(context).style).layoutSize(context).height +
+        TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,11 +177,16 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildRecentItem(BuildContext context, TinyManga manga) {
+  Widget _buildRecentItem(BuildContext context, TinyManga manga, {Tuple1<double>? outHeight}) {
     final count = !widget.showMore ? 4 : 5;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
     final extraData = MangaExtraDataForDialog.fromTinyManga(manga);
+
+    outHeight?.item = height + //
+        2 +
+        TextSpan(text: '　', style: DefaultTextStyle.of(context).style).layoutSize(context).height +
+        TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,10 +216,14 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildHistoryItem(BuildContext context, MangaHistory manga) {
+  Widget _buildHistoryItem(BuildContext context, MangaHistory manga, {Tuple1<double>? outHeight}) {
     final count = !widget.showMore ? 6 : 8;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
+
+    outHeight?.item = height + //
+        2 +
+        TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,11 +244,15 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildLaterItem(BuildContext context, LaterManga manga) {
+  Widget _buildLaterItem(BuildContext context, LaterManga manga, {Tuple1<double>? outHeight}) {
     final count = !widget.showMore ? 6 : 8;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
     final extraData = MangaExtraDataForDialog.fromLaterManga(manga);
+
+    outHeight?.item = height + //
+        2 +
+        TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,11 +273,16 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildShelfItem(BuildContext context, ShelfManga manga) {
+  Widget _buildShelfItem(BuildContext context, ShelfManga manga, {Tuple1<double>? outHeight}) {
     final count = !widget.showMore ? 4 : 5;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
     final extraData = MangaExtraDataForDialog.fromShelfManga(manga);
+
+    outHeight?.item = height + //
+        2 +
+        TextSpan(text: '　', style: DefaultTextStyle.of(context).style).layoutSize(context).height +
+        TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,10 +312,14 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildFavoriteItem(BuildContext context, FavoriteManga manga) {
+  Widget _buildFavoriteItem(BuildContext context, FavoriteManga manga, {Tuple1<double>? outHeight}) {
     final count = !widget.showMore ? 6 : 8;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
+
+    outHeight?.item = height + //
+        2 +
+        TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,10 +340,15 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     );
   }
 
-  Widget _buildDownloadItem(BuildContext context, DownloadedManga manga) {
+  Widget _buildDownloadItem(BuildContext context, DownloadedManga manga, {Tuple1<double>? outHeight}) {
     final count = !widget.showMore ? 4 : 5;
     final width = (MediaQuery.of(context).size.width - 15 * count) / (count - 0.5); // | ▢ ▢ ▢ ▢|
     final height = width / 3 * 4;
+
+    outHeight?.item = height + //
+        2 +
+        TextSpan(text: '　', style: DefaultTextStyle.of(context).style).layoutSize(context).height +
+        TextSpan(text: '　', style: Theme.of(context).textTheme.bodyText2).layoutSize(context).height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,47 +392,48 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
     String? right;
     List<Widget>? widgets;
     bool twoLine = false;
+    Tuple1<double> height = Tuple1(200.0);
 
     switch (widget.type) {
       case MangaCollectionType.rankings:
         title = '今日漫画排行榜';
         icon = Icons.trending_up;
         right = '更新于 ${formatDatetimeAndDuration(widget.rankingDateTime ?? DateTime.now(), FormatPattern.date)}';
-        widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankingItem(context, el)).toList(); // # = 50 => 20
+        widgets = widget.ranking?.sublist(0, widget.ranking!.length.clamp(0, 20)).map((el) => _buildRankingItem(context, el, outHeight: height)).toList(); // # = 50 => 20
         break;
       case MangaCollectionType.recents:
         title = '最近更新的漫画';
         icon = Icons.cached;
-        widgets = widget.updates?.sublist(0, widget.updates!.length.clamp(0, 30)).map((el) => _buildRecentItem(context, el)).toList(); // # = 42 => 30
+        widgets = widget.updates?.sublist(0, widget.updates!.length.clamp(0, 30)).map((el) => _buildRecentItem(context, el, outHeight: height)).toList(); // # = 42 => 30
         break;
       case MangaCollectionType.histories:
         title = widget.username == null ? '本地阅读历史' : '${widget.username} 的阅读历史';
         icon = Icons.history;
-        widgets = widget.histories?.sublist(0, widget.histories!.length.clamp(0, 30)).map((el) => _buildHistoryItem(context, el)).toList(); // # = 30
+        widgets = widget.histories?.sublist(0, widget.histories!.length.clamp(0, 30)).map((el) => _buildHistoryItem(context, el, outHeight: height)).toList(); // # = 30
         twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.laters:
         title = widget.username == null ? '我的稍后阅读列表' : '${widget.username} 的稍后阅读列表';
         icon = Icons.watch_later;
-        widgets = widget.laters?.sublist(0, widget.laters!.length.clamp(0, 20)).map((el) => _buildLaterItem(context, el)).toList(); // # = 20
+        widgets = widget.laters?.sublist(0, widget.laters!.length.clamp(0, 20)).map((el) => _buildLaterItem(context, el, outHeight: height)).toList(); // # = 20
         twoLine = false;
         break;
       case MangaCollectionType.shelves:
         title = widget.username == null ? '我的书架' : '${widget.username} 的书架';
         icon = Icons.star;
-        widgets = widget.shelves?.sublist(0, widget.shelves!.length.clamp(0, 20)).map((el) => _buildShelfItem(context, el)).toList(); // # = 20
+        widgets = widget.shelves?.sublist(0, widget.shelves!.length.clamp(0, 20)).map((el) => _buildShelfItem(context, el, outHeight: height)).toList(); // # = 20
         twoLine = widgets != null && widgets.length > 6;
         break;
       case MangaCollectionType.favorites:
         title = widget.username == null ? '我的本地收藏' : '${widget.username} 的本地收藏';
         icon = Icons.bookmark;
-        widgets = widget.favorites?.sublist(0, widget.favorites!.length.clamp(0, 30)).map((el) => _buildFavoriteItem(context, el)).toList(); // # = 30
+        widgets = widget.favorites?.sublist(0, widget.favorites!.length.clamp(0, 30)).map((el) => _buildFavoriteItem(context, el, outHeight: height)).toList(); // # = 30
         twoLine = widgets != null && widgets.length > 10;
         break;
       case MangaCollectionType.downloads:
         title = '漫画下载列表';
         icon = Icons.download;
-        widgets = widget.downloads?.sublist(0, widget.downloads!.length.clamp(0, 10)).map((el) => _buildDownloadItem(context, el)).toList(); // # = 10
+        widgets = widget.downloads?.sublist(0, widget.downloads!.length.clamp(0, 10)).map((el) => _buildDownloadItem(context, el, outHeight: height)).toList(); // # = 10
         break;
     }
 
@@ -426,23 +459,21 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
           iconSize: 42,
           textStyle: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.grey[600]),
         ).copyWithChinese(),
-        childBuilder: (_) => SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 15),
-          physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(), // for scrolling in recommend page
-          scrollDirection: Axis.horizontal,
-          child: !twoLine
-              ? Row(
-                  children: [
+        childBuilder: (_) => SizedBox(
+          height: !twoLine ? height.item : 2 * height.item + 10,
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 15),
+            physics: DefaultScrollPhysics.of(context) ?? AlwaysScrollableScrollPhysics(), // for scrolling in recommend page
+            scrollDirection: Axis.horizontal,
+            children: !twoLine
+                ? [
                     for (var i = 0; i < widgets!.length; i++)
                       Padding(
                         padding: EdgeInsets.only(left: i == 0 ? 0 : 15),
                         child: widgets[i],
                       ),
-                  ],
-                )
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  ]
+                : [
                     for (var i = 0; i < widgets!.length; i += 2)
                       Padding(
                         padding: EdgeInsets.only(left: i == 0 ? 0 : 15),
@@ -458,7 +489,7 @@ class _MangaCollectionViewState extends State<MangaCollectionView> with Automati
                         ),
                       ),
                   ],
-                ),
+          ),
         ),
       ),
     );

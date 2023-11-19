@@ -59,4 +59,8 @@ class CustomIcons {
   static const IconData history_clock = IconData(0xe827, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData eye_history = IconData(0xe828, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData clock_delete = IconData(0xe829, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData clock_normal = IconData(0xe82c, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData clock_normal_smaller = IconData(0xe82d, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData clock_star = IconData(0xe82e, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData clock_star_smaller = IconData(0xe82f, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }
