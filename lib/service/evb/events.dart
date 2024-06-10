@@ -40,6 +40,8 @@ class ToRankingRequestedEvent {
 
 enum UpdateReason { added, updated, deleted }
 
+// enum UpdateReason2 { added, deleted }
+
 // TODO improve checking event source and event fields
 
 enum EventSource {
@@ -168,10 +170,10 @@ class FavoriteAuthorUpdatedEvent {
 }
 
 class LaterUpdatedEvent {
-  const LaterUpdatedEvent({required this.mangaId, required this.added, required this.source});
+  const LaterUpdatedEvent({required this.mangaId, required this.reason, required this.source});
 
   final int mangaId;
-  final bool added;
+  final UpdateReason reason;
   final EventSource source; // LaterPage | SepLaterPage | MangaPage
 }
 

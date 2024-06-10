@@ -378,7 +378,7 @@ class _DialogHelper {
 
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已添加至稍后阅读列表')));
-    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: true, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.added, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
   // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
@@ -397,7 +397,7 @@ class _DialogHelper {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已从稍后阅读列表中移出')));
     EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, added: false, source: eventSource)); // x fromMangaPage: fromMangaPage));
-    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
   // => called by showPopupMenuForMangaList, showPopupMenuForSubscribing, showPopupMenuForLaterManga
@@ -414,7 +414,7 @@ class _DialogHelper {
     onUpdated?.call(updatedLaterManga);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将本漫画置顶于稍后阅读列表')));
-    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
   // => called by showPopupMenuForMangaList, showPopupMenuForLaterManga
@@ -451,7 +451,7 @@ class _DialogHelper {
     onUpdated?.call(updatedLaterManga);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将本漫画的稍后阅读记录更新到最新章节')));
-    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
   // => called by showPopupMenuForMangaList
@@ -540,7 +540,7 @@ class _DialogHelper {
       var newLater = LaterManga(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, newestChapter: extraData.newestChapter, newestDate: extraData.newestDate, createdAt: DateTime.now());
       await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
       onLmAdded?.call(newLater);
-      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: true, source: eventSource)); // x fromMangaPage: fromMangaPage));
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.added, source: eventSource)); // x fromMangaPage: fromMangaPage));
     }
     var newLater = LaterChapter(mangaId: mangaId, chapterId: chapterId, createdAt: DateTime.now());
     await LaterMangaDao.addOrUpdateLaterChapter(username: AuthManager.instance.username, chapter: newLater);

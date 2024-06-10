@@ -306,7 +306,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _laterManga = newLater;
         await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: newLater);
         if (changedExcludeCover) {
-          EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: _data!.mid, added: false, source: EventSource.mangaPage));
+          EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.updated, source: EventSource.mangaPage));
         }
         if (mounted) setState(() {});
       }
