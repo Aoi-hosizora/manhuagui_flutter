@@ -217,11 +217,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           _total--;
           _removed++;
           if (mounted) setState(() {});
-
-          // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepFavoritePage)
-          // if (widget.isSepPage) {
-          //   EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: favorite.groupName, reason: UpdateReason.deleted, fromFavoritePage: true, fromSepFavoritePage: true));
-          // }
         }
       },
       favoriteSetter: (newFavorite) {
@@ -239,21 +234,11 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
               _data.insert(0, newFavorite); // <<< ignore previous order
               if (mounted) setState(() {});
             }
-
-            // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepFavoritePage)
-            // if (widget.isSepPage) {
-            //   EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated,fromFavoritePage: true, fromSepFavoritePage: true));
-            // }
           } else {
             _data.removeWhere((el) => el.mangaId == newFavorite.mangaId); // 不同分组 => 从列表删除
             _total--;
             _removed++;
             if (mounted) setState(() {});
-
-            // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepFavoritePage)
-            // if (widget.isSepPage) {
-            //   EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: newFavorite.groupName, oldGroup: _currentGroup, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
-            // }
           }
         }
       },
@@ -278,11 +263,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         _msController.exitMultiSelectionMode();
         _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite);
         if (mounted) setState(() {});
-
-        // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepFavoritePage)
-        // if (widget.isSepPage) {
-        //   EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: newFavorite.groupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
-        // }
       },
     );
   }
@@ -315,14 +295,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
           }
         }
         if (mounted) setState(() {});
-
-        // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepFavoritePage)
-        // if (widget.isSepPage) {
-        //   for (var newFavorite in newFavorites) {
-        //     var oldGroupName = oldFavorites.where((f) => f.mangaId == newFavorite.mangaId).firstOrNull?.groupName;
-        //     EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: newFavorite.mangaId, group: newFavorite.groupName, oldGroup: oldGroupName, reason: UpdateReason.updated, fromFavoritePage: true, fromSepFavoritePage: true));
-        //   }
-        // }
       },
     );
   }
@@ -368,13 +340,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: _currentGroup, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.favoritePage : EventSource.sepFavoritePage)); // x fromFavoritePage: true));
     }
-
-    // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepFavoritePage)
-    // if (widget.isSepPage) {
-    //   for (var mangaId in mangaIds) {
-    //     EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: _currentGroup, reason: UpdateReason.deleted, fromFavoritePage: true, fromSepFavoritePage: true));
-    //   }
-    // }
   }
 
   void _switchGroup(FavoriteGroup group) {

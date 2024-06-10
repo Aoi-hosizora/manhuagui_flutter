@@ -106,16 +106,22 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
   }
 
   void _updateByEvent(LaterUpdatedEvent event) async {
-    if (event.added) {
+    if (event.reason == UpdateReason.added) {
       // 新增 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (!event.added && ((!widget.isSepPage && !event.source.isLaterPage()) || (widget.isSepPage && !event.source.isSepLaterPage()))) {
+    if (event.reason == UpdateReason.updated && ((!widget.isSepPage && !event.source.isLaterPage()) || (widget.isSepPage && !event.source.isSepLaterPage()))) {
+      // 非本页引起的更新 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (event.reason == UpdateReason.deleted&& ((!widget.isSepPage && !event.source.isLaterPage()) || (widget.isSepPage && !event.source.isSepLaterPage()))) {
       // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
+
     // if (!widget.isSepPage && event.fromLaterPage) {
     //   // 单独页引起的变更 => 显示有更新 (仅限主页子页)
     //   _isUpdated = true;
@@ -239,11 +245,6 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
           _total--;
           _removed++;
           if (mounted) setState(() {});
-
-          // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
-          // if (widget.isSepPage) {
-          //   EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
-          // }
         }
       },
       laterSetter: (newLater) {
@@ -255,11 +256,6 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
           // _data.removeWhere((el) => el.mangaId == newLater.mangaId);
           // _data.insert(0, newLater); // => 取巧的做法，但不通用于其他更新
           if (mounted) setState(() {});
-
-          // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
-          // if (widget.isSepPage) {
-          //   EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
-          // }
         }
       },
     );
@@ -275,6 +271,7 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     _msController.exitMultiSelectionMode();
 
     // 更新数据库、更新界面、弹出提示、发送通知
+    // 本页引起的更新 => 更新列表显示
     var updatedManga = manga.copyWith(createdAt: DateTime.now());
     await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedManga);
     _data.removeWhere((el) => el.mangaId == manga.mangaId);
@@ -282,12 +279,7 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     if (mounted) setState(() {});
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画置顶于稍后阅读列表')));
-    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage)); // x fromLaterPage: true));
-
-    // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
-    // if (widget.isSepPage) {
-    //   EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
-    // }
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage)); // x fromLaterPage: true));
   }
 
   Future<void> _deleteLaterMangas({required List<int> mangaIds}) async {
@@ -329,15 +321,8 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     }
     if (mounted) setState(() {});
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage)); // x fromLaterPage: true));
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage)); // x fromLaterPage: true));
     }
-
-    // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepLaterPage)
-    // if (widget.isSepPage) {
-    //   for (var mangaId in mangaIds) {
-    //     EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, added: false, fromLaterPage: true, fromSepLaterPage: true));
-    //   }
-    // }
   }
 
   @override

@@ -117,7 +117,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       for (var data in result.data.data.reversed /* reversed, 书架上越老更新的漫画同步时间设置得越先 */) {
         var cache = ShelfCache(mangaId: data.mid, mangaTitle: data.title, mangaCover: data.cover, mangaUrl: data.url, cachedAt: DateTime.now());
         await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
-        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, added: true));
+        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, added: true, source: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage));
       }
     });
     if (mounted) setState(() {});
@@ -223,11 +223,6 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
           _data.removeWhere((el) => el.mid == manga.mid);
           _total--; // no "removed++"
           if (mounted) setState(() {});
-
-          // // 独立页时发送额外通知，让主页子页显示有更新 (fromSepShelfPage)
-          // if (widget.isSepPage) {
-          //   EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: manga.mid, added: false, fromShelfPage: true, fromSepShelfPage: true));
-          // }
         }
       },
     );

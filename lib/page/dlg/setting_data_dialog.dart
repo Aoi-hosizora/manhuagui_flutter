@@ -288,6 +288,7 @@ Future<void> showImportDataDialog({required BuildContext context}) async {
     Fluttertoast.showToast(msg: '"$name" 内不包括数据');
   } else {
     var resultString = counter.formatToString(includeZero: false, includeTypes: ExportDataType.values);
+    // TODO prompt to restart app
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
