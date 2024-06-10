@@ -566,18 +566,18 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       if (mounted) setState(() {});
     }
 
-    if (shelfEvent != null && shelfEvent.mangaId == widget.mangaId) {
-      _inShelf = shelfEvent.added;
+    if (shelfEvent != null && !shelfEvent.source.isMangaViewerPage() && shelfEvent.mangaId == widget.mangaId) {
+      _inShelf = shelfEvent.reason == UpdateReason2.added;
       if (mounted) setState(() {});
     }
 
-    if (favoriteEvent != null && favoriteEvent.mangaId == widget.mangaId) {
+    if (favoriteEvent != null && !favoriteEvent.source.isMangaViewerPage() && favoriteEvent.mangaId == widget.mangaId) {
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: favoriteEvent.mangaId);
       _inFavorite = _favoriteManga != null;
       if (mounted) setState(() {});
     }
 
-    if (laterEvent != null && laterEvent.mangaId == widget.mangaId) {
+    if (laterEvent != null && !laterEvent.source.isMangaViewerPage() && laterEvent.mangaId == widget.mangaId) {
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }

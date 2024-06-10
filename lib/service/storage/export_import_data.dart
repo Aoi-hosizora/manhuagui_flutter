@@ -417,7 +417,7 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
     }
     if (counter.laterMangas > 0) {
       EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: -1, reason: UpdateReason.added, source: EventSource.general));
-      EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: -1, chapterId: -1, added: true, source: EventSource.general));
+      EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: -1, chapterId: -1, reason: UpdateReason2.added, source: EventSource.general));
     }
   }
   await exportedDB.close();
@@ -463,7 +463,7 @@ Future<bool> _importPrefs(File prefsFile, SharedPreferences prefs, ExportDataTyp
 
   if (ok) {
     if (counter.markedCategories > 0) {
-      EventBusManager.instance.fire(MarkedCategoryUpdatedEvent(categoryName: '', added: true));
+      EventBusManager.instance.fire(MarkedCategoryUpdatedEvent(categoryName: ''));
     }
     if (counter.appSetting > 0) {
       await AppSettingPrefs.loadAllSettings(alsoFireEvent: true); // reload AppSetting, and notify that settings have been changed

@@ -40,7 +40,7 @@ class ToRankingRequestedEvent {
 
 enum UpdateReason { added, updated, deleted }
 
-// enum UpdateReason2 { added, deleted }
+enum UpdateReason2 { added, deleted }
 
 // TODO improve checking event source and event fields
 
@@ -116,10 +116,10 @@ class HistoryUpdatedEvent {
 }
 
 class ShelfUpdatedEvent {
-  const ShelfUpdatedEvent({required this.mangaId, required this.added, required this.source});
+  const ShelfUpdatedEvent({required this.mangaId, required this.reason, required this.source});
 
   final int mangaId;
-  final bool added;
+  final UpdateReason2 reason;
   final EventSource source; // ShelfPage | SepShelfPage | MangaPage
 }
 
@@ -142,10 +142,10 @@ class DownloadUpdatedEvent {
 }
 
 class ShelfCacheUpdatedEvent {
-  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added, required this.source});
+  const ShelfCacheUpdatedEvent({required this.mangaId, required this.reason, required this.source});
 
   final int mangaId;
-  final bool added;
+  final UpdateReason2 reason;
   final EventSource source; // ShelfCachePage
 }
 
@@ -188,19 +188,18 @@ class FootprintUpdatedEvent {
 }
 
 class LaterChapterUpdatedEvent {
-  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, required this.source});
+  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.reason, required this.source});
 
   final int mangaId;
   final int chapterId;
-  final bool added;
+  final UpdateReason2 reason;
   final EventSource source; // MangaPage | MangaTocPage | MangaHistoryPage
 }
 
 class MarkedCategoryUpdatedEvent {
-  const MarkedCategoryUpdatedEvent({required this.categoryName, required this.added});
+  const MarkedCategoryUpdatedEvent({required this.categoryName});
 
   final String categoryName;
-  final bool added;
 }
 
 // ============

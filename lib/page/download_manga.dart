@@ -183,22 +183,22 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       }
     }
 
-    if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
+    if (historyEvent != null && historyEvent.mangaId == widget.mangaId && !historyEvent.source.isDownloadMangaPage()) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
 
-    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId) {
+    if (footprintEvent != null && footprintEvent.mangaId == widget.mangaId && !footprintEvent.source.isDownloadMangaPage()) {
       _footprints = await HistoryDao.getMangaFootprintsSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }
 
-    if (laterEvent != null && laterEvent.mangaId == widget.mangaId) {
+    if (laterEvent != null && laterEvent.mangaId == widget.mangaId && !laterEvent.source.isDownloadMangaPage()) {
       _later = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
 
-    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId) {
+    if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.source.isDownloadMangaPage()) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
       if (mounted) setState(() {});
     }

@@ -138,11 +138,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    // if (!widget.isSepPage && event.fromSepFavoritePage) {
-    //   // 单独页引起的变更 => 显示有更新 (仅限主页子页)
-    //   _isUpdated = true;
-    //   if (mounted) setState(() {});
-    // }
   }
 
   Future<void> _toSearch() async {

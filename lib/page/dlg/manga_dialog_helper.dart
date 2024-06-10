@@ -256,7 +256,7 @@ class _DialogHelper {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '成功将漫画放入书架' : '成功将漫画移出书架')));
       } catch (_) {} // for destroyed context
-      EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, added: added, source: eventSource)); // x fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
+      EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, reason: added ? UpdateReason2.added : UpdateReason2.deleted, source: eventSource)); // x fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
     } catch (e, s) {
       var err = wrapError(e, s).text;
       var already = err.contains('已经被'), notYet = err.contains('还没有被');
@@ -267,7 +267,7 @@ class _DialogHelper {
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(added ? '漫画已经在书架上' : '漫画还未在书架上')));
         } catch (_) {} // for destroyed context
-        EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, added: added, source: eventSource)); // x fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
+        EventBusManager.instance.fire(ShelfUpdatedEvent(mangaId: mangaId, reason: added ? UpdateReason2.added : UpdateReason2.deleted, source: eventSource)); // x fromShelfPage: fromShelfList, fromMangaPage: fromMangaPage));
       } else {
         try {
           ScaffoldMessenger.of(context).clearSnackBars();
@@ -282,10 +282,10 @@ class _DialogHelper {
     if (added == true) {
       var cache = ShelfCache(mangaId: mangaId, mangaTitle: mangaTitle, mangaCover: mangaCover, mangaUrl: mangaUrl, cachedAt: DateTime.now());
       await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: true, source: eventSource)); // x fromShelfCachePage: false));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, reason: UpdateReason2.added, source: eventSource)); // x fromShelfCachePage: false));
     } else if (added == false) {
       await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: mangaId);
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, added: false, source: eventSource)); // x fromShelfCachePage: false));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: mangaId, reason: UpdateReason2.deleted, source: eventSource)); // x fromShelfCachePage: false));
     }
   }
 
@@ -396,7 +396,7 @@ class _DialogHelper {
     onRemoved?.call();
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已从稍后阅读列表中移出')));
-    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, added: false, source: eventSource)); // x fromMangaPage: fromMangaPage));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, reason: UpdateReason2.deleted, source: eventSource)); // x fromMangaPage: fromMangaPage));
     EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: eventSource)); // x fromLaterPage: fromLaterList, fromMangaPage: fromMangaPage));
   }
 
@@ -545,7 +545,7 @@ class _DialogHelper {
     var newLater = LaterChapter(mangaId: mangaId, chapterId: chapterId, createdAt: DateTime.now());
     await LaterMangaDao.addOrUpdateLaterChapter(username: AuthManager.instance.username, chapter: newLater);
     onAdded?.call(newLater);
-    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: true, source: eventSource)); // x fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, reason: UpdateReason2.added, source: eventSource)); // x fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
   }
 
   // => called by showPopupMenuForMangaToc
@@ -559,7 +559,7 @@ class _DialogHelper {
   }) async {
     await LaterMangaDao.deleteLaterChapter(username: AuthManager.instance.username, mid: mangaId, cid: chapterId);
     onRemoved?.call(chapterId);
-    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, added: false, source: eventSource)); // x fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: chapterId, reason: UpdateReason2.deleted, source: eventSource)); // x fromMangaPage: fromMangaPage, fromMangaTocPage: fromMangaTocPage, fromMangaHistoryPage: fromMangaHistoryPage));
   }
 
   // => called by showPopupMenuForMangaToc
@@ -570,7 +570,7 @@ class _DialogHelper {
   }) async {
     await LaterMangaDao.clearLaterChapters(username: AuthManager.instance.username, mid: mangaId);
     onCleared?.call();
-    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, added: false, source: eventSource)); // x fromMangaPage: fromMangaPage, fromMangaTocPage: false));
+    EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: mangaId, chapterId: -1, reason: UpdateReason2.deleted, source: eventSource)); // x fromMangaPage: fromMangaPage, fromMangaTocPage: false));
   }
 
   // =================================

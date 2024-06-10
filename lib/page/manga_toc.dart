@@ -107,11 +107,11 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
     FootprintUpdatedEvent? footprintEvent,
     LaterChapterUpdatedEvent? laterChapterEvent,
   }) async {
-    if (historyEvent != null && historyEvent.mangaId == widget.mangaId) {
+    if (historyEvent != null && historyEvent.mangaId == widget.mangaId && !historyEvent.source.isMangaTocPage()) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
-    if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
+    if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId && !downloadEvent.source.isMangaTocPage()) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
       _downloadedChapters = _downloadEntity?.downloadedChapters.toChapterGroup(origin: widget.extraData.chapterGroups);
       if (mounted) setState(() {});

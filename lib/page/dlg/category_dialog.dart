@@ -38,7 +38,7 @@ Future<void> showCategoryPopupMenu({
             popWhenPress: c,
             onPressed: () async {
               await MarkedCategoryPrefs.markCategory(name: category.name);
-              EventBusManager.instance.fire(MarkedCategoryUpdatedEvent(categoryName: category.name, added: true));
+              EventBusManager.instance.fire(MarkedCategoryUpdatedEvent(categoryName: category.name));
               onMarkedChanged?.call(category, true);
             },
           ),
@@ -49,7 +49,7 @@ Future<void> showCategoryPopupMenu({
             popWhenPress: c,
             onPressed: () async {
               await MarkedCategoryPrefs.unmarkCategory(name: category.name);
-              EventBusManager.instance.fire(MarkedCategoryUpdatedEvent(categoryName: category.name, added: false));
+              EventBusManager.instance.fire(MarkedCategoryUpdatedEvent(categoryName: category.name));
               onMarkedChanged?.call(category, false);
             },
           ),

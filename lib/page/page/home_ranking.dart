@@ -66,7 +66,7 @@ class _RankingSubPageState extends State<RankingSubPage> with AutomaticKeepAlive
   final _genres = <TinyCategory>[];
   var _genreError = '';
   final _categories = <TinyCategory>[];
-  final _markedCategoryNames = <String>[];
+  final _markedCategoryNames = <String>[]; // for CategoryGridListView and CategoryPopupView
 
   Future<void> _loadGenres() async {
     var categories = await MarkedCategoryPrefs.getMarkedCategories();

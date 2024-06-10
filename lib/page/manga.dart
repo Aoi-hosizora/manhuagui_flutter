@@ -271,7 +271,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       } else {
         await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: widget.id);
       }
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, added: _inShelf, source: EventSource.mangaPage));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, reason: _inShelf ? UpdateReason2.added : UpdateReason2.deleted, source: EventSource.mangaPage));
     }
 
     // 4. 更新漫画收藏信息
@@ -346,7 +346,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
     }
 
     if (shelfEvent != null && !shelfEvent.source.isMangaPage() && shelfEvent.mangaId == widget.id) {
-      _inShelf = shelfEvent.added;
+      _inShelf = shelfEvent.reason == UpdateReason2.added;
       if (mounted) setState(() {});
     }
 

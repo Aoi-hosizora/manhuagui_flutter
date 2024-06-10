@@ -117,7 +117,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       for (var data in result.data.data.reversed /* reversed, 书架上越老更新的漫画同步时间设置得越先 */) {
         var cache = ShelfCache(mangaId: data.mid, mangaTitle: data.title, mangaCover: data.cover, mangaUrl: data.url, cachedAt: DateTime.now());
         await ShelfCacheDao.addOrUpdateShelfCache(username: AuthManager.instance.username, cache: cache);
-        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, added: true, source: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage));
+        EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: data.mid, reason: UpdateReason2.added, source: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage));
       }
     });
     if (mounted) setState(() {});
@@ -126,21 +126,16 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
   }
 
   void _updateByEvent(ShelfUpdatedEvent event) {
-    if (event.added) {
+    if (event.reason == UpdateReason2.added) {
       // 新增 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (!event.added && ((!widget.isSepPage && !event.source.isShelfPage()) || (widget.isSepPage && !event.source.isSepShelfPage()))) {
+    if (event.reason == UpdateReason2.deleted && ((!widget.isSepPage && !event.source.isShelfPage()) || (widget.isSepPage && !event.source.isSepShelfPage()))) {
       // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    // if (!widget.isSepPage && event.fromSepShelfPage) {
-    //   // 单独页引起的变更 => 显示有更新 (仅限主页子页)
-    //   _isUpdated = true;
-    //   if (mounted) setState(() {});
-    // }
   }
 
   void _showPopupMenuForCache() {

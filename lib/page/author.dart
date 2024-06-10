@@ -64,20 +64,12 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => _loadData());
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (_) async {
-        _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: widget.id);
-        if (mounted) setState(() {});
-      }));
+      _cancelHandlers.add(AuthManager.instance.listenOnlyWhen(Tuple1(AuthManager.instance.authData), (ev) => _updateByEvent(authEvent: ev)));
       await AuthManager.instance.check();
     });
 
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
-    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) async {
-      if (!ev.source.isAuthorPage() && ev.authorId == widget.id) {
-        _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: ev.authorId);
-        if (mounted) setState(() {});
-      }
-    }));
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteAuthorUpdatedEvent>((ev) => _updateByEvent(favoriteAuthorEvent: ev)));
   }
 
   @override
@@ -156,6 +148,21 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: result.data.data.map((e) => e.mid)).then((_) => mountedSetState(() {}));
     return PagedList(list: result.data.data, next: result.data.page + 1);
+  }
+
+  Future<void> _updateByEvent({
+    AuthChangedEvent? authEvent,
+    FavoriteAuthorUpdatedEvent? favoriteAuthorEvent,
+  }) async {
+    if (authEvent != null) {
+      _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: widget.id);
+      if (mounted) setState(() {});
+    }
+
+    if (favoriteAuthorEvent != null && !favoriteAuthorEvent.source.isAuthorPage() && favoriteAuthorEvent.authorId == widget.id) {
+      _favoriteAuthor = await FavoriteDao.getAuthor(username: AuthManager.instance.username, aid: widget.id);
+      if (mounted) setState(() {});
+    }
   }
 
   void _favorite() {

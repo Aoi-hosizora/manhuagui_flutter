@@ -104,7 +104,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
   var _loading = true; // initialize to true
   HomepageMangaGroupList? _data;
   var _error = '';
-  final _markedCategoryNames = <String>[];
+  final _markedCategoryNames = <String>[]; // for CategoryChipListView
 
   Future<void> _loadingGroupList({bool considerOtherData = true}) async {
     _loading = true;

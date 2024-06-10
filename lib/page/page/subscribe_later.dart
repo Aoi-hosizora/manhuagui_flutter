@@ -116,17 +116,11 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-    if (event.reason == UpdateReason.deleted&& ((!widget.isSepPage && !event.source.isLaterPage()) || (widget.isSepPage && !event.source.isSepLaterPage()))) {
+    if (event.reason == UpdateReason.deleted && ((!widget.isSepPage && !event.source.isLaterPage()) || (widget.isSepPage && !event.source.isSepLaterPage()))) {
       // 非本页引起的删除 => 显示有更新
       _isUpdated = true;
       if (mounted) setState(() {});
     }
-
-    // if (!widget.isSepPage && event.fromLaterPage) {
-    //   // 单独页引起的变更 => 显示有更新 (仅限主页子页)
-    //   _isUpdated = true;
-    //   if (mounted) setState(() {});
-    // }
   }
 
   Future<void> _toSearch() async {

@@ -63,7 +63,7 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
   var _genreLoading = true; // initialize to true
   final _genres = <TinyCategory>[];
   var _genreError = '';
-  final _markedCategoryNames = <String>[];
+  final _markedCategoryNames = <String>[]; // for CategoryPopupView
 
   Future<void> _loadGenres() async {
     var categories = await MarkedCategoryPrefs.getMarkedCategories();
