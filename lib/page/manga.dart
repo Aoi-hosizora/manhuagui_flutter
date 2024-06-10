@@ -257,7 +257,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         _downloadEntity = newDownload;
         await DownloadDao.addOrUpdateManga(manga: newDownload);
         if (changedExcludeCover) {
-          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, source: EventSource.mangaPage));
+          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: _data!.mid, reason: UpdateReason.updated, source: EventSource.mangaPage));
         }
         if (mounted) setState(() {});
       }

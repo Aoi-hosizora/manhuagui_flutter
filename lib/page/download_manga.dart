@@ -287,7 +287,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       await DownloadDao.addOrUpdateChapter(chapter: newChapter);
       _data?.downloadedChapters.replaceWhere((item) => item.chapterId == chapterId, (_) => newChapter);
       if (mounted) setState(() {});
-      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.downloadMangaPage));
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.downloadMangaPage));
     }
 
     await showDialog(
@@ -431,7 +431,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       }
       getDownloadedMangaBytes(mangaId: widget.mangaId).then((b) => mountedSetState(() => _byte = b)); // 删除文件后遍历统计文件大小
     }
-    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.downloadMangaPage));
+    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.downloadMangaPage));
   }
 
   Future<bool> _onWillPop() async {
@@ -505,7 +505,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                     await DownloadDao.addOrUpdateManga(manga: newEntity);
                     _data = newEntity;
                     if (mounted) setState(() {});
-                    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.downloadMangaPage));
+                    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.downloadMangaPage));
                   },
                 ),
             ],

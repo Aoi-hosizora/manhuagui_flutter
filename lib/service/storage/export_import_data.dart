@@ -407,7 +407,7 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
       EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: -1, chapterIds: null, reason: UpdateReason.added, source: EventSource.general));
     }
     if (counter.favoriteMangas > 0) {
-      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: -1, source: EventSource.general));
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: -1, reason: UpdateReason.added, source: EventSource.general));
     }
     if (counter.favoriteMangas > 0) {
       EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added, source: EventSource.general));

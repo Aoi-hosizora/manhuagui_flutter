@@ -157,8 +157,7 @@ class _DownloadChoosePageState extends State<DownloadChoosePage> with FitSystemS
       throughChapterList: null,
     );
 
-    // 4. 更新界面，并显示提示
-    // await _loadDownloadedChapters(); => 由事件通知更新章节信息
+    // 4. 更新界面，并显示提示 (由事件通知更新章节信息)
     _msController.unselectAll();
     _isAllSelected = false;
     if (mounted) setState(() {});

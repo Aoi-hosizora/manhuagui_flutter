@@ -511,7 +511,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         _downloadChapter = newDownload;
         _downloadEntity!.downloadedChapters.replaceWhere((el) => el.chapterId == widget.chapterId, (_) => newDownload);
         await DownloadDao.addOrUpdateChapter(chapter: newDownload);
-        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, source: EventSource.mangaViewerPage));
+        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.mangaViewerPage));
         if (mounted) setState(() {});
       }
     }

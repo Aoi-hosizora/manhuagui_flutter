@@ -139,7 +139,7 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
     }
-    if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId) {
+    if (downloadEvent != null && downloadEvent.mangaId == widget.mangaId && !downloadEvent.source.isMangaHistoryPage()) {
       _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId);
       if (mounted) setState(() {});
     }

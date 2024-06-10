@@ -66,8 +66,10 @@ class MangaCornerFlagStorage {
   }) {
     if (!ignoreDownloads) {
       _cancelHandlers.add(EventBusManager.instance.listen<DownloadUpdatedEvent>((ev) async {
-        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryShelves: false, queryFavorites: false, queryLaters: false, queryHistories: false);
-        stateSetter();
+        if (ev.reason != UpdateReason.updated) {
+          await queryAndStoreFlags(mangaIds: [ev.mangaId], queryShelves: false, queryFavorites: false, queryLaters: false, queryHistories: false);
+          stateSetter();
+        }
       }));
     }
     if (!ignoreShelves) {
@@ -78,20 +80,26 @@ class MangaCornerFlagStorage {
     }
     if (!ignoreFavorites) {
       _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) async {
-        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryLaters: false, queryHistories: false);
-        stateSetter();
+        if (ev.reason != UpdateReason.updated) {
+          await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryLaters: false, queryHistories: false);
+          stateSetter();
+        }
       }));
     }
     if (!ignoreLaters) {
       _cancelHandlers.add(EventBusManager.instance.listen<LaterUpdatedEvent>((ev) async {
-        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryFavorites: false, queryHistories: false);
-        stateSetter();
+        if (ev.reason != UpdateReason.updated) {
+          await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryFavorites: false, queryHistories: false);
+          stateSetter();
+        }
       }));
     }
     if (!ignoreHistories) {
       _cancelHandlers.add(EventBusManager.instance.listen<HistoryUpdatedEvent>((ev) async {
-        await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryLaters: false, queryFavorites: false);
-        stateSetter();
+        if (ev.reason != UpdateReason.updated) {
+          await queryAndStoreFlags(mangaIds: [ev.mangaId], queryDownloads: false, queryShelves: false, queryLaters: false, queryFavorites: false);
+          stateSetter();
+        }
       }));
     }
 

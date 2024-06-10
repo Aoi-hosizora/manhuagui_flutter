@@ -134,9 +134,10 @@ class FavoriteUpdatedEvent {
 }
 
 class DownloadUpdatedEvent {
-  const DownloadUpdatedEvent({required this.mangaId, required this.source});
+  const DownloadUpdatedEvent({required this.mangaId, required this.reason, required this.source});
 
   final int mangaId;
+  final UpdateReason reason;
   final EventSource source; // DownloadPage | MangaPage | MangaViewerPage | DownloadMangaPage
 }
 

@@ -316,7 +316,7 @@ class _DownloadPageState extends State<DownloadPage> with FitSystemScreenshotMix
       }
     }
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, source: EventSource.downloadPage));
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: EventSource.downloadPage));
     }
   }
 
