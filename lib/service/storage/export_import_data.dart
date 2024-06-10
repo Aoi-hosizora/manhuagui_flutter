@@ -403,21 +403,21 @@ Future<bool> _importDB(File dbFile, Transaction db, ExportDataTypeCounter counte
   if (ok) {
     // notify that related entities have been changed
     if (counter.readHistories > 0) {
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added));
-      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: -1, chapterIds: null, reason: UpdateReason.added));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: -1, reason: UpdateReason.added, source: EventSource.general));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: -1, chapterIds: null, reason: UpdateReason.added, source: EventSource.general));
     }
     if (counter.favoriteMangas > 0) {
-      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: -1));
+      EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: -1, source: EventSource.general));
     }
     if (counter.favoriteMangas > 0) {
-      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added));
+      EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: -1, group: '', reason: UpdateReason.added, source: EventSource.general));
     }
     if (counter.favoriteAuthors > 0) {
-      EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added));
+      EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: -1, reason: UpdateReason.added, source: EventSource.general));
     }
     if (counter.laterMangas > 0) {
-      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: -1, added: true));
-      EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: -1, chapterId: -1, added: true));
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: -1, added: true, source: EventSource.general));
+      EventBusManager.instance.fire(LaterChapterUpdatedEvent(mangaId: -1, chapterId: -1, added: true, source: EventSource.general));
     }
   }
   await exportedDB.close();

@@ -78,7 +78,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
   @override
   Future<void> doDefer() {
     EventBusManager.instance.fire(DownloadProgressChangedEvent(mangaId: mangaId, finished: true)); // finished means task has been removed from queue
-    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
+    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, source: EventSource.general));
     Future.microtask(() async {
       // 以防万一，等待 2s/3s/4s/5s 后再分别更新系统通知一次
       await Future.delayed(Duration(seconds: 2));
@@ -208,7 +208,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         ),
       );
     }
-    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId)); // 更新完漫画数据和章节数据后发送通知
+    EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, source: EventSource.general)); // 更新完漫画数据和章节数据后发送通知
 
     // 6. 判断是否入队
     if (previousTask != null) {
@@ -270,7 +270,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
         await DownloadDao.addOrUpdateManga(
           manga: oldManga.copyWith(error: true), // 漫画数据获取失败
         );
-        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
+        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, source: EventSource.general));
       }
       return false;
     }
@@ -390,7 +390,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
               successPageCount: oldChapter.successPageCount /* 已成功下载的页数不做变化 */,
             ),
           );
-          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
+          EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, source: EventSource.general));
         }
         continue;
       }
@@ -524,7 +524,7 @@ class DownloadMangaQueueTask extends QueueTask<void> {
             needUpdate: false /* 已被更新，无需更新 */,
           ),
         );
-        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId));
+        EventBusManager.instance.fire(DownloadUpdatedEvent(mangaId: mangaId, source: EventSource.general));
       } // try-catch-finally
     } // for in chapterIds
 

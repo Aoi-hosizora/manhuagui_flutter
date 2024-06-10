@@ -248,7 +248,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     for (var mangaId in mangaIds) {
       var groupName = favorites.where((f) => f.mangaId == mangaId).firstOrNull?.groupName;
       if (groupName != null) {
-        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.deleted, source: EventSource.general));
+        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.deleted, source: EventSource.general)); // => 该页不做任何更新
       }
     }
   }

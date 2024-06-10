@@ -271,7 +271,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       } else {
         await ShelfCacheDao.deleteShelfCache(username: AuthManager.instance.username, mangaId: widget.id);
       }
-      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, added: _inShelf));
+      EventBusManager.instance.fire(ShelfCacheUpdatedEvent(mangaId: widget.id, added: _inShelf, source: EventSource.mangaPage));
     }
 
     // 4. 更新漫画收藏信息

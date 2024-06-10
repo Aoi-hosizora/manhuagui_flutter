@@ -106,7 +106,7 @@ extension EventSourceExtension on EventSource {
 // =================
 
 class HistoryUpdatedEvent {
-  const HistoryUpdatedEvent({required this.mangaId, required this.reason, this.source = EventSource.general});
+  const HistoryUpdatedEvent({required this.mangaId, required this.reason, required this.source});
 
   final int mangaId;
   final UpdateReason reason;
@@ -114,7 +114,7 @@ class HistoryUpdatedEvent {
 }
 
 class ShelfUpdatedEvent {
-  const ShelfUpdatedEvent({required this.mangaId, required this.added, this.source = EventSource.general});
+  const ShelfUpdatedEvent({required this.mangaId, required this.added, required this.source});
 
   final int mangaId;
   final bool added;
@@ -122,7 +122,7 @@ class ShelfUpdatedEvent {
 }
 
 class FavoriteUpdatedEvent {
-  const FavoriteUpdatedEvent({required this.mangaId, required this.group, this.oldGroup, required this.reason, this.source = EventSource.general});
+  const FavoriteUpdatedEvent({required this.mangaId, required this.group, this.oldGroup, required this.reason, required this.source});
 
   final int mangaId;
   final String group;
@@ -132,14 +132,14 @@ class FavoriteUpdatedEvent {
 }
 
 class DownloadUpdatedEvent {
-  const DownloadUpdatedEvent({required this.mangaId, this.source = EventSource.general});
+  const DownloadUpdatedEvent({required this.mangaId, required this.source});
 
   final int mangaId;
   final EventSource source; // DownloadPage | MangaPage | MangaViewerPage | DownloadMangaPage
 }
 
 class ShelfCacheUpdatedEvent {
-  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added, this.source = EventSource.general});
+  const ShelfCacheUpdatedEvent({required this.mangaId, required this.added, required this.source});
 
   final int mangaId;
   final bool added;
@@ -160,7 +160,7 @@ class FavoriteGroupUpdatedEvent {
 }
 
 class FavoriteAuthorUpdatedEvent {
-  const FavoriteAuthorUpdatedEvent({required this.authorId, required this.reason, this.source = EventSource.general});
+  const FavoriteAuthorUpdatedEvent({required this.authorId, required this.reason, required this.source});
 
   final int authorId;
   final UpdateReason reason;
@@ -168,7 +168,7 @@ class FavoriteAuthorUpdatedEvent {
 }
 
 class LaterUpdatedEvent {
-  const LaterUpdatedEvent({required this.mangaId, required this.added, this.source = EventSource.general});
+  const LaterUpdatedEvent({required this.mangaId, required this.added, required this.source});
 
   final int mangaId;
   final bool added;
@@ -176,7 +176,7 @@ class LaterUpdatedEvent {
 }
 
 class FootprintUpdatedEvent {
-  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, this.source = EventSource.general});
+  const FootprintUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, required this.source});
 
   final int mangaId;
   final List<int>? chapterIds;
@@ -185,7 +185,7 @@ class FootprintUpdatedEvent {
 }
 
 class LaterChapterUpdatedEvent {
-  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, this.source = EventSource.general});
+  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.added, required this.source});
 
   final int mangaId;
   final int chapterId;

@@ -635,7 +635,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       await HistoryDao.addOrUpdateFootprint(username: AuthManager.instance.username, footprint: newFootprint);
       if (mounted) setState(() {});
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: widget.mangaId, reason: UpdateReason.updated, source: EventSource.mangaViewerPage));
-      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: [widget.chapterId], reason: !toUpdateFp ? UpdateReason.added : UpdateReason.updated));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: widget.mangaId, chapterIds: [widget.chapterId], reason: !toUpdateFp ? UpdateReason.added : UpdateReason.updated, source: EventSource.mangaViewerPage));
     }
   }
 
