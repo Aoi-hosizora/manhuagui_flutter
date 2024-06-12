@@ -22,43 +22,57 @@ class EventBusManager {
     return () => stream.cancel();
   }
 
-  ListenerBuilder listenOnce() {
-    return ListenerBuilder._();
-  }
-
-  void fire(dynamic event) {
+  void fire<T extends Object>(T event, [ListenerIdentifier? identifier, bool onceOnce = false]) {
     eventBus.fire(event);
+    if (identifier != null) {
+      identifier.invoke<T>(event, onceOnce: onceOnce);
+    }
   }
 }
 
-class ListenerBuilder {
-  ListenerBuilder._();
+class ListenerIdentifierBuilder {
+  ListenerIdentifierBuilder._();
 
-  final _identifier = ListenerIdentifier();
+  static ListenerIdentifierBuilder create() {
+    return ListenerIdentifierBuilder._();
+  }
 
-  ListenerBuilder withListener<T>(void Function(T event) onData) {
-    _identifier._listeners[T] = (event) {
-      if (event is T) {
-        onData.call(event as T);
-      }
-    };
+  final _identifier = ListenerIdentifier._();
+
+  ListenerIdentifierBuilder withListener<T extends Object>(void Function(T event) onData) {
+    _identifier._addListener<T>(onData);
     return this;
   }
 
   ListenerIdentifier build() {
-    _identifier._enabled = true;
+    _identifier._enable();
     return _identifier;
   }
 }
 
 class ListenerIdentifier {
-  ListenerIdentifier();
+  ListenerIdentifier._();
 
   final _listeners = <Type, void Function(Object event)>{};
   var _enabled = false;
 
-  void call<T extends Object>(T event) {
+  void _addListener<T extends Object>(void Function(T event) onData) {
+    _listeners[T] = (event) {
+      if (event is T) {
+        onData.call(event);
+      }
+    };
+  }
+
+  void invoke<T extends Object>(T event, {bool onceOnce = false}) {
     _listeners[T]?.call(event);
+    if (onceOnce) {
+      _listeners.remove(T);
+    }
+  }
+
+  void _enable() {
+    _enabled = true;
   }
 
   bool enabled() {

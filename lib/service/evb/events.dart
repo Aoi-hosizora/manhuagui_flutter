@@ -188,10 +188,10 @@ class FootprintUpdatedEvent {
 }
 
 class LaterChapterUpdatedEvent {
-  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterId, required this.reason, required this.source});
+  const LaterChapterUpdatedEvent({required this.mangaId, required this.chapterIds, required this.reason, required this.source});
 
   final int mangaId;
-  final int chapterId;
+  final List<int>? chapterIds;
   final UpdateReason2 reason;
   final EventSource source; // MangaPage | MangaTocPage | MangaHistoryPage
 }

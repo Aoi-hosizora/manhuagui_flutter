@@ -55,7 +55,7 @@ class _IndexPageState extends State<IndexPage> with SingleTickerProviderStateMix
     super.dispose();
   }
 
-  Future<void> _jumpToPageByEvent(int index, dynamic event) async {
+  Future<void> _jumpToPageByEvent<T extends Object>(int index, T event) async {
     if (_controller.index != index) {
       _controller.animateTo(index); // jump to target page with animation
       if (mounted) setState(() {}); // set state right after calling animateTo
