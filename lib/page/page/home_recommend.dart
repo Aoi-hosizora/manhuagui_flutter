@@ -467,10 +467,27 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           mangaUrl: mangaUrl,
           extraData: extraData,
           eventSource: EventSource.general,
-          inShelfSetter: (i) => i ? null : mountedSetState(() => _shelves?.removeWhere((el) => el.mid == mangaId)),
-          inFavoriteSetter: (i) => i ? null : mountedSetState(() => _favorites?.removeWhere((el) => el.mangaId == mangaId)),
-          inLaterSetter: (i) => i ? null : mountedSetState(() => _laters?.removeWhere((el) => el.mangaId == mangaId)),
-          inHistorySetter: (i) => i ? null : mountedSetState(() => _histories?.removeWhere((el) => el.mangaId == mangaId)),
+          listenerIdentifier: ListenerIdentifierBuilder.create().withListener<ShelfUpdatedEvent>((ev) {
+            if (ev.mangaId == mangaId && ev.reason == UpdateReason2.deleted) {
+              _shelves?.removeWhere((el) => el.mid == mangaId);
+              if (mounted) setState(() {});
+            }
+          }).withListener<FavoriteUpdatedEvent>((ev) {
+            if (ev.mangaId == mangaId && ev.reason == UpdateReason.deleted) {
+              _favorites?.removeWhere((el) => el.mangaId == mangaId);
+              if (mounted) setState(() {});
+            }
+          }).withListener<LaterUpdatedEvent>((ev) {
+            if (ev.mangaId == mangaId && ev.reason == UpdateReason.deleted) {
+              _laters?.removeWhere((el) => el.mangaId == mangaId);
+              if (mounted) setState(() {});
+            }
+          }).withListener<HistoryUpdatedEvent>((ev) {
+            if (ev.mangaId == mangaId && ev.reason == UpdateReason.deleted) {
+              _histories?.removeWhere((el) => el.mangaId == mangaId);
+              if (mounted) setState(() {});
+            }
+          }).build(),
         ),
       ),
     );

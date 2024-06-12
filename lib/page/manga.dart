@@ -840,13 +840,44 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       // fromMangaHistoryPage: false,
       chapter: chapter,
       extraData: MangaExtraDataForViewer.fromMangaData(_data!),
-      onHistoryUpdated: (h) => mountedSetState(() => _history = h),
-      onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
-      onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
-      onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
-      onLaterAdded: (l) => mountedSetState(() => _laterManga = l),
-      onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
-      onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
+      listenerIdentifier: ListenerIdentifierBuilder.create().withListener<LaterUpdatedEvent>((ev) async {
+        if (ev.reason == UpdateReason.added && ev.mangaId == widget.id) {
+          _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id);
+          if (mounted) setState(() {});
+        }
+      }).withListener<LaterChapterUpdatedEvent>((ev) async {
+        if (ev.reason == UpdateReason2.added && ev.chapterIds?.contains(chapterId) == true) {
+          var laterChapter = await LaterMangaDao.getLaterChapter(username: AuthManager.instance.username, mid: widget.id, cid: chapterId);
+          if (laterChapter != null) {
+            _laterChapters?[laterChapter.chapterId] = laterChapter;
+            if (mounted) setState(() {});
+          }
+        } else if (ev.reason == UpdateReason2.deleted && ev.chapterIds?.contains(chapterId) == true) {
+          _laterChapters?.removeWhere((key, _) => ev.chapterIds!.contains(key));
+        }
+      }).withListener<HistoryUpdatedEvent>((ev) async {
+        if (ev.mangaId == widget.id) {
+          _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
+          if (mounted) setState(() {});
+        }
+      }).withListener<FootprintUpdatedEvent>((ev) async {
+        if (ev.reason == UpdateReason2.added && ev.chapterIds?.contains(chapterId) == true) {
+          var footprint = await HistoryDao.getFootprint(username: AuthManager.instance.username, mid: widget.id, cid: chapterId);
+          if (footprint != null) {
+            _footprints?[footprint.chapterId] = footprint;
+            if (mounted) setState(() {});
+          }
+        } else if (ev.reason == UpdateReason2.deleted && ev.chapterIds?.contains(chapterId) == true) {
+          _footprints?.removeWhere((key, _) => ev.chapterIds!.contains(key));
+        }
+      }).build(),
+      // onHistoryUpdated: (h) => mountedSetState(() => _history = h),
+      // onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
+      // onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
+      // onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
+      // onLaterAdded: (l) => mountedSetState(() => _laterManga = l),
+      // onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
+      // onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
     );
   }
 

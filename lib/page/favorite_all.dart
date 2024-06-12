@@ -145,18 +145,17 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       mangaCover: favorite.mangaCover,
       mangaUrl: favorite.mangaUrl,
       extraData: null,
-      // fromFavoriteList: false /* <<< */,
       eventSource: EventSource.general,
-      inFavoriteSetter: (inFavorite) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的删除 => 更新列表显示
-        if (!inFavorite) {
+      listenerIdentifier: ListenerIdentifierBuilder.create().withListener<FavoriteUpdatedEvent>((ev) {
+        if (ev.mangaId == favorite.mangaId && ev.reason == UpdateReason.deleted) {
+          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+          // 本页引起的删除 => 更新列表显示
           _data.removeWhere((el) => el.mangaId == favorite.mangaId);
           _total--;
           _removed++;
           if (mounted) setState(() {});
         }
-      },
+      }).build(),
     );
   }
 
@@ -172,13 +171,18 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       favorite: oldFavorite,
       // fromFavoriteList: false /* <<< */,
       eventSource: EventSource.general,
-      onUpdated: (newFavorite) {
-        // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的更新 => 更新列表显示
-        _msController.exitMultiSelectionMode();
-        _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite);
-        if (mounted) setState(() {});
-      },
+      listenerIdentifier: ListenerIdentifierBuilder.create().withListener<FavoriteUpdatedEvent>((ev) async {
+        if (ev.reason == UpdateReason.updated && ev.mangaId == mangaId) {
+          // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
+          // 本页引起的更新 => 更新列表显示
+          _msController.exitMultiSelectionMode();
+          var newFavorite = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: mangaId);
+          if (newFavorite != null) {
+            _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite);
+            if (mounted) setState(() {});
+          }
+        }
+      }).build(),
     );
   }
 

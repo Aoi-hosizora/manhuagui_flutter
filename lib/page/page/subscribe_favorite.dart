@@ -203,22 +203,21 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       mangaUrl: favorite.mangaUrl,
       extraData: null,
       eventSource: !widget.isSepPage ? EventSource.favoritePage : EventSource.sepFavoritePage,
-      // fromFavoriteList: true,
-      inFavoriteSetter: (inFavorite) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的删除 => 更新列表显示
-        if (!inFavorite) {
+      listenerIdentifier: ListenerIdentifierBuilder.create().withListener<FavoriteUpdatedEvent>((ev) async {
+        if (ev.mangaId != favorite.mangaId) {
+          return; // unreachable
+        }
+        var newFavorite = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: favorite.mangaId);
+        if (newFavorite == null) {
+          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+          // 本页引起的删除 => 更新列表显示
           _data.removeWhere((el) => el.mangaId == favorite.mangaId);
           _total--;
           _removed++;
           if (mounted) setState(() {});
-        }
-      },
-      favoriteSetter: (newFavorite) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的更新 => 更新列表显示 (修改备注、移动至分组)
-
-        if (newFavorite != null) {
+        } else {
+          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+          // 本页引起的更新 => 更新列表显示 (修改备注、移动至分组)
           if (newFavorite.groupName == _currentGroup) {
             if (newFavorite.remark != favorite.remark) {
               _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite); // 备注被修改 => 更新列表
@@ -236,7 +235,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
             if (mounted) setState(() {});
           }
         }
-      },
+      }).build(),
     );
   }
 
@@ -252,13 +251,18 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       favorite: oldFavorite,
       eventSource: !widget.isSepPage ? EventSource.favoritePage : EventSource.sepFavoritePage,
       // fromFavoriteList: true,
-      onUpdated: (newFavorite) {
-        // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的更新 => 更新列表显示
-        _msController.exitMultiSelectionMode();
-        _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite);
-        if (mounted) setState(() {});
-      },
+      listenerIdentifier: ListenerIdentifierBuilder.create().withListener<FavoriteUpdatedEvent>((ev) async {
+        if (ev.reason == UpdateReason.updated && ev.mangaId == mangaId) {
+          // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
+          // 本页引起的更新 => 更新列表显示
+          _msController.exitMultiSelectionMode();
+          var newFavorite = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: mangaId);
+          if (newFavorite != null) {
+            _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite);
+            if (mounted) setState(() {});
+          }
+        }
+      }).build(),
     );
   }
 
