@@ -42,7 +42,6 @@ part 'manga_dialog_helper.dart';
 /// 漫画收藏页-修改备注对话框 [showUpdateFavoriteMangaRemarkDialog]
 /// 漫画页/章节页-漫画章节弹出菜单 [showPopupMenuForMangaToc]
 /// 漫画页/章节页-漫画订阅对话框 [showPopupMenuForSubscribing]
-/// 漫画页/书架同步页-同步书架对话框 [showPopupMenuForShelfCache]
 /// 漫画页/章节页/漫画下载页-稍后阅读对话框 [showPopupMenuForLaterManga]
 /// 漫画页-标题对话框 [showPopupMenuForMangaTitle]
 /// 章节页-标题对话框 [showPopupMenuForChapterTitle]
@@ -64,7 +63,6 @@ Future<void> showPopupMenuForMangaList({
   required String mangaUrl,
   required MangaExtraDataForDialog? extraData,
   required EventSource eventSource,
-  ListenerIdentifier? listenerIdentifier /* <<< */,
   // bool fromShelfList = false,
   // bool fromFavoriteList = false,
   // bool fromLaterList = false,
@@ -348,7 +346,6 @@ Future<void> showPopupMenuForMangaList({
                         mangaUrl: mangaUrl,
                         extraData: extraData,
                         eventSource: eventSource,
-                        listenerIdentifier: listenerIdentifier,
                         // fromShelfList: fromShelfList,
                         // fromFavoriteList: fromFavoriteList,
                         // fromLaterList: fromLaterList,
