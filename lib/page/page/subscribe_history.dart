@@ -147,17 +147,18 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       mangaCover: history.mangaCover,
       mangaUrl: history.mangaUrl,
       extraData: null,
+      // fromHistoryList: true,
       eventSource: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage,
-      listenerIdentifier: ListenerIdentifierBuilder.create().withListener<HistoryUpdatedEvent>((ev) {
-        if (ev.mangaId == history.mangaId && ev.reason == UpdateReason.deleted) {
-          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-          // 本页引起的删除 => 更新列表显示
+      inHistorySetter: (inHistory) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        // 本页引起的删除 => 更新列表显示
+        if (!inHistory) {
           _data.removeWhere((el) => el.mangaId == history.mangaId);
           _total--;
           _removed++;
           if (mounted) setState(() {});
         }
-      }).build(),
+      },
     );
   }
 

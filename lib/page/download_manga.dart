@@ -605,6 +605,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
+                            // fromDownloadPage: true,
                             eventSource: EventSource.downloadMangaPage,
                           ),
                         ),

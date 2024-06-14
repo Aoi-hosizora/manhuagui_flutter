@@ -209,16 +209,17 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       mangaCover: manga.cover,
       mangaUrl: manga.url,
       extraData: MangaExtraDataForDialog.fromShelfManga(manga),
+      // fromShelfList: true,
       eventSource: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage,
-      listenerIdentifier: ListenerIdentifierBuilder.create().withListener<ShelfUpdatedEvent>((ev) {
-        if (ev.mangaId == manga.mid && ev.reason == UpdateReason2.deleted) {
-          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-          // 本页引起的删除 => 更新列表显示
+      inShelfSetter: (inShelf) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        // 本页引起的删除 => 更新列表显示
+        if (!inShelf) {
           _data.removeWhere((el) => el.mid == manga.mid);
           _total--; // no "removed++"
           if (mounted) setState(() {});
         }
-      }).build(),
+      },
     );
   }
 
