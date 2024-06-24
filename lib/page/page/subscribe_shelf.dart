@@ -138,6 +138,15 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     }
   }
 
+  void _updateByDlg({int? mangaId, bool? inShelf}) {
+    if (mangaId != null && inShelf == false) {
+      // 本页引起的删除 => 更新列表显示
+      _data.removeWhere((el) => el.mid == mangaId);
+      _total--; // no "removed++"
+      if (mounted) setState(() {});
+    }
+  }
+
   void _showPopupMenuForCache() {
     if (!AuthManager.instance.logined) {
       Fluttertoast.showToast(msg: '用户未登录');
@@ -210,16 +219,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       mangaUrl: manga.url,
       extraData: MangaExtraDataForDialog.fromShelfManga(manga),
       eventSource: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage,
-      // ===
-      onShelfUpdated: (inShelf) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的删除 => 更新列表显示
-        if (!inShelf) {
-          _data.removeWhere((el) => el.mid == manga.mid);
-          _total--; // no "removed++"
-          if (mounted) setState(() {});
-        }
-      },
+      onShelfUpdated: (inShelf) => _updateByDlg(mangaId: manga.mid, inShelf: inShelf),
     );
   }
 

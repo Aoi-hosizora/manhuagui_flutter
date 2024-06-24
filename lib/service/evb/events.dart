@@ -50,6 +50,7 @@ enum EventSource {
   sepShelfPage,
   favoritePage,
   sepFavoritePage,
+  favoriteAllPage,
   laterPage,
   sepLaterPage,
   historyPage,
@@ -75,6 +76,8 @@ extension EventSourceExtension on EventSource {
   bool isFavoritePage() => this == EventSource.favoritePage;
 
   bool isSepFavoritePage() => this == EventSource.sepFavoritePage;
+
+  bool isFavoriteAllPage() => this == EventSource.favoriteAllPage;
 
   bool isLaterPage() => this == EventSource.laterPage;
 
@@ -130,7 +133,7 @@ class FavoriteUpdatedEvent {
   final String group;
   final String? oldGroup; // means move to group
   final UpdateReason reason;
-  final EventSource source; // FavoritePage | SepFavoritePage | MangaPage
+  final EventSource source; // FavoritePage | SepFavoritePage | FavoriteAllPage | MangaPage
 }
 
 class DownloadUpdatedEvent {

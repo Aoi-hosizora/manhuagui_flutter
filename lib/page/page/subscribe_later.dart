@@ -123,6 +123,39 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     }
   }
 
+  void _updateByDlg({int? mangaId, LaterManga? later, List<int>? mangaIds, List<LaterManga>? laters}) async {
+    if (_msController.multiSelecting) {
+      _msController.exitMultiSelectionMode(); // 先退出多选模式
+    }
+
+    if (later != null) {
+      // 本页引起的更新 => 更新列表显示
+      _data.removeWhere((el) => el.mangaId == later.mangaId);
+      _data.insert(0, later); // 目前仅可能因置顶而更新
+      if (mounted) setState(() {});
+    }
+    if (mangaId != null && later == null) {
+      // 本页引起的删除 => 更新列表显示
+      _data.removeWhere((el) => el.mangaId == mangaId);
+      _total--;
+      _removed++;
+      if (mounted) setState(() {});
+    }
+
+    if (laters != null) {
+      // 本页引起的更新 => pass
+    }
+    if (mangaIds != null && laters == null) {
+      // 本页引起的删除 => 更新列表显示
+      for (var mangaId in mangaIds) {
+        _data.removeWhere((h) => h.mangaId == mangaId);
+        _total--;
+        _removed++;
+      }
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _toSearch() async {
     var result = await showKeywordDialogForSearching(
       context: context,
@@ -230,23 +263,7 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
       mangaUrl: manga.mangaUrl,
       extraData: MangaExtraDataForDialog.fromLaterManga(manga),
       eventSource: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage,
-      // ===
-      onLaterUpdated: (newLater) {
-        if (newLater != null) {
-          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-          // 本页引起的更新 => 更新列表显示 (目前仅可能因稍后阅读记录被置顶而更新)
-          _data.replaceWhere((el) => el.mangaId == newLater.mangaId, (_) => newLater);
-          _data.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          if (mounted) setState(() {});
-        } else {
-          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-          // 本页引起的删除 => 更新列表显示
-          _data.removeWhere((el) => el.mangaId == manga.mangaId);
-          _total--;
-          _removed++;
-          if (mounted) setState(() {});
-        }
-      },
+      onLaterUpdated: (later) => _updateByDlg(mangaId: mangaId, later: later),
     );
   }
 
@@ -255,20 +272,12 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     if (manga == null) {
       return;
     }
-
-    // 退出多选模式
-    _msController.exitMultiSelectionMode();
-
-    // 更新数据库、更新界面、弹出提示、发送通知
-    // 本页引起的更新 => 更新列表显示
     var updatedManga = manga.copyWith(createdAt: DateTime.now());
     await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedManga);
-    _data.removeWhere((el) => el.mangaId == manga.mangaId);
-    _data.insert(0, updatedManga);
-    if (mounted) setState(() {});
+    _updateByDlg(mangaId: mangaId, later: updatedManga);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画置顶于稍后阅读列表')));
-    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage)); // x fromLaterPage: true));
+    EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage));
   }
 
   Future<void> _deleteLaterMangas({required List<int> mangaIds}) async {
@@ -299,18 +308,13 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
       return;
     }
 
-    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
-    // 本页引起的删除 => 更新列表显示
     _msController.exitMultiSelectionMode();
     for (var mangaId in mangaIds) {
       await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: mangaId);
-      _data.removeWhere((el) => el.mangaId == mangaId);
-      _total--;
-      _removed++;
     }
-    if (mounted) setState(() {});
+    _updateByDlg(mangaIds: mangaIds, laters: null);
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage)); // x fromLaterPage: true));
+      EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage));
     }
   }
 

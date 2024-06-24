@@ -70,6 +70,7 @@ typedef FootprintUpdatedCallback = void Function(ChapterFootprint? footprint);
 typedef SubscribingUpdatedCallback = void Function(bool subscribing);
 typedef FavoritesUpdatedCallback = void Function(List<FavoriteManga> favorites, bool addToTop);
 typedef NotateClearedCallback = void Function();
+typedef FootprintClearedCallback = void Function();
 
 // typedef navigate wrapper
 typedef NavigateWrapper = Future<void> Function(Future<void> Function());

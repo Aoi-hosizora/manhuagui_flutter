@@ -467,6 +467,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
           mangaUrl: mangaUrl,
           extraData: extraData,
           eventSource: EventSource.general,
+          // 本页引起的更新或刪除 => 更新列表显示
           onShelfUpdated: (i) => i ? null : mountedSetState(() => _shelves?.removeWhere((el) => el.mid == mangaId)),
           onFavoriteUpdated: (i) => i != null ? null : mountedSetState(() => _favorites?.removeWhere((el) => el.mangaId == mangaId)),
           onLaterUpdated: (i) => i != null ? null : mountedSetState(() => _laters?.removeWhere((el) => el.mangaId == mangaId)),

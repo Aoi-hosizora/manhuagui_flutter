@@ -109,6 +109,42 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     }
   }
 
+  void _updateByDlg({int? mangaId, MangaHistory? history, List<int>? mangaIds, List<MangaHistory>? histories, bool? isCleared}) async {
+    if (_msController.multiSelecting) {
+      _msController.exitMultiSelectionMode(); // 先退出多选模式
+    }
+
+    if (history != null) {
+      // 本页引起的更新 => pass
+    }
+    if (mangaId != null && history == null) {
+      // 本页引起的删除 => 更新列表显示
+      _data.removeWhere((el) => el.mangaId == mangaId);
+      _total--;
+      _removed++;
+      if (mounted) setState(() {});
+    }
+
+    if (histories != null) {
+      // 本页引起的更新 => pass
+    }
+    if (mangaIds != null && histories == null) {
+      // 本页引起的删除 => 更新列表显示
+      if (isCleared != true) {
+        for (var mangaId in mangaIds) {
+          _data.removeWhere((h) => h.mangaId == mangaId);
+          _total--;
+          _removed++;
+        }
+      } else {
+        _data.clear();
+        _total = 0;
+        _removed = mangaIds.length;
+      }
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _toSearch() async {
     var result = await showKeywordDialogForSearching(
       context: context,
@@ -137,8 +173,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     if (history == null) {
       return;
     }
-
-    // 退出多选模式、弹出菜单
     _msController.exitMultiSelectionMode();
     showPopupMenuForMangaList(
       context: context,
@@ -148,17 +182,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       mangaUrl: history.mangaUrl,
       extraData: null,
       eventSource: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage,
-      // ===
-      onHistoryUpdated: (deletedHistory) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的删除 => 更新列表显示
-        if (deletedHistory == null) {
-          _data.removeWhere((el) => el.mangaId == history.mangaId);
-          _total--;
-          _removed++;
-          if (mounted) setState(() {});
-        }
-      },
+      onHistoryUpdated: (history) => _updateByDlg(mangaId: mangaId, history: history),
     );
   }
 
@@ -167,8 +191,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     if (histories.isEmpty) {
       return;
     }
-
-    // 不退出多选模式、先弹出对话框
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -190,19 +212,14 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       return;
     }
 
-    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
-    // 本页引起的删除 => 更新列表显示
     _msController.exitMultiSelectionMode();
     for (var mangaId in mangaIds) {
       await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
       await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: mangaId);
-      _data.removeWhere((h) => h.mangaId == mangaId);
-      _total--;
-      _removed++;
     }
-    if (mounted) setState(() {});
+    _updateByDlg(mangaIds: mangaIds, histories: null);
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage)); // x fromHistoryPage: true));
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
       EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
     }
   }
@@ -213,8 +230,6 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       Fluttertoast.showToast(msg: '当前无漫画阅读历史');
       return;
     }
-
-    // 不退出多选模式、先弹出对话框
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -230,19 +245,14 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       return;
     }
 
-    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
-    // 本页引起的删除 => 更新列表显示
     _msController.exitMultiSelectionMode();
     await HistoryDao.clearHistories(username: AuthManager.instance.username);
     await HistoryDao.clearAllFootprints(username: AuthManager.instance.username);
     var mangaIds = _data.map((el) => el.mangaId).toList();
-    _data.clear();
-    _total = 0;
-    _removed = mangaIds.length;
-    if (mounted) setState(() {});
+    _updateByDlg(mangaIds: mangaIds, histories: null, isCleared: true);
     for (var mangaId in mangaIds) {
-      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage)); // x fromHistoryPage: true));
-      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage)); // currently no need for fromHistoryPage flag
+      EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
+      EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
     }
   }
 

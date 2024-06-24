@@ -49,7 +49,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       await AuthManager.instance.check();
     });
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
-    // _cancelHandlers.add(EventBusManager.instance.listen<...>((ev) => _updateByEvent(ev))); => 该页不因 evb 而做任何更新
+    _cancelHandlers.add(EventBusManager.instance.listen<FavoriteUpdatedEvent>((ev) => _updateByEvent(ev)));
   }
 
   @override
@@ -69,6 +69,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
   var _searchKeyword = ''; // for query condition
   var _searchTitleOnly = true; // for query condition
   var _sortMethod = SortMethod.byTimeDesc; // for query condition
+  var _isUpdated = false;
 
   Future<PagedList<FavoriteManga>> _getData({required int page}) async {
     if (page == 1) {
@@ -81,6 +82,60 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     if (mounted) setState(() {});
     _flagStorage.queryAndStoreFlags(mangaIds: data.map((e) => e.mangaId), queryFavorites: false).then((_) => mountedSetState(() {}));
     return PagedList(list: data, next: page + 1);
+  }
+
+  void _updateByEvent(FavoriteUpdatedEvent event) async {
+    if (event.reason == UpdateReason.added) {
+      // 新增 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (event.reason == UpdateReason.updated && !event.source.isFavoriteAllPage()) {
+      // 非本页引起的更新 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
+    if (event.reason == UpdateReason.deleted && !event.source.isFavoriteAllPage()) {
+      // 非本页引起的删除 => 显示有更新
+      _isUpdated = true;
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _updateByDlg({int? mangaId, FavoriteManga? favorite, List<int>? mangaIds, List<FavoriteManga>? favorites}) async {
+    if (_msController.multiSelecting) {
+      _msController.exitMultiSelectionMode(); // 先退出多选模式
+    }
+
+    if (favorite != null) {
+      // 本页引起的更新 => 更新列表显示
+      _data.replaceWhere((el) => el.mangaId == favorite.mangaId, (_) => favorite);
+      if (mounted) setState(() {});
+    }
+    if (mangaId != null && favorite == null) {
+      // 本页引起的删除 => 更新列表显示
+      _data.removeWhere((el) => el.mangaId == mangaId);
+      _total--;
+      _removed++;
+      if (mounted) setState(() {});
+    }
+
+    if (favorites != null) {
+      // 本页引起的更新 => 更新列表显示
+      for (var favorite in favorites) {
+        _data.replaceWhere((el) => el.mangaId == favorite.mangaId, (_) => favorite);
+      }
+      if (mounted) setState(() {});
+    }
+    if (mangaIds != null && favorites == null) {
+      // 本页引起的删除 => 更新列表显示
+      for (var mangaId in mangaIds) {
+        _data.removeWhere((el) => el.mangaId == mangaId);
+        _total--;
+        _removed++;
+      }
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _toSearch() async {
@@ -135,8 +190,6 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     if (favorite == null) {
       return;
     }
-
-    // 退出多选模式、弹出菜单
     _msController.exitMultiSelectionMode();
     showPopupMenuForMangaList(
       context: context,
@@ -145,17 +198,8 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       mangaCover: favorite.mangaCover,
       mangaUrl: favorite.mangaUrl,
       extraData: null,
-      eventSource: EventSource.general /* => 该页不因 evb 而做任何更新 */,
-      onFavoriteUpdated: (deletedFavorite) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的删除 => 更新列表显示
-        if (deletedFavorite == null) {
-          _data.removeWhere((el) => el.mangaId == favorite.mangaId);
-          _total--;
-          _removed++;
-          if (mounted) setState(() {});
-        }
-      },
+      eventSource: EventSource.favoriteAllPage,
+      onFavoriteUpdated: (favorite) => _updateByDlg(mangaId: mangaId, favorite: favorite),
     );
   }
 
@@ -164,19 +208,11 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     if (oldFavorite == null) {
       return;
     }
-
-    // 不退出多选模式、先弹出菜单
     showUpdateFavoriteMangaRemarkDialog(
       context: context,
       favorite: oldFavorite,
-      eventSource: EventSource.general /* => 该页不因 evb 而做任何更新 */,
-      onUpdated: (newFavorite) {
-        // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的更新 => 更新列表显示
-        _msController.exitMultiSelectionMode();
-        _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite!);
-        if (mounted) setState(() {});
-      },
+      eventSource: EventSource.favoriteAllPage,
+      onUpdated: (favorite) => _updateByDlg(mangaId: mangaId, favorite: favorite),
     );
   }
 
@@ -185,22 +221,12 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     if (oldFavorites.isEmpty) {
       return;
     }
-
-    // 不退出多选模式、先弹出菜单
     showUpdateFavoriteMangasGroupDialog(
       context: context,
       favorites: oldFavorites,
       currentGroupName: null,
-      eventSource: EventSource.general /* => 该页不因 evb 而做任何更新 */,
-      onUpdated: (newFavorites, addToTop) {
-        // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的更新 => 更新列表显示
-        _msController.exitMultiSelectionMode();
-        for (var newFavorite in newFavorites) {
-          _data.replaceWhere((el) => el.mangaId == newFavorite.mangaId, (_) => newFavorite); // 更换分组名
-        }
-        if (mounted) setState(() {});
-      },
+      eventSource: EventSource.favoriteAllPage,
+      onUpdated: (favorites, _) => _updateByDlg(mangaIds: mangaIds, favorites: favorites),
     );
   }
 
@@ -209,8 +235,6 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     if (favorites.isEmpty) {
       return;
     }
-
-    // 不退出多选模式、先弹出对话框
     var ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -227,25 +251,20 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
           TextButton(child: Text('取消'), onPressed: () => Navigator.of(c).pop(false)),
         ],
       ),
-    );
+    ); // TODO move to manga_dialog.dart ???
     if (ok != true) {
       return;
     }
 
-    // 退出多选模式、更新数据库、更新界面[↴]、发送通知
-    // 本页引起的删除 => 更新列表显示
     _msController.exitMultiSelectionMode();
     for (var mangaId in mangaIds) {
       await FavoriteDao.deleteFavorite(username: AuthManager.instance.username, mid: mangaId);
-      _data.removeWhere((el) => el.mangaId == mangaId);
-      _total--;
-      _removed++;
     }
-    if (mounted) setState(() {});
+    _updateByDlg(mangaIds: mangaIds, favorites: null);
     for (var mangaId in mangaIds) {
       var groupName = favorites.where((f) => f.mangaId == mangaId).firstOrNull?.groupName;
       if (groupName != null) {
-        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.deleted, source: EventSource.general)); // => 该页不做任何更新
+        EventBusManager.instance.fire(FavoriteUpdatedEvent(mangaId: mangaId, group: groupName, reason: UpdateReason.deleted, source: EventSource.favoriteAllPage));
       }
     }
   }
@@ -356,7 +375,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
               outerTopWidgets: [
                 ListHintView.textWidget(
                   leftText: (AuthManager.instance.logined ? '${AuthManager.instance.username} 的所有本地收藏' : '未登录用户的所有本地收藏') + //
-                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : ''),
+                      (_searchKeyword.isNotEmpty ? ' ("$_searchKeyword" 的搜索结果)' : (_isUpdated ? ' (有更新)' : '')),
                   rightWidget: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
