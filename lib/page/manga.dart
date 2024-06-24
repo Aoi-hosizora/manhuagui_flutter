@@ -414,10 +414,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       // 本页引起的更新 => 更新相关界面
       onSubscribingUpdated: (s) => mountedSetState(() => _subscribing = s),
       onShelfUpdated: (s) => mountedSetState(() => _inShelf = s),
-      onFavoriteUpdated: (f) {
-        _favoriteManga = f;
-        if (mounted) setState(() {});
-      },
+      onFavoriteUpdated: (f) => mountedSetState(() => _favoriteManga = f),
       onLaterUpdated: (l) {
         _laterManga = l;
         if (l == null) {

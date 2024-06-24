@@ -50,11 +50,6 @@ Future<void> showUpdateFavoriteMangaRemarkDialog({
   );
 }
 
-
-// ================
-// misc popup menus
-// ================
-
 // => called in MangaPage
 void showPopupMenuForMangaTitle({
   required BuildContext context,

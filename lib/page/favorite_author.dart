@@ -165,7 +165,6 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
       authorCover: author.authorCover,
       authorUrl: author.authorUrl,
       authorZone: author.authorZone,
-      // fromFavoriteList: true,
       eventSource: EventSource.authorFavoritePage,
       onFavoriteUpdated: (deletedFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
@@ -283,7 +282,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
               icon: Icon(Icons.person_search),
               tooltip: '寻找作者',
               onPressed: () async {
-                var aid = await showFindAuthorByIdDialog(context: context, title: '寻找作者', textLabel: '漫画作者 aid');
+                var aid = await showFindAuthorByIdDialog(context: context);
                 if (aid == null) {
                   return;
                 }

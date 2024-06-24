@@ -25,19 +25,12 @@ Future<void> showUpdateFavoriteAuthorRemarkDialog({
 }
 
 // => called in AuthorCategorySubPage / FavoriteAuthorPage
-Future<int?> showFindAuthorByIdDialog({
-  required BuildContext context,
-  required String title,
-  String textLabel = '漫画作者 aid',
-  String textValue = '',
-  String emptyToast = '请输入作者 aid',
-  String invalidToast = '输入的作者 aid 有误',
-}) async {
-  var controller = TextEditingController()..text = textValue;
+Future<int?> showFindAuthorByIdDialog({required BuildContext context}) async {
+  var controller = TextEditingController();
   var ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: Text(title),
+      title: Text('寻找漫画作者'),
       content: SizedBox(
         width: getDialogContentMaxWidth(context),
         child: TextField(
@@ -46,7 +39,7 @@ Future<int?> showFindAuthorByIdDialog({
           autofocus: true,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(vertical: 5),
-            labelText: textLabel,
+            labelText: '漫画作者 aid',
             icon: Icon(Icons.person_search),
           ),
           keyboardType: TextInputType.numberWithOptions(signed: false, decimal: false),
@@ -59,9 +52,9 @@ Future<int?> showFindAuthorByIdDialog({
           onPressed: () async {
             var text = controller.text.trim();
             if (text.isEmpty) {
-              Fluttertoast.showToast(msg: emptyToast);
+              Fluttertoast.showToast(msg: '请输入作者 aid');
             } else if ((int.tryParse(text) ?? 0) <= 0) {
-              Fluttertoast.showToast(msg: invalidToast);
+              Fluttertoast.showToast(msg: '输入的作者 aid 格式有误，请重新输入');
             } else {
               Navigator.of(c).pop(true);
             }

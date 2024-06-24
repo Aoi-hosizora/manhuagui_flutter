@@ -130,7 +130,7 @@ class _AuthorCategorySubPageState extends State<AuthorCategorySubPage> with Auto
   }
 
   Future<void> _inputAndFind() async {
-    var aid = await showFindAuthorByIdDialog(context: context, title: '寻找作者', textLabel: '漫画作者 aid');
+    var aid = await showFindAuthorByIdDialog(context: context);
     if (aid == null) {
       return;
     }

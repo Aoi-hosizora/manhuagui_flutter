@@ -877,14 +877,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       // 本页引起的更新 => 更新相关界面
       onSubscribingUpdated: (s) => mountedSetState(() => _subscribing = s),
       onShelfUpdated: (s) => mountedSetState(() => _inShelf = s),
-      onFavoriteUpdated: (f) {
-        _favoriteManga = f;
-        if (mounted) setState(() {});
-      },
-      onLaterUpdated: (l) {
-        _laterManga = l;
-        if (mounted) setState(() {});
-      },
+      onFavoriteUpdated: (f) => mountedSetState(() => _favoriteManga = f),
+      onLaterUpdated: (l) => mountedSetState(() => _laterManga = l),
       onNotateCleared: null /* 本页暂不显示稍后阅读章节 */,
     );
   }
