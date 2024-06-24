@@ -574,7 +574,7 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                               }
                               if (mounted) setState(() {});
                             },
-                            onLaterChapterCleared: null /* 该页暂不显示稍后阅读章节 */,
+                            onNotateCleared: null /* 该页暂不显示稍后阅读章节 */,
                           ),
                         ),
                       ),

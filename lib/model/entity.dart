@@ -673,6 +673,10 @@ class LaterManga {
   }
 }
 
+// TODO rename to NotateChapter
+
+typedef NotateChapter = LaterChapter;
+
 class LaterChapter {
   final int mangaId;
   final int chapterId; // 仅记录 cid，其他字段由 manga 的 chapter group 获取

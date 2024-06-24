@@ -877,18 +877,18 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
       laterManga: _laterManga,
-      subscribing: (s) => mountedSetState(() => _subscribing = s),
-      inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
-      inFavoriteSetter: (f) {
+      onSubscribingUpdated: (s) => mountedSetState(() => _subscribing = s),
+      onShelfUpdated: (s) => mountedSetState(() => _inShelf = s),
+      onFavoriteUpdated: (f) {
         _inFavorite = f != null;
         _favoriteManga = f;
         if (mounted) setState(() {});
       },
-      inLaterSetter: (l) {
+      onLaterUpdated: (l) {
         _laterManga = l;
         if (mounted) setState(() {});
       },
-      onLaterChapterCleared: null /* 本页暂不显示稍后阅读章节 */,
+      onNotateCleared: null /* 本页暂不显示稍后阅读章节 */,
     );
   }
 
@@ -1108,7 +1108,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
         _laterManga = l;
         if (mounted) setState(() {});
       },
-      onLaterChapterCleared: null /* 该页暂不显示稍后阅读章节 */,
+      onNotateCleared: null /* 该页暂不显示稍后阅读章节 */,
       navigateWrapper: (navigate) async {
         await _ScreenHelper.restoreSystemUI();
         await navigate();

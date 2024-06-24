@@ -145,16 +145,30 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
       chapter: chapter,
       extraData: widget.extraData,
       eventSource: EventSource.mangaTocPage,
-      onHistoryUpdated: (h) => mountedSetState(() => _history = h),
-      onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
-      onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
-      onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
-      onLaterAdded: null /* 本页不显示 later banner */,
-      onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
-      onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
       canOperateHistory: widget.canOperateHistory,
       toSwitchChapter: widget.toSwitchChapter == null ? null : () => widget.toSwitchChapter?.call(chapterId),
       navigateWrapper: widget.navigateWrapper,
+
+      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+      // 本页引起的更新 => 更新相关界面
+      onHistoryUpdated: (h) => mountedSetState(() => _history = h),
+      onFootprintUpdated: (fp) {
+        if (fp == null) {
+          _footprints?.remove(chapterId);
+        } else {
+          _footprints?[fp.chapterId] = fp;
+        }
+        if (mounted) setState(() {});
+      },
+      onLaterUpdated: null /* 本页不显示稍后阅读的漫画 */,
+      onNotateUpdated: (nt) {
+        if (nt == null) {
+          _laterChapters?.remove(chapterId);
+        } else {
+          _laterChapters?[nt.chapterId] = nt;
+        }
+        if (mounted) setState(() {});
+      },
     );
   }
 

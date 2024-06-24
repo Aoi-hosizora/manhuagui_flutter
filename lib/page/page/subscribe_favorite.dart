@@ -204,21 +204,10 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       extraData: null,
       eventSource: !widget.isSepPage ? EventSource.favoritePage : EventSource.sepFavoritePage,
       // fromFavoriteList: true,
-      inFavoriteSetter: (inFavorite) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的删除 => 更新列表显示
-        if (!inFavorite) {
-          _data.removeWhere((el) => el.mangaId == favorite.mangaId);
-          _total--;
-          _removed++;
-          if (mounted) setState(() {});
-        }
-      },
-      favoriteSetter: (newFavorite) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        // 本页引起的更新 => 更新列表显示 (修改备注、移动至分组)
-
+      onFavoriteUpdated: (newFavorite) {
         if (newFavorite != null) {
+          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+          // 本页引起的更新 => 更新列表显示 (修改备注、移动至分组)
           if (newFavorite.groupName == _currentGroup) {
             if (newFavorite.remark != favorite.remark) {
               _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite); // 备注被修改 => 更新列表
@@ -235,6 +224,13 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
             _removed++;
             if (mounted) setState(() {});
           }
+        } else {
+          // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+          // 本页引起的删除 => 更新列表显示
+          _data.removeWhere((el) => el.mangaId == favorite.mangaId);
+          _total--;
+          _removed++;
+          if (mounted) setState(() {});
         }
       },
     );
@@ -256,7 +252,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
         _msController.exitMultiSelectionMode();
-        _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite);
+        _data.replaceWhere((el) => el.mangaId == mangaId, (_) => newFavorite!);
         if (mounted) setState(() {});
       },
     );

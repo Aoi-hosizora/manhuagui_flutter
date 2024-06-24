@@ -413,21 +413,21 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       subscribeCount: _subscribeCount,
       favoriteManga: _favoriteManga,
       laterManga: _laterManga,
-      subscribing: (s) => mountedSetState(() => _subscribing = s),
-      inShelfSetter: (s) => mountedSetState(() => _inShelf = s),
-      inFavoriteSetter: (f) {
+      onSubscribingUpdated: (s) => mountedSetState(() => _subscribing = s),
+      onShelfUpdated: (s) => mountedSetState(() => _inShelf = s),
+      onFavoriteUpdated: (f) {
         _inFavorite = f != null;
         _favoriteManga = f;
         if (mounted) setState(() {});
       },
-      inLaterSetter: (l) {
+      onLaterUpdated: (l) {
         _laterManga = l;
         if (l == null) {
           _laterChapters?.clear();
         }
         if (mounted) setState(() {});
       },
-      onLaterChapterCleared: () {
+      onNotateCleared: () {
         _laterChapters?.clear();
         if (mounted) setState(() {});
       },
@@ -645,7 +645,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         }
         if (mounted) setState(() {});
       },
-      onLaterChapterCleared: () {
+      onNotateCleared: () {
         _laterChapters?.clear();
         if (mounted) setState(() {});
       },
@@ -840,13 +840,27 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       // fromMangaHistoryPage: false,
       chapter: chapter,
       extraData: MangaExtraDataForViewer.fromMangaData(_data!),
+
+      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+      // 本页引起的更新 => 更新相关界面
       onHistoryUpdated: (h) => mountedSetState(() => _history = h),
-      onFootprintAdded: (fp) => mountedSetState(() => _footprints?[fp.chapterId] = fp),
-      onFootprintsAdded: (fps) => mountedSetState(() => fps.forEach((fp) => _footprints?[fp.chapterId] = fp)),
-      onFootprintsRemoved: (cids) => mountedSetState(() => _footprints?.removeWhere((key, _) => cids.contains(key))),
-      onLaterAdded: (l) => mountedSetState(() => _laterManga = l),
-      onLaterMarked: (l) => mountedSetState(() => _laterChapters?[l.chapterId] = l),
-      onLaterUnmarked: (cid) => mountedSetState(() => _laterChapters?.remove(cid)),
+      onFootprintUpdated: (fp) {
+        if (fp == null) {
+          _footprints?.remove(chapterId);
+        } else {
+          _footprints?[fp.chapterId] = fp;
+        }
+        if (mounted) setState(() {});
+      },
+      onLaterUpdated: (l) => mountedSetState(() => _laterManga = l),
+      onNotateUpdated: (nt) {
+        if (nt == null) {
+          _laterChapters?.remove(chapterId);
+        } else {
+          _laterChapters?[nt.chapterId] = nt;
+        }
+        if (mounted) setState(() {});
+      },
     );
   }
 
