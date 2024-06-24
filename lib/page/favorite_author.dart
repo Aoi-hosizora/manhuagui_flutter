@@ -167,10 +167,10 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
       authorZone: author.authorZone,
       // fromFavoriteList: true,
       eventSource: EventSource.authorFavoritePage,
-      inFavoriteSetter: (inFavorite) {
+      onFavoriteUpdated: (deletedFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
-        if (!inFavorite) {
+        if (deletedFavorite == null) {
           _data.removeWhere((el) => el.authorId == author.authorId);
           _total--;
           _removed++;
@@ -195,7 +195,7 @@ class _FavoriteAuthorPageState extends State<FavoriteAuthorPage> with FitSystemS
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
         _msController.exitMultiSelectionMode();
-        _data.replaceWhere((el) => el.authorId == authorId, (_) => newFavorite);
+        _data.replaceWhere((el) => el.authorId == authorId, (_) => newFavorite!);
         if (mounted) setState(() {});
       },
     );

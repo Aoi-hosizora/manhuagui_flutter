@@ -166,7 +166,7 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
   }
 
   void _favorite() {
-    showPopupMenuForAuthorFavorite(
+    showPopupMenuForAuthorFavoriting(
       context: context,
       authorId: _data!.aid,
       authorName: _data!.name,
@@ -176,6 +176,8 @@ class _AuthorPageState extends State<AuthorPage> with FitSystemScreenshotMixin {
       favoriteAuthor: _favoriteAuthor,
       eventSource: EventSource.authorPage,
       favoriteSetter: (f) {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+        // 本页引起的更新 => 更新相关界面
         _favoriteAuthor = f;
         if (mounted) setState(() {});
       },
