@@ -563,9 +563,9 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
-                            // fromMangaPage: false,
-                            eventSource: EventSource.downloadMangaPage,
                             laterManga: _later!,
+                            eventSource: EventSource.downloadMangaPage,
+                            // ===
                             onLaterUpdated: (l) {
                               // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
                               _later = l;
@@ -605,7 +605,6 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             mangaCover: _data!.mangaCover,
                             mangaUrl: _data!.mangaUrl,
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
-                            // fromDownloadPage: true,
                             eventSource: EventSource.downloadMangaPage,
                           ),
                         ),

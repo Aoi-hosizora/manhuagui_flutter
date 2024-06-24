@@ -110,12 +110,11 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
   Map<int, LaterChapter>? _laterChapters;
   DownloadedManga? _downloadEntity;
 
-  int? _subscribeCount;
-  FavoriteManga? _favoriteManga;
   var _subscribing = false; // 执行订阅操作中
+  int? _subscribeCount; // 订阅量
   var _inShelf = false; // 书架
-  var _inFavorite = false; // 收藏
-  LaterManga? _laterManga; // 稍后阅读
+  FavoriteManga? _favoriteManga; // 收藏
+  LaterManga? _laterManga; // 稍后
   var _showBriefIntroduction = true;
 
   Future<void> _loadData() async {
@@ -155,7 +154,6 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
     _downloadEntity = await DownloadDao.getManga(mid: widget.id); // 下载记录
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id); // 本地收藏
     _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 稍后阅读
-    _inFavorite = _favoriteManga != null;
     _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id); // 稍后阅读
 
     try {
@@ -329,7 +327,6 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       _subscribeCount = null;
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.id);
       _inShelf = false;
-      _inFavorite = _favoriteManga != null;
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.id); // 稍后阅读
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {}; // 稍后阅读
       if (mounted) setState(() {});
@@ -352,7 +349,6 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
 
     if (favoriteEvent != null && !favoriteEvent.source.isMangaPage() && favoriteEvent.mangaId == widget.id) {
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: favoriteEvent.mangaId);
-      _inFavorite = _favoriteManga != null;
       if (mounted) setState(() {});
     }
 
@@ -407,16 +403,18 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       mangaUrl: _data!.url,
       extraData: MangaExtraDataForDialog.fromManga(_data!),
       eventSource: EventSource.mangaPage,
+
+      // 书架、收藏、稍后、订阅量
       nowInShelf: _inShelf,
-      nowInFavorite: _inFavorite,
-      nowInLater: _laterManga != null,
+      nowFavorite: _favoriteManga,
+      nowLater: _laterManga,
       subscribeCount: _subscribeCount,
-      favoriteManga: _favoriteManga,
-      laterManga: _laterManga,
+
+      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+      // 本页引起的更新 => 更新相关界面
       onSubscribingUpdated: (s) => mountedSetState(() => _subscribing = s),
       onShelfUpdated: (s) => mountedSetState(() => _inShelf = s),
       onFavoriteUpdated: (f) {
-        _inFavorite = f != null;
         _favoriteManga = f;
         if (mounted) setState(() {});
       },
@@ -635,8 +633,9 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
       extraData: MangaExtraDataForDialog.fromManga(_data!),
-      eventSource: EventSource.mangaPage,
       laterManga: _laterManga!,
+      eventSource: EventSource.mangaPage,
+      // ===
       onLaterUpdated: (l) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         _laterManga = l;
@@ -646,6 +645,7 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
         if (mounted) setState(() {});
       },
       onNotateCleared: () {
+        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         _laterChapters?.clear();
         if (mounted) setState(() {});
       },
@@ -835,11 +835,9 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       mangaTitle: _data!.title,
       mangaCover: _data!.cover,
       mangaUrl: _data!.url,
-      eventSource: EventSource.mangaPage,
-      // fromMangaTocPage: false,
-      // fromMangaHistoryPage: false,
       chapter: chapter,
       extraData: MangaExtraDataForViewer.fromMangaData(_data!),
+      eventSource: EventSource.mangaPage,
 
       // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
       // 本页引起的更新 => 更新相关界面
@@ -1153,12 +1151,12 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
                   color: Colors.white,
                   child: ActionRowView.five(
                     action1: ActionItem(
-                      text: !_inShelf && !_inFavorite
+                      text: !_inShelf && _favoriteManga == null
                           ? '订阅漫画'
-                          : _inShelf && _inFavorite
+                          : _inShelf && _favoriteManga != null
                               ? '查看订阅'
-                              : (_inShelf && !_inFavorite ? '已放书架' : '已加收藏'),
-                      icon: !_inShelf && !_inFavorite ? Icons.sell : Icons.loyalty,
+                              : (_inShelf && _favoriteManga == null ? '已放书架' : '已加收藏'),
+                      icon: !_inShelf && _favoriteManga == null ? Icons.sell : Icons.loyalty,
                       action: _subscribing ? null : () => _subscribe(),
                       longPress: _subscribing ? null : () => _subscribe(),
                       enable: !_subscribing,

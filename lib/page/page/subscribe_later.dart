@@ -229,16 +229,14 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
       mangaCover: manga.mangaCover,
       mangaUrl: manga.mangaUrl,
       extraData: MangaExtraDataForDialog.fromLaterManga(manga),
-      // fromLaterList: true,
       eventSource: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage,
+      // ===
       onLaterUpdated: (newLater) {
         if (newLater != null) {
           // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-          // 本页引起的更新 => 更新列表显示 (置顶稍后阅读记录)
+          // 本页引起的更新 => 更新列表显示 (目前仅可能因稍后阅读记录被置顶而更新)
           _data.replaceWhere((el) => el.mangaId == newLater.mangaId, (_) => newLater);
           _data.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          // _data.removeWhere((el) => el.mangaId == newLater.mangaId);
-          // _data.insert(0, newLater); // => 取巧的做法，但不通用于其他更新
           if (mounted) setState(() {});
         } else {
           // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)

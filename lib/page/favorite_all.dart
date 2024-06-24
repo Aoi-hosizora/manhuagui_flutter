@@ -49,7 +49,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       await AuthManager.instance.check();
     });
     _cancelHandlers.add(EventBusManager.instance.listen<AppSettingChangedEvent>((_) => mountedSetState(() {})));
-    // _cancelHandlers.add(EventBusManager.instance.listen<...>((ev) => _updateByEvent(ev))); => 该页不做任何更新
+    // _cancelHandlers.add(EventBusManager.instance.listen<...>((ev) => _updateByEvent(ev))); => 该页不因 evb 而做任何更新
   }
 
   @override
@@ -145,8 +145,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       mangaCover: favorite.mangaCover,
       mangaUrl: favorite.mangaUrl,
       extraData: null,
-      // fromFavoriteList: false /* <<< */,
-      eventSource: EventSource.general,
+      eventSource: EventSource.general /* => 该页不因 evb 而做任何更新 */,
       onFavoriteUpdated: (deletedFavorite) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
@@ -170,8 +169,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     showUpdateFavoriteMangaRemarkDialog(
       context: context,
       favorite: oldFavorite,
-      // fromFavoriteList: false /* <<< */,
-      eventSource: EventSource.general,
+      eventSource: EventSource.general /* => 该页不因 evb 而做任何更新 */,
       onUpdated: (newFavorite) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -192,9 +190,8 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     showUpdateFavoriteMangasGroupDialog(
       context: context,
       favorites: oldFavorites,
-      selectedGroupName: null,
-      // fromFavoriteList: false /* <<< */,
-      eventSource: EventSource.general,
+      currentGroupName: null,
+      eventSource: EventSource.general /* => 该页不因 evb 而做任何更新 */,
       onUpdated: (newFavorites, addToTop) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示

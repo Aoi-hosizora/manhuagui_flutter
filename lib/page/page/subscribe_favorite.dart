@@ -203,7 +203,7 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       mangaUrl: favorite.mangaUrl,
       extraData: null,
       eventSource: !widget.isSepPage ? EventSource.favoritePage : EventSource.sepFavoritePage,
-      // fromFavoriteList: true,
+      // ===
       onFavoriteUpdated: (newFavorite) {
         if (newFavorite != null) {
           // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
@@ -247,7 +247,6 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
       context: context,
       favorite: oldFavorite,
       eventSource: !widget.isSepPage ? EventSource.favoritePage : EventSource.sepFavoritePage,
-      // fromFavoriteList: true,
       onUpdated: (newFavorite) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示
@@ -268,9 +267,8 @@ class _FavoriteSubPageState extends State<FavoriteSubPage> with AutomaticKeepAli
     showUpdateFavoriteMangasGroupDialog(
       context: context,
       favorites: oldFavorites,
-      selectedGroupName: _currentGroup,
+      currentGroupName: _currentGroup,
       eventSource: !widget.isSepPage ? EventSource.favoritePage : EventSource.sepFavoritePage,
-      // fromFavoriteList: true,
       onUpdated: (newFavorites, addToTop) {
         // (更新数据库)、退出多选模式、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的更新 => 更新列表显示

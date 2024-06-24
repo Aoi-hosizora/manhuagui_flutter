@@ -249,13 +249,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
   List<Future<String?>>? _urlFutures;
   List<Future<File?>>? _fileFutures;
 
-  MangaHistory? _history; // ignore: unused_field
-  int? _subscribeCount;
-  FavoriteManga? _favoriteManga;
   var _subscribing = false; // 执行订阅操作中
+  int? _subscribeCount; // 订阅量
   var _inShelf = false; // 书架
-  var _inFavorite = false; // 收藏
-  LaterManga? _laterManga; // 稍后阅读
+  FavoriteManga? _favoriteManga; // 收藏
+  LaterManga? _laterManga; // 稍后
+  MangaHistory? _history; // ignore: unused_field
   DownloadedManga? _downloadEntity;
   DownloadedChapter? _downloadChapter;
 
@@ -269,7 +268,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
     // 1. 先获取各种数据库信息 (收藏、下载)
     _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId); // 阅读历史
     _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId); // 本地收藏
-    _inFavorite = _favoriteManga != null;
     _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId); // 稍后阅读
     _downloadEntity = await DownloadDao.getManga(mid: widget.mangaId); // 下载记录
     _downloadChapter = _downloadEntity?.downloadedChapters.where((el) => el.chapterId == widget.chapterId).firstOrNull;
@@ -550,7 +548,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       _subscribeCount = null;
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: widget.mangaId);
       _inShelf = false;
-      _inFavorite = _favoriteManga != null;
       _laterManga = await LaterMangaDao.getLaterManga(username: AuthManager.instance.username, mid: widget.mangaId); // 稍后阅读
       if (mounted) setState(() {});
     }
@@ -573,7 +570,6 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
 
     if (favoriteEvent != null && !favoriteEvent.source.isMangaViewerPage() && favoriteEvent.mangaId == widget.mangaId) {
       _favoriteManga = await FavoriteDao.getFavorite(username: AuthManager.instance.username, mid: favoriteEvent.mangaId);
-      _inFavorite = _favoriteManga != null;
       if (mounted) setState(() {});
     }
 
@@ -869,18 +865,19 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaCover: _data!.mangaCover,
       mangaUrl: _data!.mangaUrl,
       extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
-      // fromMangaPage: false,
       eventSource: EventSource.mangaViewerPage,
+
+      // 书架、收藏、稍后、订阅量
       nowInShelf: _inShelf,
-      nowInFavorite: _inFavorite,
-      nowInLater: _laterManga != null,
+      nowFavorite: _favoriteManga,
+      nowLater: _laterManga,
       subscribeCount: _subscribeCount,
-      favoriteManga: _favoriteManga,
-      laterManga: _laterManga,
+
+      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
+      // 本页引起的更新 => 更新相关界面
       onSubscribingUpdated: (s) => mountedSetState(() => _subscribing = s),
       onShelfUpdated: (s) => mountedSetState(() => _inShelf = s),
       onFavoriteUpdated: (f) {
-        _inFavorite = f != null;
         _favoriteManga = f;
         if (mounted) setState(() {});
       },
@@ -1100,20 +1097,21 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       mangaCover: _data!.mangaCover,
       mangaUrl: _data!.mangaUrl,
       extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
-      // fromMangaPage: false,
-      eventSource: EventSource.mangaViewerPage,
       laterManga: _laterManga!,
+      eventSource: EventSource.mangaViewerPage,
+      // ===
+      navigateWrapper: (navigate) async {
+        await _ScreenHelper.restoreSystemUI();
+        await navigate();
+        await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
+      },
+      // ===
       onLaterUpdated: (l) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         _laterManga = l;
         if (mounted) setState(() {});
       },
       onNotateCleared: null /* 该页暂不显示稍后阅读章节 */,
-      navigateWrapper: (navigate) async {
-        await _ScreenHelper.restoreSystemUI();
-        await navigate();
-        await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
-      },
     );
   }
 
@@ -1643,7 +1641,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       onlineMode: widget.onlineMode,
                       subscribing: _subscribing,
                       inShelf: _inShelf,
-                      inFavorite: _inFavorite,
+                      inFavorite: _favoriteManga != null,
                       laterManga: _laterManga,
                       onHeightChanged: ({bool byOpt = false, bool byLater = false}) {
                         _mangaGalleryViewKey.currentState?.updatePageHeight(0); // update page height
@@ -1658,7 +1656,7 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
                       onlineMode: widget.onlineMode,
                       subscribing: _subscribing,
                       inShelf: _inShelf,
-                      inFavorite: _inFavorite,
+                      inFavorite: _favoriteManga != null,
                       laterManga: _laterManga,
                       onHeightChanged: ({bool byOpt = false, bool byLater = false}) {
                         _mangaGalleryViewKey.currentState?.updatePageHeight(_data!.pageCount + 1); // update page height

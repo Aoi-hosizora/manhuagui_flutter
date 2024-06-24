@@ -139,12 +139,11 @@ class _MangaTocPageState extends State<MangaTocPage> with FitSystemScreenshotMix
       mangaTitle: widget.mangaTitle,
       mangaCover: widget.mangaCover,
       mangaUrl: widget.mangaUrl,
-      // fromMangaPage: false,
-      // fromMangaTocPage: true,
-      // fromMangaHistoryPage: false,
       chapter: chapter,
       extraData: widget.extraData,
       eventSource: EventSource.mangaTocPage,
+
+      // navigate related
       canOperateHistory: widget.canOperateHistory,
       toSwitchChapter: widget.toSwitchChapter == null ? null : () => widget.toSwitchChapter?.call(chapterId),
       navigateWrapper: widget.navigateWrapper,

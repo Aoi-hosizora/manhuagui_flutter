@@ -209,8 +209,8 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       mangaCover: manga.cover,
       mangaUrl: manga.url,
       extraData: MangaExtraDataForDialog.fromShelfManga(manga),
-      // fromShelfList: true,
       eventSource: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage,
+      // ===
       onShelfUpdated: (inShelf) {
         // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
         // 本页引起的删除 => 更新列表显示
