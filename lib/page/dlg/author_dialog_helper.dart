@@ -212,8 +212,6 @@ class _DialogHelper {
   Future<void> addFavoriteWithDlg({
     required void Function(FavoriteAuthor newFavorite)? onAdded,
     required EventSource eventSource,
-    // required bool fromFavoriteList,
-    // required bool fromAuthorPage,
   }) async {
     var remark = await showAddToFavoriteDialog(context: context);
     if (remark == null) {
@@ -234,22 +232,20 @@ class _DialogHelper {
     onAdded?.call(newFavorite);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已收藏漫画作者')));
-    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.added, source: eventSource)); // x fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
+    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.added, source: eventSource));
   }
 
   // => called by showPopupMenuForAuthorList, showPopupMenuForAuthorFavorite
   Future<void> removeFavorite({
     required void Function()? onRemoved,
     required EventSource eventSource,
-    // required bool fromFavoriteList,
-    // required bool fromAuthorPage,
   }) async {
     // 更新数据库、(更新界面)、弹出提示、发送通知
     await FavoriteDao.deleteAuthor(username: AuthManager.instance.username, aid: authorId);
     onRemoved?.call();
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已取消收藏漫画作者')));
-    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, source: eventSource)); // x fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
+    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.deleted, source: eventSource));
   }
 
   // => called by showUpdateFavoriteAuthorRemarkDialog
@@ -258,8 +254,6 @@ class _DialogHelper {
     required void Function(FavoriteAuthor newFavorite) onUpdated,
     required EventSource eventSource,
     required bool showSnackBar,
-    // required bool fromFavoriteList,
-    // required bool fromAuthorPage,
   }) async {
     var remark = await showEditFavoriteRemarkDialog(context: context, remark: oldFavorite.remark.trim());
     if (remark == null) {
@@ -274,7 +268,7 @@ class _DialogHelper {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(remark == '' ? '已删除收藏备注' : '已将备注修改为 "$remark"')));
     }
-    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.updated, source: eventSource)); // x fromFavoritePage: fromFavoriteList, fromAuthorPage: fromAuthorPage));
+    EventBusManager.instance.fire(FavoriteAuthorUpdatedEvent(authorId: authorId, reason: UpdateReason.updated, source: eventSource));
   }
 
   // => called by showPopupMenuForAuthorFavorite
@@ -283,8 +277,6 @@ class _DialogHelper {
     required void Function(FavoriteAuthor newFavorite) onUpdated,
     required EventSource eventSource,
     required bool showSnackBar,
-    // required bool fromFavoriteList,
-    // required bool fromAuthorPage,
   }) async {
     var toEdit = await showFavoriteRemarkDialog(context: context, remark: favorite.remark.trim(), authorName: authorName);
     if (toEdit) {
@@ -293,8 +285,6 @@ class _DialogHelper {
         onUpdated: onUpdated,
         eventSource: eventSource,
         showSnackBar: showSnackBar,
-        // fromFavoriteList: fromFavoriteList,
-        // fromAuthorPage: fromAuthorPage,
       );
     }
   }
