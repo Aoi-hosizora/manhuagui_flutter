@@ -183,6 +183,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       }
     }
 
+    // 非本页引起的更新或删除 => 更新相关界面
+
     if (historyEvent != null && historyEvent.mangaId == widget.mangaId && !historyEvent.source.isDownloadMangaPage()) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
@@ -200,6 +202,25 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
 
     if (laterChapterEvent != null && laterChapterEvent.mangaId == widget.mangaId && !laterChapterEvent.source.isDownloadMangaPage()) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.mangaId) ?? {};
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _updateByDlg({DialogObject<LaterManga>? onLaterUpdated, DialogObject<void>? onNotateCleared}) {
+    if (onLaterUpdated != null && onLaterUpdated.value != null) {
+      // 本页引起的更新 => 更新相关界面
+      _later = onLaterUpdated.value;
+      if (mounted) setState(() {});
+    }
+    if (onLaterUpdated != null && onLaterUpdated.value == null) {
+      // 本页引起的删除 => 更新相关界面
+      _later = null;
+      _laterChapters?.clear();
+      if (mounted) setState(() {});
+    }
+    if (onNotateCleared != null) {
+      // 本页引起的删除 => 更新相关界面
+      _laterChapters?.clear();
       if (mounted) setState(() {});
     }
   }
@@ -342,24 +363,22 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
       mangaId: widget.mangaId,
       chapterId: chapterId,
       downloadedChapters: _data!.downloadedChapters,
-      toReadChapter: ({required int cid, required int page}) {
-        Navigator.of(context).push(
-          CustomPageRoute(
-            context: context,
-            builder: (c) => MangaViewerPage(
-              mangaId: widget.mangaId,
-              chapterId: cid /* <<< */,
-              mangaTitle: _data!.mangaTitle,
-              mangaCover: _data!.mangaCover,
-              mangaUrl: _data!.mangaUrl,
-              extraData: MangaExtraDataForViewer.fromNullableMangaData(_mangaData) /* nullable */,
-              initialPage: page /* <<< */,
-              onlineMode: _onlineMode,
-              onMangaGot: (manga) => _mangaData = manga,
-            ),
+      toReadChapter: ({required int cid, required int page}) => Navigator.of(context).push(
+        CustomPageRoute(
+          context: context,
+          builder: (c) => MangaViewerPage(
+            mangaId: widget.mangaId,
+            chapterId: cid /* <<< */,
+            mangaTitle: _data!.mangaTitle,
+            mangaCover: _data!.mangaCover,
+            mangaUrl: _data!.mangaUrl,
+            extraData: MangaExtraDataForViewer.fromNullableMangaData(_mangaData) /* nullable */,
+            initialPage: page /* <<< */,
+            onlineMode: _onlineMode,
+            onMangaGot: (manga) => _mangaData = manga,
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -565,16 +584,8 @@ class _DownloadMangaPageState extends State<DownloadMangaPage> with SingleTicker
                             extraData: _mangaData == null ? null : MangaExtraDataForDialog.fromManga(_mangaData!),
                             laterManga: _later!,
                             eventSource: EventSource.downloadMangaPage,
-                            // ===
-                            onLaterUpdated: (l) {
-                              // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-                              _later = l;
-                              if (l == null) {
-                                _laterChapters?.clear();
-                              }
-                              if (mounted) setState(() {});
-                            },
-                            onNotateCleared: null /* 该页暂不显示稍后阅读章节 */,
+                            onLaterUpdated: (later) => _updateByDlg(onLaterUpdated: DialogObject(widget.mangaId, later)),
+                            onNotateCleared: () => _updateByDlg(onNotateCleared: DialogObject(widget.mangaId)),
                           ),
                         ),
                       ),

@@ -138,10 +138,10 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
     }
   }
 
-  void _updateByDlg({int? mangaId, bool? inShelf}) {
-    if (mangaId != null && inShelf == false) {
+  void _updateByDlg({DialogObject<bool>? onShelfUpdated}) {
+    if (onShelfUpdated != null && onShelfUpdated.value == false) {
       // 本页引起的删除 => 更新列表显示
-      _data.removeWhere((el) => el.mid == mangaId);
+      _data.removeWhere((el) => el.mid == onShelfUpdated.id);
       _total--; // no "removed++"
       if (mounted) setState(() {});
     }
@@ -219,7 +219,7 @@ class _ShelfSubPageState extends State<ShelfSubPage> with AutomaticKeepAliveClie
       mangaUrl: manga.url,
       extraData: MangaExtraDataForDialog.fromShelfManga(manga),
       eventSource: !widget.isSepPage ? EventSource.shelfPage : EventSource.sepShelfPage,
-      onShelfUpdated: (inShelf) => _updateByDlg(mangaId: manga.mid, inShelf: inShelf),
+      onShelfUpdated: (inShelf) => _updateByDlg(onShelfUpdated: DialogObject(manga.mid, inShelf)),
     );
   }
 

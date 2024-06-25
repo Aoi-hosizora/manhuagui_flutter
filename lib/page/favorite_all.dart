@@ -102,34 +102,34 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     }
   }
 
-  void _updateByDlg({int? mangaId, FavoriteManga? favorite, List<int>? mangaIds, List<FavoriteManga>? favorites}) async {
+  void _updateByDlg({DialogObject<FavoriteManga>? onFavoriteUpdated, DialogObjects<List<FavoriteManga>>? onFavoritesUpdated}) async {
     if (_msController.multiSelecting) {
       _msController.exitMultiSelectionMode(); // 先退出多选模式
     }
 
-    if (favorite != null) {
+    if (onFavoriteUpdated != null && onFavoriteUpdated.value != null) {
       // 本页引起的更新 => 更新列表显示
+      var favorite = onFavoriteUpdated.value!;
       _data.replaceWhere((el) => el.mangaId == favorite.mangaId, (_) => favorite);
       if (mounted) setState(() {});
     }
-    if (mangaId != null && favorite == null) {
+    if (onFavoriteUpdated != null && onFavoriteUpdated.value == null) {
       // 本页引起的删除 => 更新列表显示
-      _data.removeWhere((el) => el.mangaId == mangaId);
+      _data.removeWhere((el) => el.mangaId == onFavoriteUpdated.id);
       _total--;
       _removed++;
       if (mounted) setState(() {});
     }
-
-    if (favorites != null) {
+    if (onFavoritesUpdated != null && onFavoritesUpdated.value != null) {
       // 本页引起的更新 => 更新列表显示
-      for (var favorite in favorites) {
+      for (var favorite in onFavoritesUpdated.value!) {
         _data.replaceWhere((el) => el.mangaId == favorite.mangaId, (_) => favorite);
       }
       if (mounted) setState(() {});
     }
-    if (mangaIds != null && favorites == null) {
+    if (onFavoritesUpdated != null && onFavoritesUpdated.value == null) {
       // 本页引起的删除 => 更新列表显示
-      for (var mangaId in mangaIds) {
+      for (var mangaId in onFavoritesUpdated.id) {
         _data.removeWhere((el) => el.mangaId == mangaId);
         _total--;
         _removed++;
@@ -199,7 +199,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       mangaUrl: favorite.mangaUrl,
       extraData: null,
       eventSource: EventSource.favoriteAllPage,
-      onFavoriteUpdated: (favorite) => _updateByDlg(mangaId: mangaId, favorite: favorite),
+      onFavoriteUpdated: (favorite) => _updateByDlg(onFavoriteUpdated: DialogObject(mangaId, favorite)),
     );
   }
 
@@ -212,7 +212,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       context: context,
       favorite: oldFavorite,
       eventSource: EventSource.favoriteAllPage,
-      onUpdated: (favorite) => _updateByDlg(mangaId: mangaId, favorite: favorite),
+      onUpdated: (favorite) => _updateByDlg(onFavoriteUpdated: DialogObject(mangaId, favorite)),
     );
   }
 
@@ -226,7 +226,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
       favorites: oldFavorites,
       currentGroupName: null,
       eventSource: EventSource.favoriteAllPage,
-      onUpdated: (favorites, _) => _updateByDlg(mangaIds: mangaIds, favorites: favorites),
+      onUpdated: (favorites, _) => _updateByDlg(onFavoritesUpdated: DialogObjects(mangaIds, favorites)),
     );
   }
 
@@ -260,7 +260,7 @@ class _FavoriteAllPageState extends State<FavoriteAllPage> with FitSystemScreens
     for (var mangaId in mangaIds) {
       await FavoriteDao.deleteFavorite(username: AuthManager.instance.username, mid: mangaId);
     }
-    _updateByDlg(mangaIds: mangaIds, favorites: null);
+    _updateByDlg(onFavoritesUpdated: DialogObjects(mangaIds));
     for (var mangaId in mangaIds) {
       var groupName = favorites.where((f) => f.mangaId == mangaId).firstOrNull?.groupName;
       if (groupName != null) {

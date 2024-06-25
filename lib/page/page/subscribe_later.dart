@@ -123,31 +123,31 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     }
   }
 
-  void _updateByDlg({int? mangaId, LaterManga? later, List<int>? mangaIds, List<LaterManga>? laters}) async {
+  void _updateByDlg({DialogObject<LaterManga>? onLaterUpdated, DialogObjects<List<LaterManga>>? onLatersUpdated}) async {
     if (_msController.multiSelecting) {
       _msController.exitMultiSelectionMode(); // 先退出多选模式
     }
 
-    if (later != null) {
+    if (onLaterUpdated != null && onLaterUpdated.value != null) {
       // 本页引起的更新 => 更新列表显示
+      var later = onLaterUpdated.value!;
       _data.removeWhere((el) => el.mangaId == later.mangaId);
       _data.insert(0, later); // 目前仅可能因置顶而更新
       if (mounted) setState(() {});
     }
-    if (mangaId != null && later == null) {
+    if (onLaterUpdated != null && onLaterUpdated.value == null) {
       // 本页引起的删除 => 更新列表显示
-      _data.removeWhere((el) => el.mangaId == mangaId);
+      _data.removeWhere((el) => el.mangaId == onLaterUpdated.id);
       _total--;
       _removed++;
       if (mounted) setState(() {});
     }
-
-    if (laters != null) {
+    if (onLatersUpdated != null && onLatersUpdated.value != null) {
       // 本页引起的更新 => pass
     }
-    if (mangaIds != null && laters == null) {
+    if (onLatersUpdated != null && onLatersUpdated.value == null) {
       // 本页引起的删除 => 更新列表显示
-      for (var mangaId in mangaIds) {
+      for (var mangaId in onLatersUpdated.id) {
         _data.removeWhere((h) => h.mangaId == mangaId);
         _total--;
         _removed++;
@@ -263,7 +263,7 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
       mangaUrl: manga.mangaUrl,
       extraData: MangaExtraDataForDialog.fromLaterManga(manga),
       eventSource: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage,
-      onLaterUpdated: (later) => _updateByDlg(mangaId: mangaId, later: later),
+      onLaterUpdated: (later) => _updateByDlg(onLaterUpdated: DialogObject(mangaId, later)),
     );
   }
 
@@ -274,7 +274,7 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     }
     var updatedManga = manga.copyWith(createdAt: DateTime.now());
     await LaterMangaDao.addOrUpdateLaterManga(username: AuthManager.instance.username, manga: updatedManga);
-    _updateByDlg(mangaId: mangaId, later: updatedManga);
+    _updateByDlg(onLaterUpdated: DialogObject(mangaId, updatedManga));
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已将漫画置顶于稍后阅读列表')));
     EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.updated, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage));
@@ -312,7 +312,7 @@ class _LaterSubPageState extends State<LaterSubPage> with AutomaticKeepAliveClie
     for (var mangaId in mangaIds) {
       await LaterMangaDao.deleteLaterManga(username: AuthManager.instance.username, mid: mangaId);
     }
-    _updateByDlg(mangaIds: mangaIds, laters: null);
+    _updateByDlg(onLatersUpdated: DialogObjects(mangaIds));
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(LaterUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.laterPage : EventSource.sepLaterPage));
     }

@@ -154,6 +154,39 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
     }
   }
 
+  void _updateByDlg({DialogObject<NotateChapter>? onNotateUpdated, DialogObject<MangaHistory>? onHistoryUpdated, DialogObject<ChapterFootprint>? onFootprintUpdated}) {
+    if (onNotateUpdated != null && onNotateUpdated.value != null) {
+      // 本页引起的更新 => 更新相关界面
+      _laterChapters?[onNotateUpdated.value!.chapterId] = onNotateUpdated.value!;
+      if (mounted) setState(() {});
+    }
+    if (onNotateUpdated != null && onNotateUpdated.value == null) {
+      // 本页引起的删除 => 更新相关界面
+      _laterChapters?.remove(onNotateUpdated.id);
+      if (mounted) setState(() {});
+    }
+    if (onHistoryUpdated != null && onHistoryUpdated.value != null) {
+      // 本页引起的更新 => 更新相关界面
+      _history = onHistoryUpdated.value!;
+      if (mounted) setState(() {});
+    }
+    if (onHistoryUpdated != null && onHistoryUpdated.value == null) {
+      // 本页引起的删除 => 更新相关界面
+      _history = null;
+      if (mounted) setState(() {});
+    }
+    if (onFootprintUpdated != null && onFootprintUpdated.value != null) {
+      // 本页引起的更新 => 更新相关界面
+      _footprints?[onFootprintUpdated.value!.chapterId] = onFootprintUpdated.value!;
+      if (mounted) setState(() {});
+    }
+    if (onFootprintUpdated != null && onFootprintUpdated.value == null) {
+      // 本页引起的删除 => 更新相关界面
+      _footprints?.remove(onFootprintUpdated.id);
+      if (mounted) setState(() {});
+    }
+  }
+
   void _switchToMode(_MangaHistoryPageMode mode) {
     if (_mode != mode) {
       _mode = mode;
@@ -361,27 +394,10 @@ class _MangaHistoryPageState extends State<MangaHistoryPage> with FitSystemScree
       chapter: chapter,
       extraData: widget.extraData,
       eventSource: EventSource.mangaHistoryPage,
-
-      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-      // 本页引起的更新 => 更新相关界面
-      onHistoryUpdated: (h) => mountedSetState(() => _history = h),
-      onFootprintUpdated: (fp) {
-        if (fp == null) {
-          _footprints?.remove(chapterId);
-        } else {
-          _footprints?[fp.chapterId] = fp;
-        }
-        if (mounted) setState(() {});
-      },
+      onHistoryUpdated: (history) => _updateByDlg(onHistoryUpdated: DialogObject(widget.mangaId, history)),
+      onFootprintUpdated: (footprint) => _updateByDlg(onFootprintUpdated: DialogObject(chapterId, footprint)),
       onLaterUpdated: null /* 本页不显示稍后阅读的漫画 */,
-      onNotateUpdated: (nt) {
-        if (nt == null) {
-          _laterChapters?.remove(chapterId);
-        } else {
-          _laterChapters?[nt.chapterId] = nt;
-        }
-        if (mounted) setState(() {});
-      },
+      onNotateUpdated: (notate) => _updateByDlg(onNotateUpdated: DialogObject(chapterId, notate)),
     );
   }
 

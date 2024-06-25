@@ -109,38 +109,38 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     }
   }
 
-  void _updateByDlg({int? mangaId, MangaHistory? history, List<int>? mangaIds, List<MangaHistory>? histories, bool? isCleared}) async {
+  void _updateByDlg({DialogObject<MangaHistory>? onHistoryUpdated, DialogObjects<List<MangaHistory>>? onHistoriesUpdated, DialogObjects<void>? onHistoriesCleared}) async {
     if (_msController.multiSelecting) {
       _msController.exitMultiSelectionMode(); // 先退出多选模式
     }
 
-    if (history != null) {
+    if (onHistoryUpdated != null && onHistoryUpdated.value != null) {
       // 本页引起的更新 => pass
     }
-    if (mangaId != null && history == null) {
+    if (onHistoryUpdated != null && onHistoryUpdated.value == null) {
       // 本页引起的删除 => 更新列表显示
-      _data.removeWhere((el) => el.mangaId == mangaId);
+      _data.removeWhere((el) => el.mangaId == onHistoryUpdated.id);
       _total--;
       _removed++;
       if (mounted) setState(() {});
     }
-
-    if (histories != null) {
+    if (onHistoriesUpdated != null && onHistoriesUpdated.value != null) {
       // 本页引起的更新 => pass
     }
-    if (mangaIds != null && histories == null) {
+    if (onHistoriesUpdated != null && onHistoriesUpdated.value == null) {
       // 本页引起的删除 => 更新列表显示
-      if (isCleared != true) {
-        for (var mangaId in mangaIds) {
-          _data.removeWhere((h) => h.mangaId == mangaId);
-          _total--;
-          _removed++;
-        }
-      } else {
-        _data.clear();
-        _total = 0;
-        _removed = mangaIds.length;
+      for (var mangaId in onHistoriesUpdated.id) {
+        _data.removeWhere((h) => h.mangaId == mangaId);
+        _total--;
+        _removed++;
       }
+      if (mounted) setState(() {});
+    }
+    if (onHistoriesCleared != null) {
+      // 本页引起的删除 => 更新列表显示
+      _data.clear();
+      _total = 0;
+      _removed = onHistoriesCleared.id.length;
       if (mounted) setState(() {});
     }
   }
@@ -182,7 +182,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       mangaUrl: history.mangaUrl,
       extraData: null,
       eventSource: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage,
-      onHistoryUpdated: (history) => _updateByDlg(mangaId: mangaId, history: history),
+      onHistoryUpdated: (history) => _updateByDlg(onHistoryUpdated: DialogObject(mangaId, history)),
     );
   }
 
@@ -217,7 +217,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
       await HistoryDao.deleteHistory(username: AuthManager.instance.username, mid: mangaId);
       await HistoryDao.clearMangaFootprints(username: AuthManager.instance.username, mid: mangaId);
     }
-    _updateByDlg(mangaIds: mangaIds, histories: null);
+    _updateByDlg(onHistoriesUpdated: DialogObjects(mangaIds));
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
       EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
@@ -249,7 +249,7 @@ class _HistorySubPageState extends State<HistorySubPage> with AutomaticKeepAlive
     await HistoryDao.clearHistories(username: AuthManager.instance.username);
     await HistoryDao.clearAllFootprints(username: AuthManager.instance.username);
     var mangaIds = _data.map((el) => el.mangaId).toList();
-    _updateByDlg(mangaIds: mangaIds, histories: null, isCleared: true);
+    _updateByDlg(onHistoriesCleared: DialogObjects(mangaIds));
     for (var mangaId in mangaIds) {
       EventBusManager.instance.fire(HistoryUpdatedEvent(mangaId: mangaId, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));
       EventBusManager.instance.fire(FootprintUpdatedEvent(mangaId: mangaId, chapterIds: null, reason: UpdateReason.deleted, source: !widget.isSepPage ? EventSource.historyPage : EventSource.sepHistoryPage));

@@ -79,3 +79,19 @@ typedef NavigateWrapper = Future<void> Function(Future<void> Function());
 Future<void> _navigateWrapper(Future<void> Function() navigate) {
   return navigate.call();
 }
+
+// dialog callback object
+class DialogObject<T extends Object> {
+  const DialogObject(this.id, [this.value]);
+
+  final int id; // mangaId or chapterId
+  final T? value; // `null` almost means deleted
+}
+
+// dialog callback objects
+class DialogObjects<T extends Object> {
+  const DialogObjects(this.id, [this.value]);
+
+  final List<int> id; // mangaId or chapterId
+  final T? value; // `null` almost means deleted
+}

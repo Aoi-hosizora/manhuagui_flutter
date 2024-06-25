@@ -332,6 +332,8 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       if (mounted) setState(() {});
     }
 
+    // 非本页引起的更新或删除 => 更新相关界面
+
     if (historyEvent != null && !historyEvent.source.isMangaPage() && historyEvent.mangaId == widget.id) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.id);
       if (mounted) setState(() {});
@@ -364,6 +366,61 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
 
     if (laterChapterEvent != null && !laterChapterEvent.source.isMangaPage() && laterChapterEvent.mangaId == widget.id) {
       _laterChapters = await LaterMangaDao.getLaterChaptersSet(username: AuthManager.instance.username, mid: widget.id) ?? {};
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _updateByDlg({
+    DialogObject<LaterManga>? onLaterUpdated,
+    DialogObject<NotateChapter>? onNotateUpdated,
+    DialogObject<void>? onNotateCleared,
+    DialogObject<MangaHistory>? onHistoryUpdated,
+    DialogObject<ChapterFootprint>? onFootprintUpdated,
+  }) {
+    if (onLaterUpdated != null) {
+      if (onLaterUpdated.value != null) {
+        // 本页引起的更新 => 更新相关界面
+        _laterManga = onLaterUpdated.value!;
+      } else {
+        // 本页引起的删除 => 更新相关界面
+        _laterManga = null;
+        _laterChapters?.clear();
+      }
+      if (mounted) setState(() {});
+    }
+    if (onNotateUpdated != null) {
+      if (onNotateUpdated.value != null) {
+        // 本页引起的更新 => 更新相关界面
+        _laterChapters?[onNotateUpdated.value!.chapterId] = onNotateUpdated.value!;
+      } else {
+        // 本页引起的删除 => 更新相关界面
+        _laterChapters?.remove(onNotateUpdated.id);
+      }
+      if (mounted) setState(() {});
+    }
+    if (onNotateCleared != null) {
+      // 本页引起的删除 => 更新相关界面
+      _laterChapters?.clear();
+      if (mounted) setState(() {});
+    }
+    if (onHistoryUpdated != null) {
+      if (onHistoryUpdated.value != null) {
+        // 本页引起的更新 => 更新相关界面
+        _history = onHistoryUpdated.value!;
+      } else {
+        // 本页引起的删除 => 更新相关界面
+        _history = null;
+      }
+      if (mounted) setState(() {});
+    }
+    if (onFootprintUpdated != null) {
+      if (onFootprintUpdated.value != null) {
+        // 本页引起的更新 => 更新相关界面
+        _footprints?[onFootprintUpdated.value!.chapterId] = onFootprintUpdated.value!;
+      } else {
+        // 本页引起的删除 => 更新相关界面
+        _footprints?.remove(onFootprintUpdated.id);
+      }
       if (mounted) setState(() {});
     }
   }
@@ -632,20 +689,8 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       extraData: MangaExtraDataForDialog.fromManga(_data!),
       laterManga: _laterManga!,
       eventSource: EventSource.mangaPage,
-      // ===
-      onLaterUpdated: (l) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        _laterManga = l;
-        if (l == null) {
-          _laterChapters?.clear();
-        }
-        if (mounted) setState(() {});
-      },
-      onNotateCleared: () {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        _laterChapters?.clear();
-        if (mounted) setState(() {});
-      },
+      onLaterUpdated: (later) => _updateByDlg(onLaterUpdated: DialogObject(widget.id, later)),
+      onNotateCleared: () => _updateByDlg(onNotateCleared: DialogObject(widget.id)),
     );
   }
 
@@ -823,9 +868,6 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       Fluttertoast.showToast(msg: '未从漫画章节列表中找到章节'); // almost unreachable
       return;
     }
-
-    // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-    // 本页引起的更新 => 更新和历史与稍后阅读相关的界面
     showPopupMenuForMangaToc(
       context: context,
       mangaId: _data!.mid,
@@ -835,27 +877,10 @@ class _MangaPageState extends State<MangaPage> with FitSystemScreenshotMixin {
       chapter: chapter,
       extraData: MangaExtraDataForViewer.fromMangaData(_data!),
       eventSource: EventSource.mangaPage,
-
-      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-      // 本页引起的更新 => 更新相关界面
-      onHistoryUpdated: (h) => mountedSetState(() => _history = h),
-      onFootprintUpdated: (fp) {
-        if (fp == null) {
-          _footprints?.remove(chapterId);
-        } else {
-          _footprints?[fp.chapterId] = fp;
-        }
-        if (mounted) setState(() {});
-      },
-      onLaterUpdated: (l) => mountedSetState(() => _laterManga = l),
-      onNotateUpdated: (nt) {
-        if (nt == null) {
-          _laterChapters?.remove(chapterId);
-        } else {
-          _laterChapters?[nt.chapterId] = nt;
-        }
-        if (mounted) setState(() {});
-      },
+      onHistoryUpdated: (history) => _updateByDlg(onHistoryUpdated: DialogObject(_data!.mid, history)),
+      onFootprintUpdated: (footprint) => _updateByDlg(onFootprintUpdated: DialogObject(chapterId, footprint)),
+      onLaterUpdated: (later) => _updateByDlg(onLaterUpdated: DialogObject(_data!.mid, later)),
+      onNotateUpdated: (notate) => _updateByDlg(onNotateUpdated: DialogObject(chapterId, notate)),
     );
   }
 

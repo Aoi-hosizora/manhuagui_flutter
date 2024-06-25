@@ -552,6 +552,8 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       if (mounted) setState(() {});
     }
 
+    // 非本页引起的更新或删除 => 更新相关界面
+
     if (historyEvent != null && !historyEvent.source.isMangaViewerPage() && historyEvent.mangaId == widget.mangaId) {
       _history = await HistoryDao.getHistory(username: AuthManager.instance.username, mid: widget.mangaId);
       if (mounted) setState(() {});
@@ -873,13 +875,12 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       nowLater: _laterManga,
       subscribeCount: _subscribeCount,
 
-      // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
       // 本页引起的更新 => 更新相关界面
       onSubscribingUpdated: (s) => mountedSetState(() => _subscribing = s),
       onShelfUpdated: (s) => mountedSetState(() => _inShelf = s),
       onFavoriteUpdated: (f) => mountedSetState(() => _favoriteManga = f),
       onLaterUpdated: (l) => mountedSetState(() => _laterManga = l),
-      onNotateCleared: null /* 本页暂不显示稍后阅读章节 */,
+      onNotateCleared: null /* 本页不显示稍后阅读的章节 */,
     );
   }
 
@@ -1093,19 +1094,13 @@ class _MangaViewerPageState extends State<MangaViewerPage> with AutomaticKeepAli
       extraData: MangaExtraDataForDialog.fromMangaViewer(_data!),
       laterManga: _laterManga!,
       eventSource: EventSource.mangaViewerPage,
-      // ===
+      onLaterUpdated: (l) => mountedSetState(() => _laterManga = l) /* 本页引起的更新或删除 => 更新相关界面 */,
+      onNotateCleared: null /* 该页暂不显示稍后阅读章节 */,
       navigateWrapper: (navigate) async {
         await _ScreenHelper.restoreSystemUI();
         await navigate();
         await _ScreenHelper.setSystemUIWhenEnter(fullscreen: _setting.fullscreen);
       },
-      // ===
-      onLaterUpdated: (l) {
-        // (更新数据库)、更新界面[↴]、(弹出提示)、(发送通知)
-        _laterManga = l;
-        if (mounted) setState(() {});
-      },
-      onNotateCleared: null /* 该页暂不显示稍后阅读章节 */,
     );
   }
 
