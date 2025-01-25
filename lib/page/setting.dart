@@ -116,7 +116,7 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
                       style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.normal),
                     ),
                     Text(
-                      APP_VERSION,
+                      '$APP_VERSION ($APP_COMMIT)',
                       style: Theme.of(context).textTheme.subtitle2?.copyWith(fontWeight: FontWeight.normal),
                     ),
                   ],
@@ -286,7 +286,7 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
               context: context,
               builder: (c) => AlertDialog(
                 title: Text('检查更新'),
-                content: Text('当前 $APP_NAME 版本为 $APP_VERSION。\n\n是否用浏览器打开 GitHub Release 页面手动检查更新？'),
+                content: Text('当前 $APP_NAME 版本为 $APP_VERSION ($APP_COMMIT)。\n\n是否用浏览器打开 GitHub Release 页面手动检查更新？'),
                 actions: [
                   TextButton(
                     child: Text('打开'),
@@ -335,7 +335,7 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
                 context: context,
                 builder: (c) => LicensePage(
                   applicationName: APP_NAME,
-                  applicationVersion: APP_VERSION,
+                  applicationVersion: '$APP_VERSION ($APP_COMMIT)',
                   applicationLegalese: APP_LEGALESE,
                   applicationIcon: Image.asset('${ASSETS_PREFIX}logo_xxhdpi.png', height: 60, width: 60),
                 ),
@@ -350,7 +350,7 @@ class _SettingPageState extends State<SettingPage> with FitSystemScreenshotMixin
               context: context,
               useRootNavigator: false,
               applicationName: APP_NAME,
-              applicationVersion: APP_VERSION,
+              applicationVersion: '$APP_VERSION ($APP_COMMIT)',
               applicationLegalese: APP_LEGALESE,
               applicationIcon: Image.asset('${ASSETS_PREFIX}logo_xxhdpi.png', height: 60, width: 60),
               children: [
