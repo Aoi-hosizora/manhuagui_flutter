@@ -609,6 +609,7 @@ class UiSetting {
     required this.allowErrorToast,
     required this.overviewLoadAll,
     required this.homepageShowMoreMangas,
+    required this.forceHomepageFluency,
     required this.includeUnreadInHome,
     required this.audienceRankingRows,
     required this.homepageFavorite,
@@ -635,6 +636,7 @@ class UiSetting {
   final bool overviewLoadAll; // 章节一览页加载所有图片
   // 首页设置
   final bool homepageShowMoreMangas; // 首页显示更多漫画
+  final bool forceHomepageFluency; // 提升首页的流畅度
   final bool includeUnreadInHome; // 首页显示未阅读漫画历史
   final int audienceRankingRows; // 首页受众排行榜显示数量
   final HomepageFavorite homepageFavorite; // 首页收藏列表显示内容
@@ -660,6 +662,7 @@ class UiSetting {
     showLastHistory: true,
     overviewLoadAll: false,
     homepageShowMoreMangas: false,
+    forceHomepageFluency: true,
     includeUnreadInHome: true,
     audienceRankingRows: 5,
     homepageFavorite: HomepageFavorite.defaultAscOrder,
@@ -685,6 +688,7 @@ class UiSetting {
     bool? showLastHistory,
     bool? overviewLoadAll,
     bool? homepageShowMoreMangas,
+    bool? forceHomepageFluency,
     bool? includeUnreadInHome,
     int? audienceRankingRows,
     HomepageFavorite? homepageFavorite,
@@ -709,6 +713,7 @@ class UiSetting {
       showLastHistory: showLastHistory ?? this.showLastHistory,
       overviewLoadAll: overviewLoadAll ?? this.overviewLoadAll,
       homepageShowMoreMangas: homepageShowMoreMangas ?? this.homepageShowMoreMangas,
+      forceHomepageFluency: forceHomepageFluency ?? this.forceHomepageFluency,
       includeUnreadInHome: includeUnreadInHome ?? this.includeUnreadInHome,
       audienceRankingRows: audienceRankingRows ?? this.audienceRankingRows,
       homepageFavorite: homepageFavorite ?? this.homepageFavorite,
@@ -736,6 +741,7 @@ class UiSetting {
         allowErrorToast == other.allowErrorToast &&
         overviewLoadAll == other.overviewLoadAll &&
         homepageShowMoreMangas == other.homepageShowMoreMangas &&
+        forceHomepageFluency == other.forceHomepageFluency &&
         includeUnreadInHome == other.includeUnreadInHome &&
         audienceRankingRows == other.audienceRankingRows &&
         homepageFavorite == other.homepageFavorite &&

@@ -159,6 +159,7 @@ class AppSettingPrefs {
   static const _showLastHistoryKey = BoolKey('AppSettingPrefs_showLastHistory');
   static const _overviewLoadAllKey = BoolKey('AppSettingPrefs_overviewLoadAll');
   static const _homepageShowMoreMangasKey = BoolKey('AppSettingPrefs_homepageShowMoreMangas');
+  static const _forceHomepageFluencyKey = BoolKey('AppSettingPrefs_forceHomepageFluency');
   static const _includeUnreadInHomeKey = BoolKey('AppSettingPrefs_includeUnreadInHome');
   static const _audienceMangaRowsKey = IntKey('AppSettingPrefs_audienceMangaRows');
   static const _homepageFavoriteKey = IntKey('AppSettingPrefs_homepageFavorite');
@@ -183,6 +184,7 @@ class AppSettingPrefs {
         _showLastHistoryKey,
         _overviewLoadAllKey,
         _homepageShowMoreMangasKey,
+        _forceHomepageFluencyKey,
         _includeUnreadInHomeKey,
         _audienceMangaRowsKey,
         _homepageFavoriteKey,
@@ -211,6 +213,7 @@ class AppSettingPrefs {
       showLastHistory: prefs.safeGet<bool>(_showLastHistoryKey) ?? def.showLastHistory,
       overviewLoadAll: prefs.safeGet<bool>(_overviewLoadAllKey) ?? def.overviewLoadAll,
       homepageShowMoreMangas: prefs.safeGet<bool>(_homepageShowMoreMangasKey) ?? def.homepageShowMoreMangas,
+      forceHomepageFluency: prefs.safeGet<bool>(_forceHomepageFluencyKey) ?? def.forceHomepageFluency,
       includeUnreadInHome: prefs.safeGet<bool>(_includeUnreadInHomeKey) ?? def.includeUnreadInHome,
       audienceRankingRows: prefs.safeGet<int>(_audienceMangaRowsKey) ?? def.audienceRankingRows,
       homepageFavorite: HomepageFavoriteExtension.fromInt(prefs.safeGet<int>(_homepageFavoriteKey) ?? def.homepageFavorite.toInt()),
@@ -239,6 +242,7 @@ class AppSettingPrefs {
     await prefs.safeSet<bool>(_showLastHistoryKey, setting.showLastHistory);
     await prefs.safeSet<bool>(_overviewLoadAllKey, setting.overviewLoadAll);
     await prefs.safeSet<bool>(_homepageShowMoreMangasKey, setting.homepageShowMoreMangas);
+    await prefs.safeSet<bool>(_forceHomepageFluencyKey, setting.forceHomepageFluency);
     await prefs.safeSet<bool>(_includeUnreadInHomeKey, setting.includeUnreadInHome);
     await prefs.safeSet<int>(_audienceMangaRowsKey, setting.audienceRankingRows);
     await prefs.safeSet<int>(_homepageFavoriteKey, setting.homepageFavorite.toInt());

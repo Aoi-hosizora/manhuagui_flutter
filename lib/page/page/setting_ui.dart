@@ -49,6 +49,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
   late var _showLastHistory = widget.setting.showLastHistory;
   late var _overviewLoadAll = widget.setting.overviewLoadAll;
   late var _homepageShowMoreMangas = widget.setting.homepageShowMoreMangas;
+  late var _forceHomepageFluency = widget.setting.forceHomepageFluency;
   late var _includeUnreadInHome = widget.setting.includeUnreadInHome;
   late var _audienceMangaRows = widget.setting.audienceRankingRows;
   late var _homepageFavorite = widget.setting.homepageFavorite;
@@ -73,6 +74,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
         showLastHistory: _showLastHistory,
         overviewLoadAll: _overviewLoadAll,
         homepageShowMoreMangas: _homepageShowMoreMangas,
+        forceHomepageFluency: _forceHomepageFluency,
         includeUnreadInHome: _includeUnreadInHome,
         audienceRankingRows: _audienceMangaRows,
         homepageFavorite: _homepageFavorite,
@@ -99,6 +101,7 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
     _showLastHistory = setting.showLastHistory;
     _overviewLoadAll = setting.overviewLoadAll;
     _homepageShowMoreMangas = setting.homepageShowMoreMangas;
+    _forceHomepageFluency = setting.forceHomepageFluency;
     _includeUnreadInHome = setting.includeUnreadInHome;
     _audienceMangaRows = setting.audienceRankingRows;
     _homepageFavorite = setting.homepageFavorite;
@@ -252,6 +255,15 @@ class _UiSettingSubPageState extends State<UiSettingSubPage> {
           value: _homepageShowMoreMangas,
           onChanged: (b) {
             _homepageShowMoreMangas = b;
+            if (mounted) setState(() {});
+          },
+        ),
+        SettingSwitcherView(
+          style: widget.style,
+          title: '提升首页的流畅度',
+          value: _forceHomepageFluency,
+          onChanged: (b) {
+            _forceHomepageFluency = b;
             if (mounted) setState(() {});
           },
         ),

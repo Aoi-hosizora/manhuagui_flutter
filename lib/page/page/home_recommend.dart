@@ -596,7 +596,7 @@ class _RecommendSubPageState extends State<RecommendSubPage> with AutomaticKeepA
               controller: _controller,
               padding: EdgeInsets.zero,
               physics: AlwaysScrollableScrollPhysics(),
-              cacheExtent: 999999 /* <<< keep states in ListView */,
+              cacheExtent: AppSetting.instance.ui.forceHomepageFluency ? null : 999999 /* <<< keep states in ListView */,
               children: [
                 MangaCarouselView(
                   mangas: _data!.carouselMangas,
